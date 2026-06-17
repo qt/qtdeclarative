@@ -13,7 +13,7 @@ anti-patterns.
 \e qmllint is a tool shipped with Qt, that verifies the syntactic validity of
 QML files. You can \l{Using qmllint with CMake}{integrate qmllint into your build system}
 for ease of use. It also warns about some QML anti-patterns. See
-\{Configuring qmllint warnings} for how to disable a specific warning type.
+\l{Configuring qmllint warnings} for how to disable a specific warning type.
 
 \note When using IDE, such as Qt Creator, you don't need to run \c qmllint
 manually. The IDE uses \l {QML Language Server#Linting}{QML Language Server},
