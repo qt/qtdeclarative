@@ -122,6 +122,9 @@ private:
     bool loadStyle();
     void updateStyle();
 
+    QQStyleKitStyle *ensureDefaultStyle();
+    QQStyleKitStyle *effectiveStyle() const;
+
     void unsetStyleFont(QWidget *widget);
     void setStyleFont(QWidget *widget, const QFont &styleFont);
     void refreshStyleFont(QWidget *widget);
@@ -168,6 +171,7 @@ private:
 
     QQmlEngine *qmlEngine = nullptr;
     QQStyleKitStyle *style = nullptr;
+    QQStyleKitStyle *defaultStyle = nullptr;
     // Reader for static metric reads
     mutable QQStyleKitReader *sharedReader = nullptr;
     // Per-widget readers
