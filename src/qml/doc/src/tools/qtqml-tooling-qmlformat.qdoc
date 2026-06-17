@@ -156,6 +156,9 @@ For boolean options, pass the flag on the command line or set the variable to
 \endtable
 
 \section1 Usage
+\e qmlformat is flexible and can be configured according to your needs. \e qmlformat should be
+deployed in a sandbox, container, or other safe environment when running on untrusted code, for
+example when formatting QML files during testing in a public CI.
 
 \section2 Output
 qmlformat writes the formatted version of the file to stdout.
