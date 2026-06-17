@@ -114,8 +114,8 @@ QT_BEGIN_NAMESPACE
     the same as well. These are provided as Vulkan-style GLSL source code and
     must be processed first by the Qt shader infrastructure first. This is
     achieved either by running the \c qsb command-line tool manually, or by
-    using the \l{Qt Shader Tools Build System Integration}{qt_add_shaders()}
-    function in CMake. The QQuickRhiItem loads these pre-processed \c{.qsb}
+    using the \l{qt_add_shaders}{qt_add_shaders()} function in CMake.
+    The QQuickRhiItem loads these pre-processed \c{.qsb}
     files that are shipped with the application. See \l{Qt Shader Tools} for
     more information about Qt's shader translation infrastructure.
 

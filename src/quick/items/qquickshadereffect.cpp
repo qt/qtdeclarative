@@ -349,8 +349,8 @@ QT_BEGIN_NAMESPACE
     \endlist
 
     As described in the \l{Qt Shader Tools} module some of these steps can be
-    automated by letting CMake invoke the \c qsb tool at build time. See \l{Qt
-    Shader Tools Build System Integration} for more information and examples.
+    automated by letting CMake invoke the \c qsb tool at build time. See
+    \l{qt_add_shaders}{qt_add_shaders()} for more information and examples.
 
     When it comes to updating the shader code, below is an overview of the
     commonly required changes.
@@ -498,7 +498,7 @@ QT_BEGIN_NAMESPACE
 
     \endlist
 
-    \sa {Item Layers}, {QSB Manual}, {Qt Shader Tools Build System Integration}
+    \sa {Item Layers}, {QSB Manual}, qt_add_shaders
 */
 
 
