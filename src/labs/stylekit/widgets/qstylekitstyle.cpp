@@ -64,6 +64,7 @@
 #include <QtGui/qpainterpath.h>
 #include <QtGui/qpainterstateguard.h>
 #include <QtGui/qstylehints.h>
+#include <QtCore/qloggingcategory.h>
 #include <QtQml/private/qqmlcomponent_p.h>
 #include <QtQml/qqmlengine.h>
 #include <QtLabsStyleKit/private/qqstylekit_p.h>
@@ -71,6 +72,8 @@
 #include <QtLabsStyleKit/private/qqstylekitstyle_p.h>
 
 QT_BEGIN_NAMESPACE
+
+Q_STATIC_LOGGING_CATEGORY(lcStyleKit, "qt.labs.stylekit")
 
 /*!
     \class QStyleKitStyle
@@ -114,8 +117,8 @@ QT_BEGIN_NAMESPACE
 
     The Style is loaded with an internal QQmlEngine owned by the
     QStyleKitStyle instance. If the path is invalid or the root object is
-    not a \l Style, a warning is emitted and the style behaves like
-    QCommonStyle until a valid \l stylePath is set.
+    not a \l Style, a warning is emitted and the style uses a default
+    fallback style until a valid \l stylePath is set.
 
     \section1 Themes
 
@@ -406,23 +409,63 @@ bool QStyleKitStylePrivate::loadStyle()
     return true;
 }
 
+/*! \internal
+    Creates and returns the empty fallback style used when no user
+    style is loaded.
+*/
+QQStyleKitStyle *QStyleKitStylePrivate::ensureDefaultStyle()
+{
+    if (defaultStyle)
+        return defaultStyle;
+
+    Q_Q(QStyleKitStyle);
+    if (!qmlEngine)
+        qmlEngine = new QQmlEngine(q);
+
+    QQmlComponent component(qmlEngine);
+    component.loadFromModule("Qt.labs.StyleKit", "Style");
+    if (component.isError()) {
+        qWarning("QStyleKitStyle: Failed to create default fallback style: %s",
+                 qPrintable(component.errorString()));
+        return nullptr;
+    }
+    defaultStyle = qobject_cast<QQStyleKitStyle *>(component.create());
+    if (defaultStyle) {
+        defaultStyle->setParent(q);
+        qCDebug(lcStyleKit, "No style set; using a default fallback style. "
+                            "Set stylePath to load a StyleKit Style.");
+    }
+    return defaultStyle;
+}
+
+/*! \internal
+    Returns the user style if one is loaded, otherwise the default fallback
+    style
+*/
+QQStyleKitStyle *QStyleKitStylePrivate::effectiveStyle() const
+{
+    return style ? style : defaultStyle;
+}
+
 void QStyleKitStylePrivate::updateStyle()
 {
     clearMetricsCache();
 
-    if (sharedReader && sharedReader->style() != style)
-        sharedReader->setExplicitStyle(style);
+    QQStyleKitStyle *effective = effectiveStyle();
+
+    if (sharedReader && sharedReader->style() != effective)
+        sharedReader->setExplicitStyle(effective);
 
     for (const auto &byItem : std::as_const(itemViewItemReaders)) {
         for (auto *reader : std::as_const(byItem)) {
-            if (reader && reader->style() != style)
-                reader->setExplicitStyle(style);
+            if (reader && reader->style() != effective)
+                reader->setExplicitStyle(effective);
         }
     }
 
     for (auto *wr : std::as_const(widgetReaders)) {
-        if (wr->style() != style)
-            wr->setExplicitStyle(style);
+        if (wr->style() != effective)
+            wr->setExplicitStyle(effective);
     }
 
     if (!QWidgetPrivate::allWidgets)
@@ -458,7 +501,7 @@ void QStyleKitStylePrivate::unsetStyleFont(QWidget *widget)
 
 void QStyleKitStylePrivate::setStyleFont(QWidget *widget, const QFont &styleFont)
 {
-    if (!style || !widget)
+    if (!effectiveStyle() || !widget)
         return;
 
     const auto styleMask = styleFont.resolveMask();
@@ -484,7 +527,7 @@ void QStyleKitStylePrivate::setStyleFont(QWidget *widget, const QFont &styleFont
 
 void QStyleKitStylePrivate::refreshStyleFont(QWidget *widget)
 {
-    if (!style || !widget)
+    if (!effectiveStyle() || !widget)
         return;
 
     const QWidget *targetWidget = containerWidget(widget);
@@ -515,7 +558,7 @@ void QStyleKitStylePrivate::unsetStylePalette(QWidget *widget)
 
 void QStyleKitStylePrivate::setStylePalette(QWidget *widget, const QPalette &stylePalette) const
 {
-    if (!style || !widget)
+    if (!effectiveStyle() || !widget)
         return;
 
     const quint64 styleMask = stylePalette.resolveMask();
@@ -539,7 +582,7 @@ void QStyleKitStylePrivate::setStylePalette(QWidget *widget, const QPalette &sty
 // using palette roles, we need to push the style colors to those roles
 void QStyleKitStylePrivate::refreshStylePalette(QWidget *widget)
 {
-    if (!style || !widget)
+    if (!effectiveStyle() || !widget)
         return;
 
     const bool isWindow = widget->windowType() & (Qt::Popup | Qt::Window | Qt::Dialog);
@@ -590,14 +633,15 @@ void QStyleKitStylePrivate::refreshStylePalette(QWidget *widget)
 QQStyleKitReader *QStyleKitStylePrivate::readerForWidget(const QWidget *widget) const
 {
     Q_Q(const QStyleKitStyle);
-    if (!style || !widget)
+    QQStyleKitStyle *effective = effectiveStyle();
+    if (!effective || !widget)
         return nullptr;
 
     if (auto it = widgetReaders.find(widget); it != widgetReaders.end())
         return *it;
 
     auto *widgetReader = new QQStyleKitReader(const_cast<QStyleKitStyle *>(q));
-    widgetReader->setExplicitStyle(style);
+    widgetReader->setExplicitStyle(effective);
     widgetReader->setTarget(const_cast<QWidget *>(widget));
     widgetReader->setCompleted(true);
     widgetReaders.insert(widget, widgetReader);
@@ -639,7 +683,8 @@ QQStyleKitReader *QStyleKitStylePrivate::readerForItemViewItem(
     const QWidget *widget, quint64 itemKey) const
 {
     Q_Q(const QStyleKitStyle);
-    if (!style)
+    QQStyleKitStyle *effective = effectiveStyle();
+    if (!effective)
         return nullptr;
 
     auto &byItem = itemViewItemReaders[widget];
@@ -647,7 +692,7 @@ QQStyleKitReader *QStyleKitStylePrivate::readerForItemViewItem(
         return *it;
 
     auto *reader = new QQStyleKitReader(const_cast<QStyleKitStyle *>(q));
-    reader->setExplicitStyle(style);
+    reader->setExplicitStyle(effective);
     reader->setTarget(const_cast<QWidget *>(widget));
     reader->setCompleted(true);
     byItem.insert(itemKey, reader);
@@ -789,12 +834,13 @@ QQStyleKitReader *QStyleKitStylePrivate::ensureSharedReader() const
         return sharedReader;
 
     Q_Q(const QStyleKitStyle);
-    if (!style)
+    QQStyleKitStyle *effective = effectiveStyle();
+    if (!effective)
         return nullptr;
     sharedReader = new QQStyleKitReader(const_cast<QStyleKitStyle *>(q));
     // Disable transitions since this reader is used for one-off metric reads in layout queries
     sharedReader->setTransitionsEnabled(false);
-    sharedReader->setExplicitStyle(style);
+    sharedReader->setExplicitStyle(effective);
     sharedReader->setCompleted(true);
     return sharedReader;
 }
@@ -1125,8 +1171,7 @@ QStyleKitStylePrivate::ControlMetrics QStyleKitStylePrivate::metricsForReader(QQ
     Constructs a QStyleKitStyle with no style loaded.
 
     Use \l setStylePath() to load a QML \l Style after construction.
-    Until a style is loaded, painting and metrics behave as in
-    QCommonStyle.
+    Until a style is loaded, the style uses a default fallback style.
 */
 QStyleKitStyle::QStyleKitStyle()
     : QCommonStyle(*new QStyleKitStylePrivate())
@@ -1139,8 +1184,8 @@ QStyleKitStyle::QStyleKitStyle()
     \a filePath is a path to a local file or a path to a file in the resource
     file system; a relative path is resolved against the application's working
     directory. If the path is invalid or the root object of the loaded component
-    is not a \l Style, a warning is emitted and the constructed style behaves as
-    QCommonStyle until a valid \l stylePath is set.
+    is not a \l Style, a warning is emitted and the constructed style uses a
+    default fallback style until a valid \l stylePath is set.
 */
 QStyleKitStyle::QStyleKitStyle(const QString &filePath)
     : QCommonStyle(*new QStyleKitStylePrivate())
@@ -1261,10 +1306,6 @@ void QStyleKitStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt,
     const QWidget *w) const
 {
     Q_D(const QStyleKitStyle);
-    if (!d->style) {
-        QCommonStyle::drawPrimitive(pe, opt, p, w);
-        return;
-    }
 
     switch (pe) {
     case PE_FrameButtonBevel:
@@ -1410,10 +1451,6 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
     const QWidget *w) const
 {
     Q_D(const QStyleKitStyle);
-    if (!d->style) {
-        QCommonStyle::drawControl(element, opt, p, w);
-        return;
-    }
 
     switch (element) {
     case CE_PushButton:
@@ -1709,9 +1746,6 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
 QRect QStyleKitStyle::subElementRect(SubElement r, const QStyleOption *opt, const QWidget *widget) const
 {
     Q_D(const QStyleKitStyle);
-    if (!d->style) {
-        return QCommonStyle::subElementRect(r, opt, widget);
-    }
 
     switch (r) {
     case SE_PushButtonLayoutItem:
@@ -1980,10 +2014,6 @@ void QStyleKitStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCom
     const QWidget *w) const
 {
     Q_D(const QStyleKitStyle);
-    if (!d->style) {
-        QCommonStyle::drawComplexControl(cc, opt, p, w);
-        return;
-    }
 
     switch (cc) {
 #if QT_CONFIG(slider)
@@ -2232,9 +2262,6 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
     const QWidget *w) const
 {
     Q_D(const QStyleKitStyle);
-    if (!d->style) {
-        return QCommonStyle::subControlRect(cc, opt, sc, w);
-    }
 
     switch (cc) {
 #if QT_CONFIG(slider)
@@ -2606,9 +2633,6 @@ QSize QStyleKitStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt,
     const QSize &contentsSize, const QWidget *widget) const
 {
     Q_D(const QStyleKitStyle);
-    if (!d->style) {
-        return QCommonStyle::sizeFromContents(ct, opt, contentsSize, widget);
-    }
 
     switch (ct) {
     case CT_PushButton:
@@ -2880,6 +2904,12 @@ void QStyleKitStyle::polish(QWidget *widget)
         return;
 
     Q_D(QStyleKitStyle);
+
+    // When no user style is loaded, create the empty fallback style now,
+    // before any reader is created, so that all widgets are styled consistently
+    if (!d->style)
+        d->ensureDefaultStyle();
+
     widget->setAttribute(Qt::WA_Hover);
 
 #if QT_CONFIG(scrollbar)
