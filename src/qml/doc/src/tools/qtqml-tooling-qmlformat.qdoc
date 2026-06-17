@@ -177,7 +177,9 @@ controlled via a  \l{Settings File}{settings file}.:
 \endtable
 
 \section2 Details
-\e qmlformat is flexible and can be configured according to your needs.
+\e qmlformat is flexible and can be configured according to your needs. \e qmlformat should be
+deployed in a sandbox, container, or other safe environment when running on untrusted code, for
+example when formatting QML files during testing in a public CI.
 
 \section3 Output
 qmlformat writes the formatted version of the file to stdout.
