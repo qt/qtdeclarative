@@ -11,8 +11,7 @@ QT_BEGIN_NAMESPACE
 namespace QQmlJS {
 namespace Dom {
 
-FileWriter::Status FileWriter::write(const QString &tFile, function_ref<bool(QTextStream &)> write,
-                                     int nBk)
+FileWriter::Status FileWriter::write(const QString &tFile, function_ref<bool(QTextStream &)> write)
 {
     if (shouldRemoveTempFile)
         tempFile.remove();
@@ -21,7 +20,6 @@ FileWriter::Status FileWriter::write(const QString &tFile, function_ref<bool(QTe
     Q_ASSERT(status != Status::ShouldWrite);
     status = Status::ShouldWrite;
     targetFile = tFile;
-    newBkFiles.clear();
     warnings.clear();
 
     int i = 0;
@@ -43,7 +41,7 @@ FileWriter::Status FileWriter::write(const QString &tFile, function_ref<bool(QTe
     QTextStream inF(&tempFile);
     QT_TRY
     {
-        auto cleanup = qScopeGuard([this, &inF, &success, nBk] {
+        auto cleanup = qScopeGuard([this, &inF, &success] {
             inF.flush();
             tempFile.flush();
             tempFile.close();
@@ -71,49 +69,16 @@ FileWriter::Status FileWriter::write(const QString &tFile, function_ref<bool(QTe
                     }
                 }
                 // move to target
-                int i = 0;
-                const int maxAttempts = 10;
-                for (; i < maxAttempts; ++i) {
-                    if (QFile::exists(targetFile)) {
-                        // make place for targetFile
-                        QString bkFileName;
-                        if (nBk < 1) {
-                            QFile::remove(targetFile);
-                        } else if (nBk == 1) {
-                            QString bkFileName = targetFile + QStringLiteral(u"~");
-                            QFile::remove(bkFileName);
-                            QFile::rename(targetFile, bkFileName);
-                        } else {
-                            // f~ is the oldest, further backups at f1~ .. f<nBk>~
-                            // keeping an empty place for the "next" backup
-                            // f~ is never overwritten
-                            int iBk = 0;
-                            QString bkFileName = targetFile + QStringLiteral(u"~");
-                            while (++iBk < nBk) {
-                                if (QFile::exists(bkFileName))
-                                    bkFileName = targetFile + QString::number(iBk)
-                                            + QStringLiteral(u"~");
-                            }
-                            if (iBk == nBk)
-                                QFile::remove(targetFile + QStringLiteral(u"1~"));
-                            else
-                                QFile::remove(targetFile + QString::number(++iBk)
-                                              + QStringLiteral(u"~"));
-                            QFile::remove(bkFileName);
-                            QFile::rename(targetFile, bkFileName);
-                        }
-                        if (!bkFileName.isEmpty() && QFile::rename(targetFile, bkFileName))
-                            newBkFiles.append(bkFileName);
-                    }
-                    if (tempFile.rename(targetFile)) {
-                        status = Status::DidWrite;
-                        shouldRemoveTempFile = false;
-                        return;
-                    }
+                if (QFile::exists(targetFile))
+                    QFile::remove(targetFile);
+                if (tempFile.rename(targetFile)) {
+                    status = Status::DidWrite;
+                    shouldRemoveTempFile = false;
+                } else {
+                    warnings.append(tr("Rename of file %1 to %2 failed")
+                                            .arg(tempFile.fileName(), targetFile));
+                    status = Status::SkippedDueToFailure;
                 }
-                warnings.append(
-                        tr("Rename of file %1 to %2 failed").arg(tempFile.fileName(), targetFile));
-                status = Status::SkippedDueToFailure;
             } else {
                 warnings.append(tr("Error while writing"));
             }

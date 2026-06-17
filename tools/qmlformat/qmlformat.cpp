@@ -83,8 +83,7 @@ static bool parseFile(const QString &filename, const QQmlFormatOptions &options)
         if (options.isVerbose())
             qWarning().noquote() << "Writing to file" << filename;
         FileWriter fw;
-        const unsigned numberOfBackupFiles = 0;
-        res = fileItem.writeOut(filename, numberOfBackupFiles, lwOptions, &fw, checks);
+        res = fileItem.writeOut(filename, lwOptions, &fw, checks);
     } else {
         QFile out;
         if (out.open(stdout, QIODevice::WriteOnly)) {

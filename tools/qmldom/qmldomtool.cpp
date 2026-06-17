@@ -97,18 +97,10 @@ int main(int argc, char *argv[])
 
     QCommandLineOption reformatDirOption(
             QStringList() << "reformat-dir",
-            QLatin1String(
-                    "Target directory for the reformatted files, "
-                    "if not given the files are reformatted in place (but backup files are kept)"),
+            QLatin1String("Target directory for the reformatted files, "
+                          "if not given the files are reformatted in place"),
             QLatin1String("reformatDir"));
     parser.addOption(reformatDirOption);
-
-    QCommandLineOption nBackupsOption(
-            QStringList() << "backups",
-            QLatin1String("Number of backup files to generate (default is 2, the oldest, "
-                          "and the last version are kept), "),
-            QLatin1String("nBackups"));
-    parser.addOption(nBackupsOption);
 
     QCommandLineOption dumpAstOption(QStringList() << "dump-ast",
                                      QLatin1String("Dumps the AST of the given QML file."));
@@ -155,16 +147,6 @@ int main(int argc, char *argv[])
             qDebug().noquote() << "Invalid dependencies argument, expected one of "
                                << values.join(QLatin1Char(','));
             return 1;
-        }
-    }
-
-    int nBackups = 2;
-    if (parser.isSet(nBackupsOption)) {
-        bool intOk;
-        nBackups = parser.value(nBackupsOption).toInt(&intOk);
-        if (!intOk) {
-            qDebug() << "expected an integer giving the number of backups after --backups, not "
-                     << parser.value(nBackupsOption);
         }
     }
 
@@ -245,7 +227,7 @@ int main(int argc, char *argv[])
                 QDir d(rDir);
                 target = d.filePath(f.fileName());
             }
-            auto res = qmlFile.writeOut(target, nBackups, lwOptions, &fw, checks);
+            auto res = qmlFile.writeOut(target, lwOptions, &fw, checks);
             switch (fw.status) {
             case FileWriter::Status::ShouldWrite:
             case FileWriter::Status::SkippedDueToFailure:

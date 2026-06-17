@@ -46,7 +46,7 @@ public:
             tempFile.remove();
     }
 
-    Status write(const QString &targetFile, function_ref<bool(QTextStream &)> write, int nBk = 2);
+    Status write(const QString &targetFile, function_ref<bool(QTextStream &)> write);
 
     bool shouldRemoveTempFile = false;
     bool silentWarnings = false;

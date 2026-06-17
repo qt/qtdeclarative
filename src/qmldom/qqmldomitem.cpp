@@ -1338,20 +1338,17 @@ bool DomItem::writeOutForFile(OutWriter &ow, WriteOutChecks extraChecks) const
     return result == WriteOutCheckResult::Success ? bool(currentFileItem) : false;
 }
 
-bool DomItem::writeOut(const QString &path, int nBackups, const LineWriterOptions &options, 
-                       FileWriter *fw, WriteOutChecks extraChecks) const
+bool DomItem::writeOut(const QString &path, const LineWriterOptions &options, FileWriter *fw,
+                       WriteOutChecks extraChecks) const
 {
     FileWriter localFw;
     if (!fw)
         fw = &localFw;
-    auto status = fw->write(
-            path,
-            [this, path, &options, extraChecks](QTextStream &ts) {
-                auto lw = createLineWriter([&ts](QStringView s) { ts << s; }, path, options);
-                OutWriter ow(getFileItemOwner(fileObject()), *lw);
-                return writeOutForFile(ow, extraChecks);
-            },
-            nBackups);
+    auto status = fw->write(path, [this, path, &options, extraChecks](QTextStream &ts) {
+        auto lw = createLineWriter([&ts](QStringView s) { ts << s; }, path, options);
+        OutWriter ow(getFileItemOwner(fileObject()), *lw);
+        return writeOutForFile(ow, extraChecks);
+    });
     switch (status) {
     case FileWriter::Status::DidWrite:
     case FileWriter::Status::SkippedEqual:
@@ -2289,21 +2286,18 @@ void DomItem::dump(
     visitEl([this, s, indent, filter](auto &&e) { e->dump(*this, s, indent, filter); });
 }
 
-FileWriter::Status
-DomItem::dump(const QString &path,
-              function_ref<bool(const DomItem &, const PathEls::PathComponent &, const DomItem &)> filter,
-              int nBackups, int indent, FileWriter *fw) const
+FileWriter::Status DomItem::dump(
+        const QString &path,
+        function_ref<bool(const DomItem &, const PathEls::PathComponent &, const DomItem &)> filter,
+        int indent, FileWriter *fw) const
 {
     FileWriter localFw;
     if (!fw)
         fw = &localFw;
-    switch (fw->write(
-            path,
-            [this, indent, filter](QTextStream &ts) {
-                this->dump([&ts](QStringView s) { ts << s; }, indent, filter);
-                return true;
-            },
-            nBackups)) {
+    switch (fw->write(path, [this, indent, filter](QTextStream &ts) {
+        this->dump([&ts](QStringView s) { ts << s; }, indent, filter);
+        return true;
+    })) {
     case FileWriter::Status::ShouldWrite:
     case FileWriter::Status::SkippedDueToFailure:
         qWarning() << "Failure dumping " << canonicalPath() << " to " << path;

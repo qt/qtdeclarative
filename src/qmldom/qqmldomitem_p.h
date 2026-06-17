@@ -979,8 +979,8 @@ public:
     void writeOut(OutWriter &lw) const;
     void writeOutPost(OutWriter &lw) const;
     bool writeOutForFile(OutWriter &ow, WriteOutChecks extraChecks) const;
-    bool writeOut(const QString &path, int nBackups = 2,
-                  const LineWriterOptions &opt = LineWriterOptions(), FileWriter *fw = nullptr,
+    bool writeOut(const QString &path, const LineWriterOptions &opt = LineWriterOptions(),
+                  FileWriter *fw = nullptr,
                   WriteOutChecks extraChecks = WriteOutCheck::Default) const;
 
     bool visitTree(const Path &basePath, ChildrenVisitor visitor,
@@ -1043,8 +1043,9 @@ public:
                       noFilter) const;
     FileWriter::Status
     dump(const QString &path,
-         function_ref<bool(const DomItem &, const PathEls::PathComponent &, const DomItem &)> filter = noFilter,
-         int nBackups = 2, int indent = 0, FileWriter *fw = nullptr) const;
+         function_ref<bool(const DomItem &, const PathEls::PathComponent &, const DomItem &)>
+                 filter = noFilter,
+         int indent = 0, FileWriter *fw = nullptr) const;
     QString toString() const;
 
     // OwnigItem elements
@@ -1611,16 +1612,17 @@ public:
     }
     FileWriter::Status
     dump(const QString &path,
-         function_ref<bool(const DomItem &, const PathEls::PathComponent &, const DomItem &)> filter = noFilter,
-         int nBackups = 2, int indent = 0, FileWriter *fw = nullptr)
+         function_ref<bool(const DomItem &, const PathEls::PathComponent &, const DomItem &)>
+                 filter = noFilter,
+         int indent = 0, FileWriter *fw = nullptr)
     {
-        return item().dump(path, filter, nBackups, indent, fw);
+        return item().dump(path, filter, indent, fw);
     }
     void writeOut(OutWriter &lw) { return item().writeOut(lw); }
-    bool writeOut(const QString &path, int nBackups = 2,
-                  const LineWriterOptions &opt = LineWriterOptions(), FileWriter *fw = nullptr)
+    bool writeOut(const QString &path, const LineWriterOptions &opt = LineWriterOptions(),
+                  FileWriter *fw = nullptr)
     {
-        return item().writeOut(path, nBackups, opt, fw);
+        return item().writeOut(path, opt, fw);
     }
 
     MutableDomItem makeCopy(CopyOption option = CopyOption::EnvConnected)
