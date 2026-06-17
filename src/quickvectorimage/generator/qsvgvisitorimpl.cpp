@@ -1791,7 +1791,7 @@ void QSvgVisitorImpl::applyAnimationsToProperty(const QList<AnimationPair> &anim
         }
 
         outProperty->beginAnimationGroup();
-        QBezier easing = easingForAnimation(animation->easing(), animation->animationType());
+        const auto animationEasing = easingForAnimation(animation->easing(), animation->animationType());
         for (int i = 0; i < outAnimations.size(); ++i) {
             QQuickAnimatedProperty::PropertyAnimation outAnimation = outAnimations.at(i);
 
@@ -1801,11 +1801,11 @@ void QSvgVisitorImpl::applyAnimationsToProperty(const QList<AnimationPair> &anim
                 const QVariant value = calculateValue(property, j, i);
                 outAnimation.frames[time] = value;
 
-                const QSvgEasingInterface *easingInterface = property->easingAt(j);
-                if (easingInterface)
-                    easing = easingForAnimation(easingInterface, animation->animationType());
+                const QSvgEasingInterface *easingInterface = j > 0 ? property->easingAt(j - 1) : nullptr;
+                outAnimation.easingPerFrame[time] = easingInterface != nullptr
+                    ? easingForAnimation(easingInterface, animation->animationType())
+                    : animationEasing;
 
-                outAnimation.easingPerFrame[time] = easing;
                 qCDebug(lcVectorImageAnimations) << "        -> Frame " << time << " is " << value;
             }
 
@@ -2002,11 +2002,18 @@ void QSvgVisitorImpl::fillMotionPathAnimationInfo(const QSvgNode *node, NodeInfo
 
     const QList<qreal> propertyKeyFrames = property->keyFrames();
     outAnimation.frames[0] = qreal(0);
+    const auto animationEasing = easingForAnimation(animation->easing(), animation->animationType());
     for (int j = 0; j < propertyKeyFrames.size(); ++j) {
         const int time = qRound(propertyKeyFrames.at(j) * duration);
         if (time >= 0) {
             qreal t = calculateInterpolatedValue(property, j, 0).toReal();
             outAnimation.frames[time] = t;
+
+            const QSvgEasingInterface *easingInterface = j > 0 ? property->easingAt(j - 1) : nullptr;
+            outAnimation.easingPerFrame[time] = easingInterface != nullptr
+                ? easingForAnimation(easingInterface, animation->animationType())
+                : animationEasing;
+
             qCDebug(lcVectorImageAnimations) << "        -> Frame " << time << " is " << t;
         }
     }
