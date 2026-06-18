@@ -41,6 +41,11 @@ struct CompositeLevel
     QQmlRefPointer<QQmlContextData> context;
 };
 
+// Maps a property name bound by the new compilation unit to the new binding. Used to
+// recognize properties that repopulateBindings() will re-assign (so resetting them is
+// redundant) and, for group/attached properties, to find the matching new sub-object.
+using ReboundBindings = QHash<QString, const QV4::CompiledData::Binding *>;
+
 class BindingPatchContext
 {
 public:
@@ -56,7 +61,8 @@ public:
     {
     }
 
-    void reset(const std::vector<QQmlRefPointer<QV4::ExecutableCompilationUnit>> &unitsToUnparent);
+    void reset(const std::vector<QQmlRefPointer<QV4::ExecutableCompilationUnit>> &unitsToUnparent,
+               const std::vector<CompositeLevel> &internalUnits);
     void stashExternalState(
             const std::vector<CompositeLevel> &internalUnits,
             QDuplicateTracker<QObject *> *seenChildren);
@@ -97,8 +103,12 @@ private:
                              int cuIndex, QHash<QString, QVariant> *constantValues,
                              QDuplicateTracker<QObject *> *seenChildren);
     void resetBinding(const QV4::CompiledData::Binding *binding, const QString &name,
-                      const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit);
-    void resetBindings(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit, int cuIndex);
+                      const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit,
+                      const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit,
+                      const ReboundBindings &rebound);
+    void resetBindings(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit, int cuIndex,
+                       const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit,
+                       int newCuIndex);
     static void retireObject(QObject *object);
     static void clearBindingsRecursive(QObject *object);
 

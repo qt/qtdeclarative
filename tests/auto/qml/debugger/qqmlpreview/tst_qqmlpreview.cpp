@@ -112,6 +112,9 @@ private slots:
     // Same flood, but parent reached through `property Item parentBlock: parent`
     // (content/BlockEmitter.qml).
     void inPlaceParentIndirectionNotNull();
+    // Reading a composite's VME var/QObject property while it is rebuilt must
+    // not hit null member-data storage ("Cannot find member data").
+    void inPlaceCompositeVmePropertyMemberData();
     // A dropped non-QML resource (image) must not be fed to the QML compiler
     // (".png:1:1: Unexpected token" / "Syntax error").
     void inPlaceImageNotParsedAsQml();
@@ -1524,6 +1527,51 @@ void tst_QQmlPreview::inPlaceParentIndirectionNotNull()
             || after.contains("Cannot read property 'width' of null")
             || after.contains("Cannot read property 'height' of null");
     QVERIFY2(!hadNull, "parentBlock indirection became null during the in-place rebuild");
+
+    m_process->stop();
+    QTRY_COMPARE(m_client->state(), QQmlDebugClient::NotConnected);
+}
+
+// A composite type with a VME QObject property (like LogoAnimation's
+// `property ParticleSystem particleSystem`) read by inner Repeater-delegated
+// children. When the composite's VME meta-object is rebuilt in place, that
+// property is transiently unavailable: the delegate bindings read it as null,
+// the same root cause as the samegame "Cannot find member data" /
+// "Cannot read property ... of null" warnings around LogoAnimation.
+void tst_QQmlPreview::inPlaceCompositeVmePropertyMemberData()
+{
+    const QString file("inplace_defaultprop.qml");
+    QCOMPARE(startQmlProcess(file), ConnectSuccess);
+    QVERIFY(m_client);
+    QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
+
+    enableInPlaceUpdates();
+    verifyProcessOutputContains("vmeprop size=8 marker=1");
+
+    // Reload the composite type itself: this rebuilds its VME meta-object
+    // (stash/restore of member data) while the Repeater-delegated children and
+    // the root Timer keep reading container.payload through it.
+    const QString composite("HotComposite.qml");
+    QByteArray contents = readAndModify(composite,
+                                        {{"property int size: 8", "property int size: 16"}});
+    QVERIFY(!contents.isEmpty());
+
+    const int prevLen = m_process->output().size();
+    serveFile(testFile(composite), contents);
+    m_client->triggerLoad(testFileUrl(composite));
+    QTRY_VERIFY_WITH_TIMEOUT(m_process->output().size() > prevLen
+                                     && m_process->output().mid(prevLen).contains("size=16"),
+                             15000);
+
+    const QString after = m_process->output().mid(prevLen);
+
+    // The new value does propagate once the rebuild settles.
+    QVERIFY(after.contains("vmeprop size=16"));
+
+    const bool vmePropertyNull = after.contains("Cannot find member data")
+            || after.contains("Cannot read property 'size' of null");
+    QVERIFY2(!vmePropertyNull,
+             "composite VME property read as null during rebuild");
 
     m_process->stop();
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::NotConnected);
