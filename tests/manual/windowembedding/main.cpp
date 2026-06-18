@@ -75,7 +75,7 @@ int main(int argc, char* argv[])
 # ifndef Q_OS_IOS
     auto *videoView = [AVPlayerView new];
     videoView.player = [AVPlayer playerWithURL:[NSURL URLWithString:
-        @"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"]];
+        @"https://download.blender.org/peach/bigbuckbunny_movies/big_buck_bunny_1080p_h264.mov"]];
     videoWindow = QWindow::fromWinId(WId(videoView));
 # endif
 
