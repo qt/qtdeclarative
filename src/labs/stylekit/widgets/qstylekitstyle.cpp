@@ -85,11 +85,15 @@ Q_STATIC_LOGGING_CATEGORY(lcStyleKit, "qt.labs.stylekit")
     to Qt Widgets.
 
     QStyleKitStyle is a QStyle implementation that uses a \l StyleKit \l Style
-    to style Qt Widgets. It loads the Style at the local path specified by
-    \l stylePath, and uses it to resolve style properties such as colors,
-    fonts, and sizes for widgets in various states, in order to paint them
-    according to the style's design. This allows the same StyleKit style to be
-    shared between Qt Quick Controls and Qt Widgets.
+    to style Qt Widgets. The \l Style is a QML file that declaratively describes
+    the visual design (colors, sizes, radii, borders, and other properties)
+    for each widget type and state. Those property values drive the painting,
+    which is done entirely with QPainter. Qt Quick and the scene graph play
+    no part in the rendering.
+
+    This separation means the same \l Style QML file can drive both
+    Qt Quick Controls and Qt Widgets, sharing one design definition across
+    both systems.
 
     \note StyleKit is a Qt Labs module, and its API may change between
     Qt releases.
@@ -117,6 +121,104 @@ Q_STATIC_LOGGING_CATEGORY(lcStyleKit, "qt.labs.stylekit")
     \c System makes the style follow the platform color scheme: when the
     OS color scheme changes, the active theme is recreated automatically
     and all widgets are repolished.
+
+    \section1 Widget to StyleKit Control Mapping
+
+    Each Qt Widgets class is mapped to a StyleKit control type, which
+    determines which control entry in the \l Style applies to it. Use the
+    corresponding control entry to configure colors, sizes, and other visual
+    properties for that widget type. Properties not set in a specific control
+    entry fall back through the control type hierarchy: for example, \c button
+    falls back to \c abstractButton, which falls back to \c control.
+
+    \table
+    \header
+        \li Qt Widgets class
+        \li StyleKit control
+    \row
+        \li QPushButton (flat)
+        \li \l {AbstractStylableControls::flatButton}{flatButton}
+    \row
+        \li QPushButton
+        \li \l {AbstractStylableControls::button}{button}
+    \row
+        \li QCheckBox
+        \li \l {AbstractStylableControls::checkBox}{checkBox}
+    \row
+        \li QRadioButton
+        \li \l {AbstractStylableControls::radioButton}{radioButton}
+    \row
+        \li QComboBox
+        \li \l {AbstractStylableControls::comboBox}{comboBox}
+    \row
+        \li QSlider
+        \li \l {AbstractStylableControls::slider}{slider}
+    \row
+        \li QScrollBar
+        \li \l {AbstractStylableControls::scrollBar}{scrollBar}
+    \row
+        \li QSpinBox, QDoubleSpinBox
+        \li \l {AbstractStylableControls::spinBox}{spinBox}
+    \row
+        \li QProgressBar
+        \li \l {AbstractStylableControls::progressBar}{progressBar}
+    \row
+        \li QLineEdit
+        \li \l {AbstractStylableControls::textField}{textField}
+    \row
+        \li QTextEdit, QPlainTextEdit
+        \li \l {AbstractStylableControls::textArea}{textArea}
+    \row
+        \li QTabBar
+        \li \l {AbstractStylableControls::tabBar}{tabBar}
+    \row
+        \li QToolBar
+        \li \l {AbstractStylableControls::toolBar}{toolBar}
+    \row
+        \li QToolButton
+        \li \l {AbstractStylableControls::toolButton}{toolButton}
+    \row
+        \li QGroupBox
+        \li \l {AbstractStylableControls::groupBox}{groupBox}
+    \row
+        \li QFrame
+        \li \l {AbstractStylableControls::frame}{frame}
+    \row
+        \li Everything else
+        \li \l {AbstractStylableControls::control}{control}
+    \endtable
+
+    Widgets not listed above fall back to the
+    \l {AbstractStylableControls::control}{control} type. Notably,
+    \l QMenuBar, \l QMenu, and item view containers such as
+    \l QListView and \l QTreeView are not yet specifically mapped; only the
+    individual items inside item views are styled via the
+    \l {AbstractStylableControls::itemDelegate}{itemDelegate} control.
+    Dedicated mappings for these widgets are planned for a future release.
+    Conversely, control entries with no Qt Widgets equivalent —
+    \l {AbstractStylableControls::switchControl}{switchControl},
+    \l {AbstractStylableControls::rangeSlider}{rangeSlider},
+    \l {AbstractStylableControls::scrollIndicator}{scrollIndicator},
+    \l {AbstractStylableControls::roundButton}{roundButton}, and
+    \l {AbstractStylableControls::page}{page} — have no corresponding widget
+    type and are not applied.
+
+    \section1 Known Limitations
+
+    QStyleKitStyle is in Tech Preview. The following StyleKit features are
+    currently not supported when used with Qt Widgets:
+
+    \list
+        \li \b{Shadows} — shadows are not rendered.
+        \li \b{Variations} — setting a \l StyleVariation on a widget instance is
+            not yet supported.
+        \li \b{Custom controls} — styling custom widgets using \l CustomControl
+            is not yet supported.
+        \li \b{Custom delegates} — the \l {DelegateStyle::}{delegate} property is
+            not used; the built-in rendering is always applied.
+    \endlist
+
+    Support for these features is planned for a future release.
 
     \sa QStyle, QCommonStyle, {Qt Labs StyleKit}, Style, Theme
 */
