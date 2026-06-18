@@ -26,11 +26,20 @@ QT_BEGIN_NAMESPACE
 
 namespace QQmlPreview {
 
-bool applyDiff(std::vector<QObject *> &objects,
-               const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit,
-               const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit);
+enum class PatchResult: quint8 {
+    Failed,         // The diff cannot be applied in place; the caller must do a full reload.
+    Rebuilt,        // Component roots were rebuilt; left-over old expressions must be nulled.
+    PatchedInPlace, // Trivial diff: objects kept; their old expressions must be translated.
+};
 
-void refreshBindings(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit);
+PatchResult applyDiff(std::vector<QObject *> &objects,
+                      const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit,
+                      const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit);
+
+// Translate still-live expressions from oldUnit to the function at the same
+// index in newUnit (or nullptr if there is no newUnit). Re-evaluate them if necessary.
+void refreshBindings(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit,
+                     const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit = {});
 
 } // namespace QQmlPreview
 

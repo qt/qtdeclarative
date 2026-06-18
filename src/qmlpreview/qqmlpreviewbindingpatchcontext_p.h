@@ -9,10 +9,12 @@
 #include <private/qqmlboundsignal_p.h>
 #include <private/qqmlcontextdata_p.h>
 #include <private/qqmldata_p.h>
+#include <private/qqmlpreviewdiff_p.h>
 #include <private/qqmlvmemetaobject_p.h>
 #include <private/qv4executablecompilationunit_p.h>
 
 #include <QtCore/qpointer.h>
+#include <QtCore/qvariant.h>
 
 #include <unordered_map>
 
@@ -48,7 +50,11 @@ using ReboundBindings = QHash<QString, const QV4::CompiledData::Binding *>;
 
 class BindingPatchContext
 {
+    Q_DISABLE_COPY(BindingPatchContext)
 public:
+    static QString targetPropertyName(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit,
+                                      int objectIndex, const QV4::CompiledData::Binding *binding);
+
     BindingPatchContext(QObject *object, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit,
                         int objectIndex, const QString &prefix)
         : m_object(object), unit(unit), objectIndex(objectIndex), prefix(prefix + QLatin1Char('.'))
@@ -60,6 +66,9 @@ public:
         : m_object(object), unit(unit), objectIndex(objectIndex)
     {
     }
+
+    BindingPatchContext(BindingPatchContext &&) = default;
+    BindingPatchContext &operator=(BindingPatchContext &&) = default;
 
     void reset(const std::vector<QQmlRefPointer<QV4::ExecutableCompilationUnit>> &unitsToUnparent,
                const std::vector<CompositeLevel> &internalUnits);
@@ -78,6 +87,11 @@ public:
     BindingPatchContext *attachedContext(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit,
                                          const QV4::CompiledData::Binding *binding,
                                          QDuplicateTracker<QObject *> *seenChildren);
+
+    // Walk this object's group- and attached-property sub-object tree and find the right one to
+    // apply the change to. Return true if the change was applied or false otherwise.
+    bool applyBindingChange(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit,
+                     const QV4::CompiledData::Change &change);
 
 private:
     struct StoredBinding
@@ -109,8 +123,12 @@ private:
     void resetBindings(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit, int cuIndex,
                        const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit,
                        int newCuIndex);
+    void patchBinding(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit,
+                      const QV4::CompiledData::Change &change);
+
     static void retireObject(QObject *object);
     static void clearBindingsRecursive(QObject *object);
+
 
     QPointer<QObject> m_object;
     QQmlRefPointer<QV4::ExecutableCompilationUnit> unit;
