@@ -25,9 +25,14 @@ Item {
         source: VectorImageManager.currentSource.toString().endsWith("json") ? VectorImageManager.currentSource : ""
         loops: VectorImageManager.looping ? LottieAnimation.Infinite : 1
         autoPlay: false
+        onStatusChanged: {
+            if (status === LottieAnimation.Ready)
+                connections.onCurrentTimeChanged(VectorImageManager.currentTime)
+        }
     }
 
     Connections {
+        id: connections
         target: VectorImageManager
 
         function onCurrentTimeChanged(time) {
