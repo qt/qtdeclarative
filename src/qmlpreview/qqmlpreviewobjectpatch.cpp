@@ -177,7 +177,7 @@ static void rebuildObject(QObject *object, int cuIndex,
     unitsToUnparent.push_back(oldUnit);
     for (const auto &level : levels)
         unitsToUnparent.push_back(level.oldCu);
-    patchCtx.reset(unitsToUnparent);
+    patchCtx.reset(unitsToUnparent, internalUnits);
 
     QV4::ExecutionEngine *v4 = newUnit->engine;
     Q_ASSERT(v4);

@@ -572,9 +572,19 @@ BindingPatchContext::attachedContext(const QQmlRefPointer<QV4::ExecutableCompila
 }
 
 void BindingPatchContext::reset(
-        const std::vector<QQmlRefPointer<QV4::ExecutableCompilationUnit>> &unitsToUnparent)
+        const std::vector<QQmlRefPointer<QV4::ExecutableCompilationUnit>> &unitsToUnparent,
+        const std::vector<CompositeLevel> &internalUnits)
 {
     QQmlData *ddata = QQmlData::get(m_object);
+
+    const auto levelFor = [&internalUnits](
+            const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldCu, int oldIndex) {
+        for (const CompositeLevel &level : internalUnits) {
+            if (level.oldCu == oldCu && level.objectIndex == oldIndex)
+                return level;
+        }
+        return CompositeLevel();
+    };
 
     const QHash<QQmlAttachedPropertiesFunc, QObject *> *attachedProperties =
             ddata->hasExtendedData() ? ddata->attachedProperties() : nullptr;
@@ -614,13 +624,16 @@ void BindingPatchContext::reset(
     for (QObject *child : children)
         clearBindingsRecursive(child);
 
-    resetBindings(unit, objectIndex);
+    const CompositeLevel level = levelFor(unit, objectIndex);
+    resetBindings(unit, objectIndex, level.newCu, level.objectIndex);
 
     for (QQmlVMEMetaObject *vmeMeta = ddata->hasVMEMetaObject
                  ? static_cast<QQmlVMEMetaObject *>(QObjectPrivate::get(m_object)->metaObject)
                  : nullptr;
          vmeMeta; vmeMeta = vmeMeta->parentVMEMetaObject()) {
-        resetBindings(vmeMeta->compilationUnit(), vmeMeta->qmlObjectId());
+        const CompositeLevel level = levelFor(vmeMeta->compilationUnit(), vmeMeta->qmlObjectId());
+        resetBindings(vmeMeta->compilationUnit(), vmeMeta->qmlObjectId(), level.newCu,
+                      level.objectIndex);
     }
 
     // Remove remaining composite signal handlers (all internal ones).
@@ -701,14 +714,48 @@ void BindingPatchContext::clearBindingsRecursive(QObject *object)
     }
 }
 
+// Map the names of the properties that the new compilation unit binds on the given object
+// to their bindings. repopulateBindings() will re-assign these, so resetting them before
+// is redundant.
+static ReboundBindings reboundBindings(
+        const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit, int cuIndex)
+{
+    ReboundBindings bindings;
+    if (!unit || cuIndex < 0 || cuIndex >= unit->objectCount())
+        return bindings;
+
+    const QV4::CompiledData::Object *obj = unit->objectAt(cuIndex);
+    const QQmlPropertyCache::ConstPtr cache = unit->propertyCachesPtr()->at(cuIndex);
+    const QString defaultPropertyName = cache ? cache->defaultPropertyName() : QString();
+
+    for (auto binding = obj->bindingsBegin(), end = obj->bindingsEnd(); binding != end; ++binding) {
+        const QString name = binding->propertyNameIndex == 0
+                ? defaultPropertyName
+                : unit->stringAt(binding->propertyNameIndex);
+        bindings.insert(name, binding);
+    }
+    return bindings;
+}
+
+// The new sub-object index for a group/attached property that the new CU rebinds with the
+// same kind of binding, or -1 if the new CU doesn't rebind it.
+static int reboundSubObjectIndex(const ReboundBindings &rebound,
+                                 const QString &name, QV4::CompiledData::Binding::Type type)
+{
+    const QV4::CompiledData::Binding *newBinding = rebound.value(name);
+    return (newBinding && newBinding->type() == type) ? newBinding->value.objectIndex : -1;
+}
+
 void BindingPatchContext::resetBinding(
         const QV4::CompiledData::Binding *binding, const QString &name,
-        const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit)
+        const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit,
+        const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit,
+        const ReboundBindings &rebound)
 {
     if (binding->hasFlag(QV4::CompiledData::Binding::IsCustomParserBinding))
         return;
 
-    QQmlProperty prop(m_object, name);
+    QQmlProperty prop(m_object, prefix + name);
     QQmlPropertyIndex propIdx = QQmlPropertyPrivate::propertyIndex(prop);
     Q_ASSERT(propIdx.coreIndex() >= 0);
 
@@ -716,26 +763,38 @@ void BindingPatchContext::resetBinding(
 
     const QMetaType::TypeFlags flags = type.flags();
     if (flags.testFlag(QMetaType::IsQmlList)) {
+        // Lists need to always be cleared because they're generally additive.
+        // TODO: Handle ListPropertyAssignBehavior
         QQmlListReference list = prop.read().value<QQmlListReference>();
-        if (list.clear()) {
+        if (list.clear())
             return;
-        }
     } else if (flags.testFlag(QMetaType::PointerToQObject) && binding->isGroupProperty()) {
-        if (BindingPatchContext *child = childContext(oldUnit, binding, nullptr))
-            child->resetBindings(oldUnit, binding->value.objectIndex);
+        if (BindingPatchContext *child = childContext(oldUnit, binding, nullptr)) {
+            child->resetBindings(
+                    oldUnit, binding->value.objectIndex, newUnit,
+                    reboundSubObjectIndex(rebound, name,
+                                          QV4::CompiledData::Binding::Type_GroupProperty));
+        }
         return;
     }
+
+    // Don't reset individual bindings that are re-bound anyway.
+    if (rebound.contains(name))
+        return;
 
     if ((!prop.isResettable() || !prop.reset()) && prop.isWritable())
         prop.write(QVariant(type));
 }
 
 void BindingPatchContext::resetBindings(
-        const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit, int cuIndex)
+        const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit, int cuIndex,
+        const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit, int newCuIndex)
 {
     const QV4::CompiledData::Object *obj = oldUnit->objectAt(cuIndex);
     const QQmlPropertyCache::ConstPtr cache = oldUnit->propertyCachesPtr()->at(cuIndex);
     const QString defaultPropertyName = cache ? cache->defaultPropertyName() : QString();
+
+    const ReboundBindings rebound = reboundBindings(newUnit, newCuIndex);
 
     for (auto binding = obj->bindingsBegin(), end = obj->bindingsEnd(); binding != end; ++binding) {
         const QString name = binding->propertyNameIndex == 0
@@ -750,15 +809,19 @@ void BindingPatchContext::resetBindings(
             if (!QQmlData::get(m_object)->hasExtendedData())
                 continue;
 
-            if (BindingPatchContext *attached = attachedContext(oldUnit, binding, nullptr))
-                attached->resetBindings(oldUnit, binding->value.objectIndex);
+            if (BindingPatchContext *attached = attachedContext(oldUnit, binding, nullptr)) {
+                attached->resetBindings(
+                        oldUnit, binding->value.objectIndex, newUnit,
+                        reboundSubObjectIndex(rebound, name,
+                                              QV4::CompiledData::Binding::Type_AttachedProperty));
+            }
 
             continue;
         }
 
         // Signal handlers are disconnected centrally.
         if (!binding->isSignalHandler())
-            resetBinding(binding, prefix + name, oldUnit);
+            resetBinding(binding, name, oldUnit, newUnit, rebound);
     }
 }
 
