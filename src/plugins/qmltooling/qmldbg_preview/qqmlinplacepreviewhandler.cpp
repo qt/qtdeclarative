@@ -23,6 +23,8 @@ struct ComponentUpdate
 {
     std::unique_ptr<QQmlComponent> component;
     QQmlRefPointer<QV4::ExecutableCompilationUnit> oldUnit;
+    QQmlRefPointer<QV4::ExecutableCompilationUnit> newUnit;
+    QQmlPreview::PatchResult patchResult = QQmlPreview::PatchResult::Failed;
 };
 
 struct InplaceUpdate
@@ -182,13 +184,17 @@ static void updateInplace(QQmlComponent *component, std::shared_ptr<InplaceUpdat
     QV4::ExecutionEngine *v4 = component->engine()->handle();
 
     if (const auto oldExecCU = componentUpdate.oldUnit) {
+        const auto newExecCU = QQmlComponentPrivate::get(component)->compilationUnit();
         std::vector<QObject *> objects = v4->memoryManager->findObjectsForCompilationUnits(
                 { oldExecCU->baseCompilationUnit() });
-        if (!QQmlPreview::applyDiff(objects, oldExecCU,
-                                    QQmlComponentPrivate::get(component)->compilationUnit())) {
-            inplaceUpdate->emitReloadFailure("Could not apply diff");
-        }
 
+        const QQmlPreview::PatchResult result =
+                QQmlPreview::applyDiff(objects, oldExecCU, newExecCU);
+        if (result == QQmlPreview::PatchResult::Failed)
+            inplaceUpdate->emitReloadFailure("Could not apply diff");
+
+        componentUpdate.newUnit = newExecCU;
+        componentUpdate.patchResult = result;
         inplaceUpdate->processedComponentUpdates.push_back(std::move(componentUpdate));
     }
 
@@ -196,8 +202,14 @@ static void updateInplace(QQmlComponent *component, std::shared_ptr<InplaceUpdat
     // compilation units and refresh all bindings
     if (inplaceUpdate->pendingComponentUpdates.empty()) {
         updateResolvedTypeReferences(v4, inplaceUpdate->droppedUnits);
-        for (const ComponentUpdate &update : inplaceUpdate->processedComponentUpdates)
-            QQmlPreview::refreshBindings(update.oldUnit);
+        for (const ComponentUpdate &update : inplaceUpdate->processedComponentUpdates) {
+            // Objects patched in place keep their original (still-live) expressions; translate
+            // those to the new unit. Rebuilt roots only leave dead expressions behind; null them.
+            QQmlPreview::refreshBindings(
+                    update.oldUnit,
+                    update.patchResult == QQmlPreview::PatchResult::PatchedInPlace ? update.newUnit
+                                                                                   : nullptr);
+        }
     }
 }
 
@@ -214,10 +226,13 @@ void updateEngine(std::shared_ptr<InplaceUpdate> inplaceUpdate, const QList<QUrl
         // Hold on to the old unit.
         QQmlRefPointer<QV4::ExecutableCompilationUnit> oldUnit = v4->compilationUnitForUrl(url);
 
-        // Then have it re-compile with updated source code
+        // Then have it re-compile with updated source code. newUnit and patchResult are filled
+        // in by updateInplace() once the component has recompiled and the diff has been applied.
         inplaceUpdate->pendingComponentUpdates.push_back({
                 std::make_unique<QQmlComponent>(inplaceUpdate->engine, url),
                 std::move(oldUnit),
+                {},
+                QQmlPreview::PatchResult::Failed,
         });
 
         // Additionally store in another vector since updateInplace deletes from inplaceUpdate

@@ -48,6 +48,7 @@ private slots:
     void updateObjectsFunctionRemove();
 
     void scriptBindingChangeDropsCppPropertyOverride();
+    void bindingPropertyRename();
     void reattachLosesListChildUserOverrides();
     void varPropertyStashTypeMismatch();
     void reattachPreservesIdBinding();
@@ -265,17 +266,17 @@ objectsForCompilationUnit(QQmlEngine *engine,
             { unit->baseCompilationUnit() });
 }
 
-static bool updateObjects(std::vector<QObject *> &objects,
+static QQmlPreview::PatchResult updateObjects(std::vector<QObject *> &objects,
                           const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit,
                           const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit)
 {
-    if (QQmlPreview::applyDiff(objects, oldUnit, newUnit)) {
+    const QQmlPreview::PatchResult result = QQmlPreview::applyDiff(objects, oldUnit, newUnit);
+    if (result != QQmlPreview::PatchResult::Failed) {
         QQmlMetaType::deepClearCompositeType(oldUnit->baseCompilationUnit());
-        QQmlPreview::refreshBindings(oldUnit);
-        return true;
+        QQmlPreview::refreshBindings(
+                oldUnit, result == QQmlPreview::PatchResult::PatchedInPlace ? newUnit : nullptr);
     }
-
-    return false;
+    return result;
 }
 
 tst_QQmlPreviewObjectPatch::tst_QQmlPreviewObjectPatch() : QQmlDataTest(QT_QMLTEST_DATADIR)
@@ -300,9 +301,14 @@ void tst_QQmlPreviewObjectPatch::granularConstantUpdate()
     const auto newExecUnit = QQmlComponentPrivate::get(&newComponent)->compilationUnit();
     QVERIFY(oldExecUnit && newExecUnit);
 
-    // Apply the update to the live object — no new QObject created.
+    // A pure constant change is a trivial diff: it must be patched in place, leaving the same
+    // QObject and the same VME meta-object untouched (no rebuild).
+    const QMetaObject *metaObjectBefore = object->metaObject();
+
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE(updateObjects(objects, oldExecUnit, newExecUnit),
+             QQmlPreview::PatchResult::PatchedInPlace);
+    QCOMPARE(object->metaObject(), metaObjectBefore);
 
     QCOMPARE(object->property("count").toInt(), 20); // updated by diff
     QCOMPARE(object->property("label").toString(), QString("hello")); // not invalidated
@@ -329,7 +335,7 @@ void tst_QQmlPreviewObjectPatch::granularConstantUpdatePreservesUserOverride()
 
     // The user-overridden value (99 ≠ old default 10) must not be touched.
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
     QCOMPARE(object->property("count").toInt(), 99); // preserved
 }
 
@@ -354,7 +360,7 @@ void tst_QQmlPreviewObjectPatch::granularPropertyAdditionWithStash()
     QVERIFY(oldExecUnit && newExecUnit);
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     QCOMPARE(object->property("count").toInt(), 42);
     QCOMPARE(object->property("newProp").toString(), QString("added"));
@@ -381,7 +387,7 @@ void tst_QQmlPreviewObjectPatch::granularPropertyRemovalWithStash()
     QVERIFY(oldExecUnit && newExecUnit);
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     QCOMPARE(object->property("count").toInt(), 77);
     QVERIFY(!object->property("removedProp").isValid());
@@ -409,7 +415,7 @@ void tst_QQmlPreviewObjectPatch::updateObjectsFunctionAdd()
     QVERIFY(oldExecUnit && newExecUnit);
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     QVERIFY(QMetaObject::invokeMethod(object.data(), "compute", Q_RETURN_ARG(QVariant, result)));
     QCOMPARE(result.metaType(), QMetaType::fromType<int>());
@@ -441,7 +447,7 @@ void tst_QQmlPreviewObjectPatch::updateObjectsGeneratorFunctionAdd()
     QVERIFY(oldExecUnit && newExecUnit);
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     // runGen() drives the generator: yields value(3), value*2(6), value*3(9) → sum 18.
     QVERIFY(QMetaObject::invokeMethod(object.data(), "runGen", Q_RETURN_ARG(QVariant, result)));
@@ -472,7 +478,7 @@ void tst_QQmlPreviewObjectPatch::updateObjectsFunctionChange()
     QVERIFY(oldExecUnit && newExecUnit);
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     QVERIFY(QMetaObject::invokeMethod(object.data(), "compute", Q_RETURN_ARG(QVariant, result)));
     QCOMPARE(result.toInt(), 30); // value(10) * 3
@@ -500,7 +506,7 @@ void tst_QQmlPreviewObjectPatch::updateObjectsFunctionRemove()
     QVERIFY(oldExecUnit && newExecUnit);
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     QTest::ignoreMessage(QtWarningMsg,
                          QRegularExpression("QMetaObject::invokeMethod: No such method "
@@ -642,8 +648,7 @@ void tst_QQmlPreviewObjectPatch::compositeExternalToAlias()
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
     const auto origObjects = objects;
-    const bool updated = updateObjects(objects, oldExecUnit, newExecUnit);
-    QVERIFY(updated);
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     auto root = std::find(origObjects.begin(), origObjects.end(), object.get());
     QObject *replaced = objects[root - origObjects.begin()];
@@ -687,8 +692,7 @@ void tst_QQmlPreviewObjectPatch::compositeFromPlainToSmallerCU()
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
     const auto origObjects = objects;
-    const bool updated = updateObjects(objects, oldExecUnit, newExecUnit);
-    QVERIFY(updated);
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     auto root = std::find(origObjects.begin(), origObjects.end(), object.get());
     QObject *replaced = objects[root - origObjects.begin()];
@@ -736,8 +740,7 @@ void tst_QQmlPreviewObjectPatch::childConstantChangePreservesRootIds()
     QVERIFY(oldExecUnit && newExecUnit);
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    const bool updated = updateObjects(objects, oldExecUnit, newExecUnit);
-    QVERIFY(updated);
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
 
@@ -769,12 +772,42 @@ void tst_QQmlPreviewObjectPatch::scriptBindingChangeDropsCppPropertyOverride()
     QVERIFY(oldExecUnit && newExecUnit);
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     QCOMPARE(object->objectName(), QStringLiteral("user-modified"));
 
     // The new CU's script binding was applied correctly.
     QCOMPARE(object->property("value").toInt(), 2); // aux * 2 = 1 * 2 = 2
+}
+
+// Renaming the property a binding assigns to (at a stable binding-table index) is reported
+// by the positional diff as a single BindingChanged. Patching it in place leaves the live
+// expression bound to the old property and never installs it on the new one.
+void tst_QQmlPreviewObjectPatch::bindingPropertyRename()
+{
+    QQmlComponent oldComp(&engine, testFileUrl("BindingPropertyRenameOld.qml"));
+    QVERIFY2(oldComp.isReady(), qPrintable(oldComp.errorString()));
+    QScopedPointer<QObject> object(oldComp.create());
+    QVERIFY(object);
+
+    // Old source: width is script-bound to base + 10, height is unset.
+    QCOMPARE(object->property("width").toReal(), 60.0);
+    QCOMPARE(object->property("height").toReal(), 0.0);
+
+    QQmlComponent newComp(&engine, testFileUrl("BindingPropertyRenameNew.qml"));
+    QVERIFY2(newComp.isReady(), qPrintable(newComp.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldComp)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComp)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
+
+    // New source: the binding moved from width to height. height must now be 60 and width must
+    // no longer be bound.
+    QCOMPARE(object->property("height").toReal(), 60.0);
+    QCOMPARE(object->property("width").toReal(), 0.0);
 }
 
 // User-overridden values on children are retained during the patching.
@@ -802,8 +835,7 @@ void tst_QQmlPreviewObjectPatch::reattachLosesListChildUserOverrides()
     QVERIFY(oldExecUnit && newExecUnit);
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    if (!updateObjects(objects, oldExecUnit, newExecUnit))
-        QSKIP("not supported yet");
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     QCOMPARE(ref.count(), 2);
 
@@ -832,7 +864,7 @@ void tst_QQmlPreviewObjectPatch::varPropertyStashTypeMismatch()
     // The new CU's default for count is 20; since the user has not overridden it,
     // the new default should win.
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     QCOMPARE(object->property("count").toInt(), 20);
 }
@@ -857,7 +889,7 @@ void tst_QQmlPreviewObjectPatch::reattachPreservesIdBinding()
 
     // The id `root` must be re-registered so the `derived: root.base + 1`
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     QCOMPARE(object->property("base").toInt(), 5);
     QCOMPARE(object->property("derived").toInt(), 6); // root.base + 1
@@ -890,7 +922,7 @@ void tst_QQmlPreviewObjectPatch::inPlaceOnChildNeedlesslyReattaches()
     QVERIFY(oldExecUnit && newExecUnit);
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     // The child's updated value is applied via reinitChildInPlace.
     QCOMPARE(ref.count(), 1);
@@ -946,7 +978,7 @@ void tst_QQmlPreviewObjectPatch::reattachPreservesExternalBinding()
     QVERIFY(oldExecUnit && newExecUnit);
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     QCOMPARE(object->property("value").toInt(), 42);
 
@@ -996,8 +1028,7 @@ void tst_QQmlPreviewObjectPatch::enumChangeAcrossComponents()
     // Patch all live EnumType objects.
     auto enumObjects = objectsForCompilationUnit(&engine, oldEnumCU);
     QVERIFY(!enumObjects.empty());
-    const bool patched = updateObjects(enumObjects, oldEnumCU, newEnumCU);
-    QVERIFY(patched);
+    QCOMPARE_NE(updateObjects(enumObjects, oldEnumCU, newEnumCU), QQmlPreview::PatchResult::Failed);
 
     // In the new enum, Processing was inserted before Ready, so Ready = 3.
 
@@ -1046,7 +1077,7 @@ void tst_QQmlPreviewObjectPatch::attachedPropertyValueChange()
     QVERIFY(oldExecUnit && newExecUnit);
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     QCOMPARE(object->property("value").toInt(), 20);
 
@@ -1081,7 +1112,7 @@ void tst_QQmlPreviewObjectPatch::attachedPropertyAdded()
     QVERIFY(oldExecUnit && newExecUnit);
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     // Keys.enabled: false must have been applied to the attached object.
     compareKeysEnabled(object.data(), false);
@@ -1113,7 +1144,7 @@ void tst_QQmlPreviewObjectPatch::attachedPropertyRemoved()
     QVERIFY(oldExecUnit && newExecUnit);
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     // After removal, the binding no longer drives the property.
     // But since the property has no RESET, it retains its value.
@@ -1139,17 +1170,16 @@ void tst_QQmlPreviewObjectPatch::groupPropertyFontChange()
     QVERIFY(oldExecUnit && newExecUnit);
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     QFont newFont = object->property("font").value<QFont>();
     QCOMPARE(newFont.pixelSize(), 24);
 }
 
 // Like granularConstantUpdatePreservesUserOverride, but the user override is on a
-// *value-type sub-property* (font.pixelSize) rather than a top-level property.
-// The stash/restore path records sub-property constants by their bare name and then
-// iterates the parent's metaobject, so "pixelSize" is never matched and the override
-// is silently dropped on rebuild — even though resetBindings does apply the prefix.
+// *value-type sub-property* (font.pixelSize) rather than a top-level property. The change is a
+// trivial diff, so it is patched in place: the guarded write sees the property no longer holds the
+// old default and leaves the override untouched.
 void tst_QQmlPreviewObjectPatch::groupPropertyValueTypeOverridePreserved()
 {
     QQmlComponent oldComp(&engine, testFileUrl("GroupPropertyFontChangeOld.qml"));
@@ -1172,13 +1202,10 @@ void tst_QQmlPreviewObjectPatch::groupPropertyValueTypeOverridePreserved()
     QVERIFY(oldExecUnit && newExecUnit);
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
-    // The user-overridden sub-property (99 != old default 12) should survive the rebuild,
-    // just like a top-level property override does. It currently reverts to the new CU's
-    // internal value (24): the prefix is only applied when resetting bindings, not when
-    // stashing and restoring external state, so the override is never recorded.
-    QEXPECT_FAIL("", "Value-type sub-property overrides are not stashed and restored", Continue);
+    // The user-overridden sub-property (99 != old default 12) survives the update, just like a
+    // top-level property override does.
     QCOMPARE(object->property("font").value<QFont>().pixelSize(), 99);
 }
 
@@ -1206,7 +1233,7 @@ void tst_QQmlPreviewObjectPatch::groupPropertyAnchorsChange()
     QVERIFY(oldExecUnit && newExecUnit);
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     QCOMPARE(anchors->property("leftMargin").toReal(), 10.0);
     QCOMPARE(object->property("value").toInt(), 20);
@@ -1238,7 +1265,7 @@ void tst_QQmlPreviewObjectPatch::groupPropertyAnchorsTargetChange()
     QVERIFY(oldExecUnit && newExecUnit);
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     // Rebuild replaces inner objects; re-fetch target.
     target = object->children().at(1);
@@ -1271,7 +1298,7 @@ void tst_QQmlPreviewObjectPatch::groupPropIndexShift()
     QVERIFY(oldExecUnit && newExecUnit);
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     QFont newFont = object->property("font").value<QFont>();
     QCOMPARE(newFont.pixelSize(), 24);
@@ -1302,7 +1329,7 @@ void tst_QQmlPreviewObjectPatch::groupPropChildRemoved()
     QVERIFY(oldExecUnit && newExecUnit);
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     QFont newFont = object->property("font").value<QFont>();
     QCOMPARE(newFont.pixelSize(), 24);
@@ -1331,7 +1358,7 @@ void tst_QQmlPreviewObjectPatch::groupPropertyRemoved()
     QVERIFY(oldExecUnit && newExecUnit);
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
     QCOMPARE(anchors->property("leftMargin").toReal(), 0.0);
 }
 
@@ -1357,7 +1384,7 @@ void tst_QQmlPreviewObjectPatch::attachedPropIndexShift()
     QVERIFY(oldExecUnit && newExecUnit);
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     QCOMPARE(object->property("marker").toInt(), 2);
 }
@@ -1387,7 +1414,7 @@ void tst_QQmlPreviewObjectPatch::multiGroupChange()
     QVERIFY(oldExecUnit && newExecUnit);
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     QFont newFont = object->property("font").value<QFont>();
     QCOMPARE(newFont.pixelSize(), 24);
@@ -1420,7 +1447,7 @@ void tst_QQmlPreviewObjectPatch::groupAndAttachedChange()
     QVERIFY(oldExecUnit && newExecUnit);
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     QFont newFont = object->property("font").value<QFont>();
     QCOMPARE(newFont.pixelSize(), 24);
@@ -1453,7 +1480,7 @@ void tst_QQmlPreviewObjectPatch::inlineComponentInstanceChange()
     QVERIFY(oldExecUnit && newExecUnit);
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     inner = object->findChild<QObject *>("inner");
     QVERIFY(inner);
@@ -1486,7 +1513,7 @@ void tst_QQmlPreviewObjectPatch::implicitComponentContentChange()
     QVERIFY(oldExecUnit && newExecUnit);
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     // After patching, newly created instances should reflect the new value.
     delegate = qvariant_cast<QQmlComponent *>(object->property("delegate"));
@@ -1520,7 +1547,7 @@ void tst_QQmlPreviewObjectPatch::explicitComponentContentChange()
     QVERIFY(oldExecUnit && newExecUnit);
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     delegate = qvariant_cast<QQmlComponent *>(object->property("delegate"));
     QVERIFY(delegate);
@@ -1553,7 +1580,7 @@ void tst_QQmlPreviewObjectPatch::signalHandlerWithPropertyAdd()
     // Apply — this used to assert in QQmlPropertyPrivate::setBinding()
     // because the signal handler binding had a null targetObject.
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     // The new property was added and initialized.
     QCOMPARE(object->property("label").toString(), QStringLiteral("new"));
@@ -1593,7 +1620,7 @@ void tst_QQmlPreviewObjectPatch::inPlaceUpdateNoObjectDuplication()
     QVERIFY(objectCountBefore > 0);
 
     // Apply the in-place update.
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     // 1. Property was updated.
     QCOMPARE(object->property("count").toInt(), 55);
@@ -1664,7 +1691,7 @@ void tst_QQmlPreviewObjectPatch::anchorsTopIndividualTargetChange()
     QVERIFY(oldExecUnit && newExecUnit);
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
     target = findTarget();
     QVERIFY(target);
 
@@ -1701,7 +1728,7 @@ void tst_QQmlPreviewObjectPatch::anchorsTopTimerNoAlternation()
     QVERIFY(oldExecUnit && newExecUnit);
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     // After the patch, y should consistently be 100 (parent.verticalCenter
     // with parent height 200). No y=0 should appear.
@@ -1727,7 +1754,7 @@ void tst_QQmlPreviewObjectPatch::rebuildDoesNotLeakChildren()
     QVERIFY(oldExecUnit && newExecUnit);
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     // Process deferred deletes so any properly retired objects are cleaned up.
     QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
@@ -1766,7 +1793,7 @@ void tst_QQmlPreviewObjectPatch::compositeVMERebuildFromPlain()
     QVERIFY(oldExecUnit && newExecUnit);
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     // Flush deferred deletes.
     QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
@@ -1801,7 +1828,7 @@ void tst_QQmlPreviewObjectPatch::compositeVMERebuildICChange()
     QVERIFY(oldExecUnit && newExecUnit);
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     child = object->findChild<QObject *>("child");
     QVERIFY(child);
@@ -1834,7 +1861,7 @@ void tst_QQmlPreviewObjectPatch::compositeVMERebuildExternal()
     QVERIFY(oldExecUnit && newExecUnit);
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     // Flush deferred deletes.
     QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
@@ -1869,7 +1896,7 @@ void tst_QQmlPreviewObjectPatch::compositeBindingScriptFromPlain()
     QVERIFY(oldExecUnit && newExecUnit);
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
 
@@ -1908,7 +1935,7 @@ void tst_QQmlPreviewObjectPatch::compositeBindingScriptICChange()
     QVERIFY(oldExecUnit && newExecUnit);
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     child = object->findChild<QObject *>("child");
     QVERIFY(child);
@@ -1945,7 +1972,7 @@ void tst_QQmlPreviewObjectPatch::compositeBindingScriptExternal()
     QVERIFY(oldExecUnit && newExecUnit);
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
 
@@ -1986,7 +2013,7 @@ void tst_QQmlPreviewObjectPatch::compositeRecursiveConstant()
     QVERIFY(oldExecUnit && newExecUnit);
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
 
@@ -2025,7 +2052,7 @@ void tst_QQmlPreviewObjectPatch::compositeRecursiveScript()
     QVERIFY(oldExecUnit && newExecUnit);
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
 
@@ -2072,7 +2099,7 @@ void tst_QQmlPreviewObjectPatch::compositeRecursiveICExternal()
     QVERIFY(oldExecUnit && newExecUnit);
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
 
@@ -2120,7 +2147,7 @@ void tst_QQmlPreviewObjectPatch::compositeAliasRebuildCrash()
     QVERIFY(oldExecUnit && newExecUnit);
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     // Verify the alias still resolves and the color change was applied.
     header = object->property("header").value<QObject *>();
@@ -2148,7 +2175,7 @@ void tst_QQmlPreviewObjectPatch::multipleCompositeInstances()
     const auto newExecUnit = QQmlComponentPrivate::get(&newComp)->compilationUnit();
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     // Verify the marker property was updated.
     QCOMPARE(object->property("marker").toInt(), 2);
@@ -2183,7 +2210,7 @@ void tst_QQmlPreviewObjectPatch::nestedCompositeAlias()
     const auto newExecUnit = QQmlComponentPrivate::get(&newComp)->compilationUnit();
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     // Find the DerivedCompositeWithAliases child and verify its aliases resolve.
     QObject *nested = nullptr;
@@ -2218,7 +2245,7 @@ void tst_QQmlPreviewObjectPatch::compositeSignalHandler()
     const auto newExecUnit = QQmlComponentPrivate::get(&newComp)->compilationUnit();
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     // Find the CompositeWithSignalHandler child and verify its alias resolves.
     QObject *handler = nullptr;
@@ -2264,7 +2291,7 @@ void tst_QQmlPreviewObjectPatch::compositeRepeater()
     const auto newExecUnit = QQmlComponentPrivate::get(&newComp)->compilationUnit();
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     // Verify the tag property was updated.
     QCOMPARE(object->property("tag").toString(), QStringLiteral("new"));
@@ -2298,7 +2325,7 @@ void tst_QQmlPreviewObjectPatch::instanceBindingReadsAlias()
     const auto newExecUnit = QQmlComponentPrivate::get(&newComp)->compilationUnit();
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     QVERIFY(!object->property("headerInfo").toString().isEmpty());
     QCOMPARE(object->property("bgColor").value<QColor>(), QColor("red"));
@@ -2324,7 +2351,7 @@ void tst_QQmlPreviewObjectPatch::compositeComponent()
     const auto newExecUnit = QQmlComponentPrivate::get(&newComp)->compilationUnit();
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     // Verify the marker property was updated.
     QCOMPARE(object->property("marker").toInt(), 2);
@@ -2363,7 +2390,7 @@ void tst_QQmlPreviewObjectPatch::inlineChildReadsAlias()
     const auto newExecUnit = QQmlComponentPrivate::get(&newComp)->compilationUnit();
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     // Verify status property updated.
     QCOMPARE(object->property("status").toString(), QStringLiteral("new"));
@@ -2388,7 +2415,7 @@ void tst_QQmlPreviewObjectPatch::compositeStates()
     const auto newExecUnit = QQmlComponentPrivate::get(&newComp)->compilationUnit();
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     // Verify the tag property was updated.
     QCOMPARE(object->property("tag").toString(), QStringLiteral("new"));
@@ -2461,7 +2488,7 @@ void tst_QQmlPreviewObjectPatch::compositeContextHierarchyCrash()
     // hierarchy of the composite instance (whose outerContext is the wrapper),
     // and the deferred State content (PropertyChanges targeting IDs from the
     // base form) crashes on lookupIdObject because the context has no ID values.
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     QCOMPARE(derived->property("smallMode").toBool(), true);
     QCOMPARE(derived->property("width").toDouble(), 300);
@@ -2519,7 +2546,7 @@ void tst_QQmlPreviewObjectPatch::compositeContextIdLookupCrash()
     // This crashes: the rebuild corrupts the context hierarchy so that
     // the deferred State/PropertyChanges content tries to look up "header"
     // and "caption" IDs on a context that has no ID values.
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     // If we survive, verify correctness.
     header = derived->property("header").value<QObject *>();
@@ -2558,7 +2585,7 @@ void tst_QQmlPreviewObjectPatch::safeAreaAttachedRebuildCrash()
     const auto newExecUnit = QQmlComponentPrivate::get(&newComp)->compilationUnit();
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     // Trigger a resize on the window — this causes transformChanged on
     // QQuickRootItem → notifyChangeListeners → SafeArea::itemTransformChanged
@@ -2603,7 +2630,7 @@ void tst_QQmlPreviewObjectPatch::consecutiveUpdatesDeadContext()
     // First update: v1 -> v2 (context is valid, succeeds normally).
     auto objects = objectsForCompilationUnit(&engine, v1Unit);
     QVERIFY(!objects.empty());
-    QVERIFY(updateObjects(objects, v1Unit, v2Unit));
+    QCOMPARE_NE(updateObjects(objects, v1Unit, v2Unit), QQmlPreview::PatchResult::Failed);
     QCOMPARE(object->property("counter").toInt(), 2);
 
     // Simulate a cascading context invalidation between two rapid updates.
@@ -2624,7 +2651,7 @@ void tst_QQmlPreviewObjectPatch::consecutiveUpdatesDeadContext()
 
     objects = objectsForCompilationUnit(&engine, v2Unit);
     QVERIFY(!objects.empty());
-    QVERIFY(updateObjects(objects, v2Unit, v3Unit));
+    QCOMPARE_NE(updateObjects(objects, v2Unit, v3Unit), QQmlPreview::PatchResult::Failed);
 
     // The object's outer context was invalidated, so rebuildObject skipped it.
     // Counter stays at 2 (not updated to 3).
@@ -2692,7 +2719,7 @@ void tst_QQmlPreviewObjectPatch::scriptToConstantToScriptRoundtrip()
     // Find objects belonging to the form's CU (the form-level objects inside `card`).
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
     QVERIFY(!objects.empty());
-    QVERIFY(updateObjects(objects, oldExecUnit, midExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, midExecUnit), QQmlPreview::PatchResult::Failed);
 
     // After patching to constant true, the Rectangle should be visible.
     // Re-fetch outOfDialog since it might have been recreated.
@@ -2713,7 +2740,7 @@ void tst_QQmlPreviewObjectPatch::scriptToConstantToScriptRoundtrip()
 
     objects = objectsForCompilationUnit(&engine, midExecUnit);
     QVERIFY(!objects.empty());
-    QVERIFY(updateObjects(objects, midExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, midExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     // After restoring the script binding, cupsLeft = 5 → visible should be false.
     // BUG: the external cupsLeft binding is lost during rebuild, cupsLeft falls back
@@ -2767,7 +2794,7 @@ void tst_QQmlPreviewObjectPatch::scriptToConstantToScriptRoundtripExternalScript
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
     QVERIFY(!objects.empty());
-    QVERIFY(updateObjects(objects, oldExecUnit, midExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, midExecUnit), QQmlPreview::PatchResult::Failed);
 
     outOfDialog = card->property("outOfDialog").value<QObject *>();
     QVERIFY(outOfDialog);
@@ -2785,7 +2812,7 @@ void tst_QQmlPreviewObjectPatch::scriptToConstantToScriptRoundtripExternalScript
 
     objects = objectsForCompilationUnit(&engine, midExecUnit);
     QVERIFY(!objects.empty());
-    QVERIFY(updateObjects(objects, midExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, midExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     // After restoring the script binding, the external script expression
     // (2 + 3 = 5) must still be in effect, so visible should be false.
@@ -2849,7 +2876,7 @@ void tst_QQmlPreviewObjectPatch::externalSignalHandlerLostOnRebuild()
     QVERIFY(oldExecUnit && newExecUnit);
 
     auto objects = objectsForCompilationUnit(&localEngine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     // Fire the signal again after rebuild.
     QMetaObject::invokeMethod(target.get(), "fired");
@@ -2902,7 +2929,7 @@ void tst_QQmlPreviewObjectPatch::externalSignalHandlerSignalRemoved()
     QVERIFY(oldExecUnit && newExecUnit);
 
     auto objects = objectsForCompilationUnit(&localEngine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     // The signal is gone, so the handler is genuinely unrecoverable. The point of
     // this test is that tearing down the engine and observer afterwards must not
@@ -2944,7 +2971,7 @@ void tst_QQmlPreviewObjectPatch::externalSignalHandlerGroupedPropertySyntax()
 
     // Only rebuild the target object (in a real scenario, only its type's file changed).
     std::vector<QObject *> objects = { target };
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     // The wrapper's state must not have been affected by the target rebuild.
     QCOMPARE(wrapper->property("callCount").toInt(), 2);
@@ -2998,7 +3025,7 @@ void tst_QQmlPreviewObjectPatch::externalSignalHandlerJsConnect()
     QVERIFY(oldExecUnit && newExecUnit);
 
     auto objects = objectsForCompilationUnit(&localEngine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     // Fire the signal again after rebuild.
     QMetaObject::invokeMethod(target.get(), "fired");
@@ -3045,7 +3072,7 @@ void tst_QQmlPreviewObjectPatch::externalSignalHandlerOnSubObject()
     // Rebuild only the form's objects (simulates editing CoffeeCardForm.ui.qml).
     auto objects = objectsForCompilationUnit(&localEngine, oldExecUnit);
     QVERIFY(!objects.empty());
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     // Re-fetch the button alias — it may point to a new object after rebuild.
     button = target->property("button").value<QObject *>();
@@ -3103,7 +3130,7 @@ void tst_QQmlPreviewObjectPatch::externalBindingOnSubObjectTargetMismatch()
     // tries to installOn() a binding whose targetObject is the old Timer.
     auto objects = objectsForCompilationUnit(&localEngine, oldExecUnit);
     QVERIFY(!objects.empty());
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     // Re-fetch the button — it should be a new object after rebuild.
     button = target->property("button").value<QObject *>();
@@ -3160,7 +3187,7 @@ void tst_QQmlPreviewObjectPatch::externalSignalHandlerOnListChild()
     // Rebuild only the form's objects.
     auto objects = objectsForCompilationUnit(&localEngine, oldExecUnit);
     QVERIFY(!objects.empty());
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     // Re-fetch the timer from the list — it may be a new object after rebuild.
     QQmlListReference newTimersList(target, "timers");
@@ -3172,8 +3199,9 @@ void tst_QQmlPreviewObjectPatch::externalSignalHandlerOnListChild()
     // Fire the signal on the (possibly new) timer after rebuild.
     QVERIFY(QMetaObject::invokeMethod(timer, "triggered"));
 
-    // The external signal handler from the wrapper must still fire.
-    QEXPECT_FAIL("", "We don't properly re-attach signal handlers to list elements", Continue);
+    // The external signal handler from the wrapper must still fire. The form change is a trivial
+    // constant edit, so the objects are patched in place rather than rebuilt; the list child and
+    // its externally-connected signal handler are left untouched and keep working.
     QCOMPARE(wrapper->property("callCount").toInt(), 2);
 }
 
@@ -3213,7 +3241,7 @@ void tst_QQmlPreviewObjectPatch::externalSignalHandlerOnSubObjectUnfired()
 
     auto objects = objectsForCompilationUnit(&localEngine, oldExecUnit);
     QVERIFY(!objects.empty());
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     // Re-fetch button (it was replaced during rebuild).
     button = target->property("button").value<QObject *>();
@@ -3261,7 +3289,7 @@ void tst_QQmlPreviewObjectPatch::compositeRebuildNoVisualChildDuplication()
     const auto newExecUnit = QQmlComponentPrivate::get(&newComp)->compilationUnit();
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     // After rebuild, the marker should be updated.
     QCOMPARE(object->property("marker").toInt(), 2);
@@ -3311,7 +3339,7 @@ void tst_QQmlPreviewObjectPatch::singletonConstantPropertyChange()
     // Discover and patch singleton objects.
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
     QVERIFY(!objects.empty());
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     QCOMPARE(consumer->property("currentBackground").value<QColor>(), QColor("#ffffff"));
     QCOMPARE(consumer->property("currentTextColor").value<QColor>(), QColor("#121111"));
@@ -3342,7 +3370,7 @@ void tst_QQmlPreviewObjectPatch::singletonBindingPropagation()
     if (objects.empty())
         objects.push_back(object.data());
 
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     // background changes to #ffffff.
     QCOMPARE(object->property("background").value<QColor>(), QColor("#ffffff"));
@@ -3378,7 +3406,7 @@ void tst_QQmlPreviewObjectPatch::singletonChildObjectPropertyChange()
     if (objects.empty())
         objects.push_back(object.data());
 
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
 
@@ -3412,7 +3440,7 @@ void tst_QQmlPreviewObjectPatch::singletonPropertyAddition()
     if (objects.empty())
         objects.push_back(object.data());
 
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     // The newly added property should become accessible on the singleton.
     QCOMPARE(object->property("borderColor").value<QColor>(), QColor("#3E3E3E"));
@@ -3451,7 +3479,8 @@ void tst_QQmlPreviewObjectPatch::singletonConsumerBindingRefresh()
     // Patch the singleton.
     auto singletonObjects = objectsForCompilationUnit(&engine, oldColorsCU);
     QVERIFY(!singletonObjects.empty());
-    QVERIFY(updateObjects(singletonObjects, oldColorsCU, newColorsCU));
+    QCOMPARE_NE(updateObjects(singletonObjects, oldColorsCU, newColorsCU),
+                QQmlPreview::PatchResult::Failed);
 
     QCOMPARE(consumer->property("currentBackground").value<QColor>(), QColor("#ffffff"));
     QCOMPARE(consumer->property("currentTextColor").value<QColor>(), QColor("#121111"));
@@ -3504,7 +3533,7 @@ void tst_QQmlPreviewObjectPatch::childOrderBindingShift()
     QVERIFY(oldExecUnit && newExecUnit);
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
 
@@ -3561,7 +3590,7 @@ void tst_QQmlPreviewObjectPatch::requiredPropertyPreservedOnRebuild()
     QVERIFY(oldExecUnit && newExecUnit);
 
     auto objects = objectsForCompilationUnit(&localEngine, oldExecUnit);
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
 
@@ -3624,7 +3653,7 @@ void tst_QQmlPreviewObjectPatch::childBindingScopeAfterFormRebuild()
     // Rebuild the form CU. The widget child is destroyed and recreated.
     auto objects = objectsForCompilationUnit(&localEngine, oldExecUnit);
     QVERIFY(!objects.empty());
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
 
@@ -3689,7 +3718,7 @@ void tst_QQmlPreviewObjectPatch::topLevelDerivedTypeFormRebuild()
     // the form CU). The instance-level VME is for the wrapper's own CU.
     auto objects = objectsForCompilationUnit(&localEngine, oldExecUnit);
     QVERIFY(!objects.empty());
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
 
@@ -3738,7 +3767,7 @@ void tst_QQmlPreviewObjectPatch::childAddedWithIdCrash()
     // CoffeeCard's id (macchiato_for_ulf) is registered beyond the old context bounds.
     auto objects = objectsForCompilationUnit(&localEngine, oldExecUnit);
     QVERIFY(!objects.empty());
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
 }
@@ -3769,7 +3798,7 @@ void tst_QQmlPreviewObjectPatch::childAddedWithIdCompositeCrash()
     // instance's form context is rebuilt with more ids than originally allocated.
     auto objects = objectsForCompilationUnit(&localEngine, oldExecUnit);
     QVERIFY(!objects.empty());
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
 }
@@ -3790,7 +3819,7 @@ void tst_QQmlPreviewObjectPatch::insertBinding()
 
     auto objects = objectsForCompilationUnit(&engine, oldUnit);
     QCOMPARE(objects.size(), 2);
-    QVERIFY(updateObjects(objects, oldUnit, newUnit));
+    QCOMPARE_NE(updateObjects(objects, oldUnit, newUnit), QQmlPreview::PatchResult::Failed);
 
     QVERIFY2(object->objectName().isEmpty(), qPrintable(object->objectName()));
 }
@@ -3840,7 +3869,7 @@ void tst_QQmlPreviewObjectPatch::derivedTypeFunctionChangeCrash()
     // the StackView has active content.
     auto objects = objectsForCompilationUnit(&localEngine, oldExecUnit);
     QVERIFY(!objects.empty());
-    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
 
     QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
     QCoreApplication::processEvents();

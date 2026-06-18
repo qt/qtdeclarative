@@ -138,6 +138,41 @@ static QObject *propertyToPropertySource(const QQmlAnyBinding &binding)
     return nullptr;
 }
 
+static QVariant literalBindingValue(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit,
+                             const QV4::CompiledData::Binding *binding)
+{
+    switch (binding->type()) {
+    case QV4::CompiledData::Binding::Type_Number: {
+        const double d = unit->bindingValueAsNumber(binding);
+        return QV4::Value::isInt32(d) ? QVariant(int(d)) : QVariant(d);
+    }
+    case QV4::CompiledData::Binding::Type_Boolean:
+        return QVariant(bool(binding->value.b));
+    case QV4::CompiledData::Binding::Type_Translation:
+    case QV4::CompiledData::Binding::Type_TranslationById:
+    case QV4::CompiledData::Binding::Type_String:
+        return unit->bindingValueAsString(binding);
+    case QV4::CompiledData::Binding::Type_Null:
+        return QVariant::fromValue(nullptr);
+    default:
+        // Script bindings, object bindings, etc. carry no constant value.
+        return QVariant();
+    }
+}
+
+static QVariant coerceToPropertyType(QV4::ExecutionEngine *v4, const QVariant &value,
+                              QMetaType propertyType)
+{
+    if (propertyType == QMetaType::fromType<QVariant>() || value.metaType() == propertyType)
+        return value;
+
+    QV4::Scope scope(v4);
+    QV4::ScopedValue v(scope, v4->metaTypeToJS(value.metaType(), value.constData()));
+    QVariant result(propertyType);
+    v4->metaTypeFromJS(v, propertyType, result.data());
+    return result;
+}
+
 void BindingPatchContext::recordBindingValues(
         const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit, int cuIndex,
         QHash<QString, QVariant> *constantValues, QDuplicateTracker<QObject *> *seenChildren)
@@ -181,30 +216,10 @@ void BindingPatchContext::recordBindingValues(
         if (constantValues->size() == size)
             continue;
 
-        // Extract constant value from the binding for comparison
-        switch (binding->type()) {
-        case QV4::CompiledData::Binding::Type_Number: {
-            const double d = unit->bindingValueAsNumber(binding);
-            value = QV4::Value::isInt32(d) ? QVariant(int(d)) : QVariant(d);
-            break;
-        }
-        case QV4::CompiledData::Binding::Type_Boolean:
-            value = QVariant(bool(binding->value.b));
-            break;
-        case QV4::CompiledData::Binding::Type_Translation:
-        case QV4::CompiledData::Binding::Type_TranslationById:
-        case QV4::CompiledData::Binding::Type_String:
-            value = unit->bindingValueAsString(binding);
-            break;
-        case QV4::CompiledData::Binding::Type_Null:
-            value = QVariant::fromValue(nullptr);
-            break;
-        default:
-            // Script bindings, object bindings, etc.
-            // We mark these with an invalid QVariant. They shouldn't be touched since we've
-            // just installed the new bindings (unless there is yet another, external binding).
-            break;
-        }
+        // Extract constant value from the binding for comparison. Script and object bindings
+        // yield an invalid QVariant: they shouldn't be touched since we've just installed the
+        // new bindings (unless there is yet another, external binding).
+        value = literalBindingValue(unit, binding);
     }
 
     for (int propertyIndex = 0, end = obj->propertyCount(); propertyIndex != end; ++propertyIndex) {
@@ -301,19 +316,7 @@ void BindingPatchContext::stashExternalState(const std::vector<CompositeLevel> &
 
         // Two constant values. Figure out if they're the same. If not, store.
 
-        const QMetaType expectedMetaType = qProp.propertyMetaType();
-        QVariant expected;
-        if (expectedMetaType != QMetaType::fromType<QVariant>()
-            && it->metaType() != expectedMetaType) {
-            QV4::ExecutionEngine *v4 = unit->engine;
-            QV4::Scope scope(v4);
-            QV4::ScopedValue v(scope, v4->metaTypeToJS(it->metaType(), it->constData()));
-            expected = QVariant(expectedMetaType);
-            v4->metaTypeFromJS(v, expectedMetaType, expected.data());
-        } else {
-            expected = *it;
-        }
-
+        const QVariant expected = coerceToPropertyType(unit->engine, *it, qProp.propertyMetaType());
         if (const QVariant current = qProp.read(); current != expected)
             m_storedValues.push_back({ propName, current });
     }
@@ -571,6 +574,40 @@ BindingPatchContext::attachedContext(const QQmlRefPointer<QV4::ExecutableCompila
     return child.get();
 }
 
+bool BindingPatchContext::applyBindingChange(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit,
+                                      const QV4::CompiledData::Change &change)
+{
+    Q_ASSERT(change.type == QV4::CompiledData::ChangeType::BindingChanged);
+
+    if (!m_object || objectIndex < 0 || objectIndex >= unit->objectCount())
+        return false;
+
+    if (objectIndex == change.objectIndex) {
+        patchBinding(newUnit, change);
+        return true;
+    }
+
+    QDuplicateTracker<QObject *> seenChildren;
+    const QV4::CompiledData::Object *obj = unit->objectAt(objectIndex);
+    for (auto binding = obj->bindingsBegin(), end = obj->bindingsEnd(); binding != end; ++binding) {
+        BindingPatchContext *child = nullptr;
+        switch (binding->type()) {
+        case QV4::CompiledData::Binding::Type_GroupProperty:
+            child = childContext(unit, binding, &seenChildren);
+            break;
+        case QV4::CompiledData::Binding::Type_AttachedProperty:
+            child = attachedContext(unit, binding, &seenChildren);
+            break;
+        default:
+            continue;
+        }
+        if (child && child->applyBindingChange(newUnit, change))
+            return true;
+    }
+
+    return false;
+}
+
 void BindingPatchContext::reset(
         const std::vector<QQmlRefPointer<QV4::ExecutableCompilationUnit>> &unitsToUnparent,
         const std::vector<CompositeLevel> &internalUnits)
@@ -823,6 +860,43 @@ void BindingPatchContext::resetBindings(
         if (!binding->isSignalHandler())
             resetBinding(binding, name, oldUnit, newUnit, rebound);
     }
+}
+
+// The name of the property a binding assigns, resolving the default property for unnamed bindings.
+QString
+BindingPatchContext::targetPropertyName(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit,
+                                        int objectIndex, const QV4::CompiledData::Binding *binding)
+{
+    if (binding->propertyNameIndex != 0)
+        return unit->stringAt(binding->propertyNameIndex);
+    const QQmlPropertyCache::ConstPtr cache = unit->propertyCachesPtr()->at(objectIndex);
+    return cache ? cache->defaultPropertyName() : QString();
+}
+
+void BindingPatchContext::patchBinding(
+        const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit,
+        const QV4::CompiledData::Change &change)
+{
+    const QV4::CompiledData::Binding *newBinding =
+            newUnit->objectAt(change.objectIndex)->bindingTable() + change.index;
+    const QVariant newValue = literalBindingValue(newUnit, newBinding);
+    if (!newValue.isValid())
+        return; // Script binding: handled by function translation.
+
+    const QQmlProperty qProp(m_object,
+                             prefix + targetPropertyName(newUnit, change.objectIndex, newBinding));
+    if (!qProp.isValid())
+        return;
+
+    QV4::ExecutionEngine *v4 = unit->engine;
+    const QMetaType metaType = qProp.propertyMetaType();
+
+    const QV4::CompiledData::Binding *oldBinding =
+            unit->objectAt(change.objectIndex)->bindingTable() + change.index;
+    const QVariant expectedOld =
+            coerceToPropertyType(v4, literalBindingValue(unit, oldBinding), metaType);
+    if (qProp.read() == expectedOld)
+        qProp.write(coerceToPropertyType(v4, newValue, metaType));
 }
 
 } // namespace QQmlPreview
