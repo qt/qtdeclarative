@@ -31,6 +31,8 @@
 #include <QtQuickTestUtils/private/viewtestutils_p.h>
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
 
+#include <QtQmlModels/private/qqmlsortfilterproxymodel_p.h>
+
 using namespace QQuickViewTestUtils;
 using namespace QQuickVisualTestUtils;
 
@@ -328,6 +330,11 @@ private slots:
 
     void delegateChooserDataChange();
     void requiredRoleUpdatedAfterProxyModelResort();
+
+    void checkSortStateAfterModelChanged();
+
+    void sortByColumn_data();
+    void sortByColumn();
 };
 
 tst_QQuickTableView::tst_QQuickTableView()
@@ -8885,6 +8892,164 @@ void tst_QQuickTableView::delegateChooserDataChange()
     QCOMPARE(model.choice_delegates_count()[1], rows * columns);
 
     tableView->setModel({ });
+}
+
+void tst_QQuickTableView::checkSortStateAfterModelChanged()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("sortByColumn.qml"));
+
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY2(root, qPrintable(component.errorString()));
+
+    auto *window = qobject_cast<QWindow *>(root.data());
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    auto *tv = root->findChild<QQuickTableView *>("tableView");
+    QVERIFY(tv);
+
+    auto *sortModel = tv->model().value<QQmlSortFilterProxyModel *>();
+    QVERIFY2(sortModel, "The view's model type is not QQmlSortFilterProxyModel");
+
+    auto *sourceModel = qobject_cast<TestModel *>(sortModel->sourceModel());
+    QVERIFY2(sourceModel, "The proxy model's source model is not TestModel");
+
+    sourceModel->setModelData(QPoint(0,0), QSize(1,1), QString("cat"));
+    sourceModel->setModelData(QPoint(0,1), QSize(1,1), QString("dog"));
+    sourceModel->setModelData(QPoint(0,2), QSize(1,1), QString("bird"));
+    sourceModel->setModelData(QPoint(0,3), QSize(1,1), QString("fish"));
+
+    QSignalSpy sortColumnChangedSpy(tv, SIGNAL(sortColumnChanged()));
+    QVERIFY(sortColumnChangedSpy.isValid());
+
+    QSignalSpy sortOrderChangedSpy(tv, SIGNAL(sortOrderChanged()));
+    QVERIFY(sortOrderChangedSpy.isValid());
+
+    QCOMPARE(tv->sortColumn(), -1);
+    QCOMPARE(tv->sortOrder(), Qt::AscendingOrder);
+
+    tv->sortByColumn(1, Qt::DescendingOrder);
+
+    QCOMPARE(tv->sortColumn(), 1);
+    QCOMPARE(tv->sortOrder(), Qt::DescendingOrder);
+    QCOMPARE(sortColumnChangedSpy.size(), 1);
+    QCOMPARE(sortOrderChangedSpy.size(), 1);
+
+    TestModel newModel(3, 2);
+    tv->setModel(QVariant::fromValue(&newModel));
+
+    QCOMPARE(tv->sortColumn(), -1);
+    QCOMPARE(tv->sortOrder(), Qt::AscendingOrder);
+    QCOMPARE(sortColumnChangedSpy.size(), 2);
+    QCOMPARE(sortOrderChangedSpy.size(), 2);
+}
+
+void tst_QQuickTableView::sortByColumn_data()
+{
+    QTest::addColumn<bool>("sortingEnabled");
+    QTest::addColumn<int>("column");
+    QTest::addColumn<Qt::SortOrder>("order");
+    QTest::addColumn<QStringList>("modelAfterSort");
+
+    QTest::addColumn<int>("sortColumnChangedCountAfterFirstCall");
+    QTest::addColumn<int>("sortOrderChangedCountAfterFirstCall");
+
+    QTest::addColumn<int>("sortColumnChangedCountAfterSecondCall");
+    QTest::addColumn<int>("sortOrderChangedCountAfterSecondCall");
+
+    const QStringList ascendingOrder = { "bird", "cat", "dog", "fish"};
+    const QStringList descendingOrder = { "fish", "dog", "cat", "bird"};
+
+    QTest::newRow("disabled, ascending")
+            << false
+            << 0 << Qt::AscendingOrder << ascendingOrder
+            << 1 << 0
+            << 1 << 0;
+
+    QTest::newRow("disabled, descending")
+            << false
+            << 0 << Qt::DescendingOrder << descendingOrder
+            << 1 << 1
+            << 1 << 1;
+
+    QTest::newRow("enabled, descending")
+            << true
+            << 0 << Qt::DescendingOrder << descendingOrder
+            << 1 << 1
+            << 1 << 1;
+}
+
+void tst_QQuickTableView::sortByColumn()
+{
+    QFETCH(bool, sortingEnabled);
+    QFETCH(int, column);
+    QFETCH(Qt::SortOrder, order);
+    QFETCH(QStringList, modelAfterSort);
+    QFETCH(int, sortColumnChangedCountAfterFirstCall);
+    QFETCH(int, sortOrderChangedCountAfterFirstCall);
+    QFETCH(int, sortColumnChangedCountAfterSecondCall);
+    QFETCH(int, sortOrderChangedCountAfterSecondCall);
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("sortByColumn.qml"));
+
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY2(root, qPrintable(component.errorString()));
+
+    auto *window = qobject_cast<QWindow *>(root.data());
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    auto *tv = root->findChild<QQuickTableView *>("tableView");
+    QVERIFY(tv);
+
+    auto *sortModel = tv->model().value<QQmlSortFilterProxyModel *>();
+    QVERIFY2(sortModel, "The view's model type is not QQmlSortFilterProxyModel");
+
+    auto *sourceModel = qobject_cast<TestModel *>(sortModel->sourceModel());
+    QVERIFY2(sourceModel, "The proxy model's source model is not TestModel");
+
+    sourceModel->setModelData(QPoint(0,0), QSize(1,1), QString("cat"));
+    sourceModel->setModelData(QPoint(0,1), QSize(1,1), QString("dog"));
+    sourceModel->setModelData(QPoint(0,2), QSize(1,1), QString("bird"));
+    sourceModel->setModelData(QPoint(0,3), QSize(1,1), QString("fish"));
+
+    auto modelColumnData = [](QAbstractItemModel *model, int column) {
+        QStringList list;
+        for (int row = 0; row < model->rowCount(); ++row)
+            list << model->data(model->index(row, column), Qt::DisplayRole).toString();
+        return list;
+    };
+
+    const QStringList defaultOrder = { "cat", "dog", "bird", "fish"};
+
+    QSignalSpy sortColumnChangedSpy(tv, SIGNAL(sortColumnChanged()));
+    QVERIFY(sortColumnChangedSpy.isValid());
+
+    QSignalSpy sortOrderChangedSpy(tv, SIGNAL(sortOrderChanged()));
+    QVERIFY(sortOrderChangedSpy.isValid());
+
+    tv->setSortingEnabled(sortingEnabled);
+    QCOMPARE(tv->sortingEnabled(), sortingEnabled);
+
+    QCOMPARE(modelColumnData(sortModel, 0), defaultOrder);
+    QCOMPARE(tv->sortColumn(), -1);
+    QCOMPARE(tv->sortOrder(), Qt::AscendingOrder);
+
+    tv->sortByColumn(column, order);
+
+    QCOMPARE(tv->sortColumn(), column);
+    QCOMPARE(tv->sortOrder(), order);
+    QCOMPARE(modelColumnData(sortModel, 0), modelAfterSort);
+    QCOMPARE(sortColumnChangedSpy.size(), sortColumnChangedCountAfterFirstCall);
+    QCOMPARE(sortOrderChangedSpy.size(), sortOrderChangedCountAfterFirstCall);
+
+    tv->sortByColumn(column, order);
+
+    QCOMPARE(tv->sortColumn(), column);
+    QCOMPARE(tv->sortOrder(), order);
+    QCOMPARE(modelColumnData(sortModel, 0), modelAfterSort);
+    QCOMPARE(sortColumnChangedSpy.size(), sortColumnChangedCountAfterSecondCall);
+    QCOMPARE(sortOrderChangedSpy.size(), sortOrderChangedCountAfterSecondCall);
 }
 
 void tst_QQuickTableView::verifyThatOnlyRemovedRowsArePooled()

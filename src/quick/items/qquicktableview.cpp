@@ -863,6 +863,81 @@
 */
 
 /*!
+    \qmlproperty bool QtQuick::TableView::sortingEnabled
+    \since 6.13
+
+    This property holds whether clicking a section in a synced
+    \l HorizontalHeaderView can trigger sorting.
+
+    This property only controls interactive sorting from the header. Calling
+    sortByColumn() directly requests sorting regardless of the value of this
+    property.
+
+    The default value is \c false.
+
+    \sa sortByColumn(), sortColumn, sortOrder
+    \sa {HorizontalHeaderView::showSortIndicator}
+    \sa {HorizontalHeaderView::sortIndicatorClearable}
+*/
+
+/*!
+    \qmlproperty int QtQuick::TableView::sortColumn
+    \since 6.13
+
+    This property holds the column in TableView's current sort state.
+
+    Setting this property to a column index requests sorting by that column
+    using the current \l sortOrder. Setting it to \c -1 requests the model to
+    clear sorting. Whether clearing restores the original order depends on the
+    model.
+
+    \note When configured declaratively, the initial sort request is made after
+    the TableView has completed initialization.
+
+    A value of \c -1 means that no sort column is currently set. This is the
+    initial state and also the state after sorting has been cleared. In this
+    state, \l sortOrder does not describe the current order of the model.
+
+    This property reflects the sorting state requested by the view. It does not
+    guarantee that the model has applied the requested sorting.
+
+    The default value is \c -1.
+
+    \sa sortOrder, sortingEnabled, sortByColumn()
+*/
+
+/*!
+    \qmlproperty enumeration QtQuick::TableView::sortOrder
+    \since 6.13
+
+    This property holds the order in TableView's current sort state.
+
+    Possible values are:
+
+    \value Qt.AscendingOrder
+           Sort in ascending order.
+    \value Qt.DescendingOrder
+           Sort in descending order.
+
+    When \l sortColumn is set to a column index, setting this property requests
+    sorting by that column in the given order.
+
+    \note When configured declaratively, the initial sort request is made after
+    the TableView has completed initialization.
+
+    \note If \l sortColumn is \c -1, setting this property only changes the order
+    to use when a sort column is later set; it does not request sorting. In
+    this state, this property does not describe the current order of the model.
+
+    This property reflects the sorting state requested by the view. It does not
+    guarantee that the model has applied the requested sorting.
+
+    The default value is \c Qt.AscendingOrder.
+
+    \sa sortColumn, sortingEnabled, sortByColumn()
+*/
+
+/*!
     \qmlmethod void QtQuick::TableView::positionViewAtCell(point cell, PositionMode mode, point offset, rect subRect)
 
     Positions \l {Flickable::}{contentX} and \l {Flickable::}{contentY} such
@@ -1036,6 +1111,37 @@
 
     \note If a syncView is set, a call to this function will be forwarded to
     the corresponding view item and reset the row ordering.
+*/
+
+/*!
+    \qmlmethod void QtQuick::TableView::sortByColumn(int column, enumeration order)
+    \since 6.13
+
+    Requests sorting of the current model by \a column in the given \a order.
+
+    Sorting is supported for models based on QAbstractItemModel. When sorting is
+    requested, TableView updates sortColumn and sortOrder, and calls
+    QAbstractItemModel::sort() on the current model. The model is responsible for
+    defining the actual sorting behavior. Models that do not support sorting may
+    ignore the request.
+
+    The \a order should be either \c Qt.AscendingOrder or \c Qt.DescendingOrder.
+
+    The \a column may be \c -1, in which case the sort column is cleared and no
+    sort indicator is shown. TableView passes \c -1 to the model as a request to
+    clear sorting. Whether this restores the original order depends on the model.
+    Not all models support this.
+
+    Calling this method directly requests sorting regardless of the value of
+    sortingEnabled. The sortingEnabled property only controls whether sorting can
+    be triggered interactively from a synced \l HorizontalHeaderView.
+
+    If the current model is a proxy model, the proxy model defines how the sort
+    request is interpreted. TableView does not manage sorters configured on a
+    proxy model.
+
+    \sa sortingEnabled, sortColumn, sortOrder
+    \sa {HorizontalHeaderView::sortIndicatorClearable}
 */
 
 /*!
@@ -1585,6 +1691,11 @@ static const char* kRequiredProperty_selected = "selected";
 static const char* kRequiredProperty_current = "current";
 static const char* kRequiredProperty_editing = "editing";
 static const char* kRequiredProperty_containsDrag = "containsDrag";
+
+static constexpr Qt::SortOrder flipOrder(Qt::SortOrder order)
+{
+    return (order == Qt::AscendingOrder) ? Qt::DescendingOrder : Qt::AscendingOrder;
+}
 
 QDebug operator<<(QDebug dbg, QQuickTableViewPrivate::RebuildState state)
 {
@@ -4280,6 +4391,90 @@ void QQuickTableViewPrivate::fixup(QQuickFlickablePrivate::AxisData &data, qreal
     QQuickFlickablePrivate::fixup(data, minExtent, maxExtent);
 }
 
+void QQuickTableViewPrivate::requestSort(int logicalColumn, bool clearable)
+{
+    if (!sortingEnabled || logicalColumn < 0)
+        return;
+
+    auto *sourceModel = qaim(modelImpl());
+    if (!sourceModel) {
+        qmlWarning(q_func()) << "Sorting is only supported for QAbstractItemModel based models.";
+        return;
+    }
+
+    if (logicalColumn >= sourceModel->columnCount())
+        return;
+
+    Qt::SortOrder defaultSortOrder = Qt::AscendingOrder;
+    const QVariant value = sourceModel->headerData(logicalColumn, Qt::Horizontal, Qt::InitialSortOrderRole);
+    if (value.canConvert<int>())
+        defaultSortOrder = static_cast<Qt::SortOrder>(value.toInt());
+
+    /*
+     * First click sorts by the column's default sort order
+     * Subsequent clicks toggle the order, unless the header allows clearing;
+     * in that case the third click clears the sort state
+     */
+    if (sortColumn == logicalColumn) {
+        if (clearable && sortOrder != defaultSortOrder) {
+            sortByColumn(-1, Qt::AscendingOrder);
+            return;
+        }
+
+        sortByColumn(logicalColumn, flipOrder(sortOrder));
+        return;
+    }
+
+    sortByColumn(logicalColumn, defaultSortOrder);
+}
+
+void QQuickTableViewPrivate::sortByColumn(int column, Qt::SortOrder order)
+{
+    Q_Q(QQuickTableView);
+
+    if (column < -1)
+        return;
+
+    // Before finalization, only store the declaratively configured state.
+    // The model and its bindings might not be ready yet.
+    if (!componentFinalized) {
+        updateSortState(column, order);
+        return;
+    }
+
+    auto *sourceModel = qaim(modelImpl());
+    if (!sourceModel) {
+        qmlWarning(q) << "Sorting is only supported for QAbstractItemModel based models.";
+        return;
+    }
+
+    updateSortState(column, order);
+
+    // Apply the sort even if the state has not changed. This is needed when
+    // componentFinalized() applies declaratively configured values.
+    sourceModel->sort(column, order);
+}
+
+void QQuickTableViewPrivate::updateSortState(int column, Qt::SortOrder order)
+{
+    Q_Q(QQuickTableView);
+
+    const bool columnChanged = sortColumn != column;
+    const bool orderChanged = sortOrder != order;
+
+    if (!columnChanged && !orderChanged)
+        return;
+
+    sortColumn = column;
+    sortOrder = order;
+
+    if (columnChanged)
+        emit q->sortColumnChanged();
+
+    if (orderChanged)
+        emit q->sortOrderChanged();
+}
+
 QTypeRevision QQuickTableViewPrivate::resolveImportVersion()
 {
     const auto data = QQmlData::get(q_func());
@@ -4600,6 +4795,10 @@ void QQuickTableViewPrivate::setModelImpl(const QVariant &newModel)
 {
     assignedModel = newModel;
     needsModelSynchronization = true;
+
+    if (componentFinalized)
+        updateSortState(-1, Qt::AscendingOrder);
+
     scheduleRebuildTable(QQuickTableViewPrivate::RebuildOption::All);
     emit q_func()->modelChanged();
 }
@@ -5212,6 +5411,13 @@ void QQuickTableViewPrivate::handleTap(const QQuickHandlerPoint &point)
     if (resizeHandler->state() != QQuickTableViewResizeHandler::Listening)
         return;
 
+    executeTap(point);
+}
+
+void QQuickTableViewPrivate::executeTap(const QQuickHandlerPoint &point)
+{
+    Q_Q(QQuickTableView);
+
     const QModelIndex tappedIndex = q->modelIndex(q->cellAtPosition(point.position()));
     bool tappedCellIsSelected = false;
 
@@ -5745,6 +5951,12 @@ void QQuickTableView::componentFinalized()
     // our final geometery, we can build the table.
     Q_D(QQuickTableView);
     qCDebug(lcTableViewDelegateLifecycle);
+
+    d->componentFinalized = true;
+
+    if (d->sortColumn >= 0)
+        d->sortByColumn(d->sortColumn, d->sortOrder);
+
     d->updatePolish();
 }
 
@@ -5928,6 +6140,70 @@ void QQuickTableView::setDelegateModelAccess(
     d->scheduleRebuildTable(QQuickTableViewPrivate::RebuildOption::All);
 
     emit delegateModelAccessChanged();
+}
+
+bool QQuickTableView::sortingEnabled() const
+{
+    Q_D(const QQuickTableView);
+    return d->sortingEnabled;
+}
+
+void QQuickTableView::setSortingEnabled(bool enabled)
+{
+    Q_D(QQuickTableView);
+
+    if (d->sortingEnabled == enabled)
+        return;
+
+    d->sortingEnabled = enabled;
+    emit sortingEnabledChanged();
+
+    if (enabled && d->sortColumn >= 0)
+        d->sortByColumn(d->sortColumn, d->sortOrder);
+}
+
+int QQuickTableView::sortColumn() const
+{
+    Q_D(const QQuickTableView);
+    return d->sortColumn;
+}
+
+void QQuickTableView::setSortColumn(int column)
+{
+    Q_D(QQuickTableView);
+
+    if (column < -1 || d->sortColumn == column)
+        return;
+
+    d->sortByColumn(column, d->sortOrder);
+}
+
+Qt::SortOrder QQuickTableView::sortOrder() const
+{
+    Q_D(const QQuickTableView);
+    return d->sortOrder;
+}
+
+void QQuickTableView::setSortOrder(Qt::SortOrder order)
+{
+    Q_D(QQuickTableView);
+
+    if (d->sortOrder == order)
+        return;
+
+    // No sorting is active when sortColumn is -1, so only update the state.
+    if (d->sortColumn < 0) {
+        d->updateSortState(d->sortColumn, order);
+        return;
+    }
+
+    d->sortByColumn(d->sortColumn, order);
+}
+
+void QQuickTableView::sortByColumn(int column, Qt::SortOrder order)
+{
+    Q_D(QQuickTableView);
+    d->sortByColumn(column, order);
 }
 
 bool QQuickTableView::reuseItems() const

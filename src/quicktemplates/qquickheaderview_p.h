@@ -54,6 +54,10 @@ class Q_QUICKTEMPLATES2_EXPORT QQuickHorizontalHeaderView : public QQuickHeaderV
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickHorizontalHeaderView)
     Q_PROPERTY(bool movableColumns READ movableColumns WRITE setMovableColumns NOTIFY movableColumnsChanged REVISION(6, 8) FINAL)
+    Q_PROPERTY(bool showSortIndicator READ showSortIndicator WRITE setShowSortIndicator
+                       NOTIFY showSortIndicatorChanged REVISION(6, 13))
+    Q_PROPERTY(bool sortIndicatorClearable READ sortIndicatorClearable WRITE setSortIndicatorClearable
+                       NOTIFY sortIndicatorClearableChanged REVISION(6, 13))
     QML_NAMED_ELEMENT(HorizontalHeaderView)
     QML_ADDED_IN_VERSION(2, 15)
 
@@ -64,8 +68,18 @@ public:
     bool movableColumns() const;
     void setMovableColumns(bool movableColumns);
 
+    bool showSortIndicator() const;
+    void setShowSortIndicator(bool show);
+
+    bool sortIndicatorClearable() const;
+    void setSortIndicatorClearable(bool clearable);
+
 Q_SIGNALS:
     Q_REVISION(6, 8) void movableColumnsChanged();
+    Q_REVISION(6, 13) void showSortIndicatorChanged();
+    Q_REVISION(6, 13) void sortIndicatorClearableChanged();
+
+    Q_REVISION(6,13) void headerClicked(int logicalColumn);
 
 protected:
     QQuickHorizontalHeaderView(QQuickHorizontalHeaderViewPrivate &dd, QQuickItem *parent);

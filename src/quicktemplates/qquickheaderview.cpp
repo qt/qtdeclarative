@@ -79,6 +79,27 @@
     \include qquickheaderview.qdocinc {movableRows}
 */
 
+/*!
+    \qmlproperty bool QtQuick.Controls::HorizontalHeaderView::showSortIndicator
+    \since 6.13
+
+    \include qquickheaderview.qdocinc {showSortIndicator}
+*/
+
+/*!
+    \qmlproperty bool QtQuick.Controls::HorizontalHeaderView::sortIndicatorClearable
+    \since 6.13
+
+    \include qquickheaderview.qdocinc {sortIndicatorClearable}
+*/
+
+/*!
+    \qmlsignal void QtQuick.Controls::HorizontalHeaderView::headerClicked(int logicalColumn)
+    \since 6.13
+
+    \include qquickheaderview.qdocinc {headerClicked}
+*/
+
 QT_BEGIN_NAMESPACE
 
 static const char *kRequiredProperty_headerView = "headerView";
@@ -507,6 +528,38 @@ void QQuickHorizontalHeaderView::setMovableColumns(bool movableColumns)
     emit movableColumnsChanged();
 }
 
+bool QQuickHorizontalHeaderView::showSortIndicator() const
+{
+    Q_D(const QQuickHorizontalHeaderView);
+    return d->showSortIndicator;
+}
+
+void QQuickHorizontalHeaderView::setShowSortIndicator(bool show)
+{
+    Q_D(QQuickHorizontalHeaderView);
+    if (d->showSortIndicator == show)
+        return;
+
+    d->showSortIndicator = show;
+    emit showSortIndicatorChanged();
+}
+
+bool QQuickHorizontalHeaderView::sortIndicatorClearable() const
+{
+    Q_D(const QQuickHorizontalHeaderView);
+    return d->sortIndicatorClearable;
+}
+
+void QQuickHorizontalHeaderView::setSortIndicatorClearable(bool clearable)
+{
+    Q_D(QQuickHorizontalHeaderView);
+    if (d->sortIndicatorClearable == clearable)
+        return;
+
+    d->sortIndicatorClearable = clearable;
+    emit sortIndicatorClearableChanged();
+}
+
 QQuickVerticalHeaderView::QQuickVerticalHeaderView(QQuickItem *parent)
     : QQuickHeaderViewBase(*(new QQuickVerticalHeaderViewPrivate), parent)
 {
@@ -552,6 +605,27 @@ QQuickHorizontalHeaderViewPrivate::QQuickHorizontalHeaderViewPrivate()
 };
 
 QQuickHorizontalHeaderViewPrivate::~QQuickHorizontalHeaderViewPrivate() = default;
+
+void QQuickHorizontalHeaderViewPrivate::executeTap(const QQuickHandlerPoint &point)
+{
+    Q_Q(QQuickHorizontalHeaderView);
+
+    QQuickTableViewPrivate::executeTap(point);
+
+    const QPoint cell = q->cellAtPosition(point.position());
+    const int visualColumn = cell.x();
+    const int logicalColumn = logicalColumnIndex(visualColumn);
+
+    if (logicalColumn < 0)
+        return;
+
+    emit q->headerClicked(logicalColumn);
+
+    if (!assignedSyncView)
+        return;
+
+    QQuickTableViewPrivate::get(assignedSyncView)->requestSort(logicalColumn, sortIndicatorClearable);
+}
 
 QQuickVerticalHeaderViewPrivate::QQuickVerticalHeaderViewPrivate()
 {

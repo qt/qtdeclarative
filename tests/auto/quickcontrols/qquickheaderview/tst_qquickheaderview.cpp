@@ -18,6 +18,7 @@
 #include <QtQuickTemplates2/private/qquicklabel_p.h>
 #include <private/qquickheaderview_p_p.h>
 #include <private/qquickheaderviewdelegate_p.h>
+#include <QtQmlModels/private/qqmlsortfilterproxymodel_p.h>
 
 using namespace QQuickVisualTestUtils;
 
@@ -143,12 +144,21 @@ public:
     void setRowCount(int count) override
     {
         vData.resize(count);
+        tableData.resize(count);
+
+        for (auto &row : tableData)
+            row.resize(columnCount());
+
         TestTableModel::setRowCount(count);
     }
 
     void setColumnCount(int count) override
     {
         hData.resize(count);
+
+        for (auto &row : tableData)
+            row.resize(count);
+
         TestTableModel::setColumnCount(count);
     }
 
@@ -157,9 +167,39 @@ public:
         switch (role) {
         case CustomRole:
             return QString("%1-%2").arg(index.column()).arg(index.row());
+        case Qt::DisplayRole:
+            if (index.row() >= 0 && index.row() < tableData.size()
+                && index.column() >= 0 && index.column() < tableData.at(index.row()).size()
+                && tableData.at(index.row()).at(index.column()).isValid()) {
+                return tableData.at(index.row()).at(index.column());
+            }
         default:
             return TestTableModel::data(index, role);
         }
+    }
+
+    bool setData(const QModelIndex &index, const QVariant &value,
+                 int role = Qt::EditRole) override
+    {
+        if (!index.isValid())
+            return false;
+
+        if (role == Qt::DisplayRole) {
+            if (index.row() < 0 || index.row() >= tableData.size())
+                return false;
+
+            if (index.column() < 0 || index.column() >= tableData.at(index.row()).size())
+                return false;
+
+            if (tableData[index.row()][index.column()] == value)
+                return false;
+
+            tableData[index.row()][index.column()] = value;
+            emit dataChanged(index, index, { role });
+            return true;
+        }
+
+        return TestTableModel::setData(index, value, role);
     }
 
     Q_INVOKABLE QVariant headerData(int section, Qt::Orientation orientation,
@@ -174,12 +214,17 @@ public:
             auto &data = orientation == Qt::Horizontal ? hData : vData;
             return data[section].toString();
         }
+        case Qt::InitialSortOrderRole:
+            if (orientation == Qt::Horizontal)
+                return horizontalSortOrder.value(section);
+            return QVariant();
         case CustomRole:
             return (orientation == Qt::Horizontal ? "c" : "r") + QString::number(section);
         default:
             return QVariant();
         }
     }
+
     Q_INVOKABLE bool setHeaderData(int section, Qt::Orientation orientation,
         const QVariant &value, int role = Qt::EditRole) override
     {
@@ -191,6 +236,22 @@ public:
         auto sectionCount = orientation == Qt::Horizontal ? columnCount() : rowCount();
         if (section < 0 || section >= sectionCount)
             return false;
+        if (role == Qt::InitialSortOrderRole) {
+            if (orientation != Qt::Horizontal)
+                return false;
+
+            if (horizontalSortOrder.value(section) == value)
+                return false;
+
+            if (value.isValid())
+                horizontalSortOrder.insert(section, value);
+            else
+                horizontalSortOrder.remove(section);
+
+            emit headerDataChanged(orientation, section, section);
+            return true;
+        }
+
         auto &data = orientation == Qt::Horizontal ? hData : vData;
         data[section] = value;
         emit headerDataChanged(orientation, section, section);
@@ -206,6 +267,8 @@ public:
 
 private:
     QList<QVariant> hData, vData;
+    QHash<int, QVariant> horizontalSortOrder;
+    QVector<QVector<QVariant>> tableData;
 };
 
 class tst_QQuickHeaderView : public QQmlDataTest {
@@ -235,6 +298,10 @@ private slots:
     void horizontalHeaderViewWithListModel_data();
     void horizontalHeaderViewWithListModel();
     void reorderEmptyModel();
+    void horizontalHeaderClickedWithoutSyncView();
+    void sorting_data();
+    void sorting();
+    void sortingAfterColumnMoved();
 
 private:
     QQmlEngine *engine;
@@ -463,9 +530,10 @@ void tst_QQuickHeaderView::headerData()
     QVERIFY(headerView);
     const auto firstHeaderCell = headerView->itemAtIndex(headerView->index(0, 0));
     QVERIFY(firstHeaderCell);
-    const auto label = firstHeaderCell->findChild<QQuickLabel *>();
-    QVERIFY(label);
-    QCOMPARE(label->text(), "c0");
+    const auto delegate = qobject_cast<QQuickHeaderViewDelegate *>(firstHeaderCell);
+    QVERIFY(delegate);
+    QVERIFY(delegate->contentItem());
+    QCOMPARE(delegate->contentItem()->property("text").toString(), QStringLiteral("c0"));
 }
 
 void tst_QQuickHeaderView::warnMissingDefaultRole()
@@ -565,6 +633,229 @@ void tst_QQuickHeaderView::reorderEmptyModel()
     QVERIFY(columnMovedSpy.isValid());
     hhv->moveColumn(0, 1);
     QVERIFY(!columnMovedSpy.isEmpty());
+}
+
+void tst_QQuickHeaderView::horizontalHeaderClickedWithoutSyncView()
+{
+    QQmlComponent component(engine);
+    component.loadUrl(testFileUrl("horizontalHeaderClickedWithoutSyncView.qml"));
+
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY2(root, qPrintable(component.errorString()));
+
+    auto *window = qobject_cast<QWindow *>(root.data());
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    auto hh = root->findChild<QQuickHorizontalHeaderView *>("horizontalHeader");
+    QVERIFY(hh);
+
+    QSignalSpy headerClickedSpy(hh, SIGNAL(headerClicked(int)));
+    QVERIFY(headerClickedSpy.isValid());
+
+    const QPointF localPos = QPointF(hh->width() / 6, hh->height() / 2);
+    const QPoint point = hh->mapToScene(localPos).toPoint();
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, point);
+
+    QCOMPARE(headerClickedSpy.size(), 1);
+}
+
+void tst_QQuickHeaderView::sorting_data()
+{
+    QTest::addColumn<bool>("sortIndicatorClearable");
+    QTest::addColumn<bool>("sortingEnabled");
+    QTest::addColumn<QVariant>("initialSortOrder");
+
+    QTest::addColumn<int>("sortColumnAfterFirstClick");
+    QTest::addColumn<Qt::SortOrder>("sortOrderAfterFirstClick");
+    QTest::addColumn<QStringList>("modelAfterFirstClick");
+
+    QTest::addColumn<int>("sortColumnAfterSecondClick");
+    QTest::addColumn<Qt::SortOrder>("sortOrderAfterSecondClick");
+    QTest::addColumn<QStringList>("modelAfterSecondClick");
+
+    QTest::addColumn<int>("sortColumnAfterThirdClick");
+    QTest::addColumn<Qt::SortOrder>("sortOrderAfterThirdClick");
+    QTest::addColumn<QStringList>("modelAfterThirdClick");
+
+    const QStringList defaultOrder = { "cat", "dog", "bird", "fish"};
+    const QStringList ascendingOrder = { "bird", "cat", "dog", "fish"};
+    const QStringList descendingOrder = { "fish", "dog", "cat", "bird"};
+
+    QTest::newRow("clearable, enabled, default sortOrder")
+            << true << true << QVariant()
+            << 0 << Qt::AscendingOrder << ascendingOrder
+            << 0 << Qt::DescendingOrder << descendingOrder
+            << -1 << Qt::AscendingOrder << defaultOrder;
+
+    QTest::newRow("not clearable, enabled, default sortOrder")
+            << false << true << QVariant()
+            << 0 << Qt::AscendingOrder << ascendingOrder
+            << 0 << Qt::DescendingOrder << descendingOrder
+            << 0 << Qt::AscendingOrder << ascendingOrder;
+
+    QTest::newRow("clearable, disabled, default sortOrder")
+            << true << false << QVariant()
+            << -1 << Qt::AscendingOrder << defaultOrder
+            << -1 << Qt::AscendingOrder << defaultOrder
+            << -1 << Qt::AscendingOrder << defaultOrder;
+
+    QTest::newRow("clearable, enabled, initial descending sortOrder")
+            << true << true << QVariant::fromValue(int(Qt::DescendingOrder))
+            << 0 << Qt::DescendingOrder << descendingOrder
+            << 0 << Qt::AscendingOrder << ascendingOrder
+            << -1 << Qt::AscendingOrder << defaultOrder;
+}
+
+void tst_QQuickHeaderView::sorting()
+{
+    QFETCH(bool, sortIndicatorClearable);
+    QFETCH(bool, sortingEnabled);
+    QFETCH(QVariant, initialSortOrder);
+    QFETCH(int, sortColumnAfterFirstClick);
+    QFETCH(Qt::SortOrder, sortOrderAfterFirstClick);
+    QFETCH(QStringList, modelAfterFirstClick);
+    QFETCH(int, sortColumnAfterSecondClick);
+    QFETCH(Qt::SortOrder, sortOrderAfterSecondClick);
+    QFETCH(QStringList, modelAfterSecondClick);
+    QFETCH(int, sortColumnAfterThirdClick);
+    QFETCH(Qt::SortOrder, sortOrderAfterThirdClick);
+    QFETCH(QStringList, modelAfterThirdClick);
+
+    QQmlComponent component(engine);
+    component.loadUrl(testFileUrl("sorting.qml"));
+
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY2(root, qPrintable(component.errorString()));
+
+    auto *window = qobject_cast<QWindow *>(root.data());
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    auto hh = root->findChild<QQuickHorizontalHeaderView *>("horizontalHeader");
+    QVERIFY(hh);
+
+    auto *tv = root->findChild<QQuickTableView *>("tableView");
+    QVERIFY(tv);
+
+    hh->setSortIndicatorClearable(sortIndicatorClearable);
+    tv->setSortingEnabled(sortingEnabled);
+
+    auto *sortModel = tv->model().value<QQmlSortFilterProxyModel *>();
+    QVERIFY2(sortModel, "The view's model type is not QQmlSortFilterProxyModel");
+    auto *tableModel = qobject_cast<TestTableModelWithHeader *>(sortModel->sourceModel());
+    QVERIFY2(tableModel, "The sort model's source model is not TestTableModelWithHeader");
+
+    tableModel->setHeaderData(0, Qt::Horizontal, QStringLiteral("Name"), Qt::DisplayRole);
+    tableModel->setHeaderData(1, Qt::Horizontal, QStringLiteral("Color"), Qt::DisplayRole);
+
+    if (initialSortOrder.isValid())
+        tableModel->setHeaderData(0, Qt::Horizontal, initialSortOrder, Qt::InitialSortOrderRole);
+
+    tableModel->setHeaderData(0, Qt::Vertical, QStringLiteral("1"), Qt::DisplayRole);
+    tableModel->setHeaderData(1, Qt::Vertical, QStringLiteral("2"), Qt::DisplayRole);
+    tableModel->setHeaderData(2, Qt::Vertical, QStringLiteral("3"), Qt::DisplayRole);
+    tableModel->setHeaderData(3, Qt::Vertical, QStringLiteral("4"), Qt::DisplayRole);
+
+    tableModel->setData(tableModel->index(0,0), "cat", Qt::DisplayRole);
+    tableModel->setData(tableModel->index(0,1), "black", Qt::DisplayRole);
+    tableModel->setData(tableModel->index(1,0), "dog", Qt::DisplayRole);
+    tableModel->setData(tableModel->index(1,1), "brown", Qt::DisplayRole);
+    tableModel->setData(tableModel->index(2,0), "bird", Qt::DisplayRole);
+    tableModel->setData(tableModel->index(2,1), "white", Qt::DisplayRole);
+    tableModel->setData(tableModel->index(3,0), "fish", Qt::DisplayRole);
+    tableModel->setData(tableModel->index(3,1), "gold", Qt::DisplayRole);
+
+    QCOMPARE(tableModel->headerData(0, Qt::Horizontal, Qt::DisplayRole).toString(), "Name");
+    QCOMPARE(tableModel->data(tableModel->index(0,0), Qt::DisplayRole).toString(), "cat");
+
+    QCOMPARE(tableModel->rowCount(), 4);
+    QCOMPARE(tableModel->columnCount(), 2);
+
+    QCOMPARE(tv->sortColumn(), -1);
+    QCOMPARE(tv->sortOrder(), Qt::AscendingOrder);
+
+    auto modelColumnData = [](QAbstractItemModel *model, int column) {
+        QStringList list;
+        for (int row = 0; row < model->rowCount(); ++row)
+            list << model->data(model->index(row, column), Qt::DisplayRole).toString();
+        return list;
+    };
+
+    const QPointF localPos = QPointF(hh->columnWidth(0) / 2, hh->height() / 2);
+    const QPoint pos = hh->mapToScene(localPos).toPoint();
+
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, pos);
+    QCOMPARE(tv->sortColumn(), sortColumnAfterFirstClick);
+    QCOMPARE(tv->sortOrder(), sortOrderAfterFirstClick);
+    QCOMPARE(modelColumnData(sortModel, 0), modelAfterFirstClick);
+
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, pos);
+    QCOMPARE(tv->sortColumn(), sortColumnAfterSecondClick);
+    QCOMPARE(tv->sortOrder(), sortOrderAfterSecondClick);
+    QCOMPARE(modelColumnData(sortModel, 0), modelAfterSecondClick);
+
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, pos);
+    QCOMPARE(tv->sortColumn(), sortColumnAfterThirdClick);
+    QCOMPARE(tv->sortOrder(), sortOrderAfterThirdClick);
+    QCOMPARE(modelColumnData(sortModel, 0), modelAfterThirdClick);
+}
+
+void tst_QQuickHeaderView::sortingAfterColumnMoved()
+{
+    QQmlComponent component(engine);
+    component.loadUrl(testFileUrl("sortingAfterColumnMoved.qml"));
+
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY2(root, qPrintable(component.errorString()));
+
+    auto *window = qobject_cast<QWindow *>(root.data());
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    auto hh = root->findChild<QQuickHorizontalHeaderView *>("horizontalHeader");
+    QVERIFY(hh);
+
+    auto *tv = root->findChild<QQuickTableView *>("tableView");
+    QVERIFY(tv);
+
+    hh->setSortIndicatorClearable(true);
+    tv->setSortingEnabled(true);
+
+    auto *sortModel = tv->model().value<QQmlSortFilterProxyModel *>();
+    QVERIFY2(sortModel, "The view's model type is not QQmlSortFilterProxyModel");
+    auto *tableModel = qobject_cast<TestTableModelWithHeader *>(sortModel->sourceModel());
+    QVERIFY2(tableModel, "The sort model's source model is not TestTableModelWithHeader");
+
+    tableModel->setHeaderData(0, Qt::Horizontal, QStringLiteral("Name"), Qt::DisplayRole);
+    tableModel->setHeaderData(1, Qt::Horizontal, QStringLiteral("Color"), Qt::DisplayRole);
+
+    tableModel->setHeaderData(0, Qt::Vertical, QStringLiteral("1"), Qt::DisplayRole);
+    tableModel->setHeaderData(1, Qt::Vertical, QStringLiteral("2"), Qt::DisplayRole);
+
+    tableModel->setData(tableModel->index(0, 0), QStringLiteral("cat"), Qt::DisplayRole);
+    tableModel->setData(tableModel->index(0, 1), QStringLiteral("brown"), Qt::DisplayRole);
+    tableModel->setData(tableModel->index(1, 0), QStringLiteral("dog"), Qt::DisplayRole);
+    tableModel->setData(tableModel->index(1, 1), QStringLiteral("black"), Qt::DisplayRole);
+
+    QCOMPARE(tableModel->headerData(0, Qt::Horizontal, Qt::DisplayRole).toString(), "Name");
+    QCOMPARE(tableModel->data(tableModel->index(0,0), Qt::DisplayRole).toString(), "cat");
+
+    QCOMPARE(tableModel->rowCount(), 2);
+    QCOMPARE(tableModel->columnCount(), 2);
+
+    QCOMPARE(tv->sortColumn(), -1);
+    QCOMPARE(tv->sortOrder(), Qt::AscendingOrder);
+
+    QSignalSpy columnMovedSpy(hh, SIGNAL(columnMoved(int,int,int)));
+    QVERIFY(columnMovedSpy.isValid());
+    hh->moveColumn(0, 1);
+    QVERIFY(!columnMovedSpy.isEmpty());
+
+    const QPointF localPos = QPointF(hh->columnWidth(0) / 2, hh->height() / 2);
+    const QPoint pos = hh->mapToScene(localPos).toPoint();
+
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, pos);
+    QCOMPARE(tv->sortColumn(), 1);
+    QCOMPARE(tv->sortOrder(), Qt::AscendingOrder);
+    QCOMPARE(sortModel->data(sortModel->index(0,1), Qt::DisplayRole).toString(), "black");
 }
 
 QTEST_MAIN(tst_QQuickHeaderView)

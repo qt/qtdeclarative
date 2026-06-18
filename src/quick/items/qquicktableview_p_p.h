@@ -399,6 +399,17 @@ public:
     QQmlDelegateModel::DelegateModelAccess assignedDelegateModelAccess
             = QQmlDelegateModel::Qt5ReadWrite;
 
+    bool componentFinalized = false;
+
+    // sorting
+    void requestSort(int logicalColumn, bool clearable);
+    void sortByColumn(int column, Qt::SortOrder order);
+    void updateSortState(int column, Qt::SortOrder order);
+
+    bool sortingEnabled = false;
+    int sortColumn = -1;
+    Qt::SortOrder sortOrder = Qt::AscendingOrder;
+
     QJSValue rowHeightProvider;
     QJSValue columnWidthProvider;
 
@@ -671,6 +682,7 @@ public:
                              QObject *object, bool init);
 
     void handleTap(const QQuickHandlerPoint &point);
+    virtual void executeTap(const QQuickHandlerPoint &point);
     void setCurrentIndexFromTap(const QPointF &pos);
     void setCurrentIndex(const QPoint &cell);
     bool setCurrentIndexFromKeyEvent(QKeyEvent *e);

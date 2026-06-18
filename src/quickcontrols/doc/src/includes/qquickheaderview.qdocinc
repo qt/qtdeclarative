@@ -104,3 +104,52 @@ false.
 and drop rows at the required position. When syncView is enabled,
 any change will be applied to the corresponding view item.
 //! [movableRows]
+
+//! [showSortIndicator]
+This property holds whether the header can show a sort indicator for the
+synced TableView.
+
+If this property is \c true, the header shows a sort indicator for the
+section that corresponds to the synced \l {TableView::sortColumn}. No indicator
+is shown when there is no synced view, when sortColumn is \c -1, or when the
+section does not correspond to the current sort column.
+
+This property does not enable or disable sorting. Interactive sorting is
+controlled by \l {TableView::sortingEnabled}.
+
+The default value is \c false.
+
+\sa sortIndicatorClearable, {TableView::sortingEnabled}
+\sa {TableView::sortColumn}, {TableView::sortOrder}
+//! [showSortIndicator]
+
+//! [sortIndicatorClearable]
+This property holds whether clicking a sorted section again can clear the
+sort indicator.
+
+When a HorizontalHeaderView is synced with a TableView, clicking a section
+requests sorting by that column. Clicking the same section again toggles the
+sort order. If this property is \c true, clicking the same section once more
+clears the sort state.
+
+Clearing the sort state sets the synced \l {TableView::sortColumn} to \c -1
+and requests the model to clear sorting. Whether this restores the original
+order depends on the model.
+
+The default value is \c false.
+
+\sa showSortIndicator, {TableView::sortByColumn}
+\sa {TableView::sortColumn}, {TableView::sortOrder}
+//! [sortIndicatorClearable]
+
+//! [headerClicked]
+This signal is emitted when the user clicks a header section.
+
+The \a logicalColumn parameter identifies the clicked column in the model.
+Unlike the visual column, the logical column remains the same when columns
+are reordered.
+
+When the header is synchronized with a TableView that has
+\l {TableView::sortingEnabled} enabled, clicking a section may trigger sorting
+for the corresponding logical column.
+//! [headerClicked]

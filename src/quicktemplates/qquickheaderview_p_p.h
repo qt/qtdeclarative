@@ -104,6 +104,12 @@ public:
     ~QQuickHorizontalHeaderViewPrivate();
 
     bool m_movableColumns = false;
+
+    // sorting
+    bool showSortIndicator = false;
+    bool sortIndicatorClearable = false;
+
+    void executeTap(const QQuickHandlerPoint &point) override;
 };
 
 class QQuickVerticalHeaderViewPrivate : public QQuickHeaderViewBasePrivate

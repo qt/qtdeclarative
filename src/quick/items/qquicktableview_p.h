@@ -72,6 +72,10 @@ class Q_QUICK_EXPORT QQuickTableView : public QQuickFlickable, public QQmlFinali
     Q_PROPERTY(SelectionMode selectionMode READ selectionMode WRITE setSelectionMode NOTIFY selectionModeChanged REVISION(6, 6) FINAL)
     Q_PROPERTY(QQmlDelegateModel::DelegateModelAccess delegateModelAccess READ delegateModelAccess
             WRITE setDelegateModelAccess NOTIFY delegateModelAccessChanged REVISION(6, 10) FINAL)
+    Q_PROPERTY(bool sortingEnabled READ sortingEnabled WRITE setSortingEnabled
+                       NOTIFY sortingEnabledChanged REVISION(6, 13))
+    Q_PROPERTY(int sortColumn READ sortColumn WRITE setSortColumn NOTIFY sortColumnChanged REVISION(6, 13))
+    Q_PROPERTY(Qt::SortOrder sortOrder READ sortOrder WRITE setSortOrder NOTIFY sortOrderChanged REVISION(6, 13))
 
     QML_NAMED_ELEMENT(TableView)
     QML_ADDED_IN_VERSION(2, 12)
@@ -178,6 +182,15 @@ public:
     QQmlDelegateModel::DelegateModelAccess delegateModelAccess() const;
     void setDelegateModelAccess(QQmlDelegateModel::DelegateModelAccess delegateModelAccess);
 
+    bool sortingEnabled() const;
+    void setSortingEnabled(bool enabled);
+
+    int sortColumn() const;
+    void setSortColumn(int column);
+
+    Qt::SortOrder sortOrder() const;
+    void setSortOrder(Qt::SortOrder order);
+
     Q_INVOKABLE void forceLayout();
     Q_INVOKABLE void positionViewAtCell(const QPoint &cell, QQuickFlickable::PositionMode mode, const QPointF &offset = QPointF(), const QRectF &subRect = QRectF());
     Q_INVOKABLE void positionViewAtIndex(const QModelIndex &index, QQuickFlickable::PositionMode mode, const QPointF &offset = QPointF(), const QRectF &subRect = QRectF());
@@ -234,6 +247,8 @@ public:
     Q_REVISION(6, 8) Q_INVOKABLE void clearColumnReordering();
     Q_REVISION(6, 8) Q_INVOKABLE void clearRowReordering();
 
+    Q_REVISION(6, 13) Q_INVOKABLE void sortByColumn(int column, Qt::SortOrder order);
+
     static QQuickTableViewAttached *qmlAttachedProperties(QObject *);
 
 Q_SIGNALS:
@@ -268,6 +283,9 @@ Q_SIGNALS:
     Q_REVISION(6, 8) void rowMoved(int logicalIndex, int oldVisualIndex, int newVisualIndex);
     Q_REVISION(6, 8) void columnMoved(int logicalIndex, int oldVisualIndex, int newVisualIndex);
     Q_REVISION(6, 10) void delegateModelAccessChanged();
+    Q_REVISION(6, 13) void sortingEnabledChanged();
+    Q_REVISION(6, 13) void sortColumnChanged();
+    Q_REVISION(6, 13) void sortOrderChanged();
 
 protected:
     void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;

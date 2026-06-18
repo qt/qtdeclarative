@@ -244,6 +244,14 @@ set(qtquickcontrols2basicstyle_resource_files
     "images/search-magnifier@2x.png"
     "images/search-magnifier@3x.png"
     "images/search-magnifier@4x.png"
+    "images/sort-ascending.png"
+    "images/sort-ascending@2x.png"
+    "images/sort-ascending@3x.png"
+    "images/sort-ascending@4x.png"
+    "images/sort-descending.png"
+    "images/sort-descending@2x.png"
+    "images/sort-descending@3x.png"
+    "images/sort-descending@4x.png"
 )
 
 qt_internal_add_resource(QuickControls2Basic "qtquickcontrols2basicstyle"
