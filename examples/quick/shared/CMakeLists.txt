@@ -12,8 +12,6 @@ set(QT_QML_GENERATE_QMLLS_INI OFF)
 qt_add_qml_module(${PROJECT_NAME}_shared
     URI shared
     PLUGIN_TARGET ${PROJECT_NAME}_shared
-    SOURCES
-        "shared.h"
     QML_FILES
         "Button.qml"
         "CheckBox.qml"
