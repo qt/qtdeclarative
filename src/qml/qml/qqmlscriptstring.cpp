@@ -33,6 +33,12 @@ QQmlExpression expr(scriptString);
 expr.evaluate();
 \endcode
 
+\note A QQmlScriptString can always be evaluated through a QQmlExpression, but
+its source code is not guaranteed to be retrievable. If the QML module is
+compiled ahead of time, the source code of non-literal script strings may be
+discarded and cannot be recovered via \l QQmlExpression::expression(). Avoid
+relying on the textual form of a script string; evaluate it instead.
+
 \sa QQmlExpression
 */
 

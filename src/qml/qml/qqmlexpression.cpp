@@ -96,6 +96,11 @@ QQmlExpression::QQmlExpression()
     and the scope object to evaluate it with. If provided, \a ctxt and \a scope will override
     the context and scope object provided by \a script.
 
+    \note The resulting expression can always be evaluated, but its source code,
+    as returned by expression(), may not be available. If the QML module that
+    produced \a script was compiled ahead of time, the source code of
+    non-literal script strings can be discarded. See expression() for details.
+
     \sa QQmlScriptString
 */
 QQmlExpression::QQmlExpression(const QQmlScriptString &script, QQmlContext *ctxt, QObject *scope, QObject *parent)
@@ -198,10 +203,23 @@ QQmlContext *QQmlExpression::context() const
 
 /*!
     Returns the expression string.
+
+    If this expression was constructed from a \l QQmlScriptString, its source
+    code is not guaranteed to be available. A QML module compiled ahead of time
+    may not retain the source code of non-literal script strings. In that case
+    the expression can still be evaluated via evaluate(), but expression()
+    returns an empty string and produces a warning. Only literals (numbers,
+    strings, booleans, \c null and \c undefined) are guaranteed to be available
+    as source code.
 */
 QString QQmlExpression::expression() const
 {
     Q_D(const QQmlExpression);
+    if (d->expressionFunctionValid) {
+        qWarning("QQmlExpression: Attempted to retrieve potentially discarded source code of "
+                 "expression. Only literals (numbers, strings, booleans, null, undefined) are "
+                 "guaranteed to be available from QQmlExpression::expression().");
+    }
     return d->expression;
 }
 

@@ -20,7 +20,9 @@
 #include <QString>
 
 #include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <qqmlexpression.h>
 #include "scriptstringprops.h"
+#include "discardprobe.h"
 
 using namespace Qt::StringLiterals;
 
@@ -87,6 +89,7 @@ private slots:
     void gracefullyHandleTruncatedCacheFile();
 
     void scriptStringCachegenInteraction();
+    void scriptStringSourceSurvivesDiscardedQml();
     void saveableUnitPointer();
 
     void aotstatsSerialization();
@@ -913,6 +916,50 @@ void tst_qmlcachegen::scriptStringCachegenInteraction()
     ok = false;
     scripty->m_bol.booleanLiteral(&ok);
     QVERIFY(ok);
+}
+
+void tst_qmlcachegen::scriptStringSourceSurvivesDiscardedQml()
+{
+    QTest::failOnWarning();
+
+    // The cachegendiscard module is built with DISCARD_QML_CONTENTS: the QML file's bytes are
+    // dropped from the resource system (the entry remains but is empty), so a QQmlScriptString
+    // binding of a non-literal will not actually contain a string. A QQmlExpression constructed
+    // from it wants the source code when you ask it for expression(), though. This is
+    // fundamentally at odds. Check for the relevant warning.
+    QFile discardedSource(":/cachegendiscard/DiscardScriptStringTest.qml");
+    QVERIFY2(discardedSource.exists(), "the module layout changed; update this path");
+    QVERIFY2(discardedSource.size() == 0,
+             "the QML source was not discarded; the test would be moot");
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadFromModule("cachegendiscard", "DiscardScriptStringTest");
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY2(!root.isNull(), qPrintable(component.errorString()));
+    auto probe = qobject_cast<DiscardProbe *>(root.get());
+    QVERIFY(probe);
+
+    QQmlExpression expression(probe->m_expr);
+    QTest::ignoreMessage(
+            QtWarningMsg,
+            "QQmlExpression: Attempted to retrieve potentially discarded source code of "
+            "expression. Only literals (numbers, strings, booleans, null, undefined) are "
+            "guaranteed to be available from QQmlExpression::expression().");
+    QVERIFY(expression.expression().isEmpty());
+
+    bool expressionIsUndefined = false;
+    const QVariant expresisonValue = expression.evaluate(&expressionIsUndefined);
+    QVERIFY(!expressionIsUndefined);
+    QCOMPARE(expresisonValue.toInt(), 3);
+
+    QQmlExpression literal(probe->m_lit);
+    QCOMPARE(literal.expression(), u"\"available\""_s);
+
+    bool literalIsUndefined = false;
+    const QVariant literalValue = literal.evaluate(&literalIsUndefined);
+    QVERIFY(!literalIsUndefined);
+    QCOMPARE(literalValue.toString(), u"available"_s);
 }
 
 void tst_qmlcachegen::saveableUnitPointer()

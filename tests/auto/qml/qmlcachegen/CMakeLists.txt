@@ -54,6 +54,24 @@ qt_add_qml_module(tst_qmlcachegen_aotstats
 qt_autogen_tools_initial_setup(tst_qmlcachegen_aotstatsplugin)
 add_dependencies(tst_qmlcachegen tst_qmlcachegen_aotstats)
 
+# A module whose QML source is discarded from the resources (QT_DISCARD_FILE_CONTENTS), so a binding's
+# source can only be recovered from the ahead-of-time-compiled unit, never reparsed at run time.
+qt_add_library(tst_qmlcachegen_discard STATIC)
+qt_autogen_tools_initial_setup(tst_qmlcachegen_discard)
+qt_add_qml_module(tst_qmlcachegen_discard
+    URI cachegendiscard
+    QML_FILES
+        DiscardScriptStringTest.qml
+    SOURCES
+        discardprobe.h
+    DISCARD_QML_CONTENTS
+    OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/cachegendiscard"
+    RESOURCE_PREFIX "/"
+)
+qt_autogen_tools_initial_setup(tst_qmlcachegen_discardplugin)
+add_dependencies(tst_qmlcachegen tst_qmlcachegen_discard)
+target_link_libraries(tst_qmlcachegen PRIVATE tst_qmlcachegen_discardplugin)
+
 set(qmake_workerscripts_test_qml_files
     "data/worker.js"
     "data/worker.qml"
