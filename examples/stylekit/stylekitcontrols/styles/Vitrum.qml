@@ -233,8 +233,8 @@ Style {
 
     popup {
         padding: 2
-        topPadding: 20
-        bottomPadding: 20
+        topPadding: 10
+        bottomPadding: 10
     }
 
     comboBox {
@@ -350,21 +350,28 @@ Style {
 
     menu {
         padding: 2
+        topPadding: 10
+        bottomPadding: 10
         background.width: 100
     }
 
     menuBar {
         padding: 2
+        background.height: 30
     }
 
     menuBarItem {
         padding: 2
         background.width: 100
+        background.height: 30
         hovered.background.color: myTheme.accentBackground.normal
     }
 
     menuItem {
         padding: 2
+        text.padding: 4
+        background.height: 30
+        indicator.height: 30
         hovered.background.color: myTheme.accentBackground.normal
     }
 
