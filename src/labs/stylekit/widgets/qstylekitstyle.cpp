@@ -2013,73 +2013,42 @@ void QStyleKitStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCom
                 const auto *foreground = indicator ? indicator->foreground() : nullptr;
                 if (foreground && foreground->visible() && foreground->opacity() > 0) {
                     const bool isHorizontal = slider->orientation == Qt::Horizontal;
-                    const auto availableW = isHorizontal
-                        ? grooveRect.width() - foreground->leftMargin() - foreground->rightMargin()
-                        : grooveRect.width() - foreground->topMargin() - foreground->bottomMargin();
-                    const auto availableH = isHorizontal
-                        ? grooveRect.height() - foreground->topMargin() - foreground->bottomMargin()
-                        : grooveRect.height() - foreground->leftMargin() - foreground->rightMargin();
+                    const qreal availableW = grooveRect.width()  - foreground->leftMargin() - foreground->rightMargin();
+                    const qreal availableH = grooveRect.height() - foreground->topMargin()  - foreground->bottomMargin();
 
                     const qreal range = slider->maximum - slider->minimum;
                     const qreal ratio = range > 0 ? (slider->sliderPosition - slider->minimum) / range : 0;
 
-                    qreal trackW, trackH;
-                    if (isHorizontal) {
-                        trackW = ratio * availableW;
-                        trackH = resolvedImplicitHeight(foreground, availableH);
-                    } else {
-                        trackW = resolvedImplicitWidth(foreground, availableW);
-                        trackH = ratio * availableH;
-                    }
-                    QRect trackRect(0, 0, trackW, trackH);
-                    // alignment
-                    const uint rawHAlign = foreground->alignment() & Qt::AlignHorizontal_Mask;
-                    const uint rawVAlign = foreground->alignment() & Qt::AlignVertical_Mask;
-                    // For vertical orientation, swap alignment
-                    uint hAlign, vAlign;
-                    if (isHorizontal) {
-                        hAlign = rawHAlign;
-                        vAlign = rawVAlign;
-                    } else {
-                        if (rawVAlign == Qt::AlignTop)
-                            hAlign = Qt::AlignLeft;
-                        else if (rawVAlign == Qt::AlignVCenter)
-                            hAlign = Qt::AlignHCenter;
-                        else if (rawVAlign == Qt::AlignBottom)
-                            hAlign = Qt::AlignRight;
-                        else
-                            hAlign = 0;
+                    const auto hAlign = foreground->alignment() & Qt::AlignHorizontal_Mask;
+                    const auto vAlign = foreground->alignment() & Qt::AlignVertical_Mask;
+                    const qreal fgW = resolvedImplicitWidth(foreground, availableW);
+                    const qreal fgH = resolvedImplicitHeight(foreground, availableH);
+                    const qreal fgX = hAlign & Qt::AlignRight
+                        ? grooveRect.left() + foreground->leftMargin() + availableW - fgW
+                        : hAlign & Qt::AlignHCenter
+                            ? grooveRect.left() + foreground->leftMargin() + (availableW - fgW) / 2
+                            : grooveRect.left() + foreground->leftMargin();
+                    const qreal fgY = vAlign & Qt::AlignBottom
+                        ? grooveRect.top() + foreground->topMargin() + availableH - fgH
+                        : vAlign & Qt::AlignVCenter
+                            ? grooveRect.top() + foreground->topMargin() + (availableH - fgH) / 2
+                            : grooveRect.top() + foreground->topMargin();
 
-                        if (rawHAlign == Qt::AlignLeft)
-                            vAlign = Qt::AlignTop;
-                        else if (rawHAlign == Qt::AlignHCenter)
-                            vAlign = Qt::AlignVCenter;
-                        else if (rawHAlign == Qt::AlignRight)
-                            vAlign = Qt::AlignBottom;
-                        else
-                            vAlign = 0;
+                    const qreal minW = foreground->minimumWidth();
+                    QRectF trackRect;
+                    if (isHorizontal) {
+                        const qreal trackW = foreground->fillWidth()
+                            ? minW + ratio * (fgW - minW)
+                            : ratio * fgW;
+                        trackRect = QRectF(fgX, fgY, trackW, fgH);
+                    } else {
+                        const qreal trackH = foreground->fillHeight()
+                            ? minW + ratio * (fgH - minW)
+                            : ratio * fgH;
+                        const qreal trackY = fgY + (1.0 - ratio) * (foreground->fillHeight() ? fgH - minW : fgH);
+                        trackRect = QRectF(fgX, trackY, fgW, trackH);
                     }
-                    if (hAlign & Qt::AlignLeft)
-                        trackRect.moveLeft(grooveRect.left() + foreground->leftMargin());
-                    else if (hAlign & Qt::AlignHCenter)
-                        trackRect.moveLeft(grooveRect.left() + foreground->leftMargin()
-                                           + (availableW - trackRect.width()) / 2);
-                    else if (hAlign & Qt::AlignRight)
-                        trackRect.moveLeft(grooveRect.right() - foreground->rightMargin() - trackRect.width());
-                    if (vAlign & Qt::AlignTop) {
-                        if (!isHorizontal)
-                            trackRect.moveTop(grooveRect.bottom() - foreground->bottomMargin() - trackRect.height());
-                        else
-                            trackRect.moveTop(grooveRect.top() + foreground->topMargin());
-                    } else if (vAlign & Qt::AlignVCenter) {
-                        trackRect.moveTop(grooveRect.top() + (grooveRect.height() - trackRect.height()) / 2);
-                    } else if (vAlign & Qt::AlignBottom) {
-                        if (!isHorizontal)
-                             trackRect.moveTop(grooveRect.top() + foreground->topMargin());
-                        else
-                            trackRect.moveTop(grooveRect.bottom() - foreground->bottomMargin() - trackRect.height());
-                    }
-                    d->drawStyledItemRect(foreground, visualRect(opt->direction, grooveRect, trackRect), p);
+                    d->drawStyledItemRect(foreground, visualRect(opt->direction, grooveRect, trackRect.toAlignedRect()), p);
                 }
             }
 
@@ -2250,63 +2219,23 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
                 break;
             const auto &metrics = *resolved.metrics;
             const bool horizontal = slider->orientation == Qt::Horizontal;
-            QRect contentsRect = opt->rect.marginsRemoved(horizontal
-                ? QMargins(metrics.margins.left(), metrics.margins.top(), metrics.margins.right(), metrics.margins.bottom())
-                : QMargins(metrics.margins.top(), metrics.margins.left(), metrics.margins.bottom(), metrics.margins.right())
-            ).marginsRemoved(horizontal
-                ? QMargins(metrics.padding.left(), metrics.padding.top(), metrics.padding.right(), metrics.padding.bottom())
-                : QMargins(metrics.padding.top(), metrics.padding.left(), metrics.padding.bottom(), metrics.padding.right())
-            );
+            QRect contentsRect = opt->rect.marginsRemoved(metrics.margins).marginsRemoved(metrics.padding);
 
             const auto *indicator = resolved.indicator();
             if (!indicator)
                 return contentsRect;
             switch (sc) {
             case SC_SliderGroove: {
-                const auto availableW = horizontal
-                    ? contentsRect.width() - indicator->leftMargin() - indicator->rightMargin()
-                    : contentsRect.width() - indicator->topMargin() - indicator->bottomMargin();
-                const auto availableH = horizontal
-                    ? contentsRect.height() - indicator->topMargin() - indicator->bottomMargin()
-                    : contentsRect.height() - indicator->leftMargin() - indicator->rightMargin();
-
-                qreal grooveW, grooveH;
-                if (horizontal) {
-                    grooveW = resolvedImplicitWidth(indicator, availableW);
-                    grooveH = resolvedImplicitHeight(indicator, availableH);
-                } else {
-                    grooveW = resolvedImplicitHeight(indicator, availableW);
-                    grooveH = resolvedImplicitWidth(indicator, availableH);
-                }
+                const auto availableW = contentsRect.width()  - indicator->leftMargin() - indicator->rightMargin();
+                const auto availableH = contentsRect.height() - indicator->topMargin()  - indicator->bottomMargin();
+                const qreal grooveW = resolvedImplicitWidth(indicator, availableW);
+                const qreal grooveH = resolvedImplicitHeight(indicator, availableH);
 
                 QRectF grooveRect(0, 0, grooveW, grooveH);
-                // alignment
                 const uint rawHAlign = indicator->alignment() & Qt::AlignHorizontal_Mask;
                 const uint rawVAlign = indicator->alignment() & Qt::AlignVertical_Mask;
-                // For vertical orientation, swap alignment axes
-                uint hAlign, vAlign;
-                if (horizontal) {
-                    hAlign = rawHAlign ? static_cast<Qt::Alignment>(rawHAlign) : Qt::AlignLeft;
-                    vAlign = rawVAlign ? static_cast<Qt::Alignment>(rawVAlign) : Qt::AlignVCenter;
-                } else {
-                    if (rawVAlign & Qt::AlignTop)
-                        hAlign = Qt::AlignLeft;
-                    else if (rawVAlign & Qt::AlignBottom)
-                        hAlign = Qt::AlignRight;
-                    else if (rawVAlign & Qt::AlignVCenter)
-                        hAlign = Qt::AlignHCenter;
-                    else
-                        hAlign = Qt::AlignLeft;
-
-                    if (rawHAlign & Qt::AlignLeft)
-                        vAlign = Qt::AlignTop;
-                    else if (rawHAlign & Qt::AlignRight)
-                        vAlign = Qt::AlignBottom;
-                    else if (rawHAlign & Qt::AlignHCenter)
-                        vAlign = Qt::AlignVCenter;
-                    else
-                        vAlign = Qt::AlignVCenter;
-                }
+                const uint hAlign = rawHAlign ? static_cast<Qt::Alignment>(rawHAlign) : Qt::AlignLeft;
+                const uint vAlign = rawVAlign ? static_cast<Qt::Alignment>(rawVAlign) : Qt::AlignVCenter;
 
                 if (hAlign & Qt::AlignLeft) {
                     grooveRect.moveLeft(contentsRect.x() + indicator->leftMargin());
@@ -2345,13 +2274,27 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
                     contentsRect.width() - handle->leftMargin() - handle->rightMargin());
                 const auto handleH = resolvedImplicitHeight(handle,
                     contentsRect.height() - handle->topMargin() - handle->bottomMargin());
-                const int range = horizontal ? contentsRect.width() - handleW : contentsRect.height() - handleH;
-                const int sliderPos = QStyle::sliderPositionFromValue(slider->minimum, slider->maximum,
-                    slider->sliderPosition, range, !horizontal);
-                if (horizontal)
-                    handleRect = QRect(contentsRect.x() + sliderPos, contentsRect.y() + handle->topMargin() + (contentsRect.height() - handleH) / 2, handleW, handleH);
-                else
-                    handleRect = QRect(contentsRect.x() + handle->leftMargin() + (contentsRect.width() - handleW) / 2, contentsRect.y() + sliderPos, handleW, handleH);
+                if (horizontal) {
+                    const int range = contentsRect.width()
+                        - handle->leftMargin() - handle->rightMargin() - handleW;
+                    const int sliderPos = QStyle::sliderPositionFromValue(
+                        slider->minimum, slider->maximum, slider->sliderPosition, range, false);
+                    handleRect = QRect(
+                        contentsRect.x() + handle->leftMargin() + sliderPos,
+                        contentsRect.y() + handle->topMargin() - handle->bottomMargin()
+                            + (contentsRect.height() - handleH) / 2,
+                        handleW, handleH);
+                } else {
+                    const int range = contentsRect.height()
+                        - handle->topMargin() - handle->bottomMargin() - handleH;
+                    const int sliderPos = QStyle::sliderPositionFromValue(
+                        slider->minimum, slider->maximum, slider->sliderPosition, range, true);
+                    handleRect = QRect(
+                        contentsRect.x() + handle->leftMargin() - handle->rightMargin()
+                            + (contentsRect.width() - handleW) / 2,
+                        contentsRect.y() + handle->topMargin() + sliderPos,
+                        handleW, handleH);
+                }
                 return visualRect(opt->direction, opt->rect, handleRect);
             }
             default:
@@ -2543,9 +2486,7 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
                 break;
             const auto &metrics = *resolved.metrics;
             const bool horizontal = scrollbar->orientation == Qt::Horizontal;
-            const QRectF grooveRect = opt->rect.marginsRemoved(horizontal
-                ? QMargins(metrics.margins.left(), metrics.margins.top(), metrics.margins.right(), metrics.margins.bottom())
-                : QMargins(metrics.margins.top(), metrics.margins.left(), metrics.margins.bottom(), metrics.margins.right()));
+            const QRectF grooveRect = opt->rect.marginsRemoved(metrics.margins);
 
             switch (sc) {
             // TODO: support up/down buttons
@@ -2560,37 +2501,37 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
                 const auto *indicator = resolved.indicator();
                 if (!indicator || !indicator->visible() || indicator->opacity() == 0)
                     return QRect();
-                QRectF contentsRect = grooveRect.marginsRemoved(horizontal
-                    ? QMargins(metrics.padding.left(), metrics.padding.top(), metrics.padding.right(), metrics.padding.bottom())
-                    : QMargins(metrics.padding.top(), metrics.padding.left(), metrics.padding.bottom(), metrics.padding.right()));
+                const QRectF contentsRect = grooveRect.marginsRemoved(metrics.padding);
 
-                const qreal availableW = (horizontal ? contentsRect.width()  - indicator->leftMargin() - indicator->rightMargin()
-                                                     : contentsRect.height() - indicator->topMargin()  - indicator->bottomMargin());
-                const qreal availableH = (horizontal ? contentsRect.height() - indicator->topMargin()  - indicator->bottomMargin()
-                                                     : contentsRect.width()  - indicator->leftMargin() - indicator->rightMargin());
+                const qreal availableW = contentsRect.width()  - indicator->leftMargin() - indicator->rightMargin();
+                const qreal availableH = contentsRect.height() - indicator->topMargin()  - indicator->bottomMargin();
 
                 const int totalRange = scrollbar->maximum - scrollbar->minimum + scrollbar->pageStep;
                 const qreal ratio = totalRange > 0 ? qreal(scrollbar->pageStep) / totalRange : 1.0;
-                const qreal sliderW = qMax(qreal(metrics.indicatorImplicitSize.width()),
-                                               availableW * ratio);
-                const qreal sliderH = resolvedImplicitHeight(indicator, availableH);
-
-                const qreal travelRange = qMax(0.0, availableW - sliderW);
-                const int sliderPos = QStyle::sliderPositionFromValue(
-                    scrollbar->minimum, scrollbar->maximum,
-                    scrollbar->sliderPosition, int(travelRange), scrollbar->upsideDown);
 
                 QRectF sliderRect;
                 if (horizontal) {
+                    const qreal sliderW = qMax(qreal(metrics.indicatorImplicitSize.width()), availableW * ratio);
+                    const qreal sliderH = resolvedImplicitHeight(indicator, availableH);
+                    const qreal travelRange = qMax(0.0, availableW - sliderW);
+                    const int sliderPos = QStyle::sliderPositionFromValue(
+                        scrollbar->minimum, scrollbar->maximum,
+                        scrollbar->sliderPosition, int(travelRange), scrollbar->upsideDown);
                     sliderRect = QRectF(
                         contentsRect.x() + indicator->leftMargin() + sliderPos,
                         contentsRect.y() + indicator->topMargin() + (availableH - sliderH) / 2.0,
                         sliderW, sliderH);
                 } else {
+                    const qreal sliderH = qMax(qreal(metrics.indicatorImplicitSize.width()), availableH * ratio);
+                    const qreal sliderW = resolvedImplicitWidth(indicator, availableW);
+                    const qreal travelRange = qMax(0.0, availableH - sliderH);
+                    const int sliderPos = QStyle::sliderPositionFromValue(
+                        scrollbar->minimum, scrollbar->maximum,
+                        scrollbar->sliderPosition, int(travelRange), scrollbar->upsideDown);
                     sliderRect = QRectF(
-                        contentsRect.x() + indicator->leftMargin() + (availableH - sliderH) / 2.0,
+                        contentsRect.x() + indicator->leftMargin() + (availableW - sliderW) / 2.0,
                         contentsRect.y() + indicator->topMargin() + sliderPos,
-                        sliderH, sliderW);
+                        sliderW, sliderH);
                 }
                 return visualRect(opt->direction, opt->rect, sliderRect.toAlignedRect());
             }
@@ -2711,21 +2652,25 @@ QSize QStyleKitStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt,
         }
         break;
     case CT_Slider:
-        if (const auto *slider = qstyleoption_cast<const QStyleOptionSlider *>(opt)) {
+        if (qstyleoption_cast<const QStyleOptionSlider *>(opt)) {
             const auto resolved = d->resolveLayout(QQStyleKitReader::ControlType::Slider, opt->state);
             if (!resolved.isValid())
                 break;
             const auto &metrics = *resolved.metrics;
-            // background in Controls = indicator = groove + track
-            const int bgW = std::max(metrics.indicatorImplicitSize.width() + metrics.indicatorMargins.left() + metrics.indicatorMargins.right(),
-                                     metrics.bgImplicitSize.width() + metrics.margins.left() + metrics.margins.right());
-            const int bgH = std::max(metrics.indicatorImplicitSize.height() + metrics.indicatorMargins.top() + metrics.indicatorMargins.bottom(),
-                                     metrics.bgImplicitSize.height() + metrics.margins.top() + metrics.margins.bottom());
+            // background = indicator = groove + track
+            const int bgW = std::max(
+                metrics.padding.left() + metrics.padding.right()
+                    + metrics.indicatorImplicitSize.width()
+                    + metrics.indicatorMargins.left() + metrics.indicatorMargins.right(),
+                metrics.bgImplicitSize.width() + metrics.margins.left() + metrics.margins.right());
+            const int bgH = std::max(
+                metrics.padding.top() + metrics.padding.bottom()
+                    + metrics.indicatorImplicitSize.height()
+                    + metrics.indicatorMargins.top() + metrics.indicatorMargins.bottom(),
+                metrics.bgImplicitSize.height() + metrics.margins.top() + metrics.margins.bottom());
             const int handleW = metrics.handleImplicitSize.width() + metrics.padding.left() + metrics.padding.right();
             const int handleH = metrics.handleImplicitSize.height() + metrics.padding.top() + metrics.padding.bottom();
-            return slider->orientation == Qt::Horizontal
-                    ? QSize(std::max(handleW, bgW), std::max(handleH, bgH))
-                    : QSize(std::max(handleH, bgH), std::max(handleW, bgW));
+            return QSize(std::max(handleW, bgW), std::max(handleH, bgH));
         }
         break;
 #if QT_CONFIG(lineedit)
@@ -2814,32 +2759,23 @@ QSize QStyleKitStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt,
 #endif // QT_CONFIG(groupbox)
 #if QT_CONFIG(scrollbar)
     case CT_ScrollBar:
-        if (const auto *scrollBar = qstyleoption_cast<const QStyleOptionSlider *>(opt)) {
+        if (qstyleoption_cast<const QStyleOptionSlider *>(opt)) {
             const auto resolved = d->resolveLayout(QQStyleKitReader::ControlType::ScrollBar, opt->state);
             if (!resolved.isValid())
                 break;
             const auto &metrics = *resolved.metrics;
-            const bool horizontal = scrollBar->orientation == Qt::Horizontal;
 
             const int iH = metrics.indicatorImplicitSize.height()
-                + (horizontal ? metrics.padding.top()  + metrics.padding.bottom()
-                              : metrics.padding.left() + metrics.padding.right())
-                + (horizontal ? metrics.indicatorMargins.top()  + metrics.indicatorMargins.bottom()
-                              : metrics.indicatorMargins.left() + metrics.indicatorMargins.right());
+                + metrics.padding.top() + metrics.padding.bottom()
+                + metrics.indicatorMargins.top() + metrics.indicatorMargins.bottom();
             const int iW = metrics.indicatorImplicitSize.width()
-                + (horizontal ? metrics.padding.left() + metrics.padding.right()
-                              : metrics.padding.top()  + metrics.padding.bottom())
-                + (horizontal ? metrics.indicatorMargins.left() + metrics.indicatorMargins.right()
-                              : metrics.indicatorMargins.top()  + metrics.indicatorMargins.bottom());
+                + metrics.padding.left() + metrics.padding.right()
+                + metrics.indicatorMargins.left() + metrics.indicatorMargins.right();
             const int bgH = metrics.bgImplicitSize.height()
-                + (horizontal ? metrics.margins.top()  + metrics.margins.bottom()
-                              : metrics.margins.left() + metrics.margins.right());
+                + metrics.margins.top() + metrics.margins.bottom();
             const int bgW = metrics.bgImplicitSize.width()
-                + (horizontal ? metrics.margins.left() + metrics.margins.right()
-                              : metrics.margins.top()  + metrics.margins.bottom());
-            return horizontal
-                    ? QSize(std::max(iW, bgW), std::max(iH, bgH))
-                    : QSize(std::max(iH, bgH), std::max(iW, bgW));
+                + metrics.margins.left() + metrics.margins.right();
+            return QSize(std::max(iW, bgW), std::max(iH, bgH));
         }
         break;
 #endif // QT_CONFIG(scrollbar)
