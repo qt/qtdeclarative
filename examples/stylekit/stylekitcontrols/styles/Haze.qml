@@ -24,6 +24,12 @@ Style {
         rightPadding: 8
         bottomPadding: 2
 
+        background {
+            // Disable drop shadow on the background by default, and enable it per
+            // control type below instead
+            shadow.visible: false
+        }
+
         handle {
             implicitWidth: 25
             implicitHeight: 25
@@ -71,6 +77,7 @@ Style {
             radius: 8
 
             shadow {
+                visible: true
                 opacity: 0.8
                 scale: 1.1
             }
@@ -92,7 +99,6 @@ Style {
     }
 
     flatButton {
-        background.shadow.visible: false
         background.gradient: null
     }
 
@@ -128,7 +134,6 @@ Style {
             border.width: 0
             implicitWidth: 200
             implicitHeight: 200
-            shadow.visible: false
         }
     }
 
@@ -315,7 +320,6 @@ Style {
     frame {
         background {
             border.width: 1
-            shadow.visible: true
         }
         variations: StyleVariation {
             button.background {
@@ -401,7 +405,6 @@ Style {
             disabled {
                 background {
                     opacity: 0.4
-                    shadow.visible: false
                     gradient: null
                 }
             }
@@ -623,7 +626,6 @@ Style {
              * should not. Override the property here to disable that behavior for panes. */
             background.color: Qt.lighter("#544e52", 1.3)
             background.border.color: "#3d373b"
-            background.shadow.visible: false
         }
 
         StyleVariation {
@@ -892,7 +894,6 @@ Style {
             pane {
                 background.color: "#a0b1a0"
                 background.border.color: "#415a41"
-                background.shadow.visible: false
             }
 
             scrollIndicator {
