@@ -407,6 +407,40 @@ ApplicationWindow {
         }
         //! [scrollIndicator]
 
+        //! [searchField]
+        searchField {
+            // Center the text between the buttons
+            text.padding: 5
+            text.alignment: Qt.AlignVCenter | Qt.AlignLeft
+            text.color: "black"
+            background.implicitWidth: 200
+
+            indicator {
+                color: "transparent"
+                border.width: 0
+
+                foreground{
+                    alignment: Qt.AlignCenter
+                }
+
+                // Place the search and clear buttons on the left and right side of the control
+                // search button
+                first {
+                    alignment: Qt.AlignLeft
+                    image.color: "black"
+                    image.source: "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/search-magnifier.png"
+                }
+
+                // clear button
+                second {
+                    alignment: Qt.AlignRight
+                    image.color: "black"
+                    image.source: "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/close_circle.png"
+                }
+            }
+        }
+        //! [searchField]
+
         //! [slider]
         slider {
             background {

@@ -342,6 +342,44 @@ BaseStyle {
         }
     }
 
+    searchField {
+        text.padding: 5
+        text.alignment: Qt.AlignVCenter | Qt.AlignLeft
+        text.color: __baseBlack
+        background.implicitWidth: 200
+
+        indicator {
+            fillHeight: true
+            border.width: 0
+            margins: 0
+            color: __transparent
+            foreground {
+                fillWidth: false
+                fillHeight: false
+                implicitWidth: 10
+                implicitHeight: 10
+                alignment: Qt.AlignCenter
+                color: __transparent
+            }
+
+            //search button
+            first {
+                alignment: Qt.AlignLeft
+                image.color: __textDefault
+                image.fillMode: Image.PreserveAspectFit
+                image.source: "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/search-magnifier.png"
+            }
+
+            //clear button
+            second {
+                alignment: Qt.AlignRight
+                image.color: __textDefault
+                image.fillMode: Image.PreserveAspectFit
+                image.source: "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/close_circle.png"
+            }
+        }
+    }
+
     slider {
         background {
             visible: false

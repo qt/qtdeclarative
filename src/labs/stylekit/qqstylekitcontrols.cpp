@@ -351,6 +351,16 @@ QT_BEGIN_NAMESPACE
     \snippet ControlsSnippets.qml scrollView
 */
 
+/*
+    \qmlproperty ControlStyle AbstractStylableControls::searchField
+
+    Grouped property for styling \l [QtQuickControls]{SearchField}.
+
+    Unset properties fall back to \l control.
+
+    \snippet ControlsSnippets.qml searchfield
+*/
+
 /*!
     \qmlproperty ControlStyle AbstractStylableControls::slider
 
@@ -529,6 +539,7 @@ IMPLEMENT_ACCESSORS(progressBar, QQStyleKitReader::ControlType::ProgressBar)
 IMPLEMENT_ACCESSORS(scrollBar, QQStyleKitReader::ControlType::ScrollBar)
 IMPLEMENT_ACCESSORS(scrollIndicator, QQStyleKitReader::ControlType::ScrollIndicator)
 IMPLEMENT_ACCESSORS(scrollView, QQStyleKitReader::ControlType::ScrollView)
+IMPLEMENT_ACCESSORS(searchField, QQStyleKitReader::SearchField)
 IMPLEMENT_ACCESSORS(slider, QQStyleKitReader::ControlType::Slider)
 IMPLEMENT_ACCESSORS(spinBox, QQStyleKitReader::ControlType::SpinBox)
 IMPLEMENT_ACCESSORS(switchControl, QQStyleKitReader::ControlType::SwitchControl)

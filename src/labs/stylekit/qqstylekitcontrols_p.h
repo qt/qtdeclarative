@@ -42,6 +42,7 @@ class QQStyleKitControls : public QObject, public QQmlParserStatus
     Q_PROPERTY(QQStyleKitControl *scrollBar READ scrollBar WRITE set_scrollBar NOTIFY scrollBarChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *scrollIndicator READ scrollIndicator WRITE set_scrollIndicator NOTIFY scrollIndicatorChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *scrollView READ scrollView WRITE set_scrollView NOTIFY scrollViewChanged FINAL)
+    Q_PROPERTY(QQStyleKitControl *searchField READ searchField WRITE set_searchField NOTIFY searchFieldChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *slider READ slider WRITE set_slider NOTIFY sliderChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *spinBox READ spinBox WRITE set_spinBox NOTIFY spinBoxChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *tabBar READ tabBar WRITE set_tabBar NOTIFY tabBarChanged FINAL)
@@ -91,6 +92,7 @@ public:
     IMPLEMENT_ACCESSORS(scrollBar)
     IMPLEMENT_ACCESSORS(scrollIndicator)
     IMPLEMENT_ACCESSORS(scrollView)
+    IMPLEMENT_ACCESSORS(searchField)
     IMPLEMENT_ACCESSORS(slider)
     IMPLEMENT_ACCESSORS(spinBox)
     IMPLEMENT_ACCESSORS(tabBar)
@@ -137,6 +139,7 @@ signals:
     void scrollBarChanged();
     void scrollIndicatorChanged();
     void scrollViewChanged();
+    void searchFieldChanged();
     void sliderChanged();
     void spinBoxChanged();
     void tabBarChanged();
