@@ -54,6 +54,7 @@ qt_internal_add_qml_module(LabsStyleKit
         ScrollBar.qml
         ScrollIndicator.qml
         ScrollView.qml
+        SearchField.qml
         Slider.qml
         Style.qml
         StyleAnimation.qml
