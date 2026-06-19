@@ -13,20 +13,11 @@ qt_add_qml_module(${PROJECT_NAME}_shared
     URI shared
     PLUGIN_TARGET ${PROJECT_NAME}_shared
     QML_FILES
-        "Button.qml"
-        "CheckBox.qml"
-        "Label.qml"
         "LauncherList.qml"
         "SimpleLauncherDelegate.qml"
-        "Slider.qml"
-        "TabSet.qml"
-        "TextField.qml"
         "Images.qml"
     RESOURCES
         "images/back.png"
-        "images/checkmark.png"
         "images/next.png"
         "images/qt-logo.png"
-        "images/slider_handle.png"
-        "images/tab.png"
 )
