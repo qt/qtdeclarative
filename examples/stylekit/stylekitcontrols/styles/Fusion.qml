@@ -272,10 +272,6 @@ Style {
                 color: "white"
             }
 
-            hovered {
-                background.color: "transparent"
-            }
-
             pressed {
                 indicator.color: "lightgray"
                 handle.color: Qt.lighter("lightgray", 1.15)

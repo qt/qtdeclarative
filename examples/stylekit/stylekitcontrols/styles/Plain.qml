@@ -81,7 +81,8 @@ Style {
         // We don't want the menu items in a ComboBox to fade, so we override and unset
         // the transition previously set for all controls in the 'control' section.
         transition: null
-        background.color: "transparent"
+        background.radius: 0
+        background.color: Qt.alpha(palette.accent, 0)
         hovered {
             background.color: palette.accent
             text.color: "white"
@@ -93,10 +94,16 @@ Style {
     }
 
     menuBarItem {
+        background.color: Qt.alpha(palette.accent, 0)
         hovered.background.color: palette.accent
     }
 
+    menu {
+        padding: 2
+    }
+
     menuItem {
+        background.color: Qt.alpha(palette.accent, 0)
         hovered.background.color: palette.accent
     }
 

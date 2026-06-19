@@ -19,10 +19,7 @@ Style {
     control {
         // 'control' is the fallback for all the controls. Any properties that are not
         // overridden by a specific control underneath will be read from here instead.
-        leftPadding: 8
-        topPadding: 2
-        rightPadding: 8
-        bottomPadding: 2
+        padding: 8
 
         background {
             // Disable drop shadow on the background by default, and enable it per
@@ -154,18 +151,22 @@ Style {
     }
 
     menuBarItem {
+        text.bold: true
         background {
             height: 30
             width: 30
         }
+        transition: null
     }
 
     menuItem {
-        background.height: 30
+        padding: 4
+        background.height: 20
+        transition: null
     }
 
     menuSeparator {
-        padding: 0
+        padding: 4
 
         background {
             width: 120
@@ -436,6 +437,8 @@ Style {
         }
 
         itemDelegate {
+            padding: 4
+            background.height: 40
             hovered.background.color: palette.accent
         }
 
@@ -473,6 +476,10 @@ Style {
             focused.hovered {
                 background.border.color: palette.accent
             }
+        }
+
+        scrollIndicator {
+            indicator.foreground.color: "white"
         }
 
         StyleVariation {
@@ -597,11 +604,25 @@ Style {
             hovered.background.color: palette.accent
         }
 
+        menu {
+            background.color: '#433e41'
+        }
+
+        menuBar {
+            background.color: '#433e41'
+        }
+
         menuBarItem {
+            background.color: "#433e41"
             hovered.background.color: palette.accent
         }
 
+        menuSeparator {
+            background.color: "#433e41"
+        }
+
         menuItem {
+            background.color: "#433e41"
             hovered.background.color: palette.accent
         }
 
@@ -809,6 +830,36 @@ Style {
                 indicator.foreground.color: "lightgray"
             }
 
+            menu {
+                background.color: "black"
+            }
+
+            menuBar {
+                background.color: "black"
+            }
+
+            menuBarItem {
+                text.color: "white"
+                background.color: "black"
+                hovered.background.color: "white"
+                hovered.text.color: "black"
+            }
+
+            menuSeparator {
+                background.color: "black"
+                background.height: 1
+                indicator.height: 1
+                indicator.border.width: 0
+            }
+
+            menuItem {
+                text.color: "white"
+                text.padding: 6
+                background.color: "black"
+                hovered.background.color: "white"
+                hovered.text.color: "black"
+            }
+
             palettes {
                 system.window: "white"
                 textField.text: "black"
@@ -914,6 +965,19 @@ Style {
 
             textInput {
                 background.color: "white"
+            }
+
+            menuBar {
+                background.color: "#8da28d"
+            }
+
+            menuBarItem {
+                background.color: "#8da28d"
+                hovered.background.color: "white"
+            }
+
+            menuSeparator {
+                background.color: "#a0c0a0"
             }
 
             StyleVariation {
