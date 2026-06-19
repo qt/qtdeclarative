@@ -32,6 +32,7 @@ class QQuickLabsPlatformMenuBar : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(MenuBar)
+    QML_ADDED_IN_VERSION(1, 0)
     Q_INTERFACES(QQmlParserStatus)
     Q_PROPERTY(QQmlListProperty<QObject> data READ data FINAL)
     Q_PROPERTY(QQmlListProperty<QQuickLabsPlatformMenu> menus READ menus NOTIFY menusChanged FINAL)

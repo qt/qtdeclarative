@@ -24,6 +24,7 @@ class QQuickLabsPlatformMenuSeparator : public QQuickLabsPlatformMenuItem
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(MenuSeparator)
+    QML_ADDED_IN_VERSION(1, 0)
 public:
     explicit QQuickLabsPlatformMenuSeparator(QObject *parent = nullptr);
 };
