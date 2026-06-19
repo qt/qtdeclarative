@@ -34,6 +34,7 @@ class QQuickLabsPlatformStandardPaths : public QObject
     Q_OBJECT
     QML_SINGLETON
     QML_NAMED_ELEMENT(StandardPaths)
+    QML_ADDED_IN_VERSION(1, 0)
     QML_EXTENDED_NAMESPACE(QStandardPaths)
 
 public:

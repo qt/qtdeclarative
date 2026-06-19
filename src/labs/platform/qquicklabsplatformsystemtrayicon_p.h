@@ -35,6 +35,7 @@ class QQuickLabsPlatformSystemTrayIcon : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(SystemTrayIcon)
+    QML_ADDED_IN_VERSION(1, 0)
     QML_EXTENDED_NAMESPACE(QPlatformSystemTrayIcon)
     Q_INTERFACES(QQmlParserStatus)
     Q_PROPERTY(bool available READ isAvailable CONSTANT FINAL)

@@ -28,6 +28,7 @@ class QQuickLabsPlatformFolderDialog : public QQuickLabsPlatformDialog
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(FolderDialog)
+    QML_ADDED_IN_VERSION(1, 0)
     QML_EXTENDED_NAMESPACE(QFileDialogOptions)
     Q_PROPERTY(QUrl folder READ folder WRITE setFolder NOTIFY folderChanged FINAL)
     Q_PROPERTY(QUrl currentFolder READ currentFolder WRITE setCurrentFolder NOTIFY currentFolderChanged FINAL)

@@ -36,6 +36,7 @@ class QQuickLabsPlatformMenuItem : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(MenuItem)
+    QML_ADDED_IN_VERSION(1, 0)
     QML_EXTENDED_NAMESPACE(QPlatformMenuItem)
     Q_INTERFACES(QQmlParserStatus)
     Q_PROPERTY(QQuickLabsPlatformMenu *menu READ menu NOTIFY menuChanged FINAL)

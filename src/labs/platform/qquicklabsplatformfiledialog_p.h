@@ -30,6 +30,7 @@ class QQuickLabsPlatformFileDialog : public QQuickLabsPlatformDialog
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(FileDialog)
+    QML_ADDED_IN_VERSION(1, 0)
     QML_EXTENDED_NAMESPACE(QFileDialogOptions)
     Q_PROPERTY(FileMode fileMode READ fileMode WRITE setFileMode NOTIFY fileModeChanged FINAL)
     Q_PROPERTY(QUrl file READ file WRITE setFile NOTIFY fileChanged FINAL)
@@ -129,6 +130,7 @@ class QQuickLabsPlatformFileNameFilter : public QObject
 {
     Q_OBJECT
     QML_ANONYMOUS
+    QML_ADDED_IN_VERSION(1, 0)
     Q_PROPERTY(int index READ index WRITE setIndex NOTIFY indexChanged FINAL)
     Q_PROPERTY(QString name READ name NOTIFY nameChanged FINAL)
     Q_PROPERTY(QStringList extensions READ extensions NOTIFY extensionsChanged FINAL)

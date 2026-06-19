@@ -30,6 +30,7 @@ class QQuickLabsPlatformIcon
 {
     Q_GADGET
     QML_ANONYMOUS
+    QML_ADDED_IN_VERSION(1, 0)
     Q_PROPERTY(QUrl source READ source WRITE setSource FINAL)
     Q_PROPERTY(QString name READ name WRITE setName FINAL)
     Q_PROPERTY(bool mask READ isMask WRITE setMask FINAL)

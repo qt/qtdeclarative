@@ -34,6 +34,7 @@ class QQuickLabsPlatformDialog : public QObject, public QQmlParserStatus
     Q_OBJECT
     Q_INTERFACES(QQmlParserStatus)
     QML_NAMED_ELEMENT(Dialog)
+    QML_ADDED_IN_VERSION(1, 0)
     QML_UNCREATABLE("Dialog is an abstract base class")
     Q_PROPERTY(QQmlListProperty<QObject> data READ data FINAL)
     Q_PROPERTY(QWindow *parentWindow READ parentWindow WRITE setParentWindow NOTIFY parentWindowChanged FINAL)
