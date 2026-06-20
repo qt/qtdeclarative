@@ -35,6 +35,9 @@
 #include <QtCore/qprocess.h>
 #endif
 
+#include <QtCore/qscopeguard.h>
+#include <QtCore/qtemporarydir.h>
+
 #include <memory>
 
 using namespace Qt::StringLiterals;
@@ -125,6 +128,7 @@ private slots:
     void enums();
     void enforceSignature();
     void enumsInOtherObject();
+    void enumsInOtherObjectFromSource();
     void equalityQObjects();
     void equalityQUrl();
     void equalityTestsWithNullOrUndefined();
@@ -2242,7 +2246,7 @@ void tst_QmlCppCodegen::enforceSignature()
 void tst_QmlCppCodegen::enumsInOtherObject()
 {
     QQmlEngine engine;
-    QTest::ignoreMessage(QtWarningMsg, "qrc:/qt/qml/TestTypes/enumsInOtherObject.qml:4:25: "
+    QTest::ignoreMessage(QtWarningMsg, "qrc:/qt/qml/TestTypes/Enums.qml:4:1: "
                                        "QML Enums: Layout attached property must be attached to an object deriving from Item");
     QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/enumsInOtherObject.qml"_s));
     QVERIFY2(!component.isError(), component.errorString().toUtf8());
@@ -2250,6 +2254,63 @@ void tst_QmlCppCodegen::enumsInOtherObject()
     QVERIFY(object);
     QCOMPARE(object->property("color").toString(), u"blue"_s);
     QTRY_COMPARE(object->property("color").toString(), u"green"_s);
+}
+
+void tst_QmlCppCodegen::enumsInOtherObjectFromSource()
+{
+    // enumsInOtherObject() above exercises this scenario through an ahead-of-time-compiled unit. Both
+    // codegen test modules only ever load such units, so the from-source compilation path goes
+    // untested. Compile the same structure from source at run time and assert it reports the Layout
+    // misuse at the same location: the qualified enum (Qt.AlignCenter) must be folded and applied the
+    // same way regardless of whether the unit came from qmlcachegen or from source.
+    QTemporaryDir dir;
+    QVERIFY2(dir.isValid(), qPrintable(dir.errorString()));
+
+    QFile enums(dir.filePath(u"Enums.qml"_s));
+    QVERIFY2(enums.open(QIODevice::WriteOnly), qPrintable(enums.errorString()));
+    enums.write(
+            "import QtQml\n"
+            "import QtQuick.Layouts\n"
+            "\n"
+            "QtObject {\n"
+            "    id: root\n"
+            "    property int appState: Enums.AppState.Blue\n"
+            "    property string color: \"blue\"\n"
+            "\n"
+            "    enum AppState { Red, Green, Blue }\n"
+            "\n"
+            "    Layout.alignment: Qt.AlignCenter\n"
+            "}\n");
+    enums.close();
+
+    QFile root(dir.filePath(u"root.qml"_s));
+    QVERIFY2(root.open(QIODevice::WriteOnly), qPrintable(root.errorString()));
+    root.write(
+            "import QtQml\n"
+            "\n"
+            "QtObject {\n"
+            "    property Enums app: Enums { appState: 0 }\n"
+            "    property string color: app.color\n"
+            "}\n");
+    root.close();
+
+    // Make sure the unit is compiled from source rather than read back from a cache file.
+    qputenv("QML_DISABLE_DISK_CACHE", "1");
+    const auto cacheGuard = qScopeGuard([]() { qunsetenv("QML_DISABLE_DISK_CACHE"); });
+
+    const QUrl enumsUrl = QUrl::fromLocalFile(dir.filePath(u"Enums.qml"_s));
+    QTest::ignoreMessage(
+            QtWarningMsg,
+            qPrintable(enumsUrl.toString()
+                       + u":4:1: QML Enums: Layout attached property must be attached to an object "
+                         "deriving from Item"_s));
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl::fromLocalFile(dir.filePath(u"root.qml"_s)));
+    QVERIFY2(!component.isError(), component.errorString().toUtf8());
+    std::unique_ptr<QObject> object(component.create());
+    QVERIFY(object);
+    QCOMPARE(object->property("color").toString(), u"blue"_s);
 }
 
 void tst_QmlCppCodegen::equalityQObjects()
