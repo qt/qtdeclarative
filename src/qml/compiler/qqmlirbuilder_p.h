@@ -268,6 +268,25 @@ struct Binding : public QV4::CompiledData::Binding
     Binding *next;
 };
 
+// we support one or two '.' in the enum phrase:
+// * <TypeName>.<EnumValue>
+// * <TypeName>.<ScopedEnumName>.<EnumValue>
+inline int qualifiedEnumDot(QStringView source)
+{
+    if (source.isEmpty() || !source.front().isUpper())
+        return -1;
+
+    // reject any "complex" expression (even simple arithmetic) by excluding everything that is not
+    // part of a valid identifier or a dot
+    for (const QChar c : source) {
+        if (!(c.isLetterOrNumber() || c == u'.' || c == u'_' || c.isSpace()))
+            return -1;
+    }
+
+    const qsizetype dot = source.indexOf(u'.');
+    return (dot  == -1 || dot == source.size() - 1) ?  -1 : dot;
+}
+
 struct InlineComponent : public QV4::CompiledData::InlineComponent
 {
     InlineComponent *next;

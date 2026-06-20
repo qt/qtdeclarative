@@ -489,11 +489,14 @@ bool QQmlEnumTypeResolver::resolveEnumBindings()
     return true;
 }
 
-bool QQmlEnumTypeResolver::assignEnumToBinding(QmlIR::Binding *binding, QStringView, int enumValue, bool)
+bool QQmlEnumTypeResolver::assignEnumToBinding(QmlIR::Binding *binding, QStringView, int enumValue)
 {
     binding->setType(QV4::CompiledData::Binding::Type_Number);
-    binding->value.constantValueIndex = compiler->registerConstant(QV4::Encode((double)enumValue));
-//    binding->setNumberValueInternal((double)enumValue);
+    // Enum values are integers (for now). This keeps the fold independent of the constant table,
+    // which is not regenerated when an ahead-of-time-compiled unit is loaded and its enum bindings
+    // are folded against the run-time-resolved types.
+    // TODO: Filter out long enums when we get to use them
+    binding->value.resolvedEnumValue = enumValue;
     binding->setFlag(QV4::CompiledData::Binding::IsResolvedEnum);
     return true;
 }
@@ -514,22 +517,8 @@ bool QQmlEnumTypeResolver::tryQualifiedEnumAssignment(
 
     Q_ASSERT(binding->type() == QV4::CompiledData::Binding::Type_Script);
     const QString string = compiler->bindingAsString(obj, binding->value.compiledScriptIndex);
-    if (!string.constData()->isUpper())
-        return true;
-
-    // reject any "complex" expression (even simple arithmetic)
-    // we do this by excluding everything that is not part of a
-    // valid identifier or a dot
-    for (const QChar &c : string)
-        if (!(c.isLetterOrNumber() || c == u'.' || c == u'_' || c.isSpace()))
-            return true;
-
-    // we support one or two '.' in the enum phrase:
-    // * <TypeName>.<EnumValue>
-    // * <TypeName>.<ScopedEnumName>.<EnumValue>
-
-    int dot = string.indexOf(QLatin1Char('.'));
-    if (dot == -1 || dot == string.size()-1)
+    const int dot = QmlIR::qualifiedEnumDot(string);
+    if (dot == -1)
         return true;
 
     int dot2 = string.indexOf(QLatin1Char('.'), dot+1);
@@ -551,7 +540,7 @@ bool QQmlEnumTypeResolver::tryQualifiedEnumAssignment(
         bool ok;
         int enumval = evaluateEnum(typeName.toString(), scopedEnumName, enumValue, &ok);
         if (ok) {
-            if (!assignEnumToBinding(binding, enumValue, enumval, isQtObject))
+            if (!assignEnumToBinding(binding, enumValue, enumval))
                 return false;
         }
         return true;
@@ -611,7 +600,7 @@ bool QQmlEnumTypeResolver::tryQualifiedEnumAssignment(
     if (!ok)
         return true;
 
-    return assignEnumToBinding(binding, enumValue, value, isQtObject);
+    return assignEnumToBinding(binding, enumValue, value);
 }
 
 int QQmlEnumTypeResolver::evaluateEnum(const QString &scope, QStringView enumName, QStringView enumValue, bool *ok) const

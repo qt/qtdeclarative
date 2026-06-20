@@ -188,10 +188,10 @@ public:
     bool resolveEnumBindings();
 
 private:
-    bool assignEnumToBinding(QmlIR::Binding *binding, QStringView enumName, int enumValue, bool isQtObject);
-    bool assignEnumToBinding(QmlIR::Binding *binding, const QString &enumName, int enumValue, bool isQtObject)
+    bool assignEnumToBinding(QmlIR::Binding *binding, QStringView enumName, int enumValue);
+    bool assignEnumToBinding(QmlIR::Binding *binding, const QString &enumName, int enumValue)
     {
-        return assignEnumToBinding(binding, QStringView(enumName), enumValue, isQtObject);
+        return assignEnumToBinding(binding, QStringView(enumName), enumValue);
     }
     bool tryQualifiedEnumAssignment(
             const QmlIR::Object *obj, const QQmlPropertyCache::ConstPtr &propertyCache,
