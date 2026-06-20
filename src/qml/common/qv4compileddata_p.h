@@ -53,7 +53,7 @@ QT_BEGIN_NAMESPACE
 // benefit that if another patch changes the version too, it will result in a merge conflict, and
 // not get removed silently.
 // Also update the comparison functions in qqmlpreviewdiff.cpp when you change the data structures.
-#define QV4_DATA_STRUCTURE_VERSION 0x4d // Added AOT lookup validation
+#define QV4_DATA_STRUCTURE_VERSION 0x4e // Store resolved enum values inline in bindings
 
 class QIODevice;
 class QQmlTypeNameCache;
@@ -611,6 +611,8 @@ struct Binding
     union {
         bool b;
         quint32_le constantValueIndex;
+        qint32_le resolvedEnumValue;    // used when Type_Number and IsResolvedEnum: enum values are
+                                        // integers and stored inline rather than in the constant table
         quint32_le compiledScriptIndex; // used when Type_Script
         quint32_le objectIndex;
         quint32_le translationDataIndex; // used when Type_Translation
@@ -1611,6 +1613,8 @@ public:
     {
         if (binding->type() != CompiledData::Binding::Type_Number)
             return 0.0;
+        if (binding->hasFlag(CompiledData::Binding::IsResolvedEnum))
+            return binding->value.resolvedEnumValue;
         return constants[binding->value.constantValueIndex].doubleValue();
     }
 

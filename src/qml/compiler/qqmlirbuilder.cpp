@@ -1371,8 +1371,11 @@ void IRBuilder::setBindingValue(QV4::CompiledData::Binding *binding, QQmlJS::AST
         QQmlJS::AST::Node *nodeForString = statement;
         if (exprStmt)
             nodeForString = exprStmt->expression;
-        if (asStringRef(nodeForString) == u"undefined")
+        const QStringView source = asStringRef(nodeForString);
+        if (source == u"undefined")
             binding->stringIndex = registerString(u"undefined"_s);
+        else if (qualifiedEnumDot(source) != -1)
+            binding->stringIndex = registerString(source.toString());
         else
             binding->stringIndex = emptyStringIndex;
     }
