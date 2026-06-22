@@ -27,6 +27,8 @@ qt_add_qml_module(${PROJECT_NAME}_shared
         "FlickrRssModel.qml"
         "Images.qml"
         "Label.qml"
+        "LauncherList.qml"
+        "SimpleLauncherDelegate.qml"
         "Slider.qml"
         "TabSet.qml"
         "TextField.qml"
