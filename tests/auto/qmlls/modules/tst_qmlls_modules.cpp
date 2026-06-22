@@ -209,6 +209,12 @@ void tst_qmlls_modules::ignoreDiagnostics()
             [](const QByteArray &, const PublishDiagnosticsParams &) {});
 }
 
+void tst_qmlls_modules::ignoreWorkspaceSemanticTokensRefreshRequestHandler()
+{
+    m_protocol->registerRequestingARefreshOfAllSemanticTokensRequestHandler(
+            [](const QByteArray &, std::nullptr_t, auto &&r) { r.sendResponse(); });
+}
+
 void tst_qmlls_modules::initTestCase()
 {
     QQmlDataTest::initTestCase();
@@ -440,9 +446,17 @@ void tst_qmlls_modules::buildDir()
     QVERIFY(tempDir.isValid());
     createQmllsBuildIni(tempDir.path(), testFile(filePath), importPathsPerWorkspace);
 
+    bool semanticTokensRefreshed = false;
+    m_protocol->registerRequestingARefreshOfAllSemanticTokensRequestHandler(
+            [&semanticTokensRefreshed](const QByteArray &, std::nullptr_t, auto &&r) {
+                semanticTokensRefreshed = true;
+                r.sendResponse();
+            });
     m_protocol->typedRpc()->sendNotification(
             QByteArray(Notifications::AddBuildDirsMethod),
             addBuildDirsParamsFromMap(importPathsPerWorkspace, tempDir.path().toUtf8()));
+
+    QTRY_VERIFY_WITH_TIMEOUT(semanticTokensRefreshed, 1000);
 
     DidChangeTextDocumentParams didChange;
     didChange.textDocument.uri = *uri;
@@ -1495,6 +1509,8 @@ void tst_qmlls_modules::warnings()
     QFETCH(QString, filePath);
     QFETCH(ExpectedWarnings, expectedWarnings);
 
+    ignoreWorkspaceSemanticTokensRefreshRequestHandler();
+
     std::optional<QTemporaryDir> tempDir;
     if (!expectedWarnings.extraImportPathsPerWorkspace.isEmpty()) {
         tempDir.emplace();
@@ -1754,6 +1770,8 @@ void tst_qmlls_modules::qmldirImports()
     QFETCH(int, line);
     QFETCH(int, character);
     QFETCH(QString, expectedCompletion);
+
+    ignoreWorkspaceSemanticTokensRefreshRequestHandler();
 
     std::optional<QTemporaryDir> tempDir;
     if (addBuildDirectory == AddBuildDir) {
