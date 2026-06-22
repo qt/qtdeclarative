@@ -1431,7 +1431,7 @@ ReturnedValue QObjectWrapper::method_connect(const FunctionObject *b, const Valu
         QObjectPrivate::connect(signalObject, signalIndex, receiver, slot, Qt::AutoConnection);
     } else {
         slot->maxNumArguments = std::numeric_limits<qsizetype>::max();
-        qCInfo(lcObjectConnect,
+        qCDebug(lcObjectConnect,
                "Could not find receiver of the connection, using sender as receiver. Disconnect "
                "explicitly (or delete the sender) to make sure the connection is removed.");
         QObjectPrivate::connect(signalObject, signalIndex, signalObject, slot, Qt::AutoConnection);
