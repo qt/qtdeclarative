@@ -67,9 +67,9 @@ void QQmlIRLoader::load()
     if (unit->flags & QV4::CompiledData::Unit::IsStrict)
         createPragma(Pragma::Strict);
 
-    if (unit->flags & QV4::CompiledData::Unit::ListPropertyAssignReplace)
+    if (unit->isListPropertyAssignReplace())
         createListPragma(Pragma::ListPropertyAssignBehavior, Pragma::Replace);
-    else if (unit->flags & QV4::CompiledData::Unit::ListPropertyAssignReplaceIfNotDefault)
+    else if (unit->isListPropertyAssignReplaceIfNotDefault())
         createListPragma(Pragma::ListPropertyAssignBehavior, Pragma::ReplaceIfNotDefault);
 
     if (unit->flags & QV4::CompiledData::Unit::ComponentsBound)

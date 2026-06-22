@@ -1318,6 +1318,16 @@ struct Unit
     bool isSingleton() const {
         return flags & Unit::IsSingleton;
     }
+
+    bool isListPropertyAssignReplace() const {
+        // ListPropertyAssignReplace is the combination of both replace bits, so it must be tested
+        // for an exact match.
+        return (flags & Unit::ListPropertyAssignReplace) == Unit::ListPropertyAssignReplace;
+    }
+
+    bool isListPropertyAssignReplaceIfNotDefault() const {
+        return flags & Unit::ListPropertyAssignReplaceIfNotDefault;
+    }
     /* end QML specific fields*/
 
     QString stringAtInternal(uint idx) const {
@@ -1693,9 +1703,10 @@ public:
     enum class ListPropertyAssignBehavior { Append, Replace, ReplaceIfNotDefault };
     ListPropertyAssignBehavior listPropertyAssignBehavior() const
     {
-        if (unitData()->flags & CompiledData::Unit::ListPropertyAssignReplace)
+        const CompiledData::Unit *unit = unitData();
+        if (unit->isListPropertyAssignReplace())
             return ListPropertyAssignBehavior::Replace;
-        if (unitData()->flags & CompiledData::Unit::ListPropertyAssignReplaceIfNotDefault)
+        if (unit->isListPropertyAssignReplaceIfNotDefault())
             return ListPropertyAssignBehavior::ReplaceIfNotDefault;
         return ListPropertyAssignBehavior::Append;
     }
