@@ -1,11 +1,12 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#include "qmltccompiler.h"
-#include "qmltcoutputir.h"
-#include "qmltccodewriter.h"
-#include "qmltcpropertyutils.h"
-#include "qmltccompilerpieces.h"
+#include "qqmltccompiler_p.h"
+
+#include <private/qqmltcoutputir_p.h>
+#include <private/qqmltccodewriter_p.h>
+#include <private/qqmltcpropertyutils_p.h>
+#include <private/qqmltccompilerpieces_p.h>
 
 #include <QtCore/qloggingcategory.h>
 #include <QtQml/private/qqmlsignalnames_p.h>
@@ -14,7 +15,12 @@
 #include <algorithm>
 
 QT_BEGIN_NAMESPACE
+
 using namespace Qt::StringLiterals;
+
+Q_LOGGING_CATEGORY(lcQmltcCompiler, "qml.qmltc.compiler", QtWarningMsg);
+
+namespace QQmltc {
 
 bool qIsReferenceTypeList(const QQmlJSMetaProperty &p)
 {
@@ -140,8 +146,6 @@ static void compileRootExternalConstructorBody(
                     + u"(&creator, engine, QQmlContextData::get(engine->rootContext()), /* "
                         u"endInit */ true, %1);"_s.arg(initializerName);
 };
-
-Q_LOGGING_CATEGORY(lcQmltcCompiler, "qml.qmltc.compiler", QtWarningMsg);
 
 const QString QmltcCodeGenerator::privateEngineName = u"ePriv"_s;
 const QString QmltcCodeGenerator::typeCountName = u"q_qmltc_typeCount"_s;
@@ -2032,5 +2036,7 @@ void QmltcCompiler::compileScriptBinding(QmltcType &current,
         break;
     }
 }
+
+} // namespace QQmltc
 
 QT_END_NAMESPACE

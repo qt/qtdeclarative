@@ -7,21 +7,7 @@ qt_internal_add_tool(${target_name}
     TOOLS_TARGET Qml
     SOURCES
         main.cpp
-        qmltccommandlineutils.h qmltccommandlineutils.cpp
-        qmltcoutputprimitives.h
-        qmltccodewriter.h qmltccodewriter.cpp
-        qmltcoutputir.h
-        qmltctyperesolver.h qmltctyperesolver.cpp
-        qmltcvisitor.h qmltcvisitor.cpp
-        qmltccompiler.h qmltccompiler.cpp
-        qmltccompilerpieces.h qmltccompilerpieces.cpp
-        qmltcpropertyutils.h
-    DEFINES
-        QT_NO_CAST_FROM_ASCII
-        QT_NO_CAST_TO_ASCII
     LIBRARIES
-        Qt::Core
-        Qt::QmlPrivate
-        Qt::QmlCompilerPrivate
+        Qt::QmltcPrivate
 )
 qt_internal_return_unless_building_tools()

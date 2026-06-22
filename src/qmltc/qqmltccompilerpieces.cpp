@@ -1,7 +1,7 @@
 // Copyright (C) 2022 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#include "qmltccompilerpieces.h"
+#include "qqmltccompilerpieces_p.h"
 
 #include <private/qqmljsutils_p.h>
 
@@ -10,6 +10,8 @@
 QT_BEGIN_NAMESPACE
 
 using namespace Qt::StringLiterals;
+
+namespace QQmltc {
 
 static QString scopeName(const QQmlJSScope::ConstPtr &scope)
 {
@@ -379,5 +381,7 @@ QString QmltcCodeGenerator::wrap_addressof(const QString &addressed)
 {
     return u"std::addressof(" + addressed + u")";
 }
+
+} // namespace QQmltc
 
 QT_END_NAMESPACE

@@ -89,6 +89,7 @@ endif()
 
 add_subdirectory(qmlcompiler)
 add_subdirectory(qmldom)
+add_subdirectory(qmltc)
 
 if(QT_FEATURE_commandlineparser)
     add_subdirectory(qmlformat)

@@ -1,7 +1,7 @@
 // Copyright (C) 2022 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#include "qmltctyperesolver.h"
+#include "qqmltctyperesolver_p.h"
 
 #include <private/qqmljsimporter_p.h>
 #include <private/qqmljsliteralbindingcheck_p.h>
@@ -13,6 +13,10 @@
 #include <QtCore/qdiriterator.h>
 
 Q_STATIC_LOGGING_CATEGORY(lcTypeResolver2, "qml.qmltc.typeresolver", QtInfoMsg);
+
+QT_BEGIN_NAMESPACE
+
+namespace QQmltc {
 
 void QmltcTypeResolver::init(QmltcVisitor *visitor, QQmlJS::AST::Node *program)
 {
@@ -54,3 +58,7 @@ QmltcTypeResolver::importedType(const QQmlJSScope::ConstPtr &type) const
         return {};
     return { it.key(), it.value() };
 }
+
+} // namespace QQmltc
+
+QT_END_NAMESPACE
