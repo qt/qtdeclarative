@@ -437,12 +437,12 @@ public:
     }
 
 public:
-    void increase()
+    virtual void increase()
     {
         d_func()->increase(QQuickAbstractSpinBoxPrivate::ValueStatus::Unmodified);
     }
 
-    void decrease()
+    virtual void decrease()
     {
         d_func()->decrease(QQuickAbstractSpinBoxPrivate::ValueStatus::Unmodified);
     }
