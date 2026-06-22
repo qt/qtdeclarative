@@ -78,6 +78,10 @@ public:
 
     void setWrap(bool wrap);
 
+public Q_SLOTS:
+    void increase() override;
+    void decrease() override;
+
 Q_SIGNALS:
     void fromChanged();
     void toChanged();

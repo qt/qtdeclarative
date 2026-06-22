@@ -1171,4 +1171,14 @@ TestCase {
         let control = createTemporaryObject(spinBox, testCase, { validator: null })
         verify(control)
     }
+
+    function test_increaseAndDecrease() {
+        let control = createTemporaryObject(spinBox, testCase, {from: 0, to: 100, value: 50})
+        verify(control)
+        compare(control.value, 50)
+        control.increase()
+        compare(control.value, 51)
+        control.decrease()
+        compare(control.value, 50)
+    }
 }

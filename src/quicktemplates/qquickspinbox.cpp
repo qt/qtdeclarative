@@ -491,9 +491,19 @@ void QQuickSpinBox::setWrap(bool wrap)
     \include qquickspinbox.qdocinc {increase} {SpinBox}
 */
 
+void QQuickSpinBox::increase()
+{
+    QQuickAbstractSpinBox<QQuickSpinBox, int>::increase();
+}
+
 /*!
     \include qquickspinbox.qdocinc {decrease} {SpinBox}
 */
+
+void QQuickSpinBox::decrease()
+{
+    QQuickAbstractSpinBox<QQuickSpinBox, int>::decrease();
+}
 
 void QQuickSpinBox::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
 {
