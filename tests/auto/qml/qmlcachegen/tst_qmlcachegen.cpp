@@ -60,6 +60,7 @@ private slots:
     void signalHandlerParameters();
     void errorOnArgumentsInSignalHandler();
     void aheadOfTimeCompilation();
+    void listPropertyReplaceIfNotDefault();
     void functionExpressions();
     void versionChecksForAheadOfTimeUnits();
     void retainedResources();
@@ -469,6 +470,54 @@ void tst_qmlcachegen::aheadOfTimeCompilation()
     QVariant result;
     QMetaObject::invokeMethod(obj.data(), "runTest", Q_RETURN_ARG(QVariant, result));
     QCOMPARE(result.toInt(), 42);
+}
+
+void tst_qmlcachegen::listPropertyReplaceIfNotDefault()
+{
+    SKIP_WHEN_CROSS_COMPILED
+
+    QTemporaryDir tempDir;
+    QVERIFY(tempDir.isValid());
+
+    // ReplaceIfNotDefault appends to the default list property and only replaces other list
+    // properties. ListPropertyAssignReplace is the combination of both replace bits, so a plain
+    // bitwise-and test misreported a ReplaceIfNotDefault unit as Replace and cleared the default
+    // list on the IR-loader path too. Test that this doesn't happen anymore.
+
+    const QString testFilePath = tempDir.path() + QLatin1String("/test.qml");
+    {
+        QFile f(testFilePath);
+        QVERIFY(f.open(QIODevice::WriteOnly | QIODevice::Truncate));
+        f.write("pragma ListPropertyAssignBehavior: ReplaceIfNotDefault\n"
+                "import QtQml\n"
+                "QtObject {\n"
+                "    component WithDefault: QtObject {\n"
+                "        default property list<QtObject> defaultList\n"
+                "    }\n"
+                "    component MyChild: WithDefault {\n"
+                "        QtObject {}\n"
+                "    }\n"
+                "    property MyChild child: MyChild {\n"
+                "        QtObject {}\n"
+                "    }\n"
+                "    property int count: child.defaultList.length\n"
+                "}");
+    }
+
+    QVERIFY(generateCache(testFilePath));
+
+    const QString cacheFilePath = testFilePath + QLatin1Char('c');
+    QVERIFY(QFile::exists(cacheFilePath));
+    QVERIFY(QFile::remove(testFilePath));
+
+    QQmlEngine engine;
+    CleanlyLoadingComponent component(&engine, QUrl::fromLocalFile(testFilePath));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY2(!obj.isNull(), qPrintable(component.errorString()));
+    // The child's own default element plus the one added by the instance: both are appended,
+    // because the default list keeps its append behavior under ReplaceIfNotDefault.
+    QCOMPARE(obj->property("count").toInt(), 2);
 }
 
 static QQmlPrivate::CachedQmlUnit *temporaryModifiedCachedUnit = nullptr;
