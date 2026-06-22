@@ -95,6 +95,7 @@ private slots:
     void fileSelectors();
     void localAliases();
     void aliasToAlias();
+    void deepAliasThroughGroupedAliasFromCache();
     void cacheResources();
     void stableOrderOfDependentCompositeTypes();
     void singletonDependency();
@@ -762,6 +763,47 @@ void tst_qmldiskcache::aliasToAlias()
         QScopedPointer<QObject> obj(component.create());
         QVERIFY(!obj.isNull());
         QCOMPARE(obj->property("myAlias").toInt(), 100);
+    }
+}
+
+void tst_qmldiskcache::deepAliasThroughGroupedAliasFromCache()
+{
+    // A deep alias whose intermediate segment is another alias that carries a grouped binding.
+    // The grouped binding's object has no property cache, so when the unit is reloaded from the
+    // disk cache the compilation-unit deep-alias resolver dereferenced a null cache and crashed.
+    // The alias target is declared before the deep alias here, so this exercises only the deep-alias
+    // resolution, not the out-of-order alias-to-alias resolution.
+    QQmlEngine engine;
+
+    TestCompiler testCompiler(&engine);
+    QVERIFY(testCompiler.tempDir.isValid());
+
+    const QByteArray contents = QByteArrayLiteral("import QtQml\n"
+                                                  "QtObject {\n"
+                                                  "    id: root\n"
+                                                  "    property alias foo: fooId\n"
+                                                  "    property alias bar: root.foo.objectName\n"
+                                                  "    foo {}\n"
+                                                  "    property QtObject o: QtObject {\n"
+                                                  "        id: fooId\n"
+                                                  "        objectName: \"hello\"\n"
+                                                  "    }\n"
+                                                  "}");
+
+    {
+        testCompiler.clearCache();
+        QVERIFY2(testCompiler.compile(contents), qPrintable(testCompiler.lastErrorString));
+        QVERIFY2(testCompiler.verify(), qPrintable(testCompiler.lastErrorString));
+    }
+
+    // Force a reload from the disk cache, which goes through the compilation-unit alias resolver.
+    engine.clearComponentCache();
+
+    {
+        CleanlyLoadingComponent component(&engine, testCompiler.testFilePath);
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(!obj.isNull());
+        QCOMPARE(obj->property("bar").toString(), QStringLiteral("hello"));
     }
 }
 
