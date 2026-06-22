@@ -299,8 +299,12 @@ QQmlComponentAndAliasResolver<QV4::CompiledData::CompilationUnit>::resolveAliase
             if (m_compiler->stringAt(it->propertyNameIndex) != property)
                 continue;
 
-            switch (handleDeepAlias(
-                    alias, m_propertyCaches->at(it->value.objectIndex), coreIndex, subProperty)) {
+            const QQmlPropertyCache::ConstPtr bindingCache
+                    = m_propertyCaches->at(it->value.objectIndex);
+            if (!bindingCache)
+                continue;
+
+            switch (handleDeepAlias(alias, bindingCache, coreIndex, subProperty)) {
             case DeepAliasResult::NoProperty:
                 continue;
             case DeepAliasResult::CannotAppend:
