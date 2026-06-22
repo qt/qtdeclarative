@@ -9,7 +9,7 @@ find_package(Qt6 QUIET OPTIONAL_COMPONENTS Multimedia)
 
 qt_standard_project_setup(REQUIRES 6.8)
 
-add_subdirectory("../../../examples/quick/shared" "shared")
+add_subdirectory("../shared" "shared")
 
 qt_add_executable(windowembedding_test
     WIN32
