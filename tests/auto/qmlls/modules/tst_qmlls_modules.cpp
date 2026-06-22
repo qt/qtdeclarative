@@ -29,7 +29,7 @@ using namespace Qt::StringLiterals;
 using namespace QLspSpecification;
 using namespace QmlLsp;
 
-static constexpr bool enable_debug_output = false;
+Q_STATIC_LOGGING_CATEGORY(lc, "qt.tst_qmlls_modules");
 
 static void createQmllsBuildIni(const QString &buildFolder,
                                 const QmlLsp::ModuleSettings &moduleSettings)
@@ -101,12 +101,12 @@ void tst_qmlls_modules::init()
         m_protocol->receiveData(data);
     });
 
-    if constexpr (enable_debug_output) {
+    if (lc().isDebugEnabled()) {
         connect(&m_server, &QProcess::readyReadStandardError, this, [this]() {
             QProcess::ProcessChannel tmp = m_server.readChannel();
             m_server.setReadChannel(QProcess::StandardError);
             while (m_server.canReadLine())
-                qDebug() << m_server.readLine();
+                qCDebug(lc) << m_server.readLine();
             m_server.setReadChannel(tmp);
         });
     }
@@ -148,7 +148,8 @@ void tst_qmlls_modules::cleanup()
     m_protocol->notifyExit(nullptr);
 
     m_server.disconnect(this);
-    if constexpr (enable_debug_output) {
+
+    if (lc().isDebugEnabled()) {
         m_server.disconnect(this);
     }
 
@@ -826,23 +827,17 @@ void tst_qmlls_modules::findUsages()
                 QScopeGuard cleanup(clean);
                 auto result = std::get_if<QList<Location>>(&_result);
                 QVERIFY(result);
-                if constexpr (enable_debug_output) {
-                    if (!locationListsAreEqual(*result, expectedUsages)) {
-                        qDebug() << "Got following locations:";
-                        for (auto &x : *result) {
-                            qDebug() << locationToString(x);
-                        }
-                        qDebug() << "But expected:";
-                        for (auto &x : expectedUsages) {
-                            qDebug() << locationToString(x);
-                        }
+                if (!locationListsAreEqual(*result, expectedUsages)) {
+                    qCDebug(lc) << "Got following locations:";
+                    for (auto &x : *result) {
+                        qCDebug(lc) << locationToString(x);
                     }
-                } else {
-                    // dont get warning on unused function when enable_debug_output is false
-                    Q_UNUSED(locationToString);
+                    qCDebug(lc) << "But expected:";
+                    for (auto &x : expectedUsages) {
+                        qCDebug(lc) << locationToString(x);
+                    }
+                    QFAIL("Location lists are not equal");
                 }
-
-                QVERIFY(locationListsAreEqual(*result, expectedUsages));
             },
             [clean](const ResponseError &err) {
                 QScopeGuard cleanup(clean);
@@ -1337,21 +1332,17 @@ void tst_qmlls_modules::linting()
                     return;
                 auto expectedMessage = recorder.diagnosticsPerFileVersions.find(*p.version);
                 if (expectedMessage == recorder.diagnosticsPerFileVersions.end()) {
-                    if constexpr (enable_debug_output) {
-                        if (p.diagnostics.size() > 0)
-                            qDebug() << "Did not expect message" << p.diagnostics.front().message;
-                    }
+                    if (p.diagnostics.size() > 0)
+                        qCDebug(lc) << "Did not expect message" << p.diagnostics.front().message;
 
                     QVERIFY(p.diagnostics.size() == 0);
                     diagnosticOk = true;
                     return;
                 }
                 QVERIFY(p.diagnostics.size() > 0);
-                if constexpr (enable_debug_output) {
-                    if (!p.diagnostics.front().message.contains(expectedMessage->toUtf8())) {
-                        qDebug() << "expected a message with" << *expectedMessage << "but got"
-                                 << p.diagnostics.front().message;
-                    }
+                if (!p.diagnostics.front().message.contains(expectedMessage->toUtf8())) {
+                    qCDebug(lc) << "expected a message with" << *expectedMessage << "but got"
+                                << p.diagnostics.front().message;
                 }
                 QVERIFY(p.diagnostics.front().message.contains(expectedMessage->toUtf8()));
                 diagnosticOk = true;
@@ -1536,7 +1527,7 @@ void tst_qmlls_modules::warnings()
 
                 if (expectedWarnings.warnings.isEmpty()) {
                     for (const auto& x: p.diagnostics)
-                        qDebug() << "Received unexpected message:" << x.message;
+                        qCDebug(lc) << "Received unexpected message:" << x.message;
                     QCOMPARE(p.diagnostics.size(), 0);
                     diagnosticOk = true;
                     return;
@@ -1798,11 +1789,9 @@ void tst_qmlls_modules::qmldirImports()
                 if (p.uri != *uri)
                     return;
 
-                if constexpr (enable_debug_output) {
-                    for (const auto &x : p.diagnostics) {
-                        qDebug() << x.message;
-                    }
-                }
+                qCDebug(lc) << qJoin(p.diagnostics.begin(), p.diagnostics.end(),
+                                     "Received unexpected messages:\n"_ba, "\n"_ba,
+                                     [](const Diagnostic &d) { return d.message; });
                 QCOMPARE(p.diagnostics.size(), 0);
                 diagnosticOk = true;
             });
@@ -1895,11 +1884,9 @@ void tst_qmlls_modules::quickFixes()
                 if (p.uri != *uri)
                     return;
 
-                if constexpr (enable_debug_output) {
-                    for (const auto &x : p.diagnostics) {
-                        qDebug() << x.message;
-                    }
-                }
+                qCDebug(lc) << qJoin(p.diagnostics.begin(), p.diagnostics.end(),
+                                     "Received unexpected messages:\n"_ba, "\n"_ba,
+                                     [](const Diagnostic &d) { return d.message; });
                 QCOMPARE_GE(p.diagnostics.size(), diagnosticIndex);
 
                 QList<Diagnostic> partially_sorted{ p.diagnostics };
@@ -2160,8 +2147,8 @@ static bool compareRanges(const Range &lhs, const Range &rhs)
 
 static void debugPrint(const Range &range)
 {
-    qDebug() << '{' << range.start.line << ',' << range.start.character << '}' << ',' << '{'
-             << range.end.line << ',' << range.end.character << '}';
+    qCDebug(lc) << '{' << range.start.line << ',' << range.start.character << '}' << ',' << '{'
+                << range.end.line << ',' << range.end.character << '}';
 }
 
 static bool compareDocumentSymbols(const DocumentSymbol &current, const DocumentSymbol &expected)
@@ -2181,25 +2168,25 @@ static bool compareDocumentSymbols(const DocumentSymbol &current, const Document
     const auto qmlObjectKind = DocumentSymbolUtils::symbolKindOf(qmlObjectItem);
     if (current.kind == qmlObjectKind) {
         if (current.detail != expected.detail) {
-            qDebug() << "Current " << current.detail << " Expected " << expected.detail;
+            qCDebug(lc) << "Current " << current.detail << " Expected " << expected.detail;
             return false;
         }
     } else {
         if (expected.detail.has_value() != current.detail.has_value()) {
-            qDebug() << current.name;
+            qCDebug(lc) << current.name;
             return false;
         }
     }
     if (!compareRanges(current.range, expected.range)) {
-        qDebug() << "Current Range: ";
+        qCDebug(lc) << "Current Range: ";
         debugPrint(current.range);
-        qDebug() << " Expected ";
+        qCDebug(lc) << " Expected ";
         debugPrint(expected.range);
     }
     if (!compareRanges(current.selectionRange, expected.selectionRange)) {
-        qDebug() << "Current Selection Range: ";
+        qCDebug(lc) << "Current Selection Range: ";
         debugPrint(current.selectionRange);
-        qDebug() << " Expected ";
+        qCDebug(lc) << " Expected ";
         debugPrint(expected.selectionRange);
     }
     // Compare children
