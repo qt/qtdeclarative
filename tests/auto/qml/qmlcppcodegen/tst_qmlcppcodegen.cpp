@@ -3992,6 +3992,11 @@ void tst_QmlCppCodegen::mathMinMax()
 
 void tst_QmlCppCodegen::mathOperations()
 {
+#ifdef QT_ASAN_ENABLED
+    if (qEnvironmentVariable("QTEST_ENVIRONMENT").split(u' ').contains("ci"_L1))
+        QSKIP("Skipping under ASAN in CI as it is too slow");
+#endif
+
     QQmlEngine engine;
     QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/mathOperations.qml"_s));
     QVERIFY2(c.isReady(), qPrintable(c.errorString()));
