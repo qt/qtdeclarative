@@ -577,16 +577,11 @@ QVariant QQStyleKitPropertyResolver::readStyleProperty(
     }
 
     QQStyleKitStyle *style = controlProperties->style();
-    if (!style) {
-        if (!s_styleWarningsIssued) {
-            s_styleWarningsIssued = true;
-            qmlWarning(group) << "style properties cannot be read: No StyleKit style has been set!";
-        }
-        return {};
-    }
-
-    if (!style->loaded()) {
-        // Optimization: Skip reads until both the style and the theme is ready
+    if (!style || !style->loaded()) {
+        /* No style has been set yet, or the style is still loading. The application should set
+         * a style early (e.g. at the top of main.qml) before creating any controls, to avoid
+         * premature property reads that end up here. However, some controls like the menu bar
+         * are instantiated very early and may try to read properties before a style is available. */
         return {};
     }
 
