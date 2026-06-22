@@ -35,7 +35,7 @@ public:
     QPointF position() const override;
     QSizeF viewportSize() const override;
     bool isIndexed() const override;
-    void setPosition(const QPointF &position) override;
+    void setPosition(QPointF position) override;
 
 protected:
     QQuickFlickable *flickable() const;
