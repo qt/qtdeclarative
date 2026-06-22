@@ -66,7 +66,7 @@ bool QAccessibleQuickFlickable::isIndexed() const
     return false;
 }
 
-void QAccessibleQuickFlickable::setPosition(const QPointF &position)
+void QAccessibleQuickFlickable::setPosition(QPointF position)
 {
     if (auto *f = flickable()) {
         const qreal contentWidth = f->contentWidth();
