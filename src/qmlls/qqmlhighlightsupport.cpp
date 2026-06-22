@@ -213,8 +213,9 @@ void QQmlHighlightSupport::registerHandlers(QLanguageServer *server, QLanguageSe
     QObject::connect(server, &QLanguageServer::clientInitialized, this,
                      &QQmlHighlightSupport::clientInitialized, Qt::SingleShotConnection);
 
-    QObject::connect(m_full.manager(), &QmlLsp::QQmlCodeModelManager::configurationChanged, this,
-                     [protocol]() { protocol->requestWorkspaceSemanticTokensRefresh({ }, { }); });
+    QObject::connect(
+            m_full.manager(), &QmlLsp::QQmlCodeModelManager::configurationChanged, this,
+            [protocol]() { protocol->requestWorkspaceSemanticTokensRefresh({ }, []() { }); });
 }
 
 void QQmlHighlightSupport::clientInitialized(QLanguageServer *server)
