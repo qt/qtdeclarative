@@ -22,6 +22,7 @@
 #include <QtQml/qqmlcomponent.h>
 #include <QtQmlModels/private/qqmlobjectmodel_p.h>
 #include <QtQmlModels/private/qqmllistmodel_p.h>
+#include <QtQmlModels/private/qqmlsortfilterproxymodel_p.h>
 
 #include "delegatechoosermodel.h"
 #include "testmodel.h"
@@ -325,6 +326,7 @@ private slots:
     void checkSelectionAfterReorder();
 
     void delegateChooserDataChange();
+    void requiredRoleUpdatedAfterProxyModelResort();
 };
 
 tst_QQuickTableView::tst_QQuickTableView()
@@ -8898,6 +8900,56 @@ void tst_QQuickTableView::verifyThatOnlyRemovedRowsArePooled()
     QCOMPARE(getItems({{0,0}, {1,0}, {0,2}, {1,2}}), initialItems);
     verifyContextProperties({{0,0,0}, {3,0,1}, {2,2,0}, {5,2,1}});
     verifyInitialItemsNotPooled();
+}
+
+void tst_QQuickTableView::requiredRoleUpdatedAfterProxyModelResort()
+{
+    // QTBUG-147684:
+    // When a SortFilterProxyModel with dynamicSortFilter re-sorts because of a
+    // setData() call, it emits layoutChanged followed immediately by
+    // dataChanged at the item's new proxy position. The dataChanged handler
+    // runs before the deferred ViewportOnly rebuild and, with delegate model
+    // items still keyed by pre-sort flat indices, updates the wrong delegate.
+    // The rebuild then matches every item back to its correct position, but
+    // the stale or wrong display value was never corrected.
+    LOAD_TABLEVIEW("sfpmRequiredRoleAfterResort.qml");
+
+    auto *sortModel = tableView->model().value<QQmlSortFilterProxyModel *>();
+    QVERIFY(sortModel);
+    auto *sourceModel = view->rootObject()->property("sourceModel").value<TestModel *>();
+    QVERIFY(sourceModel);
+
+    // Fill in values that are already in ascending order so the SFPM does not
+    // re-sort during setup. Each setData() is handled synchronously by
+    // dataChangedCallback() with correct flat indices — no rebuild needed.
+    sourceModel->setModelData(QPoint(0, 0), QSize(1, 1), "1");
+    sourceModel->setModelData(QPoint(0, 1), QSize(1, 1), "2");
+    sourceModel->setModelData(QPoint(0, 2), QSize(1, 1), "3");
+    sourceModel->setModelData(QPoint(0, 3), QSize(1, 1), "4");
+
+    auto displayAt = [&](int col, int row) -> QString {
+        const auto *item = tableView->itemAtCell(QPoint(col, row));
+        return item ? item->property("display").toString() : QString{};
+    };
+
+    QCOMPARE(displayAt(0, 0), "1");
+    QCOMPARE(displayAt(0, 1), "2");
+    QCOMPARE(displayAt(0, 2), "3");
+    QCOMPARE(displayAt(0, 3), "4");
+
+    // Change "1" (source row 0) to "9" so it moves from proxy row 0 to row 3.
+    // The SFPM emits layoutChanged (triggering a deferred ViewportOnly
+    // rebuild) then dataChanged at the new proxy position.
+    sourceModel->setModelData(QPoint(0, 0), QSize(1, 1), "9");
+
+    WAIT_UNTIL_POLISHED;
+
+    // After the rebuild every delegate must display the value at
+    // its current proxy row.
+    QCOMPARE(displayAt(0, 0), "2");
+    QCOMPARE(displayAt(0, 1), "3");
+    QCOMPARE(displayAt(0, 2), "4");
+    QCOMPARE(displayAt(0, 3), "9");
 }
 
 QTEST_MAIN(tst_QQuickTableView)
