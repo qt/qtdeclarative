@@ -72,7 +72,9 @@ bool QQmlTypeData::tryLoadFromDiskCache()
     auto unit = QQml::makeRefPointer<QV4::CompiledData::CompilationUnit>();
     {
         QString error;
-        if (!unit->loadFromDisk(url(), m_backupSourceCode.sourceTimeStamp(), &error)) {
+        const auto sourceChecksum = [this]() { return m_backupSourceCode.checksum(); };
+        if (!unit->loadFromDisk(url(), m_backupSourceCode.sourceTimeStamp(), sourceChecksum,
+                                &error)) {
             qCDebug(DBG_DISK_CACHE) << "Error loading" << urlString() << "from disk cache:" << error;
             return false;
         }
@@ -958,10 +960,22 @@ void QQmlTypeData::compile(const QQmlRefPointer<QQmlTypeNameCache> &typeNameCach
     const bool trySaveToDisk = m_typeLoader->writeCacheFile() && !typeRecompilation;
     if (trySaveToDisk) {
         QString errorString;
-        if (compilationUnit->saveToDisk(url(), &errorString)) {
+
+        QByteArray cachedChecksum;
+        const auto sourceChecksum = [&]() {
+            if (cachedChecksum.isEmpty())
+                cachedChecksum = m_backupSourceCode.checksum();
+            return cachedChecksum;
+        };
+
+        if (compilationUnit->saveToDisk(url(), sourceChecksum, &errorString)) {
             QString error;
-            if (!compilationUnit->loadFromDisk(url(), m_backupSourceCode.sourceTimeStamp(), &error)) {
-                // ignore error, keep using the in-memory compilation unit.
+            if (!compilationUnit->loadFromDisk(url(), m_backupSourceCode.sourceTimeStamp(),
+                                               sourceChecksum, &error)) {
+                // log but ignore error, keep using the in-memory compilation unit.
+                qCDebug(DBG_DISK_CACHE)
+                        << "Error re-loading cached version of" << compilationUnit->fileName()
+                        << "from disk:" << errorString;
             }
         } else {
             qCDebug(DBG_DISK_CACHE) << "Error saving cached version of"

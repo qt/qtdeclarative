@@ -16,6 +16,7 @@
 #include <QThread>
 #include <QCryptographicHash>
 #include <QStandardPaths>
+#include <QTimeZone>
 #include <QDirIterator>
 
 // C++ type that provides attached properties.  Used by
@@ -78,6 +79,17 @@ public:
     }
 };
 
+static QByteArray fileChecksum(const QString &fileName)
+{
+    QFile f(fileName);
+    if (!f.open(QIODevice::ReadOnly))
+        return QByteArray();
+    QCryptographicHash hash(QCryptographicHash::Md5);
+    if (!hash.addData(&f))
+        return QByteArray();
+    return hash.result();
+}
+
 class tst_qmldiskcache: public QObject
 {
     Q_OBJECT
@@ -91,6 +103,7 @@ private slots:
     void registerImportForImplicitComponent();
     void basicVersionChecks();
     void recompileAfterChange();
+    void recompileAfterContentChangeWithSameTimeStamp();
     void recompileAfterDirectoryChange();
     void fileSelectors();
     void localAliases();
@@ -272,15 +285,17 @@ struct TestCompiler
         const QString path = fileName.isEmpty() ? testFilePath : tempDir.path() + "/" + fileName;
 
         auto unit = QQml::makeRefPointer<QV4::CompiledData::CompilationUnit>();
-        return unit->loadFromDisk(QUrl::fromLocalFile(path),
-                                  QFileInfo(path).lastModified(), &lastErrorString);
+        return unit->loadFromDisk(QUrl::fromLocalFile(path), QFileInfo(path).lastModified(),
+                                  [&path]() { return fileChecksum(path); }, &lastErrorString);
     }
 
     quintptr unitData()
     {
         auto unit = QQml::makeRefPointer<QV4::CompiledData::CompilationUnit>();
         return unit->loadFromDisk(QUrl::fromLocalFile(testFilePath),
-                                  QFileInfo(testFilePath).lastModified(), &lastErrorString)
+                                  QFileInfo(testFilePath).lastModified(),
+                                  [this]() { return fileChecksum(testFilePath); },
+                                  &lastErrorString)
                 ? quintptr(unit->unitData())
                 : 0;
     }
@@ -359,8 +374,10 @@ void tst_qmldiskcache::loadLocalAsFallback()
     }
 
     auto unit = QQml::makeRefPointer<QV4::CompiledData::CompilationUnit>();
-    bool loaded = unit->loadFromDisk(QUrl::fromLocalFile(testCompiler.testFilePath),
-                                     QFileInfo(testCompiler.testFilePath).lastModified(),
+    const QString &sourcePath = testCompiler.testFilePath;
+    bool loaded = unit->loadFromDisk(QUrl::fromLocalFile(sourcePath),
+                                     QFileInfo(sourcePath).lastModified(),
+                                     [&sourcePath]() { return fileChecksum(sourcePath); },
                                      &testCompiler.lastErrorString);
     QVERIFY2(loaded, qPrintable(testCompiler.lastErrorString));
     QCOMPARE(unit->qmlData->nObjects, 1u);
@@ -575,6 +592,59 @@ void tst_qmldiskcache::recompileAfterChange()
         QScopedPointer<TypeVersion2> obj(qobject_cast<TypeVersion2*>(component.create()));
         QVERIFY(!obj.isNull());
         QVERIFY(QFileInfo(testCompiler.cacheFilePath).lastModified() > initialCacheTimeStamp);
+    }
+}
+
+void tst_qmldiskcache::recompileAfterContentChangeWithSameTimeStamp()
+{
+    // QTBUG-147384: in reproducible-build/OTA environments the source file's modification time
+    // may be pinned to a fixed value (e.g. SOURCE_DATE_EPOCH). A content change that keeps the
+    // same time stamp must still invalidate the cache. Cache files generated at run time are
+    // validated by content hashing, so this works regardless of the time stamp.
+
+    QQmlEngine engine;
+
+    TestCompiler testCompiler(&engine);
+    QVERIFY(testCompiler.tempDir.isValid());
+
+    // A fixed time stamp shared by both versions of the file.
+    const QDateTime fixedTime = QDateTime(QDate(2000, 1, 1), QTime(0, 0), QTimeZone::UTC);
+
+    const QByteArray v1 = QByteArrayLiteral("import QtQml\n"
+                                            "QtObject { property int value: 1 }");
+    const QByteArray v2 = QByteArrayLiteral("import QtQml\n"
+                                            "QtObject { property int value: 2 }");
+
+    const auto pinTimeStamp = [&]() {
+        QFile f(testCompiler.testFilePath);
+        QVERIFY(f.open(QIODevice::ReadWrite));
+        QVERIFY(f.setFileTime(fixedTime, QFile::FileModificationTime));
+    };
+
+    testCompiler.clearCache();
+    QVERIFY2(testCompiler.compile(v1), qPrintable(testCompiler.lastErrorString));
+    pinTimeStamp();
+    QCOMPARE(QFileInfo(testCompiler.testFilePath).lastModified(), fixedTime);
+
+    {
+        engine.clearComponentCache();
+        CleanlyLoadingComponent component(&engine, testCompiler.testFilePath);
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(!obj.isNull());
+        QCOMPARE(obj->property("value").toInt(), 1);
+    }
+
+    // Replace the content but restore the exact same modification time.
+    QVERIFY2(testCompiler.writeTestFile(v2), qPrintable(testCompiler.lastErrorString));
+    pinTimeStamp();
+    QCOMPARE(QFileInfo(testCompiler.testFilePath).lastModified(), fixedTime);
+
+    {
+        engine.clearComponentCache();
+        CleanlyLoadingComponent component(&engine, testCompiler.testFilePath);
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(!obj.isNull());
+        QCOMPARE(obj->property("value").toInt(), 2);
     }
 }
 
@@ -893,10 +963,10 @@ void tst_qmldiskcache::cacheResources()
 
         cacheFileTimeStamp = QFileInfo(cacheFile.fileName()).lastModified();
 
-        QDateTime referenceTimeStamp = QFileInfo(":/test.qml").lastModified();
-        if (!referenceTimeStamp.isValid())
-            referenceTimeStamp = QFileInfo(QCoreApplication::applicationFilePath()).lastModified();
-        QCOMPARE(qint64(unit.sourceTimeStamp), referenceTimeStamp.toMSecsSinceEpoch());
+        // A cache file generated at run time is validated by content hashing, not by time stamp.
+        QCOMPARE(qint64(unit.sourceTimeStamp), qint64(-1));
+        QCOMPARE(QByteArray(unit.sourceChecksum, sizeof(unit.sourceChecksum)),
+                 fileChecksum(QStringLiteral(":/test.qml")));
     }
 
     waitForFileSystem();
@@ -1270,7 +1340,9 @@ void tst_qmldiskcache::invalidateSaveLoadCache()
 
     QString errorString;
     auto oldUnit = QQml::makeRefPointer<QV4::CompiledData::CompilationUnit>();
-    QVERIFY2(oldUnit->loadFromDisk(url, QFileInfo(fileName).lastModified(), &errorString), qPrintable(errorString));
+    const auto sourceChecksum = [&fileName]() { return fileChecksum(fileName); };
+    QVERIFY2(oldUnit->loadFromDisk(url, QFileInfo(fileName).lastModified(), sourceChecksum,
+                                   &errorString), qPrintable(errorString));
 
     // Produce a checksum mismatch.
     e->clearComponentCache();
@@ -1313,7 +1385,8 @@ void tst_qmldiskcache::invalidateSaveLoadCache()
     // So, now we should be able to load a freshly written CU.
 
     auto unit = QQml::makeRefPointer<QV4::CompiledData::CompilationUnit>();
-    QVERIFY2(unit->loadFromDisk(url, QFileInfo(fileName).lastModified(), &errorString), qPrintable(errorString));
+    QVERIFY2(unit->loadFromDisk(url, QFileInfo(fileName).lastModified(), sourceChecksum,
+                                &errorString), qPrintable(errorString));
 
     QVERIFY(unit->unitData() != oldUnit->unitData());
 }

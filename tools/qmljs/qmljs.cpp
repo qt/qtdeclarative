@@ -23,11 +23,23 @@
 
 #include <QtCore/qcommandlineparser.h>
 #include <QtCore/qcoreapplication.h>
+#include <QtCore/qcryptographichash.h>
 #include <QtCore/qdatetime.h>
 #include <QtCore/qfile.h>
 #include <QtCore/qfileinfo.h>
 
 #include <iostream>
+
+static QByteArray fileChecksum(const QString &fileName)
+{
+    QFile f(fileName);
+    if (!f.open(QIODevice::ReadOnly))
+        return QByteArray();
+    QCryptographicHash hash(QCryptographicHash::Md5);
+    if (!hash.addData(&f))
+        return QByteArray();
+    return hash.result();
+}
 
 static void showException(QV4::ExecutionContext *ctx, const QV4::Value &exception, const QV4::StackTrace &trace)
 {
@@ -131,7 +143,9 @@ int main(int argc, char *argv[])
             if (useCache && QFile::exists(fn + QLatin1Char('c'))) {
                 auto unit = QQml::makeRefPointer<QV4::CompiledData::CompilationUnit>();
                 QString error;
-                if (unit->loadFromDisk(QUrl::fromLocalFile(fn), QFileInfo(fn).lastModified(), &error)) {
+                const auto sourceChecksum = [&fn]() { return fileChecksum(fn); };
+                if (unit->loadFromDisk(QUrl::fromLocalFile(fn), QFileInfo(fn).lastModified(),
+                                       sourceChecksum, &error)) {
                     script.reset(new QV4::Script(
                             &vm, nullptr, vm.insertCompilationUnit(std::move(unit))));
                 } else {
@@ -150,12 +164,10 @@ int main(int argc, char *argv[])
             if (!scope.hasException()) {
                 const auto unit = script->compilationUnit();
                 if (useCache && unit && !(unit->unitData()->flags & QV4::CompiledData::Unit::StaticData)) {
-                    if (unit->unitData()->sourceTimeStamp == 0) {
-                        const_cast<QV4::CompiledData::Unit*>(unit->unitData())->sourceTimeStamp = QFileInfo(fn).lastModified().toMSecsSinceEpoch();
-                    }
                     QString saveError;
+                    const auto sourceChecksum = [&fn]() { return fileChecksum(fn); };
                     if (!unit->baseCompilationUnit()->saveToDisk(
-                                QUrl::fromLocalFile(fn), &saveError)) {
+                                QUrl::fromLocalFile(fn), sourceChecksum, &saveError)) {
                         std::cout << "Error saving JS cache file: " << qPrintable(saveError) << std::endl;
                     }
                 }
