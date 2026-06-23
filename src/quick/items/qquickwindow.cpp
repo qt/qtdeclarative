@@ -59,6 +59,7 @@
 
 #include <rhi/qrhi.h>
 
+#include <algorithm>
 #include <utility>
 #include <mutex>
 
@@ -1609,6 +1610,22 @@ bool QQuickWindow::event(QEvent *event)
         // TODO should we deliver to all DAs at once then, since we don't know which one should get it?
         // or fix QTBUG-90851 so that the event always has points?
         bool ret = (da && da->event(event));
+
+        // The default QWindow mousePressEvent/mouseMoveEvent/mouseReleaseEvent handlers
+        // dispatched to above always ignore() the event, and Quick's own handlers don't
+        // reliably accept() the whole event either (e.g. QQuickDragHandler only does so
+        // incidentally). So isAccepted() may not reflect whether a point actually got
+        // grabbed. Fix that up before clearGrabbers() discards the grab state, so external
+        // code that still checks QEvent::isAccepted() (e.g. QWindowPrivate::forwardToPopup)
+        // gets a meaningful answer.
+        // Tablet events are excluded: QGuiApplicationPrivate::processTabletEvent() gives
+        // isAccepted() an unrelated meaning for them (whether to synthesize a compatibility
+        // QMouseEvent for items/handlers that only understand mouse events), and accepting
+        // here purely because a point got grabbed would suppress that synthesis (see the
+        // dedicated tablet handling below, which accepts tablet events on its own terms).
+        if (pe->isPointerEvent() && !QQuickDeliveryAgentPrivate::isTabletEvent(pe) && d->isPopup()
+            && std::any_of(std::cbegin(pe->points()), std::cend(pe->points()), [pe](auto &p){ return pe->exclusiveGrabber(p);}))
+            pe->accept();
 
         d->deliveryAgentPrivate()->clearGrabbers(pe);
 
