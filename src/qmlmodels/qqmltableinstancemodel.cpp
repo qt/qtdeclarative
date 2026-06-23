@@ -561,16 +561,37 @@ void QQmlTableInstanceModel::setModel(const QVariant &model)
 
 void QQmlTableInstanceModel::dataChangedCallback(const QModelIndex &begin, const QModelIndex &end, const QList<int> &roles)
 {
-    // This function is called when model data has changed. In that case, we tell the adaptor model
-    // to go through all the items we have created, find the ones that are affected, and notify that
-    // their model data has changed. This will in turn update QML bindings inside the delegate items.
-    int numberOfRowsChanged = end.row() - begin.row() + 1;
-    int numberOfColumnsChanged = end.column() - begin.column() + 1;
+    // This function is called when model data has changed. We iterate over the affected cells,
+    // find the delegate item (if any) currently showing each cell via its persistent model index,
+    // and notify the adaptor model so it can update role-based QML bindings in that item.
+    // NOTE: A model may sometimes emit layoutChanged first (e.g. after sorting), and then
+    // emit dataChanged for some of the affected items (e.g. because a data change triggered
+    // the sort in the first place). This causes a problem here, because TableView hasn't
+    // processed the layout change yet (it will do so on the next updatePolish()), so the
+    // items in this QQmlTableInstanceModel are index-wise out-of-sync with QAbstractItemModel.
+    // When we detect this, we temporarily correct an item's flat index before notifying, so
+    // that the right QModelIndex is read from QAbstractItemModel. Afterwards we restore the
+    // old flat index to stay in sync with what TableView expects. When TableView later
+    // rebuilds in response to the layout change, all flat indices will be corrected.
+    for (int row = begin.row(); row <= end.row(); ++row) {
+        for (int column = begin.column(); column <= end.column(); ++column) {
+            const QModelIndex modelIndex = abstractItemModel()->index(row, column);
+            const auto it = std::find_if(m_modelItems.cbegin(), m_modelItems.cend(),
+                [&modelIndex](const QQmlDelegateModelItem *item) {
+                    return item->persistentModelIndex() == modelIndex;
+                });
+            if (it == m_modelItems.cend())
+                continue;
 
-    for (int column = 0; column < numberOfColumnsChanged; ++column) {
-        const int columnIndex = begin.column() + column;
-        const int rowIndex = begin.row() + (columnIndex * rows());
-        m_adaptorModel.notify(m_modelItems.values(), rowIndex, numberOfRowsChanged, roles);
+            QQmlDelegateModelItem *modelItem = *it;
+            const int oldFlatIndex = modelItem->modelIndex();
+            const int newFlatIndex = row + column * rows();
+            if (oldFlatIndex != newFlatIndex)
+                modelItem->setModelIndex(newFlatIndex, row, column, false);
+            m_adaptorModel.notify({modelItem}, newFlatIndex, 1, roles);
+            if (oldFlatIndex != newFlatIndex)
+                modelItem->setModelIndex(oldFlatIndex, row, column, false);
+        }
     }
 }
 
