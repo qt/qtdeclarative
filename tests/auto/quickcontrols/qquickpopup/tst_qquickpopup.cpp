@@ -158,6 +158,7 @@ private slots:
     void popupWindowPositionerRespectingScreenBounds();
     void popupWindowRepositionOnImplicitSizeChange();
     void popupWindowDragInsidePopup();
+    void popupWindowDragHandlerDoesNotJump();
     void propagateTouchEvents();
     void blockEventsBehindModal_data();
     void blockEventsBehindModal();
@@ -3806,6 +3807,54 @@ void tst_QQuickPopup::popupWindowDragInsidePopup() // QTBUG-146887
     QVERIFY2(valueAfterDrag < valueAfterPress,
              qPrintable(QString("Slider value did not decrease during drag: was %1, got %2")
                                 .arg(valueAfterPress).arg(valueAfterDrag)));
+}
+
+void tst_QQuickPopup::popupWindowDragHandlerDoesNotJump() // QTBUG-147603
+{
+    if (!arePopupWindowsSupported())
+        QSKIP("The platform doesn't support popup windows. Skipping test.");
+
+    QQuickApplicationHelper helper(this, "popupWindowWithDragHandler.qml");
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    auto *popup = window->property("popup").value<QQuickPopup *>();
+    QVERIFY(popup);
+    auto *rect = window->property("draggableRect").value<QQuickItem *>();
+    QVERIFY(rect);
+
+    popup->open();
+    TRY_VERIFY_POPUP_OPENED(popup);
+
+    auto *popupWindow = QQuickPopupPrivate::get(popup)->popupWindow;
+    QVERIFY(popupWindow);
+
+    // The popup is at (50, 100) relative to the main window. Before the fix,
+    // move events that DragHandler had already exclusively grabbed inside the
+    // popup window kept being forwarded to the main window as well, because
+    // the QMouseEvent wasn't marked accepted. The main window's delivery agent
+    // then localized the same scenePosition() against its own coordinate
+    // system, producing a delta equal to the popup's screen offset (~100px in
+    // Y) rather than the actual drag distance.
+    const QPoint pressPos = window->mapFromGlobal(rect->mapToGlobal(rect->boundingRect().center()).toPoint());
+    const QPoint dragDelta(20, 15);
+
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, pressPos);
+    // Move in several small steps, like a real drag, rather than one big jump:
+    // the bug only manifests once DragHandler has taken the exclusive grab
+    // (which itself requires crossing the drag threshold), and then receives
+    // *further* move events while already grabbing.
+    PointLerper pointLerper(window, pressPos);
+    pointLerper.move(pressPos + dragDelta);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, pressPos + dragDelta);
+
+    // The rectangle's position must be close to the drag delta.
+    // Before the fix it would jump by approximately the popup's global screen
+    // offset (hundreds of pixels), landing far outside the popup's bounds.
+    QCOMPARE_LT(qAbs(rect->x() - dragDelta.x()), 3.0);
+    QCOMPARE_LT(qAbs(rect->y() - dragDelta.y()), 3.0);
 }
 
 void tst_QQuickPopup::propagateTouchEvents()
