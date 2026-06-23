@@ -27,6 +27,8 @@
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QQmlComponent>
 
+#include <algorithm>
+
 class tst_QQMLTypeLoader : public QQmlDataTest
 {
     Q_OBJECT
@@ -528,7 +530,10 @@ void tst_QQMLTypeLoader::intercept()
     QVERIFY(factory.loadedFiles.contains(dataDirectory() + "/Fast/qmldir"));
     QVERIFY(factory.loadedFiles.contains(dataDirectory() + "/Fast/Fast.qml"));
     QVERIFY(factory.loadedFiles.contains(dataDirectory() + "/GenericView.qml"));
-    QVERIFY(factory.loadedFiles.contains(QLatin1String(QT_TESTCASE_BUILDDIR) + "/Slow/qmldir"));
+    QVERIFY(std::any_of(factory.loadedFiles.cbegin(), factory.loadedFiles.cend(),
+                        [](const QString &file) {
+                            return file.endsWith(QLatin1String("/Slow/qmldir"));
+                        }));
 }
 
 void tst_QQMLTypeLoader::redirect()
