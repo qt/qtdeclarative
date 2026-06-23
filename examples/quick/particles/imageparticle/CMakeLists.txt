@@ -4,11 +4,9 @@
 cmake_minimum_required(VERSION 3.16)
 project(imageparticle LANGUAGES CXX)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick QuickControls2)
 
 qt_standard_project_setup(REQUIRES 6.8)
-
-add_subdirectory("../../shared" "shared")
 
 qt_add_executable(imageparticleexample WIN32 MACOSX_BUNDLE
     main.cpp
@@ -21,14 +19,15 @@ target_link_libraries(imageparticleexample PRIVATE
     Qt6::Gui
     Qt6::Qml
     Qt6::Quick
+    Qt6::QuickControls2
 )
-
-add_dependencies(imageparticleexample imageparticle_shared)
 
 # Resources:
 qt_add_qml_module(imageparticleexample
     URI imageparticle
     QML_FILES
+        "LauncherList.qml"
+        "SimpleLauncherDelegate.qml"
         "allatonce.qml"
         "colored.qml"
         "colortable.qml"
@@ -38,6 +37,10 @@ qt_add_qml_module(imageparticleexample
         "sharing.qml"
         "sprites.qml"
     RESOURCES
+        "images/back.png"
+        "images/back@2x.png"
+        "images/back@3x.png"
+        "images/back@4x.png"
         "images/bear_tiles.png"
         "images/colortable.png"
         "images/starfish_0.png"

@@ -4,11 +4,9 @@
 cmake_minimum_required(VERSION 3.16)
 project(animation LANGUAGES CXX)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick QuickControls2)
 
 qt_standard_project_setup(REQUIRES 6.8)
-
-add_subdirectory("../shared" "shared")
 
 qt_add_executable(animationexample
     WIN32
@@ -23,13 +21,14 @@ target_link_libraries(animationexample PRIVATE
     Qt6::Gui
     Qt6::Qml
     Qt6::Quick
+    Qt6::QuickControls2
 )
-
-add_dependencies(animationexample animation_shared)
 
 qt_add_qml_module(animationexample
     URI animation
     QML_FILES
+        "LauncherList.qml"
+        "SimpleLauncherDelegate.qml"
         "animation.qml"
         "basics/animators.qml"
         "basics/color-animation.qml"
@@ -45,6 +44,10 @@ qt_add_qml_module(animationexample
         "states/states.qml"
         "states/transitions.qml"
     RESOURCES
+        "images/back.png"
+        "images/back@2x.png"
+        "images/back@3x.png"
+        "images/back@4x.png"
         "basics/images/face-smile.png"
         "basics/images/moon.png"
         "basics/images/shadow.png"

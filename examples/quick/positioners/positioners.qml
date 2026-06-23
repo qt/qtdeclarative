@@ -2,17 +2,39 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 import QtQuick
-import shared as Examples
+import QtQuick.Controls
 
-Item {
-    height: 480
+ApplicationWindow {
     width: 320
-    Examples.LauncherList {
-        id: ll
+    height: 480
+    visible: true
+    title: qsTr("Positioners")
+
+    header: ToolBar {
+        visible: stack.depth > 1
+        height: visible ? implicitHeight : 0
+        ToolButton {
+            icon.source: "images/back.png"
+            Accessible.name: qsTr("Back")
+            onClicked: stack.pop()
+        }
+    }
+
+    StackView {
+        id: stack
         anchors.fill: parent
-        Component.onCompleted: {
-            addExample(qsTr("Transitions"), qsTr("Fluidly shows and hides elements"),  Qt.resolvedUrl("positioners-transitions.qml"))
-            addExample(qsTr("Attached Properties"), qsTr("Knows where it is in the positioner"), Qt.resolvedUrl("positioners-attachedproperties.qml"))
+        focus: true
+        initialItem: LauncherList {
+            model: [
+                { name: "Transitions", description: "Fluidly shows and hides elements", source: "positioners-transitions.qml" },
+                { name: "Attached Properties", description: "Knows where it is in the positioner", source: "positioners-attachedproperties.qml" },
+            ]
+            onExampleClicked: (source) => stack.push(exampleLoader, { source })
+        }
+
+        Component {
+            id: exampleLoader
+            Loader {}
         }
     }
 }

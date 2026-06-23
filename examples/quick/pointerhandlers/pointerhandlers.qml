@@ -3,7 +3,6 @@
 
 import QtQuick
 import QtQuick.Layouts
-import shared as Examples
 import "components"
 
 Rectangle {
@@ -11,7 +10,7 @@ Rectangle {
     width: 800
     height: 800
     visible: true
-    Examples.LauncherList {
+    LauncherList {
         id: ll
         objectName: "LauncherList"
         anchors.fill: parent

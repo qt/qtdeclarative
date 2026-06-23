@@ -2,20 +2,43 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 import QtQuick
-import shared
+import QtQuick.Controls
 
-Item {
-    height: 480
+ApplicationWindow {
     width: 320
-    LauncherList {
+    height: 480
+    visible: true
+    title: qsTr("Text")
+
+    header: ToolBar {
+        visible: stack.depth > 1
+        height: visible ? implicitHeight : 0
+        ToolButton {
+            icon.source: "images/back.png"
+            Accessible.name: qsTr("Back")
+            onClicked: stack.pop()
+        }
+    }
+
+    StackView {
+        id: stack
         anchors.fill: parent
-        Component.onCompleted: {
-            addExample(qsTr("Hello"), qsTr("An Animated Hello World"), Qt.resolvedUrl("fonts/hello.qml"));
-            addExample(qsTr("Fonts"), qsTr("Using various fonts with a Text element"), Qt.resolvedUrl("fonts/fonts.qml"));
-            addExample(qsTr("Available Fonts"), qsTr("A list of your available fonts"),  Qt.resolvedUrl("fonts/availableFonts.qml"));
-            addExample(qsTr("Banner"), qsTr("Large, scrolling text"), Qt.resolvedUrl("fonts/banner.qml"));
-            addExample(qsTr("Img tag"), qsTr("Embedding images into text"), Qt.resolvedUrl("imgtag/imgtag.qml"));
-            addExample(qsTr("Text Layout"), qsTr("Flowing text around items"), Qt.resolvedUrl("styledtext-layout.qml"));
+        focus: true
+        initialItem: LauncherList {
+            model: [
+                { name: "Hello", description: "An Animated Hello World", source: "fonts/hello.qml" },
+                { name: "Fonts", description: "Using various fonts with a Text element", source: "fonts/fonts.qml" },
+                { name: "Available Fonts", description: "A list of your available fonts", source: "fonts/availableFonts.qml" },
+                { name: "Banner", description: "Large, scrolling text", source: "fonts/banner.qml" },
+                { name: "Img tag", description: "Embedding images into text", source: "imgtag/imgtag.qml" },
+                { name: "Text Layout", description: "Flowing text around items", source: "styledtext-layout.qml" },
+            ]
+            onExampleClicked: (source) => stack.push(exampleLoader, { source })
+        }
+
+        Component {
+            id: exampleLoader
+            Loader {}
         }
     }
 }

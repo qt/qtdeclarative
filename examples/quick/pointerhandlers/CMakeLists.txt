@@ -8,8 +8,6 @@ find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick Svg)
 
 qt_standard_project_setup(REQUIRES 6.8)
 
-add_subdirectory("../shared" "shared")
-
 qt_add_executable(pointerhandlersexample WIN32 MACOSX_BUNDLE main.cpp)
 
 set_target_properties(pointerhandlersexample PROPERTIES FOLDER "qtc_runnable")
@@ -22,11 +20,11 @@ target_link_libraries(pointerhandlersexample PRIVATE
     Qt6::Svg
 )
 
-add_dependencies(pointerhandlersexample pointerhandlers_shared)
-
 qt_add_qml_module(pointerhandlersexample
     URI pointerhandlers
     QML_FILES
+        "LauncherList.qml"
+        "SimpleLauncherDelegate.qml"
         "components/Button.qml"
         "components/CheckBox.qml"
         "components/CorkPanel.qml"
@@ -55,6 +53,8 @@ qt_add_qml_module(pointerhandlersexample
         "tabletCanvasDrawing.qml"
         "tapHandler.qml"
     RESOURCES
+        "images/back.png"
+        "images/next.png"
         "components/images/checkmark.png"
         "components/images/cork.jpg"
         "components/images/fingersprite.png"

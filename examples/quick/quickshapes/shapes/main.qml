@@ -2,19 +2,42 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 import QtQuick
-import shared
+import QtQuick.Controls
 
-Item {
-    width: 1280
-    height: 720
-    LauncherList {
+ApplicationWindow {
+    width: 320
+    height: 480
+    visible: true
+    title: qsTr("Shapes")
+
+    header: ToolBar {
+        visible: stack.depth > 1
+        height: visible ? implicitHeight : 0
+        ToolButton {
+            icon.source: "images/back.png"
+            Accessible.name: qsTr("Back")
+            onClicked: stack.pop()
+        }
+    }
+
+    StackView {
+        id: stack
         anchors.fill: parent
-        Component.onCompleted: {
-            addExample(qsTr("Shape Gallery"), qsTr("Simple path rendering examples"), Qt.resolvedUrl("shapegallery.qml"))
-            addExample(qsTr("Interactive Shape"), qsTr("Dynamic, interactive path rendering examples"), Qt.resolvedUrl("interactive.qml"))
-            addExample(qsTr("Anti-aliasing"), qsTr("Improving quality"), Qt.resolvedUrl("sampling.qml"))
-            addExample(qsTr("Magnify My Tiger!"), qsTr("Path zooming example"), Qt.resolvedUrl("zoomtiger.qml"))
-            addExample(qsTr("Clip My Tiger!"), qsTr("Clip examples, a.k.a. What Not To Do"), Qt.resolvedUrl("clippedtigers.qml"))
+        focus: true
+        initialItem: LauncherList {
+            model: [
+                { name: "Shape Gallery", description: "Simple path rendering examples", source: "shapegallery.qml" },
+                { name: "Interactive Shape", description: "Dynamic, interactive path rendering examples", source: "interactive.qml" },
+                { name: "Anti-aliasing", description: "Improving quality", source: "sampling.qml" },
+                { name: "Magnify My Tiger!", description: "Path zooming example", source: "zoomtiger.qml" },
+                { name: "Clip My Tiger!", description: "Clip examples, a.k.a. What Not To Do", source: "clippedtigers.qml" },
+            ]
+            onExampleClicked: (source) => stack.push(exampleLoader, { source })
+        }
+
+        Component {
+            id: exampleLoader
+            Loader {}
         }
     }
 }

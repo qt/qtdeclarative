@@ -2,29 +2,44 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 import QtQuick
-import shared as Examples
+import QtQuick.Controls
 
-Item {
-    id: root
-    height: 480
+ApplicationWindow {
     width: 320
-    Examples.LauncherList {
-        anchors.fill: root
-        Component.onCompleted: {
-            addExample(qsTr("Red heart"), qsTr("Draws a red heart with bezier curves"),
-                Qt.resolvedUrl("bezierCurve/bezierCurve.qml"))
-            addExample(qsTr("Talk bubble"), qsTr("Draws a talk bubble with quadratic curves"),
-                Qt.resolvedUrl("quadraticCurveTo/quadraticCurveTo.qml"))
-            addExample(qsTr("Squircle"), qsTr("Draws a smooth squircle with simple lines"),
-                Qt.resolvedUrl("squircle/squircle.qml"))
-            addExample(qsTr("Rounded rectangle"), qsTr("Draws a rounded rectangle with lines and arcs"),
-                Qt.resolvedUrl("roundedrect/roundedrect.qml"))
-            addExample(qsTr("Smile face"), qsTr("Draws a smile face with complex paths"),
-                Qt.resolvedUrl("smile/smile.qml"))
-            addExample(qsTr("Clip"), qsTr("Shows the canvas clip feature"),
-                Qt.resolvedUrl("clip/clip.qml"))
-            addExample(qsTr("Tiger"), qsTr("Draw a tiger with a collection of SVG paths"),
-                Qt.resolvedUrl("tiger/tiger.qml"))
+    height: 480
+    visible: true
+    title: qsTr("Canvas")
+
+    header: ToolBar {
+        visible: stack.depth > 1
+        height: visible ? implicitHeight : 0
+        ToolButton {
+            icon.source: "images/back.png"
+            Accessible.name: qsTr("Back")
+            onClicked: stack.pop()
+        }
+    }
+
+    StackView {
+        id: stack
+        anchors.fill: parent
+        focus: true
+        initialItem: LauncherList {
+            model: [
+                { name: "Red heart", description: "Draws a red heart with bezier curves", source: "bezierCurve/bezierCurve.qml" },
+                { name: "Talk bubble", description: "Draws a talk bubble with quadratic curves", source: "quadraticCurveTo/quadraticCurveTo.qml" },
+                { name: "Squircle", description: "Draws a smooth squircle with simple lines", source: "squircle/squircle.qml" },
+                { name: "Rounded rectangle", description: "Draws a rounded rectangle with lines and arcs", source: "roundedrect/roundedrect.qml" },
+                { name: "Smile face", description: "Draws a smile face with complex paths", source: "smile/smile.qml" },
+                { name: "Clip", description: "Shows the canvas clip feature", source: "clip/clip.qml" },
+                { name: "Tiger", description: "Draw a tiger with a collection of SVG paths", source: "tiger/tiger.qml" },
+            ]
+            onExampleClicked: (source) => stack.push(exampleLoader, { source })
+        }
+
+        Component {
+            id: exampleLoader
+            Loader {}
         }
     }
 }

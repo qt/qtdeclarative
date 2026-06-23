@@ -50,20 +50,8 @@ endif()
 # qt_examples_build_end() misses at least some of these due to some
 # source subdirectories being added multiple times. See QTBUG-96159.
 set(reused_dir_targets
-    animation_shared
-    canvas_shared
-    views_shared
-    positioners_shared
-    text_shared
     window_shared
-    imageelements_shared
-    pointerhandlers_shared
-    affectors_shared
-    emitters_shared
-    imageparticle_shared
     itemparticle_shared
-    system_shared
-    draganddrop_shared
     testbed_shared
     itemswitcher_shared
     neumorphicpanel_shared

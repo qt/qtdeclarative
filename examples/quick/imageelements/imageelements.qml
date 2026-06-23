@@ -2,24 +2,45 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 import QtQuick
-import shared as Shared
+import QtQuick.Controls
 
-Item {
-    height: 480
+ApplicationWindow {
     width: 320
-    Shared.LauncherList {
-        id: ll
+    height: 480
+    visible: true
+    title: qsTr("Image Elements")
 
+    header: ToolBar {
+        visible: stack.depth > 1
+        height: visible ? implicitHeight : 0
+        ToolButton {
+            icon.source: "images/back.png"
+            Accessible.name: qsTr("Back")
+            onClicked: stack.pop()
+        }
+    }
+
+    StackView {
+        id: stack
         anchors.fill: parent
-        Component.onCompleted: {
-            addExample(qsTr("BorderImage"), qsTr("An image with scaled borders"),  Qt.resolvedUrl("borderimage.qml"))
-            addExample(qsTr("Image"), qsTr("A showcase of the options available to Image"), Qt.resolvedUrl("image.qml"))
-            addExample(qsTr("Shadows"), qsTr("Rectangles with a drop-shadow effect"), Qt.resolvedUrl("shadows.qml"))
-            addExample(qsTr("AnimatedImage"), qsTr("An image which plays animated formats"), Qt.resolvedUrl("animatedimage.qml"))
-            addExample(qsTr("AnimatedSprite"), qsTr("A simple sprite-based animation"), Qt.resolvedUrl("animatedsprite.qml"))
-            addExample(qsTr("SpriteSequence"), qsTr("A sprite-based animation with complex transitions"), Qt.resolvedUrl("spritesequence.qml"))
-            addExample(qsTr("FrameStepping"), qsTr("A multi-frame non-animated image"), Qt.resolvedUrl("framestepping.qml"))
-            addExample(qsTr("MultiBorderImage"), qsTr("A multi-frame image with scaled borders"), Qt.resolvedUrl("multiframeborderimage.qml"))
+        focus: true
+        initialItem: LauncherList {
+            model: [
+                { name: "BorderImage", description: "An image with scaled borders", source: "borderimage.qml" },
+                { name: "Image", description: "A showcase of the options available to Image", source: "image.qml" },
+                { name: "Shadows", description: "Rectangles with a drop-shadow effect", source: "shadows.qml" },
+                { name: "AnimatedImage", description: "An image which plays animated formats", source: "animatedimage.qml" },
+                { name: "AnimatedSprite", description: "A simple sprite-based animation", source: "animatedsprite.qml" },
+                { name: "SpriteSequence", description: "A sprite-based animation with complex transitions", source: "spritesequence.qml" },
+                { name: "FrameStepping", description: "A multi-frame non-animated image", source: "framestepping.qml" },
+                { name: "MultiBorderImage", description: "A multi-frame image with scaled borders", source: "multiframeborderimage.qml" },
+            ]
+            onExampleClicked: (source) => stack.push(exampleLoader, { source })
+        }
+
+        Component {
+            id: exampleLoader
+            Loader {}
         }
     }
 }

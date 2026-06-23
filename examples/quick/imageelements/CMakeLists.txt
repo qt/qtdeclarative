@@ -4,11 +4,9 @@
 cmake_minimum_required(VERSION 3.16)
 project(imageelements LANGUAGES CXX)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick QuickControls2)
 
 qt_standard_project_setup(REQUIRES 6.8)
-
-add_subdirectory("../shared" "shared")
 
 qt_add_executable(imageelementsexample
     WIN32
@@ -21,11 +19,14 @@ target_link_libraries(imageelementsexample PRIVATE
     Qt6::Gui
     Qt6::Qml
     Qt6::Quick
+    Qt6::QuickControls2
 )
 
 qt_add_qml_module(imageelementsexample
     URI imageelements
     QML_FILES
+        "LauncherList.qml"
+        "SimpleLauncherDelegate.qml"
         "animatedimage.qml"
         "animatedsprite.qml"
         "borderimage.qml"
@@ -40,6 +41,10 @@ qt_add_qml_module(imageelementsexample
         "MyBorderImage.qml"
         "ShadowRectangle.qml"
     RESOURCES
+        "images/back.png"
+        "images/back@2x.png"
+        "images/back@3x.png"
+        "images/back@4x.png"
         "pics/qt-logo.png"
         "pics/shadow.png"
         "pics/speaker.png"

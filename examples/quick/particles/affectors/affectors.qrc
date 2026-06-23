@@ -1,5 +1,11 @@
 <RCC>
     <qresource prefix="/qt/qml/affectors">
+        <file>LauncherList.qml</file>
+        <file>SimpleLauncherDelegate.qml</file>
+        <file>images/back.png</file>
+        <file>images/back@2x.png</file>
+        <file>images/back@3x.png</file>
+        <file>images/back@4x.png</file>
         <file>affectors.qml</file>
         <file>age.qml</file>
         <file>attractor.qml</file>

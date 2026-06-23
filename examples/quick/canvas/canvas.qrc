@@ -1,5 +1,11 @@
 <RCC>
     <qresource prefix="/qt/qml/canvas">
+        <file>LauncherList.qml</file>
+        <file>SimpleLauncherDelegate.qml</file>
+        <file>images/back.png</file>
+        <file>images/back@2x.png</file>
+        <file>images/back@3x.png</file>
+        <file>images/back@4x.png</file>
         <file>canvas.qml</file>
         <file>LabeledSlider.qml</file>
         <file>bezierCurve/bezierCurve.qml</file>

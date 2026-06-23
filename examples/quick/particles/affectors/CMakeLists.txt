@@ -4,11 +4,9 @@
 cmake_minimum_required(VERSION 3.16)
 project(affectors LANGUAGES CXX)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick QuickControls2)
 
 qt_standard_project_setup(REQUIRES 6.8)
-
-add_subdirectory("../../shared" "shared")
 
 qt_add_executable(affectorsexample WIN32 MACOSX_BUNDLE
     main.cpp
@@ -21,14 +19,15 @@ target_link_libraries(affectorsexample PRIVATE
     Qt6::Gui
     Qt6::Qml
     Qt6::Quick
+    Qt6::QuickControls2
 )
-
-add_dependencies(affectorsexample affectors_shared)
 
 # Resources:
 qt_add_qml_module(affectorsexample
     URI affectors
     QML_FILES
+        "LauncherList.qml"
+        "SimpleLauncherDelegate.qml"
         "affectors.qml"
         "GreyButton.qml"
         "age.qml"
@@ -42,6 +41,10 @@ qt_add_qml_module(affectorsexample
         "turbulence.qml"
         "wander.qml"
     RESOURCES
+        "images/back.png"
+        "images/back@2x.png"
+        "images/back@3x.png"
+        "images/back@4x.png"
         "images/snowflake.png"
         "images/finalfrontier.png"
         "images/meteor.png"
