@@ -19,7 +19,7 @@ QT_BEGIN_NAMESPACE
 // If you update the data structures in qv4compileddata_p.h, then you also need to
 // update the comparison functions below. Only after making sure the comparisons
 // are fine, bump the version in the static_assert.
-static_assert(QV4_DATA_STRUCTURE_VERSION == 0x4e);
+static_assert(QV4_DATA_STRUCTURE_VERSION == 0x4f);
 
 namespace QV4::CompiledData {
 
@@ -324,6 +324,13 @@ struct UnitDiffer
         if (oldUnit->version != newUnit->version || oldUnit->reserved != newUnit->reserved
             || oldUnit->sourceTimeStamp != newUnit->sourceTimeStamp
             || oldUnit->unitSize != newUnit->unitSize) {
+            return false;
+        }
+
+        // sourceChecksum lives before md5Checksum and is therefore not covered by it.
+        if (std::memcmp(oldUnit->sourceChecksum, newUnit->sourceChecksum,
+                        sizeof(oldUnit->sourceChecksum))
+            != 0) {
             return false;
         }
 

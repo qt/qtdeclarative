@@ -12,6 +12,8 @@
 
 #include <QtQml/qqmlengine.h>
 
+#include <QtCore/qcryptographichash.h>
+
 #include <qtqml_tracepoints_p.h>
 
 DEFINE_BOOL_CONFIG_OPTION(dumpErrors, QML_DUMP_ERRORS);
@@ -636,6 +638,22 @@ QDateTime QQmlDataBlob::SourceCodeData::sourceTimeStamp() const
         return QDateTime();
 
     return fileInfo.lastModified();
+}
+
+QByteArray QQmlDataBlob::SourceCodeData::checksum() const
+{
+    QCryptographicHash hash(QCryptographicHash::Md5);
+    if (hasInlineSourceCode) {
+        hash.addData(inlineSourceCode.toUtf8());
+        return hash.result();
+    }
+
+    QFile f(fileInfo.absoluteFilePath());
+    if (!f.open(QIODevice::ReadOnly))
+        return QByteArray();
+    if (!hash.addData(&f))
+        return QByteArray();
+    return hash.result();
 }
 
 bool QQmlDataBlob::SourceCodeData::exists() const

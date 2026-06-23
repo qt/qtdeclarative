@@ -35,20 +35,33 @@ bool Unit::verifyHeader(QDateTime expectedSourceTimeStamp, QString *errorString)
         return false;
     }
 
-    if (sourceTimeStamp) {
-        // Files from the resource system do not have any time stamps, so fall back to the application
-        // executable.
+    switch (sourceTimeStamp) {
+    case 0:
+        // No validation necessary
+        return true;
+    case -1:
+        // Content-hash mode: the unit is validated against sourceChecksum rather than the source
+        // file's time stamp. The actual comparison is done in CompilationUnit::loadFromDisk, which
+        // has access to the source code.
+        return true;
+    default:
+        break;
+    }
+
+    // Files from the resource system do not have any time stamps, so fall back to the application
+    // executable.
+    if (!expectedSourceTimeStamp.isValid()) {
+        expectedSourceTimeStamp = QFileInfo(QCoreApplication::applicationFilePath()).lastModified();
         if (!expectedSourceTimeStamp.isValid()) {
-            expectedSourceTimeStamp = QFileInfo(QCoreApplication::applicationFilePath()).lastModified();
-            if (!expectedSourceTimeStamp.isValid()) {
-                *errorString = QStringLiteral("Failed to get valid timestamp from application executable");
-                return false;
-            }
-        }
-        if (expectedSourceTimeStamp.toMSecsSinceEpoch() != sourceTimeStamp) {
-            *errorString = QStringLiteral("QML source file has a different time stamp than cached file.");
+            *errorString =
+                    QStringLiteral("Failed to get valid timestamp from application executable");
             return false;
         }
+    }
+    if (expectedSourceTimeStamp.toMSecsSinceEpoch() != sourceTimeStamp) {
+        *errorString =
+                QStringLiteral("QML source file has a different time stamp than cached file.");
+        return false;
     }
 
     return true;
@@ -121,7 +134,8 @@ QString CompilationUnit::localCacheFilePath(const QUrl &url)
 }
 
 bool CompilationUnit::loadFromDisk(
-        const QUrl &url, const QDateTime &sourceTimeStamp, QString *errorString)
+        const QUrl &url, const QDateTime &sourceTimeStamp,
+        qxp::function_ref<QByteArray() const> sourceChecksum, QString *errorString)
 {
     if (!QQmlFile::isLocalFile(url)) {
         *errorString = QStringLiteral("File has to be a local file.");
@@ -148,6 +162,16 @@ bool CompilationUnit::loadFromDisk(
         });
         setUnitData(mappedUnit);
 
+        if (mappedUnit->sourceTimeStamp == -1) {
+            const QByteArray checksum = sourceChecksum();
+            if (checksum.size() != sizeof(mappedUnit->sourceChecksum)
+                || memcmp(mappedUnit->sourceChecksum, checksum.constData(), checksum.size()) != 0) {
+                *errorString = QStringLiteral(
+                        "QML source file has a different content checksum than cached file.");
+                continue;
+            }
+        }
+
         if (mappedUnit->sourceFileIndex != 0) {
             if (mappedUnit->sourceFileIndex >=
                 mappedUnit->stringTableSize + dynamicStrings.size()) {
@@ -170,17 +194,35 @@ bool CompilationUnit::loadFromDisk(
     return false;
 }
 
-bool CompilationUnit::saveToDisk(const QUrl &unitUrl, QString *errorString) const
+bool CompilationUnit::saveToDisk(
+        const QUrl &unitUrl, qxp::function_ref<QByteArray() const> sourceChecksum,
+        QString *errorString) const
 {
-    if (unitData()->sourceTimeStamp == 0) {
-        *errorString = QStringLiteral("Missing time stamp for source file");
-        return false;
-    }
-
     if (!QQmlFile::isLocalFile(unitUrl)) {
         *errorString = QStringLiteral("File has to be a local file.");
         return false;
     }
+
+    Unit *mutableUnit = const_cast<Unit *>(unitData());
+    const QByteArray checksum = sourceChecksum();
+    if (checksum.size() != sizeof(mutableUnit->sourceChecksum)) {
+        *errorString = QStringLiteral("Failed to compute source code checksum");
+        return false;
+    }
+
+    // Switch the unit to content-hash mode for the duration of the write. sourceTimeStamp and
+    // sourceChecksum live before md5Checksum and are therefore not covered by it, so we can patch
+    // them without recomputing the integrity checksum. Restore them afterwards because the
+    // in-memory unit is kept around and may still be used with its original time stamp.
+    const qint64 oldTimeStamp = mutableUnit->sourceTimeStamp;
+    char oldChecksum[sizeof(mutableUnit->sourceChecksum)];
+    memcpy(oldChecksum, mutableUnit->sourceChecksum, sizeof(oldChecksum));
+    mutableUnit->sourceTimeStamp = -1;
+    memcpy(mutableUnit->sourceChecksum, checksum.constData(), sizeof(mutableUnit->sourceChecksum));
+    const auto restore = qScopeGuard([&]() {
+        mutableUnit->sourceTimeStamp = oldTimeStamp;
+        memcpy(mutableUnit->sourceChecksum, oldChecksum, sizeof(oldChecksum));
+    });
 
     return SaveableUnitPointer(unitData()).saveToDisk<char>(
             [&unitUrl, errorString](const char *data, quint32 size) {

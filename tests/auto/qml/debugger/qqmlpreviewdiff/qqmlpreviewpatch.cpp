@@ -651,6 +651,8 @@ private:
             return true;
         Unit *unit = reinterpret_cast<Unit *>(m_patchedData.data());
         unit->sourceTimeStamp = m_unitMetadata->sourceTimeStamp;
+        std::memcpy(unit->sourceChecksum, m_unitMetadata->sourceChecksum,
+                    sizeof(unit->sourceChecksum));
         unit->sourceFileIndex = m_unitMetadata->sourceFileIndex;
         unit->finalUrlIndex = m_unitMetadata->finalUrlIndex;
         unit->flags = m_unitMetadata->flags;

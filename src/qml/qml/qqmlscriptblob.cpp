@@ -34,7 +34,8 @@ void QQmlScriptBlob::dataReceived(const SourceCodeData &data)
         if (m_typeLoader->readCacheFile()) {
             auto unit = QQml::makeRefPointer<QV4::CompiledData::CompilationUnit>();
             QString error;
-            if (unit->loadFromDisk(url(), data.sourceTimeStamp(), &error)) {
+            const auto sourceChecksum = [&data]() { return data.checksum(); };
+            if (unit->loadFromDisk(url(), data.sourceTimeStamp(), sourceChecksum, &error)) {
                 initializeFromCompilationUnit(std::move(unit));
                 return;
             } else {
@@ -103,10 +104,13 @@ void QQmlScriptBlob::dataReceived(const SourceCodeData &data)
 
     if (m_typeLoader->writeCacheFile()) {
         QString errorString;
-        if (unit->saveToDisk(url(), &errorString)) {
+        const auto sourceChecksum = [&data]() { return data.checksum(); };
+        if (unit->saveToDisk(url(), sourceChecksum, &errorString)) {
             QString error;
-            if (!unit->loadFromDisk(url(), data.sourceTimeStamp(), &error)) {
-                // ignore error, keep using the in-memory compilation unit.
+            if (!unit->loadFromDisk(url(), data.sourceTimeStamp(), sourceChecksum, &error)) {
+                // log but ignore error, keep using the in-memory compilation unit.
+                qCDebug(DBG_DISK_CACHE()) << "Error re-loading cached version of"
+                                          << unit->fileName() << "from disk:" << errorString;
             }
         } else {
             qCDebug(DBG_DISK_CACHE()) << "Error saving cached version of"

@@ -87,6 +87,7 @@ public:
     public:
         QString readAll(QString *error) const;
         QDateTime sourceTimeStamp() const;
+        QByteArray checksum() const;
         bool exists() const;
         bool isEmpty() const;
         bool isCacheable() const { return !hasStaticData; }
