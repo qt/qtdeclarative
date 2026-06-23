@@ -1,6 +1,6 @@
 TEMPLATE = app
 
-QT += quick qml
+QT += quick qml quickcontrols2
 SOURCES += main.cpp
 RESOURCES += \
     shapes.qrc \

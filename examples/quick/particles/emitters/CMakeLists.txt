@@ -4,11 +4,9 @@
 cmake_minimum_required(VERSION 3.16)
 project(emitters LANGUAGES CXX)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick QuickControls2)
 
 qt_standard_project_setup(REQUIRES 6.8)
-
-add_subdirectory("../../shared" "shared")
 
 qt_add_executable(emittersexample WIN32 MACOSX_BUNDLE
     main.cpp
@@ -21,14 +19,15 @@ target_link_libraries(emittersexample PRIVATE
     Qt6::Gui
     Qt6::Qml
     Qt6::Quick
+    Qt6::QuickControls2
 )
-
-add_dependencies(emittersexample emitters_shared)
 
 # Resources:
 qt_add_qml_module(emittersexample
     URI emitters
     QML_FILES
+        "LauncherList.qml"
+        "SimpleLauncherDelegate.qml"
         "burstandpulse.qml"
         "customemitter.qml"
         "emitmask.qml"
@@ -38,6 +37,10 @@ qt_add_qml_module(emittersexample
         "velocityfrommotion.qml"
         "emitters.qml"
     RESOURCES
+        "images/back.png"
+        "images/back@2x.png"
+        "images/back@3x.png"
+        "images/back@4x.png"
         "images/portal_bg.png"
         "images/starfish_mask.png"
 )

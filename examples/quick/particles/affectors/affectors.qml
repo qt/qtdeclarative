@@ -2,25 +2,47 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 import QtQuick
-import shared
+import QtQuick.Controls
 
-Item {
-    height: 480
+ApplicationWindow {
     width: 320
-    LauncherList {
-        id: ll
+    height: 480
+    visible: true
+    title: qsTr("Affectors")
+
+    header: ToolBar {
+        visible: stack.depth > 1
+        height: visible ? implicitHeight : 0
+        ToolButton {
+            icon.source: "images/back.png"
+            Accessible.name: qsTr("Back")
+            onClicked: stack.pop()
+        }
+    }
+
+    StackView {
+        id: stack
         anchors.fill: parent
-        Component.onCompleted: {
-            addExample("Age", "Kills off particles that enter the affector",  Qt.resolvedUrl("age.qml"));
-            addExample("Attractor", "Simulates a small black hole", Qt.resolvedUrl("attractor.qml"));
-            addExample("Custom Affector", "Custom falling leaves", Qt.resolvedUrl("customaffector.qml"));
-            addExample("Friction", "Leaves that slow down as they fall", Qt.resolvedUrl("friction.qml"));
-            addExample("Gravity", "Leaves that fall towards the earth as you move it", Qt.resolvedUrl("gravity.qml"));
-            addExample("GroupGoal", "Balls that can be set on fire various ways", Qt.resolvedUrl("groupgoal.qml"));
-            addExample("Move", "Some effects you can get by altering trajectory midway", Qt.resolvedUrl("move.qml"));
-            addExample("SpriteGoal", "A ship that makes asteroids explode", Qt.resolvedUrl("spritegoal.qml"));
-            addExample("Turbulence", "A candle with faint wind", Qt.resolvedUrl("turbulence.qml"));
-            addExample("Wander", "Drifting snow flakes", Qt.resolvedUrl("wander.qml"));
+        focus: true
+        initialItem: LauncherList {
+            model: [
+                { name: "Age", description: "Kills off particles that enter the affector", source: "age.qml" },
+                { name: "Attractor", description: "Simulates a small black hole", source: "attractor.qml" },
+                { name: "Custom Affector", description: "Custom falling leaves", source: "customaffector.qml" },
+                { name: "Friction", description: "Leaves that slow down as they fall", source: "friction.qml" },
+                { name: "Gravity", description: "Leaves that fall towards the earth as you move it", source: "gravity.qml" },
+                { name: "GroupGoal", description: "Balls that can be set on fire various ways", source: "groupgoal.qml" },
+                { name: "Move", description: "Some effects you can get by altering trajectory midway", source: "move.qml" },
+                { name: "SpriteGoal", description: "A ship that makes asteroids explode", source: "spritegoal.qml" },
+                { name: "Turbulence", description: "A candle with faint wind", source: "turbulence.qml" },
+                { name: "Wander", description: "Drifting snow flakes", source: "wander.qml" },
+            ]
+            onExampleClicked: (source) => stack.push(exampleLoader, { source })
+        }
+
+        Component {
+            id: exampleLoader
+            Loader {}
         }
     }
 }

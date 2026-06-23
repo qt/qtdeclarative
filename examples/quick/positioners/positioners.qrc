@@ -1,5 +1,11 @@
 <RCC>
     <qresource prefix="/qt/qml/positioners">
+        <file>LauncherList.qml</file>
+        <file>SimpleLauncherDelegate.qml</file>
+        <file>images/back.png</file>
+        <file>images/back@2x.png</file>
+        <file>images/back@3x.png</file>
+        <file>images/back@4x.png</file>
         <file>positioners.qml</file>
         <file>positioners-attachedproperties.qml</file>
         <file>positioners-transitions.qml</file>

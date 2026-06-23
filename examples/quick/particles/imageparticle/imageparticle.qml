@@ -2,22 +2,44 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 import QtQuick
-import shared
+import QtQuick.Controls
 
-Item {
-    height: 480
+ApplicationWindow {
     width: 320
-    LauncherList {
-        id: ll
+    height: 480
+    visible: true
+    title: qsTr("Image Particle")
+
+    header: ToolBar {
+        visible: stack.depth > 1
+        height: visible ? implicitHeight : 0
+        ToolButton {
+            icon.source: "images/back.png"
+            Accessible.name: qsTr("Back")
+            onClicked: stack.pop()
+        }
+    }
+
+    StackView {
+        id: stack
         anchors.fill: parent
-        Component.onCompleted: {
-            addExample("All at once", "Uses all ImageParticle features",  Qt.resolvedUrl("allatonce.qml"));
-            addExample("Colored", "Colorized image particles",  Qt.resolvedUrl("colored.qml"));
-            addExample("Color Table", "Color-over-life rainbow particles",  Qt.resolvedUrl("colortable.qml"));
-            addExample("Deformation", "Deformed particles",  Qt.resolvedUrl("deformation.qml"));
-            addExample("Rotation", "Rotated particles",  Qt.resolvedUrl("rotation.qml"));
-            addExample("Sharing", "Multiple ImageParticles on the same particles",  Qt.resolvedUrl("sharing.qml"));
-            addExample("Sprites", "Particles rendered with sprites",  Qt.resolvedUrl("sprites.qml"));
+        focus: true
+        initialItem: LauncherList {
+            model: [
+                { name: "All at once", description: "Uses all ImageParticle features", source: "allatonce.qml" },
+                { name: "Colored", description: "Colorized image particles", source: "colored.qml" },
+                { name: "Color Table", description: "Color-over-life rainbow particles", source: "colortable.qml" },
+                { name: "Deformation", description: "Deformed particles", source: "deformation.qml" },
+                { name: "Rotation", description: "Rotated particles", source: "rotation.qml" },
+                { name: "Sharing", description: "Multiple ImageParticles on the same particles", source: "sharing.qml" },
+                { name: "Sprites", description: "Particles rendered with sprites", source: "sprites.qml" },
+            ]
+            onExampleClicked: (source) => stack.push(exampleLoader, { source })
+        }
+
+        Component {
+            id: exampleLoader
+            Loader {}
         }
     }
 }

@@ -1,5 +1,11 @@
 <RCC>
     <qresource prefix="/qt/qml/emitters">
+        <file>LauncherList.qml</file>
+        <file>SimpleLauncherDelegate.qml</file>
+        <file>images/back.png</file>
+        <file>images/back@2x.png</file>
+        <file>images/back@3x.png</file>
+        <file>images/back@4x.png</file>
         <file>emitters.qml</file>
         <file>burstandpulse.qml</file>
         <file>customemitter.qml</file>

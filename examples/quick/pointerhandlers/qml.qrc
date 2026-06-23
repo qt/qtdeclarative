@@ -15,6 +15,10 @@
         <file>sidebar.qml</file>
         <file>tabletCanvasDrawing.qml</file>
         <file>tapHandler.qml</file>
+        <file>LauncherList.qml</file>
+        <file>SimpleLauncherDelegate.qml</file>
+        <file>images/back.png</file>
+        <file>images/next.png</file>
         <file>components/Button.qml</file>
         <file>components/CheckBox.qml</file>
         <file>components/CorkPanel.qml</file>

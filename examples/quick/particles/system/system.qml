@@ -2,20 +2,42 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 import QtQuick
-import shared
+import QtQuick.Controls
 
-Item {
-    height: 480
+ApplicationWindow {
     width: 320
-    LauncherList {
-        id: ll
+    height: 480
+    visible: true
+    title: qsTr("Particle System")
+
+    header: ToolBar {
+        visible: stack.depth > 1
+        height: visible ? implicitHeight : 0
+        ToolButton {
+            icon.source: "images/back.png"
+            Accessible.name: qsTr("Back")
+            onClicked: stack.pop()
+        }
+    }
+
+    StackView {
+        id: stack
         anchors.fill: parent
-        Component.onCompleted: {
-            addExample("Dynamic Comparison", "Compares with dynamically created elements",  Qt.resolvedUrl("dynamiccomparison.qml"));
-            addExample("StartStop", "Start and stop the simulation", Qt.resolvedUrl("startstop.qml"));
-            addExample("Timed group changes", "Emit into managed groups",  Qt.resolvedUrl("timedgroupchanges.qml"));
-            addExample("Dynamic Emitters", "Dynamically instantiated emitters with a single system",  Qt.resolvedUrl("dynamicemitters.qml"));
-            addExample("Multiple Painters", "Several ParticlePainters on the same logical particles",  Qt.resolvedUrl("multiplepainters.qml"));
+        focus: true
+        initialItem: LauncherList {
+            model: [
+                { name: "Dynamic Comparison", description: "Compares with dynamically created elements", source: "dynamiccomparison.qml" },
+                { name: "StartStop", description: "Start and stop the simulation", source: "startstop.qml" },
+                { name: "Timed group changes", description: "Emit into managed groups", source: "timedgroupchanges.qml" },
+                { name: "Dynamic Emitters", description: "Dynamically instantiated emitters with a single system", source: "dynamicemitters.qml" },
+                { name: "Multiple Painters", description: "Several ParticlePainters on the same logical particles", source: "multiplepainters.qml" },
+            ]
+            onExampleClicked: (source) => stack.push(exampleLoader, { source })
+        }
+
+        Component {
+            id: exampleLoader
+            Loader {}
         }
     }
 }

@@ -1,10 +1,9 @@
 TEMPLATE = app
 
-QT += quick qml
+QT += quick qml quickcontrols2
 SOURCES += main.cpp
 RESOURCES += \
-    draganddrop.qrc \
-    ../shared/shared.qrc
+    draganddrop.qrc
 
 target.path = $$[QT_INSTALL_EXAMPLES]/quick/draganddrop
 INSTALLS += target

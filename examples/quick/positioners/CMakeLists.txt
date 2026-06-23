@@ -4,11 +4,9 @@
 cmake_minimum_required(VERSION 3.16)
 project(positioners LANGUAGES CXX)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick QuickControls2)
 
 qt_standard_project_setup(REQUIRES 6.8)
-
-add_subdirectory("../shared" "shared")
 
 qt_add_executable(positionersexample
     WIN32
@@ -19,9 +17,16 @@ qt_add_executable(positionersexample
 qt_add_qml_module(positionersexample
     URI positioners
     QML_FILES
+        "LauncherList.qml"
+        "SimpleLauncherDelegate.qml"
         "positioners-attachedproperties.qml"
         "positioners-transitions.qml"
         "positioners.qml"
+    RESOURCES
+        "images/back.png"
+        "images/back@2x.png"
+        "images/back@3x.png"
+        "images/back@4x.png"
 )
 
 target_link_libraries(positionersexample PRIVATE
@@ -29,6 +34,7 @@ target_link_libraries(positionersexample PRIVATE
     Qt6::Gui
     Qt6::Qml
     Qt6::Quick
+    Qt6::QuickControls2
 )
 
 install(TARGETS positionersexample

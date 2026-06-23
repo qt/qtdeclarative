@@ -4,11 +4,9 @@
 cmake_minimum_required(VERSION 3.16)
 project(draganddrop LANGUAGES CXX)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick QuickControls2)
 
 qt_standard_project_setup(REQUIRES 6.8)
-
-add_subdirectory("../shared" "shared")
 
 qt_add_executable(draganddropexample
     WIN32
@@ -21,6 +19,8 @@ set_target_properties(draganddropexample PROPERTIES FOLDER "qtc_runnable")
 qt_add_qml_module(draganddropexample
     URI draganddrop
     QML_FILES
+        "LauncherList.qml"
+        "SimpleLauncherDelegate.qml"
         "draganddrop.qml"
         "tiles/DragTile.qml"
         "tiles/DropTile.qml"
@@ -28,6 +28,11 @@ qt_add_qml_module(draganddropexample
         "views/Icon.qml"
         "views/gridview.qml"
         "external/externaldraganddrop.qml"
+    RESOURCES
+        "images/back.png"
+        "images/back@2x.png"
+        "images/back@3x.png"
+        "images/back@4x.png"
 )
 
 target_link_libraries(draganddropexample PRIVATE
@@ -35,9 +40,8 @@ target_link_libraries(draganddropexample PRIVATE
     Qt6::Gui
     Qt6::Qml
     Qt6::Quick
+    Qt6::QuickControls2
 )
-
-add_dependencies(draganddropexample draganddrop_shared)
 
 install(TARGETS draganddropexample
     BUNDLE  DESTINATION .

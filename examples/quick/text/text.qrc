@@ -1,5 +1,11 @@
 <RCC>
     <qresource prefix="/qt/qml/text">
+        <file>LauncherList.qml</file>
+        <file>SimpleLauncherDelegate.qml</file>
+        <file>images/back.png</file>
+        <file>images/back@2x.png</file>
+        <file>images/back@3x.png</file>
+        <file>images/back@4x.png</file>
         <file>text.qml</file>
         <file>fonts/availableFonts.qml</file>
         <file>fonts/banner.qml</file>

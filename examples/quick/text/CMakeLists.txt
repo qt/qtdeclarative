@@ -4,11 +4,9 @@
 cmake_minimum_required(VERSION 3.16)
 project(text LANGUAGES CXX)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick QuickControls2)
 
 qt_standard_project_setup(REQUIRES 6.8)
-
-add_subdirectory("../shared" "shared")
 
 qt_add_executable(textexample
     WIN32
@@ -23,13 +21,14 @@ target_link_libraries(textexample PRIVATE
     Qt6::Gui
     Qt6::Qml
     Qt6::Quick
+    Qt6::QuickControls2
 )
-
-add_dependencies(textexample text_shared)
 
 qt_add_qml_module(textexample
     URI text
     QML_FILES
+        "LauncherList.qml"
+        "SimpleLauncherDelegate.qml"
         "fonts/availableFonts.qml"
         "fonts/banner.qml"
         "fonts/fonts.qml"
@@ -39,6 +38,10 @@ qt_add_qml_module(textexample
         "styledtext-layout.qml"
         "text.qml"
     RESOURCES
+        "images/back.png"
+        "images/back@2x.png"
+        "images/back@3x.png"
+        "images/back@4x.png"
         "fonts/content/fonts/tarzeau_ocr_a.ttf"
         "imgtag/images/face-sad.png"
         "imgtag/images/face-smile-big.png"

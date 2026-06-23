@@ -4,7 +4,7 @@
 cmake_minimum_required(VERSION 3.16)
 project(shapes LANGUAGES CXX)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick QuickControls2)
 
 qt_standard_project_setup(REQUIRES 6.8)
 
@@ -23,6 +23,7 @@ target_link_libraries(shapesexample PRIVATE
     Qt6::Gui
     Qt6::Qml
     Qt6::Quick
+    Qt6::QuickControls2
 )
 
 add_dependencies(shapesexample shapes_shared)
@@ -30,6 +31,8 @@ add_dependencies(shapesexample shapes_shared)
 qt_add_qml_module(shapesexample
     URI shapes
     QML_FILES
+        "LauncherList.qml"
+        "SimpleLauncherDelegate.qml"
         "clippedtigers.qml"
         "interactive.qml"
         "cubicCurve.qml"
@@ -58,6 +61,11 @@ qt_add_qml_module(shapesexample
         "rectangle.qml"
         "fillItem.qml"
         "cosmetic.qml"
+    RESOURCES
+        "images/back.png"
+        "images/back@2x.png"
+        "images/back@3x.png"
+        "images/back@4x.png"
 )
 
 install(TARGETS shapesexample

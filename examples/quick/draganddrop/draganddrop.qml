@@ -2,18 +2,40 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 import QtQuick
-import shared as Examples
+import QtQuick.Controls
 
-Item {
-    height: 480
+ApplicationWindow {
     width: 320
-    Examples.LauncherList {
-        id: ll
+    height: 480
+    visible: true
+    title: qsTr("Drag and Drop")
+
+    header: ToolBar {
+        visible: stack.depth > 1
+        height: visible ? implicitHeight : 0
+        ToolButton {
+            icon.source: "images/back.png"
+            Accessible.name: qsTr("Back")
+            onClicked: stack.pop()
+        }
+    }
+
+    StackView {
+        id: stack
         anchors.fill: parent
-        Component.onCompleted: {
-            addExample(qsTr("Tiles"), qsTr("Press and drag tiles to move them into the matching colored boxes"),  Qt.resolvedUrl("tiles/tiles.qml"))
-            addExample(qsTr("GridView"), qsTr("Press and drag to re-order items in the grid"), Qt.resolvedUrl("views/gridview.qml"))
-            addExample(qsTr("External"), qsTr("Drag and drop between this and other applications."), Qt.resolvedUrl("external/externaldraganddrop.qml"))
+        focus: true
+        initialItem: LauncherList {
+            model: [
+                { name: "Tiles", description: "Press and drag tiles to move them into the matching colored boxes", source: "tiles/tiles.qml" },
+                { name: "GridView", description: "Press and drag to re-order items in the grid", source: "views/gridview.qml" },
+                { name: "External", description: "Drag and drop between this and other applications.", source: "external/externaldraganddrop.qml" },
+            ]
+            onExampleClicked: (source) => stack.push(exampleLoader, { source })
+        }
+
+        Component {
+            id: exampleLoader
+            Loader {}
         }
     }
 }
