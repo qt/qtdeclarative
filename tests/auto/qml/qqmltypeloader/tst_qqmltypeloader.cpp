@@ -10,6 +10,7 @@
 #include <QtQml/qqmlnetworkaccessmanagerfactory.h>
 #include <QtQuick/qquickview.h>
 #include <QtQuick/qquickitem.h>
+#include <QtCore/qfileinfo.h>
 #if QT_CONFIG(process)
 #include <QtCore/qprocess.h>
 #include <QtCore/qresource.h>
@@ -65,6 +66,11 @@ private slots:
     void populateDirectoryCache();
     void resourceRegistrationInvalidatesCache();
     void removeFromCache();
+
+    void fileExistsCorrectness_data();
+    void fileExistsCorrectness();
+    void cleanFilePathCorrectness_data();
+    void cleanFilePathCorrectness();
     void addImportPathDuringAsyncLoad();
     void addImportPathFromStatusChanged();
     void urlNotRepresentableAsLocalFile_data();
@@ -72,6 +78,7 @@ private slots:
 
 private:
     void checkSingleton(const QString & dataDirectory);
+    void addFileSystemAndResourceRows();
 };
 
 tst_QQMLTypeLoader::tst_QQMLTypeLoader()
@@ -1079,6 +1086,95 @@ void tst_QQMLTypeLoader::removeFromCache()
     QVERIFY(typeLoader->isTypeLoaded(url));
     typeLoader->removeFromCache(url);
     QVERIFY(!typeLoader->isTypeLoaded(url));
+}
+
+// The "file location" phase of compilation is entirely contained in
+// QQmlTypeLoader::fileExists() and QQmlTypeLoader::cleanFilePath(). The
+// following tests poke those two functions directly, in the same access
+// patterns a real compile produces (a cold directory scan that populates the
+// import-dir cache, followed by many cached hits and misses while resolving
+// imports), without paying for parsing, IR construction or code generation.
+
+// The same data files exist both on the physical file system (the "data"
+// directory) and in this test's resource file system (see CMakeLists.txt), so
+// every test below can be run against either. The resource file system is
+// reachable both through a raw ":/" path and through a "qrc:/" URL, which take
+// different branches in fileExists()/cleanFilePath().
+void tst_QQMLTypeLoader::addFileSystemAndResourceRows()
+{
+    QTest::addColumn<QString>("dir");
+
+    QTest::newRow("filesystem") << dataDirectory();
+    QTest::newRow("resources") << QStringLiteral(":/data");
+}
+
+void tst_QQMLTypeLoader::fileExistsCorrectness_data()
+{
+    addFileSystemAndResourceRows();
+}
+
+void tst_QQMLTypeLoader::fileExistsCorrectness()
+{
+    QFETCH(QString, dir);
+
+    QQmlEngine engine;
+    QQmlTypeLoader *loader = QQmlTypeLoader::get(&engine);
+
+    // Existing file via the two-argument overload (dir + file) and the
+    // single-argument convenience overload (full path).
+    QVERIFY(loader->fileExists(dir, QLatin1String("doesExist.qml")));
+    QVERIFY(loader->fileExists(dir + QLatin1String("/doesExist.qml")));
+
+    // Missing file in an existing (and now cached) directory.
+    QVERIFY(!loader->fileExists(dir, QLatin1String("doesNotExist.qml")));
+
+    // Missing directory.
+    QVERIFY(!loader->fileExists(dir + QLatin1String("/no/such/qml/dir"), QLatin1String("x.qml")));
+
+    // The lookup is case-sensitive even on case-insensitive file systems, so a
+    // differently-cased name must not resolve.
+    QVERIFY(!loader->fileExists(dir, QLatin1String("DOESEXIST.QML")));
+
+    // Empty inputs are rejected.
+    QVERIFY(!loader->fileExists(QString(), QLatin1String("doesExist.qml")));
+    QVERIFY(!loader->fileExists(dir, QString()));
+}
+
+void tst_QQMLTypeLoader::cleanFilePathCorrectness_data()
+{
+    QTest::addColumn<QString>("dir");
+    QTest::addColumn<QString>("expected");
+
+    // The raw ":/" qrc path resolves to the canonical resource path that QFileInfo reports.
+    // Note there is deliberately no "qrc:/" URL row: cleanFilePath() handles paths only, not
+    // URLs. Callers rewrite local URLs to paths before calling it (see localPathForUrlOrPath()).
+    const QString resourcePath =
+            QFileInfo(QStringLiteral(":/data/doesExist.qml")).absoluteFilePath();
+
+    QTest::newRow("filesystem")
+            << dataDirectory()
+            << QFileInfo(dataDirectory() + QLatin1String("/doesExist.qml")).absoluteFilePath();
+    QTest::newRow("resources") << QStringLiteral(":/data") << resourcePath;
+}
+
+void tst_QQMLTypeLoader::cleanFilePathCorrectness()
+{
+    QFETCH(QString, dir);
+    QFETCH(QString, expected);
+
+    QQmlEngine engine;
+    QQmlTypeLoader *loader = QQmlTypeLoader::get(&engine);
+
+    // Existing file resolves to its absolute path.
+    QCOMPARE(loader->cleanFilePath(dir + QLatin1String("/doesExist.qml")), expected);
+
+    // Missing file and empty path resolve to an empty string.
+    QVERIFY(loader->cleanFilePath(dir + QLatin1String("/doesNotExist.qml")).isEmpty());
+    QVERIFY(loader->cleanFilePath(QString()).isEmpty());
+
+    // cleanFilePath() takes paths, not URLs. A "qrc:/" URL is not a path, so even though it
+    // points at an existing resource it does not resolve here; callers must convert it first.
+    QVERIFY(loader->cleanFilePath(QStringLiteral("qrc:/data/doesExist.qml")).isEmpty());
 }
 
 // Regression test for QTBUG-146210: calling addImportPath() while an async

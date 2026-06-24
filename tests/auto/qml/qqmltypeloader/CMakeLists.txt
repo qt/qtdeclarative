@@ -58,6 +58,7 @@ qt_add_resources(tst_qqmltypeloader "typeloader"
         "declarative/import/for/typeloader/test/qmldir"
         "declarative/import/for/typeloader/test/Singleton.qml"
         "data/compilercompatibility/signalHandlers.qml"
+        "data/doesExist.qml"
         "${CMAKE_CURRENT_BINARY_DIR}/lazyresource.rcc"
 )
 
