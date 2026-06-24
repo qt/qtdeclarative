@@ -2035,6 +2035,10 @@ void TestQmllint::cleanQmlSnippet_data()
             << defaultOptions;
     QTest::newRow("testSnippet") << u"property int qwer: 123"_s << defaultOptions;
     QTest::newRow("underScoreId") << u"id: _Root"_s << defaultOptions;
+    QTest::newRow("underScoreGroupedProperty")
+            << u"component Foo: Item { property alias _bar: theItem; Item { id: theItem; } }\n"
+               "Foo { _bar { width: 10 } }"_s
+            << defaultOptions;
     QTest::newRow("unintentionalEmptyBlock-clean")
             << uR"(
                     property var p1: ({})
