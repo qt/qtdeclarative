@@ -507,7 +507,8 @@ static QList<const Statement *> possibleLastStatements(const Statement *ast)
 
 static QList<const Statement *> possibleLastStatements(const StatementList *ast)
 {
-    Q_ASSERT(ast);
+    if (!ast)
+        return {};
     for (; ast->next; ast = ast->next) { }
     const auto *statement = ast->statement;
 
