@@ -23,6 +23,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickItem;
+class QQuickShape;
 
 class Q_QUICKVECTORIMAGEGENERATOR_EXPORT QQuickItemGenerator : public QQuickGenerator
 {
@@ -57,6 +58,7 @@ private:
     QStack<QQuickItem *> m_itemStack;
     quint32 m_nodeCounter = 0;
 
+    QQuickShape *createShapeContainer();
     void pushItem(QQuickItem *item);
     QQuickItem *popItem();
     QQuickItem *currentItem() const;

@@ -6,6 +6,10 @@
 
 #include <private/qquickitem_p.h>
 #include <private/qquicktranslate_p.h>
+#include <private/qquickshape_p.h>
+#include <private/qquickpath_p.h>
+
+#include "utils_p.h"
 
 #include <QtCore/qloggingcategory.h>
 
@@ -26,6 +30,16 @@ QQuickItem *QQuickItemGenerator::takeRootItem()
     QQuickItem *item = m_rootItem;
     m_rootItem = nullptr;
     return item;
+}
+
+QQuickShape *QQuickItemGenerator::createShapeContainer()
+{
+    auto *shape = new QQuickShape;
+    if (m_flags.testFlag(QQuickVectorImageGenerator::GeneratorFlag::CurveRenderer))
+        shape->setPreferredRendererType(QQuickShape::CurveRenderer);
+    if (m_flags.testFlag(QQuickVectorImageGenerator::GeneratorFlag::AsyncShapes))
+        shape->setAsynchronous(true);
+    return shape;
 }
 
 void QQuickItemGenerator::pushItem(QQuickItem *item)
@@ -131,20 +145,25 @@ bool QQuickItemGenerator::generateStructureNode(const StructureNodeInfo &info)
         return false;
 
     if (info.stage == StructureNodeStage::Start) {
-        auto *item = new QQuickItem;
+        QQuickItem *item;
+        if (!info.forceSeparatePaths && info.isPathContainer) {
+            item = createShapeContainer();
+        } else {
+            item = new QQuickItem;
 
-        if (!info.viewBox.isEmpty()) {
-            auto xformProp = item->transform();
-            if (!qFuzzyIsNull(info.viewBox.x()) || !qFuzzyIsNull(info.viewBox.y())) {
-                auto *translate = new QQuickTranslate(item);
-                translate->setX(-info.viewBox.x());
-                translate->setY(-info.viewBox.y());
-                xformProp.append(&xformProp, translate);
+            if (!info.viewBox.isEmpty()) {
+                auto xformProp = item->transform();
+                if (!qFuzzyIsNull(info.viewBox.x()) || !qFuzzyIsNull(info.viewBox.y())) {
+                    auto *translate = new QQuickTranslate(item);
+                    translate->setX(-info.viewBox.x());
+                    translate->setY(-info.viewBox.y());
+                    xformProp.append(&xformProp, translate);
+                }
+                auto *scale = new QQuickScale(item);
+                scale->setXScale(info.size.width() / info.viewBox.width());
+                scale->setYScale(info.size.height() / info.viewBox.height());
+                xformProp.append(&xformProp, scale);
             }
-            auto *scale = new QQuickScale(item);
-            scale->setXScale(info.size.width() / info.viewBox.width());
-            scale->setYScale(info.size.height() / info.viewBox.height());
-            xformProp.append(&xformProp, scale);
         }
 
         pushItem(item);
@@ -158,9 +177,18 @@ bool QQuickItemGenerator::generateStructureNode(const StructureNodeInfo &info)
 
 void QQuickItemGenerator::generatePath(const PathNodeInfo &info, const QRectF &overrideBoundingRect)
 {
-    qCDebug(lcQuickVectorImage) << "generatePath: not yet implemented";
-    Q_UNUSED(info)
-    Q_UNUSED(overrideBoundingRect)
+    if (Q_UNLIKELY(errorState() || !isNodeVisible(info)))
+        return;
+
+    if (qobject_cast<QQuickShape *>(currentItem())) {
+        optimizePaths(info, overrideBoundingRect);
+    } else {
+        auto *shape = createShapeContainer();
+        pushItem(shape);
+        generateNodeBase(info);
+        optimizePaths(info, overrideBoundingRect);
+        popItem();
+    }
 }
 
 void QQuickItemGenerator::outputShapePath(const PathNodeInfo &info, const QPainterPath *path,
@@ -168,12 +196,82 @@ void QQuickItemGenerator::outputShapePath(const PathNodeInfo &info, const QPaint
                                           QQuickVectorImageGenerator::PathSelector pathSelector,
                                           const QRectF &boundingRect)
 {
-    qCDebug(lcQuickVectorImage) << "outputShapePath: not yet implemented";
-    Q_UNUSED(info)
-    Q_UNUSED(path)
-    Q_UNUSED(quadPath)
-    Q_UNUSED(pathSelector)
-    Q_UNUSED(boundingRect)
+    Q_ASSERT(path || quadPath);
+
+    if (Q_UNLIKELY(errorState()))
+        return;
+
+    auto *shape = qobject_cast<QQuickShape *>(currentItem());
+    if (!shape)
+        return;
+
+    const bool invalidGradientBounds = info.strokeGrad.coordinateMode() == QGradient::ObjectMode
+            && (qFuzzyIsNull(boundingRect.width()) || qFuzzyIsNull(boundingRect.height()));
+    const QColor strokeColor = info.strokeStyle.color.defaultValue().value<QColor>();
+    const bool noPen = (strokeColor == QColorConstants::Transparent || !strokeColor.isValid())
+            && !info.strokeStyle.color.isAnimated() && !info.strokeStyle.opacity.isAnimated()
+            && (info.strokeGrad.type() == QGradient::NoGradient || invalidGradientBounds);
+    if (pathSelector == QQuickVectorImageGenerator::StrokePath && noPen)
+        return;
+
+    const QColor fillColor = info.fillColor.defaultValue().value<QColor>();
+    const bool noFill = info.grad.type() == QGradient::NoGradient
+            && fillColor == QColorConstants::Transparent && !info.fillColor.isAnimated()
+            && !info.fillOpacity.isAnimated();
+    if (pathSelector == QQuickVectorImageGenerator::FillPath && noFill)
+        return;
+
+    if (noPen && noFill)
+        return;
+
+    auto *shapePath = new QQuickShapePath;
+    shapePath->setParent(shape);
+
+    if (!info.nodeId.isEmpty()) {
+        switch (pathSelector) {
+        case QQuickVectorImageGenerator::FillPath:
+            shapePath->setObjectName(u"svg_fill_path:"_s + info.nodeId);
+            break;
+        case QQuickVectorImageGenerator::StrokePath:
+            shapePath->setObjectName(u"svg_stroke_path:"_s + info.nodeId);
+            break;
+        case QQuickVectorImageGenerator::FillAndStroke:
+            shapePath->setObjectName(u"svg_path:"_s + info.nodeId);
+            break;
+        }
+    }
+
+    if (noPen || !(pathSelector & QQuickVectorImageGenerator::StrokePath)) {
+        shapePath->setStrokeColor(QColorConstants::Transparent);
+    } else {
+        shapePath->setStrokeColor(strokeColor);
+        shapePath->setStrokeWidth(info.strokeStyle.width.defaultValue().toReal());
+        shapePath->setCapStyle(QQuickShapePath::CapStyle(info.strokeStyle.lineCapStyle));
+        shapePath->setJoinStyle(QQuickShapePath::JoinStyle(info.strokeStyle.lineJoinStyle));
+        shapePath->setMiterLimit(info.strokeStyle.miterLimit);
+    }
+
+    if (!(pathSelector & QQuickVectorImageGenerator::FillPath)) {
+        shapePath->setFillColor(QColorConstants::Transparent);
+    } else {
+        shapePath->setFillColor(fillColor);
+    }
+
+    shapePath->setFillRule(
+            QQuickShapePath::FillRule(path ? path->fillRule() : quadPath->fillRule()));
+
+    if (quadPath)
+        shapePath->setPathHints(QQuickShapePath::PathHints(int(quadPath->pathHints())));
+
+    const QString svgString = path ? QQuickVectorImageGenerator::Utils::toSvgString(*path)
+                                   : QQuickVectorImageGenerator::Utils::toSvgString(*quadPath);
+    auto *pathSvg = new QQuickPathSvg(shapePath);
+    pathSvg->setPath(svgString);
+    auto pathElems = shapePath->pathElements();
+    pathElems.append(&pathElems, pathSvg);
+
+    auto shapeData = shape->data();
+    shapeData.append(&shapeData, shapePath);
 }
 
 void QQuickItemGenerator::generateImageNode(const ImageNodeInfo &info)

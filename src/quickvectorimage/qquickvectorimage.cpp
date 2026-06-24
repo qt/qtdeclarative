@@ -6,14 +6,20 @@
 #include "qquickvectorimage_p.h"
 #include "qquickvectorimage_p_p.h"
 #include "qquickvectorimageincubator_p.h"
+#include "qquickvectorimageplugin_p.h"
 #include <QtQuickVectorImageGenerator/private/qquickitemgenerator_p.h>
 #include <QtQuickVectorImageGenerator/private/qquickvectorimageglobal_p.h>
+#include <QtCore/private/qfactoryloader_p.h>
 #include <QtCore/qloggingcategory.h>
 
 #include <private/qquicktranslate_p.h>
 #include <private/qquickanimation_p.h>
 
 QT_BEGIN_NAMESPACE
+
+Q_GLOBAL_STATIC_WITH_ARGS(QFactoryLoader, itemGenPluginLoader,
+                          (QQuickVectorImageFormatsPluginFactory_iid,
+                           QLatin1String("/vectorimageformats"), Qt::CaseInsensitive))
 
 static bool useQmlGenerator()
 {
@@ -119,7 +125,25 @@ void QQuickVectorImagePrivate::loadFile()
         incubator->start(localFile, flags);
     } else {
         QQuickItemGenerator gen(localFile, flags);
-        gen.generate();
+
+        bool generatedWithPlugin = false;
+        if (flags.testFlag(QQuickVectorImageGenerator::AssumeTrustedSource)) {
+            QFactoryLoader *loader = itemGenPluginLoader();
+            const qsizetype count = loader->keyMap().size();
+            for (qsizetype i = 0; i < count && !generatedWithPlugin; ++i) {
+                QQuickVectorImagePlugin *plugin =
+                        qobject_cast<QQuickVectorImagePlugin *>(loader->instance(i));
+                if (plugin != nullptr) {
+                    std::unique_ptr<QQuickVectorImagePluginGenerator> pluginGen(
+                            plugin->createGenerator(localFile));
+                    if (pluginGen != nullptr)
+                        generatedWithPlugin = pluginGen->generate(localFile, &gen);
+                }
+            }
+        }
+
+        if (!generatedWithPlugin)
+            gen.generate();
 
         if (gen.errorState() == QQuickVectorImageGenerator::NoError) {
             pendingRootItem = gen.takeRootItem();
