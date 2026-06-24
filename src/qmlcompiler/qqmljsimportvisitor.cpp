@@ -1807,8 +1807,10 @@ bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
     // we need to assume that it is a type based on its capitalization. Types defined in inline
     // components, for example, can have their type definition after their type usages:
     // Item { property IC myIC; component IC: Item{}; }
+    // A QML type name always starts with an upper case letter; "_" is neither upper- nor
+    // lower-case, so use !isUpper() to also catch names like "_bar".
     const qsizetype indexOfTypeName = superType.lastIndexOf(u'.');
-    const bool looksLikeGroupedProperty = superType.front().isLower();
+    const bool looksLikeGroupedProperty = !superType.front().isUpper();
 
     if (indexOfTypeName != -1 && looksLikeGroupedProperty) {
         logLowerCaseImport(superType, definition->qualifiedTypeNameId->identifierToken,
