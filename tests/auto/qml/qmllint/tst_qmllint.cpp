@@ -4982,6 +4982,26 @@ void TestQmllint::uselessExpressionStatements_data()
                          { warning, 45, 25 },   // bare
                        } }
             << defaultOptions;
+
+    QTest::newRow("emptyCaseClause")
+            << uR"(width: {
+                        switch (0) {
+                        case 1:
+                        default:
+                            1;
+                        }
+                    })"_s
+            << Result::clean()
+            << defaultOptions;
+
+    QTest::newRow("emptyBlock")
+            << uR"(width: {
+                        if (true)
+                            1;
+                        else {}
+                    })"_s
+            << Result::clean()
+            << defaultOptions;
 }
 
 void TestQmllint::uselessExpressionStatements()
