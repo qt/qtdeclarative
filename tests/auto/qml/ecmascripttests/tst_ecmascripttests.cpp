@@ -29,7 +29,7 @@ public:
     {
         if (!qEnvironmentVariableIsEmpty("QTEST_FUNCTION_TIMEOUT"))
             return;
-#ifdef Q_OS_ANDROID
+#if defined(Q_OS_ANDROID ) || defined(QT_ASAN_ENABLED)
     qputenv("QTEST_FUNCTION_TIMEOUT", "1800000"); // 30 minutes for android
 #else
     qputenv("QTEST_FUNCTION_TIMEOUT", "900000");  // 15 minutes for everything else
