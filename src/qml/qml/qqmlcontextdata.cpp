@@ -11,6 +11,188 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \class QQmlContextData
+    \internal
+
+    \brief Runtime embodiment of a single QML component instance's context.
+
+    A QQmlContextData holds the state that backs a QML context: the parent/child
+    links, the id values, the imports, the compilation unit, the owned objects,
+    the imported scripts and so on.
+
+    Contexts usually form at component boundaries. That is, the root object of
+    a document, an inline component or the instantiation point of a Component.
+    When looking up unqalified names, the engine travels the context hierarchy
+    and considers both context properties and the context object for each
+    context. This is the reason why you can implicitly refer to the properties
+    of root objects (recursively), but not to the properties of intermediate
+    objects in the document tree. You can, however, manually mess with the
+    context hierarchy, and some QML types (e.g. models and views) do that.
+
+    The public \l QQmlContext is a thin shell on top of QQmlContextData. The
+    relationship is deliberately asymmetric:
+
+    \list
+    \li An \e internal context (\c m_isInternal == true) is created by the engine
+        while instantiating a component. The QQmlContextData is the primary object
+        and \e owns its publicContext, which is minted lazily by asQQmlContext().
+        Almost every context created during .qml instantiation is internal.
+    \li An \e external context (\c m_isInternal == false) is created when the user
+        constructs a QQmlContext explicitly; that QQmlContext owns the
+        QQmlContextData.
+    \endlist
+
+    QQmlContextData::get() bridges public to private; asQQmlContext()/
+    publicContext() bridge back. Lifetime is reference counted (\c m_refCount,
+    addref()/release()), with the cycle-avoiding twists described below.
+
+    \section1 The context tree: parent and childContexts
+
+    Contexts form a tree that mirrors the \e{document nesting} of QML, not the
+    QObject parent hierarchy and not the visual item tree:
+
+    \list
+    \li \c m_parent -- up the tree, to the next \e{component root}.
+    \li \c m_childContexts, \c m_nextChild, \c m_prevChild -- an intrusive child
+        list with a back-link to the slot that points at each node, so insert and
+        unlink are O(1) (see the constructor).
+    \endlist
+
+    Parent and child links are \e not reference counted: that would create cyclic
+    references. A parent keeps its children alive through ownership (see below);
+    children point back at the parent weakly. The tree propagates expression
+    refreshes downward (refreshExpressions() and friends walk childContexts())
+    and resolves relative URLs upward (url()/baseUrl() walk the parent chain).
+
+    \section1 Ownership: who keeps whom alive
+
+    Because parent->child links are raw, something else must pin contexts. There
+    are three ownership modes (\c enum \c Ownership):
+
+    \list
+    \li \c RefCounted (createRefCounted()/createBareContext()) - held by whoever
+        holds the QQmlRefPointer.
+    \li \c OwnedByParent (createChild()) - released when the parent drops it via
+        clearParent().
+    \li \c OwnedByPublicContext - released via clearPublicContext().
+    \endlist
+
+    \c m_ownedByParent and \c m_ownedByPublicContext are mutually exclusive bits.
+    Component root contexts created during instantiation are \c RefCounted; the
+    field that actually pins a root context in memory is the object side's
+    \c{QQmlData::ownContext}, which is a QQmlRefPointer (see below).
+
+    \section1 Binding to a type: the compilation unit
+
+    A context created for a compiled QML type remembers:
+
+    \list
+    \li \c m_typeCompilationUnit -- the CU this context belongs to.
+    \li \c m_componentObjectIndex -- the object index within that CU of the
+        component that created the context (0 for the document root, the IC root
+        index for an inline component).
+    \endlist
+
+    initFromTypeCompilationUnit() wires these up and sizes the id table from the
+    component root's \c nNamedObjectsInComponent. So a context is the runtime
+    embodiment of one component instance: it knows its CU, its root object index,
+    how many ids that component declares, and the import set (\c m_imports) used
+    for name resolution.
+
+    \section1 The object side: QQmlData::context, outerContext, ownContext
+
+    Three QQmlData fields tie a QObject into the context world:
+
+    \list
+    \li \c outerContext - the context of the enclosing component instance: where
+        the object lives, where its id (if any) is registered, and where name
+        lookup for its bindings starts. Siblings created by the same component
+        share it. Not refcounted.
+    \li \c ownContext - non-null \e only for component roots (the document root,
+        an inline-component root, or a base-type level in a composite chain). It
+        is the refcounted pointer that keeps the introduced context alive. A plain
+        child object has \c ownContext == nullptr.
+    \li \c context - the effective context for the object's own bindings:
+        \c{== outerContext} for a borrowed child, \c{== ownContext.data()} for a
+        root.
+    \endlist
+
+    installContext() establishes these (called from
+    QQmlObjectCreator::initializeDData). A context also keeps the inverse mapping:
+    a doubly-linked list of the QQmlData it owns (\c m_ownedObjects), severed in
+    clearOwnedObjects() on destruction.
+
+    Now, given this explanation we clearly have a problem: The same component
+    root object can live in and own multiple contexts. It can inherit from
+    another QML type after all, with more inner objects. It can even have
+    different IDs in different outer contexts. That's where the linked contexts
+    come into play.
+
+    \section1 Linked contexts: the composite (base-type) chain
+
+    A QML type may derive from another QML type (MyButton.qml : Button.qml :
+    C++ QQuickButton). Each composite (QML-defined) level is a separate
+    compilation unit and gets its \e own context, yet they all describe the same
+    single QObject. These per-level contexts are chained through
+    \c m_linkedContext (\c{this} owns the next link, so the chain is refcounted
+    derived->base):
+
+    \list
+    \li \c{ddata->outerContext}/\c context/\c ownContext point at the
+        most-derived type the enclosing document instantiated.
+    \li linkedContext() walks the base types. The deepest-base type is first
+        and the most-derived one last.
+    \endlist
+
+    Object creation proceeds deepest-base-first, so installContext() appends each
+    newly installed (more derived) root to the end of the linked chain. Because
+    one QObject spans the whole chain, deepClearContextObject() must sweep every
+    link, not just the head, when detaching the context object.
+
+    \section1 Ids: the id-value table and context guards
+
+    Each context owns an array of \c ContextGuard, one per id declared in its
+    component (\c m_idValues, \c m_idValueCount). The index<->name mapping is the
+    lazily filled \c m_propertyNameCache (propertyIndex()/propertyName()). A
+    ContextGuard is a QQmlGuard plus a QQmlNotifier: assigning or destroying an
+    id'd object fires the notifier so alias and id-referencing bindings
+    re-evaluate. The \c ObjectWasSet tag (wasSet()) distinguishes "slot exists but
+    empty" from "set to null". findObjectId() does the reverse name lookup.
+
+    \section1 The context object
+
+    \c m_contextObject is the scope object whose properties are in unqualified
+    scope for bindings evaluated in this context (for a root context, the root
+    instance). isValid() couples an internal context's validity to the liveness
+    of its context object.
+
+    \section1 The extra slot
+
+    A single union slot, discriminated by \c m_hasExtraObject, serves two
+    mutually exclusive purposes:
+
+    \list
+    \li \c m_incubator - while a context is built asynchronously, the
+        QQmlIncubatorPrivate driving construction.
+    \li \c m_extraObject - repurposed afterward for component-specific side data;
+        currently only QQmlDelegateModel (QQmlDelegateModelItem::dataForObject).
+    \endlist
+
+    \section1 Other per-context state
+
+    \list
+    \li \c m_expressions - intrusive list of QQmlJavaScriptExpressions evaluated
+        in this context; the basis of refreshExpressions().
+    \li \c m_importedScripts - the JS array of .import'ed scripts; downgraded
+        strong->weak on invalidation so closures keep working without pinning.
+    \li \c m_imports - the QQmlTypeNameCache for resolving type names here.
+    \li \c m_componentAttacheds - uses of the Component attached property.
+    \li \c m_contextGuards - external weak references to this context.
+    \li \c m_baseUrl/\c m_baseUrlString - explicit base-URL overrides.
+    \endlist
+*/
+
 void QQmlContextData::installContext(QQmlData *ddata, QQmlContextData::QmlObjectKind kind)
 {
     Q_ASSERT(ddata);
