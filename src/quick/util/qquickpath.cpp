@@ -2641,10 +2641,9 @@ void QQuickPathRectangle::setBevel(bool bevel)
 
 bool QQuickPathRectangle::cornerBevel(Qt::Corner corner) const
 {
-    if (_extra.isAllocated())
-        return _extra->isBevelSet(corner);
-    else
+    if (!_extra.isAllocated())
         return false;
+    return _extra->isBevelSet(corner) || (_extra->cornerProperties & (1 << 8));
 }
 
 void QQuickPathRectangle::setCornerBevel(Qt::Corner corner, bool newCornerBevel)
