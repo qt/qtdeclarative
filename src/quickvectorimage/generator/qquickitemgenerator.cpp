@@ -8,18 +8,27 @@
 #include <private/qquicktranslate_p.h>
 #include <private/qquickshape_p.h>
 #include <private/qquickpath_p.h>
+#include <private/qquickimage_p.h>
+#include <private/qquicktext_p.h>
 
 #include "utils_p.h"
 
+#include <QtCore/qdir.h>
+#include <QtCore/qfileinfo.h>
 #include <QtCore/qloggingcategory.h>
+#include <QtGui/qfontmetrics.h>
+#include <QtQml/qqmlcontext.h>
+#include <QtQml/qqmlengine.h>
+#include <QtQml/qqmlparserstatus.h>
 
 QT_BEGIN_NAMESPACE
 
 using namespace Qt::StringLiterals;
 
 QQuickItemGenerator::QQuickItemGenerator(const QString &fileName,
-                                         QQuickVectorImageGenerator::GeneratorFlags flags)
-    : QQuickGenerator(fileName, flags)
+                                         QQuickVectorImageGenerator::GeneratorFlags flags,
+                                         QQmlContext *context)
+    : QQuickGenerator(fileName, flags), m_context(context)
 {
 }
 
@@ -276,14 +285,88 @@ void QQuickItemGenerator::outputShapePath(const PathNodeInfo &info, const QPaint
 
 void QQuickItemGenerator::generateImageNode(const ImageNodeInfo &info)
 {
-    qCDebug(lcQuickVectorImage) << "generateImageNode: not yet implemented";
-    Q_UNUSED(info)
+    if (Q_UNLIKELY(errorState() || !isNodeVisible(info)))
+        return;
+
+    QString filePath = info.externalFileReference;
+    if (filePath.isEmpty()) {
+        filePath =
+                QDir::tempPath() + QStringLiteral("/svg_asset_%1.png").arg(info.image.cacheKey());
+        if (!info.image.save(filePath))
+            qCWarning(lcQuickVectorImage) << "Unable to save image resource" << filePath;
+    } else if (QDir::isRelativePath(filePath)) {
+        filePath = QFileInfo(fileName()).dir().absoluteFilePath(filePath);
+    }
+
+    auto *image = new QQuickImage;
+    if (m_context)
+        QQmlEngine::setContextForObject(image, m_context);
+    pushItem(image);
+    generateNodeBase(info);
+    image->setX(info.rect.x());
+    image->setY(info.rect.y());
+    image->setWidth(info.rect.width());
+    image->setHeight(info.rect.height());
+    auto *parserStatus = qobject_cast<QQmlParserStatus *>(image);
+    if (parserStatus)
+        parserStatus->classBegin();
+    image->setSource(QUrl::fromLocalFile(filePath));
+    if (parserStatus)
+        parserStatus->componentComplete();
+    popItem();
 }
 
 void QQuickItemGenerator::generateTextNode(const TextNodeInfo &info)
 {
-    qCDebug(lcQuickVectorImage) << "generateTextNode: not yet implemented";
-    Q_UNUSED(info)
+    if (Q_UNLIKELY(errorState() || !isNodeVisible(info)))
+        return;
+
+    auto *item = new QQuickItem;
+    pushItem(item);
+    generateNodeBase(info);
+
+    auto *text = new QQuickText;
+    text->setParent(item);
+    text->setParentItem(item);
+
+    text->setColor(info.fillColor.defaultValue().value<QColor>());
+    text->setFont(info.font);
+    text->setText(info.text);
+    text->setTextFormat(info.needsRichText ? QQuickText::RichText : QQuickText::StyledText);
+
+    if (info.isTextArea) {
+        text->setX(info.position.x());
+        text->setY(info.position.y());
+        if (info.size.width() > 0)
+            text->setWidth(info.size.width());
+        if (info.size.height() > 0)
+            text->setHeight(info.size.height());
+        text->setWrapMode(QQuickText::Wrap);
+        text->setClip(true);
+    } else {
+        QFontMetricsF fm(info.font);
+        text->setX(info.position.x());
+        text->setY(info.position.y() - fm.ascent());
+        switch (info.alignment) {
+        case Qt::AlignHCenter:
+            text->setHAlign(QQuickText::AlignHCenter);
+            break;
+        case Qt::AlignRight:
+            text->setHAlign(QQuickText::AlignRight);
+            break;
+        default:
+            text->setHAlign(QQuickText::AlignLeft);
+            break;
+        }
+    }
+
+    const QColor strokeColor = info.strokeColor.defaultValue().value<QColor>();
+    if (strokeColor != QColorConstants::Transparent || info.strokeColor.isAnimated()) {
+        text->setStyleColor(strokeColor);
+        text->setStyle(QQuickText::Outline);
+    }
+
+    popItem();
 }
 
 void QQuickItemGenerator::generateNode(const NodeInfo &info)

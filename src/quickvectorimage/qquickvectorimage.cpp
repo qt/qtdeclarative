@@ -124,7 +124,7 @@ void QQuickVectorImagePrivate::loadFile()
                          &QQuickVectorImage::updateItem);
         incubator->start(localFile, flags);
     } else {
-        QQuickItemGenerator gen(localFile, flags);
+        QQuickItemGenerator gen(localFile, flags, qmlContext(q));
 
         bool generatedWithPlugin = false;
         if (flags.testFlag(QQuickVectorImageGenerator::AssumeTrustedSource)) {

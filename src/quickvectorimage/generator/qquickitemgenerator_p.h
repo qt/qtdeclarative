@@ -24,11 +24,13 @@ QT_BEGIN_NAMESPACE
 
 class QQuickItem;
 class QQuickShape;
+class QQmlContext;
 
 class Q_QUICKVECTORIMAGEGENERATOR_EXPORT QQuickItemGenerator : public QQuickGenerator
 {
 public:
-    QQuickItemGenerator(const QString &fileName, QQuickVectorImageGenerator::GeneratorFlags flags);
+    QQuickItemGenerator(const QString &fileName, QQuickVectorImageGenerator::GeneratorFlags flags,
+                        QQmlContext *context = nullptr);
     ~QQuickItemGenerator() override;
 
     QQuickItem *takeRootItem();
@@ -56,6 +58,7 @@ public:
 private:
     QQuickItem *m_rootItem = nullptr;
     QStack<QQuickItem *> m_itemStack;
+    QQmlContext *m_context = nullptr;
     quint32 m_nodeCounter = 0;
 
     QQuickShape *createShapeContainer();
