@@ -1607,6 +1607,17 @@ static QString stripTrailingSlashes(const QString &path)
     return QString();
 }
 
+static bool isResource(const QString &path)
+{
+    const bool startsWithColon = path.at(0) == QLatin1Char(':');
+#if defined(Q_OS_ANDROID)
+    return startsWithColon || path.startsWith(QLatin1String("assets:/", Qt::CaseInsensitive))
+            || path.startsWith(QLatin1String("content:/"), Qt::CaseInsensitive);
+#else
+    return startsWithColon;
+#endif
+}
+
 bool QQmlTypeLoader::fileExists(const QString &dirPath, const QString &file) const
 {
     // Can be called from either thread.
@@ -1617,12 +1628,23 @@ bool QQmlTypeLoader::fileExists(const QString &dirPath, const QString &file) con
     // claim that Date.qml exists in such a situation on a case-insensitive file sysem. Such a
     // thing then shadows the JavaScript Date object and disaster ensues.
 
-    const QString path = stripTrailingSlashes(dirPath);
-
     const QChar nullChar(QChar::Null);
-    if (path.isEmpty() || path.contains(nullChar) || file.isEmpty() || file.contains(nullChar))
+    if (dirPath.isEmpty() || dirPath.contains(nullChar) || file.isEmpty()
+        || file.contains(nullChar)) {
         return false;
+    }
 
+    // NB: We really shouldn't see URLs (qrc:/ or the like) here. This is explicitly about paths.
+    //     We don't handle file:/ either.
+
+    if (isResource(dirPath)) {
+        // The resource file system is case-sensitive. So we don't have to do the below gymnastics.
+        // However, it changes spontanously as resources are loaded. Therefore we can't cache it.
+        const QFileInfo info(dirPath + u'/' + file);
+        return info.exists();
+    }
+
+    const QString path = stripTrailingSlashes(dirPath);
 
     QQmlTypeLoaderSharedDataConstPtr data(&m_data);
     QCache<QString, bool> *fileSet = data->importDirCache.object(path);
@@ -1640,67 +1662,38 @@ bool QQmlTypeLoader::fileExists(const QString &dirPath, const QString &file) con
         return false;
     }
 
-    auto addToCache = [&](const QString &path, const QString &file) {
-        const QDir dir(path);
+    const QDir dir(path);
 
-        if (!fileSet) {
-            // First try to cache the whole directory, but only up to the maxCost of the cache.
+    if (!fileSet) {
+        // First try to cache the whole directory, but only up to the maxCost of the cache.
 
-            fileSet = dir.exists() ? new QCache<QString, bool> : nullptr;
-            const bool inserted = data->importDirCache.insert(path, fileSet);
-            Q_ASSERT(inserted);
-            if (!fileSet)
-                return false;
+        fileSet = dir.exists() ? new QCache<QString, bool> : nullptr;
+        const bool inserted = data->importDirCache.insert(path, fileSet);
+        Q_ASSERT(inserted);
+        if (!fileSet)
+            return false;
 
-            switch (populateFileSet(fileSet, dir.path(), file)) {
-            case FileSetPopulateResult::NotFound:
-                return false;
-            case FileSetPopulateResult::Found:
-                return true;
-            case FileSetPopulateResult::Overflow:
-                break;
-            }
-
-            // Cache overflow. Look up files individually
-        } else {
-            // If the directory was completely cached, we'd have returned early above.
-            Q_ASSERT(fileSet->totalCost() == fileSet->maxCost());
-
+        switch (populateFileSet(fileSet, dir.path(), file)) {
+        case FileSetPopulateResult::NotFound:
+            return false;
+        case FileSetPopulateResult::Found:
+            return true;
+        case FileSetPopulateResult::Overflow:
+            break;
         }
 
-        const QDirListing singleFile(dir.path(), {file}, dirListingFlags());
-        const bool exists = singleFile.begin() != singleFile.end();
-        fileSet->insert(file, new bool(exists));
+        // Cache overflow. Look up files individually
+    } else {
+        // If the directory was completely cached, we'd have returned early above.
         Q_ASSERT(fileSet->totalCost() == fileSet->maxCost());
-        return exists;
-    };
 
-    if (path.at(0) == QLatin1Char(':')) {
-        // qrc resource
-        return addToCache(path, file);
     }
 
-    if (path.size() > 3 && path.at(3) == QLatin1Char(':')
-            && path.startsWith(QLatin1String("qrc"), Qt::CaseInsensitive)) {
-        // qrc resource url
-        return addToCache(QQmlFile::urlToLocalFileOrQrc(path), file);
-    }
-
-#if defined(Q_OS_ANDROID)
-    if (path.size() > 7 && path.at(6) == QLatin1Char(':') && path.at(7) == QLatin1Char('/')
-            && path.startsWith(QLatin1String("assets"), Qt::CaseInsensitive)) {
-        // assets resource url
-        return addToCache(QQmlFile::urlToLocalFileOrQrc(path), file);
-    }
-
-    if (path.size() > 8 && path.at(7) == QLatin1Char(':') && path.at(8) == QLatin1Char('/')
-            && path.startsWith(QLatin1String("content"), Qt::CaseInsensitive)) {
-        // content url
-        return addToCache(QQmlFile::urlToLocalFileOrQrc(path), file);
-    }
-#endif
-
-    return addToCache(path, file);
+    const QDirListing singleFile(dir.path(), {file}, dirListingFlags());
+    const bool exists = singleFile.begin() != singleFile.end();
+    fileSet->insert(file, new bool(exists));
+    Q_ASSERT(fileSet->totalCost() == fileSet->maxCost());
+    return exists;
 }
 
 
@@ -1715,12 +1708,7 @@ bool QQmlTypeLoader::directoryExists(const QString &path)
     if (path.isEmpty())
         return false;
 
-    bool isResource = path.at(0) == QLatin1Char(':');
-#if defined(Q_OS_ANDROID)
-    isResource = isResource || path.startsWith(QLatin1String("assets:/")) || path.startsWith(QLatin1String("content:/"));
-#endif
-
-    if (isResource) {
+    if (isResource(path)) {
         // qrc resource
         QFileInfo fileInfo(path);
         return fileInfo.exists() && fileInfo.isDir();

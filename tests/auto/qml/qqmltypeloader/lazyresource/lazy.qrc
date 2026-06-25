@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/qt_test_lazy_resource">
+        <file>Probe.qml</file>
+    </qresource>
+</RCC>
