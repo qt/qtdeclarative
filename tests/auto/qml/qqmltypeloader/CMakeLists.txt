@@ -64,3 +64,9 @@ set_target_properties(tst_qqmltypeloader PROPERTIES
 
 _qt_internal_qml_type_registration(tst_qqmltypeloader)
 add_subdirectory(SlowImport)
+
+# A resource compiled to a standalone .rcc that the test registers at run time, to exercise
+# the directory cache being invalidated when a resource appears after it was first probed.
+qt_add_binary_resources(tst_qqmltypeloader_lazy_resource "lazyresource/lazy.qrc"
+    DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/lazyresource.rcc")
+add_dependencies(tst_qqmltypeloader tst_qqmltypeloader_lazy_resource)
