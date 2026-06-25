@@ -500,11 +500,12 @@ void tst_QuickPath::cornerProperties()
 
     pathRectangle.setBevel(true);
     QVERIFY(pathRectangle.hasBevel());
-    QCOMPARE(pathRectangle.hasTopLeftBevel(), false);
-    QCOMPARE(pathRectangle.hasTopRightBevel(), false);
-    QCOMPARE(pathRectangle.hasBottomLeftBevel(), false);
-    QCOMPARE(pathRectangle.hasBottomRightBevel(), false);
+    QCOMPARE(pathRectangle.hasTopLeftBevel(), true);
+    QCOMPARE(pathRectangle.hasTopRightBevel(), true);
+    QCOMPARE(pathRectangle.hasBottomLeftBevel(), true);
+    QCOMPARE(pathRectangle.hasBottomRightBevel(), true);
 
+    pathRectangle.setBevel(false);
     pathRectangle.setBottomLeftBevel(true);
     QCOMPARE(pathRectangle.hasTopLeftBevel(), false);
     QCOMPARE(pathRectangle.hasTopRightBevel(), false);
