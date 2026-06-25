@@ -510,6 +510,22 @@ static bool isPathAbsolute(const QString &path)
 #endif
 }
 
+static bool isPathQrcOrAbsolute(const QString &path)
+{
+    return path.startsWith(u':') || isPathAbsolute(path);
+}
+
+// importPathList() and the qmldir candidate paths derived from it are a mixture of absolute
+// file system paths, qrc paths (":/...") and URLs (e.g. "qrc:/...", "file:///...", remote URLs,
+// or whatever a URL interceptor produced). absoluteFilePath() and fileExists() only understand
+// paths, not URLs. Turn any local URL into its path here. Returns an empty string for empty
+// input or for anything that does not resolve to a local path (in particular remote URLs).
+static QString localPathForUrlOrPath(const QString &urlOrPath)
+{
+    if (urlOrPath.isEmpty() || isPathQrcOrAbsolute(urlOrPath))
+        return urlOrPath;
+    return QQmlFile::urlToLocalFileOrQrc(urlOrPath);
+}
 
 /*!
     \internal
@@ -522,8 +538,12 @@ QStringList QQmlTypeLoader::importPathList(PathType type) const
 
     QStringList list;
     for (const QString &path : data->importPaths) {
-        bool localPath = isPathAbsolute(path) || QQmlFile::isLocalFile(path);
-        if (localPath == (type == Local))
+        // The import paths are a mixture of absolute file system paths and URLs. None of them
+        // starts with a bare ':' because addImportPath() rewrites qrc paths (":/foo") to
+        // "qrc:/foo" URLs before storing them. So an absolute-path check together with
+        // QQmlFile::isLocalFile() is enough to tell local entries (resolvable on the file
+        // system or in qrc) from remote ones.
+        if ((isPathAbsolute(path) || QQmlFile::isLocalFile(path)) == (type == Local))
             list.append(path);
     }
 
@@ -1526,6 +1546,17 @@ QQmlRefPointer<QQmlQmldirData> QQmlTypeLoader::getQmldir(const QUrl &url)
     return qmldirData;
 }
 
+static bool isResource(const QString &path)
+{
+    const bool startsWithColon = path.at(0) == QLatin1Char(':');
+#if defined(Q_OS_ANDROID)
+    return startsWithColon || path.startsWith(QLatin1String("assets:/", Qt::CaseInsensitive))
+            || path.startsWith(QLatin1String("content:/"), Qt::CaseInsensitive);
+#else
+    return startsWithColon;
+#endif
+}
+
 /*!
 Returns the absolute filename of path via a directory cache.
 Returns a empty string if the path does not exist.
@@ -1541,29 +1572,12 @@ QString QQmlTypeLoader::absoluteFilePath(const QString &path) const
 
     if (path.isEmpty())
         return QString();
-    if (path.at(0) == QLatin1Char(':')) {
+
+    if (isResource(path)) {
         // qrc resource
         QFileInfo fileInfo(path);
         return fileInfo.isFile() ? fileInfo.absoluteFilePath() : QString();
-    } else if (path.size() > 3 && path.at(3) == QLatin1Char(':') &&
-               path.startsWith(QLatin1String("qrc"), Qt::CaseInsensitive)) {
-        // qrc resource url
-        QFileInfo fileInfo(QQmlFile::urlToLocalFileOrQrc(path));
-        return fileInfo.isFile() ? fileInfo.absoluteFilePath() : QString();
     }
-#if defined(Q_OS_ANDROID)
-    else if (path.size() > 7 && path.at(6) == QLatin1Char(':') && path.at(7) == QLatin1Char('/') &&
-           path.startsWith(QLatin1String("assets"), Qt::CaseInsensitive)) {
-        // assets resource url
-        QFileInfo fileInfo(QQmlFile::urlToLocalFileOrQrc(path));
-        return fileInfo.isFile() ? fileInfo.absoluteFilePath() : QString();
-    } else if (path.size() > 8 && path.at(7) == QLatin1Char(':') && path.at(8) == QLatin1Char('/') &&
-           path.startsWith(QLatin1String("content"), Qt::CaseInsensitive)) {
-        // content url
-        QFileInfo fileInfo(QQmlFile::urlToLocalFileOrQrc(path));
-        return fileInfo.isFile() ? fileInfo.absoluteFilePath() : QString();
-    }
-#endif
 
     return fileExists(path)
             ? QFileInfo(path).absoluteFilePath()
@@ -1605,17 +1619,6 @@ static QString stripTrailingSlashes(const QString &path)
     }
 
     return QString();
-}
-
-static bool isResource(const QString &path)
-{
-    const bool startsWithColon = path.at(0) == QLatin1Char(':');
-#if defined(Q_OS_ANDROID)
-    return startsWithColon || path.startsWith(QLatin1String("assets:/", Qt::CaseInsensitive))
-            || path.startsWith(QLatin1String("content:/"), Qt::CaseInsensitive);
-#else
-    return startsWithColon;
-#endif
 }
 
 bool QQmlTypeLoader::fileExists(const QString &dirPath, const QString &file) const
@@ -1965,7 +1968,7 @@ QStringList QQmlTypeLoader::urlsForModule(const QString &module) const
     const auto completedImportPaths = QQmlImports::completeQmldirPaths(module, importPaths, {});
     QStringList urls;
     for (const auto &importPath : completedImportPaths) {
-        const auto absolutePath = absoluteFilePath(importPath);
+        const auto absolutePath = absoluteFilePath(localPathForUrlOrPath(importPath));
         if (absolutePath.isEmpty())
             continue;
         if (const std::optional<QString> url = pathToUrl(absolutePath))
@@ -2061,7 +2064,11 @@ QQmlTypeLoader::LocalQmldirResult QQmlTypeLoader::locateLocalQmldir(
             }
         }
 
-        qmldirAbsoluteFilePath = absoluteFilePath(qmldirPath);
+        // qmldirPath can be a path or a URL at this point because we've inherited that property
+        // from importPathList(). absoluteFilePath() however, wants only paths, not URLs. It may
+        // also be empty here if an interceptor redirected it to a non-local URL above.
+        qmldirAbsoluteFilePath = absoluteFilePath(localPathForUrlOrPath(qmldirPath));
+
         if (!qmldirAbsoluteFilePath.isEmpty()) {
             QString url = pathToUrl(qmldirAbsoluteFilePath);
             if (url.startsWith(QStringLiteral("file:")))
