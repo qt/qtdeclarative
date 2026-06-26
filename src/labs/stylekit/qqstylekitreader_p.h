@@ -57,6 +57,7 @@ public:
         ApplicationWindow,
         Button,
         CheckBox,
+        CheckDelegate,
         ComboBox,
         FlatButton,
         ProgressBar,

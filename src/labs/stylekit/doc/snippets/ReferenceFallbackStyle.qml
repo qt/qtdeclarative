@@ -115,6 +115,29 @@ BaseStyle {
         }
     }
 
+    checkDelegate {
+        text.alignment: Qt.AlignVCenter | Qt.AlignLeft
+        background {
+            radius: 0
+            color: __baseWhite
+            border.width: 0
+        }
+        indicator {
+            alignment: Qt.AlignRight | Qt.AlignVCenter
+            foreground {
+                visible: false
+                alignment: Qt.AlignCenter
+                color: __transparent
+                image.fillMode: Image.PreserveAspectFit
+                image.source: "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/check.png"
+            }
+        }
+        hovered.background.color: __backgroundDefault
+        checked {
+            indicator.foreground.visible: true
+        }
+    }
+
     comboBox {
         text.alignment: Qt.AlignVCenter | Qt.AlignLeft
         background.implicitWidth: 150

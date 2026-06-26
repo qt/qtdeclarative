@@ -103,6 +103,16 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \qmlproperty ControlStyle AbstractStylableControls::checkDelegate
+
+    Grouped property for styling \l [QtQuickControls]{CheckDelegate}.
+
+    Unset properties fall back to \l itemDelegate.
+
+    \snippet ControlsSnippets.qml checkDelegate
+*/
+
+/*!
     \qmlproperty ControlStyle AbstractStylableControls::comboBox
 
     Grouped property for styling \l [QtQuickControls]{ComboBox}.
@@ -534,6 +544,7 @@ IMPLEMENT_ACCESSORS(control, QQStyleKitReader::ControlType::Control)
 IMPLEMENT_ACCESSORS(button, QQStyleKitReader::ControlType::Button)
 IMPLEMENT_ACCESSORS(flatButton, QQStyleKitReader::ControlType::FlatButton)
 IMPLEMENT_ACCESSORS(checkBox, QQStyleKitReader::ControlType::CheckBox)
+IMPLEMENT_ACCESSORS(checkDelegate, QQStyleKitReader::ControlType::CheckDelegate)
 IMPLEMENT_ACCESSORS(comboBox, QQStyleKitReader::ControlType::ComboBox)
 IMPLEMENT_ACCESSORS(progressBar, QQStyleKitReader::ControlType::ProgressBar)
 IMPLEMENT_ACCESSORS(scrollBar, QQStyleKitReader::ControlType::ScrollBar)

@@ -57,6 +57,8 @@ static QQuickTheme::Scope scopeForType(QQStyleKitExtendableControlType type)
         return QQuickTheme::Button;
     case QQStyleKitReader::ControlType::CheckBox:
         return QQuickTheme::CheckBox;
+    case QQStyleKitReader::ControlType::CheckDelegate:
+        return QQuickTheme::ListView;
     case QQStyleKitReader::ControlType::ComboBox:
         return QQuickTheme::ComboBox;
     case QQStyleKitReader::ControlType::GroupBox:
