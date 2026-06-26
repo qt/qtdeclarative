@@ -479,7 +479,6 @@ void FormatPartialStatus::handleTokens()
                 enter(StateType::BindingAssignment);
                 break; // oops, was a binding
             case QQmlJSGrammar::T_VAR:
-            case QQmlJSGrammar::T_IDENTIFIER:
                 enter(StateType::PropertyName);
                 break;
             default:

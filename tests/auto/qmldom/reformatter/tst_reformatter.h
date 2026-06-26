@@ -142,6 +142,10 @@ private slots:
                 << "fromAsIdentifier.qml"
                 << "fromAsIdentifier.formatted.qml"
                 << defaultOptions;
+        QTest::newRow("listMisformattedAsProperty")
+                << "listMisformattedAsProperty.qml"
+                << "listMisformattedAsProperty.formatted.qml"
+                << defaultOptions;
     }
 
     void lineByLineReformatter()
