@@ -4,7 +4,7 @@
 import QtQuick
 import QtTest
 import QtNetwork
-import QmlTestUri
+import QmlNetworkTest.SslKey
 
 Item {
     id: root

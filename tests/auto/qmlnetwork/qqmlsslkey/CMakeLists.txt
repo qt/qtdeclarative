@@ -20,7 +20,7 @@ qt_internal_add_test(tst_sslkey_qml
 qt_policy(SET QTP0001 NEW)
 
 qt_add_qml_module(tst_sslkey_qml
-    URI QmlTestUri
+    URI QmlNetworkTest.SslKey
     VERSION 1.0
     NO_GENERATE_EXTRA_QMLDIRS
     QML_FILES
