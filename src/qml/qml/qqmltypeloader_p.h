@@ -207,7 +207,7 @@ public:
     }
 
     bool fileExists(const QString &dirPath, const QString &file) const;
-    bool directoryExists(const QString &path);
+    bool directoryExists(const QString &path) const;
 
     const QQmlTypeLoaderQmldirContent qmldirContent(const QString &filePath);
     void setQmldirContent(const QString &filePath, const QString &content);

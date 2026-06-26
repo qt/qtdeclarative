@@ -1584,33 +1584,6 @@ QString QQmlTypeLoader::absoluteFilePath(const QString &path) const
             : QString();
 }
 
-static constexpr QDirListing::IteratorFlags dirListingFlags()
-{
-    return QDirListing::IteratorFlag::CaseSensitive | QDirListing::IteratorFlag::IncludeHidden;
-}
-
-enum class FileSetPopulateResult { NotFound, Found, Overflow };
-static FileSetPopulateResult populateFileSet(
-        QCache<QString, bool> *fileSet, const QString &path, const QString &file)
-{
-    const QDirListing listing(path, dirListingFlags());
-    bool seen = false;
-    for (const auto &entry : listing) {
-        const QString next = entry.fileName();
-        if (next == file)
-            seen = true;
-        fileSet->insert(next, new bool(true));
-        if (fileSet->totalCost() == fileSet->maxCost())
-            break;
-    }
-
-    if (seen)
-        return FileSetPopulateResult::Found;
-    if (fileSet->totalCost() < fileSet->maxCost())
-        return FileSetPopulateResult::NotFound;
-    return FileSetPopulateResult::Overflow;
-}
-
 static QString stripTrailingSlashes(const QString &path)
 {
     for (qsizetype length = path.size(); length > 0; --length) {
@@ -1650,53 +1623,7 @@ bool QQmlTypeLoader::fileExists(const QString &dirPath, const QString &file) con
     const QString path = stripTrailingSlashes(dirPath);
 
     QQmlTypeLoaderSharedDataConstPtr data(&m_data);
-    QCache<QString, bool> *fileSet = data->importDirCache.object(path);
-    if (fileSet) {
-        if (const bool *exists = fileSet->object(file))
-            return *exists;
-
-        // If the cache isn't full, we know that we've scanned the whole directory.
-        // The file not being in the cache then means it doesn't exist.
-        if (fileSet->totalCost() < fileSet->maxCost())
-            return false;
-
-    } else if (data->importDirCache.contains(path)) {
-        // explicit nullptr in cache
-        return false;
-    }
-
-    const QDir dir(path);
-
-    if (!fileSet) {
-        // First try to cache the whole directory, but only up to the maxCost of the cache.
-
-        fileSet = dir.exists() ? new QCache<QString, bool> : nullptr;
-        const bool inserted = data->importDirCache.insert(path, fileSet);
-        Q_ASSERT(inserted);
-        if (!fileSet)
-            return false;
-
-        switch (populateFileSet(fileSet, dir.path(), file)) {
-        case FileSetPopulateResult::NotFound:
-            return false;
-        case FileSetPopulateResult::Found:
-            return true;
-        case FileSetPopulateResult::Overflow:
-            break;
-        }
-
-        // Cache overflow. Look up files individually
-    } else {
-        // If the directory was completely cached, we'd have returned early above.
-        Q_ASSERT(fileSet->totalCost() == fileSet->maxCost());
-
-    }
-
-    const QDirListing singleFile(dir.path(), {file}, dirListingFlags());
-    const bool exists = singleFile.begin() != singleFile.end();
-    fileSet->insert(file, new bool(exists));
-    Q_ASSERT(fileSet->totalCost() == fileSet->maxCost());
-    return exists;
+    return data->importDirCache.fileExists(path, file);
 }
 
 
@@ -1704,7 +1631,7 @@ bool QQmlTypeLoader::fileExists(const QString &dirPath, const QString &file) con
 Returns true if the path is a directory via a directory cache.  Cache is
 shared with absoluteFilePath().
 */
-bool QQmlTypeLoader::directoryExists(const QString &path)
+bool QQmlTypeLoader::directoryExists(const QString &path) const
 {
     // Can be called from either thread.
 
@@ -1719,20 +1646,9 @@ bool QQmlTypeLoader::directoryExists(const QString &path)
 
     const QString dirPath = stripTrailingSlashes(path);
 
-    QQmlTypeLoaderSharedDataPtr data(&m_data);
-    if (!data->importDirCache.contains(dirPath)) {
-        if (QDir(dirPath).exists()) {
-            QCache<QString, bool> *files = new QCache<QString, bool>;
-            populateFileSet(files, dirPath, QString());
-            data->importDirCache.insert(dirPath, files);
-            return true;
-        }
+    QQmlTypeLoaderSharedDataConstPtr data(&m_data);
+    return data->importDirCache.directoryExists(path);
 
-        data->importDirCache.insert(dirPath, nullptr);
-        return false;
-    }
-
-    return data->importDirCache.object(dirPath) != nullptr;
 }
 
 

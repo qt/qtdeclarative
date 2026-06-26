@@ -43,7 +43,16 @@ public:
     using TypeCache = QHash<QUrl, QQmlRefPointer<QQmlTypeData>>;
     using ScriptCache = QHash<QUrl, QQmlRefPointer<QQmlScriptBlob>>;
     using QmldirCache = QHash<QUrl, QQmlRefPointer<QQmlQmldirData>>;
-    using ImportDirCache = QCache<QString, QCache<QString, bool>>;
+
+    class ImportDirCache
+    {
+    public:
+        bool fileExists(const QString &path, const QString &file);
+        bool directoryExists(const QString &dirPath);
+        void clear() { content.clear(); }
+    private:
+        QCache<QString, QCache<QString, bool>> content;
+    };
 
     QQmlTypeLoaderSharedData() = default;
 
