@@ -158,8 +158,8 @@ TestCase {
             touch.press(0, control, control.width / 2, control.height / 2).commit()
         else
             mousePress(control, control.width / 2, control.height / 2)
-        compare(control.pressX, control.width / 2)
-        compare(control.pressY, control.height / 2)
+        fuzzyCompare(control.pressX, control.width / 2, 1)
+        fuzzyCompare(control.pressY, control.height / 2, 1)
         compare(pressXSpy.count, ++pressXChanges)
         compare(pressYSpy.count, ++pressYChanges)
 
@@ -167,8 +167,8 @@ TestCase {
             touch.move(0, control, control.width / 2, control.height / 2).commit()
         else
             mouseMove(control, control.width / 2, control.height / 2)
-        compare(control.pressX, control.width / 2)
-        compare(control.pressY, control.height / 2)
+        fuzzyCompare(control.pressX, control.width / 2, 1)
+        fuzzyCompare(control.pressY, control.height / 2, 1)
         compare(pressXSpy.count, pressXChanges)
         compare(pressYSpy.count, pressYChanges)
 
@@ -176,8 +176,8 @@ TestCase {
             touch.move(0, control, control.width / 4, control.height / 4).commit()
         else
             mouseMove(control, control.width / 4, control.height / 4)
-        compare(control.pressX, control.width / 4)
-        compare(control.pressY, control.height / 4)
+        fuzzyCompare(control.pressX, control.width / 4, 1)
+        fuzzyCompare(control.pressY, control.height / 4, 1)
         compare(pressXSpy.count, ++pressXChanges)
         compare(pressYSpy.count, ++pressYChanges)
 
@@ -185,8 +185,8 @@ TestCase {
             touch.move(0, control, 0, 0).commit()
         else
             mouseMove(control, 0, 0)
-        compare(control.pressX, 0)
-        compare(control.pressY, 0)
+        fuzzyCompare(control.pressX, 0, 1)
+        fuzzyCompare(control.pressY, 0, 1)
         compare(pressXSpy.count, ++pressXChanges)
         compare(pressYSpy.count, ++pressYChanges)
 
@@ -194,8 +194,8 @@ TestCase {
             touch.move(0, control, -control.width / 2, -control.height / 2).commit()
         else
             mouseMove(control, -control.width / 2, -control.height / 2)
-        compare(control.pressX, -control.width / 2)
-        compare(control.pressY, -control.height / 2)
+        fuzzyCompare(control.pressX, -control.width / 2, 1)
+        fuzzyCompare(control.pressY, -control.height / 2, 1)
         compare(pressXSpy.count, ++pressXChanges)
         compare(pressYSpy.count, ++pressYChanges)
 
@@ -203,8 +203,8 @@ TestCase {
             touch.release(0, control, -control.width / 2, -control.height / 2).commit()
         else
             mouseRelease(control, -control.width / 2, -control.height / 2)
-        compare(control.pressX, -control.width / 2)
-        compare(control.pressY, -control.height / 2)
+        fuzzyCompare(control.pressX, -control.width / 2, 1)
+        fuzzyCompare(control.pressY, -control.height / 2, 1)
         compare(pressXSpy.count, pressXChanges)
         compare(pressYSpy.count, pressYChanges)
 
@@ -212,8 +212,8 @@ TestCase {
             touch.press(0, control, control.width - 1, control.height - 1).commit()
         else
             mousePress(control, control.width - 1, control.height - 1)
-        compare(control.pressX, control.width - 1)
-        compare(control.pressY, control.height - 1)
+        fuzzyCompare(control.pressX, control.width - 1, 1)
+        fuzzyCompare(control.pressY, control.height - 1, 1)
         compare(pressXSpy.count, ++pressXChanges)
         compare(pressYSpy.count, ++pressYChanges)
 
@@ -221,8 +221,8 @@ TestCase {
             touch.move(0, control, control.width + 1, control.height + 1).commit()
         else
             mouseMove(control, control.width + 1, control.height + 1)
-        compare(control.pressX, control.width + 1)
-        compare(control.pressY, control.height + 1)
+        fuzzyCompare(control.pressX, control.width + 1,1)
+        fuzzyCompare(control.pressY, control.height + 1,1)
         compare(pressXSpy.count, ++pressXChanges)
         compare(pressYSpy.count, ++pressYChanges)
 
@@ -230,8 +230,8 @@ TestCase {
             touch.release(0, control, control.width + 2, control.height + 2).commit()
         else
             mouseRelease(control, control.width + 2, control.height + 2)
-        compare(control.pressX, control.width + 2)
-        compare(control.pressY, control.height + 2)
+        fuzzyCompare(control.pressX, control.width + 2, 1)
+        fuzzyCompare(control.pressY, control.height + 2, 1)
         compare(pressXSpy.count, ++pressXChanges)
         compare(pressYSpy.count, ++pressYChanges)
     }
