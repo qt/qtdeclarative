@@ -39,6 +39,7 @@ qt_internal_add_qml_module(LabsStyleKit
         ApplicationWindow.qml
         Button.qml
         CheckBox.qml
+        CheckDelegate.qml
         ComboBox.qml
         Frame.qml
         ItemDelegate.qml

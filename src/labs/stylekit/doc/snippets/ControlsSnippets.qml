@@ -85,6 +85,33 @@ ApplicationWindow {
         }
         //! [checkBox]
 
+        //! [checkDelegate]
+        checkDelegate {
+            text.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+            background {
+                radius: 0
+                color: "white"
+                border.width: 0
+            }
+
+            indicator {
+                border.color: "darkslategray"
+                foreground {
+                    color: "transparent"
+                    image.source: "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/check.png"
+                    image.color: palette.accent
+
+                    // Hide the checkmark when the checkbox is not checked
+                    visible: false
+                }
+            }
+
+            hovered.background.color: "#f0f0f0"
+            // Show the checkmark when the checkbox is checked
+            checked.indicator.foreground.visible: true
+        }
+        //! [checkDelegate]
+
         //! [comboBox]
         comboBox {
             text.alignment: Qt.AlignHCenter | Qt.AlignVCenter

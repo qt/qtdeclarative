@@ -36,6 +36,7 @@ class QQStyleKitControls : public QObject, public QQmlParserStatus
     Q_PROPERTY(QQStyleKitControl *control READ control WRITE set_control NOTIFY controlChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *button READ button WRITE set_button NOTIFY buttonChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *checkBox READ checkBox WRITE set_checkBox NOTIFY checkBoxChanged FINAL)
+    Q_PROPERTY(QQStyleKitControl *checkDelegate READ checkDelegate WRITE set_checkDelegate NOTIFY checkDelegateChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *comboBox READ comboBox WRITE set_comboBox NOTIFY comboBoxChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *flatButton READ flatButton WRITE set_flatButton NOTIFY flatButtonChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *progressBar READ progressBar WRITE set_progressBar NOTIFY progressBarChanged FINAL)
@@ -86,6 +87,7 @@ public:
     IMPLEMENT_ACCESSORS(control)
     IMPLEMENT_ACCESSORS(button)
     IMPLEMENT_ACCESSORS(checkBox)
+    IMPLEMENT_ACCESSORS(checkDelegate)
     IMPLEMENT_ACCESSORS(comboBox)
     IMPLEMENT_ACCESSORS(flatButton)
     IMPLEMENT_ACCESSORS(progressBar)
@@ -133,6 +135,7 @@ signals:
     void controlChanged();
     void buttonChanged();
     void checkBoxChanged();
+    void checkDelegateChanged();
     void comboBoxChanged();
     void flatButtonChanged();
     void progressBarChanged();
