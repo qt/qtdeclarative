@@ -12,6 +12,7 @@
 #include <QtQuick/qquickview.h>
 #include <QtQml/private/qqmlglobal_p.h> // qmlobject_cast
 
+#include <QtQuickTestUtils/private/geometrytestutils_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/viewtestutils_p.h>
 #include <QQmlComponent>
@@ -406,8 +407,8 @@ void tst_PointerHandlers::touchEventDelivery()
 
     QPointF localPos = eventItem1->mapFromScene(p1);
     QPointF scenePos = p1; // item is at 0,0
-    QCOMPARE(eventItem1->eventList.at(1).posWrtItem, localPos);
-    QCOMPARE(eventItem1->eventList.at(1).posWrtScene, scenePos);
+    VERIFY_POINT_NEAR("posWrtItem", eventItem1->eventList.at(1).posWrtItem, localPos);
+    VERIFY_POINT_NEAR("posWrtScene", eventItem1->eventList.at(1).posWrtScene, scenePos);
 
     p1 += QPoint(10, 0);
     QTest::touchEvent(window, touchscreen.get()).move(0, p1, window);
