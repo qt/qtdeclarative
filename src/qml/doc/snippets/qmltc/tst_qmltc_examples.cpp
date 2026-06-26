@@ -138,8 +138,8 @@ void readFileContent(QStringList *content, const QString &url, Predicate filter)
 
 void tst_qmltc_examples::helloWorld()
 {
-#ifdef Q_OS_ANDROID
-    QSKIP("expected C++ files are not bundled with Android tests.");
+#if defined(Q_OS_ANDROID) || defined(Q_OS_OHOS)
+    QSKIP("expected C++ files are not bundled on this platform.");
 #endif
     QStringList generatedCode;
     readFileContent(&generatedCode,
