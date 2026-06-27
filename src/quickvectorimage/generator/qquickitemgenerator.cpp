@@ -10,6 +10,7 @@
 #include <private/qquickpath_p.h>
 #include <private/qquickimage_p.h>
 #include <private/qquicktext_p.h>
+#include <private/qquickrectangle_p.h>
 
 #include "utils_p.h"
 
@@ -200,6 +201,48 @@ void QQuickItemGenerator::generatePath(const PathNodeInfo &info, const QRectF &o
     }
 }
 
+static QQuickShapeGradient *createShapeGradient(const QGradient &grad, const QRectF &coordSys,
+                                                QObject *parent)
+{
+    const qreal sx = coordSys.width();
+    const qreal sy = coordSys.height();
+    const qreal tx = coordSys.x();
+    const qreal ty = coordSys.y();
+
+    QQuickShapeGradient *result = nullptr;
+
+    if (grad.type() == QGradient::LinearGradient) {
+        const auto *linGrad = static_cast<const QLinearGradient *>(&grad);
+        auto *g = new QQuickShapeLinearGradient(parent);
+        g->setX1(linGrad->start().x() * sx + tx);
+        g->setY1(linGrad->start().y() * sy + ty);
+        g->setX2(linGrad->finalStop().x() * sx + tx);
+        g->setY2(linGrad->finalStop().y() * sy + ty);
+        result = g;
+    } else if (grad.type() == QGradient::RadialGradient) {
+        const auto *radGrad = static_cast<const QRadialGradient *>(&grad);
+        auto *g = new QQuickShapeRadialGradient(parent);
+        g->setCenterX(radGrad->center().x() * sx + tx);
+        g->setCenterY(radGrad->center().y() * sy + ty);
+        g->setCenterRadius(radGrad->radius() * sx);
+        g->setFocalX(radGrad->focalPoint().x() * sx + tx);
+        g->setFocalY(radGrad->focalPoint().y() * sy + ty);
+        result = g;
+    } else {
+        return nullptr;
+    }
+
+    for (const auto &stop : grad.stops()) {
+        auto *s = new QQuickGradientStop(result);
+        s->setPosition(stop.first);
+        s->setColor(stop.second);
+        auto stopsProp = result->stops();
+        stopsProp.append(&stopsProp, s);
+    }
+    result->setSpread(QQuickShapeGradient::SpreadMode(grad.spread()));
+    return result;
+}
+
 void QQuickItemGenerator::outputShapePath(const PathNodeInfo &info, const QPainterPath *path,
                                           const QQuadPath *quadPath,
                                           QQuickVectorImageGenerator::PathSelector pathSelector,
@@ -253,18 +296,38 @@ void QQuickItemGenerator::outputShapePath(const PathNodeInfo &info, const QPaint
     if (noPen || !(pathSelector & QQuickVectorImageGenerator::StrokePath)) {
         shapePath->setStrokeColor(QColorConstants::Transparent);
     } else {
-        shapePath->setStrokeColor(strokeColor);
+        if (info.strokeGrad.type() != QGradient::NoGradient && !invalidGradientBounds) {
+            QRectF coordinateSys = info.strokeGrad.coordinateMode() == QGradient::ObjectMode
+                    ? boundingRect
+                    : QRectF(0.0, 0.0, 1.0, 1.0);
+            shapePath->setStrokeGradient(
+                    createShapeGradient(info.strokeGrad, coordinateSys, shapePath));
+        } else {
+            shapePath->setStrokeColor(strokeColor);
+        }
         shapePath->setStrokeWidth(info.strokeStyle.width.defaultValue().toReal());
         shapePath->setCapStyle(QQuickShapePath::CapStyle(info.strokeStyle.lineCapStyle));
         shapePath->setJoinStyle(QQuickShapePath::JoinStyle(info.strokeStyle.lineJoinStyle));
         shapePath->setMiterLimit(info.strokeStyle.miterLimit);
     }
 
+    QTransform fillTransform = info.fillTransform;
     if (!(pathSelector & QQuickVectorImageGenerator::FillPath)) {
         shapePath->setFillColor(QColorConstants::Transparent);
+    } else if (info.grad.type() != QGradient::NoGradient) {
+        if (info.grad.coordinateMode() == QGradient::ObjectMode) {
+            QTransform objectToUserSpace;
+            objectToUserSpace.translate(boundingRect.x(), boundingRect.y());
+            objectToUserSpace.scale(boundingRect.width(), boundingRect.height());
+            fillTransform *= objectToUserSpace;
+        }
+        shapePath->setFillGradient(
+                createShapeGradient(info.grad, QRectF(0.0, 0.0, 1.0, 1.0), shapePath));
     } else {
         shapePath->setFillColor(fillColor);
     }
+    if (!fillTransform.isIdentity())
+        shapePath->setFillTransform(QMatrix4x4(fillTransform));
 
     shapePath->setFillRule(
             QQuickShapePath::FillRule(path ? path->fillRule() : quadPath->fillRule()));
