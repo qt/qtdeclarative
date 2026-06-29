@@ -26,10 +26,10 @@ target_link_libraries(testCppTypes PRIVATE Qt::Qml Qt::QmlPrivate Qt::Quick)
 qt_policy(SET QTP0001 NEW)
 
 qt6_add_qml_module(testCppTypes
-    URI TestTypes
+    URI QV4DebuggerTestTypes
     SOURCES
         commontypes.h
-    OUTPUT_DIRECTORY TestTypes
+    OUTPUT_DIRECTORY QV4DebuggerTestTypes
 )
 qt_autogen_tools_initial_setup(testCppTypesplugin)
 

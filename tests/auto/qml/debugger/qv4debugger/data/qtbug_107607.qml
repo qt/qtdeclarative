@@ -1,5 +1,5 @@
 import QtQuick
-import TestTypes
+import QV4DebuggerTestTypes
 MyType {
     objectName: "patron"
     Item {
