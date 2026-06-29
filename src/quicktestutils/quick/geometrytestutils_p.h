@@ -18,9 +18,21 @@
 #include <QObject>
 #include <QList>
 #include <QSize>
+#include <QtCore/qpoint.h>
 #include <private/qglobal_p.h>
 
 QT_BEGIN_NAMESPACE
+
+inline bool pointNear(QPointF a, QPointF b, qreal tol = 1.0)
+{
+    return qAbs(a.x() - b.x()) <= tol && qAbs(a.y() - b.y()) <= tol;
+}
+
+#define VERIFY_POINT_NEAR(name, actual, expected) \
+    QVERIFY2(pointNear((actual), (expected)), \
+             qPrintable(QStringLiteral(name "=(%1,%2) expected=(%3,%4)") \
+                 .arg((actual).x()).arg((actual).y()) \
+                 .arg((expected).x()).arg((expected).y())))
 
 class QQuickItem;
 
