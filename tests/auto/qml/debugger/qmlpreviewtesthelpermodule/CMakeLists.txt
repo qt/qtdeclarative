@@ -13,7 +13,7 @@ qt_internal_add_executable(qmlpreviewtesthelpermodule
 )
 
 qt_add_qml_module(qmlpreviewtesthelpermodule
-    URI test
+    URI QmlPreviewTestHelpers
     VERSION 1.0
     QML_FILES
         Main.qml

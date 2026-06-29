@@ -8,7 +8,7 @@ int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
     QQmlApplicationEngine engine;
-    engine.loadFromModule("test", "Main");
+    engine.loadFromModule("QmlPreviewTestHelpers", "Main");
     if (engine.rootObjects().isEmpty())
         return 1;
     return app.exec();

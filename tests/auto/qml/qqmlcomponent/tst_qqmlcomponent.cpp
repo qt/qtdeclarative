@@ -1442,8 +1442,8 @@ void tst_qqmlcomponent::loadFromModule_data()
     QTest::addRow("Basic.Button") << u"QtQuick.Controls.Basic"_s << u"Button"_s << u"Button_QMLTYPE_\\d+"_s;
 #endif
 
-    QTest::addRow("IC") << u"test"_s << u"TestComponentWithIC"_s << u"TestComponentWithIC"_s; // sanity check for next test
-    QTest::addRow("InnerIC") << u"test"_s << u"TestComponentWithIC.InnerIC"_s << u"InnerIC"_s;
+    QTest::addRow("IC") << u"QQmlComponentTestHelpers"_s << u"TestComponentWithIC"_s << u"TestComponentWithIC"_s; // sanity check for next test
+    QTest::addRow("InnerIC") << u"QQmlComponentTestHelpers"_s << u"TestComponentWithIC.InnerIC"_s << u"InnerIC"_s;
 
     QTest::addRow("plainQML") << u"plainqml"_s << u"Plain"_s << u"Plain"_s;
 }
@@ -1499,7 +1499,7 @@ void tst_qqmlcomponent::loadFromModuleLifecycle()
     const QList<int> expected {1, 2, 3};
     {
         QQmlComponent component(&engine);
-        component.loadFromModule("test", "LifeCycleWatcher");
+        component.loadFromModule("QQmlComponentTestHelpers", "LifeCycleWatcher");
         QVERIFY2(component.isReady(), qPrintable(component.errorString()));
         std::unique_ptr<QObject> root{ component.create() };
         LifeCycleWatcher *watcher = qobject_cast<LifeCycleWatcher *>(root.get());
@@ -1519,7 +1519,7 @@ void tst_qqmlcomponent::loadFromModuleLifecycle()
 
     {
         QQmlComponent component(&engine);
-        component.setData("import test; LifeCycleWatcher {}", {});
+        component.setData("import QQmlComponentTestHelpers; LifeCycleWatcher {}", {});
         QVERIFY2(component.isReady(), qPrintable(component.errorString()));
 
         std::unique_ptr<QObject> root{ component.create() };
@@ -1539,7 +1539,7 @@ void tst_qqmlcomponent::loadFromModuleLifecycle()
     {
         QQmlComponent component(&engine);
         const QString compiled = "inline"_L1;
-        component.setData("import test; LifeCycleWatcher { text: 'inline' }", {});
+        component.setData("import QQmlComponentTestHelpers; LifeCycleWatcher { text: 'inline' }", {});
         QVERIFY2(component.isReady(), qPrintable(component.errorString()));
 
         std::unique_ptr<QObject> root{ component.create() };
@@ -1749,7 +1749,7 @@ void tst_qqmlcomponent::loadUrlRequired()
 void tst_qqmlcomponent::loadFromQrc()
 {
     QQmlEngine engine;
-    QQmlComponent component(&engine, QStringLiteral(":/qt/qml/test/data/withAot.qml"));
+    QQmlComponent component(&engine, QStringLiteral(":/qt/qml/QQmlComponentTestHelpers/data/withAot.qml"));
     QVERIFY2(component.isReady(), qPrintable(component.errorString()));
 
     QQmlComponentPrivate *p = QQmlComponentPrivate::get(&component);

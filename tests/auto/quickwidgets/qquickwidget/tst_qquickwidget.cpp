@@ -1429,7 +1429,7 @@ void tst_qquickwidget::loadFromModule_data()
     QTest::addColumn<QQuickWidget::Status>("status");
 
     QTest::addRow("Item") << u"QtQuick"_s << u"Item"_s << QUrl() << QQuickWidget::Ready;
-    QTest::addRow("composite") << u"test"_s << u"TestQml"_s << QUrl("qrc:/qt/qml/test/data/TestQml.qml") << QQuickWidget::Ready;
+    QTest::addRow("composite") << u"QQuickWidgetTestHelpers"_s << u"TestQml"_s << QUrl("qrc:/qt/qml/QQuickWidgetTestHelpers/data/TestQml.qml") << QQuickWidget::Ready;
     QTest::addRow("nonexistent") << u"missing"_s << u"Type"_s << QUrl() << QQuickWidget::Error;
 }
 
