@@ -69,6 +69,7 @@
     \list
         \li \l{StyleKit Quick Controls Example} - Shows how to style \l {Qt Quick Controls} using \l {Qt Labs StyleKit}{StyleKit}.
         \li \l{StyleKit Widgets Example} - Shows how to style \l {Qt Widgets} using \l {Qt Labs StyleKit}{StyleKit}.
+        \li \l{StyleKit Custom Delegates Example} - Shows how to use custom delegates and shader effects with \l {Qt Labs StyleKit}{StyleKit}.
     \endlist
 
     \section1 C++ Classes

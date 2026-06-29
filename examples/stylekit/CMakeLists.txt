@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 qt_internal_add_example(stylekitcontrols)
+qt_internal_add_example(stylekitcustomdelegates)
 if(TARGET Qt::Widgets)
     qt_internal_add_example(stylekitwidgets)
 endif()
