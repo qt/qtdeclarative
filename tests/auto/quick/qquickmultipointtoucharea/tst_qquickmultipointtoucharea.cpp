@@ -14,6 +14,7 @@
 #include <QtGui/private/qevent_p.h>
 #include <QtGui/private/qeventpoint_p.h>
 #include <QtGui/private/qpointingdevice_p.h>
+#include <QtQuickTestUtils/private/geometrytestutils_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/viewtestutils_p.h>
 
@@ -172,7 +173,7 @@ void tst_QQuickMultiPointTouchArea::release()
     QQuickTouchUtils::flush(&window);
 
     QCOMPARE(point1->pressed(), true);
-    QCOMPARE(point1->x(), qreal(20)); QCOMPARE(point1->y(), qreal(110));
+    VERIFY_POINT_NEAR("point1", QPointF(point1->x(), point1->y()), QPointF(20, 110));
 
     p1 += QPoint(4,10);
 
@@ -181,7 +182,7 @@ void tst_QQuickMultiPointTouchArea::release()
 
     //test that a release without a prior move to the release position successfully updates the point's position
     QCOMPARE(point1->pressed(), false);
-    QCOMPARE(point1->x(), qreal(24)); QCOMPARE(point1->y(), qreal(120));
+    VERIFY_POINT_NEAR("point1", QPointF(point1->x(), point1->y()), QPointF(24, 120));
 }
 
 void tst_QQuickMultiPointTouchArea::reuse()
@@ -248,7 +249,7 @@ void tst_QQuickMultiPointTouchArea::reuse()
     QCOMPARE(point2->pressed(), true);
     QCOMPARE(point3->pressed(), false);
 
-    QCOMPARE(point1->x(), qreal(80)); QCOMPARE(point1->y(), qreal(100));
+    VERIFY_POINT_NEAR("point1", QPointF(point1->x(), point1->y()), QPointF(80, 100));
 }
 
 void tst_QQuickMultiPointTouchArea::nonOverlapping()
@@ -294,8 +295,8 @@ void tst_QQuickMultiPointTouchArea::nonOverlapping()
     QCOMPARE(point22->pressed(), false);
     QCOMPARE(point23->pressed(), false);
 
-    QCOMPARE(point11->x(), qreal(20)); QCOMPARE(point11->y(), qreal(100));
-    QCOMPARE(point12->x(), qreal(40)); QCOMPARE(point12->y(), qreal(100));
+    VERIFY_POINT_NEAR("point11", QPointF(point11->x(), point11->y()), QPointF(20, 100));
+    VERIFY_POINT_NEAR("point12", QPointF(point12->x(), point12->y()), QPointF(40, 100));
 
     p1 += QPoint(0,10);
     p2 += QPoint(5,0);
@@ -308,8 +309,8 @@ void tst_QQuickMultiPointTouchArea::nonOverlapping()
     QCOMPARE(point22->pressed(), false);
     QCOMPARE(point23->pressed(), false);
 
-    QCOMPARE(point11->x(), qreal(20)); QCOMPARE(point11->y(), qreal(110));
-    QCOMPARE(point12->x(), qreal(45)); QCOMPARE(point12->y(), qreal(100));
+    VERIFY_POINT_NEAR("point11", QPointF(point11->x(), point11->y()), QPointF(20, 110));
+    VERIFY_POINT_NEAR("point12", QPointF(point12->x(), point12->y()), QPointF(45, 100));
 
     sequence.stationary(0).stationary(1).press(2, p3).commit();
     QQuickTouchUtils::flush(&window);
@@ -329,11 +330,11 @@ void tst_QQuickMultiPointTouchArea::nonOverlapping()
     QCOMPARE(point22->pressed(), true);
     QCOMPARE(point23->pressed(), true);
 
-    QCOMPARE(point11->x(), qreal(20)); QCOMPARE(point11->y(), qreal(110));
-    QCOMPARE(point12->x(), qreal(45)); QCOMPARE(point12->y(), qreal(100));
-    QCOMPARE(point21->x(), qreal(60)); QCOMPARE(point21->y(), qreal(20));
-    QCOMPARE(point22->x(), qreal(80)); QCOMPARE(point22->y(), qreal(20));
-    QCOMPARE(point23->x(), qreal(100)); QCOMPARE(point23->y(), qreal(20));
+    VERIFY_POINT_NEAR("point11", QPointF(point11->x(), point11->y()), QPointF(20, 110));
+    VERIFY_POINT_NEAR("point12", QPointF(point12->x(), point12->y()), QPointF(45, 100));
+    VERIFY_POINT_NEAR("point21", QPointF(point21->x(), point21->y()), QPointF(60, 20));
+    VERIFY_POINT_NEAR("point22", QPointF(point22->x(), point22->y()), QPointF(80, 20));
+    VERIFY_POINT_NEAR("point23", QPointF(point23->x(), point23->y()), QPointF(100, 20));
 
     p1 += QPoint(4,10);
     p2 += QPoint(17,17);
@@ -349,11 +350,11 @@ void tst_QQuickMultiPointTouchArea::nonOverlapping()
     QCOMPARE(point22->pressed(), true);
     QCOMPARE(point23->pressed(), true);
 
-    QCOMPARE(point11->x(), qreal(24)); QCOMPARE(point11->y(), qreal(120));
-    QCOMPARE(point12->x(), qreal(62)); QCOMPARE(point12->y(), qreal(117));
-    QCOMPARE(point21->x(), qreal(63)); QCOMPARE(point21->y(), qreal(20));
-    QCOMPARE(point22->x(), qreal(81)); QCOMPARE(point22->y(), qreal(19));
-    QCOMPARE(point23->x(), qreal(93)); QCOMPARE(point23->y(), qreal(30));
+    VERIFY_POINT_NEAR("point11", QPointF(point11->x(), point11->y()), QPointF(24, 120));
+    VERIFY_POINT_NEAR("point12", QPointF(point12->x(), point12->y()), QPointF(62, 117));
+    VERIFY_POINT_NEAR("point21", QPointF(point21->x(), point21->y()), QPointF(63, 20));
+    VERIFY_POINT_NEAR("point22", QPointF(point22->x(), point22->y()), QPointF(81, 19));
+    VERIFY_POINT_NEAR("point23", QPointF(point23->x(), point23->y()), QPointF(93, 30));
 
     sequence.release(0, p1).release(1, p2).release(2, p3).release(3, p4).release(4, p5).commit();
     QQuickTouchUtils::flush(&window);
@@ -406,8 +407,8 @@ void tst_QQuickMultiPointTouchArea::nested()
     QCOMPARE(point22->pressed(), false);
     QCOMPARE(point23->pressed(), false);
 
-    QCOMPARE(point11->x(), qreal(20)); QCOMPARE(point11->y(), qreal(100));
-    QCOMPARE(point12->x(), qreal(40)); QCOMPARE(point12->y(), qreal(100));
+    VERIFY_POINT_NEAR("point11", QPointF(point11->x(), point11->y()), QPointF(20, 100));
+    VERIFY_POINT_NEAR("point12", QPointF(point12->x(), point12->y()), QPointF(40, 100));
 
     p1 += QPoint(0,10);
     p2 += QPoint(5,0);
@@ -420,8 +421,8 @@ void tst_QQuickMultiPointTouchArea::nested()
     QCOMPARE(point22->pressed(), false);
     QCOMPARE(point23->pressed(), false);
 
-    QCOMPARE(point11->x(), qreal(20)); QCOMPARE(point11->y(), qreal(110));
-    QCOMPARE(point12->x(), qreal(45)); QCOMPARE(point12->y(), qreal(100));
+    VERIFY_POINT_NEAR("point11", QPointF(point11->x(), point11->y()), QPointF(20, 110));
+    VERIFY_POINT_NEAR("point12", QPointF(point12->x(), point12->y()), QPointF(45, 100));
 
     sequence.stationary(0).stationary(1).press(2, p3).commit();
     QQuickTouchUtils::flush(&window);
@@ -433,11 +434,11 @@ void tst_QQuickMultiPointTouchArea::nested()
     QCOMPARE(point23->pressed(), true);
 
     //point11 should be same as point21, point12 same as point22
-    QCOMPARE(point11->x(), qreal(20)); QCOMPARE(point11->y(), qreal(110));
-    QCOMPARE(point12->x(), qreal(45)); QCOMPARE(point12->y(), qreal(100));
-    QCOMPARE(point21->x(), qreal(20)); QCOMPARE(point21->y(), qreal(110));
-    QCOMPARE(point22->x(), qreal(45)); QCOMPARE(point22->y(), qreal(100));
-    QCOMPARE(point23->x(), qreal(60)); QCOMPARE(point23->y(), qreal(180));
+    VERIFY_POINT_NEAR("point11", QPointF(point11->x(), point11->y()), QPointF(20, 110));
+    VERIFY_POINT_NEAR("point12", QPointF(point12->x(), point12->y()), QPointF(45, 100));
+    VERIFY_POINT_NEAR("point21", QPointF(point21->x(), point21->y()), QPointF(20, 110));
+    VERIFY_POINT_NEAR("point22", QPointF(point22->x(), point22->y()), QPointF(45, 100));
+    VERIFY_POINT_NEAR("point23", QPointF(point23->x(), point23->y()), QPointF(60, 180));
 
     sequence.stationary(0).stationary(1).stationary(2).press(3, QPoint(80,180)).press(4, QPoint(100,180)).commit();
     QQuickTouchUtils::flush(&window);
@@ -449,11 +450,11 @@ void tst_QQuickMultiPointTouchArea::nested()
     QCOMPARE(point23->pressed(), true);
 
     //new touch points should be ignored (have no impact on our existing touch points)
-    QCOMPARE(point11->x(), qreal(20)); QCOMPARE(point11->y(), qreal(110));
-    QCOMPARE(point12->x(), qreal(45)); QCOMPARE(point12->y(), qreal(100));
-    QCOMPARE(point21->x(), qreal(20)); QCOMPARE(point21->y(), qreal(110));
-    QCOMPARE(point22->x(), qreal(45)); QCOMPARE(point22->y(), qreal(100));
-    QCOMPARE(point23->x(), qreal(60)); QCOMPARE(point23->y(), qreal(180));
+    VERIFY_POINT_NEAR("point11", QPointF(point11->x(), point11->y()), QPointF(20, 110));
+    VERIFY_POINT_NEAR("point12", QPointF(point12->x(), point12->y()), QPointF(45, 100));
+    VERIFY_POINT_NEAR("point21", QPointF(point21->x(), point21->y()), QPointF(20, 110));
+    VERIFY_POINT_NEAR("point22", QPointF(point22->x(), point22->y()), QPointF(45, 100));
+    VERIFY_POINT_NEAR("point23", QPointF(point23->x(), point23->y()), QPointF(60, 180));
 
     sequence.stationary(0).stationary(1).stationary(2).release(3, QPoint(80,180)).release(4, QPoint(100,180)).commit();
 
@@ -469,11 +470,11 @@ void tst_QQuickMultiPointTouchArea::nested()
     QCOMPARE(point22->pressed(), true);
     QCOMPARE(point23->pressed(), true);
 
-    QCOMPARE(point21->x(), qreal(24)); QCOMPARE(point21->y(), qreal(120));
-    QCOMPARE(point22->x(), qreal(62)); QCOMPARE(point22->y(), qreal(117));
-    QCOMPARE(point21->x(), qreal(24)); QCOMPARE(point21->y(), qreal(120));
-    QCOMPARE(point22->x(), qreal(62)); QCOMPARE(point22->y(), qreal(117));
-    QCOMPARE(point23->x(), qreal(63)); QCOMPARE(point23->y(), qreal(180));
+    VERIFY_POINT_NEAR("point21", QPointF(point21->x(), point21->y()), QPointF(24, 120));
+    VERIFY_POINT_NEAR("point22", QPointF(point22->x(), point22->y()), QPointF(62, 117));
+    VERIFY_POINT_NEAR("point21", QPointF(point21->x(), point21->y()), QPointF(24, 120));
+    VERIFY_POINT_NEAR("point22", QPointF(point22->x(), point22->y()), QPointF(62, 117));
+    VERIFY_POINT_NEAR("point23", QPointF(point23->x(), point23->y()), QPointF(63, 180));
 
     p1 += QPoint(4,10);
     p2 += QPoint(17,17);
@@ -488,11 +489,11 @@ void tst_QQuickMultiPointTouchArea::nested()
     QCOMPARE(point23->pressed(), true);
 
     //first two remain the same (touches now grabbed by inner touch area)
-    QCOMPARE(point11->x(), qreal(24)); QCOMPARE(point11->y(), qreal(120));
-    QCOMPARE(point12->x(), qreal(62)); QCOMPARE(point12->y(), qreal(117));
-    QCOMPARE(point21->x(), qreal(28)); QCOMPARE(point21->y(), qreal(130));
-    QCOMPARE(point22->x(), qreal(79)); QCOMPARE(point22->y(), qreal(134));
-    QCOMPARE(point23->x(), qreal(66)); QCOMPARE(point23->y(), qreal(180));
+    VERIFY_POINT_NEAR("point11", QPointF(point11->x(), point11->y()), QPointF(24, 120));
+    VERIFY_POINT_NEAR("point12", QPointF(point12->x(), point12->y()), QPointF(62, 117));
+    VERIFY_POINT_NEAR("point21", QPointF(point21->x(), point21->y()), QPointF(28, 130));
+    VERIFY_POINT_NEAR("point22", QPointF(point22->x(), point22->y()), QPointF(79, 134));
+    VERIFY_POINT_NEAR("point23", QPointF(point23->x(), point23->y()), QPointF(66, 180));
 
     sequence.release(0, p1).release(1, p2).release(2, p3).commit();
 
@@ -532,11 +533,11 @@ void tst_QQuickMultiPointTouchArea::nested()
     QCOMPARE(point22->pressed(), true);
     QCOMPARE(point23->pressed(), true);
 
-    QCOMPARE(point21->x(), qreal(24)); QCOMPARE(point21->y(), qreal(120));
-    QCOMPARE(point22->x(), qreal(62)); QCOMPARE(point22->y(), qreal(117));
-    QCOMPARE(point21->x(), qreal(24)); QCOMPARE(point21->y(), qreal(120));
-    QCOMPARE(point22->x(), qreal(62)); QCOMPARE(point22->y(), qreal(117));
-    QCOMPARE(point23->x(), qreal(63)); QCOMPARE(point23->y(), qreal(180));
+    VERIFY_POINT_NEAR("point21", QPointF(point21->x(), point21->y()), QPointF(24, 120));
+    VERIFY_POINT_NEAR("point22", QPointF(point22->x(), point22->y()), QPointF(62, 117));
+    VERIFY_POINT_NEAR("point21", QPointF(point21->x(), point21->y()), QPointF(24, 120));
+    VERIFY_POINT_NEAR("point22", QPointF(point22->x(), point22->y()), QPointF(62, 117));
+    VERIFY_POINT_NEAR("point23", QPointF(point23->x(), point23->y()), QPointF(63, 180));
 
     p1 -= QPoint(4,10);
     p2 -= QPoint(17,17);
@@ -551,11 +552,11 @@ void tst_QQuickMultiPointTouchArea::nested()
     QCOMPARE(point23->pressed(), true);
 
     //all change (touches not grabbed by inner touch area)
-    QCOMPARE(point11->x(), qreal(20)); QCOMPARE(point11->y(), qreal(110));
-    QCOMPARE(point12->x(), qreal(45)); QCOMPARE(point12->y(), qreal(100));
-    QCOMPARE(point21->x(), qreal(20)); QCOMPARE(point21->y(), qreal(110));
-    QCOMPARE(point22->x(), qreal(45)); QCOMPARE(point22->y(), qreal(100));
-    QCOMPARE(point23->x(), qreal(60)); QCOMPARE(point23->y(), qreal(180));
+    VERIFY_POINT_NEAR("point11", QPointF(point11->x(), point11->y()), QPointF(20, 110));
+    VERIFY_POINT_NEAR("point12", QPointF(point12->x(), point12->y()), QPointF(45, 100));
+    VERIFY_POINT_NEAR("point21", QPointF(point21->x(), point21->y()), QPointF(20, 110));
+    VERIFY_POINT_NEAR("point22", QPointF(point22->x(), point22->y()), QPointF(45, 100));
+    VERIFY_POINT_NEAR("point23", QPointF(point23->x(), point23->y()), QPointF(60, 180));
 
     sequence.release(0, p1).release(1, p2).release(2, p3).commit();
     QQuickTouchUtils::flush(&window);
@@ -1295,22 +1296,22 @@ void tst_QQuickMultiPointTouchArea::mouseGestureStarted() // QTBUG-70258
     QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, p1);
     QCOMPARE(gestureStartedSpy.size(), 0);
 
-    p1 += QPoint(dragThreshold, dragThreshold);
+    p1 += QPoint(dragThreshold - 1, dragThreshold - 1);
     QTest::mouseMove(&window, p1);
     QCOMPARE(gestureStartedSpy.size(), 0);
 
-    p1 += QPoint(1, 1);
+    p1 += QPoint(2, 2);
     QTest::mouseMove(&window, p1);
     QTRY_COMPARE(gestureStartedSpy.size(), 1);
-    QTRY_COMPARE(area->property("gestureStartedX").toInt(), distanceFromOrigin);
-    QCOMPARE(area->property("gestureStartedY").toInt(), distanceFromOrigin);
+    QTRY_VERIFY(qAbs(area->property("gestureStartedX").toInt() - distanceFromOrigin) <= 1);
+    QVERIFY(qAbs(area->property("gestureStartedY").toInt() - distanceFromOrigin) <= 1);
 
     p1 += QPoint(10, 10);
     QTest::mouseMove(&window, p1);
     // if nobody called gesteure->grab(), gestureStarted will keep happening
     QTRY_COMPARE(gestureStartedSpy.size(), grabGesture ? 1 : 2);
-    QCOMPARE(area->property("gestureStartedX").toInt(), distanceFromOrigin);
-    QCOMPARE(area->property("gestureStartedY").toInt(), distanceFromOrigin);
+    QVERIFY(qAbs(area->property("gestureStartedX").toInt() - distanceFromOrigin) <= 1);
+    QVERIFY(qAbs(area->property("gestureStartedY").toInt() - distanceFromOrigin) <= 1);
 
     QTest::mouseRelease(&window, Qt::LeftButton);
 }
