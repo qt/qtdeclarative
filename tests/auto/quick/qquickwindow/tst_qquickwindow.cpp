@@ -2582,7 +2582,7 @@ void tst_qquickwindow::defaultSurfaceFormat()
 void tst_qquickwindow::attachedProperty()
 {
     auto testUrl = testFileUrl("windowattached.qml");
-    QString warning = testUrl.toString() + ":18:34: QML Window: Window.window does only support types deriving from Item";
+    QString warning = testUrl.toString() + ":18:34: QML Window: Window.window only supports types derived from Item";
     QTest::ignoreMessage(QtWarningMsg, warning.toUtf8().constData());
     QQuickView view(testUrl);
     view.setTitle(QTest::currentTestFunction());
