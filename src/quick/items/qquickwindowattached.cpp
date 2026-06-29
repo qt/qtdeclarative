@@ -17,7 +17,7 @@ QQuickWindowAttached::QQuickWindowAttached(QObject* attachee)
     m_attachee = qobject_cast<QQuickItem*>(attachee);
     if (!m_attachee) {
         qmlWarning(attachee)
-                << "Window.window does only support types deriving from Item";
+                << "Window.window only supports types derived from Item";
         return;
     }
     if (m_attachee->window()) // It might not be in a window yet
