@@ -1314,17 +1314,11 @@ QQmlTypeLoader::QQmlTypeLoader(QV4::ExecutionEngine *engine)
     for (const auto &pluginPath : pluginPaths)
         addPluginPath(pluginPath, AppendPath);
 
-#if defined(Q_OS_OHOS)
-    // On HarmonyOS, Qt app and plugins all are Native C++ libraries (.so files).
-    // They have to be kept in entry/libs/${OHOS_ARCH} in .hap package.
-    addPluginPath(QCoreApplication::applicationDirPath(), AppendPath);
-#else
     // Explicitly add "." to the plugin paths, to represent the path relative
-    // wo where the qmldir was found. We can't use addPluginPath() here, as
+    // to where the qmldir was found. We can't use addPluginPath() here, as
     // it will resolve the path to an absolute path based on the working dir.
     QQmlTypeLoaderConfiguredDataPtr data(&m_data);
     data->pluginPaths << QLatin1String(".");
-#endif
 }
 
 /*!
