@@ -30,6 +30,7 @@
 #include "proxytestinnermodel.h"
 #include "randomsortmodel.h"
 #include "reusemodel.h"
+#include <QtCore/QScopeGuard>
 #include <math.h>
 
 Q_DECLARE_METATYPE(Qt::LayoutDirection)
@@ -123,6 +124,7 @@ private slots:
     void sectionPropertyChange();
     void sectionDelegateChange();
     void sectionsItemInsertion();
+    void sectionsFocusChain();
     void removeSectionsOnNonvisibleItems();
     void cacheBuffer();
     void positionViewAtBeginningEnd();
@@ -2785,6 +2787,57 @@ void tst_QQuickListView::sectionsSnap()
     QQuickTest::pointerFlick(device, window.data(), 0, point, QPoint(100, 100), duration);
     QTRY_VERIFY(!listview->isMovingVertically());
     QCOMPARE(listview->contentY(), qreal(-50));
+}
+
+void tst_QQuickListView::sectionsFocusChain() // QTBUG-113724
+{
+    // Tab/backtab focus navigation must visit each section header
+    // immediately before the delegate items of its section, matching the visual
+    // (top-to-bottom) order, rather than following raw item-creation order.
+
+    // Tab navigation only visits non-text controls when the platform's tab focus
+    // behavior allows it (e.g. not the default on macOS), so force it here.
+    QGuiApplication::styleHints()->setTabFocusBehavior(Qt::TabFocusAllControls);
+    auto resetTabFocusBehavior = qScopeGuard([]{
+        QGuiApplication::styleHints()->setTabFocusBehavior(Qt::TabFocusBehavior(-1));
+    });
+
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("listview-sections_focuschain.qml")));
+    window.requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(&window));
+
+    QQuickListView *listview = qobject_cast<QQuickListView *>(window.rootObject());
+    QVERIFY(listview != nullptr);
+    QVERIFY(QQuickTest::qWaitForPolish(listview));
+
+    // Expected visual (top-to-bottom) order: section header before its items.
+    const QStringList expected = {
+        "section_A", "item_A1", "item_A2", "item_A3",
+        "section_B", "item_B1", "item_B2", "item_B3",
+    };
+
+    // Confirm every section/delegate item exists.
+    for (const QString &name : expected)
+        QVERIFY2(findItem<QQuickItem>(listview->contentItem(), name), qPrintable(name));
+
+    // Start at the first section header, then Tab forward through the rest.
+    QQuickItem *first = findItem<QQuickItem>(listview->contentItem(), expected.first());
+    first->forceActiveFocus(Qt::TabFocusReason);
+    QVERIFY(first->hasActiveFocus());
+
+    for (int i = 1; i < expected.size(); ++i) {
+        QTest::keyClick(&window, Qt::Key_Tab);
+        QVERIFY(window.activeFocusItem());
+        QCOMPARE(window.activeFocusItem()->objectName(), expected.at(i));
+    }
+
+    // Backtab must produce the exact reverse traversal.
+    for (int i = expected.size() - 2; i >= 0; --i) {
+        QTest::keyClick(&window, Qt::Key_Tab, Qt::ShiftModifier);
+        QVERIFY(window.activeFocusItem());
+        QCOMPARE(window.activeFocusItem()->objectName(), expected.at(i));
+    }
 }
 
 void tst_QQuickListView::removeSectionsOnNonvisibleItems()
