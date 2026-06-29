@@ -9027,6 +9027,10 @@
                         "type": "number"
                     },
                     {
+                        "name": "ImhNoFullscreen",
+                        "type": "number"
+                    },
+                    {
                         "name": "ImhDigitsOnly",
                         "type": "number"
                     },
@@ -10206,6 +10210,13 @@
                         ],
                         "isJavaScriptFunction": true,
                         "name": "atob"
+                    },
+                    {
+                        "access": "public",
+                        "arguments": [
+                        ],
+                        "isJavaScriptFunction": true,
+                        "name": "escapeHtml"
                     },
                     {
                         "access": "public",
