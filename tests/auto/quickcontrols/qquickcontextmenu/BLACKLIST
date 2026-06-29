@@ -1,2 +1,5 @@
 [textControlsMenuKey]
 * # QTBUG-143701
+
+[menuItemShouldntTriggerOnRelease]
+wayland # QTBUG-137400
