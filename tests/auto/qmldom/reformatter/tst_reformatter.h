@@ -146,6 +146,22 @@ private slots:
                 << "listMisformattedAsProperty.qml"
                 << "listMisformattedAsProperty.formatted.qml"
                 << defaultOptions;
+        QTest::newRow("pragmaQmlFileIndents")
+                << "pragmaQmlFileIndents.qml"
+                << "pragmaQmlFileIndents.formatted.qml"
+                << defaultOptions;
+        QTest::newRow("pragmaQmlFileIndents2")
+                << "pragmaQmlFileIndents2.qml"
+                << "pragmaQmlFileIndents2.formatted.qml"
+                << defaultOptions;
+        QTest::newRow("pragmaQmlFileIndents3")
+                << "pragmaQmlFileIndents3.qml"
+                << "pragmaQmlFileIndents3.formatted.qml"
+                << defaultOptions;
+        QTest::newRow("pragmaQmlFileIndents4")
+                << "pragmaQmlFileIndents4.qml"
+                << "pragmaQmlFileIndents4.formatted.qml"
+                << defaultOptions;
     }
 
     void lineByLineReformatter()
