@@ -1232,37 +1232,60 @@ void ScriptFormatter::throwRecursionDepthError()
     out("/* ERROR: Hit recursion limit  ScriptFormatter::visiting AST, rewrite failed */");
 }
 
-// This is a set of characters that are not allowed to be at the beginning of a line
-// after a semicolon for ASI.
-
-static constexpr QStringView restrictedChars = u"([/+-";
-
-// Given an existing semicolon, can we safely remove it without changing behavior
+// Given an existing semicolon, can we safely remove it without changing
+// behavior Restricted characters (, [, +, - and / are the only ones that can
+// cause issues when removing a semicolon. The / is a special case because it
+// can be the start of a comment or a division operator.
 bool ScriptFormatter::canRemoveSemicolon(AST::Node *node)
 {
     const auto canRelyOnASI = [this](Node *node) {
         auto nodeLoc = node->lastSourceLocation().offset + 1;
         auto code = m_script->engine()->code();
-        // Bounds check for nodeLoc
-        if (qsizetype(nodeLoc) >= code.size())
-            return false;
-        auto startIt = code.begin() + nodeLoc;
-        auto endIt = std::find_first_of(startIt, code.end(), restrictedChars.begin(),
-                                        restrictedChars.end());
-        // No restricted character found, then it is safe to remove the semicolon
-        if (endIt == code.end())
+        auto it = code.begin() + nodeLoc;
+        auto end = code.end();
+        // Scan through code, skipping comments and whitespace
+        // until we find the next real token to determine if ASI will work.
+        while (it != end) {
+            QChar c = *it;
+            // Skip all whitespace and semicolons
+            if (c.isSpace() || c == u';') {
+                ++it;
+                continue;
+            }
+            // Skip comments
+            if (c == u'/' && it + 1 != end) {
+                auto next = it + 1;
+                if (*next == u'/') {
+                    // Single-line comment, skip to end of line
+                    it = std::find(next, end, u'\n');
+                    if (it != end)
+                        ++it;
+                    continue;
+                } else if (*next == u'*') {
+                    // Multi-line comment, skip to */
+                    it = next + 1;
+                    while (it != end) {
+                        if (*it == u'*' && it + 1 != end && *(it + 1) == u'/') {
+                            it += 2;
+                            break;
+                        }
+                        ++it;
+                    }
+                    continue;
+                }
+                // If / is not followed by / or *, it's a division operator
+                return false;
+            }
+            // Check for restricted characters that can continue the expression
+            if (c == u'(' || c == u'[' || c == u'+' || c == u'-') {
+                // Cannot remove semicolon; restricted char follows
+                return false;
+            }
+            // Found any other token, safe to remove semicolon
             return true;
-
-        // Check if there is at least one character between nodeLoc and the found character
-        // that are neither space chars nor semicolons.
-        bool hasOtherChars =
-                std::any_of(startIt, endIt, [](QChar ch) { return !(ch.isSpace() || ch == u';'); });
-
-        if (hasOtherChars)
-            return true;
-
-        // Check if there is no linebreak between nodeLoc and the found character
-        return std::none_of(startIt, endIt, [](QChar c) { return c == u'\n'; });
+        }
+        // Reached end of code, safe to remove semicolon
+        return true;
     };
 
     // Check if the node is a statement that requires a semicolon to avoid ASI issues
