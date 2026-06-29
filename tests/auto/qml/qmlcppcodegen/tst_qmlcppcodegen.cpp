@@ -567,11 +567,6 @@ void tst_QmlCppCodegen::initTestCase()
 void tst_QmlCppCodegen::cleanupTestCase()
 {
     // This code checks for basic blocks validation failures in the tests
-    QStringList expectedFailures = {
-        u"codegen_test_module_basicBlocksWithBackJump_infinite_qml.cpp"_s,
-        u"codegen_test_module_verify_basicBlocksWithBackJump_infinite_qml.cpp"_s,
-    };
-
     QString generatedCppFolder = QStringLiteral(GENERATED_CPP_FOLDER);
     QDirIterator dirIterator(generatedCppFolder, { u"*.cpp"_s }, QDir::Files);
     while (dirIterator.hasNext()) {
@@ -582,13 +577,9 @@ void tst_QmlCppCodegen::cleanupTestCase()
         }
 
         const auto content = file.readAll();
-        if (bool validationFailed = content.contains("// QV4_BASIC_BLOCK_VALIDATION_FAILED:"_L1)) {
-            if (expectedFailures.contains(dirIterator.fileInfo().fileName())) {
-                QEXPECT_FAIL("", "Expected failure", Continue);
-            }
-            const auto message = file.fileName() + u": Basic blocks validation failed."_s;
-            QVERIFY2(!validationFailed, message.toStdString().c_str());
-        }
+        const bool validationFailed = content.contains("// QV4_BASIC_BLOCK_VALIDATION_FAILED:"_L1);
+        const auto message = file.fileName() + u": Basic blocks validation failed."_s;
+        QVERIFY2(!validationFailed, message.toStdString().c_str());
     }
 }
 
