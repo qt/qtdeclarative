@@ -320,19 +320,28 @@ QQmlJSBasicBlocks::BasicBlocksValidationResult QQmlJSBasicBlocks::basicBlocksVal
             return { false, "Return or throw block jumps to somewhere"_L1 };
     }
 
-    // 2. The basic blocks graph must be connected.
-    QSet<int> visitedBlockOffsets;
-    QList<QFlatMap<int, BasicBlock>::const_iterator> toVisit;
-    toVisit.append(returnOrThrowBlocks);
+    // 2. Every basic block must be reachable from the entry block.
+    //    The recorded jump origins (which include fall-through edges) describe the reverse
+    //    edges of the control flow graph, so we invert them to obtain the forward edges and
+    //    then traverse forward from the entry block. Traversing backward from the return and
+    //    throw blocks instead would wrongly flag infinite loops, whose blocks have no path to
+    //    any terminal block but are nonetheless legitimately reachable.
+    QMultiHash<int, int> forwardEdges;
+    for (auto it = blocks.cbegin(), end = blocks.cend(); it != end; ++it) {
+        for (int originOffset : it.value().jumpOrigins)
+            forwardEdges.insert(basicBlockForInstruction(blocks, originOffset).key(), it.key());
+    }
 
+    QSet<int> visitedBlockOffsets;
+    QList<int> toVisit{ blocks.cbegin().key() };
     while (!toVisit.empty()) {
-        const auto &[offset, block] = *toVisit.takeLast();
+        const int offset = toVisit.takeLast();
+        if (visitedBlockOffsets.contains(offset))
+            continue;
         visitedBlockOffsets.insert(offset);
-        for (int originOffset : block.jumpOrigins) {
-            const auto originBlock = basicBlockForInstruction(blocks, originOffset);
-            if (visitedBlockOffsets.find(originBlock.key()) == visitedBlockOffsets.end()
-                && !toVisit.contains(originBlock))
-                toVisit.append(originBlock);
+        for (auto [it, end] = forwardEdges.equal_range(offset); it != end; ++it) {
+            if (!visitedBlockOffsets.contains(*it))
+                toVisit.append(*it);
         }
     }
 
