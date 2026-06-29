@@ -7,46 +7,6 @@ import Qt.labs.StyleKit
 Style {
     id: style
 
-    component NoiseDelegate : ShaderEffect {
-        id: noiseDelegate
-        implicitWidth: unifiedSourceItem.implicitWidth
-        implicitHeight: unifiedSourceItem.implicitHeight
-        width: parent.width
-        height: parent.height
-
-        required property DelegateStyle delegateStyle
-
-        readonly property bool isDarkBg: {
-            let bgColor = delegateStyle.color
-            let luminance = (0.2126 * bgColor.r) +  (0.7152 * bgColor.g) +  (0.0722 * bgColor.b);
-            return luminance < 0.5;
-        }
-
-        // The following properties are used by the shader
-        property size sourceItemSize: Qt.size(unifiedSourceItem.width, unifiedSourceItem.height)
-        property color borderColor: delegateStyle.border.color
-        property real borderMaskEnabled: 1
-        property real borderMaskThreshold: 0.001
-        property real particleDensity: 0.2
-        property real particleSize: 0.5
-        property color particleColor: "black"
-        property Item source: ShaderEffectSource { live: true; sourceItem: unifiedSourceItem }
-        property real time: 0
-        property real particleOpacity: (delegateStyle.opacity === 1
-                                       ? (isDarkBg ? 0.15 : 0.05)
-                                       : (isDarkBg ? 0.5 : 0.1))
-
-        fragmentShader: "qrc:/effects/noise.qsb"
-
-        StyledItem {
-            id: unifiedSourceItem
-            delegateStyle: noiseDelegate.delegateStyle
-            width: parent.width
-            height: parent.height
-            visible: false
-        }
-    }
-
     component ColorSet : QtObject {
         property color normal
         property color muted
@@ -126,7 +86,6 @@ Style {
         background {
             height: myTheme.controlHeight
             color: myTheme.neutralBackground.normal
-            delegate: NoiseDelegate {}
         }
 
         vertical {
@@ -141,7 +100,6 @@ Style {
             border.width: 2
             border.color: myTheme.neutralStroke.normal
             color: myTheme.accentForeground.normal
-            delegate: NoiseDelegate {}
         }
 
         indicator {
@@ -150,7 +108,6 @@ Style {
             border.width: 3
             border.color: myTheme.neutralStroke.normal
             color: myTheme.neutralBackground.normal
-            delegate: NoiseDelegate {}
             foreground {
                 radius: 25
                 gradient: strongVerticalGradient
@@ -173,7 +130,6 @@ Style {
             border.color: myTheme.neutralStroke.normal
             color: myTheme.neutralBackground.normal
             gradient: faintVerticalGradient
-            delegate: NoiseDelegate {}
 
             shadow {
                 opacity: 0.25
@@ -183,10 +139,6 @@ Style {
                 color: myTheme.shadowColor
                 blur: 5
             }
-        }
-
-        indicator {
-            foreground.delegate: NoiseDelegate {}
         }
 
         hovered {

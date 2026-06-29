@@ -5,11 +5,6 @@ cmake_minimum_required(VERSION 3.16)
 project(StyleKitControlsExample VERSION 1.0 LANGUAGES CXX)
 
 find_package(Qt6 6.11 REQUIRED COMPONENTS Core Gui Qml Quick QuickControls2)
-find_package(Qt6 6.11 COMPONENTS ShaderTools)
-
-if(NOT TARGET Qt::qsb)
-    message(FATAL_ERROR "qsb not found. Please install Qt Shader Tools to build this example.")
-endif()
 
 qt_standard_project_setup(REQUIRES 6.11)
 
@@ -17,7 +12,6 @@ set(STYLES
     styles/Plain.qml
     styles/Haze.qml
     styles/Vitrum.qml
-    styles/CustomDelegates.qml
     styles/Fusion.qml
 )
 
@@ -31,49 +25,6 @@ qt_add_qml_module(${PROJECT_NAME}
         Main.qml
         ${STYLES}
 )
-
-qt_add_resources(${PROJECT_NAME} "images"
-    PREFIX "/images"
-    FILES
-        qt.png
-)
-
-qt_add_resources(${PROJECT_NAME} "effects"
-    PREFIX "/effects"
-    FILES
-        wave.frag wave.qsb
-        noise.frag noise.qsb
-)
-
-set(SHADERS
-    wave.frag
-    noise.frag
-)
-
-set(QSB_FLAGS
-    --glsl 460,450,320es
-    --hlsl 50
-    --msl 12
-    --msl 20
-)
-
-set(GENERATED_SHADERS)
-foreach(SHADER ${SHADERS})
-    get_filename_component(NAME_WE ${SHADER} NAME_WE)
-    set(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/${NAME_WE}.qsb)
-
-    add_custom_command(
-        OUTPUT ${OUTPUT}
-        COMMAND "$<TARGET_FILE:Qt::qsb>" ${QSB_FLAGS} -o ${OUTPUT} ${CMAKE_CURRENT_SOURCE_DIR}/${SHADER}
-        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${SHADER}
-        COMMENT "Compiling shader ${SHADER} → ${NAME_WE}.qsb"
-        VERBATIM
-    )
-    list(APPEND GENERATED_SHADERS ${OUTPUT})
-endforeach()
-
-add_custom_target(shaders ALL DEPENDS ${GENERATED_SHADERS})
-add_dependencies(${PROJECT_NAME} shaders)
 
 target_link_libraries(${PROJECT_NAME}
     PRIVATE

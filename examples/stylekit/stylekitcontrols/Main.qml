@@ -20,7 +20,6 @@ ApplicationWindow {
     // at runtime, and each style provides its own set of themes.
     Haze { id: hazeStyle }
     Vitrum { id: vitrumStyle }
-    CustomDelegates { id: delegateStyle }
     Plain { id: plainStyle }
     Fusion { id: fusionStyle }
 
@@ -318,7 +317,6 @@ ApplicationWindow {
                         { value: hazeStyle, text: "Haze" },
                         { value: plainStyle, text: "Plain" },
                         { value: vitrumStyle, text: "Vitrum" },
-                        { value: delegateStyle, text: "CustomDelegates" },
                         { value: fusionStyle, text: "Fusion" }
                     ]
                     onCurrentTextChanged: {

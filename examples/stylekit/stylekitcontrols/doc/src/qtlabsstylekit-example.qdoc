@@ -18,7 +18,7 @@
         \li \b Plain - A minimal style with only the basics
         \li \b Haze - An advanced style with multiple themes
         \li \b Vitrum - A style targeting VR environments
-        \li \b CustomDelegates - A style demonstrating how to create overlays, underlays, and shader effects
+        \li \b Fusion - A classical desktop Fusion style
     \endlist
 
     The example demonstrates, among other things, how to:
@@ -29,8 +29,6 @@
             such as high-contrast.
         \li Use \l StyleVariation to provide alternative styling for
             parts of the application.
-        \li Implement custom delegates to add overlay and underlay effects.
-        \li Apply shader-based visual effects to the controls.
         \li Build custom controls using \l CustomControl and \l StyleReader.
         \li Interact with a style at runtime, for example to change the
             theme or adjust style properties like the background radius.
@@ -39,7 +37,4 @@
     \sa {Qt Labs StyleKit}, Style, Theme
 
     \include examples-run.qdocinc
-
-    \note This example requires Qt Shader Tools, an optional library available
-        through the Qt Maintenance Tool.
 */
