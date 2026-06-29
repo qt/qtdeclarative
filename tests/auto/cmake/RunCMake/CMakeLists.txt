@@ -14,6 +14,10 @@ if(NOT CMAKE_CROSSCOMPILING)
     if(QT6_IS_SHARED_LIBS_BUILD)
         qt_internal_add_RunCMake_test(qt_generate_deploy_qml_app_script ${config_flags})
     endif()
+    # host qmlpreview cannot interact with binaries on the target
+    # should this ever change, we still could not run the test without
+    # qemu/an enumlator to actually run the target
+    qt_internal_add_RunCMake_test(qt_add_qml_preview ${config_flags})
 endif()
 qt_internal_add_RunCMake_test(export_namespace_in_root ${config_flags})
 

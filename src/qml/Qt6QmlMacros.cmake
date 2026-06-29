@@ -1873,7 +1873,20 @@ function(_qt_internal_add_all_qmllint_target_deferred target)
     _qt_internal_assign_to_qmllint_targets_folder(${target})
 endfunction()
 
+# used to create the qmlpreview target for an executable specified by target
+# RESOURCE_TARGETS:
+#    extra targets (besides ${target}) whose generated .qrc
+#    files should be mapped by qmlpreview, e.g. linked
+#    qt_add_qml_module targets.
 function(_qt_internal_target_enable_qmlpreview target)
+    set(opt_args "")
+    set(single_args "")
+    set(multi_args
+        RESOURCE_TARGETS
+    )
+    cmake_parse_arguments(PARSE_ARGV 1 arg "${opt_args}" "${single_args}" "${multi_args}")
+    _qt_internal_validate_all_args_are_parsed(arg)
+
     set(preview_target ${target}_qmlpreview)
     if(TARGET ${preview_target})
         return()
@@ -1882,6 +1895,11 @@ function(_qt_internal_target_enable_qmlpreview target)
     # qmlpreview launches the target as a subprocess, so it only works for executables.
     get_target_property(target_type ${target} TYPE)
     if(NOT target_type STREQUAL "EXECUTABLE")
+        return()
+    endif()
+
+    # The host qmlpreview cannot be used with a cross compiled target
+    if(CMAKE_CROSSCOMPILING)
         return()
     endif()
 
@@ -1906,9 +1924,15 @@ function(_qt_internal_target_enable_qmlpreview target)
         return()
     endif()
 
-    _qt_internal_genex_getjoinedproperty(qrc_args ${target}
-        _qt_generated_qrc_files "--resource$<SEMICOLON>" "$<SEMICOLON>"
-    )
+    # Collect the target's and RESOURCE_TARGETS' generated .qrc files so qmlpreview
+    # can map qrc: paths back to on-disk sources. Blank entries are skipped.
+    set(qrc_args "")
+    foreach(resource_target IN LISTS target arg_RESOURCE_TARGETS)
+        _qt_internal_genex_getjoinedproperty(target_qrc_args ${resource_target}
+            _qt_generated_qrc_files "--resource$<SEMICOLON>" "$<SEMICOLON>"
+        )
+        list(APPEND qrc_args "${target_qrc_args}")
+    endforeach()
 
     set(preview_args
         --interactive
@@ -3562,9 +3586,7 @@ function(qt6_target_qml_sources target)
         if(NOT arg_NO_LINT AND NOT no_lint)
             _qt_internal_target_enable_qmllint(${target})
         endif()
-        if(NOT CMAKE_CROSSCOMPILING)
-            _qt_internal_target_enable_qmlpreview(${target})
-        endif()
+        _qt_internal_target_enable_qmlpreview(${target})
 
         if(arg_OUTPUT_TARGETS)
             set(${arg_OUTPUT_TARGETS} "" PARENT_SCOPE)
@@ -5113,6 +5135,107 @@ if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
     endfunction()
 endif()
 
+# Sets up qmlpreview for a target that links QML modules but is not itself passed
+# to qt_add_qml_module. Only non-imported targets are considered.
+function(qt6_add_qml_preview target)
+    get_target_property(target_type ${target} TYPE)
+    get_target_property(android_type ${target} _qt_android_target_type)
+    get_target_property(harmonyos_type ${target} _qt_harmonyos_target_type)
+    if(NOT target_type STREQUAL "EXECUTABLE" AND
+        NOT android_type STREQUAL "APPLICATION" AND
+        NOT harmonyos_type STREQUAL "APPLICATION")
+        message(FATAL_ERROR
+            "qt_add_qml_preview() can only be used on executable targets, but "
+            "'${target}' is of type '${target_type}'.")
+    endif()
+
+    get_target_property(is_imported ${target} IMPORTED)
+    if(is_imported)
+        message(FATAL_ERROR
+            "Only targets built by the project can be used with this command, "
+            "but target \"${target}\" is imported."
+        )
+    endif()
+
+    get_target_property(uri ${target} QT_QML_MODULE_URI)
+    if(uri)
+        return() # QML modules are already covered
+    endif()
+
+    # All dependencies are only known after the current directory scope is
+    # processed, so defer the walk. Guard against multiple calls first.
+    get_property(already_requested TARGET ${target}
+        PROPERTY _qt_qml_preview_requested)
+    if(already_requested)
+        return()
+    endif()
+    set_property(TARGET ${target} PROPERTY _qt_qml_preview_requested TRUE)
+
+    # If called from the automatic finalizer we are already past scope processing
+    # and need not defer.
+    get_property(called_from_finalizer
+        TARGET ${target}
+        PROPERTY _qt_qml_automatic_qml_preview_added
+    )
+    if (called_from_finalizer)
+        _qt_internal_finalize_qml_preview(${target})
+    else()
+        # Defer evaluation in case more modules are linked at a later point
+        cmake_language(EVAL CODE
+            "cmake_language(DEFER CALL _qt_internal_finalize_qml_preview ${target})"
+        )
+    endif()
+endfunction()
+
+if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
+    function(qt_add_qml_preview)
+        qt6_add_qml_preview(${ARGV})
+    endfunction()
+endif()
+
+# Deferred worker for qt_add_qml_preview(): walks the link closure and passes the
+# in-project qt_add_qml_module backing targets to _qt_internal_target_enable_qmlpreview
+function(_qt_internal_finalize_qml_preview target)
+    __qt_internal_collect_all_target_dependencies(${target} dep_targets)
+    set(resource_targets "")
+    set(enable_warnings FALSE)
+    get_target_property(uri ${target} QT_QML_MODULE_URI)
+    # we enable warnings for anything created by qt_add_qml_module (which has the URI set)
+    if (uri)
+        set(enable_warnings TRUE)
+    else()
+        # or for targets for which preview was explicitly requested by a manual
+        # qt6_add_qml_preview call
+        get_property(automatically_requested TARGET ${target}
+            PROPERTY _qt_qml_automatic_qml_preview_added)
+        if (NOT automatically_requested)
+            set(enable_warnings TRUE)
+        endif()
+    endif()
+    foreach(dep IN LISTS dep_targets)
+        if(NOT TARGET ${dep})
+            continue()
+        endif()
+        get_target_property(is_imported ${dep} IMPORTED)
+        get_target_property(is_backing ${dep} _qt_qml_module_is_backing_target)
+        # Only in-project qt_add_qml_module targets carry mappable resources.
+        if(is_imported OR NOT is_backing)
+            continue()
+        endif()
+        list(APPEND resource_targets ${dep})
+    endforeach()
+
+    if(NOT resource_targets AND enable_warnings)
+        message(WARNING
+            "qt_add_qml_preview(${target}): no in-project QML modules were found "
+            "in the link closure, so live reload of qrc-embedded QML will not work. "
+            "Link the qt_add_qml_module target(s) you want to preview. "
+            "Set QT_QML_NO_QML_PREVIEW to true if you do not want to have preview support.")
+    endif()
+
+    _qt_internal_target_enable_qmlpreview(${target} RESOURCE_TARGETS ${resource_targets})
+endfunction()
+
 function(_qt_internal_add_import_qml_plugins_finalizer target)
     get_property(finalizer_added TARGET ${target} PROPERTY
         _qt_qml_import_qml_plugins_finalizer_added)
@@ -5134,6 +5257,30 @@ function(_qt_internal_add_qml_deploy_info_finalizer target)
         )
         set_property(TARGET ${target} PROPERTY _qt_qml_deploy_finalizer_added TRUE)
     endif()
+endfunction()
+
+function(_qt_internal_add_qml_enable_preview_finalizer target)
+    get_property(finalizer_added TARGET ${target} PROPERTY _qt_qml_enable_preview_finalizer_added)
+    if(NOT finalizer_added)
+        set_property(TARGET ${target} APPEND PROPERTY
+            INTERFACE_QT_EXECUTABLE_FINALIZERS
+            _qt_internal_qml_enable_preview_executable_finalizer
+        )
+        set_property(TARGET ${target} PROPERTY _qt_qml_enable_preview_finalizer_added TRUE)
+    endif()
+endfunction()
+
+# helper which calls qt_add_qml_preview, but sets a target property to avoid deferring twice
+function(_qt_internal_qml_enable_preview_executable_finalizer target)
+    if (DEFINED QT_QML_NO_QML_PREVIEW AND QT_QML_NO_QML_PREVIEW)
+        return()
+    endif()
+    get_property(preview_disabled TARGET ${target} PROPERTY QT_QML_NO_QML_PREVIEW)
+    if(preview_disabled)
+        return()
+    endif()
+    set_property(TARGET ${target} PROPERTY _qt_qml_automatic_qml_preview_added TRUE)
+    qt6_add_qml_preview(${target})
 endfunction()
 
 # This function may be called as a finalizer in qt6_finalize_executable() for any
