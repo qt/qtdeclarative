@@ -282,7 +282,6 @@ void QmlLintSuggestions::diagnoseHelper(const QByteArray &url,
     // folder this mimics qmllint behaviors
     imports.append(QFileInfo(filename).dir().absolutePath());
     // add m_server->clientInfo().rootUri & co?
-    bool silent = true;
     const QString fileContents = doc.field(Fields::code).value().toString();
     const QStringList qmltypesFiles;
     const QStringList resourceFiles = m_codeModelManager->resourceFilesForFileUrl(url);
@@ -302,8 +301,14 @@ void QmlLintSuggestions::diagnoseHelper(const QByteArray &url,
     }
 
     // TODO: pass the workspace folders to QQmlJSLinter
-    linter.lintFile(filename, &fileContents, silent, nullptr, imports, qmltypesFiles, resourceFiles,
-                    categories);
+    QQmlJSLinter::LintOptions lintOptions;
+    lintOptions.setFlag(QQmlJSLinter::Silent);
+
+    const bool wasPrepared =
+            linter.prepareFileForBatchLinting(filename, &fileContents, lintOptions, imports,
+                                              qmltypesFiles, resourceFiles, categories);
+    Q_ASSERT(wasPrepared);
+    QQmlJSLinter::Result result = linter.lintFileInBatch(filename);
 
     // ###  TODO: C++20 replace with bind_front
     auto advancePositionPastLocation = [&fileContents](const QQmlJS::SourceLocation &location, Position &position)
@@ -336,7 +341,7 @@ void QmlLintSuggestions::diagnoseHelper(const QByteArray &url,
             },
             true);
 
-    if (const QQmlJSLogger *logger = linter.logger()) {
+    if (const QQmlJSLogger *logger = result.logger.get()) {
         qsizetype nDiagnostics = diagnostics.size();
         logger->iterateAllMessages([&](const Message &message) {
             if (!message.message.contains(u"Failed to import")) {

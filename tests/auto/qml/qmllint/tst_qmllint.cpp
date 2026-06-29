@@ -196,6 +196,8 @@ private Q_SLOTS:
     void useProperFunction_data();
     void useProperFunction();
 
+    void weakPointers();
+
 #if QT_CONFIG(library)
     void hasTestPlugin();
     void testPlugin_data();
@@ -281,10 +283,10 @@ private:
     QJsonArray callQmllintOnSnippet(const QString &snippet, const CallQmllintOptions &options,
                                     CallQmllintChecks checks);
 
-    void testFixes(bool shouldSucceed, QStringList importPaths, QStringList qmldirFiles,
-                   QStringList resources, DefaultImportOption defaultImports,
-                   QList<QQmlJS::LoggerCategory> *categories, bool autoFixable, bool readSettings,
-                   const QString &fixedPath);
+    void testFixes(QQmlJSLogger *logger, bool shouldSucceed, QStringList importPaths,
+                   QStringList qmldirFiles, QStringList resources,
+                   DefaultImportOption defaultImports, QList<QQmlJS::LoggerCategory> *categories,
+                   bool autoFixable, bool readSettings, const QString &fixedPath);
 
     void searchWarnings(const QJsonArray &warnings, const QString &string,
                         QtMsgType type = QtWarningMsg, quint32 line = 0, quint32 column = 0,
@@ -313,7 +315,40 @@ private:
     QString m_qmllintPath;
 
     QStringList m_defaultImportPaths;
-    QQmlJSLinter m_linter;
+    class TestLinter : public QQmlJSLinter
+    {
+    public:
+        using QQmlJSLinter::QQmlJSLinter;
+
+        void prepareScopeForReuse(const QString &filePath)
+        {
+            QQmlJSScope::Ptr scope = m_importer.importFile(filePath);
+            QQmlJSScope::resetForReparse(scope);
+            resetFactory(
+                    scope, &m_importer,
+                    [](QQmlJSImporter *, const QString &, const QSharedPointer<QQmlJSScope> &) { });
+        }
+
+        QQmlJSLinter::Result lintFile(const QString &filename, const QString *fileContents,
+                                      LintOptions options, const QStringList &qmlImportPaths,
+                                      const QStringList &qmldirFiles,
+                                      const QStringList &resourceFiles,
+                                      const QList<QQmlJS::LoggerCategory> &categories)
+        {
+            if (!prepareFileForBatchLinting(filename, fileContents, options, qmlImportPaths,
+                                            qmldirFiles, resourceFiles, categories)) {
+                // Calling clearCache for each linted file/snippet slows down the tests by a factor of 2.5.
+                // Therefore, only call it when scope re-using happens (prepareFileForBatchLinting returns false).
+                clearCache();
+                const bool result =
+                        prepareFileForBatchLinting(filename, fileContents, options, qmlImportPaths,
+                                                   qmldirFiles, resourceFiles, categories);
+                Q_ASSERT(result);
+            }
+            return lintFileInBatch(filename);
+        }
+    };
+    TestLinter m_linter;
     QList<QQmlJS::LoggerCategory> m_categories = QQmlJSLogger::builtinCategories();
 };
 
@@ -3256,6 +3291,11 @@ void TestQmllint::cycles_data()
             continue;
         QTest::addRow("%s", qPrintable(QStringView(file.filePath().mid(dataFolder.size() + 1))))
                 << file.filePath();
+        QQmlJSLinter::LintOptions options;
+        options.setFlag(QQmlJSLinter::Silent);
+        options.setFlag(QQmlJSLinter::GenerateJson);
+        m_linter.prepareFileForBatchLinting(file.filePath(), nullptr, options, m_defaultImportPaths,
+                                            { }, { }, m_categories);
     }
 }
 
@@ -3263,9 +3303,9 @@ void TestQmllint::cycles()
 {
     QFETCH(QString, filename);
 
-    QQmlJSLinter::LintResult result = m_linter.lintFile(
-            filename, nullptr, false, nullptr, m_defaultImportPaths, { }, { }, m_categories);
-    QCOMPARE(result, QQmlJSLinter::LintSuccess);
+    QQmlJSLinter::Result result = m_linter.lintFileInBatch(filename);
+
+    QCOMPARE(result.status, QQmlJSLinter::LintSuccess);
 }
 
 QString TestQmllint::runQmllint(const QString &fileToLint,
@@ -3384,13 +3424,15 @@ static void writeQrcFileMapping(const QHash<QString, QString> &mapping, const QS
 QJsonArray TestQmllint::callQmllintImpl(const QString &fileToLint, const QString &content,
                                         const CallQmllintOptions &options, CallQmllintChecks checks)
 {
-    QJsonArray jsonOutput;
     QJsonArray result;
 
     const QFileInfo info = QFileInfo(fileToLint);
     const QString lintedFile = info.isAbsolute() ? fileToLint : testFile(fileToLint);
 
-    QQmlJSLinter::LintResult lintResult;
+    QQmlJSLinter::Result lintResult;
+    QQmlJSLinter::LintOptions lintOptions;
+    lintOptions.setFlag(QQmlJSLinter::Silent);
+    lintOptions.setFlag(QQmlJSLinter::GenerateJson);
 
     const QStringList resolvedImportPaths = options.defaultImports == UseDefaultImports
             ? m_defaultImportPaths + options.importPaths
@@ -3422,26 +3464,27 @@ QJsonArray TestQmllint::callQmllintImpl(const QString &fileToLint, const QString
             writeQrcFileMapping(options.qrcToFilePaths, qrcFile);
             resourceFiles.append(qrcFile);
         }
-        lintResult = m_linter.lintFile(lintedFile, content.isEmpty() ? nullptr : &content, true,
-                                       &jsonOutput, resolvedImportPaths, options.qmldirFiles,
+
+        lintResult = m_linter.lintFile(lintedFile, content.isEmpty() ? nullptr : &content,
+                                       lintOptions, resolvedImportPaths, options.qmldirFiles,
                                        resourceFiles, resolvedCategories);
     } else {
-        lintResult = m_linter.lintModule(fileToLint, true, &jsonOutput, resolvedImportPaths,
+        lintResult = m_linter.lintModule(fileToLint, lintOptions, resolvedImportPaths,
                                          options.resources);
     }
 
     [&]() {
-        const bool success = lintResult == QQmlJSLinter::LintSuccess;
-        const QByteArray errorOutput = QJsonDocument(jsonOutput).toJson();
+        const bool success = lintResult.status == QQmlJSLinter::LintSuccess;
+        const QByteArray errorOutput = QJsonDocument(lintResult.json).toJson();
         QVERIFY2(success == (checks.testFlag(ShouldSucceed)), errorOutput);
-        QVERIFY2(jsonOutput.size() == 1, errorOutput);
-        result = jsonOutput.at(0)[u"warnings"_s].toArray();
+        result = lintResult.json[u"warnings"_s].toArray();
     }();
 
-    if (lintResult == QQmlJSLinter::LintSuccess || lintResult == QQmlJSLinter::HasWarnings) {
-        testFixes(checks.testFlag(ShouldSucceed), options.importPaths, options.qmldirFiles,
-                  options.resources, options.defaultImports, options.categories,
-                  checks.testFlag(HasAutoFix), options.readSettings,
+    if (lintResult.status == QQmlJSLinter::LintSuccess
+        || lintResult.status == QQmlJSLinter::HasWarnings) {
+        testFixes(lintResult.logger.get(), checks.testFlag(ShouldSucceed), options.importPaths,
+                  options.qmldirFiles, options.resources, options.defaultImports,
+                  options.categories, checks.testFlag(HasAutoFix), options.readSettings,
                   info.baseName() + u".fixed.qml"_s);
     }
     return result;
@@ -3457,6 +3500,8 @@ QJsonArray TestQmllint::callQmllintOnSnippet(const QString &snippet,
                                              const CallQmllintOptions &options,
                                              CallQmllintChecks checks)
 {
+    m_linter.prepareScopeForReuse(testFile("Snippet.qml"));
+
     if (options.rootUrls.isEmpty())
         return callQmllintImpl("Snippet.qml", snippet, options, checks);
     QTemporaryDir dir;
@@ -3469,13 +3514,14 @@ QJsonArray TestQmllint::callQmllintOnSnippet(const QString &snippet,
     return callQmllintImpl(dir.filePath("Snippet.qml"), snippet, options, checks);
 }
 
-void TestQmllint::testFixes(bool shouldSucceed, QStringList importPaths, QStringList qmldirFiles,
-                            QStringList resources, DefaultImportOption defaultImports,
+void TestQmllint::testFixes(QQmlJSLogger *logger, bool shouldSucceed, QStringList importPaths,
+                            QStringList qmldirFiles, QStringList resources,
+                            DefaultImportOption defaultImports,
                             QList<QQmlJS::LoggerCategory> *categories, bool autoFixable,
                             bool readSettings, const QString &fixedPath)
 {
     QString fixedCode;
-    QQmlJSLinter::FixResult fixResult = m_linter.applyFixes(&fixedCode, true);
+    QQmlJSLinter::FixResult fixResult = QQmlJSLinter::applyFixes(logger, &fixedCode, true);
 
     if (autoFixable) {
         QCOMPARE(fixResult, QQmlJSLinter::FixSuccess);
@@ -3880,21 +3926,17 @@ void TestQmllint::missingBuiltinsNoCrash()
 {
     // We cannot use the normal linter here since the other tests might have cached the builtins
     // alread
-    QQmlJSLinter linter(m_defaultImportPaths);
+    TestLinter linter(m_defaultImportPaths);
 
-    QJsonArray jsonOutput;
-    QJsonArray warnings;
-
-    bool success = linter.lintFile(testFile("missingBuiltinsNoCrash.qml"), nullptr, true,
-                                   &jsonOutput, {}, {}, {}, {})
-            == QQmlJSLinter::LintSuccess;
-    QVERIFY2(!success, QJsonDocument(jsonOutput).toJson());
-
-    QVERIFY2(jsonOutput.size() == 1, QJsonDocument(jsonOutput).toJson());
-    warnings = jsonOutput.at(0)[u"warnings"_s].toArray();
+    QQmlJSLinter::LintOptions lintOptions;
+    lintOptions.setFlag(QQmlJSLinter::Silent);
+    lintOptions.setFlag(QQmlJSLinter::GenerateJson);
+    QQmlJSLinter::Result result = linter.lintFile(testFile("missingBuiltinsNoCrash.qml"), nullptr,
+                                                  lintOptions, { }, { }, { }, { });
+    QVERIFY2(result.status != QQmlJSLinter::LintSuccess, QJsonDocument(result.json).toJson());
 
     checkResult(
-            warnings,
+            result.json[u"warnings"_s].toArray(),
             Result{ { Message{
                     u"Failed to import QtQuick. Are your import paths set up properly?"_s } } });
 }
@@ -3998,6 +4040,8 @@ void TestQmllint::lintModule()
 
 void TestQmllint::testLineEndings()
 {
+    QQmlJSLinter::LintOptions lintOptions;
+    lintOptions.setFlag(QQmlJSLinter::Silent);
     {
         const auto textWithLF = QString::fromUtf16(u"import QtQuick 2.0\nimport QtTest 2.0 // qmllint disable unused-imports\n"
             "import QtTest 2.0 // qmllint disable\n\nItem {\n    @Deprecated {}\n    property string deprecated\n\n    "
@@ -4007,7 +4051,9 @@ void TestQmllint::testLineEndings()
             "//qmllint d       4isable\n    property string e: root.a\n    Component.onCompleted: {\n        console.log"
             "(deprecated);\n    }\n    // qmllint enable\n\n}\n");
 
-        const auto lintResult = m_linter.lintFile( {}, &textWithLF, true, nullptr, {}, {}, {}, {});
+        const auto lintResult = m_linter.lintFile(testFile("snippetWithLF.qml"), &textWithLF,
+                                                  lintOptions, { }, { }, { }, { })
+                                        .status;
 
         QCOMPARE(lintResult, QQmlJSLinter::LintResult::HasWarnings);
     }
@@ -4020,7 +4066,9 @@ void TestQmllint::testLineEndings()
         "root.a\n    // qmllint enable unqualified\n\n    //qmllint d       4isable\n    property string e: root.a\n    Component.onCompleted: "
         "{\n        console.log(deprecated);\n    }\n    // qmllint enable\n\n}\n");
 
-        const auto lintResult = m_linter.lintFile( {}, &textWithCRLF, true, nullptr, {}, {}, {}, {});
+        const auto lintResult = m_linter.lintFile(testFile("snippetWithCRLF.qml"), &textWithCRLF,
+                                                  lintOptions, { }, { }, { }, { })
+                                        .status;
 
         QCOMPARE(lintResult, QQmlJSLinter::LintResult::HasWarnings);
     }
@@ -4587,7 +4635,7 @@ void TestQmllint::backslashedQmldirPath()
             = testFile(u"ImportPath/ModuleInImportPath/qmldir"_s).replace('/', QDir::separator());
     const QString output = runQmllint(
             testFile(u"something.qml"_s), true, QStringList{ u"-i"_s, qmldirPath });
-    QVERIFY(output.isEmpty());
+    QVERIFY2(output.isEmpty(), qPrintable(output));
 }
 
 #if QT_CONFIG(process)
@@ -5313,6 +5361,32 @@ void TestQmllint::crashes()
             Result{ {
                     Message{ u"FooBar was not found. Did you add all imports and dependencies?"_s },
             } });
+}
+
+void TestQmllint::weakPointers()
+{
+    // linting scenario from QTBUG-146688, where grouped properties types disappeared when linting
+    // these files in exact that order:
+    // HomePage populates all other qml scopes
+    // NavBarForm.ui.qml used to drop data weakly referenced from NewTaskForm to NavBar
+    // NewTask can't find the type weakly referenced from NewTaskForm's "backbutton" property and
+    // emits bogus warnings.
+    std::array filesToLint = {
+        testFile("weakpointers/HomePage.qml"),
+        testFile("weakpointers/NavBarForm.ui.qml"),
+        testFile("weakpointers/NewTask.qml"),
+    };
+
+    // actual testing, prove that this bug does not happen anymore in linter:
+    for (const auto &file : filesToLint) {
+        m_linter.prepareFileForBatchLinting(file, nullptr, { }, m_defaultImportPaths, { }, { },
+                                            m_categories);
+    }
+
+    for (const auto &file : filesToLint) {
+        auto result = m_linter.lintFileInBatch(file);
+        QCOMPARE(result.status, QQmlJSLinter::LintSuccess);
+    }
 }
 
 QTEST_GUILESS_MAIN(TestQmllint)

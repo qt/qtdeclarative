@@ -142,13 +142,19 @@ void tst_qmllint_benchmark::runOnFile(const QString &fileName, PluginSelection a
         return file.readAll();
     }();
 
+    std::vector<QQmlJSLinter::Result> results;
+    QQmlJSLinter::LintOptions options;
+    options.setFlag(QQmlJSLinter::Silent);
+
+    QVERIFY(linter.prepareFileForBatchLinting(fileName, &content, options, imports, { }, { },
+                                              categories));
     QBENCHMARK {
-        linter.lintFile(fileName, &content, true, nullptr, imports, {}, {}, categories);
+        results.push_back(linter.lintFileInBatch(fileName));
     }
     // make sure that all imports are available, otherwise we end up benchmarking less relevant
     // parts of the execution.
-    if (const QQmlJSLogger *logger = linter.logger()) {
-        logger->iterateAllMessages([](const Message &message) {
+    if (results.size() > 0 && results.front().logger) {
+        results.front().logger->iterateAllMessages([](const Message &message) {
             QVERIFY(!message.message.contains("Failed to import"_L1));
         });
     }

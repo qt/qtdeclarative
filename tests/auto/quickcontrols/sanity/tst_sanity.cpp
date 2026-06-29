@@ -97,12 +97,9 @@ void tst_Sanity::qmllint()
     QFETCH(QString, control);
     QFETCH(QString, filePath);
 
-    QJsonArray output;
-    bool success =
-            m_linter.lintFile(filePath, nullptr, true, &output, m_importPaths, {}, {}, m_categories)
-            == QQmlJSLinter::LintSuccess;
-
-    QVERIFY2(success, qPrintable(QJsonDocument(output).toJson(QJsonDocument::Compact)));
+    QQmlJSLinter::Result lintResult = m_linter.lintFileInBatch(filePath);
+    QVERIFY2(lintResult.status == QQmlJSLinter::LintSuccess,
+             qPrintable(QJsonDocument(lintResult.json).toJson(QJsonDocument::Compact)));
 }
 
 void tst_Sanity::qmllint_data()
@@ -111,8 +108,14 @@ void tst_Sanity::qmllint_data()
     QTest::addColumn<QString>("filePath");
 
     const QList<StyleInfo::QmlFileData> sourceQmlFiles = StyleInfo::instance()->sourceQmlFiles();
-    for (auto it = sourceQmlFiles.constBegin(); it != sourceQmlFiles.constEnd(); ++it)
+    for (auto it = sourceQmlFiles.constBegin(); it != sourceQmlFiles.constEnd(); ++it) {
         QTest::newRow(qPrintable(it->relativePath)) << it->relativePath << it->absolutePath;
+        QQmlJSLinter::LintOptions options;
+        options.setFlag(QQmlJSLinter::Silent);
+        options.setFlag(QQmlJSLinter::GenerateJson);
+        m_linter.prepareFileForBatchLinting(it->absolutePath, nullptr, options, m_importPaths, { },
+                                            { }, m_categories);
+    }
 }
 
 void tst_Sanity::quickControlsSanityPlugin()
@@ -120,13 +123,14 @@ void tst_Sanity::quickControlsSanityPlugin()
     QFETCH(QString, filePath);
     QFETCH(QString, result);
 
-    QJsonArray output;
-
-    bool hasWarnings = m_linter.lintFile(testFile(filePath), nullptr, true, &output, m_importPaths,
-                                         {}, {}, m_categories)
-            == QQmlJSLinter::HasWarnings;
-    QVERIFY(hasWarnings);
-    const auto &warningsOutput = output.first().toObject().value("warnings").toArray();
+    QQmlJSLinter::LintOptions options;
+    options.setFlag(QQmlJSLinter::Silent);
+    options.setFlag(QQmlJSLinter::GenerateJson);
+    QVERIFY(m_linter.prepareFileForBatchLinting(testFile(filePath), nullptr, options, m_importPaths,
+                                                { }, { }, m_categories));
+    QQmlJSLinter::Result lintResult = m_linter.lintFileInBatch(testFile(filePath));
+    QCOMPARE(lintResult.status, QQmlJSLinter::HasWarnings);
+    const auto &warningsOutput = lintResult.json.value("warnings").toArray();
     QCOMPARE(warningsOutput.first().toObject().value("message"), result);
 }
 
