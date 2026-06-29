@@ -1,0 +1,1 @@
+can only be used on executable targets
