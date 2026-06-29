@@ -15,6 +15,7 @@
 //
 // We mean it.
 
+#include "qqmljslintervisitor_p.h"
 #include <private/qqmljscontextproperties_p.h>
 #include <private/qqmljsimporter_p.h>
 #include <private/qqmljslintertypepropagator_p.h>
@@ -47,6 +48,11 @@ public:
                  bool useAbsolutePath = false);
 
     enum LintResult { FailedToOpen, FailedToParse, HasWarnings, HasErrors, LintSuccess };
+    enum LintOption : quint8 {
+        Silent = 1,
+        GenerateJson = 2,
+    };
+    Q_DECLARE_FLAGS(LintOptions, LintOption);
     enum FixResult { NothingToFix, FixError, FixSuccess };
 
     class Plugin
@@ -106,17 +112,27 @@ public:
 
     static std::vector<Plugin> loadPlugins(QStringList paths);
 
-    LintResult lintFile(const QString &filename, const QString *fileContents, const bool silent,
-                        QJsonArray *json, const QStringList &qmlImportPaths,
-                        const QStringList &qmldirFiles, const QStringList &resourceFiles,
-                        const QList<QQmlJS::LoggerCategory> &categories);
+    struct Result
+    {
+        LintResult status = LintSuccess;
+        QJsonObject json;
+        std::unique_ptr<QQmlJSLogger> logger;
 
-    LintResult lintModule(const QString &uri, const bool silent, QJsonArray *json,
-                          const QStringList &qmlImportPaths, const QStringList &resourceFiles);
+        void generateJson();
+        void setStatusFromLogger();
+    };
+    Result lintFileInBatch(const QString &filename);
 
-    FixResult applyFixes(QString *fixedCode, bool silent);
+    bool prepareFileForBatchLinting(const QString &filename, const QString *fileContents,
+                                    LintOptions options, const QStringList &qmlImportPaths,
+                                    const QStringList &qmldirFiles,
+                                    const QStringList &resourceFiles,
+                                    const QList<QQmlJS::LoggerCategory> &categories);
 
-    const QQmlJSLogger *logger() const { return m_logger.get(); }
+    Result lintModule(const QString &uri, LintOptions options, const QStringList &qmlImportPaths,
+                      const QStringList &resourceFiles);
+
+    static FixResult applyFixes(const QQmlJSLogger *logger, QString *fixedCode, bool silent);
 
     std::vector<Plugin> &plugins()
     {
@@ -126,28 +142,46 @@ public:
 
     void setPluginsEnabled(bool enablePlugins) { m_enablePlugins = enablePlugins; }
     bool pluginsEnabled() const { return m_enablePlugins; }
+    bool useAbsolutePath() const { return m_useAbsolutePath; }
 
     void clearCache() { m_importer.clearCache(); }
 
 private:
-    LintResult lintFileImpl(const QString &filename, const QString *fileContents, const bool silent,
-                            QJsonArray *json, const QStringList &qmlImportPaths,
-                            const QStringList &qmldirFiles, const QStringList &resourceFiles,
-                            const QList<QQmlJS::LoggerCategory> &categories);
-    LintResult lintModuleImpl(const QString &uri, const bool silent, QJsonArray *json,
-                              const QStringList &qmlImportPaths, const QStringList &resourceFiles);
-    void setupLoggingCategoriesInLogger(const QList<QQmlJS::LoggerCategory> &categories);
+    void lintFileImpl(const QString &filename);
+    Result lintModuleImpl(const QString &uri, LintOptions options,
+                          const QStringList &qmlImportPaths, const QStringList &resourceFiles);
+    void setupLoggingCategoriesInLogger(QQmlJSLogger *logger,
+                                        const QList<QQmlJS::LoggerCategory> &categories);
     void parseComments(QQmlJSLogger *logger, const QList<QQmlJS::SourceLocation> &comments);
-    void processMessages(QJsonArray &warnings);
     void updateUserContextProperties(const QString &fileNamej);
     void updateHeuristicContextProperties(const QString &fileName);
+    void typeReader(const QString &filename);
 
     bool m_useAbsolutePath;
     bool m_enablePlugins;
+protected:
     QQmlJSImporter m_importer;
-    QScopedPointer<QQmlJSLogger> m_logger;
+private:
     QString m_fileContents;
     std::vector<Plugin> m_plugins;
+
+    struct LintInfo
+    {
+        const QString *fileContents;
+        LintOptions options;
+        QStringList qmlImportPaths;
+        QStringList qmldirFiles;
+        std::optional<QQmlJSResourceFileMapper> resourceMapper;
+        QList<QQmlJS::LoggerCategory> categories;
+
+        QQmlJSScope::Ptr handle;
+        std::optional<QQmlJS::LinterVisitor> visitor;
+        Result result;
+
+        QQmlJS::Engine engine; // needs to outlive the lintFileInBatch() call.
+    };
+
+    std::unordered_map<QString, LintInfo> m_lintInfo;
 
     QQmlToolingSettings m_userContextPropertySettings =
             QQmlToolingSettings(QStringLiteral("contextProperties"));

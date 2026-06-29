@@ -67,6 +67,71 @@ bool argumentsFromCommandLineAndFile(QStringList& allArguments, const QStringLis
     return true;
 }
 
+static bool applyFixes(const QQmlJSLinter::Result &linterResult, bool silent, bool dryRun)
+{
+    if (linterResult.status != QQmlJSLinter::LintSuccess
+        && linterResult.status != QQmlJSLinter::HasWarnings) {
+        return true;
+    }
+
+    QString fixedCode;
+    const QQmlJSLinter::FixResult result =
+            QQmlJSLinter::applyFixes(linterResult.logger.get(), &fixedCode, silent);
+    const QString filename = linterResult.logger->filePath();
+
+    if (result != QQmlJSLinter::NothingToFix && result != QQmlJSLinter::FixSuccess) {
+        return false;
+    }
+
+    if (dryRun) {
+        QTextStream(stdout) << fixedCode;
+        return true;
+    }
+    if (result == QQmlJSLinter::NothingToFix) {
+        if (!silent)
+            qWarning().nospace() << "Nothing to fix in " << filename;
+        return true;
+    }
+
+    const QString backupFile = filename + u".bak"_s;
+    if (QFile::exists(backupFile) && !QFile::remove(backupFile)) {
+        if (!silent) {
+            qWarning().nospace() << "Failed to remove old backup file " << backupFile
+                                 << ", aborting";
+        }
+        return false;
+    }
+    if (!QFile::copy(filename, backupFile)) {
+        if (!silent) {
+            qWarning().nospace() << "Failed to create backup file " << backupFile << ", aborting";
+        }
+        return false;
+    }
+
+    QFile file(filename);
+    if (!file.open(QIODevice::WriteOnly)) {
+        if (!silent) {
+            qWarning().nospace() << "Failed to open " << filename
+                                 << " for writing:" << file.errorString();
+        }
+        return false;
+    }
+
+    const QByteArray data = fixedCode.toUtf8();
+    if (file.write(data) != data.size()) {
+        if (!silent) {
+            qWarning().nospace() << "Failed to write new contents to " << filename << ": "
+                                 << file.errorString();
+        }
+        return false;
+    }
+    if (!silent) {
+        qDebug().nospace() << "Applied fixes to " << filename << ". Backup created at "
+                           << backupFile;
+    }
+    return true;
+}
+
 int main(int argc, char *argv[])
 {
     QHashSeed::setDeterministicGlobalSeed();
@@ -365,6 +430,7 @@ All warnings can be set to four levels of severity:
     if (parser.isSet(dryRun))
         defaultSettings.reportConfigForFiles(positionalArguments);
 
+    const bool isFixing = parser.isSet(fixFile);
     QJsonArray jsonFiles;
 
     for (const QString &filename : positionalArguments) {
@@ -460,92 +526,65 @@ All warnings can be set to four levels of severity:
         for (auto &plugin : plugins)
             plugin.setEnabled(!disabledPlugins.contains(plugin.name().toLower()));
 
-        const bool isFixing = parser.isSet(fixFile);
-
-        QQmlJSLinter::LintResult lintResult;
+        QQmlJSLinter::Result lintResult;
 
         if (parser.isSet(moduleOption)) {
-            lintResult = linter.lintModule(filename, silent, useJson ? &jsonFiles : nullptr,
-                                           qmlImportPaths, resourceFiles);
+            QQmlJSLinter::LintOptions options;
+            options.setFlag(QQmlJSLinter::Silent, silent);
+            options.setFlag(QQmlJSLinter::GenerateJson, useJson);
+            lintResult = linter.lintModule(filename, options, qmlImportPaths, resourceFiles);
+            jsonFiles.append(lintResult.json);
+            success &= (lintResult.status == QQmlJSLinter::LintSuccess
+                        || lintResult.status == QQmlJSLinter::HasWarnings);
+            if (success) {
+                const qsizetype value = parser.isSet(maxWarnings)
+                        ? parser.value(maxWarnings).toInt()
+                        : (settings.isSet(maxWarningsSetting)
+                                   ? settings.value(maxWarningsSetting).toInt()
+                                   : defaultSettings.value(maxWarningsSetting).toInt());
+                if (value != -1 && value < lintResult.logger->numWarnings())
+                    success = false;
+            }
+
+            if (isFixing)
+                success &= applyFixes(lintResult, silent, parser.isSet(dryRun));
         } else {
-            lintResult = linter.lintFile(filename, nullptr, silent || isFixing,
-                                         useJson ? &jsonFiles : nullptr, qmlImportPaths,
-                                         qmldirFiles, resourceFiles, categories);
+            // collect all filenames and parameters before actually linting the files
+            QQmlJSLinter::LintOptions options;
+            options.setFlag(QQmlJSLinter::Silent, silent || isFixing);
+            options.setFlag(QQmlJSLinter::GenerateJson, useJson);
+            linter.prepareFileForBatchLinting(filename, nullptr, options, qmlImportPaths,
+                                              qmldirFiles, resourceFiles, categories);
         }
-        success &= (lintResult == QQmlJSLinter::LintSuccess || lintResult == QQmlJSLinter::HasWarnings);
-        if (success) {
-            const qsizetype value = parser.isSet(maxWarnings)
-                    ? parser.value(maxWarnings).toInt()
-                    : (settings.isSet(maxWarningsSetting)
-                               ? settings.value(maxWarningsSetting).toInt()
-                               : defaultSettings.value(maxWarningsSetting).toInt());
-            if (value != -1 && value < linter.logger()->numWarnings())
-                success = false;
-        }
+    }
+    if (!parser.isSet(moduleOption)) {
+        for (const QString &filename : positionalArguments) {
+            QQmlJSLinter::Result lintResult = linter.lintFileInBatch(filename);
+            jsonFiles.append(lintResult.json);
+            success &= (lintResult.status == QQmlJSLinter::LintSuccess
+                        || lintResult.status == QQmlJSLinter::HasWarnings);
 
-        if (isFixing) {
-            if (lintResult != QQmlJSLinter::LintSuccess && lintResult != QQmlJSLinter::HasWarnings)
-                continue;
+            if (success) {
+                QQmlToolingSettings settings(
+                        QLatin1String("qmllint"),
+                        { QLatin1String("General"), QLatin1String("Warnings") });
+                if (!parser.isSet(ignoreSettings)) {
+                    QQmlToolingSettings::SearchOptions options;
+                    options.isQmllintSilent = silent;
+                    settings.search(filename, options);
+                }
 
-            QString fixedCode;
-            const QQmlJSLinter::FixResult result = linter.applyFixes(&fixedCode, silent);
-
-            if (result != QQmlJSLinter::NothingToFix && result != QQmlJSLinter::FixSuccess) {
-                success = false;
-                continue;
+                const qsizetype value = parser.isSet(maxWarnings)
+                        ? parser.value(maxWarnings).toInt()
+                        : (settings.isSet(maxWarningsSetting)
+                                   ? settings.value(maxWarningsSetting).toInt()
+                                   : defaultSettings.value(maxWarningsSetting).toInt());
+                if (value != -1 && value < lintResult.logger->numWarnings())
+                    success = false;
             }
 
-            if (parser.isSet(dryRun)) {
-                QTextStream(stdout) << fixedCode;
-            } else {
-                if (result == QQmlJSLinter::NothingToFix) {
-                    if (!silent)
-                        qWarning().nospace() << "Nothing to fix in " << filename;
-                    continue;
-                }
-
-                const QString backupFile = filename + u".bak"_s;
-                if (QFile::exists(backupFile) && !QFile::remove(backupFile)) {
-                    if (!silent) {
-                        qWarning().nospace() << "Failed to remove old backup file " << backupFile
-                                             << ", aborting";
-                    }
-                    success = false;
-                    continue;
-                }
-                if (!QFile::copy(filename, backupFile)) {
-                    if (!silent) {
-                        qWarning().nospace()
-                                << "Failed to create backup file " << backupFile << ", aborting";
-                    }
-                    success = false;
-                    continue;
-                }
-
-                QFile file(filename);
-                if (!file.open(QIODevice::WriteOnly)) {
-                    if (!silent) {
-                        qWarning().nospace() << "Failed to open " << filename
-                                             << " for writing:" << file.errorString();
-                    }
-                    success = false;
-                    continue;
-                }
-
-                const QByteArray data = fixedCode.toUtf8();
-                if (file.write(data) != data.size()) {
-                    if (!silent) {
-                        qWarning().nospace() << "Failed to write new contents to " << filename
-                                             << ": " << file.errorString();
-                    }
-                    success = false;
-                    continue;
-                }
-                if (!silent) {
-                    qDebug().nospace() << "Applied fixes to " << filename << ". Backup created at "
-                                       << backupFile;
-                }
-            }
+            if (isFixing)
+                success &= applyFixes(lintResult, silent, parser.isSet(dryRun));
         }
     }
 
