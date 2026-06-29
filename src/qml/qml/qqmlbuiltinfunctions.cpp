@@ -170,6 +170,7 @@ The following functions are also on the Qt object.
         \li \c "unix" - Other Unix-based OS
         \li \c "windows" - Windows
         \li \c "wasm" - WebAssembly
+        \li \c "harmonyos" - HarmonyOS
     \endlist
 
     \note The property's value on \macos is "osx", regardless of Apple naming convention.
