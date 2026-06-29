@@ -25,7 +25,7 @@
 using namespace QV4;
 using namespace QV4::Debugging;
 
-Q_IMPORT_QML_PLUGIN(TestTypesPlugin);
+Q_IMPORT_QML_PLUGIN(QV4DebuggerTestTypesPlugin);
 
 typedef QV4::ReturnedValue (*InjectedFunction)(const FunctionObject *b, const QV4::Value *, const QV4::Value *, int);
 Q_DECLARE_METATYPE(InjectedFunction)
