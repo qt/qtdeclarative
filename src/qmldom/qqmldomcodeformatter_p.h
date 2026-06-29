@@ -47,6 +47,11 @@ public:
         MultilineCommentStart,
         MultilineCommentCont,
 
+        PragmaStart, // after 'pragma'
+        PragmaMaybeValue, // after pragma name
+        PragmaValue, // after ':' or ','
+        PragmaMaybeMoreValues, // after pragma value
+
         ImportStart, // after 'import'
         ImportMaybeDotOrVersionOrAs, // after string or identifier
         ImportDot, // after .
