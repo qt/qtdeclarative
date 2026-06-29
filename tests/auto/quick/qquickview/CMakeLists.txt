@@ -38,7 +38,7 @@ qt_internal_add_test(tst_qquickview
 
 qt_add_qml_module(
     tst_qquickview
-    URI test
+    URI QQuickViewTestHelpers
     NO_GENERATE_EXTRA_QMLDIRS
     QML_FILES
         "data/TestQml.qml"

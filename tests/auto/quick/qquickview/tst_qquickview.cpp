@@ -56,7 +56,7 @@ void tst_QQuickView::gc()
         QV4::GCStateInfo& stateInfo = sm->stateInfoMap[int(sm->state)];
         sm->state = stateInfo.execute(sm, sm->stateData);
     }
-    view.loadFromModule("test", "TestQml");
+    view.loadFromModule("QQuickViewTestHelpers", "TestQml");
     auto root = view.rootObject();
     QVERIFY(root);
     auto ddata = QQmlData::get(root, false);
@@ -327,7 +327,7 @@ void tst_QQuickView::loadFromModule_data()
     QTest::addColumn<QQuickView::Status>("status");
 
     QTest::addRow("Item") << u"QtQuick"_s << u"Item"_s << QUrl() << QQuickView::Ready;
-    QTest::addRow("composite") << u"test"_s << u"TestQml"_s << QUrl("qrc:/qt/qml/test/data/TestQml.qml") << QQuickView::Ready;
+    QTest::addRow("composite") << u"QQuickViewTestHelpers"_s << u"TestQml"_s << QUrl("qrc:/qt/qml/QQuickViewTestHelpers/data/TestQml.qml") << QQuickView::Ready;
     QTest::addRow("nonexistent") << u"missing"_s << u"Type"_s << QUrl() << QQuickView::Error;
 }
 

@@ -49,7 +49,7 @@ qt_add_qml_module(
     tst_qqmlcomponent
     SOURCES
         lifecyclewatcher.h
-    URI test
+    URI QQmlComponentTestHelpers
     NO_GENERATE_EXTRA_QMLDIRS
     QML_FILES
         "data/TestComponentWithIC.qml"

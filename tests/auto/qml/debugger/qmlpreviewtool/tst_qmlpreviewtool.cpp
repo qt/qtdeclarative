@@ -309,7 +309,7 @@ void tst_QmlPreviewTool::loadFromModuleFileUpdate()
     QVERIFY(writeFile(qmlFile, makeQmlContent(QLatin1String("MODULE_UPDATE_INITIAL"))));
 
     const QString qrcFile = m_tempDir->filePath(QLatin1String("test.qrc"));
-    QVERIFY(writeQrcFile(qrcFile, QLatin1String("/test"),
+    QVERIFY(writeQrcFile(qrcFile, QLatin1String("/QmlPreviewTestHelpers"),
                          {QLatin1String("Main.qml")}));
 
     startPreview({QLatin1String("--verbose"),

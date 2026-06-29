@@ -43,7 +43,7 @@ qt_internal_add_test(tst_qquickwidget
 
 qt_add_qml_module(
     tst_qquickwidget
-    URI test
+    URI QQuickWidgetTestHelpers
     QML_FILES
         "data/TestQml.qml"
 )
