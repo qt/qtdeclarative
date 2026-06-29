@@ -2231,6 +2231,21 @@ function(_qt_internal_qml_add_qmltc_file_mapping_resource qrc_file target qml_fi
     set(${qrc_file} ${generated_qrc_file} PARENT_SCOPE)
 endfunction()
 
+# qmlcachegen, qmlsc and qmltc are linked against Qt6::QmlCompiler dynamically. Under Ninja a
+# shared library is only an order-only dependency of the executables that link it, so rebuilding
+# Qt6::QmlCompiler does not relink the tools and their mtime stays unchanged. Generation commands
+# that depend solely on the tool executable would therefore not re-run after the compiler changes,
+# leaving previously generated sources stale. Return the library file so those commands can depend
+# on it directly and regenerate when the compiler is rebuilt. (Changes to a tool's own sources do
+# relink the executable, so the existing dependency on it already covers that case.)
+function(_qt_internal_qml_get_tool_library_dependencies out_var)
+    set(dependencies "")
+    if(TARGET ${QT_CMAKE_EXPORT_NAMESPACE}::QmlCompiler)
+        list(APPEND dependencies "$<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::QmlCompiler>")
+    endif()
+    set(${out_var} "${dependencies}" PARENT_SCOPE)
+endfunction()
+
 # Compile Qml files (.qml) to C++ source files with QML type compiler (qmltc).
 function(_qt_internal_target_enable_qmltc target)
     set(args_option "")
@@ -2262,6 +2277,7 @@ function(_qt_internal_target_enable_qmltc target)
     if(CMAKE_GENERATOR STREQUAL "Ninja Multi-Config" AND CMAKE_VERSION VERSION_GREATER_EQUAL "3.20")
         set(qmltc_executable "$<COMMAND_CONFIG:${qmltc_executable}>")
     endif()
+    _qt_internal_qml_get_tool_library_dependencies(qmltc_lib_dependencies)
 
     set(common_args "")
     if(arg_NAMESPACE)
@@ -2409,6 +2425,7 @@ function(_qt_internal_target_enable_qmltc target)
             COMMAND_EXPAND_LISTS
             DEPENDS
                 ${qmltc_executable}
+                ${qmltc_lib_dependencies}
                 "${file_absolute}"
                 ${qml_module_files}
                 $<TARGET_PROPERTY:${target},_qt_generated_qrc_files>
@@ -3589,10 +3606,12 @@ function(qt6_target_qml_sources target)
 
         # For direct evaluation in if() below
         get_target_property(cachegen_prop ${target} QT_QMLCACHEGEN_EXECUTABLE)
+        set(qmlcachegen_lib_dependencies "")
         if(cachegen_prop)
             if(cachegen_prop STREQUAL "qmlcachegen" OR cachegen_prop STREQUAL "qmlsc")
                 # If it's qmlcachegen or qmlsc, don't go looking for other programs of that name
                 set(qmlcachegen "$<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::${cachegen_prop}>")
+                _qt_internal_qml_get_tool_library_dependencies(qmlcachegen_lib_dependencies)
             else()
                 find_program(${target}_QMLCACHEGEN ${cachegen_prop})
                 if(${target}_QMLCACHEGEN)
@@ -3605,6 +3624,7 @@ function(qt6_target_qml_sources target)
             set(have_qmlsc "$<TARGET_EXISTS:${QT_CMAKE_EXPORT_NAMESPACE}::qmlsc>")
             set(cachegen_name "$<IF:${have_qmlsc},qmlsc,qmlcachegen>")
             set(qmlcachegen "$<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::${cachegen_name}>")
+            _qt_internal_qml_get_tool_library_dependencies(qmlcachegen_lib_dependencies)
         endif()
     endif()
 
@@ -3933,6 +3953,7 @@ function(qt6_target_qml_sources target)
                 COMMAND_EXPAND_LISTS
                 DEPENDS
                     ${qmlcachegen_cmd}
+                    ${qmlcachegen_lib_dependencies}
                     "${file_absolute}"
                     $<TARGET_PROPERTY:${target},_qt_generated_qrc_files>
                     "$<$<BOOL:${qmltypes_file}>:${qmltypes_file}>"
