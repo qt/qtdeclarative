@@ -527,6 +527,9 @@ void TestQmlformat::semicolonRule_data()
         QTest::newRow("emptyStatements-essential")
                 << "semicolon/emptyStatements.qml"
                 << "semicolon/emptyStatements.essential.formatted.qml" << opts;
+        QTest::newRow("comments-essential")
+            << "semicolon/comments.qml"
+            << "semicolon/comments.essential.formatted.qml" << opts;
     }
 }
 
