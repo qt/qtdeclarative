@@ -262,6 +262,7 @@ void FormatPartialStatus::handleTokens()
             case QQmlJSGrammar::T_IDENTIFIER:
                 enter(StateType::ObjectdefinitionOrJs);
                 continue;
+            case QQmlJSGrammar::T_PRAGMA:
             case QQmlJSGrammar::T_IMPORT:
                 enter(StateType::TopQml);
                 continue;
@@ -277,6 +278,9 @@ void FormatPartialStatus::handleTokens()
 
         case StateType::TopQml:
             switch (kind) {
+            case QQmlJSGrammar::T_PRAGMA:
+                enter(StateType::PragmaStart);
+                break;
             case QQmlJSGrammar::T_IMPORT:
                 enter(StateType::ImportStart);
                 break;
@@ -306,6 +310,48 @@ void FormatPartialStatus::handleTokens()
                     turnInto(StateType::TopJs);
                     continue;
                 }
+            }
+            break;
+
+        case StateType::PragmaStart:
+            switch (kind) {
+            case QQmlJSGrammar::T_IDENTIFIER:
+                turnInto(StateType::PragmaMaybeValue);
+                break;
+            default:
+                leave();
+                continue;
+            }
+            break;
+        case StateType::PragmaMaybeValue:
+            switch (kind) {
+            case QQmlJSGrammar::T_COLON:
+                turnInto(StateType::PragmaValue);
+                break;
+            default:
+                leave();
+                continue;
+            }
+            break;
+        case StateType::PragmaValue:
+            switch (kind) {
+            case QQmlJSGrammar::T_IDENTIFIER:
+            case QQmlJSGrammar::T_STRING_LITERAL:
+                turnInto(StateType::PragmaMaybeMoreValues);
+                break;
+            default:
+                leave();
+                continue;
+            }
+            break;
+        case StateType::PragmaMaybeMoreValues:
+            switch (kind) {
+            case QQmlJSGrammar::T_COMMA:
+                turnInto(StateType::PragmaValue);
+                break;
+            default:
+                leave();
+                continue;
             }
             break;
 
