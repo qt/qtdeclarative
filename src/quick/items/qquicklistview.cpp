@@ -87,6 +87,7 @@ public:
     void updateInlineSection(FxListItemSG *);
     void updateCurrentSection();
     void updateStickySections();
+    void updateSectionFocusOrder();
 
     qreal headerSize() const override;
     qreal footerSize() const override;
@@ -795,6 +796,9 @@ bool QQuickListViewPrivate::addVisibleItems(qreal fillFrom, qreal fillTo, qreal 
         changed = true;
     }
 
+    if (changed && sectionCriteria)
+        updateSectionFocusOrder();
+
     return changed;
 }
 
@@ -920,6 +924,8 @@ void QQuickListViewPrivate::layoutVisibleItems(int fromModelIndex)
 
         updateCurrentSection();
         updateStickySections();
+        if (sectionCriteria)
+            updateSectionFocusOrder();
     }
 }
 
@@ -1191,6 +1197,49 @@ void QQuickListViewPrivate::updateInlineSection(FxListItemSG *listItem)
     }
 }
 
+/*!
+    \internal
+
+    Keeps the Tab/backtab focus order of the section headers and delegate
+    items aligned with their visual (top-to-bottom) order.
+
+    Tab navigation between sibling items follows the contentItem's
+    child-stacking order (see QQuickItemPrivate::nextTabChildItem()), not their
+    visual geometry. Delegate items and their inline section headers are
+    parented to the contentItem in creation order, which need not match the
+    visual order: a section header is created after the delegate item it
+    precedes, and items added while flicking backwards are appended to the
+    child list.
+
+    To make the focus chain follow the visual order, re-stack the visible
+    delegate items and their section headers so that each section header comes
+    immediately before its delegate item. stackAfter() is a no-op when an item
+    is already in place, so this is inexpensive for a stable view. Only items
+    in visibleItems are touched; the header, footer, highlight and sticky
+    section items are left untouched, and z values are unchanged so the visual
+    stacking order is unaffected.
+*/
+void QQuickListViewPrivate::updateSectionFocusOrder()
+{
+    if (!sectionCriteria || visibleItems.isEmpty())
+        return;
+
+    QQuickItem *prev = nullptr;
+    for (FxViewItem *viewItem : std::as_const(visibleItems)) {
+        auto *listItem = static_cast<FxListItemSG *>(viewItem);
+        if (QQuickItem *section = listItem->section()) {
+            if (prev)
+                section->stackAfter(prev);
+            prev = section;
+        }
+        if (QQuickItem *item = listItem->item) {
+            if (prev)
+                item->stackAfter(prev);
+            prev = item;
+        }
+    }
+}
+
 void QQuickListViewPrivate::updateStickySections()
 {
     if (!sectionCriteria || !sectionCriteria->delegate()
@@ -1334,6 +1383,7 @@ void QQuickListViewPrivate::updateSections()
             else
                 prevAtt->setNextSection(QString());
         }
+        updateSectionFocusOrder();
     }
 
     lastVisibleSection = QString();
