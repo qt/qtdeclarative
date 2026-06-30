@@ -231,6 +231,7 @@ or
 
 When the application is running, an IDE or a tool that implements the binary
 protocol can connect to the open port.
+
 \section1 Debugging with \QC
 
 \QC uses the debugging infrastructure to debug, inspect, and profile QML
@@ -238,5 +239,11 @@ applications on the desktop as well as on remote devices. \QC provides
 integrated clients for debugging JavaScript, inspecting the object tree, and
 profiling the activities of a QML engine. For more information, see
 \l{\QC: Debugging Qt Quick Projects}.
+
+\section1 Debugging with \QVSC
+
+\QVSC provides integrated clients for debugging JavaScript and
+profiling QML engine activity. For more information, see
+\l{\QVSC: Debug Qt Quick applications}.
 
 */

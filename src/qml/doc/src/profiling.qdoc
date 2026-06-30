@@ -14,6 +14,8 @@ your QML code for performance issues. The profiler is part of
 both \QC and \QDS. The best way to use it is to utilize \QC or \QDS
 defaults for build and run settings.
 
+\QVSC also includes a \l{\QVSC: Profile QML code}{QML Profiler}.
+
 If you are building or running manually, in order to use the QML Profiler,
 you need to enable the \l{QML debugging infrastructure}.
 

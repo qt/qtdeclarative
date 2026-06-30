@@ -17,6 +17,12 @@ The \l{\QC Documentation}{\QC} IDE is the key tool that enhances the overall dev
 experience of working with Qt and Qt Quick. Its editing, formatting, profiling and
 debugging features for Qt Quick make working with Qt Quick easier.
 
+\section1 \QVSC
+
+\l{\QVSC Documentation}{\QVSC} provides editing, formatting, profiling, and
+debugging features for Qt Quick in Visual Studio Code and is available for
+Windows, Linux, and macOS.
+
 \section1 \QDS
 
 \l{\QDS Manual}{\QDS} enables designing Qt Quick-based
