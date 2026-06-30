@@ -14,6 +14,7 @@
 
 #include <QtCore/qtimer.h>
 #include <QtCore/qdebug.h>
+#include <QtCore/qfile.h>
 #include <QtCore/qtranslator.h>
 #include <QSignalSpy>
 
@@ -134,6 +135,7 @@ private slots:
     void arrayLikes();
     void functionInNested();
     void properWorkerAgentLifecycle();
+    void emptyListRoleSurvivesCachegen();
 };
 
 bool tst_qqmllistmodel::compareVariantList(const QVariantList &testList, QVariant object)
@@ -2234,6 +2236,59 @@ void tst_qqmllistmodel::properWorkerAgentLifecycle()
     QVERIFY(!o.isNull());
 
     QTRY_COMPARE(o->property("received"), 4);
+}
+
+void tst_qqmllistmodel::emptyListRoleSurvivesCachegen()
+{
+    // A ListElement role assigned an empty array ("attributes: []") must be recognized as a list
+    // role. The custom parser can only tell this from the binding's source text "[]". Compiled
+    // ahead of time by qmlcachegen, it has to come from the compiled unit -- the source is gone.
+    //
+    // Both modules below are built with DISCARD_QML_CONTENTS, so the source bytes are dropped from
+    // the resources and the only possible source of "[]" is the ahead-of-time-compiled unit.
+    QFile discardedSource(u":/listmodeldiscard/EmptyListRoleViaQtQml.qml"_s);
+    QVERIFY2(discardedSource.exists(), "the module layout changed; update this path");
+    QVERIFY2(discardedSource.size() == 0,
+             "the QML source was not discarded; the test would be moot");
+
+    QQmlEngine engine;
+
+    // Run-time compilation from source recovers "[]" no matter how the import is spelled.
+    {
+        QQmlComponent fromSource(&engine);
+        fromSource.setData("import QtQml\n"
+                           "QtObject {\n"
+                           "    property ListModel model: ListModel {\n"
+                           "        ListElement { attributes: [] }\n"
+                           "    }\n"
+                           "    property int attributesCount: model.get(0).attributes.count\n"
+                           "}\n",
+                           QUrl(u"empty_list_from_source.qml"_s));
+        QVERIFY2(fromSource.isReady(), qPrintable(fromSource.errorString()));
+        QScopedPointer<QObject> root(fromSource.create());
+        QVERIFY2(!root.isNull(), qPrintable(fromSource.errorString()));
+        QCOMPARE(root->property("attributesCount").toInt(), 0);
+    }
+
+    // Ahead-of-time, importing QtQml.Models by name.
+    {
+        QQmlComponent viaModels(&engine);
+        viaModels.loadFromModule("listmodeldiscard", "EmptyListRoleViaModels");
+        QVERIFY2(viaModels.isReady(), qPrintable(viaModels.errorString()));
+        QScopedPointer<QObject> root(viaModels.create());
+        QVERIFY2(!root.isNull(), qPrintable(viaModels.errorString()));
+        QCOMPARE(root->property("attributesCount").toInt(), 0);
+    }
+
+    // Ahead-of-time, reaching the very same types through "import QtQml".
+    // NB: This is what would fail with the old annotateListElements().
+    {
+        QQmlComponent viaQtQml(&engine);
+        viaQtQml.loadFromModule("listmodeldiscard", "EmptyListRoleViaQtQml");
+        QVERIFY2(viaQtQml.isReady(), qPrintable(viaQtQml.errorString()));
+        QScopedPointer<QObject> root(viaQtQml.create());
+        QVERIFY(!root.isNull());
+    }
 }
 
 QTEST_MAIN(tst_qqmllistmodel)

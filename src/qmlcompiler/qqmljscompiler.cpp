@@ -79,39 +79,6 @@ void QQmlJSCompileError::appendDiagnostics(const QString &inputFileName,
         appendDiagnostic(inputFileName, diagnostic);
 }
 
-// Ensure that ListElement objects keep all property assignments in their string form
-static void annotateListElements(QmlIR::Document *document)
-{
-    QStringList listElementNames;
-
-    for (const QV4::CompiledData::Import *import : std::as_const(document->imports)) {
-        const QString uri = document->stringAt(import->uriIndex);
-        if (uri != QStringLiteral("QtQml.Models") && uri != QStringLiteral("QtQuick"))
-            continue;
-
-         QString listElementName = QStringLiteral("ListElement");
-         const QString qualifier = document->stringAt(import->qualifierIndex);
-         if (!qualifier.isEmpty()) {
-             listElementName.prepend(QLatin1Char('.'));
-             listElementName.prepend(qualifier);
-         }
-         listElementNames.append(listElementName);
-    }
-
-    if (listElementNames.isEmpty())
-        return;
-
-    for (QmlIR::Object *object : std::as_const(document->objects)) {
-        if (!listElementNames.contains(document->stringAt(object->inheritedTypeNameIndex)))
-            continue;
-        for (QmlIR::Binding *binding = object->firstBinding(); binding; binding = binding->next) {
-            if (binding->type() != QV4::CompiledData::Binding::Type_Script)
-                continue;
-            binding->stringIndex = document->registerString(object->bindingAsString(document, binding->value.compiledScriptIndex));
-        }
-    }
-}
-
 static bool checkArgumentsObjectUseInSignalHandlers(const QmlIR::Document &doc,
                                                     QQmlJSCompileError *error)
 {
@@ -214,7 +181,6 @@ bool qCompileQmlFile(QmlIR::Document &irDocument, const QString &inputFileName,
         }
     }
 
-    annotateListElements(&irDocument);
     QQmlJSAotFunctionMap aotFunctionsByIndex;
 
     {
