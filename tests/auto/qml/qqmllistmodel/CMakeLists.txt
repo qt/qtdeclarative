@@ -50,3 +50,22 @@ qt_internal_extend_target(tst_qqmllistmodel CONDITION NOT ANDROID AND NOT IOS
 if (TARGET QOffscreenIntegrationPlugin)
     add_dependencies(tst_qqmllistmodel QOffscreenIntegrationPlugin)
 endif()
+
+# A module whose QML source is discarded from the resources (DISCARD_QML_CONTENTS), so a
+# binding's source can only be recovered from the ahead-of-time-compiled unit, never reparsed
+# at run time. Used to verify that the "[]" source of an empty-array list role survives
+# qmlcachegen.
+qt_add_library(tst_qqmllistmodel_discard STATIC)
+qt_autogen_tools_initial_setup(tst_qqmllistmodel_discard)
+qt_add_qml_module(tst_qqmllistmodel_discard
+    URI listmodeldiscard
+    QML_FILES
+        EmptyListRoleViaModels.qml
+        EmptyListRoleViaQtQml.qml
+    DISCARD_QML_CONTENTS
+    OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/listmodeldiscard"
+    RESOURCE_PREFIX "/"
+)
+qt_autogen_tools_initial_setup(tst_qqmllistmodel_discardplugin)
+add_dependencies(tst_qqmllistmodel tst_qqmllistmodel_discard)
+target_link_libraries(tst_qqmllistmodel PRIVATE tst_qqmllistmodel_discardplugin)

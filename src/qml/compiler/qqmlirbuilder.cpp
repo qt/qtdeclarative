@@ -1367,17 +1367,23 @@ void IRBuilder::setBindingValue(QV4::CompiledData::Binding *binding, QQmlJS::AST
         // We don't need to store the binding script as string, except for script strings
         // and types with custom parsers. Those will be added later in the compilation phase.
         // Except that we cannot recover the string when cachegen runs; we need to therefore retain
-        // "undefined". Any other "special" strings (for the various literals) are already handled above
+        // "undefined" and "[]" (for QQmlListModel). Any other "special" strings (for the various
+        // literals) are already handled above
         QQmlJS::AST::Node *nodeForString = statement;
         if (exprStmt)
             nodeForString = exprStmt->expression;
         const QStringView source = asStringRef(nodeForString);
-        if (source == u"undefined")
+        if (source == u"undefined") {
             binding->stringIndex = registerString(u"undefined"_s);
-        else if (qualifiedEnumDot(source) != -1)
+        } else if (qualifiedEnumDot(source) != -1) {
             binding->stringIndex = registerString(source.toString());
-        else
+        } else if (const auto *arrayPattern =
+                         QQmlJS::AST::cast<QQmlJS::AST::ArrayPattern *>(nodeForString);
+                 arrayPattern && !arrayPattern->elements) {
+            binding->stringIndex = registerString(u"[]"_s);
+        } else {
             binding->stringIndex = emptyStringIndex;
+        }
     }
 }
 
