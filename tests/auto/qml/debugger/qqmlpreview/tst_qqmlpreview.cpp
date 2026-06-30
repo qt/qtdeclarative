@@ -127,7 +127,6 @@ tst_QQmlPreview::tst_QQmlPreview()
 
 QQmlDebugTest::ConnectResult tst_QQmlPreview::startQmlProcess(const QString &qmlFile, QStringList environmentVariables)
 {
-    environmentVariables.append(QStringLiteral("QMLPREVIEW_HOTRELOAD=1"));
     return QQmlDebugTest::connectTo(
             QLibraryInfo::path(QLibraryInfo::BinariesPath) + "/qml",
             QStringLiteral("QmlPreview,CanvasFrameRate,EventReplay,EngineControl"),
