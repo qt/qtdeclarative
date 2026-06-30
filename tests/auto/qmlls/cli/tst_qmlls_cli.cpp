@@ -222,6 +222,9 @@ void tst_qmlls_cli::startServerImpl()
 {
     m_protocol = std::make_unique<QLanguageServerProtocol>(
             [this](const QByteArray &data) { m_server.write(data); });
+    m_protocol->registerWorkspaceSemanticTokensRefreshRequestHandler(
+            [](const QByteArray &, const std::nullptr_t &,
+               QLspSpecification::LSPResponse<std::nullptr_t> &&r) { r.sendResponse(); });
 
     connect(&m_server, &QProcess::readyReadStandardOutput, this, [this]() {
         QByteArray data = m_server.readAllStandardOutput();
