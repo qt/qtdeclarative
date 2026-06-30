@@ -30,8 +30,14 @@ Examples/Qt-\QtVersion/qml/tutorials/extending-qml/.
 \section1 Creating Project from Scratch
 
 Alternatively, you can follow the tutorial by creating the sources from scratch:
-For each chapter, create a new project using the \e {Qt Quick Application} template
-in \QC, as instructed in \l {\QC: Create Qt Quick Applications}.
+For each chapter, create a new project using the \e {Qt Quick Application}
+template:
+
+\list
+\li If you use \QC, as instructed in \l {\QC: Create Qt Quick Applications}.
+\li If you use \QVSC, as instructed in \l {\QVSC: Create Qt projects}.
+\endlist
+
 Then follow along by adapting and extending the generated skeleton code.
 
 \section1 Chapter 1: Creating a New Type
@@ -63,8 +69,9 @@ We want this \c PieChart type to be usable from QML like this:
         color: "red"
     }
 \endqml
-\note You might need to \l {\QC: Configure \QMLLS}
-{enable the QML Language Server and its semantic highlighting} to make Qt Creator highlight
+\note You might need to enable \QMLLS and its semantic
+highlighting (\l {\QC: Configure \QMLLS}{in \QC} or
+\l{\QVSC: Turn on \QMLLS}{in \QVSC}) to make Qt Creator highlight
 \c{PieChart} correctly.
 
 

@@ -25,7 +25,7 @@ speeds up the development and iteration cycle for user interface development.
 
 \l{Debugging QML Applications}{The QML Debugger} provides comprehensive support for QML
 applications, including breakpoints, expression evaluation, and inspection of QML object properties
-and bindings. The QML debugger integrates with \QC and can be used to diagnose runtime issues and
+and bindings. The QML debugger integrates with \QC and \QVSC and can be used to diagnose runtime issues and
 understand application behavior.
 
 \section1 Performance Analysis

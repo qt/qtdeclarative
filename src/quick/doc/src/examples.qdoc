@@ -11,8 +11,9 @@
 \keyword qtquick-samples
 
 Qt includes several examples to demonstrate a particular usage. The examples
-run as applications or as non-GUI examples in \l{\QC Documentation}{\QC}. Qt tutorials show
-the step-by-step information and give insight to particular code snippets.
+run as applications or as non-GUI examples in \l{\QC Documentation}{\QC} and
+\l{\QVSC Documentation}{\QVSC}. Qt tutorials show the step-by-step information
+and give insight to particular code snippets.
 
 This page lists the \l{Qt Qml} and \l{Qt Quick} examples, however, many other
 \l{All Modules}{Qt modules} contain examples related to their QML API.
@@ -20,10 +21,14 @@ This page lists the \l{Qt Qml} and \l{Qt Quick} examples, however, many other
 \section1 Running the Examples and Demos
 
 The examples are packaged with the \l{Getting Started with Qt}{Qt installers}
-and are accessed through \QC. For more information about running
-examples in \QC, see \l{\QC: Tutorial: Build and run}.
+and are accessed through \QC and \QVSC. For more information about running
+examples, see:
+\list
+\li \l{\QC: Tutorial: Build and run}.
+\li \l{\QVSC: Tutorial: Build and run}.
+\endlist
 
-Open and run examples in the \QC \uicontrol {Welcome} mode. Most of the
+Open and run examples in the \QC or \QVSC \uicontrol {Welcome} mode. Most of the
 examples run on various platforms and to search for platform-specific
 examples, type the platform name (or any keywords) in the search field. For
 example, typing \c mobile in the search field lists the examples that are
@@ -59,6 +64,7 @@ Qt Quick Applications and related modules, visit the \l{QML Applications} page.
         \b{Beginning with QML and Qt Quick}
         \list
         \li \l{First Steps with QML}
+        \li \l{\QVSC: Tutorial: Qt Quick application}
         \li \l{Getting Started programming with Qt Quick: An Alarm Application}{Alarms Application}
         \li \l{\QDS: Your First UI}{\QDS Tutorials}
         \li \l{QML Advanced Tutorial}{SameGame}

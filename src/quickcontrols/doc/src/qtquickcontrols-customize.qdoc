@@ -361,11 +361,13 @@
     style will illustrate the elevation with a drop shadow; the higher the
     elevation, the larger the shadow.
 
-    The first step is to \l {\QC: Create Qt Quick Applications}
-    {create a new Qt Quick Controls application} in \QC. After that, we
-    \l {\QC: Create C++ classes}{add a C++ type} that stores the elevation. Since
-    the type will be used for every control supported by our style, and because
-    we may wish to add other attached properties later on, we'll call it
+    The first step is to create a new Qt Quick Controls application
+    \l {\QC: Create Qt Quick Applications}{in \QC} or
+    \l {\QVSC: Tutorial: Qt Quick application}{in \QVSC}. After that, we add a
+    C++ type (\l {\QC: Create C++ classes}{in \QC} or
+    \l{\QVSC: Add files to projects}{in \QVSC}) that stores the elevation.
+    Since the type will be used for every control supported by our style, and
+    because we may wish to add other attached properties later on, we'll call it
     MyStyle. Here is \c MyStyle.h:
 
     \code

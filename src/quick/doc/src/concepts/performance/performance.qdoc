@@ -38,10 +38,13 @@ example, destroy the hierarchy containing your event loop.
 
 \section1 Profiling
 
-The most important tip is: use the \l{QML Profiler} included in \QC. Knowing
-where time is spent in an application will allow you to focus on problem areas which
-actually exist, rather than problem areas which potentially exist. See
-\l{\QC: Profiling QML Applications} for more information.
+
+The most important tip is: use \l{QML Profiler} included in \QC
+(or a trace viewer in \QVSC).
+Knowing where time is spent in an application will allow you to focus on
+problem areas which actually exist, rather than problem areas which potentially
+exist. See \l{\QC: Profiling QML Applications} and \l{\QVSC: Profile QML code}
+for more information.
 
 Determining which bindings are being run the most often, or which functions your
 application is spending the most time in, will allow you to decide whether you need

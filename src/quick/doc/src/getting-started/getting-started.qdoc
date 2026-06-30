@@ -59,6 +59,7 @@ The following pages contain more information about QML:
 
 \list
 \li \l{\QC: Create Qt Quick Applications}
+\li \l{\QVSC: Tutorial: Qt Quick application}
 \li \l{First Steps with QML} - begin using QML with these examples
 \li \l{Glossary of QML Terms}
 \li \l{The QML Reference} - reference about the QML constructs and features
