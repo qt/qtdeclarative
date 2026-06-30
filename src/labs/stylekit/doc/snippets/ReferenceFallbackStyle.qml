@@ -297,6 +297,26 @@ BaseStyle {
         checked.indicator.foreground.visible: true
     }
 
+    radioDelegate {
+        text.alignment: Qt.AlignVCenter | Qt.AlignLeft
+        background {
+            radius: 0
+            color: __baseWhite
+            border.width: 0
+        }
+        indicator {
+            alignment: Qt.AlignRight | Qt.AlignVCenter
+            radius: 255
+            foreground {
+                margins: 4
+                visible: false
+                radius: 255
+            }
+        }
+        hovered.background.color: __backgroundDefault
+        checked.indicator.foreground.visible: true
+    }
+
     roundButton {
         background.radius: 255
         text.alignment: Qt.AlignVCenter | Qt.AlignHCenter

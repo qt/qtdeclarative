@@ -373,6 +373,30 @@ ApplicationWindow {
         }
         //! [radioButton]
 
+        //! [radioDelegate]
+        radioDelegate {
+            text.alignment: Qt.AlignVCenter | Qt.AlignLeft
+            background {
+                radius: 0
+                color: "white"
+                border.width: 0
+            }
+
+            indicator {
+                radius: 255
+                foreground {
+                    margins: 4
+                    visible: false
+                    radius: 255
+                    color: palette.accent
+                }
+            }
+
+            hovered.background.color: "#f0f0f0"
+            checked.indicator.foreground.visible: true
+        }
+        //! [radioDelegate]
+
         //! [roundButton]
         roundButton {
             background.radius: 255

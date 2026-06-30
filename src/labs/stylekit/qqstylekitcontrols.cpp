@@ -313,6 +313,16 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \qmlproperty ControlStyle AbstractStylableControls::radioDelegate
+
+    Grouped property for styling \l [QtQuickControls]{RadioDelegate}.
+
+    Unset properties fall back to \l itemDelegate.
+
+    \snippet ControlsSnippets.qml radioDelegate
+*/
+
+/*!
     \qmlproperty ControlStyle AbstractStylableControls::roundButton
 
     Grouped property for styling \l [QtQuickControls]{RoundButton}.
@@ -562,6 +572,7 @@ IMPLEMENT_ACCESSORS(toolBar, QQStyleKitReader::ControlType::ToolBar)
 IMPLEMENT_ACCESSORS(toolButton, QQStyleKitReader::ControlType::ToolButton)
 IMPLEMENT_ACCESSORS(toolSeparator, QQStyleKitReader::ControlType::ToolSeparator)
 IMPLEMENT_ACCESSORS(radioButton, QQStyleKitReader::ControlType::RadioButton)
+IMPLEMENT_ACCESSORS(radioDelegate, QQStyleKitReader::ControlType::RadioDelegate)
 IMPLEMENT_ACCESSORS(roundButton, QQStyleKitReader::ControlType::RoundButton)
 IMPLEMENT_ACCESSORS(itemDelegate, QQStyleKitReader::ControlType::ItemDelegate)
 IMPLEMENT_ACCESSORS(popup, QQStyleKitReader::ControlType::Popup)
