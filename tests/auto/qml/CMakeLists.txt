@@ -22,7 +22,7 @@ if(NOT INTEGRITY)
     add_subdirectory(common)
 endif()
 
-if(NOT ANDROID) # QTBUG-100003
+if(NOT ANDROID AND NOT OHOS) # QTBUG-100003 (Android), QTBUG-147840 (OpenHarmony)
     add_subdirectory(qqmlmoduleplugin)
 endif()
 
