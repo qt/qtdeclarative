@@ -173,10 +173,9 @@ void tst_Qmlls::didOpenTextDocument()
     bool success = false;
     m_protocol.requestCodeAction(
             codeActionParams,
-            [&](const std::optional<QList<std::variant<Command, CodeAction>>>
-                        &response) {
-                QVERIFY(response);
-                auto list = *response;
+            [&](const Responses::CodeActionResultType &response) {
+                QVERIFY(!std::holds_alternative<std::nullptr_t>(response));
+                auto list = std::get<1>(response);
 
                 struct ReplacementData
                 {
@@ -216,7 +215,8 @@ void tst_Qmlls::didOpenTextDocument()
                     TextDocumentEdit textDocEdit
                             = std::get<TextDocumentEdit>(documentChanges.first());
                     QCOMPARE(textDocEdit.textDocument.uri, textDocument.uri);
-                    QVERIFY(textDocEdit.textDocument.version);
+                    QVERIFY(!std::holds_alternative<std::nullptr_t>(
+                            textDocEdit.textDocument.version));
 
                     QCOMPARE(textDocEdit.edits.size(), 1);
                     auto editVariant = textDocEdit.edits.first();

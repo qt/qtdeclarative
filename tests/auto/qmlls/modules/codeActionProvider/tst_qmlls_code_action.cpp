@@ -212,9 +212,9 @@ void tst_qmlls_code_action::wrapComponentInLoader()
     params.range = range;
 
     bool didFinish = false;
-    CodeActions result;
-    auto responseHandler = [&result, &didFinish](auto res) {
-        result = res.value_or(CodeActions{});
+    Responses::CodeActionResultType result;
+    auto responseHandler = [&result, &didFinish](const Responses::CodeActionResultType &res) {
+        result = res;
         didFinish = true;
     };
 
