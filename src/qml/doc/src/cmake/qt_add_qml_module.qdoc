@@ -781,9 +781,10 @@ added as a \c{depends} entry in the generated
 \l{Module Definition qmldir Files}{qmldir} file.
 
 \target IMPORT_PATH
-\c IMPORT_PATH can be used to add to the search paths where other QML modules
-that this one depends on can be found. The other modules must have their
-\c qmldir file under their own target path below one of the search paths.
+\c IMPORT_PATH can be used to add to the search paths where other QML
+modules that this one depends on can be found. The other modules must have
+their \c qmldir file under their own target path below one of the search paths.
+Qt assumes that all files under the \c IMPORT_PATH come from a trusted source.
 
 If the backing target is a static library and that static library will be
 installed, \c OUTPUT_TARGETS should be given to provide a variable in which to
