@@ -3118,6 +3118,11 @@ void TestQmllint::cleanQmlCode()
     QFETCH(QString, filename);
     QFETCH(CallQmllintOptions, options);
 
+    const auto guard = qScopeGuard([&]() {
+        if (!options.resources.isEmpty())
+            m_linter.clearCache();
+    });
+
     const QJsonArray warnings = callQmllint(filename, options);
     checkResult(warnings, Result::clean());
 }
