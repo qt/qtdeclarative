@@ -294,9 +294,12 @@ void QQmlCodeActionSupport::process(QQmlCodeActionSupport::RequestPointerArgumen
         return request->m_response.sendResponse(codeActions);
     }
 
-    codeActions.append(refactorings(
-            { request->m_parameters.textDocument, maybeDoc.value().snapshot.validDocVersion },
-            itemsFound.value().front()));
+    OptionalVersionedTextDocumentIdentifier versionedDocument;
+    versionedDocument.uri = request->m_parameters.textDocument.uri;
+    if (const auto &validDocVersion = maybeDoc.value().snapshot.validDocVersion)
+        versionedDocument.version = *validDocVersion;
+
+    codeActions.append(refactorings(versionedDocument, itemsFound.value().front()));
 
     request->m_response.sendResponse(codeActions);
 }
