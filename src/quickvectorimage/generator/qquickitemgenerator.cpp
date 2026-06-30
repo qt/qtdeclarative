@@ -151,7 +151,15 @@ bool QQuickItemGenerator::generateRootNode(const StructureNodeInfo &info)
 
 bool QQuickItemGenerator::generateStructureNode(const StructureNodeInfo &info)
 {
-    if (Q_UNLIKELY(errorState() || !isNodeVisible(info)))
+    if (Q_UNLIKELY(errorState()))
+        return false;
+
+    if (m_currentDefsRecord) {
+        m_currentDefsRecord->append([this, info]() { generateStructureNode(info); });
+        return true;
+    }
+
+    if (!isNodeVisible(info))
         return false;
 
     if (info.stage == StructureNodeStage::Start) {
@@ -187,7 +195,16 @@ bool QQuickItemGenerator::generateStructureNode(const StructureNodeInfo &info)
 
 void QQuickItemGenerator::generatePath(const PathNodeInfo &info, const QRectF &overrideBoundingRect)
 {
-    if (Q_UNLIKELY(errorState() || !isNodeVisible(info)))
+    if (Q_UNLIKELY(errorState()))
+        return;
+
+    if (m_currentDefsRecord) {
+        m_currentDefsRecord->append(
+                [this, info, overrideBoundingRect]() { generatePath(info, overrideBoundingRect); });
+        return;
+    }
+
+    if (!isNodeVisible(info))
         return;
 
     if (qobject_cast<QQuickShape *>(currentItem())) {
@@ -348,7 +365,15 @@ void QQuickItemGenerator::outputShapePath(const PathNodeInfo &info, const QPaint
 
 void QQuickItemGenerator::generateImageNode(const ImageNodeInfo &info)
 {
-    if (Q_UNLIKELY(errorState() || !isNodeVisible(info)))
+    if (Q_UNLIKELY(errorState()))
+        return;
+
+    if (m_currentDefsRecord) {
+        m_currentDefsRecord->append([this, info]() { generateImageNode(info); });
+        return;
+    }
+
+    if (!isNodeVisible(info))
         return;
 
     QString filePath = info.externalFileReference;
@@ -381,7 +406,15 @@ void QQuickItemGenerator::generateImageNode(const ImageNodeInfo &info)
 
 void QQuickItemGenerator::generateTextNode(const TextNodeInfo &info)
 {
-    if (Q_UNLIKELY(errorState() || !isNodeVisible(info)))
+    if (Q_UNLIKELY(errorState()))
+        return;
+
+    if (m_currentDefsRecord) {
+        m_currentDefsRecord->append([this, info]() { generateTextNode(info); });
+        return;
+    }
+
+    if (!isNodeVisible(info))
         return;
 
     auto *item = new QQuickItem;
@@ -434,13 +467,25 @@ void QQuickItemGenerator::generateTextNode(const TextNodeInfo &info)
 
 void QQuickItemGenerator::generateNode(const NodeInfo &info)
 {
+    if (m_currentDefsRecord) {
+        m_currentDefsRecord->append([this, info]() { generateNode(info); });
+        return;
+    }
     qCDebug(lcQuickVectorImage) << "generateNode: not yet implemented";
     Q_UNUSED(info)
 }
 
 void QQuickItemGenerator::generateUseNode(const UseNodeInfo &info)
 {
-    if (Q_UNLIKELY(errorState() || !isNodeVisible(info)))
+    if (Q_UNLIKELY(errorState()))
+        return;
+
+    if (m_currentDefsRecord) {
+        m_currentDefsRecord->append([this, info]() { generateUseNode(info); });
+        return;
+    }
+
+    if (!isNodeVisible(info))
         return;
 
     if (info.stage == StructureNodeStage::Start) {
@@ -454,19 +499,55 @@ void QQuickItemGenerator::generateUseNode(const UseNodeInfo &info)
 
 bool QQuickItemGenerator::generateDefsNode(const StructureNodeInfo &info)
 {
-    qCDebug(lcQuickVectorImage) << "generateDefsNode: not yet implemented";
-    Q_UNUSED(info)
+    if (Q_UNLIKELY(errorState()))
+        return false;
+
+    if (info.stage == StructureNodeStage::Start) {
+        m_defs[info.id] = {};
+        m_currentDefsRecord = &m_defs[info.id];
+    } else {
+        m_currentDefsRecord = nullptr;
+        auto it = m_defs.find(info.id);
+        if (it != m_defs.end()) {
+            for (const auto &step : *it)
+                step();
+        }
+    }
     return true;
 }
 
 void QQuickItemGenerator::generateDefsInstantiationNode(const StructureNodeInfo &info)
 {
-    qCDebug(lcQuickVectorImage) << "generateDefsInstantiationNode: not yet implemented";
-    Q_UNUSED(info)
+    if (Q_UNLIKELY(errorState()))
+        return;
+
+    if (m_currentDefsRecord) {
+        m_currentDefsRecord->append([this, info]() { generateDefsInstantiationNode(info); });
+        return;
+    }
+
+    if (info.stage != StructureNodeStage::Start)
+        return;
+
+    auto it = m_defs.find(info.defsId);
+    if (it == m_defs.end()) {
+        qCWarning(lcQuickVectorImage)
+                << "generateDefsInstantiationNode: unknown defs id:" << info.defsId;
+        return;
+    }
+    for (const auto &step : *it)
+        step();
 }
 
 bool QQuickItemGenerator::generateMaskNode(const MaskNodeInfo &info)
 {
+    if (Q_UNLIKELY(errorState()))
+        return false;
+
+    if (m_currentDefsRecord) {
+        m_currentDefsRecord->append([this, info]() { generateMaskNode(info); });
+        return true;
+    }
     qCDebug(lcQuickVectorImage) << "generateMaskNode: not yet implemented";
     Q_UNUSED(info)
     return true;
@@ -474,12 +555,23 @@ bool QQuickItemGenerator::generateMaskNode(const MaskNodeInfo &info)
 
 void QQuickItemGenerator::generateFilterNode(const FilterNodeInfo &info)
 {
+    if (m_currentDefsRecord) {
+        m_currentDefsRecord->append([this, info]() { generateFilterNode(info); });
+        return;
+    }
     qCDebug(lcQuickVectorImage) << "generateFilterNode: not yet implemented";
     Q_UNUSED(info)
 }
 
 bool QQuickItemGenerator::generateMarkerNode(const MarkerNodeInfo &info)
 {
+    if (Q_UNLIKELY(errorState()))
+        return false;
+
+    if (m_currentDefsRecord) {
+        m_currentDefsRecord->append([this, info]() { generateMarkerNode(info); });
+        return true;
+    }
     qCDebug(lcQuickVectorImage) << "generateMarkerNode: not yet implemented";
     Q_UNUSED(info)
     return true;
@@ -487,6 +579,13 @@ bool QQuickItemGenerator::generateMarkerNode(const MarkerNodeInfo &info)
 
 bool QQuickItemGenerator::generatePatternNode(const PatternNodeInfo &info)
 {
+    if (Q_UNLIKELY(errorState()))
+        return false;
+
+    if (m_currentDefsRecord) {
+        m_currentDefsRecord->append([this, info]() { generatePatternNode(info); });
+        return true;
+    }
     qCDebug(lcQuickVectorImage) << "generatePatternNode: not yet implemented";
     Q_UNUSED(info)
     return true;

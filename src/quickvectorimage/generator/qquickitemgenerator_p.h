@@ -18,7 +18,10 @@
 #include "qquickgenerator_p.h"
 #include "qquicknodeinfo_p.h"
 
+#include <QtCore/qhash.h>
 #include <QtCore/qstack.h>
+
+#include <functional>
 
 QT_BEGIN_NAMESPACE
 
@@ -60,6 +63,8 @@ private:
     QStack<QQuickItem *> m_itemStack;
     QQmlContext *m_context = nullptr;
     quint32 m_nodeCounter = 0;
+    QHash<QString, QList<std::function<void()>>> m_defs;
+    QList<std::function<void()>> *m_currentDefsRecord = nullptr;
 
     QQuickShape *createShapeContainer();
     void pushItem(QQuickItem *item);
