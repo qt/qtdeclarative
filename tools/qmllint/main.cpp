@@ -192,7 +192,7 @@ All warnings can be set to four levels of severity:
     QCommandLineOption pluginPathsOption(
             QStringList() << "P"
                           << "plugin-paths",
-            QLatin1String("Look for qmllint plugins in specified directory"),
+            QLatin1String("Load qmllint plugins from the specified trusted directory"),
             QLatin1String("directory"));
     parser.addOption(pluginPathsOption);
 
