@@ -157,7 +157,7 @@ referring to the correct type:
 
 \qml
 import QtQuick as CoreItems
-import "../textwidgets" as MyModule
+import TextWidgets as MyModule
 
 CoreItems.Rectangle {
     width: 100; height: 100
