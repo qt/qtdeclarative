@@ -136,8 +136,7 @@ void tst_QmlPreviewTool::startPreview(const QStringList &args)
     m_process.setProcessChannelMode(QProcess::MergedChannels);
     connect(&m_process, &QProcess::readyReadStandardOutput,
             this, &tst_QmlPreviewTool::readProcessOutput);
-    m_process.setEnvironment(QProcess::systemEnvironment()
-                             + QStringList(QLatin1String("QMLPREVIEW_HOTRELOAD=1")));
+    m_process.setEnvironment(QProcess::systemEnvironment());
     m_process.start(m_qmlPreviewPath, args);
     QVERIFY2(m_process.waitForStarted(5000),
              qPrintable(QLatin1String("Failed to start qmlpreview: ") + m_process.errorString()));
@@ -361,7 +360,7 @@ void tst_QmlPreviewTool::hotReloadFailure()
     // Start with valid QML
     QVERIFY(writeFile(qmlFile, makeQmlContent(QLatin1String("HOTRELOAD_START"))));
 
-    startPreview({QLatin1String("--verbose"), m_qmlRuntimePath, qmlFile, QStringLiteral("QMLPREVIEW_HOTRELOAD=1")});
+    startPreview({QLatin1String("--verbose"), m_qmlRuntimePath, qmlFile});
     QVERIFY2(waitForOutput(QLatin1String("HOTRELOAD_START")),
              qPrintable(QLatin1String("Initial load failed. Output:\n") + m_output));
 

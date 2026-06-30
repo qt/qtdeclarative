@@ -19,6 +19,19 @@
 
 QT_BEGIN_NAMESPACE
 
+inline bool convertQmlPreviewHotReload(const char *v)
+{
+    // Either not set or explicitly "1" or "true";
+    return v == nullptr || qstrcmp(v, "1") == 0 || qstrcmp(v, "true") == 0;
+}
+
+static bool qmlPreviewHotReloadEnabled()
+{
+    static const bool enabled =
+            qmlGetConfigOption<bool, convertQmlPreviewHotReload>("QMLPREVIEW_HOTRELOAD");
+    return enabled;
+}
+
 const QString QQmlPreviewServiceImpl::s_key = QStringLiteral("QmlPreview");
 using QQmlDebugPacket = QVersionedPacket<QQmlDebugConnector>;
 
@@ -121,7 +134,7 @@ void QQmlPreviewServiceImpl::messageReceived(const QByteArray &data)
         break;
     }
     case Configuration: {
-        if (qEnvironmentVariableIsSet("QMLPREVIEW_HOTRELOAD")) {
+        if (qmlPreviewHotReloadEnabled()) {
             bool enableInPlaceUpdates;
             packet >> enableInPlaceUpdates;
             if (enableInPlaceUpdates
