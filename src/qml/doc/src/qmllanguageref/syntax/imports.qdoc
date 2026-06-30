@@ -267,7 +267,9 @@ JavaScript resources, please see the in-depth documentation about
 \section1 QML Import Path
 
 When an \l{Identified Modules}{identified module} is imported,
-the QML engine searches the \e{import path} for a matching module.
+the QML engine searches the \e{import path} for a matching module to load
+QML files and QML Module plugins. Qt assumes that all files under the
+\e{import path} come from a trusted source.
 
 This import path, as returned by QQmlEngine::importPathList(), defines the
 default locations to be searched by the engine. By default, this list contains,

@@ -1217,6 +1217,7 @@ void QQmlEnginePrivate::cleanupScarceResources()
 /*!
   Adds \a path as a directory where the engine searches for
   installed modules in a URL-based directory structure.
+  Qt assumes that all files and folders under \a path come from a trusted source.
 
   The \a path may be a local filesystem directory, a
   \l {The Qt Resource System}{Qt Resource} path (\c {:/imports}), a
@@ -1258,6 +1259,8 @@ QStringList QQmlEngine::importPathList() const
 /*!
   Sets \a paths as the list of directories where the engine searches for
   installed modules in a URL-based directory structure.
+  Qt assumes that all files and folders under \a paths come from a
+  trusted source.
 
   By default, this list contains the paths mentioned in
   \l {QML Import Path}.
@@ -1272,10 +1275,11 @@ void QQmlEngine::setImportPathList(const QStringList &paths)
     QQmlTypeLoader::get(this)->setImportPathList(paths);
 }
 
-
 /*!
   Adds \a path as a directory where the engine searches for
   native plugins for imported modules (referenced in the \c qmldir file).
+  Qt assumes that all files and folders under \a path come from a
+  trusted source.
 
   By default, the list contains only \c .,  i.e. the engine searches
   in the directory of the \c qmldir file itself.
@@ -1307,6 +1311,8 @@ QStringList QQmlEngine::pluginPathList() const
   Sets the list of directories where the engine searches for
   native plugins for imported modules (referenced in the \c qmldir file)
   to \a paths.
+  Qt assumes that all files and folders under \a paths come from a
+  trusted source.
 
   By default, the list contains only \c .,  i.e. the engine searches
   in the directory of the \c qmldir file itself.

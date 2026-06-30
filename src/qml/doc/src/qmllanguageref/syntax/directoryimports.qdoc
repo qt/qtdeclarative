@@ -12,6 +12,7 @@ optionally contain a directory listing \c qmldir file in order to define the
 type names which should be provided to clients which import the directory, and
 to specify JavaScript resources which should be made available to importers.
 
+Qt assumes that all files inside the imported directory come from a trusted source.
 
 \section1 Local Directory Imports
 
@@ -20,12 +21,19 @@ import statement that refers to the directory's absolute or relative file
 system path, enabling the file to use the \l{qtqml-typesystem-objecttypes.html}
 {object types} defined within that directory.
 
-If the local directory contains a directory listing \c qmldir file, the types
-will be made available with the type names specified in the \c qmldir file;
-otherwise, they will be made available with type names derived from the
-filenames of the QML documents.  Only filenames beginning with an uppercase
-letter and ending with ".qml" will be exposed as types if no \c qmldir file
-is specified in the directory.
+The QML runtime reads an optional directory listing \c qmldir file from the
+imported directory to discover available types defined in QML and C++. The
+\c qmldir file specifies the names of the types defined in QML and the paths
+of the plugins containing C++ defined types.
+
+QML files are made available with the type names specified in the \c qmldir file
+if there is one; otherwise, they will be made available with type names derived
+from the filenames of the QML documents. Only filenames beginning with an
+uppercase letter and ending with ".qml" will be exposed as types if no \c qmldir
+file is specified in the directory.
+
+The QML runtime loads all plugins listed in the \c qmldir file to find
+all types exposed from C++.
 
 Directory Imports rank below any
 \l{qtqml-modules-identifiedmodules.html}{module imports} in precedence. If the
