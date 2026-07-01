@@ -124,6 +124,7 @@ private:
     QString m_linkSuffix;
     std::unique_ptr<QSvgStyleResolver> m_styleResolver;
     QHash<const QString, const QSvgNode *> m_nodesForKeys;
+    QSvgDocument *m_doc = nullptr;
 };
 
 QT_END_NAMESPACE
