@@ -29,6 +29,7 @@
 
 #include "utils_p.h"
 #include <QtCore/qloggingcategory.h>
+#include <QtCore/qscopedvaluerollback.h>
 
 #include <QtSvg/private/qsvgstyle_p.h>
 #include <QtSvg/private/qsvgfilter_p.h>
@@ -148,7 +149,7 @@ protected:
 };
 
 namespace {
-inline bool isPathContainer(const QSvgStructureNode *node)
+inline bool isPathContainer(const QSvgDocument *doc, const QSvgStructureNode *node)
 {
     bool foundPath = false;
     for (const auto &child : node->renderers()) {
@@ -197,7 +198,7 @@ inline bool isPathContainer(const QSvgStructureNode *node)
             if (!child->style().isDefaultProperty(QSvgStyleProperty::Transform))
                 return false;
 
-            const auto animations = child->document()->animator()->animationsForNode(child.get());
+            const auto animations = doc->animator()->animationsForNode(child.get());
             if (!animations.isEmpty()) {
                 //qCDebug(lcQuickVectorGraphics) << "NOT path container because local transform animation";
                 return false;
@@ -377,6 +378,7 @@ static void recurseSvgNodes(const QSvgNode *root, const std::function<void(const
 
 void QSvgVisitorImpl::pregenerateReferencedNodes(const QSvgNode *doc)
 {
+    Q_ASSERT(m_doc != nullptr);
     Q_ASSERT(m_generator != nullptr);
 
     // Find any node which is referenced from elsewhere and generate a Component definition
@@ -400,7 +402,7 @@ void QSvgVisitorImpl::pregenerateReferencedNodes(const QSvgNode *doc)
 
     m_pregeneratingReferencedNodes = true;
     for (const QString &referencedId : referencedIds) {
-        const QSvgNode *referencedNode = doc->document()->namedNode(referencedId);
+        const QSvgNode *referencedNode = m_doc->namedNode(referencedId);
         if (referencedNode == nullptr)
             continue;
 
@@ -427,6 +429,7 @@ bool QSvgVisitorImpl::doTraversal()
         options.setFlag(QtSvg::AssumeTrustedSource);
 
     const auto doc = QSvgDocument::load(m_svgFileName, options);
+    QScopedValueRollback docResetter(m_doc, doc.get());
     if (!doc) {
         qCDebug(lcQuickVectorImage) << "Not a valid Svg File : " << m_svgFileName;
         return false;
@@ -1569,6 +1572,7 @@ void QSvgVisitorImpl::visitFeFilterPrimitiveNodeEnd(const QSvgFeFilterPrimitive 
 
 bool QSvgVisitorImpl::visitStructureNodeStart(const QSvgStructureNode *node)
 {
+    Q_ASSERT(m_doc);
     constexpr bool forceSeparatePaths = false;
     handleBaseNodeSetup(node);
 
@@ -1577,7 +1581,7 @@ bool QSvgVisitorImpl::visitStructureNodeStart(const QSvgStructureNode *node)
     fillCommonNodeInfo(node, info);
     fillAnimationInfo(node, info);
     info.forceSeparatePaths = forceSeparatePaths;
-    info.isPathContainer = isPathContainer(node);
+    info.isPathContainer = isPathContainer(m_doc, node);
     info.stage = StructureNodeStage::Start;
 
     return m_generator->generateStructureNode(info);
@@ -1585,13 +1589,14 @@ bool QSvgVisitorImpl::visitStructureNodeStart(const QSvgStructureNode *node)
 
 void QSvgVisitorImpl::visitStructureNodeEnd(const QSvgStructureNode *node)
 {
+    Q_ASSERT(m_doc);
     handleBaseNodeEnd(node);
     //    qCDebug(lcQuickVectorGraphics) << "REVERT" << node->nodeId() << node->type() << (m_styleResolver->painter().pen().style() != Qt::NoPen) << m_styleResolver->painter().pen().color().name()
     //             << (m_styleResolver->painter().pen().brush().style() != Qt::NoBrush) << m_styleResolver->painter().pen().brush().color().name();
 
     StructureNodeInfo info;
     fillCommonNodeInfo(node, info);
-    info.isPathContainer = isPathContainer(node);
+    info.isPathContainer = isPathContainer(m_doc, node);
     info.stage = StructureNodeStage::End;
 
     m_generator->generateStructureNode(info);
@@ -1613,7 +1618,7 @@ bool QSvgVisitorImpl::visitDocumentNodeStart(const QSvgDocument *node)
     const QSvgDocument *doc = static_cast<const QSvgDocument *>(node);
     info.size = doc->size();
     info.viewBox = doc->viewBox();
-    info.isPathContainer = isPathContainer(node);
+    info.isPathContainer = isPathContainer(doc, node);
     info.forceSeparatePaths = false;
     info.stage = StructureNodeStage::Start;
 
@@ -1691,9 +1696,13 @@ void QSvgVisitorImpl::fillCommonNodeInfo(const QSvgNode *node, NodeInfo &info, c
         || node->type() == QSvgNode::Type::Pattern) {
         QImage dummy(1, 1, QImage::Format_RGB32);
         QPainter p(&dummy);
-        QSvgExtraStates states;
         p.setPen(QPen(Qt::NoPen));
-        info.bounds = node->internalBounds(&p, states);
+        QRectF b;
+        if (m_doc) {
+            QSvgExtraStates states(m_doc);
+            b = node->internalBounds(&p, states);
+        }
+        info.bounds = b;
     }
 
     if (node->hasMask())
@@ -1706,8 +1715,9 @@ void QSvgVisitorImpl::fillCommonNodeInfo(const QSvgNode *node, NodeInfo &info, c
 QList<QSvgVisitorImpl::AnimationPair> QSvgVisitorImpl::collectAnimations(const QSvgNode *node,
                                                                          const QString &propertyName)
 {
+    Q_ASSERT(m_doc);
     QList<AnimationPair> ret;
-    const QList<QSvgAbstractAnimation *> animations = node->document()->animator()->animationsForNode(node);
+    const QList<QSvgAbstractAnimation *> animations = m_doc->animator()->animationsForNode(node);
     for (const QSvgAbstractAnimation *animation : animations) {
         const QList<QSvgAbstractAnimatedProperty *> properties = animation->properties();
         for (const QSvgAbstractAnimatedProperty *property : properties) {
