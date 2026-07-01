@@ -252,6 +252,17 @@ void QSGDefaultRenderContext::renderNextFrame(QSGRenderer *renderer)
 void QSGDefaultRenderContext::endNextFrame(QSGRenderer *renderer)
 {
     Q_UNUSED(renderer);
+
+    // In case glyphs were generated in this frame but no glyph node was
+    // rendered because all Text items in the scene were invisible.
+    if (m_glyphCacheResourceUpdates) {
+        if (m_currentFrameCommandBuffer)
+            m_currentFrameCommandBuffer->resourceUpdate(m_glyphCacheResourceUpdates);
+        else
+            m_glyphCacheResourceUpdates->release();
+        m_glyphCacheResourceUpdates = nullptr;
+    }
+
     m_currentFrameCommandBuffer = nullptr;
     m_currentFrameRenderPass = nullptr;
 }
