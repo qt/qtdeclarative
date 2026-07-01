@@ -163,6 +163,8 @@ private slots:
     void blockEventsBehindModal();
     void spacingAndInsetsAreRevaluatedWhenChanged();
     void windowInsetsOrder();
+    void popupWithExplicitSizeChangesImplicitSize_data();
+    void popupWithExplicitSizeChangesImplicitSize();
 
 private:
     QScopedPointer<QPointingDevice> touchScreen = QScopedPointer<QPointingDevice>(QTest::createTouchDevice());
@@ -4013,6 +4015,51 @@ void tst_QQuickPopup::windowInsetsOrder()
     QCOMPARE(insets.top(), 10);
     QCOMPARE(insets.right(), 15);
     QCOMPARE(insets.bottom(), 20);
+}
+
+void tst_QQuickPopup::popupWithExplicitSizeChangesImplicitSize_data()
+{
+    QTest::addColumn<QQuickPopup::PopupType>("popupType");
+    QTest::newRow("popupType: Popup.Item") << QQuickPopup::Item;
+    if (arePopupWindowsSupported())
+        QTest::newRow("popupType: Popup.Window") << QQuickPopup::Window;
+}
+
+void tst_QQuickPopup::popupWithExplicitSizeChangesImplicitSize()
+{
+    QFETCH(QQuickPopup::PopupType, popupType);
+    QQuickApplicationHelper helper(this, "popupWindowImplicitResize.qml");
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    auto *popup = window->property("popup").value<QQuickPopup *>();
+    QVERIFY(popup);
+
+    popup->setPopupType(popupType);
+
+    popup->open();
+    TRY_VERIFY_POPUP_OPENED(popup);
+
+    const qreal oldWidth = popup->width();
+    const qreal oldHeight = popup->height();
+
+    auto *button = window->property("button").value<QQuickButton *>();
+    QVERIFY(button);
+
+    QSignalSpy onClickedSignalSpy(button, &QQuickButton::clicked);
+    QSignalSpy widthChangedSignalSpy(popup, &QQuickPopup::widthChanged);
+    QSignalSpy heightChangedSignalSpy(popup, &QQuickPopup::heightChanged);
+
+    QVERIFY(clickButton(button));
+
+    QTRY_COMPARE(onClickedSignalSpy.count(), 1);
+    QCOMPARE(widthChangedSignalSpy.count(), 0);
+    QCOMPARE(heightChangedSignalSpy.count(), 0);
+
+    QCOMPARE(popup->width(), oldWidth);
+    QCOMPARE(popup->height(), oldHeight);
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickPopup)

@@ -439,8 +439,10 @@ void QQuickPopupWindow::implicitWidthChanged()
         // (see QTBUG-130683). This matches the initial sizing logic in
         // QQuickPopupPrivate::adjustPopupItemParentAndWindow().
         const QMarginsF insets = popupPrivate->windowInsets();
-        setWidth(qCeil(popup->implicitWidth() + insets.left() + insets.right()));
-        d->m_popupItem->setWidth(popup->implicitWidth());
+        if (!popupPrivate->hasWidth) {
+            setWidth(qCeil(popup->implicitWidth() + insets.left() + insets.right()));
+            d->m_popupItem->setWidth(popup->implicitWidth());
+        }
         popupPrivate->reposition();
     }
 }
@@ -451,8 +453,10 @@ void QQuickPopupWindow::implicitHeightChanged()
     if (auto popup = d->m_popup) {
         auto *popupPrivate = QQuickPopupPrivate::get(popup);
         const QMarginsF insets = popupPrivate->windowInsets();
-        setHeight(qCeil(popup->implicitHeight() + insets.top() + insets.bottom()));
-        d->m_popupItem->setHeight(popup->implicitHeight());
+        if (!popupPrivate->hasHeight) {
+            setHeight(qCeil(popup->implicitHeight() + insets.top() + insets.bottom()));
+            d->m_popupItem->setHeight(popup->implicitHeight());
+        }
         popupPrivate->reposition();
     }
 }
