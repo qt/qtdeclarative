@@ -179,14 +179,14 @@ TestCase {
         verify(pressedSpy1.valid)
 
         let touch = touchEvent(control1)
-        touch.press(0, control1, 0, 0).commit().move(0, control1, control1.width - 1, control1.height - 1).commit()
+        touch.press(0, control1, 1, 1).commit().move(0, control1, control1.width - 1, control1.height - 1).commit()
 
         compare(pressedChangedSpy1.count, ++pressedChangedCount1)
         compare(pressedSpy1.count, ++pressedCount1)
         compare(control1.pressed, true)
 
         // second touch point on the same control is ignored
-        touch.stationary(0).press(1, control1, 0, 0).commit()
+        touch.stationary(0).press(1, control1, 1, 1).commit()
         touch.stationary(0).move(1, control1).commit()
         touch.stationary(0).release(1).commit()
 
@@ -207,7 +207,7 @@ TestCase {
         verify(pressedSpy2.valid)
 
         // press the second button
-        touch.stationary(0).press(2, control2, 0, 0).commit()
+        touch.stationary(0).press(2, control2, 1, 1).commit()
 
         compare(pressedChangedSpy2.count, ++pressedChangedCount2)
         compare(pressedSpy2.count, ++pressedCount2)
@@ -228,7 +228,7 @@ TestCase {
         compare(control1.pressed, false)
 
         // press two buttons with two fingers, then release: each should only be pressed once
-        touch.press(1, control1, 0, 0).commit()
+        touch.press(1, control1, 1, 1).commit()
 
         compare(pressedChangedSpy1.count, ++pressedChangedCount1)
         compare(pressedSpy1.count, ++pressedCount1)
