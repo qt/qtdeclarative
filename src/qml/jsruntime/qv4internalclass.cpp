@@ -467,7 +467,19 @@ Heap::InternalClass *InternalClass::changeMember(
     t.lookup = newClass;
     Q_ASSERT(t.lookup);
 
-    return cleanInternalClass(newClass);
+    Heap::InternalClass *cleanedIC = cleanInternalClass(newClass);
+    // cleanInternalClass might have invalidated the index
+    if (newClass == cleanedIC)
+        return cleanedIC; // IC stayed as is, no index invalidation
+    // in that case, we refetch the entry if needed
+    if (entry) {
+        auto updatedEntry = cleanedIC->findEntry(identifier);
+        Q_ASSERT(updatedEntry); // cleanup must not remove the entry
+        entry->index = updatedEntry->index;
+        entry->setterIndex = updatedEntry->setterIndex;
+        // entry->attributes is still valid, doesn't depend on the IC
+    }
+    return cleanedIC;
 }
 
 Heap::InternalClass *InternalClass::changePrototypeImpl(Heap::Object *proto)
