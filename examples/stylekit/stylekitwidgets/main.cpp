@@ -21,20 +21,97 @@
 #include <QSizePolicy>
 #include <QStyleKitStyle>
 
-int main(int argc, char *argv[])
+struct StylePreset
 {
-    QApplication app(argc, argv);
+    const char *name;
+    const char *path;
+};
 
-    struct StylePreset { const char *name; const char *path; };
-    const StylePreset presets[] = {
-        { "Classic", ":/ClassicStyle.qml" },
-        { "Flat",    ":/FlatStyle.qml"    },
-        { "Neon",    ":/NeonStyle.qml"    },
-    };
+static const StylePreset presets[] = {
+    { "Classic", ":/ClassicStyle.qml" },
+    { "Flat",    ":/FlatStyle.qml"    },
+    { "Neon",    ":/NeonStyle.qml"    },
+};
 
-    QStyleKitStyle *style = new QStyleKitStyle(QString::fromUtf8(presets[0].path));
-    QApplication::setStyle(style);
+class StyleControl : public QGroupBox
+{
+    Q_OBJECT
+public:
+    explicit StyleControl(QWidget *parent = nullptr);
 
+private slots:
+    void stylePathComboActivated(int index);
+    void themeComboActivated(int);
+
+private:
+    void refreshThemes();
+    void setStylePath(const QString &path);
+
+    QComboBox *m_themeCombo = new QComboBox();
+    QComboBox *m_stylePathCombo = new QComboBox();
+    QStyleKitStyle *m_style = qobject_cast<QStyleKitStyle *>(QApplication::style());
+};
+
+StyleControl::StyleControl(QWidget *parent) :
+    QGroupBox("Settings", parent)
+{
+    setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
+    QFormLayout *settingsLayout = new QFormLayout(this);
+
+    for (const StylePreset &preset : presets)
+        m_stylePathCombo->addItem(QString::fromUtf8(preset.name), QString::fromUtf8(preset.path));
+    m_stylePathCombo->setCurrentIndex(0);
+
+    settingsLayout->addRow("Style", m_stylePathCombo);
+    settingsLayout->addRow("Theme", m_themeCombo);
+
+    if (m_style != nullptr)
+        refreshThemes();
+    else
+        setEnabled(false);
+
+    connect(m_stylePathCombo, &QComboBox::activated, this, &StyleControl::stylePathComboActivated);
+    connect(m_themeCombo, &QComboBox::activated, this, &StyleControl::themeComboActivated);
+}
+
+void StyleControl::refreshThemes()
+{
+    const QStringList names = m_style->themeNames();
+    const QString current = m_style->themeName();
+    const QSignalBlocker blocker(m_themeCombo);
+    m_themeCombo->clear();
+    m_themeCombo->addItems(names);
+    const int idx = m_themeCombo->findText(current);
+    if (idx >= 0)
+        m_themeCombo->setCurrentIndex(idx);
+}
+
+void StyleControl::setStylePath(const QString &path)
+{
+    m_style->setStylePath(path);
+    refreshThemes();
+}
+
+void StyleControl::stylePathComboActivated(int index)
+{
+    const QString data = m_stylePathCombo->itemData(index).toString();
+    setStylePath(data.isEmpty() ? m_stylePathCombo->itemText(index) : data);
+}
+
+void StyleControl::themeComboActivated(int)
+{
+    m_style->setThemeName(m_themeCombo->currentText());
+}
+
+class Widget : public QWidget
+{
+    Q_OBJECT
+public:
+    Widget();
+};
+
+Widget::Widget()
+{
     QScrollArea *scrollArea = new QScrollArea();
     scrollArea->setWidgetResizable(true);
     scrollArea->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -139,59 +216,27 @@ int main(int argc, char *argv[])
     progressLayout->addWidget(progressBar);
     contentLayout->addWidget(progressGroup);
 
-    // --- Settings panel ---
+    auto *windowLayout = new QHBoxLayout(this);
+    windowLayout->addWidget(scrollArea);
+    windowLayout->addWidget(new StyleControl(this));
+}
 
-    QGroupBox *settingsGroup = new QGroupBox("Settings");
-    settingsGroup->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
-    QFormLayout *settingsLayout = new QFormLayout(settingsGroup);
+int main(int argc, char *argv[])
+{
+    QApplication app(argc, argv);
 
-    QComboBox *stylePathCombo = new QComboBox();
-    for (const StylePreset &preset : presets)
-        stylePathCombo->addItem(QString::fromUtf8(preset.name), QString::fromUtf8(preset.path));
-    stylePathCombo->setCurrentIndex(0);
-    settingsLayout->addRow("Style", stylePathCombo);
-
-    QComboBox *themeCombo = new QComboBox();
-    settingsLayout->addRow("Theme", themeCombo);
-
-    auto refreshThemes = [style, themeCombo]() {
-        const QStringList names = style->themeNames();
-        const QString current = style->themeName();
-        const QSignalBlocker blocker(themeCombo);
-        themeCombo->clear();
-        themeCombo->addItems(names);
-        const int idx = themeCombo->findText(current);
-        if (idx >= 0)
-            themeCombo->setCurrentIndex(idx);
-    };
-    refreshThemes();
-
-    auto applyStylePath = [style, refreshThemes](const QString &path) {
-        style->setStylePath(path);
-        refreshThemes();
-    };
-
-    QObject::connect(stylePathCombo, &QComboBox::activated, &app,
-                     [stylePathCombo, applyStylePath](int index) {
-                         const QString data = stylePathCombo->itemData(index).toString();
-                         applyStylePath(data.isEmpty() ? stylePathCombo->itemText(index) : data);
-                     });
-    QObject::connect(themeCombo, &QComboBox::activated, &app,
-                     [style, themeCombo](int) {
-                         style->setThemeName(themeCombo->currentText());
-                     });
+    QStyleKitStyle *style = new QStyleKitStyle(QString::fromUtf8(presets[0].path));
+    QApplication::setStyle(style);
 
     // --- Main window ---
 
-    QWidget window;
+    Widget window;
     window.setWindowTitle("StyleKit Widgets Example");
     window.resize(800, 600);
-
-    QHBoxLayout *windowLayout = new QHBoxLayout(&window);
-    windowLayout->addWidget(scrollArea);
-    windowLayout->addWidget(settingsGroup);
 
     window.show();
 
     return app.exec();
 }
+
+#include "main.moc"
