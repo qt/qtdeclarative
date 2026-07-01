@@ -41,6 +41,8 @@ BaseStyle {
             radius: 2
             width: 100
             height: 40
+            fillWidth: true
+            fillHeight: true
             border.width: 1
             color: __backgroundDefault
             border.color: __strokeStrong
