@@ -18,8 +18,16 @@ QQmlJSLookupSignaturesRecorder::QQmlJSLookupSignaturesRecorder(
     Q_ASSERT(m_typeResolver);
 }
 
-QQmlPrivate::AOTLookupValidation::Type QQmlJSLookupSignaturesRecorder::type(
-        const QQmlJSScope::ConstPtr &type)
+#define CHECKED_OPT_ASSIGN(var, expr)   \
+    {                                   \
+        const auto opt = expr;          \
+        if (!opt.has_value())           \
+            return false;               \
+        var = opt.value();              \
+    }
+
+std::optional<QQmlPrivate::AOTLookupValidation::Type>
+QQmlJSLookupSignaturesRecorder::type(const QQmlJSScope::ConstPtr &type)
 {
     using namespace QQmlPrivate::AOTLookupValidation;
 
@@ -41,7 +49,11 @@ QQmlPrivate::AOTLookupValidation::Type QQmlJSLookupSignaturesRecorder::type(
         // method declaration. Assume the target property/method is declared on a base type, and
         // record the base type of \a type as the base of the lookup. Otherwise, we would have
         // discarded the lookup earlier. See recordPropertyLookup.
-        Q_ASSERT(type->baseType());
+        if (!type->baseType()) {
+            const QString msg = "unknown base type for composite object at %1:%2"_L1;
+            m_rejectMessage = msg.arg(type->filePath(), QString::number(type->lineNumber()));
+            return {};
+        }
         return QQmlJSLookupSignaturesRecorder::type(type->baseType());
     }
 
@@ -127,7 +139,7 @@ static int ownRegularPropertyCountAfterIndex(const QQmlJSScope::ConstPtr &type, 
     });
 }
 
-void QQmlJSLookupSignaturesRecorder::recordPropertyLookup(const QQmlJSScope::ConstPtr &base,
+bool QQmlJSLookupSignaturesRecorder::recordPropertyLookup(const QQmlJSScope::ConstPtr &base,
                                                           const QQmlJSMetaProperty &property)
 {
     using namespace QQmlPrivate::AOTLookupValidation;
@@ -135,7 +147,7 @@ void QQmlJSLookupSignaturesRecorder::recordPropertyLookup(const QQmlJSScope::Con
     const QString &name = property.propertyName();
     const auto [owner, extensionSpecifier] = QQmlJSScope::ownerOfProperty(base, name);
     if (base->isScript() || safeBase(base) || cantDesync(owner))
-        return;
+        return true;
 
     // When performing a lookup on an inner object of unnamed type, one of two things is true:
     //   1) The target property (or method) is declared within the object. Then, because the object
@@ -146,10 +158,10 @@ void QQmlJSLookupSignaturesRecorder::recordPropertyLookup(const QQmlJSScope::Con
     //      a property on the inner object that would shadow the base type's property can only be
     //      introduced by recompiling the lookup as well.
     if (isUnnamedCompositeType(base) && owner == base)
-        return;
+        return true;
 
     PropertySignature propertySignature;
-    propertySignature.type = type(property.type());
+    CHECKED_OPT_ASSIGN(propertySignature.type, type(property.type()))
 
     // Compiler indexes follow document order. On the MO, aliases come after regular properties.
     propertySignature.relativeIndex = property.isAlias()
@@ -157,13 +169,14 @@ void QQmlJSLookupSignaturesRecorder::recordPropertyLookup(const QQmlJSScope::Con
             : property.index() - ownAliasCountBeforeIndex(owner, property.index());
 
     Lookup lookup;
-    lookup.base = type(base);
+    CHECKED_OPT_ASSIGN(lookup.base, type(base))
     lookup.member = name;
 
     m_signatures.insert(lookup, propertySignature);
+    return true;
 }
 
-void QQmlJSLookupSignaturesRecorder::recordMethodLookup(const QQmlJSScope::ConstPtr &base,
+bool QQmlJSLookupSignaturesRecorder::recordMethodLookup(const QQmlJSScope::ConstPtr &base,
                                                         const QQmlJSMetaMethod &method)
 {
     using namespace QQmlPrivate::AOTLookupValidation;
@@ -171,15 +184,15 @@ void QQmlJSLookupSignaturesRecorder::recordMethodLookup(const QQmlJSScope::Const
     const QString &name = method.methodName();
     const auto [owner, extensionSpecifier] = QQmlJSScope::ownerOfMethod(base, name);
     if (base->isScript() || safeBase(base) || cantDesync(owner))
-        return;
+        return true;
 
     // See recordPropertyLookup
     if (isUnnamedCompositeType(base) && owner == base)
-        return;
+        return true;
 
     // destroy and toString are special?
     if (name == QStringLiteral("destroy") || name == QStringLiteral("toString"))
-        return;
+        return true;
 
     MethodSignature methodSignature;
 
@@ -193,20 +206,23 @@ void QQmlJSLookupSignaturesRecorder::recordMethodLookup(const QQmlJSScope::Const
         methodSignature.relativeIndex = index + ownSignalCountAfterIndex(owner, index);
     }
 
-    methodSignature.types.push_back(type(method.returnType()));
+    methodSignature.types.push_back({});
+    CHECKED_OPT_ASSIGN(methodSignature.types.back(), type(method.returnType()))
     for (const auto &param : method.parameters()) {
         methodSignature.paramNames.push_back(param.name());
-        methodSignature.types.push_back(type(param.type()));
+        methodSignature.types.push_back({});
+        CHECKED_OPT_ASSIGN(methodSignature.types.back(), type(param.type()))
     }
 
     Lookup lookup;
-    lookup.base = type(base);
+    CHECKED_OPT_ASSIGN(lookup.base, type(base))
     lookup.member = name;
 
     m_signatures.insert(lookup, methodSignature);
+    return true;
 }
 
-void QQmlJSLookupSignaturesRecorder::recordEnumKeyLookup(const QQmlJSScope::ConstPtr &base,
+bool QQmlJSLookupSignaturesRecorder::recordEnumKeyLookup(const QQmlJSScope::ConstPtr &base,
                                                          const QQmlJSMetaEnum &metaEnum,
                                                          const QString &keyName)
 {
@@ -214,7 +230,7 @@ void QQmlJSLookupSignaturesRecorder::recordEnumKeyLookup(const QQmlJSScope::Cons
 
     const auto [owner, extensionSpecifier] = QQmlJSScope::ownerOfEnum(base, metaEnum.name());
     if (base->isScript() || safeBase(base) || cantDesync(owner))
-        return;
+        return true;
 
     EnumKeySignature enumSignature;
     // QTBUG-145053: enums can only hold ints in the Compiler
@@ -223,10 +239,11 @@ void QQmlJSLookupSignaturesRecorder::recordEnumKeyLookup(const QQmlJSScope::Cons
         enumSignature.isFlag = IsFlag::Yes;
 
     Lookup lookup;
-    lookup.base = type(base);
+    CHECKED_OPT_ASSIGN(lookup.base, type(base))
     lookup.member = keyName;
     lookup.enumName = metaEnum.name();
     m_signatures.insert(lookup, enumSignature);
+    return true;
 }
 
 QT_END_NAMESPACE

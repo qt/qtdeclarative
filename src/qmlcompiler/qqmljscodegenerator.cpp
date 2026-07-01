@@ -4637,21 +4637,27 @@ void QQmlJSCodeGenerator::GeneratePragmaWarningBlock::silenceDivideByZero()
 void QQmlJSCodeGenerator::recordPropertyLookup(const QQmlJSScope::ConstPtr &base,
                                                const QQmlJSMetaProperty &property)
 {
-    if (!m_noAotValidation)
-        m_lookupSignaturesRecorder.recordPropertyLookup(base, property);
+    if (!m_noAotValidation) {
+        if (!m_lookupSignaturesRecorder.recordPropertyLookup(base, property))
+            REJECT(m_lookupSignaturesRecorder.rejectMessage());
+    }
 }
 
 void QQmlJSCodeGenerator::recordMethodLookup(const QQmlJSScope::ConstPtr &base,
                                              const QQmlJSMetaMethod &method)
 {
-    if (!m_noAotValidation)
-        m_lookupSignaturesRecorder.recordMethodLookup(base, method);
+    if (!m_noAotValidation) {
+        if (!m_lookupSignaturesRecorder.recordMethodLookup(base, method))
+            REJECT(m_lookupSignaturesRecorder.rejectMessage());
+    }
 }
 
 void QQmlJSCodeGenerator::recordEnumKeyLookup(const QQmlJSScope::ConstPtr &base,
                                               const QQmlJSMetaEnum &metaEnum,
                                               const QString &keyName)
 {
-    if (!m_noAotValidation)
-        m_lookupSignaturesRecorder.recordEnumKeyLookup(base, metaEnum, keyName);
+    if (!m_noAotValidation) {
+        if (!m_lookupSignaturesRecorder.recordEnumKeyLookup(base, metaEnum, keyName))
+            REJECT(m_lookupSignaturesRecorder.rejectMessage());
+    }
 }
