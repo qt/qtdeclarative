@@ -29,7 +29,6 @@ class QQStyleKitDelegateContainer : public QQuickItem
     Q_PROPERTY(QQStyleKitDelegateProperties *delegateStyle READ delegateStyle WRITE setDelegateStyle NOTIFY delegateStyleChanged FINAL)
     Q_PROPERTY(QObject *quickControl READ quickControl WRITE setQuickControl NOTIFY quickControlChanged REQUIRED FINAL)
     Q_PROPERTY(QQuickItem *delegateInstance READ delegateInstance NOTIFY delegateInstanceChanged FINAL)
-    Q_PROPERTY(bool usingDefaultDelegate READ usingDefaultDelegate NOTIFY usingDefaultDelegateChanged FINAL)
     QML_NAMED_ELEMENT(DelegateContainer)
 
 public:
@@ -43,13 +42,11 @@ public:
     void setQuickControl(QObject *control);
 
     QQuickItem *delegateInstance() const;
-    bool usingDefaultDelegate() const;
 
 signals:
     void delegateStyleChanged();
     void quickControlChanged();
     void delegateInstanceChanged();
-    void usingDefaultDelegateChanged();
 
 protected:
     void componentComplete() override;
