@@ -31,21 +31,25 @@ public:
 
     QQmlPrivate::AOTLookupValidation::LookupSignatures signatures() const { return m_signatures; }
 
-    void recordPropertyLookup(const QQmlJSScope::ConstPtr &base, const QQmlJSMetaProperty &prop);
-    void recordMethodLookup(const QQmlJSScope::ConstPtr &base, const QQmlJSMetaMethod &method);
-    void recordEnumKeyLookup(const QQmlJSScope::ConstPtr &base, const QQmlJSMetaEnum &metaEnum,
+    bool recordPropertyLookup(const QQmlJSScope::ConstPtr &base, const QQmlJSMetaProperty &prop);
+    bool recordMethodLookup(const QQmlJSScope::ConstPtr &base, const QQmlJSMetaMethod &method);
+    bool recordEnumKeyLookup(const QQmlJSScope::ConstPtr &base, const QQmlJSMetaEnum &metaEnum,
                              const QString &keyName);
+
+    QString rejectMessage() { return m_rejectMessage; }
 
 private:
     bool cantDesync(const QQmlJSScope::ConstPtr &base) const;
     bool safeBase(const QQmlJSScope::ConstPtr &base) const;
     bool isUnnamedCompositeType(const QQmlJSScope::ConstPtr &type) const;
 
-    QQmlPrivate::AOTLookupValidation::Type type(const QQmlJSScope::ConstPtr &type);
+    std::optional<QQmlPrivate::AOTLookupValidation::Type> type(const QQmlJSScope::ConstPtr &type);
 
     const QString m_currentFilePath;
     const QQmlJSTypeResolver *m_typeResolver = nullptr;
     QQmlPrivate::AOTLookupValidation::LookupSignatures m_signatures;
+
+    QString m_rejectMessage;
 };
 
 QT_END_NAMESPACE
