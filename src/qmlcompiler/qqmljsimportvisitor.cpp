@@ -273,6 +273,90 @@ static bool mayBeUnresolvedGroupedProperty(const QQmlJSScope::ConstPtr &scope)
     return scope->scopeType() == QQmlSA::ScopeType::GroupedPropertyScope && !scope->baseType();
 }
 
+bool QQmlJSImportVisitor::resolveAliasProperty(const QQmlJSScope::Ptr &object,
+                                               const QQmlJSMetaProperty &property)
+{
+    bool doRequeue = false;
+    QStringList components = property.aliasExpression().split(u'.');
+    QQmlJSMetaProperty targetProperty;
+
+    bool foundProperty = false;
+
+    // The first component has to be an ID. Find the object it refers to.
+    QQmlJSScope::ConstPtr type = m_scopesById.scope(components.takeFirst(), object);
+    QQmlJSScope::ConstPtr typeScope;
+    if (!type.isNull()) {
+        foundProperty = true;
+
+        // Any further components are nested properties of that object.
+        // Technically we can only resolve a limited depth in the engine, but the rules
+        // on that are fuzzy and subject to change. Let's ignore it for now.
+        // If the target is itself an alias and has not been resolved, re-queue the object
+        // and try again later.
+        while (type && !components.isEmpty()) {
+            const QString name = components.takeFirst();
+
+            if (!type->hasProperty(name)) {
+                foundProperty = false;
+                type = { };
+                break;
+            }
+
+            const auto target = type->property(name);
+            if (!target.type() && target.isAlias())
+                doRequeue = true;
+            typeScope = type;
+            type = target.type();
+            targetProperty = target;
+        }
+    }
+
+    if (type.isNull()) {
+        if (doRequeue)
+            return doRequeue;
+        if (foundProperty) {
+            m_logger->log(QStringLiteral("Cannot deduce type of alias \"%1\"")
+                                  .arg(property.propertyName()),
+                          qmlMissingType, property.sourceLocation());
+        } else {
+            m_logger->log(
+                    QStringLiteral("Cannot resolve alias \"%1\"").arg(property.propertyName()),
+                    qmlUnresolvedAlias, property.sourceLocation());
+        }
+
+        Q_ASSERT(property.index() >= 0); // this property is already in object
+        object->addOwnProperty(property);
+
+    } else {
+        QQmlJSMetaProperty newProperty = property;
+        newProperty.setType(type);
+        // Copy additional property information from target
+        newProperty.setIsList(targetProperty.isList());
+        newProperty.setIsWritable(targetProperty.isWritable());
+        newProperty.setIsFinal(targetProperty.isFinal());
+        newProperty.setIsPointer(targetProperty.isPointer());
+
+        const bool onlyId = !property.aliasExpression().contains(u'.');
+        if (onlyId) {
+            newProperty.setAliasTargetScope(type);
+            newProperty.setAliasTargetName(QStringLiteral("id-only-alias"));
+        } else {
+            const auto &ownerScope =
+                    QQmlJSScope::ownerOfProperty(typeScope, targetProperty.propertyName()).scope;
+            newProperty.setAliasTargetScope(ownerScope);
+            newProperty.setAliasTargetName(targetProperty.propertyName());
+        }
+
+        if (const QString internalName = type->internalName(); !internalName.isEmpty())
+            newProperty.setTypeName(internalName);
+
+        Q_ASSERT(newProperty.index() >= 0); // this property is already in object
+        object->addOwnProperty(newProperty);
+        m_aliasDefinitions.append({ object, property.propertyName() });
+    }
+    return doRequeue;
+}
+
 void QQmlJSImportVisitor::resolveAliases()
 {
     QQueue<QQmlJSScope::Ptr> objects;
@@ -289,84 +373,7 @@ void QQmlJSImportVisitor::resolveAliases()
         for (const auto &property : properties) {
             if (!property.isAlias() || !property.type().isNull())
                 continue;
-
-            QStringList components = property.aliasExpression().split(u'.');
-            QQmlJSMetaProperty targetProperty;
-
-            bool foundProperty = false;
-
-            // The first component has to be an ID. Find the object it refers to.
-            QQmlJSScope::ConstPtr type = m_scopesById.scope(components.takeFirst(), object);
-            QQmlJSScope::ConstPtr typeScope;
-            if (!type.isNull()) {
-                foundProperty = true;
-
-                // Any further components are nested properties of that object.
-                // Technically we can only resolve a limited depth in the engine, but the rules
-                // on that are fuzzy and subject to change. Let's ignore it for now.
-                // If the target is itself an alias and has not been resolved, re-queue the object
-                // and try again later.
-                while (type && !components.isEmpty()) {
-                    const QString name = components.takeFirst();
-
-                    if (!type->hasProperty(name)) {
-                        foundProperty = false;
-                        type = {};
-                        break;
-                    }
-
-                    const auto target = type->property(name);
-                    if (!target.type() && target.isAlias())
-                        doRequeue = true;
-                    typeScope = type;
-                    type = target.type();
-                    targetProperty = target;
-                }
-            }
-
-            if (type.isNull()) {
-                if (doRequeue)
-                    continue;
-                if (foundProperty) {
-                    m_logger->log(QStringLiteral("Cannot deduce type of alias \"%1\"")
-                                          .arg(property.propertyName()),
-                                  qmlMissingType, property.sourceLocation());
-                } else {
-                    m_logger->log(QStringLiteral("Cannot resolve alias \"%1\"")
-                                          .arg(property.propertyName()),
-                                  qmlUnresolvedAlias, property.sourceLocation());
-                }
-
-                Q_ASSERT(property.index() >= 0); // this property is already in object
-                object->addOwnProperty(property);
-
-            } else {
-                QQmlJSMetaProperty newProperty = property;
-                newProperty.setType(type);
-                // Copy additional property information from target
-                newProperty.setIsList(targetProperty.isList());
-                newProperty.setIsWritable(targetProperty.isWritable());
-                newProperty.setIsFinal(targetProperty.isFinal());
-                newProperty.setIsPointer(targetProperty.isPointer());
-
-                const bool onlyId = !property.aliasExpression().contains(u'.');
-                if (onlyId) {
-                    newProperty.setAliasTargetScope(type);
-                    newProperty.setAliasTargetName(QStringLiteral("id-only-alias"));
-                } else {
-                    const auto &ownerScope = QQmlJSScope::ownerOfProperty(
-                                                     typeScope, targetProperty.propertyName()).scope;
-                    newProperty.setAliasTargetScope(ownerScope);
-                    newProperty.setAliasTargetName(targetProperty.propertyName());
-                }
-
-                if (const QString internalName = type->internalName(); !internalName.isEmpty())
-                    newProperty.setTypeName(internalName);
-
-                Q_ASSERT(newProperty.index() >= 0); // this property is already in object
-                object->addOwnProperty(newProperty);
-                m_aliasDefinitions.append({ object, property.propertyName() });
-            }
+            doRequeue |= resolveAliasProperty(object, property);
         }
 
         const auto childScopes = object->childScopes();

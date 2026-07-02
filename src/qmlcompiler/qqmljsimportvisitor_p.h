@@ -392,6 +392,7 @@ private:
             const QString &handlerName, const QStringList &handlerParameters);
     void importBaseModules();
     void resolveAliases();
+    bool resolveAliasProperty(const QQmlJSScope::Ptr &object, const QQmlJSMetaProperty &property);
     void populatePropertyAliases();
     void resolveGroupProperties();
     void handleIdDeclaration(QQmlJS::AST::UiScriptBinding *scriptBinding);
