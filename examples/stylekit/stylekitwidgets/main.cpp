@@ -1,25 +1,32 @@
 // Copyright (C) 2026 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
+#include <QStyleKitStyle>
+
 #include <QApplication>
-#include <QPushButton>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QGridLayout>
-#include <QFormLayout>
-#include <QWidget>
-#include <QGroupBox>
-#include <QCheckBox>
-#include <QRadioButton>
-#include <QLineEdit>
-#include <QSlider>
 #include <QButtonGroup>
-#include <QProgressBar>
+#include <QCheckBox>
 #include <QComboBox>
-#include <QSpinBox>
+#include <QFormLayout>
+#include <QGridLayout>
+#include <QGroupBox>
+#include <QHBoxLayout>
+#include <QLineEdit>
+#include <QMainWindow>
+#include <QMenu>
+#include <QMenuBar>
+#include <QProgressBar>
+#include <QPushButton>
+#include <QRadioButton>
 #include <QScrollArea>
 #include <QSizePolicy>
-#include <QStyleKitStyle>
+#include <QSlider>
+#include <QSpinBox>
+#include <QVBoxLayout>
+#include <QWidget>
+
+#include <QIcon>
+#include <QKeySequence>
 
 #include <algorithm>
 #include <array>
@@ -108,15 +115,22 @@ void StyleControl::themeComboActivated(int)
     m_style->setThemeName(m_themeCombo->currentText());
 }
 
-class Widget : public QWidget
+class MainWindow : public QMainWindow
 {
     Q_OBJECT
 public:
-    Widget();
+    MainWindow();
 };
 
-Widget::Widget()
+MainWindow::MainWindow()
 {
+    QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
+    fileMenu->addAction(QIcon::fromTheme(QIcon::ThemeIcon::ApplicationExit), tr("Quit"),
+                        QKeySequence::Quit, this, &QWidget::close);
+    QMenu *helpMenu = menuBar()->addMenu(tr("&Help"));
+    helpMenu->addAction(QIcon::fromTheme(QIcon::ThemeIcon::HelpAbout), tr("About Qt"),
+                        QKeySequence::HelpContents, this, QApplication::aboutQt);
+
     auto *scrollArea = new QScrollArea();
     scrollArea->setWidgetResizable(true);
     scrollArea->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -221,9 +235,11 @@ Widget::Widget()
     progressLayout->addWidget(progressBar);
     contentLayout->addWidget(progressGroup);
 
-    auto *windowLayout = new QHBoxLayout(this);
-    windowLayout->addWidget(scrollArea);
-    windowLayout->addWidget(new StyleControl(this));
+    auto *centralWidget = new QWidget();
+    auto *centralLayout = new QHBoxLayout(centralWidget);
+    centralLayout->addWidget(scrollArea);
+    centralLayout->addWidget(new StyleControl(centralWidget));
+    setCentralWidget(centralWidget);
 }
 
 static bool isStyleOption(const char *option)
@@ -243,8 +259,8 @@ int main(int argc, char *argv[])
 
     // --- Main window ---
 
-    Widget window;
-    window.setWindowTitle(Widget::tr("StyleKit Widgets Example"));
+    MainWindow window;
+    window.setWindowTitle(MainWindow::tr("StyleKit Widgets Example"));
     window.resize(800, 600);
 
     window.show();
