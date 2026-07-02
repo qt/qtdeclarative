@@ -113,11 +113,11 @@ create a \l{Writing QML Modules}{QML module}.
 \section2 CMake Setup
 
 For the registration to take effect when using CMake, use the
-\l{qt6_add_qml_module} {qt_add_qml_module} command:
+\l qt_add_qml_module() command:
 
 \snippet tutorials/extending-qml/chapter1-basics/CMakeLists.txt 0
 
-The \l{qt6_add_qml_module}{qt_add_qml_module} API automatically generates a
+The \l qt_add_qml_module() API automatically generates a
 \c qmldir file for the QML module.
 
 \section2 Class Implementation

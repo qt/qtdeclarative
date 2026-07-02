@@ -7,7 +7,6 @@
 
 \title qt_import_qml_plugins
 \keyword qt_import_qml_plugins()
-\keyword qt6_import_qml_plugins
 
 \summary{Ensures QML plugins needed by a target are imported for static builds.}
 
@@ -30,7 +29,7 @@ qt_import_qml_plugins(target)
 
 \c{qt_import_qml_plugins()} runs \c{qmlimportscanner} on the \c target
 immediately as part of the call (unless the \c{NO_IMPORT_SCAN} option was
-passed to \l{qt_add_qml_module()} when defining the QML
+passed to \l qt_add_qml_module() when defining the QML
 module). It finds the static QML plugins used by the
 \c target and links it to those plugins so that they are part of the executable
 or shared library that \c target represents. The search follows QML module
@@ -44,10 +43,10 @@ relationships added after this call will not be considered. Therefore, this
 command should be called as late as possible in the \c{target}'s directory
 scope so that all the linking and import relationships are known.
 
-If \c target was created using \l{qt6_add_executable}{qt_add_executable()},
+If \c target was created using \l qt_add_executable(),
 projects would not normally need to call \c{qt_import_qml_plugins()} directly.
 When Qt is built statically, the command is called automatically as part of
-\l{qt6_add_executable#Finalization}{target finalization} if \c target links to
+\l{qt_add_executable#Finalization}{target finalization} if \c target links to
 the Qml library. By default, this finalization occurs at the end of the same
 directory scope in which the \c target was created. If the \c target was
 created using the standard CMake \c{add_executable()} command instead, the

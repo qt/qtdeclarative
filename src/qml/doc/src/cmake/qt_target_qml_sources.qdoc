@@ -7,7 +7,6 @@
 
 \title qt_target_qml_sources
 \keyword qt_target_qml_sources()
-\keyword qt6_target_qml_sources
 
 \summary{Adds QML files and resources to an existing QML module target.}
 

@@ -72,14 +72,14 @@ You can set the policy explicitly in your project before calling
 qt_policy(SET QTP0004 NEW)
 \endcode
 Alternatively, call
-\l{qt6_standard_project_setup}{qt_standard_project_setup()} with a
+\l qt_standard_project_setup() with a
 \c REQUIRES version of 6.8 or later.
 
 Qt 6.8 issues warnings if you do not explicitly set the policy.
 
 \qtpolicydeprecatedbehavior
 
-\sa qt_policy, {qt6_standard_project_setup}{qt_standard_project_setup()},
-    qt_cmake_policies, qt_add_qml_module
+\sa qt_policy(), qt_standard_project_setup(),
+    qt_cmake_policies, qt_add_qml_module()
 
 */

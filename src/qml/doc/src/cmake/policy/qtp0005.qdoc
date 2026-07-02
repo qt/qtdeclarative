@@ -11,7 +11,7 @@
 \summary {qt_add_qml_module dependency keywords accept CMake targets}
 
 This policy was introduced in Qt 6.8. It allows passing CMake targets to
-\l{qt_add_qml_module()} via the \c DEPENDENCIES, \c IMPORTS,
+\l qt_add_qml_module() via the \c DEPENDENCIES, \c IMPORTS,
 \c OPTIONAL_IMPORTS, and \c DEFAULT_IMPORTS keywords.
 
 Enabling this policy means that arguments passed to those keywords can be prefixed
@@ -82,7 +82,7 @@ The same \c TARGET syntax is available for \c IMPORTS, \c OPTIONAL_IMPORTS,
 and \c DEFAULT_IMPORTS.
 
 When the module target is an executable and \c{TARGET} dependencies are used,
-\l{qt_add_qml_module()} automatically generates a
+\l qt_add_qml_module() automatically generates a
 \c{qt.conf} file next to the executable in the build directory. This file
 configures the \l{QML Import Path} so that QML modules specified as \c TARGET
 dependencies can be found at run time. Use \c{NO_GENERATE_QTCONF} to suppress
@@ -91,18 +91,18 @@ this behavior.
 As shown above, you can set the policy explicitly with
 \c{qt_policy(SET QTP0005 NEW)} before calling \c{qt_add_qml_module()}.
 Alternatively, call
-\l{qt6_standard_project_setup}{qt_standard_project_setup()} with a
+\l qt_standard_project_setup() with a
 \c REQUIRES version of 6.8 or later to enable all policies up to that version.
 
 Qt 6.8 issues a deprecation warning if you use \c TARGET as a token in
 \c DEPENDENCIES, \c IMPORTS, \c OPTIONAL_IMPORTS, or \c DEFAULT_IMPORTS while
 the policy is set to \c OLD.
-Use the \l qt_policy command to suppress the warning by explicitly setting
+Use the \l qt_policy() command to suppress the warning by explicitly setting
 the policy to \c OLD or \c NEW.
 
 \qtpolicydeprecatedbehavior
 
-\sa qt_policy, {qt6_standard_project_setup}{qt_standard_project_setup()},
-    qt_cmake_policies, qt_add_qml_module
+\sa qt_policy(), qt_standard_project_setup(),
+    qt_cmake_policies, qt_add_qml_module()
 
 */

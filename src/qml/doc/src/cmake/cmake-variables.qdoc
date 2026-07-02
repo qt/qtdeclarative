@@ -18,13 +18,13 @@ global CMake variables:
 
 \summary{Base output directory below which QML modules will be created by default.}
 
-The \l{qt6_add_qml_module}{qt6_add_qml_module()} command accepts an
+The \l qt_add_qml_module() command accepts an
 \c OUTPUT_DIRECTORY argument which specifies where the QML module's \c qmldir
 file, typeinfo file and plugin library will be created. When that argument is
 not used, the default value is based on the \c QT_QML_OUTPUT_DIRECTORY variable,
 if it is set. If \c QT_QML_OUTPUT_DIRECTORY is not set, the default value
 depends on the type of backing target (see the
-\l{qt6_add_qml_module#OUTPUT_DIRECTORY}{OUTPUT_DIRECTORY} documentation for
+\l{qt_add_qml_module#OUTPUT_DIRECTORY}{OUTPUT_DIRECTORY} documentation for
 details).
 
 When \c QT_QML_OUTPUT_DIRECTORY is set, the default output directory will be
@@ -73,7 +73,7 @@ This variable has no effect if \l{QT_QML_GENERATE_QMLLS_INI} is disabled.
 \cmakevariablesince 6.7
 
 \c QT_QML_GENERATE_QMLLS_INI is a boolean that describes whether
-\l{qt6_add_qml_module}{qt6_add_qml_module()} calls generate \c{.qmlls.ini} files inside
+\l qt_add_qml_module() calls generate \c{.qmlls.ini} files inside
 the \b{source folder}, into each subdirectory with a CMakeLists.txt file creating a QML module.
 If \c{.qmlls.ini} files already exist there, then they are overwritten.
 
@@ -111,10 +111,10 @@ subdirectories} that define QML Modules.
 
 \c QT_QML_NO_CACHEGEN is a CMake variable that can be set to disable the compilation of QML files
 into bytecode or C++ code for QML targets created by
-\l{qt6_add_qml_module}{qt6_add_qml_module()}.
+\l qt_add_qml_module().
 
 It has the same effect as setting the \c{NO_CACHEGEN} option of
-\l{qt6_add_qml_module}{qt6_add_qml_module()}, but allows doing so on a per-directory or project
+\l qt_add_qml_module(), but allows doing so on a per-directory or project
 basis.
 
 Turn on this option to reduce the number of build steps necessary to complete a build, and
@@ -145,7 +145,7 @@ qt_add_qml_module(MyModule
 \summary{Controls whether QML Compiler statistics collection is enabled.}
 \cmakevariablesince 6.8.3
 
-When a QML project is configured using \l{qt_add_qml_module}, by default,
+When a QML project is configured using \l qt_add_qml_module(), by default,
 \l{QML script compiler#Obtaining statistics about the compilation of functions and bindings}{statistics}
 from the compilation of QML code will be collected. You can explicitly opt in
 or out of this by setting the \c{QT_QML_GENERATE_AOTSTATS} variable. It can be
@@ -154,7 +154,7 @@ set project-wide by passing
 -DQT_QML_GENERATE_AOTSTATS=OFF
 \endcode
 to the CMake executable, or by setting it directly in the corresponding
-CMakeLists.txt file before the first call to \l{qt_add_qml_module}.
+CMakeLists.txt file before the first call to \l qt_add_qml_module().
 \badcode
 set(QT_QML_GENERATE_AOTSTATS OFF)
 \endcode
@@ -171,7 +171,7 @@ set(QT_QML_GENERATE_AOTSTATS OFF)
 \cmakevariablesince 6.11
 
 When the \c QT_QMLLINT_CONTEXT_PROPERTY_DUMP variable is enabled, \l{qmllint-auto}{linting targets}
-created by \l{qt_add_qml_module} will run \l qmlcontextpropertydump before running \l qmllint. This
+created by \l qt_add_qml_module() will run \l qmlcontextpropertydump before running \l qmllint. This
 allows \l qmllint to warn on the usage of context properties in QML.
 
 To enable this feature, set the \c QT_QMLLINT_CONTEXT_PROPERTY_DUMP variable using
@@ -184,7 +184,7 @@ one of the following methods:
         \endcode
 
     \li Add the setting to your \c CMakeLists.txt file before the first call to
-        \l{qt_add_qml_module}:
+        \l qt_add_qml_module():
         \badcode
         set(QT_QMLLINT_CONTEXT_PROPERTY_DUMP ON)
         \endcode
