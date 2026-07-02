@@ -371,8 +371,8 @@ void QSGMaterialShader::setShaderFileName(Stage stage, const QString &filename)
     The file is expected to contain a serialized QShader.
 
     This overload is used when enabling \l{QSGMaterial::viewCount()}{multiview}
-    rendering, in particular when the \l{Qt Shader Tools Build System
-    Integration}{build system's MULTIVIEW convenience option} is used.
+    rendering, in particular when the \l{qt_add_shaders}
+    {build system's MULTIVIEW convenience option} is used.
 
     \a viewCount should be 2, 3, or 4. The \a filename is adjusted automatically
     based on this.
