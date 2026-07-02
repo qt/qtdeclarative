@@ -49,6 +49,8 @@ private:
     void generate_CallProperty(int nameIndex, int base, int argc, int argv) override;
     void generate_CallPossiblyDirectEval(int argc, int argv) override;
 
+    PropertyResolution propertyResolution(QQmlJSScope::ConstPtr scope, const QString &type) const;
+
     void handleUnqualifiedAccess(const QString &name, bool isMethod) const override;
     void handleUnqualifiedAccessAndContextProperties(const QString &name, bool isMethod) const override;
     void checkDeprecated(QQmlJSScope::ConstPtr scope, const QString &name, bool isMethod) const override;

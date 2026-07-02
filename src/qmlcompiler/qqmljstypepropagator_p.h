@@ -201,8 +201,6 @@ protected:
         PropertyFullyResolved
     };
 
-    PropertyResolution propertyResolution(QQmlJSScope::ConstPtr scope, const QString &type) const;
-
     void checkConversion(QQmlJSRegisterContent from, QQmlJSRegisterContent to);
     void generateUnaryArithmeticOperation(QQmlJSTypeResolver::UnaryOperator op);
 

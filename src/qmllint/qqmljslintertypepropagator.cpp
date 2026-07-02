@@ -202,6 +202,33 @@ void QQmlJSLinterTypePropagator::generate_CallPossiblyDirectEval(int argc, int a
             ->analyzeCall(saBaseType, "eval"_L1, saContainedType, saLocation);
 }
 
+// Only to be called once a lookup has already failed
+QQmlJSLinterTypePropagator::PropertyResolution
+QQmlJSLinterTypePropagator::propertyResolution(QQmlJSScope::ConstPtr scope,
+                                               const QString &propertyName) const
+{
+    auto property = scope->property(propertyName);
+    if (!property.isValid())
+        return PropertyMissing;
+
+    QString errorType;
+    if (property.type().isNull())
+        errorType = u"found"_s;
+    else if (!property.type()->isFullyResolved())
+        errorType = u"fully resolved"_s;
+    else
+        return PropertyFullyResolved;
+
+    Q_ASSERT(!errorType.isEmpty());
+
+    m_logger->log(
+            u"Type \"%1\" of property \"%2\" not %3. This is likely due to a missing dependency entry or a type not being exposed declaratively."_s
+                    .arg(property.typeName(), propertyName, errorType),
+            qmlUnresolvedType, currentSourceLocation());
+
+    return PropertyTypeUnresolved;
+}
+
 void QQmlJSLinterTypePropagator::handleUnqualifiedAccess(const QString &name, bool isMethod) const
 {
     QQmlJSTypePropagator::handleUnqualifiedAccess(name, isMethod);
