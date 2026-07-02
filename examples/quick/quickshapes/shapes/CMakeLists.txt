@@ -56,6 +56,7 @@ qt_add_qml_module(shapesexample
         "zoomtiger.qml"
         "fillTransform.qml"
         "rectangle.qml"
+        "cornershapes.qml"
         "fillItem.qml"
         "cosmetic.qml"
 )

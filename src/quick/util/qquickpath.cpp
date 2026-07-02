@@ -2420,16 +2420,32 @@ void QQuickPathSvg::addToPath(QPainterPath &path, const QQuickPathData &)
     \nativetype QQuickPathRectangle
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
-    \brief Defines a rectangle with optionally rounded corners.
+    \brief Defines a rectangle with settable corner styles.
     \since QtQuick 6.8
 
     PathRectangle provides an easy way to specify a rectangle, optionally with
-    rounded or beveled corners. The API corresponds to that of the \l Rectangle
-    item.
+    rounded, beveled or squircle-style corners. The API corresponds to that of
+    the \l Rectangle item.
 
     \image pathrectangle-bevel.png {Rectangle with beveled corners}
 
     \snippet qml/pathrectangle/pathrectangle-bevel.qml shape
+
+    In addition to the plain circular-arc rounding controlled by \l radius,
+    corners can be rendered as a "squircle" (a curve whose curvature changes
+    gradually rather than switching abruptly from a straight line into a
+    circular arc, popularized by app icons and UI designs) by setting
+    \l cornerShape to \c PathRectangle.Squircle. This gives the corners a
+    softer, more organic look than \c PathRectangle.Rounded.
+
+    \image pathsquircle.png
+
+    The image above compares a squircle (red) to a rounded rectangle (blue)
+    with the same \l radius, half the width of the shape. The squircle
+    corners are approximated using cubic Bezier curves rather than being
+    derived from the mathematical definition of a squircle (a superellipse).
+    This gives a close visual approximation of that curve, but the result is
+    not an exact match to it.
 
     \sa Path, PathLine, PathQuad, PathCubic, PathArc, PathAngleArc, PathCurve, PathSvg
 */
@@ -2575,18 +2591,18 @@ void QQuickPathRectangle::setRadius(qreal newRadius)
 qreal QQuickPathRectangle::cornerRadius(Qt::Corner corner) const
 {
     if (_extra.isAllocated())
-        return (_extra->isRadiusSet(corner)) ? _extra->cornerRadii[corner] : _extra->radius;
+        return (_extra->isRadiusSet(corner)) ? _extra->cornerData[corner].radius : _extra->radius;
     else
         return 0;
 }
 
 void QQuickPathRectangle::setCornerRadius(Qt::Corner corner, qreal newCornerRadius)
 {
-    if (_extra.value().cornerRadii[corner] == newCornerRadius
+    if (_extra.value().cornerData[corner].radius == newCornerRadius
         && (_extra->isRadiusSet(corner)))
         return;
-    _extra->cornerRadii[corner] = newCornerRadius;
-    _extra->cornerProperties |= (1 << corner);
+    _extra->cornerData[corner].radius = newCornerRadius;
+    _extra->cornerData[corner].isRadiusSet = true;
 
     emitCornerRadiusChanged(corner);
 }
@@ -2595,7 +2611,7 @@ void QQuickPathRectangle::resetCornerRadius(Qt::Corner corner)
 {
     if (!_extra.isAllocated() || !(_extra->isRadiusSet(corner)))
         return;
-    _extra->cornerProperties &= ~(1 << corner);
+    _extra->cornerData[corner].isRadiusSet = false;
     emitCornerRadiusChanged(corner);
 }
 
@@ -2623,79 +2639,159 @@ void QQuickPathRectangle::emitCornerRadiusChanged(Qt::Corner corner)
         {QtQuick::PathRectangle}{qml/pathrectangle/pathrectangle-bevel.qml}
         {shape}
     \since 6.10
+
+    This property is a convenience form of \l cornerShape: setting it to
+    \c true is equivalent to setting \c cornerShape to \c PathRectangle.Bevel,
+    and setting it to \c false is equivalent to setting \c cornerShape to
+    \c PathRectangle.Rounded. Reading it returns \c true only when
+    \c cornerShape is \c PathRectangle.Bevel.
+
+    Use \l cornerShape directly to select any of the other corner shapes.
+
+    \sa cornerShape
 */
 
 bool QQuickPathRectangle::hasBevel() const
 {
-    return _extra.isAllocated() ? (_extra->cornerProperties & (1 << 8)) != 0 : false;
+    return cornerShape() == Bevel;
 }
 
 void QQuickPathRectangle::setBevel(bool bevel)
 {
-    if (((_extra.value().cornerProperties & (1 << 8)) != 0) == bevel)
-        return;
-    if (bevel)
-        _extra->cornerProperties |= (1 << 8);
-    else
-        _extra->cornerProperties &= ~(1 << 8);
-
-    emit bevelChanged();
-    if (!(_extra->isBevelSet(Qt::TopLeftCorner)))
-        emit topLeftBevelChanged();
-    if (!(_extra->isBevelSet(Qt::TopRightCorner)))
-        emit topRightBevelChanged();
-    if (!(_extra->isBevelSet(Qt::BottomLeftCorner)))
-        emit bottomLeftBevelChanged();
-    if (!(_extra->isBevelSet(Qt::BottomRightCorner)))
-        emit bottomRightBevelChanged();
-    emit changed();
+    setCornerShape(bevel ? Bevel : Rounded);
 }
 /*!
     \include pathrectangle.qdocinc {bevel-properties}
         {QtQuick::PathRectangle} {qml/pathrectangle/pathrectangle.qml} {shape}
+    \since 6.10
+
+    These properties are convenience forms of the individual corner shape
+    properties: setting one to \c true is equivalent to setting the
+    corresponding corner shape to \c PathRectangle.Bevel, while setting it to
+    \c false returns that corner to the unset state, so that it follows
+    \l cornerShape again.
+
+    Use the individual corner shape properties directly to select any of the
+    other corner shapes.
+
+    \sa topLeftCornerShape, topRightCornerShape, bottomLeftCornerShape,
+        bottomRightCornerShape
 */
 
 bool QQuickPathRectangle::cornerBevel(Qt::Corner corner) const
 {
-    if (!_extra.isAllocated())
-        return false;
-    return _extra->isBevelSet(corner) || (_extra->cornerProperties & (1 << 8));
+    return cornerShape(corner) == Bevel;
 }
 
 void QQuickPathRectangle::setCornerBevel(Qt::Corner corner, bool newCornerBevel)
 {
-    if ((_extra.value().isBevelSet(corner)) == newCornerBevel)
-        return;
     if (!newCornerBevel) {
         resetCornerBevel(corner);
         return;
     }
-    _extra->cornerProperties |= (1 << (corner + 4));
-    emitCornerBevelChanged(corner);
+    setCornerShape(corner, Bevel);
 }
 
 void QQuickPathRectangle::resetCornerBevel(Qt::Corner corner)
 {
-    if (!_extra.isAllocated() || !(_extra->isBevelSet(corner)))
-        return;
-    _extra->cornerProperties &= ~(1 << (corner + 4));
-    emitCornerBevelChanged(corner);
+    resetCornerShape(corner);
 }
 
-void QQuickPathRectangle::emitCornerBevelChanged(Qt::Corner corner)
+/*!
+    \include pathrectangle.qdocinc {corner-shape-property}
+        {QtQuick::PathRectangle}{qml/pathrectangle/pathrectangle-squircle.qml}
+        {shape}
+    \since 6.13
+*/
+
+QQuickPathRectangle::CornerShape QQuickPathRectangle::cornerShape() const
 {
+    return _extra.isAllocated() ? _extra->shape : Rounded;
+}
+
+void QQuickPathRectangle::setCornerShape(CornerShape shape)
+{
+    if (_extra.value().shape == shape)
+        return;
+    const bool bevelToggled = (_extra->shape == Bevel) != (shape == Bevel);
+    _extra->shape = shape;
+    emit cornerShapeChanged();
+    if (bevelToggled)
+        emit bevelChanged();
+    if (!(_extra->isShapeSet(Qt::TopLeftCorner))) {
+        emit topLeftCornerShapeChanged();
+        if (bevelToggled)
+            emit topLeftBevelChanged();
+    }
+    if (!(_extra->isShapeSet(Qt::TopRightCorner))) {
+        emit topRightCornerShapeChanged();
+        if (bevelToggled)
+            emit topRightBevelChanged();
+    }
+    if (!(_extra->isShapeSet(Qt::BottomLeftCorner))) {
+        emit bottomLeftCornerShapeChanged();
+        if (bevelToggled)
+            emit bottomLeftBevelChanged();
+    }
+    if (!(_extra->isShapeSet(Qt::BottomRightCorner))) {
+        emit bottomRightCornerShapeChanged();
+        if (bevelToggled)
+            emit bottomRightBevelChanged();
+    }
+    emit changed();
+}
+
+QQuickPathRectangle::CornerShape QQuickPathRectangle::cornerShape(Qt::Corner corner) const
+{
+    if (_extra.isAllocated())
+        return (_extra->isShapeSet(corner)) ? CornerShape(_extra->cornerData[corner].shape)
+                                            : _extra->shape;
+    else
+        return Rounded;
+}
+
+void QQuickPathRectangle::setCornerShape(Qt::Corner corner, CornerShape newCornerShape)
+{
+    if ((_extra.value().isShapeSet(corner)) && _extra->cornerData[corner].shape == newCornerShape)
+        return;
+    const bool oldBevel = cornerShape(corner) == Bevel;
+    _extra->cornerData[corner].shape = newCornerShape;
+    _extra->cornerData[corner].isShapeSet = true;
+    emitCornerShapeChanged(corner, oldBevel);
+}
+
+void QQuickPathRectangle::resetCornerShape(Qt::Corner corner)
+{
+    if (!_extra.isAllocated() || !(_extra->isShapeSet(corner)))
+        return;
+    const bool oldBevel = cornerShape(corner) == Bevel;
+    _extra->cornerData[corner].isShapeSet = false;
+    emitCornerShapeChanged(corner, oldBevel);
+}
+
+void QQuickPathRectangle::emitCornerShapeChanged(Qt::Corner corner, bool oldBevel)
+{
+    const bool bevelToggled = oldBevel != (cornerShape(corner) == Bevel);
     switch (corner) {
     case Qt::TopLeftCorner:
-        emit topLeftBevelChanged();
+        emit topLeftCornerShapeChanged();
+        if (bevelToggled)
+            emit topLeftBevelChanged();
         break;
     case Qt::TopRightCorner:
-        emit topRightBevelChanged();
+        emit topRightCornerShapeChanged();
+        if (bevelToggled)
+            emit topRightBevelChanged();
         break;
     case Qt::BottomLeftCorner:
-        emit bottomLeftBevelChanged();
+        emit bottomLeftCornerShapeChanged();
+        if (bevelToggled)
+            emit bottomLeftBevelChanged();
         break;
     case Qt::BottomRightCorner:
-        emit bottomRightBevelChanged();
+        emit bottomRightCornerShapeChanged();
+        if (bevelToggled)
+            emit bottomRightBevelChanged();
         break;
     }
     emit changed();
@@ -2713,66 +2809,127 @@ void QQuickPathRectangle::addToPath(QPainterPath &path, const QQuickPathData &da
     if (!_extra.isAllocated()) {
         // No rounded corners
         path.addRect(rect);
-    } else {
-        // Radii must not exceed half of the width or half of the height
-        const qreal maxDiameter = qMin(rect.width(), rect.height());
-        const qreal generalDiameter = qMax(qreal(0), qMin(maxDiameter, 2 * _extra->radius));
-        auto effectiveDiameter = [&](Qt::Corner corner) {
-            qreal radius = _extra->cornerRadii[corner];
-            return (_extra->isRadiusSet(corner)) ? qMin(maxDiameter, 2 * radius) : generalDiameter;
-        };
-        const qreal diamTL = effectiveDiameter(Qt::TopLeftCorner);
-        const qreal diamTR = effectiveDiameter(Qt::TopRightCorner);
-        const qreal diamBL = effectiveDiameter(Qt::BottomLeftCorner);
-        const qreal diamBR = effectiveDiameter(Qt::BottomRightCorner);
-
-        path.moveTo(rect.left() + diamTL * 0.5, rect.top());
-        if (diamTR) {
-            if (!cornerBevel(Qt::TopRightCorner)) {
-                // Rounded corners.
-                path.arcTo(QRectF(QPointF(rect.right() - diamTR, rect.top()), QSizeF(diamTR, diamTR)), 90, -90);
-            } else {
-                // Beveled corners.
-                path.lineTo(QPointF(rect.right() - diamTR * 0.5, rect.top()));
-                path.lineTo(QPointF(rect.right(), rect.top() + diamTR * 0.5));
-            }
-        } else {
-            // Regular corners.
-            path.lineTo(rect.topRight());
-        }
-
-        if (diamBR) {
-            if (!cornerBevel(Qt::BottomRightCorner)) {
-                path.arcTo(QRectF(QPointF(rect.right() - diamBR, rect.bottom() - diamBR), QSizeF(diamBR, diamBR)), 0, -90);
-            } else {
-                path.lineTo(QPointF(rect.right(), rect.bottom() - diamBR * 0.5));
-                path.lineTo(QPointF(rect.right() - diamBR * 0.5, rect.bottom()));
-            }
-        } else {
-            path.lineTo(rect.bottomRight());
-        }
-
-        if (diamBL) {
-            if (!cornerBevel(Qt::BottomLeftCorner)) {
-                path.arcTo(QRectF(QPointF(rect.left(), rect.bottom() - diamBL), QSizeF(diamBL, diamBL)), 270, -90);
-            } else {
-                path.lineTo(QPointF(rect.left() + diamBL * 0.5, rect.bottom()));
-                path.lineTo(QPointF(rect.left(), rect.bottom() - diamBL * 0.5));
-            }
-        } else {
-            path.lineTo(rect.bottomLeft());
-        }
-
-        if (diamTL) {
-            if (!cornerBevel(Qt::TopLeftCorner))
-                path.arcTo(QRectF(rect.topLeft(), QSizeF(diamTL, diamTL)), 180, -90);
-            else
-                path.lineTo(QPointF(rect.left(), rect.top() + diamTL * 0.5));
-        } else {
-            path.lineTo(rect.topLeft());
-        }
-        path.closeSubpath();
+        return;
     }
+
+    // Radii must not exceed half of the width or half of the height
+    const qreal maxDiameter = qMin(rect.width(), rect.height());
+    const qreal generalRadius = qBound(qreal(0), _extra->radius, maxDiameter * 0.5);
+    auto effectiveRadius = [&](Qt::Corner corner) {
+        qreal radius = _extra->cornerData[corner].radius;
+        return (_extra->isRadiusSet(corner)) ? qBound(qreal(0), radius, maxDiameter * 0.5)
+                                             : generalRadius;
+    };
+    const qreal rTL = effectiveRadius(Qt::TopLeftCorner);
+    const qreal rTR = effectiveRadius(Qt::TopRightCorner);
+    const qreal rBL = effectiveRadius(Qt::BottomLeftCorner);
+    const qreal rBR = effectiveRadius(Qt::BottomRightCorner);
+
+    // Bezier approximation of a single squircle corner, going from the
+    // point where it meets the incoming edge to the point where it meets
+    // the outgoing edge, as fractions of the corner radius. The corner
+    // curves clockwise, entering horizontally and exiting vertically (a
+    // "top-right"-style corner); the other three corners are obtained by
+    // rotating these offsets by 90, 180 and 270 degrees.
+    static constexpr QPointF cornerOffsets[9] = {
+        { 0.300, 0.000 }, { 0.473, 0.000 }, { 0.619, 0.039 }, { 0.804, 0.088 }, { 0.912, 0.196 },
+        { 0.961, 0.381 }, { 1.000, 0.527 }, { 1.000, 0.700 }, { 1.000, 1.000 }
+    };
+
+    // Rotates an offset by 90 degrees clockwise, applied "steps" times.
+    auto rotate = [](QPointF p, int steps) {
+        for (int i = 0; i < steps; ++i)
+            p = QPointF(-p.y(), p.x());
+        return p;
+    };
+
+    auto addSquircleCorner = [&](QPointF start, int steps, qreal r) {
+        for (int seg = 0; seg < 3; ++seg) {
+            QPointF c1 = start + rotate(cornerOffsets[seg * 3 + 0] * r, steps);
+            QPointF c2 = start + rotate(cornerOffsets[seg * 3 + 1] * r, steps);
+            QPointF end = start + rotate(cornerOffsets[seg * 3 + 2] * r, steps);
+            path.cubicTo(c1, c2, end);
+        }
+    };
+
+    path.moveTo(rect.left() + rTL, rect.top());
+    if (rTR > 0) {
+        switch (cornerShape(Qt::TopRightCorner)) {
+        case Bevel:
+            path.lineTo(QPointF(rect.right() - rTR, rect.top()));
+            path.lineTo(QPointF(rect.right(), rect.top() + rTR));
+            break;
+        case Squircle:
+            path.lineTo(QPointF(rect.right() - rTR, rect.top()));
+            addSquircleCorner(QPointF(rect.right() - rTR, rect.top()), 0, rTR);
+            break;
+        default:
+            path.arcTo(
+                    QRectF(QPointF(rect.right() - 2 * rTR, rect.top()), QSizeF(2 * rTR, 2 * rTR)),
+                    90, -90);
+            break;
+        }
+    } else {
+        path.lineTo(rect.topRight());
+    }
+
+    if (rBR > 0) {
+        switch (cornerShape(Qt::BottomRightCorner)) {
+        case Bevel:
+            path.lineTo(QPointF(rect.right(), rect.bottom() - rBR));
+            path.lineTo(QPointF(rect.right() - rBR, rect.bottom()));
+            break;
+        case Squircle:
+            path.lineTo(QPointF(rect.right(), rect.bottom() - rBR));
+            addSquircleCorner(QPointF(rect.right(), rect.bottom() - rBR), 1, rBR);
+            break;
+        default:
+            path.arcTo(QRectF(QPointF(rect.right() - 2 * rBR, rect.bottom() - 2 * rBR),
+                              QSizeF(2 * rBR, 2 * rBR)),
+                       0, -90);
+            break;
+        }
+    } else {
+        path.lineTo(rect.bottomRight());
+    }
+
+    if (rBL > 0) {
+        switch (cornerShape(Qt::BottomLeftCorner)) {
+        case Bevel:
+            path.lineTo(QPointF(rect.left() + rBL, rect.bottom()));
+            path.lineTo(QPointF(rect.left(), rect.bottom() - rBL));
+            break;
+        case Squircle:
+            path.lineTo(QPointF(rect.left() + rBL, rect.bottom()));
+            addSquircleCorner(QPointF(rect.left() + rBL, rect.bottom()), 2, rBL);
+            break;
+        default:
+            path.arcTo(
+                    QRectF(QPointF(rect.left(), rect.bottom() - 2 * rBL), QSizeF(2 * rBL, 2 * rBL)),
+                    270, -90);
+            break;
+        }
+    } else {
+        path.lineTo(rect.bottomLeft());
+    }
+
+    if (rTL > 0) {
+        switch (cornerShape(Qt::TopLeftCorner)) {
+        case Bevel:
+            path.lineTo(QPointF(rect.left(), rect.top() + rTL));
+            break;
+        case Squircle:
+            path.lineTo(QPointF(rect.left(), rect.top() + rTL));
+            addSquircleCorner(QPointF(rect.left(), rect.top() + rTL), 3, rTL);
+            break;
+        default:
+            path.arcTo(QRectF(rect.topLeft(), QSizeF(2 * rTL, 2 * rTL)), 180, -90);
+            break;
+        }
+    } else {
+        path.lineTo(rect.topLeft());
+    }
+    path.closeSubpath();
 }
 
 /****************************************************************************/

@@ -32,6 +32,7 @@ private slots:
     void appendRemove();
     void asynchronous();
     void cornerProperties();
+    void squircleCornerRadii();
     void splicePathList();
     void pathChanges();
 
@@ -560,6 +561,39 @@ void tst_QuickPath::cornerProperties()
     QCOMPARE(pathRectangle.hasBottomLeftBevel(), false);
     QCOMPARE(pathRectangle.hasBottomRightBevel(), false);
 
+    // CornerShape
+    QCOMPARE(pathRectangle.cornerShape(), QQuickPathRectangle::Rounded);
+    QCOMPARE(pathRectangle.topLeftCornerShape(), QQuickPathRectangle::Rounded);
+    QCOMPARE(pathRectangle.topRightCornerShape(), QQuickPathRectangle::Rounded);
+    QCOMPARE(pathRectangle.bottomLeftCornerShape(), QQuickPathRectangle::Rounded);
+    QCOMPARE(pathRectangle.bottomRightCornerShape(), QQuickPathRectangle::Rounded);
+
+    pathRectangle.setCornerShape(QQuickPathRectangle::Squircle);
+    QCOMPARE(pathRectangle.cornerShape(), QQuickPathRectangle::Squircle);
+    QCOMPARE(pathRectangle.topLeftCornerShape(), QQuickPathRectangle::Squircle);
+    QCOMPARE(pathRectangle.topRightCornerShape(), QQuickPathRectangle::Squircle);
+    QCOMPARE(pathRectangle.bottomLeftCornerShape(), QQuickPathRectangle::Squircle);
+    QCOMPARE(pathRectangle.bottomRightCornerShape(), QQuickPathRectangle::Squircle);
+    QVERIFY(pathRectangle.hasBevel() == false);
+
+    pathRectangle.setCornerShape(QQuickPathRectangle::Rounded);
+    pathRectangle.setBottomLeftCornerShape(QQuickPathRectangle::Bevel);
+    QCOMPARE(pathRectangle.topLeftCornerShape(), QQuickPathRectangle::Rounded);
+    QCOMPARE(pathRectangle.topRightCornerShape(), QQuickPathRectangle::Rounded);
+    QCOMPARE(pathRectangle.bottomLeftCornerShape(), QQuickPathRectangle::Bevel);
+    QCOMPARE(pathRectangle.bottomRightCornerShape(), QQuickPathRectangle::Rounded);
+    QCOMPARE(pathRectangle.hasBottomLeftBevel(), true);
+
+    pathRectangle.resetBottomLeftCornerShape();
+    QCOMPARE(pathRectangle.bottomLeftCornerShape(), QQuickPathRectangle::Rounded);
+
+    // bevel is a legacy view onto cornerShape
+    pathRectangle.setBevel(true);
+    QCOMPARE(pathRectangle.cornerShape(), QQuickPathRectangle::Bevel);
+    pathRectangle.setTopLeftCornerShape(QQuickPathRectangle::Squircle);
+    QCOMPARE(pathRectangle.hasTopLeftBevel(), false);
+    QCOMPARE(pathRectangle.hasTopRightBevel(), true);
+
     // Radius
     pathRectangle.setRadius(10.0);
     QCOMPARE(pathRectangle.radius(), 10.0);
@@ -586,6 +620,38 @@ void tst_QuickPath::cornerProperties()
     QCOMPARE(pathRectangle.topLeftRadius(), 0.0);
     QCOMPARE(pathRectangle.bottomLeftRadius(), 0.0);
     QCOMPARE(pathRectangle.bottomRightRadius(), 0.0);
+}
+
+void tst_QuickPath::squircleCornerRadii()
+{
+    QQuickPathRectangle pathSquircle;
+    pathSquircle.setCornerShape(QQuickPathRectangle::Squircle);
+
+    pathSquircle.setRadius(10.0);
+    QCOMPARE(pathSquircle.radius(), 10.0);
+    QCOMPARE(pathSquircle.topRightRadius(), 10.0);
+    QCOMPARE(pathSquircle.topLeftRadius(), 10.0);
+    QCOMPARE(pathSquircle.bottomLeftRadius(), 10.0);
+    QCOMPARE(pathSquircle.bottomRightRadius(), 10.0);
+
+    pathSquircle.setTopRightRadius(3.0);
+    QCOMPARE(pathSquircle.topRightRadius(), 3.0);
+    QCOMPARE(pathSquircle.radius(), 10.0);
+    QCOMPARE(pathSquircle.topLeftRadius(), 10.0);
+    QCOMPARE(pathSquircle.bottomLeftRadius(), 10.0);
+    QCOMPARE(pathSquircle.bottomRightRadius(), 10.0);
+
+    pathSquircle.setRadius(0.0);
+    QCOMPARE(pathSquircle.topRightRadius(), 3.0);
+    QCOMPARE(pathSquircle.topLeftRadius(), 0.0);
+    QCOMPARE(pathSquircle.bottomLeftRadius(), 0.0);
+    QCOMPARE(pathSquircle.bottomRightRadius(), 0.0);
+
+    pathSquircle.resetTopRightRadius();
+    QCOMPARE(pathSquircle.topRightRadius(), 0.0);
+    QCOMPARE(pathSquircle.topLeftRadius(), 0.0);
+    QCOMPARE(pathSquircle.bottomLeftRadius(), 0.0);
+    QCOMPARE(pathSquircle.bottomRightRadius(), 0.0);
 }
 
 void tst_QuickPath::splicePathList()

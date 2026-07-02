@@ -160,6 +160,10 @@ Rectangle {
                     shapeUrl: "rectangle.qml"
                 }
                 ListElement {
+                    name: qsTr("Corner Shapes")
+                    shapeUrl: "cornershapes.qml"
+                }
+                ListElement {
                     name: qsTr("Fill item")
                     shapeUrl: "fillItem.qml"
                 }

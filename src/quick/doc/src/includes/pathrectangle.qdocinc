@@ -79,3 +79,49 @@ one beveled corner}
 
 \sa bevel
 //! [bevel-properties]
+
+
+//! [corner-shape-property]
+\qmlproperty enumeration \1::cornerShape
+
+This property defines how the corners of the rectangle are rendered:
+sharp/rounded (\c PathRectangle.Rounded, the default), cut off in a
+straight line (\c PathRectangle.Bevel), or rendered as a smooth
+"squircle"-style curve (\c PathRectangle.Squircle).
+
+\value PathRectangle.Rounded The corner is a plain circular arc (or sharp,
+       if \l radius is \c 0). This is the default.
+\value PathRectangle.Bevel The corner is cut off in a straight line.
+\value PathRectangle.Squircle The corner is rounded using a curve whose
+       curvature changes gradually, rather than switching abruptly from a
+       straight line into a circular arc. This gives the corner a softer,
+       more organic look, popularized by app icons and UI designs
+       (sometimes called "squircle" or "continuous" corners).
+
+This property may be overridden by the individual corner shape properties.
+
+\snippet \2 \3
+
+\image pathsquircle.png
+
+\sa topLeftCornerShape, topRightCornerShape, bottomLeftCornerShape, bottomRightCornerShape
+//! [corner-shape-property]
+
+
+//! [corner-shape-properties]
+\qmlproperty enumeration \1::topLeftCornerShape
+\qmlproperty enumeration \1::topRightCornerShape
+\qmlproperty enumeration \1::bottomLeftCornerShape
+\qmlproperty enumeration \1::bottomRightCornerShape
+
+If set, these properties define the individual corner shapes, overriding
+\l cornerShape for that corner. When unset, the value of \l cornerShape is
+used instead.
+
+These properties are unset by default. Assign \c undefined to them to
+return them to the unset state.
+
+\snippet \2 \3
+
+\sa cornerShape
+//! [corner-shape-properties]
