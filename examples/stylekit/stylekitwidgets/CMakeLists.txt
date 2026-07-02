@@ -12,6 +12,8 @@ qt_add_executable(${PROJECT_NAME} WIN32 MACOSX_BUNDLE
     main.cpp
 )
 
+target_compile_definitions(${PROJECT_NAME} PRIVATE QT_NO_CAST_FROM_ASCII)
+
 qt_add_resources(${PROJECT_NAME} "styles"
     PREFIX "/"
     FILES
