@@ -6,6 +6,7 @@
 \ingroup cmake-commands-qtqml
 
 \title qt_import_qml_plugins
+\keyword qt_import_qml_plugins()
 \keyword qt6_import_qml_plugins
 
 \summary{Ensures QML plugins needed by a target are imported for static builds.}
@@ -29,7 +30,7 @@ qt_import_qml_plugins(target)
 
 \c{qt_import_qml_plugins()} runs \c{qmlimportscanner} on the \c target
 immediately as part of the call (unless the \c{NO_IMPORT_SCAN} option was
-passed to \l{qt6_add_qml_module}{qt_add_qml_module()} when defining the QML
+passed to \l{qt_add_qml_module()} when defining the QML
 module). It finds the static QML plugins used by the
 \c target and links it to those plugins so that they are part of the executable
 or shared library that \c target represents. The search follows QML module

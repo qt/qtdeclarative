@@ -11,7 +11,7 @@
 \summary {Let \c qt_add_qml_module() dependency keywords accept CMake targets.}
 
 This policy was introduced in Qt 6.8. It allows passing CMake targets to
-\l{qt_add_qml_module}{qt_add_qml_module()} via the \c DEPENDENCIES, \c IMPORTS,
+\l{qt_add_qml_module()} via the \c DEPENDENCIES, \c IMPORTS,
 \c OPTIONAL_IMPORTS, and \c DEFAULT_IMPORTS keywords.
 
 Enabling this policy means that arguments passed to those keywords can be prefixed

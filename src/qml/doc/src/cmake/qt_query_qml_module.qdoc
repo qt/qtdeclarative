@@ -6,6 +6,7 @@
 \ingroup cmake-commands-qtqml
 
 \title qt_query_qml_module
+\keyword qt_query_qml_module()
 \keyword qt6_query_qml_module
 
 \summary {Retrieve information about a QML module.}
@@ -41,7 +42,7 @@ qt_query_qml_module(
 
 This command is used to obtain information about a QML module \c target.
 That \c target must have previously been created by or passed to an earlier
-call to \l{qt6_add_qml_module}{qt_add_qml_module()}. The \c target cannot be an
+call to \l{qt_add_qml_module()}. The \c target cannot be an
 imported target.
 
 The information provided by this command enables the caller to deploy all parts
@@ -68,13 +69,13 @@ this QML module's \c{qmldir} file (and possibly others) should be deployed.
 The QML module installation directory serves as a QML import path where
 the QML engine will look for QML modules.
 The default base QML module installation directory used by
-\l{qt6_generate_deploy_qml_app_script}{qt_generate_deploy_qml_app_script()}
+\l{qt_generate_deploy_qml_app_script()}
 is \c{qml}. A project using a deployment script can use \l{QT_DEPLOY_QML_DIR}
 rather than hard-coding this location (also see \l{QT_DEPLOY_PREFIX}).
 
 \c MODULE_RESOURCE_PATH provides the resource path under which the QML module's
 compiled-in files can be found. It is formed from
-\l{qt6_add_qml_module}{qt_add_qml_module()}'s \c{RESOURCE_PREFIX} concatenated
+\l{qt_add_qml_module()}'s \c{RESOURCE_PREFIX} concatenated
 with the module's \c TARGET_PATH.
 The queried value should not be used for deployment, but may be helpful in
 matching up resource paths with file system locations, if needed.
@@ -91,8 +92,8 @@ file should be deployed to the same path as the \c{qmldir} file.
 of the following methods:
 
 \list
-\li As \c{QML_FILES} arguments in \l{qt6_add_qml_module}{qt_add_qml_module()}.
-\li As \c{FILES} arguments in \l{qt6_target_qml_sources}{qt_target_qml_sources()}.
+\li As \c{QML_FILES} arguments in \l{qt_add_qml_module()}.
+\li As \c{FILES} arguments in \l{qt_target_qml_sources()}.
 \endlist
 
 All files will be recorded with absolute paths.
@@ -105,7 +106,7 @@ name, since this could be different to the file name in \c QML_FILES due to the
 use of resource aliases (see \l{QT_RESOURCE_ALIAS}).
 
 Entries in \c QML_FILES_DEPLOY_PATHS can also be an empty string. Any file
-added using \l{qt6_target_qml_sources}{qt_target_qml_sources()} with a custom
+added using \l{qt_target_qml_sources()} with a custom
 \c PREFIX will have no deploy path, since using a custom prefix typically means
 the file sits outside of the QML module's target path.
 
@@ -125,8 +126,8 @@ empty element.
 The \c RESOURCES, \c RESOURCES_DEPLOY_PATHS, and \c RESOURCES_PREFIX_OVERRIDES
 options are analogous to those for \c QML_FILES discussed above.
 \c RESOURCES provides a list of all files added to the QML module as
-\c RESOURCES arguments to either \l{qt6_add_qml_module}{qt_add_qml_module()} or
-\l{qt6_target_qml_sources}{qt_target_qml_sources()}. All paths will be
+\c RESOURCES arguments to either \l{qt_add_qml_module()} or
+\l{qt_target_qml_sources()}. All paths will be
 absolute. The meaning and usage of \c RESOURCES_DEPLOY_PATHS and
 \c RESOURCES_PREFIX_OVERRIDES follows the same patterns as
 \c QML_FILES_DEPLOY_PATHS and \c QML_FILES_PREFIX_OVERRIDES respectively.
