@@ -497,6 +497,10 @@ add_dependencies(codegen_test_module ${cmake_target_dependencies})
 qt_autogen_tools_initial_setup(codegen_test_moduleplugin)
 
 
+if(OHOS) # QTBUG-147585 (OpenHarmony)
+    return()
+endif()
+
 qt_add_library(codegen_test_module_verify STATIC)
 qt_autogen_tools_initial_setup(codegen_test_module_verify)
 
