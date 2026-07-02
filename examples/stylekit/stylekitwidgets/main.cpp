@@ -21,6 +21,7 @@
 #include <QSizePolicy>
 #include <QStyleKitStyle>
 
+#include <algorithm>
 #include <array>
 
 using namespace Qt::StringLiterals;
@@ -225,12 +226,20 @@ Widget::Widget()
     windowLayout->addWidget(new StyleControl(this));
 }
 
+static bool isStyleOption(const char *option)
+{
+    return qstrcmp(option, "-style") == 0;
+}
+
 int main(int argc, char *argv[])
 {
+    const bool hasStyleOption = std::any_of(argv + 1, argv + argc, isStyleOption);
+
     QApplication app(argc, argv);
 
     auto *style = new QStyleKitStyle(presets[0].path);
-    QApplication::setStyle(style);
+    if (!hasStyleOption)
+        QApplication::setStyle(style);
 
     // --- Main window ---
 
