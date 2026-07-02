@@ -1573,6 +1573,9 @@ TestCase {
         if (!control.highlightOnHover)
             skip("highlightOnHover is not active for this component")
 
+        if (!control.hoverEnabled)
+            skip("hoverEnabled is not enabled by default for platform: " + Qt.platform.pluginName)
+
         compare(control.highlightedIndex, -1)
 
         let openedSpy = signalSpy.createObject(control, {target: control.popup, signalName: "opened"})
