@@ -11,7 +11,7 @@
 \summary {':/qt/qml/' is the default resource prefix for QML modules.}
 
 This policy was introduced in Qt 6.5. It changes where
-\l{qt_add_qml_module()} stores QML resources in
+\l qt_add_qml_module() stores QML resources in
 the resource system.
 
 Enabling this policy ensures that your QML module is placed under
@@ -28,12 +28,12 @@ found without further setup.
 
 Qt 6.5 issues warnings if you do not pass any of the following arguments to the
 \c qt_add_qml_module command: \c RESOURCE_PREFIX, \c NO_RESOURCE_TARGET_PATH.
-Use the \l qt_policy command to suppress the warning by explicitly setting
+Use the \l qt_policy() command to suppress the warning by explicitly setting
 the policy to \c OLD or \c NEW.
 
 \qtpolicydeprecatedbehavior
 
-\sa qt_policy, {qt6_standard_project_setup}{qt_standard_project_setup()},
-    qt_cmake_policies, qt_add_qml_module
+\sa qt_policy(), qt_standard_project_setup(),
+    qt_cmake_policies, qt_add_qml_module()
 
 */

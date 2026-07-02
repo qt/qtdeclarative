@@ -7,7 +7,6 @@
 
 \title qt_generate_deploy_qml_app_script
 \keyword qt_generate_deploy_qml_app_script()
-\keyword qt6_generate_deploy_qml_app_script
 
 \summary {Generate a deployment script for a QML application.}
 
@@ -54,7 +53,7 @@ the application uses may all need to be installed too. The installed layout
 is also going to be different for macOS app bundles compared to other platforms.
 The \c{qt_generate_deploy_qml_app_script()} is a convenience command intended
 to simplify that process, similar to what
-\l{qt6_generate_deploy_app_script}{qt_generate_deploy_app_script()} does for
+\l qt_generate_deploy_app_script() does for
 non-QML applications.
 
 The command expects the application to follow Qt's recommended install
@@ -77,10 +76,10 @@ is only written at CMake generate-time. It is intended to be used with the
 has been installed using \l{install(TARGETS)}.
 
 The deployment script will call
-\l{qt_deploy_qml_imports()} with a suitable set of
+\l qt_deploy_qml_imports() with a suitable set of
 options for the standard install layout. For macOS app bundles and Windows
 targets, it will then also call
-\l{qt6_deploy_runtime_dependencies}{qt_deploy_runtime_dependencies()}, again
+\l qt_deploy_runtime_dependencies(), again
 with suitable options for the standard install layout.
 
 Calling \c{qt_generate_deploy_qml_app_script()} for a platform that is not
@@ -104,7 +103,7 @@ other platforms.
 
 On platforms other than macOS, Qt translations are automatically deployed. To
 inhibit this behavior, specify \c{NO_TRANSLATIONS}. Use
-\l{qt_deploy_translations}{qt_deploy_translations()} to deploy translations in a
+\l qt_deploy_translations() to deploy translations in a
 customized way.
 
 For Windows desktop applications, the required runtime files for the compiler
@@ -119,23 +118,23 @@ The options \c{PRE_INCLUDE_REGEXES}, \c{PRE_EXCLUDE_REGEXES},
 \c{POST_EXCLUDE_FILES} can be specified to control the deployment of runtime
 dependencies. These options do not apply to all platforms and are forwarded
 unmodified to
-\l{qt6_deploy_runtime_dependencies}{qt_deploy_runtime_dependencies()}.
+\l qt_deploy_runtime_dependencies().
 
 The options \c EXCLUDE_PLUGINS, \c EXCLUDE_PLUGIN_TYPES, \c INCLUDE_PLUGINS, and
 \c INCLUDE_PLUGIN_TYPES are used to select Qt plugins. See
-\l{qt6_deploy_runtime_dependencies}{qt_deploy_runtime_dependencies()} for their
+\l qt_deploy_runtime_dependencies() for their
 documentation.
 
 You can turn off plugin deployment altogether with the \c NO_PLUGINS option.
 
 For deploying a non-QML application, use
-\l{qt6_generate_deploy_app_script}{qt_generate_deploy_app_script()}
+\l qt_generate_deploy_app_script()
 instead. It is an error to call both \c{qt_generate_deploy_qml_app_script()}
-and \l{qt6_generate_deploy_app_script}{qt_generate_deploy_app_script()} for the
+and \l qt_generate_deploy_app_script() for the
 same target.
 
-\sa {qt6_standard_project_setup}{qt_standard_project_setup()},
-    {qt6_generate_deploy_app_script}{qt_generate_deploy_app_script()}
+\sa qt_standard_project_setup(),
+    qt_generate_deploy_app_script()
 
 \section1 Example
 

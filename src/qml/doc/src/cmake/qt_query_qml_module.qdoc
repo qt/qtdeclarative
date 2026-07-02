@@ -7,7 +7,6 @@
 
 \title qt_query_qml_module
 \keyword qt_query_qml_module()
-\keyword qt6_query_qml_module
 
 \summary {Retrieve information about a QML module.}
 

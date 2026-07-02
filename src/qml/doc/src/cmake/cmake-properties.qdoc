@@ -31,7 +31,7 @@ By default, this property is set to \c{QmlLinter}.
 This property only has an effect if CMake's \l USE_FOLDERS property is \c{ON}.
 
 You can enable folder support by calling
-\l{qt6_standard_project_setup}{qt_standard_project_setup}.
+\l qt_standard_project_setup().
 */
 
 

@@ -7,7 +7,6 @@
 
 \title qt_add_qml_plugin
 \keyword qt_add_qml_plugin()
-\keyword qt6_add_qml_plugin
 
 \summary{Defines a plugin associated with a QML module.}
 

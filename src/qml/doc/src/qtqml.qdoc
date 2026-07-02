@@ -48,7 +48,7 @@ the \c QmlIntegration module as follows:
 
 \snippet code/doc_src_qtqml.cmake 1
 
-See \l{qt6_generate_foreign_qml_types} for details.
+See \l qt_generate_foreign_qml_types() for details.
 
 \section3 Building with qmake
 
@@ -57,7 +57,7 @@ See \l{qt6_generate_foreign_qml_types} for details.
 \section1 Registering QML Types and QML Modules
 
 In order to register types for usage with QML you first need to define a
-\l{Writing QML Modules}{QML module}, preferably using \l{qt_add_qml_module} in CMake.
+\l{Writing QML Modules}{QML module}, preferably using \l qt_add_qml_module() in CMake.
 Then, you can add C++ headers to your new module, and
 \l{Defining QML Types from C++}{define types} to be
 \l{Exposing Attributes of C++ Types to QML}{exposed to QML} in them.

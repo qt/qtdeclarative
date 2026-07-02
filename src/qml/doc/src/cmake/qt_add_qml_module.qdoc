@@ -7,7 +7,6 @@
 
 \title qt_add_qml_module
 \keyword qt_add_qml_module()
-\keyword qt6_add_qml_module
 
 \summary{Defines a QML module.}
 
@@ -324,7 +323,7 @@ for it instead.
 
 A separate linting target will be automatically created if any \c{.qml} files
 are added to the module via the \c QML_FILES keyword, or by a later call to
-\l{qt_target_qml_sources()}. The name of the linting
+\l qt_target_qml_sources(). The name of the linting
 target will be the \c target followed by \c{_qmllint}. An \c{all_qmllint}
 target which depends on all the individual \c{*_qmllint} targets is also
 provided as a convenience.
@@ -526,12 +525,12 @@ import. This behavior can be turned off for a QML module by passing the
 \c NO_GENERATE_EXTRA_QMLDIRS flag to it.
 The \c NO_GENERATE_QMLDIR implies \c NO_GENERATE_EXTRA_QMLDIRS.
 
-\note See \l{qt_target_qml_sources()} for further details on
+\note See \l qt_target_qml_sources() for further details on
 how to add qmlfiles after \c qt_add_qml_module() was called.
 For example, you may wish to add files conditionally based on an if statement
 expression, or from subdirectories that will only be added if certain criteria
 are met.
-Furthermore, files added with \l{qt_target_qml_sources()}
+Furthermore, files added with \l qt_target_qml_sources()
 also can specify if they should be skipped for the linting,
 \l{qmlcachegen-auto}{bytecode compilation} or \c qmldir file generation.
 
@@ -839,7 +838,7 @@ disabled by adding the \c NO_PLUGIN option. Specifying both \c NO_PLUGIN and
 In certain situations, the project may want to delay creating the plugin target
 until after the call. The \c NO_CREATE_PLUGIN_TARGET option can be given in
 that situation. The project is then expected to call
-\l{qt_add_qml_plugin()} on the plugin target once it has
+\l qt_add_qml_plugin() on the plugin target once it has
 been created. When  \c NO_CREATE_PLUGIN_TARGET is given, \c PLUGIN_TARGET must
 also be provided to explicitly name the plugin target.
 
@@ -946,7 +945,7 @@ The need for specifying the \c OUTPUT_DIRECTORY keyword should be rare, but if
 it is used, it is likely that the caller will also need to add to the
 \l IMPORT_PATH to ensure that \l{qmllint-auto}{linting},
 \l{qmlcachegen-auto}{cached compilation} of qml sources,
-\l{qt6_import_qml_plugins}{automatic importing} of plugins in static builds,
+\l{qt_import_qml_plugins}{automatic importing} of plugins in static builds,
 and \l{qt_deploy_qml_imports}{deploying imported QML modules} for non-static
 builds all work correctly.
 
@@ -982,10 +981,10 @@ code will be generated into a C++ namespace of this name.
 
 For static Qt builds, \c{qmlimportscanner} is run at configure time to scan the
 \c{.qml} files of a QML module and identify the QML imports it uses (see
-\l{qt_import_qml_plugins()}). For non-static Qt builds,
+\l qt_import_qml_plugins()). For non-static Qt builds,
 if the target is an executable, a similar scan is performed at build time to
 provide the information needed by deployment scripts (see
-\l{qt_deploy_qml_imports()}). Both scans can be
+\l qt_deploy_qml_imports()). Both scans can be
 disabled by providing the \c{NO_IMPORT_SCAN} option. Doing so means the project
 takes on the responsibility of ensuring all required plugins are instantiated
 and linked for static builds. For non-static builds the project must manually

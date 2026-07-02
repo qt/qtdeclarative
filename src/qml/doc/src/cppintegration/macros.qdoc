@@ -10,7 +10,7 @@
 
   This header provides macros that can be used to register C++ types with QML.
 
-  \sa qt_generate_foreign_qml_types, {Overview - QML and C++ Integration}, qmltyperegistrar
+  \sa qt_generate_foreign_qml_types(), {Overview - QML and C++ Integration}, qmltyperegistrar
 */
 
 /*!
@@ -52,10 +52,10 @@
   QML_IMPORT_MAJOR_VERSION = 1
   \endcode
 
-  With CMake, you pass the URI and version to qt_add_qml_module
+  With CMake, you pass the URI and version to \l qt_add_qml_module()
 
   \badcode
-  qt6_add_qml_module(myapp
+  qt_add_qml_module(myapp
     URI com.mycompany.qmlcomponents
     VERSION 1.0
   )
