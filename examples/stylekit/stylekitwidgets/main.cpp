@@ -21,16 +21,20 @@
 #include <QSizePolicy>
 #include <QStyleKitStyle>
 
+#include <array>
+
+using namespace Qt::StringLiterals;
+
 struct StylePreset
 {
-    const char *name;
-    const char *path;
+    QLatin1StringView name;
+    QLatin1StringView path;
 };
 
-static const StylePreset presets[] = {
-    { "Classic", ":/ClassicStyle.qml" },
-    { "Flat",    ":/FlatStyle.qml"    },
-    { "Neon",    ":/NeonStyle.qml"    },
+static constexpr std::array<StylePreset, 3> presets = {
+    StylePreset{ "Classic"_L1, ":/ClassicStyle.qml"_L1 },
+    StylePreset{ "Flat"_L1,    ":/FlatStyle.qml"_L1    },
+    StylePreset{ "Neon"_L1,    ":/NeonStyle.qml"_L1    },
 };
 
 class StyleControl : public QGroupBox
@@ -53,17 +57,17 @@ private:
 };
 
 StyleControl::StyleControl(QWidget *parent) :
-    QGroupBox("Settings", parent)
+    QGroupBox(tr("Settings"), parent)
 {
     setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
-    QFormLayout *settingsLayout = new QFormLayout(this);
+    auto *settingsLayout = new QFormLayout(this);
 
     for (const StylePreset &preset : presets)
-        m_stylePathCombo->addItem(QString::fromUtf8(preset.name), QString::fromUtf8(preset.path));
+        m_stylePathCombo->addItem(preset.name, preset.path);
     m_stylePathCombo->setCurrentIndex(0);
 
-    settingsLayout->addRow("Style", m_stylePathCombo);
-    settingsLayout->addRow("Theme", m_themeCombo);
+    settingsLayout->addRow(tr("Style"), m_stylePathCombo);
+    settingsLayout->addRow(tr("Theme"), m_themeCombo);
 
     if (m_style != nullptr)
         refreshThemes();
@@ -112,25 +116,25 @@ public:
 
 Widget::Widget()
 {
-    QScrollArea *scrollArea = new QScrollArea();
+    auto *scrollArea = new QScrollArea();
     scrollArea->setWidgetResizable(true);
     scrollArea->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
-    QWidget *scrollWidget = new QWidget();
+    auto *scrollWidget = new QWidget();
     scrollArea->setWidget(scrollWidget);
 
-    QVBoxLayout *contentLayout = new QVBoxLayout(scrollWidget);
+    auto *contentLayout = new QVBoxLayout(scrollWidget);
     contentLayout->setAlignment(Qt::AlignTop);
 
     // Buttons
-    QGroupBox *buttonsGroup = new QGroupBox("Buttons");
-    QHBoxLayout *buttonsLayout = new QHBoxLayout(buttonsGroup);
-    QPushButton *normalButton = new QPushButton("Normal");
-    QPushButton *checkableButton = new QPushButton("Checkable");
+    auto *buttonsGroup = new QGroupBox(tr("Buttons"));
+    auto *buttonsLayout = new QHBoxLayout(buttonsGroup);
+    auto *normalButton = new QPushButton(tr("Normal"));
+    auto *checkableButton = new QPushButton(tr("Checkable"));
     checkableButton->setCheckable(true);
-    QPushButton *disabledButton = new QPushButton("Disabled");
+    auto *disabledButton = new QPushButton(tr("Disabled"));
     disabledButton->setEnabled(false);
-    QPushButton *flatButton = new QPushButton("Flat");
+    auto *flatButton = new QPushButton(tr("Flat"));
     flatButton->setFlat(true);
     buttonsLayout->addWidget(normalButton);
     buttonsLayout->addWidget(checkableButton);
@@ -140,22 +144,22 @@ Widget::Widget()
     contentLayout->addWidget(buttonsGroup);
 
     // CheckBoxes and RadioButtons
-    QGroupBox *checkRadioGroup = new QGroupBox("CheckBoxes and RadioButtons");
-    QGridLayout *checkRadioLayout = new QGridLayout(checkRadioGroup);
+    auto *checkRadioGroup = new QGroupBox(tr("CheckBoxes and RadioButtons"));
+    auto *checkRadioLayout = new QGridLayout(checkRadioGroup);
     checkRadioLayout->setColumnStretch(3, 1);
 
-    QCheckBox *checkBox1 = new QCheckBox("Mango");
+    auto *checkBox1 = new QCheckBox(tr("Mango"));
     checkBox1->setChecked(true);
-    QCheckBox *checkBox2 = new QCheckBox("Avocado");
-    QCheckBox *checkBox3 = new QCheckBox("Banano");
+    auto *checkBox2 = new QCheckBox(tr("Avocado"));
+    auto *checkBox3 = new QCheckBox(tr("Banano"));
     checkBox3->setChecked(true);
 
-    QRadioButton *radioButton1 = new QRadioButton("Pasta");
-    QRadioButton *radioButton2 = new QRadioButton("Lasagna");
+    auto *radioButton1 = new QRadioButton(tr("Pasta"));
+    auto *radioButton2 = new QRadioButton(tr("Lasagna"));
     radioButton2->setChecked(true);
-    QRadioButton *radioButton3 = new QRadioButton("Burrita");
+    auto *radioButton3 = new QRadioButton(tr("Burrita"));
 
-    QButtonGroup *radioGroup = new QButtonGroup(scrollWidget);
+    auto *radioGroup = new QButtonGroup(scrollWidget);
     radioGroup->addButton(radioButton1);
     radioGroup->addButton(radioButton2);
     radioGroup->addButton(radioButton3);
@@ -169,37 +173,37 @@ Widget::Widget()
     contentLayout->addWidget(checkRadioGroup);
 
     // Text Inputs
-    QGroupBox *textInputsGroup = new QGroupBox("Text Inputs");
-    QHBoxLayout *textInputsLayout = new QHBoxLayout(textInputsGroup);
-    QLineEdit *lineEdit1 = new QLineEdit();
-    lineEdit1->setPlaceholderText("Potato");
-    QLineEdit *lineEdit2 = new QLineEdit();
-    lineEdit2->setPlaceholderText("Tomato");
+    auto *textInputsGroup = new QGroupBox(tr("Text Inputs"));
+    auto *textInputsLayout = new QHBoxLayout(textInputsGroup);
+    auto *lineEdit1 = new QLineEdit();
+    lineEdit1->setPlaceholderText(tr("Potato"));
+    auto *lineEdit2 = new QLineEdit();
+    lineEdit2->setPlaceholderText(tr("Tomato"));
     textInputsLayout->addWidget(lineEdit1);
     textInputsLayout->addWidget(lineEdit2);
     contentLayout->addWidget(textInputsGroup);
 
     // Misc
-    QGroupBox *miscGroup = new QGroupBox("Misc");
-    QHBoxLayout *miscLayout = new QHBoxLayout(miscGroup);
-    QSpinBox *spinBox = new QSpinBox();
+    auto *miscGroup = new QGroupBox(tr("Misc"));
+    auto *miscLayout = new QHBoxLayout(miscGroup);
+    auto *spinBox = new QSpinBox();
     spinBox->setRange(0, 100);
     spinBox->setValue(42);
-    QComboBox *comboBox = new QComboBox();
-    comboBox->addItems({ "One", "February", "Aramis", "Winter", "Friday" });
+    auto *comboBox = new QComboBox();
+    comboBox->addItems({ tr("One"), tr("February"), tr("Aramis"), tr("Winter"), tr("Friday") });
     miscLayout->addWidget(spinBox);
     miscLayout->addWidget(comboBox);
     miscLayout->addStretch();
     contentLayout->addWidget(miscGroup);
 
     // Sliders
-    QGroupBox *slidersGroup = new QGroupBox("Sliders");
+    auto *slidersGroup = new QGroupBox(tr("Sliders"));
     slidersGroup->setMinimumHeight(250);
-    QHBoxLayout *slidersLayout = new QHBoxLayout(slidersGroup);
-    QSlider *slider = new QSlider(Qt::Horizontal);
+    auto *slidersLayout = new QHBoxLayout(slidersGroup);
+    auto *slider = new QSlider(Qt::Horizontal);
     slider->setRange(0, 100);
     slider->setValue(50);
-    QSlider *verticalSlider = new QSlider(Qt::Vertical);
+    auto *verticalSlider = new QSlider(Qt::Vertical);
     verticalSlider->setRange(0, 100);
     verticalSlider->setValue(30);
     slidersLayout->addWidget(slider);
@@ -208,9 +212,9 @@ Widget::Widget()
     contentLayout->addWidget(slidersGroup);
 
     // Progress Bar
-    QGroupBox *progressGroup = new QGroupBox("Progress Bar");
-    QHBoxLayout *progressLayout = new QHBoxLayout(progressGroup);
-    QProgressBar *progressBar = new QProgressBar();
+    auto *progressGroup = new QGroupBox(tr("Progress Bar"));
+    auto *progressLayout = new QHBoxLayout(progressGroup);
+    auto *progressBar = new QProgressBar();
     progressBar->setRange(0, 100);
     progressBar->setValue(20);
     progressLayout->addWidget(progressBar);
@@ -225,18 +229,18 @@ int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
 
-    QStyleKitStyle *style = new QStyleKitStyle(QString::fromUtf8(presets[0].path));
+    auto *style = new QStyleKitStyle(presets[0].path);
     QApplication::setStyle(style);
 
     // --- Main window ---
 
     Widget window;
-    window.setWindowTitle("StyleKit Widgets Example");
+    window.setWindowTitle(Widget::tr("StyleKit Widgets Example"));
     window.resize(800, 600);
 
     window.show();
 
-    return app.exec();
+    return QApplication::exec();
 }
 
 #include "main.moc"
