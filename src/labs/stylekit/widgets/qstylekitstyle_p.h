@@ -194,7 +194,8 @@ private:
     void cleanupSubElements(const QWidget *widget) const;
     void clearAllSubElements() const;
 
-    QQSK::State resolvedStateFor(QQStyleKitReader::ControlType type, QStyle::State state) const;
+    QQSK::State resolvedStateFor(QQStyleKitReader::ControlType type, QStyle::State state,
+                                 const QWidget *widget = nullptr) const;
 
     QQStyleKitResolved resolve(const QWidget *w, QQStyleKitReader::ControlType type, QStyle::State state) const;
     QQStyleKitResolved resolveSubElement(const QWidget *w, const QStyleOption *opt,
@@ -215,6 +216,7 @@ private:
                          QPainter *p,
                          Qt::Alignment defaultAlignment = Qt::AlignHCenter | Qt::AlignVCenter) const;
     void drawStyledItemRect(const QQStyleKitDelegateProperties *, const QRectF &rect, QPainter *p) const;
+    void drawBackground(const QQStyleKitDelegateProperties *, const QRect &rect, QPainter *p) const;
     void drawStyledItemImage(const QQStyleKitImageProperties *image, const QRectF &rect,
                              qreal opacity, QPainter *p) const;
 
@@ -243,8 +245,8 @@ private:
     mutable QHash<MetricsCacheKey, ControlMetrics> metricsCache;
     QHash<const QWidget *, Tampered<QFont>> customFontWidgets;
     mutable QHash<const QWidget *, Tampered<QPalette>> customPaletteWidgets;
-    // Widgets whose viewport autoFillBackground we disabled in polish(); restored in unpolish()
-    QSet<const QWidget *> autoFillDisabledWidgets;
+    // Widgets whose automatic background fill we disabled
+    QSet<const QWidget *> bgFillDisabledWidgets;
     QString stylePath;
 };
 
