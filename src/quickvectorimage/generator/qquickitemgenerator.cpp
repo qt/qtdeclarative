@@ -291,7 +291,7 @@ void QQuickItemGenerator::outputShapePath(const PathNodeInfo &info, const QPaint
         return;
 
     const QColor fillColor = info.fillColor.defaultValue().value<QColor>();
-    const bool noFill = info.grad.type() == QGradient::NoGradient
+    const bool noFill = info.grad.type() == QGradient::NoGradient && info.patternId.isEmpty()
             && fillColor == QColorConstants::Transparent && !info.fillColor.isAnimated()
             && !info.fillOpacity.isAnimated();
     if (pathSelector == QQuickVectorImageGenerator::FillPath && noFill)
@@ -338,6 +338,8 @@ void QQuickItemGenerator::outputShapePath(const PathNodeInfo &info, const QPaint
     QTransform fillTransform = info.fillTransform;
     if (!(pathSelector & QQuickVectorImageGenerator::FillPath)) {
         shapePath->setFillColor(QColorConstants::Transparent);
+    } else if (!info.patternId.isEmpty()) {
+        generatePattern(shapePath, info, boundingRect, fillTransform);
     } else if (info.grad.type() != QGradient::NoGradient) {
         if (info.grad.coordinateMode() == QGradient::ObjectMode) {
             QTransform objectToUserSpace;
@@ -727,9 +729,68 @@ bool QQuickItemGenerator::generatePatternNode(const PatternNodeInfo &info)
         m_currentDefsRecord->append([this, info]() { generatePatternNode(info); });
         return true;
     }
-    qCDebug(lcQuickVectorImage) << "generatePatternNode: not yet implemented";
-    Q_UNUSED(info)
+
+    if (info.stage == StructureNodeStage::Start) {
+        auto *containerItem = new QQuickItem;
+        pushItem(containerItem);
+        return true;
+    }
+
+    generatePatternContainer(info);
     return true;
+}
+
+void QQuickItemGenerator::generatePatternContainer(const PatternNodeInfo &info)
+{
+    auto *container = popItem();
+    container->setParent(m_rootItem);
+    container->setParentItem(m_rootItem);
+    container->setVisible(false);
+    if (!info.isPatternRectRelativeCoordinates) {
+        container->setWidth(info.patternRect.width());
+        container->setHeight(info.patternRect.height());
+    }
+    m_patternDefs[info.id] = { container, info.patternRect, info.isPatternRectRelativeCoordinates };
+}
+
+void QQuickItemGenerator::generatePattern(QQuickShapePath *shapePath, const PathNodeInfo &info,
+                                          const QRectF &boundingRect, QTransform &fillTransform)
+{
+    auto it = m_patternDefs.find(info.patternId);
+    if (it == m_patternDefs.end()) {
+        qCWarning(lcQuickVectorImage) << "generatePattern: unknown pattern id:" << info.patternId;
+        return;
+    }
+    PatternDef &patternDef = *it;
+
+    qreal tileW, tileH, offsetX, offsetY;
+    if (patternDef.isPatternRectRelativeCoordinates) {
+        tileW = patternDef.patternRect.width() * boundingRect.width();
+        tileH = patternDef.patternRect.height() * boundingRect.height();
+        offsetX = patternDef.patternRect.x() * boundingRect.width();
+        offsetY = patternDef.patternRect.y() * boundingRect.height();
+        patternDef.container->setWidth(tileW);
+        patternDef.container->setHeight(tileH);
+    } else {
+        tileW = patternDef.patternRect.width();
+        tileH = patternDef.patternRect.height();
+        offsetX = patternDef.patternRect.x();
+        offsetY = patternDef.patternRect.y();
+    }
+
+    auto *ses = new QQuickShaderEffectSource;
+    ses->setSourceItem(patternDef.container);
+    ses->setHideSource(true);
+    ses->setVisible(false);
+    ses->setParent(m_rootItem);
+    ses->setParentItem(m_rootItem);
+    ses->setWrapMode(QQuickShaderEffectSource::Repeat);
+    ses->setSourceRect(QRectF(0, 0, tileW, tileH));
+    ses->setWidth(tileW);
+    ses->setHeight(tileH);
+
+    shapePath->setFillItem(ses);
+    fillTransform.translate(offsetX, offsetY);
 }
 
 QT_END_NAMESPACE

@@ -27,6 +27,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickItem;
 class QQuickShape;
+class QQuickShapePath;
 class QQmlContext;
 class QQuickShaderEffect;
 class QQuickShaderEffectSource;
@@ -72,6 +73,13 @@ private:
         QQuickMatrix4x4 *transformerMatrix = nullptr;
     };
 
+    struct PatternDef
+    {
+        QQuickItem *container = nullptr;
+        QRectF patternRect;
+        bool isPatternRectRelativeCoordinates = false;
+    };
+
     QQuickItem *m_rootItem = nullptr;
     QStack<QQuickItem *> m_itemStack;
     QQmlContext *m_context = nullptr;
@@ -80,6 +88,7 @@ private:
     QHash<QString, QList<std::function<void()>>> m_defs;
     QList<std::function<void()>> *m_currentDefsRecord = nullptr;
     QHash<QString, MaskDef> m_maskDefs;
+    QHash<QString, PatternDef> m_patternDefs;
 
     QQuickShape *createShapeContainer();
     void pushItem(QQuickItem *item);
@@ -87,6 +96,9 @@ private:
     QQuickItem *currentItem() const;
     void generateMaskContainer(const MaskNodeInfo &info);
     void generateMask(QQuickItem *item, const NodeInfo &info);
+    void generatePatternContainer(const PatternNodeInfo &info);
+    void generatePattern(QQuickShapePath *shapePath, const PathNodeInfo &info,
+                         const QRectF &boundingRect, QTransform &fillTransform);
 };
 
 QT_END_NAMESPACE
