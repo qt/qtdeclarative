@@ -316,6 +316,12 @@ void QQmlSortFilterProxyModel::setPrimarySorter(QQmlSorterBase *sorter)
     }
 }
 
+/*!
+    \qmlproperty var SortFilterProxyModel::sourceModel
+
+    This property allows to set source model for the sort filter proxy model.
+    The value should be of the \l {QAbstractItemModel} type.
+*/
 void QQmlSortFilterProxyModel::setSourceModel(QAbstractItemModel *sourceModel)
 {
     Q_D(QQmlSortFilterProxyModel);
