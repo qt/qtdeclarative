@@ -44,6 +44,13 @@ QQuickItem *QQuickItemGenerator::takeRootItem()
     return item;
 }
 
+QList<std::function<void()>> *QQuickItemGenerator::activeRecord() const
+{
+    if (m_currentDefsRecord)
+        return m_currentDefsRecord;
+    return m_currentMarkerRecord;
+}
+
 QQuickShape *QQuickItemGenerator::createShapeContainer()
 {
     auto *shape = new QQuickShape;
@@ -157,8 +164,8 @@ bool QQuickItemGenerator::generateStructureNode(const StructureNodeInfo &info)
     if (Q_UNLIKELY(errorState()))
         return false;
 
-    if (m_currentDefsRecord) {
-        m_currentDefsRecord->append([this, info]() { generateStructureNode(info); });
+    if (auto *rec = activeRecord()) {
+        rec->append([this, info]() { generateStructureNode(info); });
         return true;
     }
 
@@ -203,8 +210,8 @@ void QQuickItemGenerator::generatePath(const PathNodeInfo &info, const QRectF &o
     if (Q_UNLIKELY(errorState()))
         return;
 
-    if (m_currentDefsRecord) {
-        m_currentDefsRecord->append(
+    if (auto *rec = activeRecord()) {
+        rec->append(
                 [this, info, overrideBoundingRect]() { generatePath(info, overrideBoundingRect); });
         return;
     }
@@ -212,7 +219,8 @@ void QQuickItemGenerator::generatePath(const PathNodeInfo &info, const QRectF &o
     if (!isNodeVisible(info))
         return;
 
-    if (qobject_cast<QQuickShape *>(currentItem())) {
+    if (qobject_cast<QQuickShape *>(currentItem()) && info.markerStartId.isEmpty()
+        && info.markerMidId.isEmpty() && info.markerEndId.isEmpty()) {
         optimizePaths(info, overrideBoundingRect);
     } else {
         auto *shape = createShapeContainer();
@@ -222,6 +230,10 @@ void QQuickItemGenerator::generatePath(const PathNodeInfo &info, const QRectF &o
         QQuickItem *item = popItem();
         if (!info.maskId.isEmpty())
             generateMask(item, info);
+        if (!info.markerStartId.isEmpty() || !info.markerMidId.isEmpty()
+            || !info.markerEndId.isEmpty()) {
+            generateMarkers(info);
+        }
     }
 }
 
@@ -377,8 +389,8 @@ void QQuickItemGenerator::generateImageNode(const ImageNodeInfo &info)
     if (Q_UNLIKELY(errorState()))
         return;
 
-    if (m_currentDefsRecord) {
-        m_currentDefsRecord->append([this, info]() { generateImageNode(info); });
+    if (auto *rec = activeRecord()) {
+        rec->append([this, info]() { generateImageNode(info); });
         return;
     }
 
@@ -418,8 +430,8 @@ void QQuickItemGenerator::generateTextNode(const TextNodeInfo &info)
     if (Q_UNLIKELY(errorState()))
         return;
 
-    if (m_currentDefsRecord) {
-        m_currentDefsRecord->append([this, info]() { generateTextNode(info); });
+    if (auto *rec = activeRecord()) {
+        rec->append([this, info]() { generateTextNode(info); });
         return;
     }
 
@@ -478,8 +490,8 @@ void QQuickItemGenerator::generateTextNode(const TextNodeInfo &info)
 
 void QQuickItemGenerator::generateNode(const NodeInfo &info)
 {
-    if (m_currentDefsRecord) {
-        m_currentDefsRecord->append([this, info]() { generateNode(info); });
+    if (auto *rec = activeRecord()) {
+        rec->append([this, info]() { generateNode(info); });
         return;
     }
     qCDebug(lcQuickVectorImage) << "generateNode: not yet implemented";
@@ -491,8 +503,8 @@ void QQuickItemGenerator::generateUseNode(const UseNodeInfo &info)
     if (Q_UNLIKELY(errorState()))
         return;
 
-    if (m_currentDefsRecord) {
-        m_currentDefsRecord->append([this, info]() { generateUseNode(info); });
+    if (auto *rec = activeRecord()) {
+        rec->append([this, info]() { generateUseNode(info); });
         return;
     }
 
@@ -537,8 +549,8 @@ void QQuickItemGenerator::generateDefsInstantiationNode(const StructureNodeInfo 
     if (Q_UNLIKELY(errorState()))
         return;
 
-    if (m_currentDefsRecord) {
-        m_currentDefsRecord->append([this, info]() { generateDefsInstantiationNode(info); });
+    if (auto *rec = activeRecord()) {
+        rec->append([this, info]() { generateDefsInstantiationNode(info); });
         return;
     }
 
@@ -560,8 +572,8 @@ bool QQuickItemGenerator::generateMaskNode(const MaskNodeInfo &info)
     if (Q_UNLIKELY(errorState()))
         return false;
 
-    if (m_currentDefsRecord) {
-        m_currentDefsRecord->append([this, info]() { generateMaskNode(info); });
+    if (auto *rec = activeRecord()) {
+        rec->append([this, info]() { generateMaskNode(info); });
         return true;
     }
 
@@ -698,8 +710,8 @@ void QQuickItemGenerator::generateMask(QQuickItem *item, const NodeInfo &info)
 
 void QQuickItemGenerator::generateFilterNode(const FilterNodeInfo &info)
 {
-    if (m_currentDefsRecord) {
-        m_currentDefsRecord->append([this, info]() { generateFilterNode(info); });
+    if (auto *rec = activeRecord()) {
+        rec->append([this, info]() { generateFilterNode(info); });
         return;
     }
     qCDebug(lcQuickVectorImage) << "generateFilterNode: not yet implemented";
@@ -715,8 +727,15 @@ bool QQuickItemGenerator::generateMarkerNode(const MarkerNodeInfo &info)
         m_currentDefsRecord->append([this, info]() { generateMarkerNode(info); });
         return true;
     }
-    qCDebug(lcQuickVectorImage) << "generateMarkerNode: not yet implemented";
-    Q_UNUSED(info)
+
+    if (info.stage == StructureNodeStage::Start) {
+        m_markerDefs[info.id].info = info;
+        m_currentMarkerRecord = &m_markerDefs[info.id].recording;
+        return true;
+    }
+
+    m_markerDefs[info.id].info = info;
+    m_currentMarkerRecord = nullptr;
     return true;
 }
 
@@ -725,8 +744,8 @@ bool QQuickItemGenerator::generatePatternNode(const PatternNodeInfo &info)
     if (Q_UNLIKELY(errorState()))
         return false;
 
-    if (m_currentDefsRecord) {
-        m_currentDefsRecord->append([this, info]() { generatePatternNode(info); });
+    if (auto *rec = activeRecord()) {
+        rec->append([this, info]() { generatePatternNode(info); });
         return true;
     }
 
@@ -791,6 +810,164 @@ void QQuickItemGenerator::generatePattern(QQuickShapePath *shapePath, const Path
 
     shapePath->setFillItem(ses);
     fillTransform.translate(offsetX, offsetY);
+}
+
+static qreal meanAngle(QPointF p0, QPointF p1, QPointF p2)
+{
+    QPointF t1 = p1 - p0;
+    QPointF t2 = p2 - p1;
+    qreal hyp1 = hypot(t1.x(), t1.y());
+    if (hyp1 > 0)
+        t1 /= hyp1;
+    else
+        return 0.0;
+    qreal hyp2 = hypot(t2.x(), t2.y());
+    if (hyp2 > 0)
+        t2 /= hyp2;
+    else
+        return 0.0;
+    QPointF tangent = t1 + t2;
+    return -atan2(tangent.y(), tangent.x()) / M_PI * 180.0;
+}
+
+void QQuickItemGenerator::generateMarkers(const PathNodeInfo &info)
+{
+    const QPainterPath path = info.path.defaultValue().value<QPainterPath>();
+
+    for (int i = 0; i < path.elementCount(); ++i) {
+        const QPainterPath::Element element = path.elementAt(i);
+        QString markerId;
+        qreal angle = 0;
+
+        if (i == 0) {
+            markerId = info.markerStartId;
+            angle = path.angleAtPercent(0.0);
+        } else if (i == path.elementCount() - 1) {
+            markerId = info.markerEndId;
+            angle = path.angleAtPercent(1.0);
+        } else if (path.elementAt(i + 1).type != QPainterPath::CurveToDataElement) {
+            markerId = info.markerMidId;
+            QPointF p1(path.elementAt(i - 1).x, path.elementAt(i - 1).y);
+            QPointF p2(element.x, element.y);
+            QPointF p3(path.elementAt(i + 1).x, path.elementAt(i + 1).y);
+            angle = meanAngle(p1, p2, p3);
+        }
+
+        if (markerId.isEmpty())
+            continue;
+
+        auto it = m_markerDefs.find(markerId);
+        if (it == m_markerDefs.end()) {
+            qCWarning(lcQuickVectorImage) << "generateMarkers: unknown marker id:" << markerId;
+            continue;
+        }
+        const MarkerDef &markerDef = *it;
+        const MarkerNodeInfo &minfo = markerDef.info;
+
+        const qreal sw = info.strokeStyle.width.defaultValue().toReal();
+        const qreal markerW = minfo.markerUnits == MarkerNodeInfo::MarkerUnits::StrokeWidth
+                ? minfo.markerSize.width() * sw
+                : minfo.markerSize.width();
+        const qreal markerH = minfo.markerUnits == MarkerNodeInfo::MarkerUnits::StrokeWidth
+                ? minfo.markerSize.height() * sw
+                : minfo.markerSize.height();
+
+        qreal scaleX = 1.0, scaleY = 1.0, offsetX = 0.0, offsetY = 0.0;
+        if (minfo.viewBox.width() > 0)
+            scaleX = markerW / minfo.viewBox.width();
+        if (minfo.viewBox.height() > 0)
+            scaleY = markerH / minfo.viewBox.height();
+
+        if (minfo.preserveAspectRatio & MarkerNodeInfo::xyMask) {
+            if (!qFuzzyCompare(scaleX, scaleY)) {
+                if (minfo.preserveAspectRatio & MarkerNodeInfo::meet)
+                    scaleX = scaleY = qMin(scaleX, scaleY);
+                else
+                    scaleX = scaleY = qMax(scaleX, scaleY);
+
+                const qreal overflowX = scaleX * minfo.viewBox.width() - markerW;
+                const qreal overflowY = scaleY * minfo.viewBox.height() - markerH;
+
+                const quint8 xRatio = minfo.preserveAspectRatio & MarkerNodeInfo::xMask;
+                if (xRatio == MarkerNodeInfo::xMid)
+                    offsetX -= overflowX / 2;
+                else if (xRatio == MarkerNodeInfo::xMax)
+                    offsetX -= overflowX;
+
+                const quint8 yRatio = minfo.preserveAspectRatio & MarkerNodeInfo::yMask;
+                if (yRatio == MarkerNodeInfo::yMid)
+                    offsetY -= overflowY / 2;
+                else if (yRatio == MarkerNodeInfo::yMax)
+                    offsetY -= overflowY;
+            }
+        }
+
+        const qreal anchorOffsetX = offsetX - minfo.anchorPoint.x() * scaleX;
+        const qreal anchorOffsetY = offsetY - minfo.anchorPoint.y() * scaleY;
+
+        const qreal instanceAngle =
+                minfo.orientation == MarkerNodeInfo::Orientation::Value ? minfo.angle : -angle;
+
+        auto *outerItem = new QQuickItem;
+        auto outerXform = outerItem->transform();
+        if (i == 0 && minfo.orientation == MarkerNodeInfo::Orientation::AutoStartReverse) {
+            auto *flip = new QQuickScale(outerItem);
+            flip->setXScale(-1);
+            flip->setYScale(-1);
+            outerXform.append(&outerXform, flip);
+        }
+        auto *rot = new QQuickRotation(outerItem);
+        rot->setAngle(instanceAngle);
+        outerXform.append(&outerXform, rot);
+        auto *outerTr = new QQuickTranslate(outerItem);
+        outerTr->setX(element.x);
+        outerTr->setY(element.y);
+        outerXform.append(&outerXform, outerTr);
+        pushItem(outerItem);
+
+        QQuickItem *clipItem = nullptr;
+        if (!minfo.clipBox.isEmpty()) {
+            clipItem = new QQuickItem;
+            const qreal unitScale =
+                    minfo.markerUnits == MarkerNodeInfo::MarkerUnits::StrokeWidth ? sw : 1.0;
+            clipItem->setX(minfo.clipBox.x() * unitScale);
+            clipItem->setY(minfo.clipBox.y() * unitScale);
+            clipItem->setWidth(minfo.clipBox.width() * unitScale);
+            clipItem->setHeight(minfo.clipBox.height() * unitScale);
+            clipItem->setClip(true);
+            pushItem(clipItem);
+        }
+
+        auto *innerItem = new QQuickItem;
+        auto innerXform = innerItem->transform();
+        auto *innerScale = new QQuickScale(innerItem);
+        innerScale->setXScale(scaleX);
+        innerScale->setYScale(scaleY);
+        innerXform.append(&innerXform, innerScale);
+        auto *innerTr = new QQuickTranslate(innerItem);
+        innerTr->setX(anchorOffsetX);
+        innerTr->setY(anchorOffsetY);
+        innerXform.append(&innerXform, innerTr);
+        if (clipItem) {
+            auto *offsetItem = new QQuickItem;
+            const qreal unitScale =
+                    minfo.markerUnits == MarkerNodeInfo::MarkerUnits::StrokeWidth ? sw : 1.0;
+            offsetItem->setX(-minfo.clipBox.x() * unitScale);
+            offsetItem->setY(-minfo.clipBox.y() * unitScale);
+            pushItem(offsetItem);
+        }
+        pushItem(innerItem);
+
+        for (const auto &step : markerDef.recording)
+            step();
+
+        popItem();
+        if (clipItem) {
+            popItem();
+            popItem();
+        }
+        popItem();
+    }
 }
 
 QT_END_NAMESPACE

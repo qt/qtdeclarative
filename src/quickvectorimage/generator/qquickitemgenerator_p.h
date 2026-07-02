@@ -80,6 +80,12 @@ private:
         bool isPatternRectRelativeCoordinates = false;
     };
 
+    struct MarkerDef
+    {
+        QList<std::function<void()>> recording;
+        MarkerNodeInfo info;
+    };
+
     QQuickItem *m_rootItem = nullptr;
     QStack<QQuickItem *> m_itemStack;
     QQmlContext *m_context = nullptr;
@@ -87,9 +93,12 @@ private:
     quint32 m_nodeCounter = 0;
     QHash<QString, QList<std::function<void()>>> m_defs;
     QList<std::function<void()>> *m_currentDefsRecord = nullptr;
+    QList<std::function<void()>> *m_currentMarkerRecord = nullptr;
     QHash<QString, MaskDef> m_maskDefs;
     QHash<QString, PatternDef> m_patternDefs;
+    QHash<QString, MarkerDef> m_markerDefs;
 
+    QList<std::function<void()>> *activeRecord() const;
     QQuickShape *createShapeContainer();
     void pushItem(QQuickItem *item);
     QQuickItem *popItem();
@@ -99,6 +108,7 @@ private:
     void generatePatternContainer(const PatternNodeInfo &info);
     void generatePattern(QQuickShapePath *shapePath, const PathNodeInfo &info,
                          const QRectF &boundingRect, QTransform &fillTransform);
+    void generateMarkers(const PathNodeInfo &info);
 };
 
 QT_END_NAMESPACE
