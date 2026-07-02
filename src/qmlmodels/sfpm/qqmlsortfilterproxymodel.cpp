@@ -89,12 +89,12 @@ Q_LOGGING_CATEGORY (lcSortFilterProxyModel, "qt.qml.sortfilterproxymodel")
 
     The filter \l ValueFilter and \l FunctionFilter can be configured
     in SortFilterProxyModel. Each filter can be set with the
-    \l{Filter::}{column} property, similar to the sorter, to filter data in a
+    \l{FilterBase::}{column} property, similar to the sorter, to filter data in a
     specific column. If no column is specified, then the filter will be applied
     to all the column indexes in the model. To reduce the overhead of unwanted
     checks during filtering, it's recommended to specify the column index.
 
-    To disable a specific filter, \l{Filter::}{enabled} can be set to
+    To disable a specific filter, \l{FilterBase::}{enabled} can be set to
     \c false.
 
     \snippet qml/sortfilterproxymodel/qml-sortfilterproxymodel.qml sfpm-usage
@@ -107,7 +107,7 @@ Q_LOGGING_CATEGORY (lcSortFilterProxyModel, "qt.qml.sortfilterproxymodel")
     future versions of Qt.
 */
 /*!
-    \qmlproperty list<Filter> SortFilterProxyModel::filters
+    \qmlproperty list<FilterBase> SortFilterProxyModel::filters
 
     This property holds the list of filters for the \l SortFilterProxyModel.
     If no priority is set, the \l SortFilterProxyModel applies a filter in the

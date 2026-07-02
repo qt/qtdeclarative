@@ -14,7 +14,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype FunctionFilter
-    \inherits Filter
+    \inherits FilterBase
     \inqmlmodule QtQml.Models
     \since 6.10
     \preliminary
