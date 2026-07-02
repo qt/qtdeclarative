@@ -20,8 +20,6 @@ android
 android
 [ComboBox::test_modelReset]
 android
-[ComboBox::test_mouseHighlight]
-android
 [Popup::test_margins]
 android
 [Popup::test_popupOverlayCenterIn]
