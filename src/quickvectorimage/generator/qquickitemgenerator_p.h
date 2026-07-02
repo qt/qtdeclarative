@@ -28,6 +28,9 @@ QT_BEGIN_NAMESPACE
 class QQuickItem;
 class QQuickShape;
 class QQmlContext;
+class QQuickShaderEffect;
+class QQuickShaderEffectSource;
+class QQuickMatrix4x4;
 
 class Q_QUICKVECTORIMAGEGENERATOR_EXPORT QQuickItemGenerator : public QQuickGenerator
 {
@@ -59,17 +62,31 @@ public:
                          const QRectF &boundingRect) override;
 
 private:
+    struct MaskDef
+    {
+        QQuickItem *container = nullptr;
+        QRectF maskRect;
+        bool isMaskRectRelativeCoordinates = false;
+        bool isMaskContentRelativeCoordinates = false;
+        QQuickItem *transformer = nullptr;
+        QQuickMatrix4x4 *transformerMatrix = nullptr;
+    };
+
     QQuickItem *m_rootItem = nullptr;
     QStack<QQuickItem *> m_itemStack;
     QQmlContext *m_context = nullptr;
+    QSizeF m_containerSize;
     quint32 m_nodeCounter = 0;
     QHash<QString, QList<std::function<void()>>> m_defs;
     QList<std::function<void()>> *m_currentDefsRecord = nullptr;
+    QHash<QString, MaskDef> m_maskDefs;
 
     QQuickShape *createShapeContainer();
     void pushItem(QQuickItem *item);
     QQuickItem *popItem();
     QQuickItem *currentItem() const;
+    void generateMaskContainer(const MaskNodeInfo &info);
+    void generateMask(QQuickItem *item, const NodeInfo &info);
 };
 
 QT_END_NAMESPACE

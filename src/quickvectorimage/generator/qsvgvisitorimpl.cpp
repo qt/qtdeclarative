@@ -1293,8 +1293,8 @@ bool QSvgVisitorImpl::visitMaskNodeStart(const QSvgMask *node)
     info.isMaskRectRelativeCoordinates = r.unitX() == QtSvg::UnitTypes::objectBoundingBox;
     info.maskRect = r;
 
-    if (node->contentUnits() == QtSvg::UnitTypes::objectBoundingBox)
-        qCWarning(lcQuickVectorImage) << "Only user space content units supported for masks";
+    info.isMaskContentRelativeCoordinates =
+            node->contentUnits() == QtSvg::UnitTypes::objectBoundingBox;
 
     fillCommonNodeInfo(node, info);
 
@@ -1309,6 +1309,8 @@ void QSvgVisitorImpl::visitMaskNodeEnd(const QSvgMask *node)
     QSvgRectF r = node->rect();
     info.isMaskRectRelativeCoordinates = r.unitX() == QtSvg::UnitTypes::objectBoundingBox;
     info.maskRect = r;
+    info.isMaskContentRelativeCoordinates =
+            node->contentUnits() == QtSvg::UnitTypes::objectBoundingBox;
     fillCommonNodeInfo(node, info);
 
     m_generator->generateMaskNode(info);

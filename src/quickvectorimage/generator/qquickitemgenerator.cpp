@@ -11,6 +11,8 @@
 #include <private/qquickimage_p.h>
 #include <private/qquicktext_p.h>
 #include <private/qquickrectangle_p.h>
+#include <private/qquickshadereffect_p.h>
+#include <private/qquickshadereffectsource_p.h>
 
 #include "utils_p.h"
 
@@ -122,6 +124,7 @@ bool QQuickItemGenerator::generateRootNode(const StructureNodeInfo &info)
         if (info.size.height() > 0)
             root->setImplicitHeight(info.size.height());
         m_rootItem = root;
+        m_containerSize = info.viewBox.isEmpty() ? QSizeF(info.size) : info.viewBox.size();
 
         if (!isNodeVisible(info))
             return false;
@@ -187,7 +190,9 @@ bool QQuickItemGenerator::generateStructureNode(const StructureNodeInfo &info)
         pushItem(item);
         generateNodeBase(info);
     } else {
-        popItem();
+        QQuickItem *item = popItem();
+        if (!info.maskId.isEmpty())
+            generateMask(item, info);
     }
 
     return true;
@@ -214,7 +219,9 @@ void QQuickItemGenerator::generatePath(const PathNodeInfo &info, const QRectF &o
         pushItem(shape);
         generateNodeBase(info);
         optimizePaths(info, overrideBoundingRect);
-        popItem();
+        QQuickItem *item = popItem();
+        if (!info.maskId.isEmpty())
+            generateMask(item, info);
     }
 }
 
@@ -396,12 +403,12 @@ void QQuickItemGenerator::generateImageNode(const ImageNodeInfo &info)
     image->setWidth(info.rect.width());
     image->setHeight(info.rect.height());
     auto *parserStatus = qobject_cast<QQmlParserStatus *>(image);
-    if (parserStatus)
-        parserStatus->classBegin();
+    parserStatus->classBegin();
     image->setSource(QUrl::fromLocalFile(filePath));
-    if (parserStatus)
-        parserStatus->componentComplete();
-    popItem();
+    parserStatus->componentComplete();
+    QQuickItem *item = popItem();
+    if (!info.maskId.isEmpty())
+        generateMask(item, info);
 }
 
 void QQuickItemGenerator::generateTextNode(const TextNodeInfo &info)
@@ -462,7 +469,9 @@ void QQuickItemGenerator::generateTextNode(const TextNodeInfo &info)
         text->setStyle(QQuickText::Outline);
     }
 
-    popItem();
+    QQuickItem *textItem = popItem();
+    if (!info.maskId.isEmpty())
+        generateMask(textItem, info);
 }
 
 void QQuickItemGenerator::generateNode(const NodeInfo &info)
@@ -493,7 +502,9 @@ void QQuickItemGenerator::generateUseNode(const UseNodeInfo &info)
         pushItem(item);
         generateNodeBase(info);
     } else {
-        popItem();
+        QQuickItem *item = popItem();
+        if (!info.maskId.isEmpty())
+            generateMask(item, info);
     }
 }
 
@@ -509,8 +520,11 @@ bool QQuickItemGenerator::generateDefsNode(const StructureNodeInfo &info)
         m_currentDefsRecord = nullptr;
         auto it = m_defs.find(info.id);
         if (it != m_defs.end()) {
+            auto *container = new QQuickItem;
+            m_itemStack.push(container);
             for (const auto &step : *it)
                 step();
+            m_itemStack.pop();
         }
     }
     return true;
@@ -548,9 +562,136 @@ bool QQuickItemGenerator::generateMaskNode(const MaskNodeInfo &info)
         m_currentDefsRecord->append([this, info]() { generateMaskNode(info); });
         return true;
     }
-    qCDebug(lcQuickVectorImage) << "generateMaskNode: not yet implemented";
-    Q_UNUSED(info)
+
+    if (info.stage == StructureNodeStage::Start) {
+        if (info.isMaskContentRelativeCoordinates) {
+            auto *transformerItem = new QQuickItem;
+            pushItem(transformerItem);
+        }
+        return true;
+    }
+
+    generateMaskContainer(info);
     return true;
+}
+
+void QQuickItemGenerator::generateMaskContainer(const MaskNodeInfo &info)
+{
+    QQuickItem *transformer = nullptr;
+    QQuickMatrix4x4 *transformerMatrix = nullptr;
+    if (info.isMaskContentRelativeCoordinates) {
+        transformer = popItem();
+        transformerMatrix = new QQuickMatrix4x4(transformer);
+        auto xformProp = transformer->transform();
+        xformProp.append(&xformProp, transformerMatrix);
+    }
+
+    auto *container = currentItem();
+    m_maskDefs[info.id] = { container,
+                            info.maskRect,
+                            info.isMaskRectRelativeCoordinates,
+                            info.isMaskContentRelativeCoordinates,
+                            transformer,
+                            transformerMatrix };
+}
+
+void QQuickItemGenerator::generateMask(QQuickItem *item, const NodeInfo &info)
+{
+    auto it = m_maskDefs.find(info.maskId);
+    if (it == m_maskDefs.end()) {
+        qCWarning(lcQuickVectorImage) << "generateMask: unknown mask id:" << info.maskId;
+        return;
+    }
+    MaskDef &maskDef = *it;
+    QQuickItem *parentItem = item->parentItem();
+
+    const qreal w = item->width();
+    const qreal h = item->height();
+
+    const QRectF svgBounds =
+            info.bounds.isNull() ? QRectF(item->x(), item->y(), w, h) : info.bounds;
+    QRectF svgMaskRect;
+    if (maskDef.isMaskRectRelativeCoordinates) {
+        svgMaskRect = QRectF(maskDef.maskRect.x() * svgBounds.width() + svgBounds.x(),
+                             maskDef.maskRect.y() * svgBounds.height() + svgBounds.y(),
+                             maskDef.maskRect.width() * svgBounds.width(),
+                             maskDef.maskRect.height() * svgBounds.height());
+    } else {
+        svgMaskRect = maskDef.maskRect;
+    }
+
+    if (maskDef.isMaskContentRelativeCoordinates && maskDef.transformerMatrix) {
+        QMatrix4x4 mat;
+        mat.translate(svgBounds.x(), svgBounds.y());
+        mat.scale(svgBounds.width(), svgBounds.height(), 1.0f);
+        maskDef.transformerMatrix->setMatrix(mat);
+    }
+
+    maskDef.container->setParent(m_rootItem);
+    maskDef.container->setParentItem(m_rootItem);
+    const qreal containerW = m_containerSize.width() > 0 ? m_containerSize.width() : w;
+    const qreal containerH = m_containerSize.height() > 0 ? m_containerSize.height() : h;
+    maskDef.container->setWidth(containerW);
+    maskDef.container->setHeight(containerH);
+
+    static const QUrl maskShaderUrl(
+            u"qrc:/qt-project.org/quickvectorimage/helpers/shaders_ng/genericmask.frag.qsb"_s);
+
+    auto *maskSES = new QQuickShaderEffectSource;
+    maskSES->setSourceItem(maskDef.container);
+    maskSES->setHideSource(true);
+    maskSES->setVisible(false);
+    maskSES->setParent(m_rootItem);
+    maskSES->setParentItem(m_rootItem);
+    maskSES->setSourceRect(svgMaskRect);
+    maskSES->setWidth(svgMaskRect.width());
+    maskSES->setHeight(svgMaskRect.height());
+
+    auto *itemSES = new QQuickShaderEffectSource;
+    itemSES->setSourceItem(item);
+    itemSES->setHideSource(true);
+    itemSES->setVisible(false);
+    itemSES->setParent(m_rootItem);
+    itemSES->setParentItem(m_rootItem);
+    itemSES->setSourceRect(svgMaskRect);
+    itemSES->setWidth(svgMaskRect.width());
+    itemSES->setHeight(svgMaskRect.height());
+
+    auto *shaderEffect = new QQuickShaderEffect;
+    if (m_context)
+        QQmlEngine::setContextForObject(shaderEffect, m_context);
+    auto *parserStatus = qobject_cast<QQmlParserStatus *>(shaderEffect);
+    parserStatus->classBegin();
+    shaderEffect->setFragmentShader(maskShaderUrl);
+    shaderEffect->setProperty("source", QVariant::fromValue<QQuickItem *>(itemSES));
+    shaderEffect->setProperty("maskSource", QVariant::fromValue<QQuickItem *>(maskSES));
+    shaderEffect->setProperty("isAlpha", info.isMaskAlpha);
+    shaderEffect->setProperty("isInverted", info.isMaskInverted);
+    parserStatus->componentComplete();
+
+    if (!info.isDefaultOpacity)
+        shaderEffect->setOpacity(info.opacity.defaultValue().toReal());
+
+    shaderEffect->setTransformOrigin(QQuickItem::TopLeft);
+    shaderEffect->setParent(parentItem);
+    shaderEffect->setParentItem(parentItem);
+    shaderEffect->setWidth(svgMaskRect.width());
+    shaderEffect->setHeight(svgMaskRect.height());
+
+    if (!info.isDefaultTransform) {
+        const QTransform elementXf = info.transform.defaultValue().value<QTransform>();
+        QMatrix4x4 mat(elementXf);
+        mat.translate(svgMaskRect.x(), svgMaskRect.y());
+        auto *matrix = new QQuickMatrix4x4(shaderEffect);
+        matrix->setMatrix(mat);
+        auto xformProp = shaderEffect->transform();
+        xformProp.append(&xformProp, matrix);
+        shaderEffect->setX(0);
+        shaderEffect->setY(0);
+    } else {
+        shaderEffect->setX(svgMaskRect.x());
+        shaderEffect->setY(svgMaskRect.y());
+    }
 }
 
 void QQuickItemGenerator::generateFilterNode(const FilterNodeInfo &info)

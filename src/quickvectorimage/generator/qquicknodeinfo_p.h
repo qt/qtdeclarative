@@ -235,6 +235,7 @@ struct MaskNodeInfo : NodeInfo
     StructureNodeStage stage = StructureNodeStage::Start;
 
     bool isMaskRectRelativeCoordinates = false;
+    bool isMaskContentRelativeCoordinates = false;
     QRectF maskRect;
 };
 
