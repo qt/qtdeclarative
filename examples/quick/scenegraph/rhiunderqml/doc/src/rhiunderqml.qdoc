@@ -207,8 +207,8 @@
     compiled to SPIR-V and then transpiled to other shading languages by Qt's
     tools. When using CMake, the example relies on the \c qt_add_shaders command
     that makes it simple and convenient to bundle the shaders with the
-    application and perform the necessary processing at build time. See \l{Qt
-    Shader Tools Build System Integration} for details.
+    application and perform the necessary processing at build time. See
+    \l{qt_add_shaders}() for details.
 
     Specifying \c BASE helps removing the \c{../shared} prefix, while \c PREFIX
     adds the intended \c{/scenegraph/rhiunderqml} prefix. Thus the final path is
