@@ -44,7 +44,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty list<Filter> AnyOfFilter::filters
+    \qmlproperty list<FilterBase> AnyOfFilter::filters
 
     The list of child filters evaluated with logical OR. A row is accepted
     if at least one filter in this list accepts it.

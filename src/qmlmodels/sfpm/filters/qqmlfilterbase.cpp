@@ -8,14 +8,14 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \qmltype Filter
+    \qmltype FilterBase
     \inherits QtObject
     \inqmlmodule QtQml.Models
     \since 6.10
     \preliminary
     \brief Abstract base type providing functionality common to filters.
 
-    Filter provides a set of common properties for all the filters that they
+    FilterBase provides a set of common properties for all the filters that they
     inherit from.
 */
 
@@ -25,7 +25,7 @@ QQmlFilterBase::QQmlFilterBase(QQmlFilterBasePrivate *privObj, QObject *parent)
 }
 
 /*!
-    \qmlproperty bool Filter::enabled
+    \qmlproperty bool FilterBase::enabled
 
     This property enables the \l SortFilterProxyModel to consider this filter
     while filtering the model data.
@@ -49,7 +49,7 @@ void QQmlFilterBase::setEnabled(bool enabled)
 }
 
 /*!
-    \qmlproperty bool Filter::inverted
+    \qmlproperty bool FilterBase::inverted
 
     This property inverts the filter, causing the data that would normally be
     filtered out to be presented instead.
@@ -73,7 +73,7 @@ void QQmlFilterBase::setInverted(bool invert)
 }
 
 /*!
-    \qmlproperty int Filter::column
+    \qmlproperty int FilterBase::column
 
     This property specifies which column in the model the filter should be
     applied on. If the value is \c -1, the filter will be applied to all
