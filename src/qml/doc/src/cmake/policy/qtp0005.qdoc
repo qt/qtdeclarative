@@ -8,7 +8,7 @@
 \title QTP0005
 \keyword qt_cmake_policy_qtp0005
 
-\summary {qt_add_qml_module dependency keywords accept CMake targets}
+\summary {Let \c qt_add_qml_module() dependency keywords accept CMake targets.}
 
 This policy was introduced in Qt 6.8. It allows passing CMake targets to
 \l qt_add_qml_module() via the \c DEPENDENCIES, \c IMPORTS,
