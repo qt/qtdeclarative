@@ -6,6 +6,7 @@
 \ingroup cmake-commands-qtqml
 
 \title qt_deploy_qml_imports
+\keyword qt_deploy_qml_imports()
 \keyword qt6_deploy_qml_imports
 
 \summary {Deploy the runtime components of QML modules needed by an executable.}
@@ -46,10 +47,10 @@ of all QML modules imported by the application.
 The \c{TARGET} option is mandatory and should specify a \c{target} that is an
 executable (on macOS, it should be an app bundle) and also a QML module.
 All QML sources that were added to the \c{target} via
-\l{qt6_add_qml_module}{qt_add_qml_module()} or
-\l{qt6_target_qml_sources}{qt_target_qml_sources()} will be recursively scanned
+\l{qt_add_qml_module()} or
+\l{qt_target_qml_sources()} will be recursively scanned
 for QML imports. The \c{NO_IMPORT_SCAN} option must not have been given to
-\l{qt6_add_qml_module}{qt_add_qml_module()}. The \c{qmldir} files and plugins
+\l{qt_add_qml_module()}. The \c{qmldir} files and plugins
 from the imported QML modules will be deployed. The \c{NO_QT_IMPORTS} option
 can be given to skip deploying any QML modules provided by Qt.
 
@@ -64,7 +65,7 @@ named by the \c{PLUGINS_FOUND} option, if given. This is often passed as the
 \c{ADDITIONAL_MODULES} argument in a subsequent call to
 \l{qt6_deploy_runtime_dependencies}{qt_deploy_runtime_dependencies()}.
 
-\sa {qt6_generate_deploy_qml_app_script}{qt_generate_deploy_qml_app_script()},
+\sa qt_generate_deploy_qml_app_script(),
     {qt6_deploy_runtime_dependencies}{qt_deploy_runtime_dependencies()},
     QT_DEPLOY_QML_DIR
 

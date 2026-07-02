@@ -6,6 +6,7 @@
 \ingroup cmake-commands-qtqml
 
 \title qt_generate_deploy_qml_app_script
+\keyword qt_generate_deploy_qml_app_script()
 \keyword qt6_generate_deploy_qml_app_script
 
 \summary {Generate a deployment script for a QML application.}
@@ -76,7 +77,7 @@ is only written at CMake generate-time. It is intended to be used with the
 has been installed using \l{install(TARGETS)}.
 
 The deployment script will call
-\l{qt6_deploy_qml_imports}{qt_deploy_qml_imports()} with a suitable set of
+\l{qt_deploy_qml_imports()} with a suitable set of
 options for the standard install layout. For macOS app bundles and Windows
 targets, it will then also call
 \l{qt6_deploy_runtime_dependencies}{qt_deploy_runtime_dependencies()}, again

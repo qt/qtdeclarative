@@ -58,7 +58,7 @@ These warnings are not enabled by default. In order to enable them,
 category.
 
 \section2 Using qmllint with CMake
-For projects using the \l{qt6_add_qml_module}{qt_add_qml_module()} CMake API for creating QML
+For projects using the \l{qt_add_qml_module()} CMake API for creating QML
 modules, \l{Linting QML sources}{convenience targets} such as \c all_qmllint are created
 automatically. These run qmllint on all the QML files of a specific module or of the project.
 
