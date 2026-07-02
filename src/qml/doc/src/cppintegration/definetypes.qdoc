@@ -92,7 +92,7 @@ also need to make adjustments in the build system. For qmake, add
 \c {CONFIG += qmltypes}, a \c {QML_IMPORT_NAME}, and a
 \c QML_IMPORT_MAJOR_VERSION to your project file. For CMake, the file containing
 the class should be part of a target set-up with
-\l{qt_add_qml_module}{qt_add_qml_module()}.
+\l{qt_add_qml_module()}.
 This will register the class into the type namespace under the given major version,
 using either the class name or an explicitly given name as QML type name. The
 minor version(s) will be derived from any revisions attached to properties,

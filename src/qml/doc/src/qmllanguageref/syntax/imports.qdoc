@@ -302,7 +302,7 @@ QQmlEngine::addImportPath() programatically.
 
 \note It is recommended that applications and libraries put their modules
 under "qrc:/qt/qml". This happens by default when the module is created
-with  \l{qt_add_qml_module}{qt_add_qml_module()} and \l{QTP0001} is
+with  \l{qt_add_qml_module()} and \l{QTP0001} is
 enabled.
 
 

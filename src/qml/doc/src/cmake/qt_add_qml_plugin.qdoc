@@ -6,6 +6,7 @@
 \ingroup cmake-commands-qtqml
 
 \title qt_add_qml_plugin
+\keyword qt_add_qml_plugin()
 \keyword qt6_add_qml_plugin
 
 \summary{Defines a plugin associated with a QML module.}
@@ -33,17 +34,17 @@ qt_add_qml_plugin(
 \section1 Description
 
 This command creates the plugin target associated with a QML module. It would
-normally be called internally by \l{qt6_add_qml_module}{qt_add_qml_module()} to
+normally be called internally by \l{qt_add_qml_module()} to
 create or update the plugin associated with its backing target. You should not
 call this function directly unless you have special circumstances that require
 you to create the target in a special way.
 
-The documentation for \l{qt6_add_qml_module}{qt_add_qml_module()} describes
+The documentation for \l{qt_add_qml_module()} describes
 different structural patterns for how the CMake targets associated with a QML
 module can be arranged. Note that even if the QML module has no separate backing
 target and all functionality is implemented directly in the plugin (not the
 recommended arrangement), you should still call
-\l{qt6_add_qml_module}{qt_add_qml_module()} rather than \c{qt_add_qml_plugin()}.
+\l{qt_add_qml_module()} rather than \c{qt_add_qml_plugin()}.
 
 
 \section1 Arguments
@@ -54,7 +55,7 @@ does not already exist, it will be created.
 \c BACKING_TARGET specifies the name of the backing target that the plugin is
 associated with. The backing target can be the same as the plugin \c target, in
 which case there is only the one merged target, but this is not typically
-recommended (see \l{qt6_add_qml_module}{qt_add_qml_module()} for more
+recommended (see \l{qt_add_qml_module()} for more
 information). \c BACKING_TARGET should always be provided unless there are
 special circumstances that require the plugin target to be created before the
 backing target. If \c BACKING_TARGET is not provided, a \c URI option must be
@@ -83,7 +84,7 @@ default.
 associated with. The module identifier is the (dotted URI notation) identifier
 for the QML module. If \c URI is not given, a \c BACKING_TARGET must be
 provided and the backing target must have its URI recorded on it (typically by
-an earlier call to \l{qt6_add_qml_module}{qt_add_qml_module()}).
+an earlier call to \l{qt_add_qml_module()}).
 
 Each plugin should have a C++ class that registers the module with the QML
 engine. By default, \c{qt_add_qml_plugin()} auto-generates the sources for this
@@ -97,7 +98,7 @@ plugin class satisfies the requirements of the plugin being optional (see
   \li If \c CLASS_NAME has not been given, but \c BACKING_TARGET has, the C++
       class name will be taken from details recorded on that backing target.
       Those details are usually recorded by an earlier call to
-      \l{qt_add_qml_module}{qt_add_qml_module()}, and they will match the name
+      \l{qt_add_qml_module()}, and they will match the name
       used in the generated \c qmldir file. This is the recommended way to
       provide the class name in most scenarios.
   \li If the class name still cannot be determined, it is set to the module's
@@ -114,7 +115,7 @@ not implemented by the default plugin class. In such cases, the
 writing your own C++ plugin class and adding it to the \c target. Note that if
 you need to write your own plugin class, it is very unlikely that the plugin
 can be optional. This in turn means that the \c NO_PLUGIN_OPTIONAL keyword
-should be included in the call to \l{qt_add_qml_module}{qt_add_qml_module()}
+should be included in the call to \l{qt_add_qml_module()}
 when defining the QML module, or else the generated \c qmldir file will be
 incorrect. Make sure your plugin class uses the same class name as determined
 from the logic just above.

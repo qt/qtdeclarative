@@ -6,6 +6,7 @@
 \ingroup cmake-commands-qtquick
 
 \title qt_target_qml_from_svg
+\keyword qt_target_qml_from_svg()
 \keyword qt6_target_qml_from_svg
 
 \summary {Generates QML code based on an SVG file.}

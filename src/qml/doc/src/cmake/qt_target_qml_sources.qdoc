@@ -6,6 +6,7 @@
 \ingroup cmake-commands-qtqml
 
 \title qt_target_qml_sources
+\keyword qt_target_qml_sources()
 \keyword qt6_target_qml_sources
 
 \summary{Adds QML files and resources to an existing QML module target.}
@@ -37,11 +38,11 @@ qt_target_qml_sources(
 \note This command requires CMake 3.19 or later.
 
 \c{qt_target_qml_sources()} provides the ability to add more files to a QML
-module after \l{qt6_add_qml_module}{qt_add_qml_module()} has been called.
+module after \l{qt_add_qml_module()} has been called.
 Typically, you pass the set of \c{.qml} files and resources to
-\l{qt6_add_qml_module}{qt_add_qml_module()} directly, but in some cases, it may
+\l{qt_add_qml_module()} directly, but in some cases, it may
 be desirable, or even necessary, to add files after
-\l{qt6_add_qml_module}{qt_add_qml_module()} has been called. For example, you
+\l{qt_add_qml_module()} has been called. For example, you
 may wish to add files conditionally based on an \c{if} statement expression,
 or from subdirectories that will only be added if certain criteria are met.
 You might want to add a set of files with different characteristics to the
@@ -56,11 +57,11 @@ has no separate backing target, it must be the module's plugin target.
 
 \c QML_FILES is a list of \c{.qml}, \c{.js} and \c{.mjs} files to be added to
 the QML module. This option has exactly the same effect as the \c QML_FILES
-option of the \l{qt6_add_qml_module}{qt_add_qml_module()} command, including
+option of the \l{qt_add_qml_module()} command, including
 the automatic compilation to bytecode and lint processing.
 
 The \c NO_CACHEGEN and \c NO_LINT options also have the same effect as they do
-for \l{qt6_add_qml_module}{qt_add_qml_module()}. They disable the bytecode
+for \l{qt_add_qml_module()}. They disable the bytecode
 compilation and lint processing for the files listed with \c QML_FILES. This
 behavior can also be specified just for individual files using
 \l{qml-source-file-properties}{source file properties}.
@@ -69,7 +70,7 @@ behavior can also be specified just for individual files using
 generated \l{qmldir-autogeneration}{qmldir} file.
 
 \c RESOURCES has exactly the same effect as the \c RESOURCES option of the
-\l{qt6_add_qml_module}{qt_add_qml_module()} command. It provides a list of
+\l{qt_add_qml_module()} command. It provides a list of
 files to be added to the \c target as ordinary resources. These files are
 typically things like images, shaders, etc. that the QML code refers to in some
 way.
@@ -77,7 +78,7 @@ way.
 \target PREFIX
 Files added to the module via \c QML_FILES or \c RESOURCES will be placed under
 the same resource prefix and target path as they would if they were added by the
-\l{qt6_add_qml_module}{qt_add_qml_module()} command. This can be overridden by
+\l{qt_add_qml_module()} command. This can be overridden by
 providing a different location with the \c PREFIX option. The value following
 the \c PREFIX keyword will be used directly, without appending any target path.
 The final resource path of each file will be the prefix, plus the path of the
@@ -112,7 +113,7 @@ following contents:
 \endlist
 
 \c OUTPUT_TARGETS is also analogous to the same option for
-\l{qt6_add_qml_module}{qt_add_qml_module()}. Use it to specify the name of a
+\l{qt_add_qml_module()}. Use it to specify the name of a
 variable in which to store any additional targets created for static builds.
 If the \c target will be installed, these additional targets will also need to
 be installed to satisfy linking requirements.
@@ -123,7 +124,7 @@ be installed to satisfy linking requirements.
 A number of source file properties can be used to influence how each individual
 \c{.qml} file is treated at various points in the QML module processing. These
 override any higher level options specified in calls to
-\c{qt_target_qml_sources()} or \l{qt6_add_qml_module}{qt_add_qml_module()}.
+\c{qt_target_qml_sources()} or \l{qt_add_qml_module()}.
 All of these properties need to be set before the files are added with either
 of those two commands.
 
