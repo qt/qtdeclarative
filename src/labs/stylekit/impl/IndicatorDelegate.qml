@@ -9,9 +9,6 @@ import Qt.labs.StyleKit.impl
 DelegateContainer {
     id: root
 
-    implicitWidth: Math.max(delegateInstance ? delegateInstance.implicitWidth : 0, indicatorLayout.implicitWidth)
-    implicitHeight: Math.max(delegateInstance ? delegateInstance.implicitHeight : 0, indicatorLayout.implicitHeight)
-
     delegateStyle: root.indicatorStyle
     visible: delegateStyle.visible
     required property DelegateStyle indicatorStyle
