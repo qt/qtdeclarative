@@ -324,37 +324,75 @@ QQmlPropertyCache::Ptr QQmlPropertyCache::copy() const
 
 QQmlPropertyCache::Ptr QQmlPropertyCache::rebased(const ConstPtr &parent) const
 {
+    // Leave the meta-object empty so createMetaObject() rebuilds it lazily from our own members on
+    // top of the new parent's meta-object. Seeding it with the parent's meta-object would drop our
+    // own members from the derived meta-object.
     QQmlPropertyCache::Ptr cache = QQmlPropertyCache::Ptr(
-            new QQmlPropertyCache(parent->_metaObject, _handleOverride),
+            new QQmlPropertyCache(QQmlMetaObjectPointer(), _handleOverride),
             QQmlPropertyCache::Ptr::Adopt);
 
     cache->_parent = parent;
 
-    cache->propertyIndexCacheStart = propertyIndexCacheStart;
+    const int oldPropertyStart = propertyIndexCacheStart;
+    const int oldMethodStart = methodIndexCacheStart;
+    const int oldSignalStart = signalHandlerIndexCacheStart;
+
+    const int deltaProperty = parent->propertyCount() - oldPropertyStart;
+    const int deltaMethod = parent->methodCount() - oldMethodStart;
+    const int deltaSignal = parent->signalCount() - oldSignalStart;
+
+    cache->propertyIndexCacheStart = parent->propertyCount();
     cache->propertyIndexCache = propertyIndexCache;
 
-    cache->methodIndexCacheStart = methodIndexCacheStart;
+    cache->methodIndexCacheStart = parent->methodCount();
     cache->methodIndexCache = methodIndexCache;
 
-    cache->signalHandlerIndexCacheStart = signalHandlerIndexCacheStart;
+    cache->signalHandlerIndexCacheStart = parent->signalCount();
     cache->signalHandlerIndexCache = signalHandlerIndexCache;
 
     cache->enumCache = enumCache;
+
+    const auto shifted = [](int value, int threshold, int delta) {
+        return value >= threshold ? value + delta : value;
+    };
+
+    const auto shiftData = [&](QQmlPropertyData &data, int coreDelta, int coreThreshold) {
+        if (data.coreIndex() >= 0)
+            data.setCoreIndex(shifted(data.coreIndex(), coreThreshold, coreDelta));
+        if (data.notifyIndex() >= 0)
+            data.setNotifyIndex(shifted(data.notifyIndex(), oldSignalStart, deltaSignal));
+    };
+
+    for (QQmlPropertyData &data : cache->propertyIndexCache)
+        shiftData(data, deltaProperty, oldPropertyStart);
+    for (QQmlPropertyData &data : cache->methodIndexCache)
+        shiftData(data, deltaMethod, oldMethodStart);
+    for (QQmlPropertyData &data : cache->signalHandlerIndexCache)
+        shiftData(data, deltaMethod, oldMethodStart);
 
     cache->stringCache.linkAndReserve(
             parent->stringCache, ownPropertyCount() + ownMethodCount() + ownSignalCount());
 
     for (auto it = stringCache.begin(), end = stringCache.end(); it != end; ++it) {
         const QQmlPropertyData *myData = it.value().second;
-        const int index = it.value().first;
+        int index = it.value().first;
 
         QQmlPropertyData *copyData = nullptr;
-        if (myData->isSignalHandler())
-            copyData = cache->signalHandlerIndexCache.data() + (index - signalOffset());
-        else if (myData->isFunction())
-            copyData = cache->methodIndexCache.data() + (index - methodOffset());
+        if (myData->isSignalHandler()) {
+            index = shifted(index, oldSignalStart, deltaSignal);
+            copyData = cache->signalHandlerIndexCache.data() + (index - cache->signalOffset());
+        } else if (myData->isFunction()) {
+            index = shifted(index, oldMethodStart, deltaMethod);
+            copyData = cache->methodIndexCache.data() + (index - cache->methodOffset());
+        } else {
+            index = shifted(index, oldPropertyStart, deltaProperty);
+            copyData = cache->propertyIndexCache.data() + (index - cache->propertyOffset());
+        }
+
+        if (const QQmlPropertyData *overridden = parent->findNamedProperty(it.key()))
+            copyData->setOverrideIndex(overridden->coreIndex());
         else
-            copyData = cache->propertyIndexCache.data() + (index - propertyOffset());
+            copyData->setOverrideIndex(-1);
 
         cache->stringCache.insert(it.key(), std::make_pair(index, copyData));
     }

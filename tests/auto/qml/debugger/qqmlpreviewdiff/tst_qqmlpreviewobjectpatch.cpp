@@ -249,6 +249,31 @@ private slots:
 
     void insertBinding();
 
+    // Reproduces the calqlatr hot-reload assert: adding a property (e.g.
+    // "property int bla") to a composite button type used only as a base type of
+    // derived instances (component DigitButton: CalculatorButton {}) inserts a
+    // property and its change signal into the base VME meta-object, shifting the
+    // index of the base type's own JS methods (getBackgroundColor()/getTextColor()).
+    // The derived instances' property caches still link to the old base cache, so
+    // a base VME method resolved through them used to land at a stale index and
+    // assert "index >= methodOffset()" in QQmlVMEMetaObject::vmeMethod(). The
+    // rebuild must instead relink the derived caches to the new base and patch in
+    // place, surfacing the new property.
+    void compositeBaseLayoutChangeRelinksDerivedCaches();
+
+    // Same, but the derived type also declares its own property (and thus its own
+    // change signal) and its own method, exercising the index-shifting of the
+    // derived cache's *own* members when the base grows.
+    void compositeBaseLayoutChangeRelinksDerivedOwnMembers();
+
+    // A base-type property that un-reloaded derived instances still bind to is
+    // removed on reload. Re-resolving the binding target against the relinked
+    // cache yields no property, so refreshBindingPropertyData() must clear that
+    // binding-target entry. Without the fix it kept the stale (old-layout)
+    // property-data pointer, so the surviving binding wrote through the wrong
+    // offset (heap-use-after-free / clobbered sibling property).
+    void compositeBaseLayoutChangeDropsRemovedBaseProperty();
+
     // Reproduces coffee demo crash 3: changing a function body in a derived type
     // (that has states with PropertyChanges targeting form aliases) should not
     // trigger an assert in "canGetTypeFromVariant<T>(this)" during rebuild.
@@ -3884,6 +3909,179 @@ void tst_QQmlPreviewObjectPatch::derivedTypeFunctionChangeCrash()
     // If we survive, verify the function was updated.
     QVERIFY(QMetaObject::invokeMethod(object.get(), "selectCoffee"));
     QCOMPARE(object->property("coffeeName").toString(), QString("Cappuccinooooo"));
+}
+
+void tst_QQmlPreviewObjectPatch::compositeBaseLayoutChangeRelinksDerivedCaches()
+{
+    const QString moduleDir = dataDirectory() + QStringLiteral("/HotReloadButtonFunc");
+    const QString patchedDir = dataDirectory() + QStringLiteral("/HotReloadButtonFuncPatched");
+
+    QQuickWindow window;
+    window.resize(400, 400);
+
+    QQmlComponent numberPad(&engine, QUrl::fromLocalFile(moduleDir + "/NumberPad.qml"));
+    QVERIFY2(numberPad.isReady(), qPrintable(numberPad.errorString()));
+    std::unique_ptr<QObject> root(numberPad.create());
+    QVERIFY(root);
+
+    QQuickItem *rootItem = qobject_cast<QQuickItem *>(root.get());
+    QVERIFY(rootItem);
+    rootItem->setParentItem(window.contentItem());
+    QCoreApplication::processEvents();
+
+    const QStringList calcButtonNames = { QStringLiteral("d7"), QStringLiteral("d8"),
+                                          QStringLiteral("d9"), QStringLiteral("opdiv"),
+                                          QStringLiteral("d4"), QStringLiteral("d5"),
+                                          QStringLiteral("d6"), QStringLiteral("opmul"),
+                                          QStringLiteral("d1") };
+
+    // All instances are derived types (component DigitButton: CalculatorButton {}),
+    // so CalculatorButton appears only as a composite base type in their VME chain.
+    QHash<QString, QPointer<QQuickItem>> buttons;
+    for (const QString &name : calcButtonNames) {
+        QQuickItem *item = root->findChild<QQuickItem *>(name);
+        QVERIFY2(item, qPrintable(name));
+        QVERIFY(!item->property("bla").isValid()); // not in the old CU
+        buttons.insert(name, item);
+    }
+
+    QQmlComponent calcOld(&engine, QUrl::fromLocalFile(moduleDir + "/CalculatorButton.qml"));
+    QVERIFY2(calcOld.isReady(), qPrintable(calcOld.errorString()));
+    QQmlComponent calcNew(&engine, QUrl::fromLocalFile(patchedDir + "/CalculatorButton.qml"));
+    QVERIFY2(calcNew.isReady(), qPrintable(calcNew.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&calcOld)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&calcNew)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QVERIFY(!objects.empty());
+
+    // Adding "property int bla" to CalculatorButton shifts its VME method indices.
+    // The rebuild relinks the derived instances' caches to the new base cache, so
+    // getBackgroundColor()/getTextColor() resolve at the correct index rather than
+    // asserting in vmeMethod().
+    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+
+    for (const QString &name : calcButtonNames) {
+        QQuickItem *item = buttons.value(name);
+        QVERIFY2(item, qPrintable(name + " was deleted"));
+        // The added property is now part of the derived instances too.
+        QVERIFY2(item->property("bla").isValid(), qPrintable(name + " lacks the added property"));
+    }
+}
+
+void tst_QQmlPreviewObjectPatch::compositeBaseLayoutChangeRelinksDerivedOwnMembers()
+{
+    const QString moduleDir = dataDirectory() + QStringLiteral("/HotReloadOwnMembers");
+    const QString patchedDir = dataDirectory() + QStringLiteral("/HotReloadOwnMembersPatched");
+
+    QQmlComponent pad(&engine, QUrl::fromLocalFile(moduleDir + "/Pad.qml"));
+    QVERIFY2(pad.isReady(), qPrintable(pad.errorString()));
+    std::unique_ptr<QObject> root(pad.create());
+    QVERIFY(root);
+
+    const QStringList names = { QStringLiteral("w1"), QStringLiteral("w2") };
+    QHash<QString, QPointer<QObject>> widgets;
+    for (const QString &name : names) {
+        QObject *w = root->findChild<QObject *>(name);
+        QVERIFY2(w, qPrintable(name));
+        // Own property of the derived type, and a method reading the base's property.
+        QCOMPARE(w->property("localCount").toInt(), 3);
+        QVariant sum;
+        QVERIFY(QMetaObject::invokeMethod(w, "combined", Q_RETURN_ARG(QVariant, sum)));
+        QCOMPARE(sum.toInt(), 3 + 10); // localCount + base.value
+        widgets.insert(name, w);
+    }
+
+    QQmlComponent baseOld(&engine, QUrl::fromLocalFile(moduleDir + "/Widget.qml"));
+    QVERIFY2(baseOld.isReady(), qPrintable(baseOld.errorString()));
+    QQmlComponent baseNew(&engine, QUrl::fromLocalFile(patchedDir + "/Widget.qml"));
+    QVERIFY2(baseNew.isReady(), qPrintable(baseNew.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&baseOld)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&baseNew)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QVERIFY(!objects.empty());
+    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+
+    for (const QString &name : names) {
+        QVERIFY2(!widgets.value(name).isNull(), qPrintable(name + " was deleted"));
+        QObject *w = widgets.value(name);
+        // The base gained "extra" (value 5) and its change signal; the derived type's own
+        // property/method indices shifted accordingly and must still resolve correctly.
+        QVERIFY2(w->property("extra").isValid(), qPrintable(name + " lacks base's new property"));
+        QCOMPARE(w->property("localCount").toInt(), 3); // own property still readable
+        QVariant sum;
+        QVERIFY(QMetaObject::invokeMethod(w, "combined", Q_RETURN_ARG(QVariant, sum)));
+        QCOMPARE(sum.toInt(), 3 + 10); // own method still callable, reads base.value
+        // Own change signal still wired: localCount is bindable/settable.
+        w->setProperty("localCount", 7);
+        QCOMPARE(w->property("localCount").toInt(), 7);
+        QVERIFY(QMetaObject::invokeMethod(w, "combined", Q_RETURN_ARG(QVariant, sum)));
+        QCOMPARE(sum.toInt(), 7 + 10);
+    }
+}
+
+void tst_QQmlPreviewObjectPatch::compositeBaseLayoutChangeDropsRemovedBaseProperty()
+{
+    const QString moduleDir = dataDirectory() + QStringLiteral("/HotReloadRemovedBaseProp");
+    const QString patchedDir = dataDirectory() + QStringLiteral("/HotReloadRemovedBasePropPatched");
+
+    QQmlComponent pad(&engine, QUrl::fromLocalFile(moduleDir + "/Pad.qml"));
+    QVERIFY2(pad.isReady(), qPrintable(pad.errorString()));
+    std::unique_ptr<QObject> root(pad.create());
+    QVERIFY(root);
+
+    const QStringList names = { QStringLiteral("r1"), QStringLiteral("r2") };
+    QHash<QString, QPointer<QObject>> widgets;
+    for (const QString &name : names) {
+        QObject *w = root->findChild<QObject *>(name);
+        QVERIFY2(w, qPrintable(name));
+        // Both bindings resolve against the old base layout.
+        QCOMPARE(w->property("gone").toInt(), 42);
+        QCOMPARE(w->property("stay").toInt(), 7);
+        widgets.insert(name, w);
+    }
+
+    QQmlComponent baseOld(&engine, QUrl::fromLocalFile(moduleDir + "/BaseWidget.qml"));
+    QVERIFY2(baseOld.isReady(), qPrintable(baseOld.errorString()));
+    QQmlComponent baseNew(&engine, QUrl::fromLocalFile(patchedDir + "/BaseWidget.qml"));
+    QVERIFY2(baseNew.isReady(), qPrintable(baseNew.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&baseOld)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&baseNew)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QVERIFY(!objects.empty());
+
+    // Removing "gone" from the base shrinks its meta-object. The derived instances
+    // still carry a binding targeting "gone"; re-resolving it against the relinked
+    // cache fails, so refreshBindingPropertyData() must clear that entry rather than
+    // keep the stale property-data pointer from the old layout.
+    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+
+    for (const QString &name : names) {
+        QVERIFY2(!widgets.value(name).isNull(), qPrintable(name + " was deleted"));
+        QObject *w = widgets.value(name);
+        // "gone" is no longer part of the type.
+        QVERIFY2(!w->property("gone").isValid(), qPrintable(name + " still has removed property"));
+        // The surviving "stay" binding still resolved correctly and was not
+        // clobbered by the dropped binding writing through a stale offset.
+        QCOMPARE(w->property("stay").toInt(), 7);
+    }
 }
 
 QTEST_MAIN(tst_QQmlPreviewObjectPatch)

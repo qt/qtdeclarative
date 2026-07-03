@@ -57,6 +57,8 @@ private slots:
     void append_propertyAttr();
     void isComposite();
     void rebase();
+    void rebaseOntoLargerParent();
+    void rebaseOntoReorderedParent();
 
 private:
     QQmlEngine engine;
@@ -1197,6 +1199,152 @@ void tst_qqmlpropertycache::rebase()
             QLatin1String("testProp"), /*object=*/nullptr, /*context=*/nullptr);
     QVERIFY(prop);
     QVERIFY(prop->propType() == QMetaType::fromType<int>());
+}
+
+// Rebasing onto a parent with a *different* (larger) layout must shift the derived type's own
+// member indices and offsets, and rebuild the meta-object to include those members. This is what
+// the QML hot-reload path relies on when a composite base type gains members.
+void tst_qqmlpropertycache::rebaseOntoLargerParent()
+{
+    QQmlComponent derivedComp(&engine, testFileUrl("RebaseDerived.qml"));
+    QVERIFY2(derivedComp.isReady(), qPrintable(derivedComp.errorString()));
+    QScopedPointer<QObject> derived(derivedComp.create());
+    QVERIFY(derived);
+
+    QQmlComponent grownComp(&engine, testFileUrl("RebaseBaseGrown.qml"));
+    QVERIFY2(grownComp.isReady(), qPrintable(grownComp.errorString()));
+    QScopedPointer<QObject> grown(grownComp.create());
+    QVERIFY(grown);
+
+    const QQmlPropertyCache::ConstPtr derivedCache = QQmlData::get(derived.data())->propertyCache;
+    const QQmlPropertyCache::ConstPtr grownCache = QQmlData::get(grown.data())->propertyCache;
+    QVERIFY(derivedCache && grownCache);
+
+    const QQmlPropertyCache::ConstPtr baseCache = derivedCache->parent();
+    QVERIFY(baseCache);
+
+    // The "grown" base really has one more property than the base the derived type was compiled
+    // against — and thus one more change signal (hence one more method).
+    const int deltaProperty = grownCache->propertyCount() - baseCache->propertyCount();
+    const int deltaMethod = grownCache->methodCount() - baseCache->methodCount();
+    const int deltaSignal = grownCache->signalCount() - baseCache->signalCount();
+    QCOMPARE(deltaProperty, 1);
+    QCOMPARE(deltaMethod, 1);
+    QCOMPARE(deltaSignal, 1);
+
+    const auto lookup = [](const QQmlPropertyCache::ConstPtr &cache, const char *name) {
+        return cache->property(QLatin1String(name), nullptr, nullptr);
+    };
+
+    const QQmlPropertyData *ownBefore = lookup(derivedCache, "own");
+    const QQmlPropertyData *ownSignalBefore = lookup(derivedCache, "ownSignal");
+    const QQmlPropertyData *ownMethodBefore = lookup(derivedCache, "ownMethod");
+    QVERIFY(ownBefore && ownSignalBefore && ownMethodBefore);
+
+    // Rebase the derived cache onto the larger parent.
+    const QQmlPropertyCache::Ptr rebased = derivedCache->rebased(grownCache);
+    QVERIFY(rebased->parent().data() == grownCache.data());
+
+    // The inherited-member counts (which place the derived type's own members) follow the new,
+    // larger parent — not the old one.
+    QCOMPARE(rebased->propertyOffset(), grownCache->propertyCount());
+    QCOMPARE(rebased->methodOffset(), grownCache->methodCount());
+    QCOMPARE(rebased->signalOffset(), grownCache->signalCount());
+
+    // The derived type's own members are still reachable, and their indices shifted by the delta
+    // in each respective index space.
+    const QQmlPropertyData *own = lookup(rebased, "own");
+    const QQmlPropertyData *ownSignal = lookup(rebased, "ownSignal");
+    const QQmlPropertyData *ownMethod = lookup(rebased, "ownMethod");
+    QVERIFY(own && ownSignal && ownMethod);
+
+    QCOMPARE(own->propType(), QMetaType::fromType<int>());
+    QCOMPARE(own->coreIndex(), ownBefore->coreIndex() + deltaProperty);
+    QCOMPARE(own->notifyIndex(), ownBefore->notifyIndex() + deltaSignal);
+    QCOMPARE(ownSignal->coreIndex(), ownSignalBefore->coreIndex() + deltaMethod);
+    QCOMPARE(ownMethod->coreIndex(), ownMethodBefore->coreIndex() + deltaMethod);
+
+    // The (shifted) notify index still resolves to a signal — the property's own change signal.
+    const QQmlPropertyData *notify = rebased->signal(own->notifyIndex());
+    QVERIFY(notify && notify->isSignal());
+
+    // The rebuilt meta-object must include the derived type's own members (seeding it from the
+    // parent would drop them) and agree with the cache on every index.
+    const QMetaObject *mo = rebased->createMetaObject();
+    QVERIFY(mo);
+
+    const int ownPropIdx = mo->indexOfProperty("own");
+    QVERIFY(ownPropIdx >= 0);
+    QCOMPARE(ownPropIdx, own->coreIndex());
+
+    const int ownSignalIdx = mo->indexOfSignal("ownSignal()");
+    QVERIFY(ownSignalIdx >= 0);
+    QCOMPARE(ownSignalIdx, ownSignal->coreIndex());
+
+    const int ownMethodIdx = mo->indexOfMethod("ownMethod()");
+    QVERIFY(ownMethodIdx >= 0);
+    QCOMPARE(ownMethodIdx, ownMethod->coreIndex());
+
+    const QMetaProperty ownProp = mo->property(ownPropIdx);
+    QVERIFY(ownProp.hasNotifySignal());
+    QCOMPARE(ownProp.notifySignal().name(), QByteArray("ownChanged"));
+}
+
+// rebased() shifts the derived type's stored indices by a single per-space delta
+// (newParentCount - oldParentCount), assuming the parent only *grew at the end*.
+// But a reloaded base type can change the index of its *existing* members (e.g. a
+// property declared earlier in the file, or reordered members). References that a
+// derived type stores *into* the parent's index space -- here the overrideIndex of an
+// overriding property -- are then left pointing at the wrong parent member.
+void tst_qqmlpropertycache::rebaseOntoReorderedParent()
+{
+    QQmlComponent baseComp(&engine, testFileUrl("OverrideBase.qml"));
+    QVERIFY2(baseComp.isReady(), qPrintable(baseComp.errorString()));
+    QScopedPointer<QObject> base(baseComp.create());
+    QVERIFY(base);
+
+    QQmlComponent derivedComp(&engine, testFileUrl("OverrideDerived.qml"));
+    QVERIFY2(derivedComp.isReady(), qPrintable(derivedComp.errorString()));
+    QScopedPointer<QObject> derived(derivedComp.create());
+    QVERIFY(derived);
+
+    QQmlComponent reorderedComp(&engine, testFileUrl("OverrideBaseReordered.qml"));
+    QVERIFY2(reorderedComp.isReady(), qPrintable(reorderedComp.errorString()));
+    QScopedPointer<QObject> reordered(reorderedComp.create());
+    QVERIFY(reordered);
+
+    const QQmlPropertyCache::ConstPtr baseCache = QQmlData::get(base.data())->propertyCache;
+    const QQmlPropertyCache::ConstPtr derivedCache = QQmlData::get(derived.data())->propertyCache;
+    const QQmlPropertyCache::ConstPtr reorderedCache =
+            QQmlData::get(reordered.data())->propertyCache;
+    QVERIFY(baseCache && derivedCache && reorderedCache);
+
+    const auto lookup = [](const QQmlPropertyCache::ConstPtr &cache, const char *name) {
+        return cache->property(QLatin1String(name), nullptr, nullptr);
+    };
+
+    // The derived type overrides "a"; the override records the base's "a" index.
+    const QQmlPropertyData *ownA = lookup(derivedCache, "a");
+    QVERIFY(ownA);
+    QVERIFY2(ownA->hasOverride(), "precondition: the derived \"a\" overrides the base's \"a\"");
+    QCOMPARE(ownA->overrideIndex(), lookup(baseCache, "a")->coreIndex());
+
+    // Reordering really moved "a" to a different property index than the base it was
+    // compiled against, and put "b" where "a" used to be.
+    QVERIFY(lookup(reorderedCache, "a")->coreIndex() != lookup(baseCache, "a")->coreIndex());
+    QCOMPARE(lookup(reorderedCache, "b")->coreIndex(), lookup(baseCache, "a")->coreIndex());
+
+    // Re-link the derived cache onto the reordered base, as the hot-reload path does.
+    const QQmlPropertyCache::Ptr rebased = derivedCache->rebased(reorderedCache);
+    QVERIFY(rebased->parent().data() == reorderedCache.data());
+
+    const QQmlPropertyData *reboundA = lookup(rebased, "a");
+    QVERIFY(reboundA && reboundA->hasOverride());
+
+    // The override must now point at "a" in the *new* parent. rebased() leaves the
+    // parent-range override index unshifted, so it still points at the base's old slot
+    // -- which in the reordered parent is "b".
+    QCOMPARE(reboundA->overrideIndex(), lookup(reorderedCache, "a")->coreIndex());
 }
 
 QTEST_MAIN(tst_qqmlpropertycache)

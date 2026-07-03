@@ -11,6 +11,7 @@
 #include <private/qqmlobjectcreator_p.h>
 #include <private/qqmlpreviewbindingpatchcontext_p.h>
 #include <private/qqmlpreviewdiff_p.h>
+#include <private/qqmlpropertyresolver_p.h>
 #include <private/qqmlscriptdata_p.h>
 #include <private/qqmlvme_p.h>
 #include <private/qqmlvmemetaobject_p.h>
@@ -75,6 +76,73 @@ hasChangedNonCompositeBaseType(const QQmlRefPointer<QV4::ExecutableCompilationUn
 
     return nonCompositeBaseType(oldTypeRef->typePropertyCache())
             != nonCompositeBaseType(newTypeRef->typePropertyCache());
+}
+
+// Re-resolve the object's precomputed binding-target table against its relinked property cache.
+static void refreshBindingPropertyData(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &cu,
+                                       int objectIndex, const QQmlPropertyCache::ConstPtr &cache)
+{
+    QList<QV4::CompiledData::BindingPropertyData> &table =
+            cu->baseCompilationUnit()->bindingPropertyDataPerObject;
+    if (objectIndex >= table.size())
+        return;
+
+    QV4::CompiledData::BindingPropertyData &bindingData = table[objectIndex];
+
+    const QV4::CompiledData::Object *obj = cu->objectAt(objectIndex);
+    const QQmlPropertyResolver resolver(cache);
+
+    const QV4::CompiledData::Binding *binding = obj->bindingTable();
+    for (qsizetype i = 0, end = bindingData.size(); i < end; ++i, ++binding) {
+        if (!bindingData.at(i))
+            continue;
+
+        Q_ASSERT(i < obj->nBindings);
+        const QString name = BindingPatchContext::targetPropertyName(cu, objectIndex, binding);
+        if (name.isEmpty())
+            continue;
+
+        bindingData[i] =
+                (binding->hasFlag(QV4::CompiledData::Binding::IsSignalHandlerExpression)
+                 || binding->hasFlag(QV4::CompiledData::Binding::IsSignalHandlerObject))
+                ? resolver.signal(name, nullptr, QQmlPropertyResolver::IgnoreRevision)
+                : resolver.property(name, nullptr, QQmlPropertyResolver::IgnoreRevision);
+    }
+}
+
+// Ensure the property cache at objectIndex in cu is derived from actualParent, the cache we just
+// used for the level below it in the VME chain.
+static QQmlPropertyCache::ConstPtr
+relinkCache(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &cu, int objectIndex,
+            const QQmlPropertyCache::ConstPtr &actualParent)
+{
+    QQmlPropertyCacheVector *caches = cu->propertyCachesPtr();
+    QQmlPropertyCache::ConstPtr cache = caches->at(objectIndex);
+
+    // The bottom-most composite level's own base is a non-composite (C++) type. That base never
+    // changes across a reload since a changed non-composite base is rejected by
+    // hasChangedNonCompositeBaseType.
+    if (!actualParent)
+        return cache;
+
+    // A type that needs no VME meta-object of its own reuses its base type's property cache.
+    if (!caches->needsVMEMetaObject(objectIndex)) {
+        if (cache != actualParent) {
+            caches->set(objectIndex, actualParent);
+            refreshBindingPropertyData(cu, objectIndex, actualParent);
+        }
+        return actualParent;
+    }
+
+    // A type with its own cache derived from the base: re-derive it from the relinked base so its
+    // inherited offsets match the (possibly changed) base layout.
+    if (cache->parent() != actualParent) {
+        cache = cache->rebased(actualParent);
+        caches->set(objectIndex, cache);
+        refreshBindingPropertyData(cu, objectIndex, cache);
+    }
+
+    return cache;
 }
 
 struct ObjectAndIndex
@@ -230,18 +298,25 @@ static void rebuildObject(QObject *object, int cuIndex,
         ddata->context = outerContext.data();
     }
 
+    // Build the VME meta-object chain base-first, relinking each level's property cache to the
+    // actual (possibly freshly reloaded) parent cache we just used, so the whole chain's offsets
+    // stay consistent even when a composite base type's layout changed on reload.
+    QQmlPropertyCache::ConstPtr parentCache;
     for (auto it = levels.crbegin(), end = levels.crend(); it != end; ++it) {
         it->context->addOwnedObject(ddata);
-        QQmlPropertyCache::ConstPtr cache = it->newCu->propertyCachesPtr()->at(it->objectIndex);
-        new QQmlVMEMetaObject(v4, object, cache, it->newCu, it->objectIndex);
+        QQmlPropertyCache::ConstPtr cache = relinkCache(it->newCu, it->objectIndex, parentCache);
+        if (it->newCu->propertyCachesPtr()->needsVMEMetaObject(it->objectIndex))
+            new QQmlVMEMetaObject(v4, object, cache, it->newCu, it->objectIndex);
+        parentCache = cache;
     }
 
     outerContext->addOwnedObject(ddata);
     if (QQmlPropertyCacheVector *caches = instanceLevel.newCu->propertyCachesPtr();
-        caches->count() > instanceLevel.objectIndex
-        && caches->needsVMEMetaObject(instanceLevel.objectIndex)) {
-        QQmlPropertyCache::ConstPtr cache = caches->at(instanceLevel.objectIndex);
-        new QQmlVMEMetaObject(v4, object, cache, instanceLevel.newCu, instanceLevel.objectIndex);
+        caches->count() > instanceLevel.objectIndex) {
+        QQmlPropertyCache::ConstPtr cache =
+                relinkCache(instanceLevel.newCu, instanceLevel.objectIndex, parentCache);
+        if (caches->needsVMEMetaObject(instanceLevel.objectIndex))
+            new QQmlVMEMetaObject(v4, object, cache, instanceLevel.newCu, instanceLevel.objectIndex);
     }
 
     // Repopulate bindings at each composite level (deepest first).
