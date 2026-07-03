@@ -7,6 +7,7 @@
     \title StyleKit Widgets Example
     \brief Shows how to style \l {Qt Widgets} using \l {Qt Labs StyleKit}{StyleKit}.
     \ingroup qtwidgets-examples
+    \ingroup qtlabsstylekit-examples
 
     \image qtlabsstylekit-widgets-example.webp
            {StyleKit Widgets Example showing buttons, sliders, and a settings panel}
