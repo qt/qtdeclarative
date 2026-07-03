@@ -374,11 +374,21 @@ set(qml_files
     writeback.qml
 )
 
+set(qml_module_dependencies
+    QtQuick
+    QtQuick.Controls
+    QtQuick.Templates
+    QtQuick.Shapes
+)
+set(cmake_target_dependencies Qt::Quick Qt::QuickTemplates2 Qt::QuickShapesPrivate)
+
 if(QT_FEATURE_qml_labs)
     list(APPEND qml_files
         fileDialog.qml
         dummy_imports.qml
     )
+    list(APPEND qml_module_dependencies QtQuick.Dialogs)
+    list(APPEND cmake_target_dependencies Qt::QuickDialogs2)
 endif()
 
 set(resource_files
@@ -444,10 +454,7 @@ qt6_add_qml_module(codegen_test_module
     URI TestTypes
     IMPORT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/imports/"
     DEPENDENCIES
-        QtQuick
-        QtQuick.Controls
-        QtQuick.Templates
-        QtQuick.Shapes
+        ${qml_module_dependencies}
     SOURCES
         ${cpp_sources}
     QML_FILES
@@ -485,7 +492,7 @@ else()
     )
 endif()
 
-add_dependencies(codegen_test_module Qt::Quick Qt::QuickTemplates2 Qt::QuickShapesPrivate)
+add_dependencies(codegen_test_module ${cmake_target_dependencies})
 
 qt_autogen_tools_initial_setup(codegen_test_moduleplugin)
 
@@ -505,10 +512,7 @@ qt6_add_qml_module(codegen_test_module_verify
     URI TestTypes
     IMPORT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/imports/"
     DEPENDENCIES
-        QtQuick
-        QtQuick.Controls
-        QtQuick.Templates
-        QtQuick.Shapes
+        ${qml_module_dependencies}
     SOURCES
         ${cpp_sources}
     QML_FILES
@@ -522,7 +526,7 @@ qt6_add_qml_module(codegen_test_module_verify
 
 target_link_libraries(codegen_test_module_verify PRIVATE Qt::QmlPrivate)
 
-add_dependencies(codegen_test_module_verify Qt::Quick Qt::QuickTemplates2 Qt::QuickShapesPrivate)
+add_dependencies(codegen_test_module_verify ${cmake_target_dependencies})
 
 qt_autogen_tools_initial_setup(codegen_test_module_verifyplugin)
 
