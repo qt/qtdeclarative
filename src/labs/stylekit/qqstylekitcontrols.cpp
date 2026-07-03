@@ -42,7 +42,7 @@ QT_BEGIN_NAMESPACE
 
     \c control is the base type in the control hierarchy, and properties set here
     serve as defaults for all other control types. For example, setting
-    \c{control.implicitWidth: 200} makes \e all controls 200 pixels wide,
+    \c{control.width: 200} makes \e all controls 200 pixels wide,
     including buttons, scroll indicators and every other control.
     It also overrides any values inherited from a higher level in the style
     hierarchy (the \l Style for a \l Theme, or the
@@ -385,12 +385,13 @@ QT_BEGIN_NAMESPACE
     \qmlproperty ControlStyle AbstractStylableControls::slider
 
     Grouped property for styling \l [QtQuickControls]{Slider}.
-    For a slider bar, the groove is styled through the indicator, while the progress
+    For a slider, the groove is styled through the indicator, while the progress
     track is styled through the indicator's foreground.
+
     Unset properties fall back to \l control.
 
-    For vertical sliders, swap the \l {DelegateStyle::implicitWidth}{implicitWidth}
-    and \l {DelegateStyle::implicitHeight}{implicitHeight} of the relevant delegates
+    For vertical sliders, swap the \l {DelegateStyle::width}{width}
+    and \l {DelegateStyle::height}{height} of the relevant delegates
     so that the control is taller than it is wide, as shown in the snippet below.
 
     \snippet ControlsSnippets.qml slider
@@ -497,8 +498,8 @@ QT_BEGIN_NAMESPACE
 
     Unset properties fall back to \l control.
 
-    For vertical separators, swap the \l {DelegateStyle::implicitWidth}{implicitWidth}
-    and \l {DelegateStyle::implicitHeight}{implicitHeight} of the relevant delegates
+    For vertical separators, swap the \l {DelegateStyle::width}{width}
+    and \l {DelegateStyle::height}{height} of the relevant delegates
     so that the control is taller than it is wide, as shown in the snippet below.
 
     \snippet ControlsSnippets.qml toolSeparator
