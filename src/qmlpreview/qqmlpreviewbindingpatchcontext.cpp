@@ -184,13 +184,10 @@ void BindingPatchContext::recordBindingValues(
 
     const QV4::CompiledData::Object *obj = unit->objectAt(cuIndex);
     const QQmlPropertyCache::ConstPtr cache = unit->propertyCachesPtr()->at(cuIndex);
-    const QString defaultPropertyName = cache ? cache->defaultPropertyName() : QString();
 
     for (auto binding = obj->bindingsBegin(), end = obj->bindingsEnd(); binding != end; ++binding) {
 
-        const QString name = binding->propertyNameIndex == 0
-                ? defaultPropertyName
-                : unit->stringAt(binding->propertyNameIndex);
+        const QString name = targetPropertyName(unit, cuIndex, binding);
         if (name.isEmpty())
             continue;
 
@@ -762,15 +759,9 @@ static ReboundBindings reboundBindings(
         return bindings;
 
     const QV4::CompiledData::Object *obj = unit->objectAt(cuIndex);
-    const QQmlPropertyCache::ConstPtr cache = unit->propertyCachesPtr()->at(cuIndex);
-    const QString defaultPropertyName = cache ? cache->defaultPropertyName() : QString();
 
-    for (auto binding = obj->bindingsBegin(), end = obj->bindingsEnd(); binding != end; ++binding) {
-        const QString name = binding->propertyNameIndex == 0
-                ? defaultPropertyName
-                : unit->stringAt(binding->propertyNameIndex);
-        bindings.insert(name, binding);
-    }
+    for (auto binding = obj->bindingsBegin(), end = obj->bindingsEnd(); binding != end; ++binding)
+        bindings.insert(BindingPatchContext::targetPropertyName(unit, cuIndex, binding), binding);
     return bindings;
 }
 
@@ -828,15 +819,11 @@ void BindingPatchContext::resetBindings(
         const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit, int newCuIndex)
 {
     const QV4::CompiledData::Object *obj = oldUnit->objectAt(cuIndex);
-    const QQmlPropertyCache::ConstPtr cache = oldUnit->propertyCachesPtr()->at(cuIndex);
-    const QString defaultPropertyName = cache ? cache->defaultPropertyName() : QString();
 
     const ReboundBindings rebound = reboundBindings(newUnit, newCuIndex);
 
     for (auto binding = obj->bindingsBegin(), end = obj->bindingsEnd(); binding != end; ++binding) {
-        const QString name = binding->propertyNameIndex == 0
-                ? defaultPropertyName
-                : oldUnit->stringAt(binding->propertyNameIndex);
+        const QString name = targetPropertyName(oldUnit, cuIndex, binding);
         if (name.isEmpty())
             continue;
 
