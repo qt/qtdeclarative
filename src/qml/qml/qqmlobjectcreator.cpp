@@ -1852,16 +1852,22 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
     qSwap(_vmeMetaObject, vmeMetaObject);
 
     _ddata->compilationUnit = compilationUnit;
-    if (_compiledObject->hasFlag(QV4::CompiledData::Object::HasDeferredBindings))
+
+    // When we are called to apply a deferred binding, we complete deferral here rather than
+    // initiate it: the deferred bindings are applied right away via ApplyAll below. Registering
+    // additional deferred data would make no sense.
+    const bool applyingDeferred =
+            binding && binding->hasFlag(QV4::CompiledData::Binding::IsDeferredBinding);
+    if (!applyingDeferred
+        && _compiledObject->hasFlag(QV4::CompiledData::Object::HasDeferredBindings)) {
         _ddata->deferData(_compiledObjectIndex, compilationUnit, context, m_inlineComponentName);
+    }
 
     registerPostHocRequiredProperties(binding);
 
     if (_compiledObject->nFunctions > 0)
         setupFunctions();
-    setupBindings((binding && binding->hasFlag(QV4::CompiledData::Binding::IsDeferredBinding))
-                  ? BindingMode::ApplyAll
-                  : BindingMode::ApplyImmediate);
+    setupBindings(applyingDeferred ? BindingMode::ApplyAll : BindingMode::ApplyImmediate);
 
     for (int aliasIndex = 0; aliasIndex != _compiledObject->aliasCount(); ++aliasIndex) {
         // Ensure aliasChanged() signals are connected during object creation.

@@ -277,6 +277,7 @@ private slots:
     void deferredProperties();
     void executeDeferredPropertiesOnce();
     void deferredProperties_extra();
+    void deferredGeneralizedGroupReenters();
 
     void noChildEvents();
 
@@ -5579,6 +5580,43 @@ void tst_qqmllanguage::deferredProperties_extra()
     auto attached = qmlAttachedPropertiesObject<MyQmlObject>(object.get(), false);
     QVERIFY(attached);
     QCOMPARE(attached->property("value").toInt(), 1);
+}
+
+class ImmediateGroupHost : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int px MEMBER m_px)
+    Q_PROPERTY(int py MEMBER m_py)
+    // Defers everything except objectName, the way Binding and PropertyChanges do.
+    Q_CLASSINFO("ImmediatePropertyNames", "objectName")
+public:
+    int m_px = 0;
+    int m_py = 0;
+};
+
+void tst_qqmllanguage::deferredGeneralizedGroupReenters()
+{
+    qmlRegisterType<ImmediateGroupHost>("deferred.group", 1, 0, "ImmediateGroupHost");
+
+    // A composite type deriving another, each level with a deferred generalized grouped property
+    // ("self.px" in the base, "derivedSelf.py" in the derived type). Completing the deferred
+    // bindings re-populates the object, which re-registers deferred data, growing
+    // QQmlData::deferredData while beginDeferred() iterates it.
+    QQmlComponent component(&engine, testFileUrl("DeferDerived.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(object);
+
+    // The bindings are deferred (nothing is in ImmediatePropertyNames), so they haven't run yet.
+    QCOMPARE(object->property("px").toInt(), 0);
+    QCOMPARE(object->property("py").toInt(), 0);
+
+    // Completing the deferred bindings must not corrupt QQmlData::deferredData while iterating it.
+    qmlExecuteDeferred(object.get());
+
+    QCOMPARE(object->property("px").toInt(), 1);
+    QCOMPARE(object->property("py").toInt(), 2);
 }
 
 void tst_qqmllanguage::noChildEvents()
