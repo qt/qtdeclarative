@@ -464,6 +464,8 @@ struct UnitDiffer
         case Binding::Type_Boolean:
             return oldBinding.valueAsBoolean() == newBinding.valueAsBoolean();
         case Binding::Type_Number: {
+            if (oldBinding.hasFlag(CompiledData::Binding::IsResolvedEnum))
+                return oldBinding.value.resolvedEnumValue == newBinding.value.resolvedEnumValue;
             const uint oldIdx = oldBinding.value.constantValueIndex;
             const uint newIdx = newBinding.value.constantValueIndex;
             Q_ASSERT(oldIdx < oldUnit->constantTableSize);

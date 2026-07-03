@@ -107,6 +107,10 @@ private slots:
     void jsClassTableChange();
     void blockTableChange();
 
+    // Folded enum binding tests (Type_Number bindings with IsResolvedEnum)
+    void foldedEnumOutOfRange();
+    void foldedEnumChange();
+
     // Cross-product test for all QML file pairs
     void patchAllFilePairs_data();
     void patchAllFilePairs();
@@ -1288,6 +1292,86 @@ void tst_QQmlPreviewDiff::blockTableChange()
     QVERIFY(newUnit->unitData()->blockTableSize > 0);
 
     verifyPatchProducesByteIdenticalUnit("BlockTableOld.qml", "BlockTableNew.qml");
+}
+
+// Returns the first Type_Number binding that carries the IsResolvedEnum flag, i.e. a
+// folded enum value. Such a binding stores the enum value directly in resolvedEnumValue;
+// it is NOT an index into the constant table.
+static const Binding *findFoldedEnumBinding(const Unit *unit)
+{
+    const auto *qml = unit->qmlUnit();
+    for (quint32 i = 0; i < qml->nObjects; ++i) {
+        const Object *obj = qml->objectAt(i);
+        for (quint32 b = 0; b < obj->nBindings; ++b) {
+            const Binding *binding = obj->bindingTable() + b;
+            if (binding->type() == Binding::Type_Number
+                && binding->hasFlag(Binding::IsResolvedEnum)) {
+                return binding;
+            }
+        }
+    }
+    return nullptr;
+}
+
+// A folded enum binding stores the raw enum value in resolvedEnumValue, not a constant
+// table index. font.weight: Font.Black folds to 900 while the file has no numeric
+// constants at all (constantTableSize == 0), so interpreting the value as a constant
+// table index is out of range. Before the fix, bindingContentEqual did exactly that and
+// tripped Q_ASSERT(idx < constantTableSize). The diff must instead compare the resolved
+// enum values and succeed.
+void tst_QQmlPreviewDiff::foldedEnumOutOfRange()
+{
+    const auto oldUnit = loadUnit("FoldedEnumOutOfRangeOld.qml");
+    const auto newUnit = loadUnit("FoldedEnumOutOfRangeNew.qml");
+    QVERIFY(oldUnit && newUnit);
+
+    // Precondition: both units contain a folded enum whose value would be an invalid
+    // index into the constant table (this is what would have tripped the assert).
+    const Binding *oldEnum = findFoldedEnumBinding(oldUnit->unitData());
+    const Binding *newEnum = findFoldedEnumBinding(newUnit->unitData());
+    QVERIFY(oldEnum);
+    QVERIFY(newEnum);
+    QCOMPARE(oldEnum->value.resolvedEnumValue, newEnum->value.resolvedEnumValue);
+    QVERIFY(quint32(oldEnum->value.resolvedEnumValue) >= oldUnit->unitData()->constantTableSize);
+    QVERIFY(quint32(newEnum->value.resolvedEnumValue) >= newUnit->unitData()->constantTableSize);
+
+    // Diffing must not assert or crash: the folded enum values are compared directly.
+    const auto diff = diffCompilationUnits(oldUnit->unitData(), newUnit->unitData());
+    QVERIFY(diff.success);
+
+    verifyPatchProducesByteIdenticalUnit("FoldedEnumOutOfRangeOld.qml",
+                                         "FoldedEnumOutOfRangeNew.qml");
+}
+
+// Two documents whose only meaningful difference is the folded enum value
+// (font.weight: Font.Bold -> Font.Black). The diff must detect the change by comparing
+// the resolved enum values and produce a patch that reconstructs the new unit exactly.
+void tst_QQmlPreviewDiff::foldedEnumChange()
+{
+    const auto oldUnit = loadUnit("FoldedEnumChangeOld.qml");
+    const auto newUnit = loadUnit("FoldedEnumChangeNew.qml");
+    QVERIFY(oldUnit && newUnit);
+
+    const Binding *oldEnum = findFoldedEnumBinding(oldUnit->unitData());
+    const Binding *newEnum = findFoldedEnumBinding(newUnit->unitData());
+    QVERIFY(oldEnum);
+    QVERIFY(newEnum);
+
+    // The enum values genuinely differ, and both are out of range for the constant table
+    // (so the comparison cannot fall back to the constant-table path).
+    QVERIFY(oldEnum->value.resolvedEnumValue != newEnum->value.resolvedEnumValue);
+    QVERIFY(quint32(oldEnum->value.resolvedEnumValue) >= oldUnit->unitData()->constantTableSize);
+    QVERIFY(quint32(newEnum->value.resolvedEnumValue) >= newUnit->unitData()->constantTableSize);
+
+    const auto diff = diffCompilationUnits(oldUnit->unitData(), newUnit->unitData());
+    QVERIFY(diff.success);
+
+    // The differing folded enum must be reported as a change.
+    QVERIFY(countByType(diff, ChangeType::BindingChanged)
+                    + countByType(diff, ChangeType::ObjectChanged)
+            > 0);
+
+    verifyPatchProducesByteIdenticalUnit("FoldedEnumChangeOld.qml", "FoldedEnumChangeNew.qml");
 }
 
 QTEST_MAIN(tst_QQmlPreviewDiff)
