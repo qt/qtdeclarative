@@ -103,10 +103,17 @@ Q_STATIC_LOGGING_CATEGORY(lcStyleKit, "qt.labs.stylekit")
     A style is a QML file whose root object is a \l Style. To load it,
     pass the file path to the constructor or to \l setStylePath():
 
+    \if !defined(qtforpython)
     \code
     auto *style = new QStyleKitStyle(QStringLiteral(":/styles/MyStyle.qml"));
     QApplication::setStyle(style);
     \endcode
+    \else
+    \code
+    style = QStyleKitStyle(":/styles/MyStyle.qml")
+    QApplication.setStyle(style)
+    \endcode
+    \endif
 
     The Style is loaded with an internal QQmlEngine owned by the
     QStyleKitStyle instance. If the path is invalid or the root object is
