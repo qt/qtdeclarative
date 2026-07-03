@@ -89,7 +89,7 @@ QT_BEGIN_NAMESPACE
 
     When \c true, animates the geometry properties of the
     \l {ControlStyleProperties::}{background} delegate,
-    such as \l {DelegateStyle::implicitWidth}{implicit size}
+    such as \l {DelegateStyle::width}{width}, \l {DelegateStyle::height}{height},
     and \l {DelegateStyle::}{margins}.
 */
 
@@ -140,8 +140,8 @@ QT_BEGIN_NAMESPACE
 
     When \c true, animates the geometry properties of the
     \l {ControlStyleProperties::}{handle} delegate and its \l {HandleStyle}{sub-handles},
-    such as \l {DelegateStyle::implicitWidth}{implicit size} and
-    \l {DelegateStyle::}{margins}.
+    such as \l {DelegateStyle::width}{width}, \l {DelegateStyle::height}{height},
+    and \l {DelegateStyle::}{margins}.
 */
 
 /*!
@@ -191,7 +191,8 @@ QT_BEGIN_NAMESPACE
 
     When \c true, animates the geometry properties of the
     \l {ControlStyleProperties::}{indicator} delegate and its \l {IndicatorStyle}{sub-indicators},
-    such as \l {DelegateStyle::implicitWidth}{implicit size} and \l {DelegateStyle::}{margins}.
+    such as \l {DelegateStyle::width}{width}, \l {DelegateStyle::height}{height},
+    and \l {DelegateStyle::}{margins}.
 */
 
 /*!

@@ -464,7 +464,7 @@ ApplicationWindow {
             text.padding: 5
             text.alignment: Qt.AlignVCenter | Qt.AlignLeft
             text.color: "black"
-            background.implicitWidth: 200
+            background.width: 200
 
             indicator {
                 color: "transparent"
