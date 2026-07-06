@@ -1446,6 +1446,11 @@ MemoryManager::~MemoryManager()
     setGCTimeLimit(-1);
     if (engine->isGCOngoing) {
         engine->isGCOngoing = false;
+        // Aborting the incremental run drops the mark stack, so we must also clear the
+        // blocked state. Otherwise the final sweep below runs destruction handlers with
+        // gcBlocked still set, and any GCCriticalSection they open would try to mark
+        // through the now-absent mark stack.
+        gcBlocked = MemoryManager::Unblocked;
         m_markStack.reset();
         gcStateMachine->state = GCState::Invalid;
         blockAllocator.resetBlackBits();
