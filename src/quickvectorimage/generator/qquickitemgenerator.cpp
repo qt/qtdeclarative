@@ -200,6 +200,8 @@ bool QQuickItemGenerator::generateStructureNode(const StructureNodeInfo &info)
         QQuickItem *item = popItem();
         if (!info.maskId.isEmpty())
             generateMask(item, info);
+        if (!info.filterId.isEmpty())
+            generateFilter(item, info);
     }
 
     return true;
@@ -220,7 +222,7 @@ void QQuickItemGenerator::generatePath(const PathNodeInfo &info, const QRectF &o
         return;
 
     if (qobject_cast<QQuickShape *>(currentItem()) && info.markerStartId.isEmpty()
-        && info.markerMidId.isEmpty() && info.markerEndId.isEmpty()) {
+        && info.markerMidId.isEmpty() && info.markerEndId.isEmpty() && info.filterId.isEmpty()) {
         optimizePaths(info, overrideBoundingRect);
     } else {
         auto *shape = createShapeContainer();
@@ -234,6 +236,8 @@ void QQuickItemGenerator::generatePath(const PathNodeInfo &info, const QRectF &o
             || !info.markerEndId.isEmpty()) {
             generateMarkers(info);
         }
+        if (!info.filterId.isEmpty())
+            generateFilter(item, info);
     }
 }
 
@@ -423,6 +427,8 @@ void QQuickItemGenerator::generateImageNode(const ImageNodeInfo &info)
     QQuickItem *item = popItem();
     if (!info.maskId.isEmpty())
         generateMask(item, info);
+    if (!info.filterId.isEmpty())
+        generateFilter(item, info);
 }
 
 void QQuickItemGenerator::generateTextNode(const TextNodeInfo &info)
@@ -486,6 +492,8 @@ void QQuickItemGenerator::generateTextNode(const TextNodeInfo &info)
     QQuickItem *textItem = popItem();
     if (!info.maskId.isEmpty())
         generateMask(textItem, info);
+    if (!info.filterId.isEmpty())
+        generateFilter(textItem, info);
 }
 
 void QQuickItemGenerator::generateNode(const NodeInfo &info)
@@ -519,6 +527,8 @@ void QQuickItemGenerator::generateUseNode(const UseNodeInfo &info)
         QQuickItem *item = popItem();
         if (!info.maskId.isEmpty())
             generateMask(item, info);
+        if (!info.filterId.isEmpty())
+            generateFilter(item, info);
     }
 }
 
@@ -714,8 +724,245 @@ void QQuickItemGenerator::generateFilterNode(const FilterNodeInfo &info)
         rec->append([this, info]() { generateFilterNode(info); });
         return;
     }
-    qCDebug(lcQuickVectorImage) << "generateFilterNode: not yet implemented";
-    Q_UNUSED(info)
+    m_filterDefs[info.id] = info;
+}
+
+static QRectF resolveRect(const QRectF &rect, FilterNodeInfo::CoordinateSystem cs,
+                          const QRectF &itemBounds)
+{
+    if (cs == FilterNodeInfo::CoordinateSystem::Relative)
+        return QRectF(itemBounds.x() + rect.x() * itemBounds.width(),
+                      itemBounds.y() + rect.y() * itemBounds.height(),
+                      rect.width() * itemBounds.width(), rect.height() * itemBounds.height());
+    return rect;
+}
+
+void QQuickItemGenerator::generateFilter(QQuickItem *item, const NodeInfo &info)
+{
+    auto it = m_filterDefs.find(info.filterId);
+    if (it == m_filterDefs.end()) {
+        qCWarning(lcQuickVectorImage) << "applyFilter: unknown filter id:" << info.filterId;
+        return;
+    }
+    const FilterNodeInfo &filterInfo = *it;
+
+    if (filterInfo.steps.isEmpty())
+        return;
+
+    QQuickItem *parentItem = item->parentItem();
+    const QRectF itemBounds = info.bounds.isNull()
+            ? QRectF(item->x(), item->y(), item->width(), item->height())
+            : info.bounds;
+
+    QRectF filterRect = resolveRect(filterInfo.filterRect, filterInfo.csFilterRect, itemBounds);
+    if (filterRect.isEmpty())
+        filterRect = itemBounds;
+
+    auto *sourceGraphic = new QQuickShaderEffectSource;
+    sourceGraphic->setSourceItem(item);
+    sourceGraphic->setHideSource(true);
+    sourceGraphic->setVisible(false);
+    sourceGraphic->setSourceRect(filterRect);
+    sourceGraphic->setWidth(filterRect.width());
+    sourceGraphic->setHeight(filterRect.height());
+    sourceGraphic->setParent(m_rootItem);
+    sourceGraphic->setParentItem(m_rootItem);
+    if (filterInfo.wrapMode == QSGTexture::Repeat)
+        sourceGraphic->setWrapMode(QQuickShaderEffectSource::Repeat);
+
+    QHash<QString, QQuickShaderEffectSource *> namedOutputs;
+    const QString sourceAlphaName = filterInfo.id + u"_source_alpha"_s;
+    QQuickShaderEffectSource *sourceAlpha = nullptr;
+    QQuickShaderEffectSource *lastOutput = sourceGraphic;
+
+    const auto resolveInput = [&](FilterNodeInfo::FilterInput inputType,
+                                  const QString &name) -> QQuickShaderEffectSource * {
+        switch (inputType) {
+        case FilterNodeInfo::FilterInput::SourceColor:
+            return sourceGraphic;
+        case FilterNodeInfo::FilterInput::SourceAlpha:
+            return sourceAlpha;
+        case FilterNodeInfo::FilterInput::Name:
+            return namedOutputs.value(name, sourceGraphic);
+        default:
+            return lastOutput;
+        }
+    };
+
+    for (int i = 0; i < filterInfo.steps.size(); ++i) {
+        const FilterNodeInfo::FilterStep &step = filterInfo.steps.at(i);
+        const QRectF stepRect =
+                (step.filterPrimitiveRect.isNull()
+                 || step.csFilterParameter == FilterNodeInfo::CoordinateSystem::MatchFilterRect)
+                ? filterRect
+                : resolveRect(step.filterPrimitiveRect, step.csFilterParameter, itemBounds);
+
+        QQuickShaderEffectSource *output = nullptr;
+        if (step.filterType == FilterNodeInfo::Type::Merge) {
+            QList<QQuickShaderEffectSource *> mergeInputs;
+            while (i + 1 < filterInfo.steps.size()
+                   && filterInfo.steps.at(i + 1).filterType == FilterNodeInfo::Type::MergeNode) {
+                ++i;
+                const FilterNodeInfo::FilterStep &mergeNode = filterInfo.steps.at(i);
+                mergeInputs.append(resolveInput(mergeNode.input1, mergeNode.namedInput1));
+            }
+            output = generateFilterMerge(mergeInputs, stepRect);
+        } else {
+            auto *input1 = resolveInput(step.input1, step.namedInput1);
+            auto *input2 = resolveInput(step.input2, step.namedInput2);
+            output = generateFilterStep(step, input1, input2, stepRect);
+        }
+
+        if (output) {
+            lastOutput = output;
+            if (!step.outputName.isEmpty()) {
+                namedOutputs[step.outputName] = output;
+                if (step.outputName == sourceAlphaName)
+                    sourceAlpha = output;
+            }
+        }
+    }
+
+    if (lastOutput == sourceGraphic)
+        return;
+
+    lastOutput->setParent(parentItem);
+    lastOutput->setParentItem(parentItem);
+    lastOutput->setVisible(true);
+    lastOutput->setWidth(filterRect.width());
+    lastOutput->setHeight(filterRect.height());
+
+    if (!info.isDefaultOpacity)
+        lastOutput->setOpacity(info.opacity.defaultValue().toReal());
+
+    if (!info.isDefaultTransform) {
+        const QTransform elementXf = info.transform.defaultValue().value<QTransform>();
+        QMatrix4x4 mat(elementXf);
+        mat.translate(filterRect.x(), filterRect.y());
+        auto *matrix = new QQuickMatrix4x4(lastOutput);
+        matrix->setMatrix(mat);
+        auto xformProp = lastOutput->transform();
+        xformProp.append(&xformProp, matrix);
+        lastOutput->setX(0);
+        lastOutput->setY(0);
+    } else {
+        lastOutput->setX(filterRect.x());
+        lastOutput->setY(filterRect.y());
+    }
+}
+
+QQuickShaderEffectSource *
+QQuickItemGenerator::generateFilterStep(const FilterNodeInfo::FilterStep &step,
+                                        QQuickShaderEffectSource *input1,
+                                        QQuickShaderEffectSource *input2, const QRectF &stepRect)
+{
+    switch (step.filterType) {
+    case FilterNodeInfo::Type::Flood:
+        return generateFilterFlood(step, stepRect);
+    case FilterNodeInfo::Type::Offset:
+        return generateFilterOffset(step, input1, stepRect);
+    case FilterNodeInfo::Type::ColorMatrix:
+        return generateFilterColorMatrix(step, input1, stepRect);
+    case FilterNodeInfo::Type::BlendNormal:
+    case FilterNodeInfo::Type::BlendMultiply:
+    case FilterNodeInfo::Type::BlendScreen:
+    case FilterNodeInfo::Type::BlendDarken:
+    case FilterNodeInfo::Type::BlendLighten:
+        return generateFilterBlend(step, input1, input2, stepRect);
+    case FilterNodeInfo::Type::CompositeOver:
+    case FilterNodeInfo::Type::CompositeIn:
+    case FilterNodeInfo::Type::CompositeOut:
+    case FilterNodeInfo::Type::CompositeAtop:
+    case FilterNodeInfo::Type::CompositeXor:
+    case FilterNodeInfo::Type::CompositeLighter:
+    case FilterNodeInfo::Type::CompositeArithmetic:
+        return generateFilterComposite(step, input1, input2, stepRect);
+    case FilterNodeInfo::Type::GaussianBlur:
+        return generateFilterGaussianBlur(step, input1, stepRect);
+    default:
+        qCDebug(lcQuickVectorImage) << "generateFilterStep: filter type not yet implemented";
+        return nullptr;
+    }
+}
+
+QQuickShaderEffectSource *
+QQuickItemGenerator::generateFilterMerge(const QList<QQuickShaderEffectSource *> &inputs,
+                                         const QRectF &stepRect)
+{
+    qCDebug(lcQuickVectorImage) << "generateFilterMerge: not yet implemented";
+    Q_UNUSED(inputs)
+    Q_UNUSED(stepRect)
+    return nullptr;
+}
+
+QQuickShaderEffectSource *
+QQuickItemGenerator::generateFilterFlood(const FilterNodeInfo::FilterStep &step,
+                                         const QRectF &stepRect)
+{
+    qCDebug(lcQuickVectorImage) << "generateFilterFlood: not yet implemented";
+    Q_UNUSED(step)
+    Q_UNUSED(stepRect)
+    return nullptr;
+}
+
+QQuickShaderEffectSource *
+QQuickItemGenerator::generateFilterOffset(const FilterNodeInfo::FilterStep &step,
+                                          QQuickShaderEffectSource *input, const QRectF &stepRect)
+{
+    qCDebug(lcQuickVectorImage) << "generateFilterOffset: not yet implemented";
+    Q_UNUSED(step)
+    Q_UNUSED(input)
+    Q_UNUSED(stepRect)
+    return nullptr;
+}
+
+QQuickShaderEffectSource *
+QQuickItemGenerator::generateFilterColorMatrix(const FilterNodeInfo::FilterStep &step,
+                                               QQuickShaderEffectSource *input,
+                                               const QRectF &stepRect)
+{
+    qCDebug(lcQuickVectorImage) << "generateFilterColorMatrix: not yet implemented";
+    Q_UNUSED(step)
+    Q_UNUSED(input)
+    Q_UNUSED(stepRect)
+    return nullptr;
+}
+
+QQuickShaderEffectSource *
+QQuickItemGenerator::generateFilterBlend(const FilterNodeInfo::FilterStep &step,
+                                         QQuickShaderEffectSource *input1,
+                                         QQuickShaderEffectSource *input2, const QRectF &stepRect)
+{
+    qCDebug(lcQuickVectorImage) << "generateFilterBlend: not yet implemented";
+    Q_UNUSED(step)
+    Q_UNUSED(input1)
+    Q_UNUSED(input2)
+    Q_UNUSED(stepRect)
+    return nullptr;
+}
+
+QQuickShaderEffectSource *QQuickItemGenerator::generateFilterComposite(
+        const FilterNodeInfo::FilterStep &step, QQuickShaderEffectSource *input1,
+        QQuickShaderEffectSource *input2, const QRectF &stepRect)
+{
+    qCDebug(lcQuickVectorImage) << "generateFilterComposite: not yet implemented";
+    Q_UNUSED(step)
+    Q_UNUSED(input1)
+    Q_UNUSED(input2)
+    Q_UNUSED(stepRect)
+    return nullptr;
+}
+
+QQuickShaderEffectSource *
+QQuickItemGenerator::generateFilterGaussianBlur(const FilterNodeInfo::FilterStep &step,
+                                                QQuickShaderEffectSource *input,
+                                                const QRectF &stepRect)
+{
+    qCDebug(lcQuickVectorImage) << "generateFilterGaussianBlur: not yet implemented";
+    Q_UNUSED(step)
+    Q_UNUSED(input)
+    Q_UNUSED(stepRect)
+    return nullptr;
 }
 
 bool QQuickItemGenerator::generateMarkerNode(const MarkerNodeInfo &info)
