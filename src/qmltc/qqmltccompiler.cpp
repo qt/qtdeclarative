@@ -394,16 +394,16 @@ void Compiler::compileType(
     current.finalizeComponent.returnType = u"void"_s;
     current.handleOnCompleted.name = u"QML_handleOnCompleted"_s;
     current.handleOnCompleted.returnType = u"void"_s;
-    Variable creator(u"QQmltcObjectCreationHelper*"_s, u"creator"_s);
-    Variable engine(u"QQmlEngine*"_s, u"engine"_s);
-    Variable parent(u"QObject*"_s, u"parent"_s, u"nullptr"_s);
-    Variable initializedCache(
+    const Variable creator(u"QQmltcObjectCreationHelper*"_s, u"creator"_s);
+    const Variable engine(u"QQmlEngine*"_s, u"engine"_s);
+    const Variable parent(u"QObject*"_s, u"parent"_s, u"nullptr"_s);
+    const Variable initializedCache(
         u"[[maybe_unused]] const QSet<QString>&"_s,
         u"initializedCache"_s,
         u"{}"_s
     );
-    Variable ctxtdata(u"const QQmlRefPointer<QQmlContextData>&"_s, u"parentContext"_s);
-    Variable finalizeFlag(u"bool"_s, u"canFinalize"_s);
+    const Variable ctxtdata(u"const QQmlRefPointer<QQmlContextData>&"_s, u"parentContext"_s);
+    const Variable finalizeFlag(u"bool"_s, u"canFinalize"_s);
     current.baselineCtor.parameterList = { parent };
     current.endInit.parameterList = { creator, engine };
     current.setComplexBindings.parameterList = { creator, engine, initializedCache };
@@ -423,7 +423,7 @@ void Compiler::compileType(
         compileRequiredPropertiesBundle(current, type, m_typeResolver);
 
         if (current.requiredPropertiesBundle) {
-            Variable bundle{
+            const Variable bundle{
                 u"const %1&"_s.arg(current.requiredPropertiesBundle->name),
                 u"requiredPropertiesBundle"_s,
             };
