@@ -106,14 +106,14 @@ void findCurrentRootObject(QQmlEngine *engine, const QUrl &url, QQmlPreviewHandl
         }
 
         // Schedule reply on the debug server thread
-        QMetaObject::invokeMethod(receiver, [receiver, found]() {
-            if (QQuickItem *rootItem = qobject_cast<QQuickItem *>(found)) {
+        QMetaObject::invokeMethod(receiver, [receiver, currentRoot = std::move(found)]() {
+            if (QQuickItem *rootItem = qobject_cast<QQuickItem *>(currentRoot)) {
                 receiver->setCurrentRootItem(rootItem);
                 receiver->setCurrentWindow(findCurrentWindow());
                 return;
             }
 
-            if (QQuickWindow *window = qobject_cast<QQuickWindow *>(found)) {
+            if (QQuickWindow *window = qobject_cast<QQuickWindow *>(currentRoot)) {
                 receiver->setCurrentWindow(window);
                 receiver->setCurrentRootItem(nullptr);
                 return;
@@ -285,8 +285,9 @@ void QQmlInPlacePreviewHandler::load(const QUrl &url)
 
         // Schedule this on the engine's thread. The shared pointer keeps the update alive as
         // long as necessary.
-        QMetaObject::invokeMethod(engine,
-                                  [inplaceUpdate, urls]() { updateEngine(inplaceUpdate, urls); });
+        QMetaObject::invokeMethod(engine, [update = std::move(inplaceUpdate), urls]() {
+            updateEngine(update, urls);
+        });
     }
 
     // Update current window and root item based on passed URL
