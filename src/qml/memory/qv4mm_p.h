@@ -560,10 +560,17 @@ struct GCCriticalSection {
     ~GCCriticalSection()
     {
         m_engine->memoryManager->gcBlocked = m_oldState;
-        if (m_oldState != MemoryManager::Unblocked)
-            if constexpr (!std::is_same_v<ToBeMarked, void>)
-                if (m_toBeMarked)
-                    m_toBeMarked->markObjects(m_engine->memoryManager->markStack());
+        if (m_oldState != MemoryManager::Unblocked) {
+            if constexpr (!std::is_same_v<ToBeMarked, void>) {
+                if (m_toBeMarked) {
+                    // The gc was running when we entered the critical section, and blocking it
+                    // cannot have finished it, so its mark stack must still be alive.
+                    MarkStack *markStack = m_engine->memoryManager->markStack();
+                    Q_ASSERT(markStack);
+                    m_toBeMarked->markObjects(markStack);
+                }
+            }
+        }
         /* because we blocked the gc, we might be using too much memoryon the unmanaged heap
            and did not run the normal fixup logic. So recheck again, and trigger a gc run
            if necessary*/
