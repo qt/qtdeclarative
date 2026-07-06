@@ -1602,7 +1602,7 @@ static bool isResource(const QString &path)
 {
     const bool startsWithColon = path.at(0) == QLatin1Char(':');
 #if defined(Q_OS_ANDROID)
-    return startsWithColon || path.startsWith(QLatin1String("assets:/", Qt::CaseInsensitive))
+    return startsWithColon || path.startsWith(QLatin1String("assets:/"), Qt::CaseInsensitive)
             || path.startsWith(QLatin1String("content:/"), Qt::CaseInsensitive);
 #else
     return startsWithColon;
