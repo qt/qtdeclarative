@@ -497,6 +497,29 @@ BaseStyle {
         }
     }
 
+    switchDelegate {
+        text.alignment: Qt.AlignVCenter | Qt.AlignLeft
+        background {
+            radius: 0
+            color: __baseWhite
+            border.width: 0
+        }
+        indicator {
+            width: style.indicatorSize * 2
+            height: style.indicatorSize
+            alignment: Qt.AlignRight | Qt.AlignVCenter
+            radius: style.indicatorSize / 2
+            foreground {
+                radius: style.indicatorSize / 2
+                color: __transparent
+            }
+        }
+        hovered.background.color: __backgroundDefault
+        checked {
+            indicator.foreground.color: palette.accent
+        }
+    }
+
     tabBar {
         padding: 0
         spacing: -1 // let tabButtons overlap slightly

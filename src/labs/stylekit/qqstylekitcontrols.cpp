@@ -420,6 +420,16 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \qmlproperty ControlStyle AbstractStylableControls::switchDelegate
+
+    Grouped property for styling \l [QtQuickControls]{SwitchDelegate}.
+
+    Unset properties fall back to \l itemDelegate.
+
+    \snippet ControlsSnippets.qml switchDelegate
+*/
+
+/*!
     \qmlproperty ControlStyle AbstractStylableControls::tabBar
 
     Grouped property for styling \l [QtQuickControls]{TabBar}.
@@ -564,6 +574,7 @@ IMPLEMENT_ACCESSORS(searchField, QQStyleKitReader::SearchField)
 IMPLEMENT_ACCESSORS(slider, QQStyleKitReader::ControlType::Slider)
 IMPLEMENT_ACCESSORS(spinBox, QQStyleKitReader::ControlType::SpinBox)
 IMPLEMENT_ACCESSORS(switchControl, QQStyleKitReader::ControlType::SwitchControl)
+IMPLEMENT_ACCESSORS(switchDelegate, QQStyleKitReader::ControlType::SwitchDelegate)
 IMPLEMENT_ACCESSORS(tabBar, QQStyleKitReader::ControlType::TabBar)
 IMPLEMENT_ACCESSORS(tabButton, QQStyleKitReader::ControlType::TabButton)
 IMPLEMENT_ACCESSORS(textField, QQStyleKitReader::ControlType::TextField)

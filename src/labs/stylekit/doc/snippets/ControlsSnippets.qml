@@ -605,6 +605,41 @@ ApplicationWindow {
         }
         //! [switchControl]
 
+        //! [switchDelegate]
+        switchDelegate {
+            text.alignment: Qt.AlignVCenter | Qt.AlignLeft
+            background {
+                radius: 0
+                color: "white"
+                border.width: 0
+            }
+
+            indicator {
+                radius: 12
+                foreground {
+                    // Add some space between the indicator and the foreground track
+                    margins: 2
+                    radius: 12
+                    // The foreground track should only be visible when the switch is checked
+                    visible: false
+                }
+            }
+
+            handle {
+                // Add some space between the handle and the indicator
+                leftMargin: 2
+                rightMargin: 2
+                width: 20
+                height: 20
+                radius: 255
+                color: "white"
+            }
+
+            hovered.background.color: "#f0f0f0"
+            checked.indicator.foreground.visible: true
+        }
+        //! [switchDelegate]
+
         //! [tabBar]
         tabBar {
             padding: 0

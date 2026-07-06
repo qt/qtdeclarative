@@ -67,6 +67,7 @@ public:
         Slider,
         SpinBox,
         SwitchControl,
+        SwitchDelegate,
         SearchField,
         TabBar,
         TabButton,
