@@ -62,6 +62,7 @@ qt_internal_add_qml_module(LabsStyleKit
         StyleAnimation.qml
         SpinBox.qml
         Switch.qml
+        SwitchDelegate.qml
         TextField.qml
         TabBar.qml
         TabButton.qml

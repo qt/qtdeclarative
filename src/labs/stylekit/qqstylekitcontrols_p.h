@@ -54,6 +54,7 @@ class QQStyleKitControls : public QObject, public QQmlParserStatus
     Q_PROPERTY(QQStyleKitControl *toolButton READ toolButton WRITE set_toolButton NOTIFY toolButtonChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *toolSeparator READ toolSeparator WRITE set_toolSeparator NOTIFY toolSeparatorChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *switchControl READ switchControl WRITE set_switchControl NOTIFY switchControlChanged FINAL)
+    Q_PROPERTY(QQStyleKitControl *switchDelegate READ switchDelegate WRITE set_switchDelegate NOTIFY switchDelegateChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *radioButton READ radioButton WRITE set_radioButton NOTIFY radioButtonChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *radioDelegate READ radioDelegate WRITE set_radioDelegate NOTIFY radioDelegateChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *roundButton READ roundButton WRITE set_roundButton NOTIFY roundButtonChanged FINAL)
@@ -106,6 +107,7 @@ public:
     IMPLEMENT_ACCESSORS(toolButton)
     IMPLEMENT_ACCESSORS(toolSeparator)
     IMPLEMENT_ACCESSORS(switchControl)
+    IMPLEMENT_ACCESSORS(switchDelegate)
     IMPLEMENT_ACCESSORS(radioButton)
     IMPLEMENT_ACCESSORS(radioDelegate)
     IMPLEMENT_ACCESSORS(roundButton)
@@ -155,6 +157,7 @@ signals:
     void toolButtonChanged();
     void toolSeparatorChanged();
     void switchControlChanged();
+    void switchDelegateChanged();
     void radioButtonChanged();
     void radioDelegateChanged();
     void roundButtonChanged();
