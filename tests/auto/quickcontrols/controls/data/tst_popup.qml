@@ -366,10 +366,13 @@ TestCase {
         compare(control.contentItem.parent.x, 20)
         compare(control.contentItem.parent.y, 20)
 
-        control.x = testCase.width
-        control.y = testCase.height
-        compare(control.contentItem.parent.x, testCase.width - control.width - 10)
-        compare(control.contentItem.parent.y, testCase.height - control.height - 10)
+        let overlay = control.Overlay.overlay
+        verify(overlay)
+
+        control.x = overlay.width
+        control.y = overlay.height
+        compare(control.contentItem.parent.x, overlay.width - control.width - 10)
+        compare(control.contentItem.parent.y, overlay.height - control.height - 10)
 
         control.rightMargin = 20
         compare(control.margins, 10)
@@ -377,8 +380,8 @@ TestCase {
         compare(control.leftMargin, 20)
         compare(control.rightMargin, 20)
         compare(control.bottomMargin, 10)
-        compare(control.contentItem.parent.x, testCase.width - control.width - 20)
-        compare(control.contentItem.parent.y, testCase.height - control.height - 10)
+        compare(control.contentItem.parent.x, overlay.width - control.width - 20)
+        compare(control.contentItem.parent.y, overlay.height - control.height - 10)
 
         control.bottomMargin = 20
         compare(control.margins, 10)
@@ -386,36 +389,36 @@ TestCase {
         compare(control.leftMargin, 20)
         compare(control.rightMargin, 20)
         compare(control.bottomMargin, 20)
-        compare(control.contentItem.parent.x, testCase.width - control.width - 20)
-        compare(control.contentItem.parent.y, testCase.height - control.height - 20)
+        compare(control.contentItem.parent.x, overlay.width - control.width - 20)
+        compare(control.contentItem.parent.y, overlay.height - control.height - 20)
 
         control.margins = undefined
         compare(control.margins, -1)
 
         control.bottomMargin = undefined
         compare(control.bottomMargin, -1)
-        compare(control.contentItem.parent.x, testCase.width - control.width - 20)
-        compare(control.contentItem.parent.y, testCase.height)
+        compare(control.contentItem.parent.x, overlay.width - control.width - 20)
+        compare(control.contentItem.parent.y, overlay.height)
 
         control.rightMargin = undefined
         compare(control.rightMargin, -1)
-        compare(control.contentItem.parent.x, testCase.width)
-        compare(control.contentItem.parent.y, testCase.height)
+        compare(control.contentItem.parent.x, overlay.width)
+        compare(control.contentItem.parent.y, overlay.height)
 
-        control.x = -testCase.width
-        control.y = -testCase.height
+        control.x = -overlay.width
+        control.y = -overlay.height
         compare(control.contentItem.parent.x, 20)
         compare(control.contentItem.parent.y, 20)
 
         control.topMargin = undefined
         compare(control.topMargin, -1)
         compare(control.contentItem.parent.x, 20)
-        compare(control.contentItem.parent.y, -testCase.height)
+        compare(control.contentItem.parent.y, -overlay.height)
 
         control.leftMargin = undefined
         compare(control.leftMargin, -1)
-        compare(control.contentItem.parent.x, -testCase.width)
-        compare(control.contentItem.parent.y, -testCase.height)
+        compare(control.contentItem.parent.x, -overlay.width)
+        compare(control.contentItem.parent.y, -overlay.height)
     }
 
     function test_background() {
