@@ -120,7 +120,7 @@ collectCompositeLevels(const CompositeLevel &instanceLevel,
 
         levels.push_back({ oldCu, cu, rootIndex, icName, nullptr });
 
-        if (rootIndex >= cu->objectCount())
+        if (rootIndex < 0 || rootIndex >= cu->objectCount())
             break;
 
         // Walk deeper into the base type
