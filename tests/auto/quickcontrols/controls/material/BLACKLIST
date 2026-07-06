@@ -23,8 +23,6 @@ android
 android
 [ComboBox::test_modelReset]
 android
-[Popup::test_margins]
-android
 [Popup::test_popupOverlayCenterIn]
 android
 [Popup::test_resetSize]
