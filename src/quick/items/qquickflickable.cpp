@@ -858,12 +858,19 @@ void QQuickFlickable::setContentX(qreal pos)
     d->hData.explicitValue = true;
     d->resetTimeline(d->hData);
     d->hData.vTime = d->timeline.time();
-    if (isMoving() || isFlicking())
+    const bool wasMovingOrFlicking = isMoving() || isFlicking();
+    if (wasMovingOrFlicking)
         movementEnding(true, false);
     if (!qFuzzyCompare(-pos, d->hData.move.value())) {
         d->hData.contentPositionChangedExternallyDuringDrag = d->hData.dragging;
         d->hData.move.setValue(-pos);
         d->hData.contentPositionChangedExternallyDuringDrag = false;
+#if QT_CONFIG(accessibility)
+        if (!wasMovingOrFlicking && QAccessible::isActive()) {
+            QAccessibleEvent event(this, QAccessible::ScrollingEnd);
+            QAccessible::updateAccessibility(&event);
+        }
+#endif
     }
 }
 
@@ -879,12 +886,19 @@ void QQuickFlickable::setContentY(qreal pos)
     d->vData.explicitValue = true;
     d->resetTimeline(d->vData);
     d->vData.vTime = d->timeline.time();
-    if (isMoving() || isFlicking())
+    const bool wasMovingOrFlicking = isMoving() || isFlicking();
+    if (wasMovingOrFlicking)
         movementEnding(false, true);
     if (!qFuzzyCompare(-pos, d->vData.move.value())) {
         d->vData.contentPositionChangedExternallyDuringDrag = d->vData.dragging;
         d->vData.move.setValue(-pos);
         d->vData.contentPositionChangedExternallyDuringDrag = false;
+#if QT_CONFIG(accessibility)
+        if (!wasMovingOrFlicking && QAccessible::isActive()) {
+            QAccessibleEvent event(this, QAccessible::ScrollingEnd);
+            QAccessible::updateAccessibility(&event);
+        }
+#endif
     }
 }
 
