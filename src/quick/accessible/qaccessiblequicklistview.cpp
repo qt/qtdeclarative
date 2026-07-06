@@ -89,11 +89,13 @@ void QAccessibleQuickListView::setPosition(QPointF position)
 {
     if (auto *l = listView()) {
         if (l->orientation() == QQuickListView::Horizontal) {
-            l->positionViewAtIndex(position.x() * l->count(), QQuickListView::Beginning);
+            l->positionViewAtIndex(static_cast<int>(position.x() * l->count()),
+                                   QQuickListView::Beginning);
             return;
         }
 
-        l->positionViewAtIndex(position.y() * l->count(), QQuickListView::Beginning);
+        l->positionViewAtIndex(static_cast<int>(position.y() * l->count()),
+                               QQuickListView::Beginning);
     }
 }
 
