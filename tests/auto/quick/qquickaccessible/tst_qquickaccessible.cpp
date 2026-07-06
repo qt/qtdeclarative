@@ -79,6 +79,7 @@ private slots:
     void passwordTest();
     void announceTest();
     void eventTest();
+    void scrollEventTest();
     void relations_data();
     void relations();
     void controlsThatShouldSendObjectShow_data();
@@ -975,6 +976,43 @@ void tst_QQuickAccessible::eventTest()
     window.reset();
     QTestAccessibility::verifyEvent(&ev2);
     QTestAccessibility::verifyEvent(&ev3);
+}
+
+void tst_QQuickAccessible::scrollEventTest()
+{
+    // Regression test for QTBUG-146220: programmatically scrolling a Flickable
+    // by directly setting contentX/contentY (as opposed to an animated flick or
+    // flickTo()) must still emit a QAccessible::ScrollingEnd event. Without it,
+    // assistive technology (notably the Android a11y bridge) never refreshes its
+    // cached child geometry, so items scrolled into view stay unreachable.
+    auto clearEvents = qScopeGuard([]{ QTestAccessibility::clearEvents(); });
+    std::unique_ptr<QQuickView> window(new QQuickView());
+
+    window->setSource(testFileUrl("flickable.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.get()));
+
+    QQuickItem *flickable = window->findChild<QQuickItem *>("flickable");
+    QVERIFY(flickable);
+    QVERIFY(QAccessible::queryAccessibleInterface(flickable));
+
+    QAccessibleEvent scrollEvent(flickable, QAccessible::ScrollingEnd);
+
+    // A direct change of the property emits ScrollingEnd; setting the same
+    // value again does not move the content, so no event is emitted.
+    auto checkDirectScroll = [&](const char *property, qreal value) -> bool {
+        QTestAccessibility::clearEvents();
+        flickable->setProperty(property, value);
+        if (!QTestAccessibility::containsEvent(&scrollEvent))
+            return false;
+
+        QTestAccessibility::clearEvents();
+        flickable->setProperty(property, value);
+        return !QTestAccessibility::containsEvent(&scrollEvent);
+    };
+
+    QVERIFY(checkDirectScroll("contentY", 200.0));
+    QVERIFY(checkDirectScroll("contentX", 100.0));
 }
 
 void tst_QQuickAccessible::relations_data()
