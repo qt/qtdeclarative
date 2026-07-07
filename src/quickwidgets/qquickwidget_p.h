@@ -118,12 +118,21 @@ public:
     QVariantMap initialProperties;
 };
 
+class QQuickWidgetOffscreenWindowPrivate;
+
 class QQuickWidgetOffscreenWindow: public QQuickWindow
 {
     Q_OBJECT
 
 public:
     QQuickWidgetOffscreenWindow(QQuickWindowPrivate &dd, QQuickRenderControl *control);
+
+#if QT_CONFIG(accessibility)
+    QAccessibleInterface *accessibleRoot() const override;
+#endif
+
+private:
+    Q_DECLARE_PRIVATE(QQuickWidgetOffscreenWindow)
 };
 
 QT_END_NAMESPACE
