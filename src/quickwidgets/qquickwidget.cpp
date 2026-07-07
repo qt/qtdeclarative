@@ -61,11 +61,13 @@ QQuickWidgetOffscreenWindow::QQuickWidgetOffscreenWindow(QQuickWindowPrivate &dd
     setObjectName(QString::fromLatin1("QQuickWidgetOffscreenWindow"));
 }
 
-// override setVisble to prevent accidental offscreen window being created
-// by base class.
-class QQuickWidgetOffscreenWindowPrivate: public QQuickWindowPrivate {
+class QQuickWidgetOffscreenWindowPrivate: public QQuickWindowPrivate
+{
 public:
-    void setVisible(bool visible) override {
+    // override setVisible to prevent accidental offscreen window being created
+    // by base class.
+    void setVisible(bool visible) override
+    {
         Q_Q(QWindow);
         // this stays always invisible
         visibility = visible ? QWindow::Windowed : QWindow::Hidden;
