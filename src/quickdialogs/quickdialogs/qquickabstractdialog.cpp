@@ -7,6 +7,7 @@
 #include <QtCore/qloggingcategory.h>
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtQuick/qquickitem.h>
+#include <QtQuick/qquickrendercontrol.h>
 #include <QtQuick/qquickwindow.h>
 #include <QtQuickDialogs2QuickImpl/private/qquickdialogimplfactory_p.h>
 
@@ -560,8 +561,14 @@ QWindow *QQuickAbstractDialog::windowForOpen() const
 {
     if (m_parentWindowExplicitlySet)
         return m_parentWindow;
-    else if (auto parentItem = findParentItem())
-        return parentItem->window();
+    if (auto parentItem = findParentItem()) {
+        QWindow *itemWindow = parentItem->window();
+        if (auto *quickWindow = qobject_cast<QQuickWindow *>(itemWindow)) {
+            if (auto *effectiveWindow = QQuickRenderControl::renderWindowFor(quickWindow, nullptr))
+                itemWindow = effectiveWindow;
+        }
+        return itemWindow;
+    }
     return m_parentWindow;
 }
 
