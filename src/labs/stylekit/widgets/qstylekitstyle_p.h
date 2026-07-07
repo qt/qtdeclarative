@@ -24,8 +24,12 @@
 #include "qstylekitstyle.h"
 #include <QtLabsStyleKit/private/qqstylekitreader_p.h>
 
+#include <variant>
+
 QT_BEGIN_NAMESPACE
 
+class QAction;
+class QQuickTransition;
 class QQStyleKitDelegateProperties;
 class QQStyleKitHandleProperties;
 class QQStyleKitImageProperties;
@@ -54,6 +58,48 @@ class QStyleKitStylePrivate : public QCommonStylePrivate
         QMargins handleMargins;
         int spacing;
     };
+    // Key to identify a sub-element inside a widget: item-view cells,
+    // a menu/menu-bar item, etc.
+    // Needed for animating sub-elements
+    struct SubElementKey
+    {
+        const QWidget *widget = nullptr;
+        // used for item-view cells
+        struct ItemViewCell
+        {
+            const void *model = nullptr;
+            quintptr internalId = 0;
+            int row = -1;
+            int column = -1;
+            friend bool operator==(const ItemViewCell &l, const ItemViewCell &r) noexcept
+            {
+                return l.model == r.model && l.internalId == r.internalId
+                    && l.row == r.row && l.column == r.column;
+            }
+        };
+        // used for menu/menu-bar items
+        struct Action
+        {
+            const QAction *action = nullptr;
+            friend bool operator==(const Action &l, const Action &r) noexcept
+            { return l.action == r.action; }
+        };
+        std::variant<std::monostate, ItemViewCell, Action> id;
+
+        bool isValid() const noexcept
+        { return widget != nullptr && !std::holds_alternative<std::monostate>(id); }
+        friend bool operator==(const SubElementKey &l, const SubElementKey &r) noexcept
+        { return l.widget == r.widget && l.id == r.id; }
+        friend size_t qHash(const SubElementKey &k, size_t seed = 0) noexcept
+        {
+            if (auto *c = std::get_if<ItemViewCell>(&k.id))
+                return qHashMulti(seed, k.widget, 1, c->model, c->internalId, c->row, c->column);
+            if (auto *a = std::get_if<Action>(&k.id))
+                return qHashMulti(seed, k.widget, 2, a->action);
+            return qHashMulti(seed, k.widget, 0);
+        }
+    };
+
     // Key for the metrics cache
     struct MetricsCacheKey
     {
@@ -135,18 +181,25 @@ private:
 
     QQStyleKitReader *readerForWidget(const QWidget *widget) const;
     void cleanupWidgetReader(const QWidget *widget) const;
-
-    QQStyleKitReader *readerForItemViewItem(const QWidget *widget, quint64 itemKey) const;
-    void cleanupItemViewItemReaders(const QWidget *widget) const;
-    static quint64 itemViewItemKeyForOption(const QStyleOption *opt);
+    void onWidgetDestroyed(QObject *w) const;
 
     QQStyleKitReader *ensureSharedReader() const;
+    QQStyleKitReader *ensureSubElementReader() const;
+
+    static SubElementKey subElementKeyForOption(const QStyleOption *opt, const QWidget *widget);
+    QQStyleKitReader *startSubElementTransition(const SubElementKey &key,
+                                                QQStyleKitReader::ControlType type,
+                                                QQSK::State fromState, QQSK::State toState,
+                                                QQuickTransition *transition) const;
+    void cleanupSubElements(const QWidget *widget) const;
+    void clearAllSubElements() const;
 
     QQSK::State resolvedStateFor(QQStyleKitReader::ControlType type, QStyle::State state) const;
 
     QQStyleKitResolved resolve(const QWidget *w, QQStyleKitReader::ControlType type, QStyle::State state) const;
-    QQStyleKitResolved resolveItemViewItem(const QWidget *w, const QStyleOption *opt,
-                                   QQStyleKitReader::ControlType type, QStyle::State state) const;
+    QQStyleKitResolved resolveSubElement(const QWidget *w, const QStyleOption *opt,
+                                         QQStyleKitReader::ControlType type, QStyle::State state,
+                                         bool track = true) const;
 
     QQStyleKitLayoutResolved resolveLayout(QQStyleKitReader::ControlType type,
                                            QStyle::State state) const;
@@ -172,14 +225,20 @@ private:
     QQmlEngine *qmlEngine = nullptr;
     QQStyleKitStyle *style = nullptr;
     QQStyleKitStyle *defaultStyle = nullptr;
-    // Reader for static metric reads
+    // Shared reader for static metric reads
     mutable QQStyleKitReader *sharedReader = nullptr;
     // Per-widget readers
     // Separate per-widget readers are used in order to support transitions,
     // as each reader provides interpolated property values during these transitions.
     mutable QHash<const QWidget *, QQStyleKitReader *> widgetReaders;
-    // Per-item readers for item-view items
-    mutable QHash<const QWidget *, QHash<quint64, QQStyleKitReader *>> itemViewItemReaders;
+    // Shared reader for static (ie: not currently animating) sub-element reads
+    mutable QQStyleKitReader *subElementReader = nullptr;
+    // Last transitioned-to state for the sub-element
+    mutable QHash<SubElementKey, QQSK::State> subElementStates;
+    // Transient readers, one per animating sub-element
+    mutable QHash<SubElementKey, QQStyleKitReader *> subElementAnimationReaders;
+    static constexpr int kMaxSubElementAnimationReaders = 64;
+    static constexpr int kMaxSubElementStates = 1024;
     // Cache of resolved metrics per control type and state
     mutable QHash<MetricsCacheKey, ControlMetrics> metricsCache;
     QHash<const QWidget *, Tampered<QFont>> customFontWidgets;

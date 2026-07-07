@@ -58,11 +58,13 @@
 #endif
 #if QT_CONFIG(menu)
 #include <QtWidgets/qmenu.h>
+#include <QtWidgets/qmenubar.h>
 #endif
 #if QT_CONFIG(label)
 #include <QtWidgets/qlabel.h>
 #endif
 #include <QtWidgets/private/qwidget_p.h>
+#include <QtCore/private/qobject_p.h>
 #include <QtGui/qpainter.h>
 #include <QtGui/qpainterpath.h>
 #include <QtGui/qpainterstateguard.h>
@@ -70,6 +72,7 @@
 #include <QtCore/qloggingcategory.h>
 #include <QtQml/private/qqmlcomponent_p.h>
 #include <QtQml/qqmlengine.h>
+#include <QtQuick/private/qquicktransition_p.h>
 #include <QtLabsStyleKit/private/qqstylekit_p.h>
 #include <QtLabsStyleKit/private/qqstylekitcontrolproperties_p.h>
 #include <QtLabsStyleKit/private/qqstylekitstyle_p.h>
@@ -561,12 +564,10 @@ void QStyleKitStylePrivate::updateStyle()
     if (sharedReader && sharedReader->style() != effective)
         sharedReader->setExplicitStyle(effective);
 
-    for (const auto &byItem : std::as_const(itemViewItemReaders)) {
-        for (auto *reader : std::as_const(byItem)) {
-            if (reader && reader->style() != effective)
-                reader->setExplicitStyle(effective);
-        }
-    }
+    if (subElementReader && subElementReader->style() != effective)
+        subElementReader->setExplicitStyle(effective);
+
+    clearAllSubElements();
 
     for (auto *wr : std::as_const(widgetReaders)) {
         if (wr->style() != effective)
@@ -750,9 +751,8 @@ QQStyleKitReader *QStyleKitStylePrivate::readerForWidget(const QWidget *widget) 
     widgetReader->setTarget(const_cast<QWidget *>(widget));
     widgetReader->setCompleted(true);
     widgetReaders.insert(widget, widgetReader);
-    QObject::connect(widget, &QObject::destroyed, q, [this, widget]() {
-        cleanupWidgetReader(widget);
-    });
+    QObjectPrivate::connect(widget, &QObject::destroyed, this,
+                            &QStyleKitStylePrivate::onWidgetDestroyed, Qt::UniqueConnection);
     return widgetReader;
 }
 
@@ -760,55 +760,145 @@ void QStyleKitStylePrivate::cleanupWidgetReader(const QWidget *widget) const
 {
     if (auto *reader = widgetReaders.take(widget))
         reader->deleteLater();
-    cleanupItemViewItemReaders(widget);
+    cleanupSubElements(widget);
 }
 
-/*! \internal
-    Returns a unique key for the given item view item, or 0 if the option is not an item view item.
-    The key is used to cache a reader for the item.
-*/
-quint64 QStyleKitStylePrivate::itemViewItemKeyForOption(const QStyleOption *opt)
+void QStyleKitStylePrivate::onWidgetDestroyed(QObject *w) const
 {
-    if (const auto *viewOpt = qstyleoption_cast<const QStyleOptionViewItem *>(opt)) {
-        const auto &idx = viewOpt->index;
-        if (!idx.isValid())
-            return 0;
-
-        // Generate a unique key for the item using its row, column, and internalId
-        return qHashMulti(0, idx.row(), idx.column(), quint64(idx.internalId()));
-    }
-    return 0;
+    cleanupWidgetReader(static_cast<QWidget *>(w));
 }
 
 /*! \internal
-    Returns a reader for the given item view item, creating and caching it if needed.
-    Each item gets its own reader so that transitions for different items animate independently.
+    Returns the key identifying the sub-element (item-view cell, menu item or
+    menubar item) that \a opt refers to, or an invalid key if the option does
+    not identify one.
 */
-QQStyleKitReader *QStyleKitStylePrivate::readerForItemViewItem(
-    const QWidget *widget, quint64 itemKey) const
+QStyleKitStylePrivate::SubElementKey QStyleKitStylePrivate::subElementKeyForOption(
+    const QStyleOption *opt, const QWidget *widget)
+{
+    SubElementKey key;
+    if (!widget)
+        return key;
+
+#if QT_CONFIG(itemviews)
+    if (const auto *viewOpt = qstyleoption_cast<const QStyleOptionViewItem *>(opt)) {
+        const QModelIndex &idx = viewOpt->index;
+        if (!idx.isValid())
+            return key;
+        key.widget = widget;
+        key.id = SubElementKey::ItemViewCell{idx.model(), idx.internalId(), idx.row(), idx.column()};
+        return key;
+    }
+#endif
+#if QT_CONFIG(menu)
+    if (const auto *menuOpt = qstyleoption_cast<const QStyleOptionMenuItem *>(opt)) {
+        if (menuOpt->menuItemType == QStyleOptionMenuItem::Separator)
+            return key;
+        QAction *action = nullptr;
+        if (const auto *menu = qobject_cast<const QMenu *>(widget))
+            action = menu->actionAt(menuOpt->rect.center());
+        else if (const auto *menuBar = qobject_cast<const QMenuBar *>(widget))
+            action = menuBar->actionAt(menuOpt->rect.center());
+        if (action) {
+            key.widget = widget;
+            key.id = SubElementKey::Action{action};
+        }
+        return key;
+    }
+#endif
+    return key;
+}
+
+/*! \internal
+    Creates and returns a transitions-enabled reader for the given sub-element
+    that animates from \a fromState to \a toState
+
+*/
+QQStyleKitReader *QStyleKitStylePrivate::startSubElementTransition(
+    const SubElementKey &key, QQStyleKitReader::ControlType type,
+    QQSK::State fromState, QQSK::State toState, QQuickTransition *transition) const
 {
     Q_Q(const QStyleKitStyle);
     QQStyleKitStyle *effective = effectiveStyle();
     if (!effective)
         return nullptr;
 
-    auto &byItem = itemViewItemReaders[widget];
-    if (auto it = byItem.find(itemKey); it != byItem.end())
-        return *it;
+    // Reclaim finished readers. running() is per (shared) transition object, so
+    // it turns false only once no instance of that transition animates anywhere
+    for (auto it = subElementAnimationReaders.begin();
+         it != subElementAnimationReaders.end();) {
+        const QQuickTransition *t = it.value()->transition();
+        if (!t || !t->running()) {
+            it.value()->deleteLater();
+            it = subElementAnimationReaders.erase(it);
+        } else {
+            ++it;
+        }
+    }
+
+
+    if (subElementAnimationReaders.size() >= kMaxSubElementAnimationReaders) {
+        const auto it = subElementAnimationReaders.begin();
+        if (const QWidget *widget = it.key().widget)
+            const_cast<QWidget *>(widget)->update(); // snap to end state
+        it.value()->deleteLater();
+        subElementAnimationReaders.erase(it);
+    }
 
     auto *reader = new QQStyleKitReader(const_cast<QStyleKitStyle *>(q));
     reader->setExplicitStyle(effective);
-    reader->setTarget(const_cast<QWidget *>(widget));
+    reader->setTarget(const_cast<QWidget *>(key.widget));
+    // just stores the fromState, doesn't start the animation yet
+    reader->setControlTypeAndState(type, fromState);
     reader->setCompleted(true);
-    byItem.insert(itemKey, reader);
+    // As delegates are created lazily, a fresh reader has none,
+    // so we need to create them now so delegates can already start animating changes
+    // Only create delegates actually used by subelements, ie: background, indicators
+    reader->background();
+    auto *indicator = reader->indicator();
+    indicator->first()->foreground();
+    indicator->second()->foreground();
+    // Start the transition to the new state
+    reader->setControlTypeAndState(type, toState);
+    if (!transition || !transition->running()) {
+        reader->deleteLater();
+        return nullptr;
+    }
+    subElementAnimationReaders.insert(key, reader);
     return reader;
 }
 
-void QStyleKitStylePrivate::cleanupItemViewItemReaders(const QWidget *widget) const
+/*! \internal
+    Drops all sub-element state tracking and animation readers for \a widget.
+*/
+void QStyleKitStylePrivate::cleanupSubElements(const QWidget *widget) const
 {
-    const auto readers = itemViewItemReaders.take(widget);
-    for (auto *reader : readers)
+    for (auto it = subElementStates.begin(); it != subElementStates.end();) {
+        if (it.key().widget == widget)
+            it = subElementStates.erase(it);
+        else
+            ++it;
+    }
+    for (auto it = subElementAnimationReaders.begin();
+         it != subElementAnimationReaders.end();) {
+        if (it.key().widget == widget) {
+            it.value()->deleteLater();
+            it = subElementAnimationReaders.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
+/*! \internal
+    Drops all sub-element state tracking and animation readers.
+*/
+void QStyleKitStylePrivate::clearAllSubElements() const
+{
+    subElementStates.clear();
+    for (QQStyleKitReader *reader : std::as_const(subElementAnimationReaders))
         reader->deleteLater();
+    subElementAnimationReaders.clear();
 }
 
 /*! \internal
@@ -878,33 +968,81 @@ QStyleKitStylePrivate::QQStyleKitResolved QStyleKitStylePrivate::resolve(
 }
 
 /*! \internal
-    Resolves the properties for the given item view item, control type and state,
-    and returns them as a QQStyleKitResolved.
-    Falls back to resolve() if the option is not an item view item.
+    Resolves the properties for a sub-element of \a w (an item-view item, menu/
+    menuBar item), and returns them as a QQStyleKitResolved.
+
+    Sub-elements in a steady-state use the shared, transitions-disabled
+    subElementReader. When a sub-element is observed to change state and
+    the style defines a transition for the new state, a transient per-item
+    reader is created to run that transition
+
+    Pass \a track = false for synthetic resolves that should not register state changes
+    or retarget a running animation.
 */
-QStyleKitStylePrivate::QQStyleKitResolved QStyleKitStylePrivate::resolveItemViewItem(
+QStyleKitStylePrivate::QQStyleKitResolved QStyleKitStylePrivate::resolveSubElement(
     const QWidget *w, const QStyleOption *opt,
-    QQStyleKitReader::ControlType type, QStyle::State state) const
+    QQStyleKitReader::ControlType type, QStyle::State state, bool track) const
 {
-    // Same machinery as resolve(), but for sub-elements that have their own state
-    // (item view rows/cells). Each (widget, itemKey) gets its own reader
-    // so transitions for different items animate independently.
-    // Falls back to the widget reader
-    const quint64 itemKey = itemViewItemKeyForOption(opt);
-    if (itemKey == 0)
-        return resolve(w, type, state);
-
-    auto *reader = readerForItemViewItem(w, itemKey);
-    if (!reader)
-        return resolve(w, type, state);
-
-    const QQSK::State resolvedState = resolvedStateFor(type, state);
-    reader->setControlTypeAndState(type, resolvedState);
-
     QQStyleKitResolved out;
     out.widget = w;
+
+    auto *steadyReader = ensureSubElementReader();
+    if (!steadyReader)
+        return out;
+
+    const QQSK::State newState = resolvedStateFor(type, state);
+    const SubElementKey key = subElementKeyForOption(opt, w);
+
+    QQStyleKitReader *reader = nullptr;
+    if (track && key.isValid()) {
+        QQStyleKitReader *animReader = subElementAnimationReaders.value(key);
+        const auto it = subElementStates.constFind(key);
+        const bool seen = it != subElementStates.cend();
+
+        // Fallback to a reasonable base state to transition from by stripping the
+        // interactive/pointer-driven flags from the new state.
+        const auto baseState = newState & ~(QQSK::State(QQSK::StateFlag::Hovered)
+            | QQSK::StateFlag::Pressed
+            | QQSK::StateFlag::Checked
+            | QQSK::StateFlag::Focused
+            | QQSK::StateFlag::Highlighted);
+        const QQSK::State prevState = seen ? *it : baseState;
+        if (prevState != newState) {
+            if (animReader) {
+                // State changed before transition finished
+                // Retarget to new state, the transition continues from the current interpolated values
+                animReader->setControlTypeAndState(type, newState);
+            } else {
+                // Only pointer-driven states should animate
+                // If an item first comes into view checked/highlighted, etc.,
+                // it should not animate
+                const bool shouldAnimate = seen
+                    || newState.testFlag(QQSK::StateFlag::Hovered)
+                    || newState.testFlag(QQSK::StateFlag::Pressed);
+                if (shouldAnimate) {
+                    steadyReader->setControlTypeAndState(type, newState);
+                    if (QQuickTransition *transition = steadyReader->transition())
+                        animReader = startSubElementTransition(key, type, prevState,
+                                                               newState, transition);
+                }
+            }
+        }
+        if (!seen || prevState != newState) {
+            QObjectPrivate::connect(w, &QObject::destroyed, this,
+                                    &QStyleKitStylePrivate::onWidgetDestroyed, Qt::UniqueConnection);
+            if (subElementStates.size() >= kMaxSubElementStates)
+                subElementStates.clear();
+            subElementStates.insert(key, newState);
+        }
+        reader = animReader;
+    }
+
+    if (!reader)
+        reader = steadyReader;
+    reader->setControlTypeAndState(type, newState);
+
     out.reader = reader;
-    out.metrics = &metricsFor(type, resolvedState);
+    out.metrics = &metricsFor(type, newState);
     return out;
 }
 
@@ -948,6 +1086,24 @@ QQStyleKitReader *QStyleKitStylePrivate::ensureSharedReader() const
     sharedReader->setExplicitStyle(effective);
     sharedReader->setCompleted(true);
     return sharedReader;
+}
+
+QQStyleKitReader *QStyleKitStylePrivate::ensureSubElementReader() const
+{
+    if (subElementReader)
+        return subElementReader;
+
+    Q_Q(const QStyleKitStyle);
+    QQStyleKitStyle *effective = effectiveStyle();
+    if (!effective)
+        return nullptr;
+    subElementReader = new QQStyleKitReader(const_cast<QStyleKitStyle *>(q));
+    // Disable transitions: this reader is retargeted across many sub-elements
+    // per paint pass and must never animate between their states
+    subElementReader->setTransitionsEnabled(false);
+    subElementReader->setExplicitStyle(effective);
+    subElementReader->setCompleted(true);
+    return subElementReader;
 }
 
 /*! \internal
@@ -1492,7 +1648,7 @@ void QStyleKitStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt,
 #endif // QT_CONFIG(lineedit)
 #if QT_CONFIG(itemviews)
     case PE_PanelItemViewItem: {
-        const auto r = d->resolveItemViewItem(w, opt, QQStyleKitReader::ControlType::ItemDelegate, opt->state);
+        const auto r = d->resolveSubElement(w, opt, QQStyleKitReader::ControlType::ItemDelegate, opt->state);
         if (!r.isValid())
             break;
         d->drawStyledItemRect(r.background(), opt->rect, p);
@@ -1518,7 +1674,9 @@ void QStyleKitStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt,
         return;
     }
     case PE_IndicatorItemViewItemCheck: {
-        const auto r = d->resolveItemViewItem(w, opt, QQStyleKitReader::ControlType::ItemDelegate, opt->state);
+        // track = false: Checked state is synthetic
+        const auto r = d->resolveSubElement(w, opt, QQStyleKitReader::ControlType::ItemDelegate,
+                                            opt->state, false);
         if (!r.isValid())
             break;
         d->drawControlIndicator(r.indicator(), opt->rect, p);
@@ -1763,7 +1921,7 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
 #if QT_CONFIG(itemviews)
     case CE_ItemViewItem:
         if (const auto *itemViewOption = qstyleoption_cast<const QStyleOptionViewItem *>(opt)) {
-            const auto r = d->resolveItemViewItem(w, opt, QQStyleKitReader::ControlType::ItemDelegate, opt->state);
+            const auto r = d->resolveSubElement(w, opt, QQStyleKitReader::ControlType::ItemDelegate, opt->state);
             if (!r.isValid())
                 break;
             QStyleOptionViewItem optBg(*itemViewOption);
@@ -3212,7 +3370,12 @@ void QStyleKitStyle::polish(QWidget *widget)
     d->refreshStyleFont(widget);
     d->refreshStylePalette(widget);
 
-    if (isSelfPaintingWidget(widget))
+    bool needsEventFilter = isSelfPaintingWidget(widget);
+#if QT_CONFIG(menu)
+    // Menus are transient: drop their sub-element tracking when they hide
+    needsEventFilter = needsEventFilter || qobject_cast<QMenu *>(widget);
+#endif
+    if (needsEventFilter)
         widget->installEventFilter(this);
 
     QCommonStyle::polish(widget);
@@ -3236,7 +3399,11 @@ void QStyleKitStyle::unpolish(QWidget *widget)
     Q_D(QStyleKitStyle);
     d->unsetStylePalette(widget);
     d->unsetStyleFont(widget);
-    if (isSelfPaintingWidget(widget))
+    bool hasEventFilter = isSelfPaintingWidget(widget);
+#if QT_CONFIG(menu)
+    hasEventFilter = hasEventFilter || qobject_cast<QMenu *>(widget);
+#endif
+    if (hasEventFilter)
         widget->removeEventFilter(this);
     if (d->autoFillDisabledWidgets.remove(widget)) {
         if (QWidget *vp = managedViewport(widget))
@@ -3275,6 +3442,12 @@ bool QStyleKitStyle::eventFilter(QObject *obj, QEvent *event)
                 d->refreshStyleFont(w);
         }
         break;
+#if QT_CONFIG(menu)
+    case QEvent::Hide:
+        if (auto *menu = qobject_cast<QMenu *>(obj))
+            d->cleanupSubElements(menu);
+        break;
+#endif
     default:
         break;
     }
