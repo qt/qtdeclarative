@@ -599,6 +599,18 @@ bool QQuickItemGenerator::generateMaskNode(const MaskNodeInfo &info)
     return true;
 }
 
+static QQuickShaderEffectSource *makeSES(QQuickItem *item, const QRectF &rect, QQuickItem *parent)
+{
+    auto *ses = new QQuickShaderEffectSource;
+    ses->setSourceItem(item);
+    ses->setWidth(rect.width());
+    ses->setHeight(rect.height());
+    ses->setVisible(false);
+    ses->setParent(parent);
+    ses->setParentItem(parent);
+    return ses;
+}
+
 void QQuickItemGenerator::generateMaskContainer(const MaskNodeInfo &info)
 {
     QQuickItem *transformer = nullptr;
@@ -661,25 +673,13 @@ void QQuickItemGenerator::generateMask(QQuickItem *item, const NodeInfo &info)
     static const QUrl maskShaderUrl(
             u"qrc:/qt-project.org/quickvectorimage/helpers/shaders_ng/genericmask.frag.qsb"_s);
 
-    auto *maskSES = new QQuickShaderEffectSource;
-    maskSES->setSourceItem(maskDef.container);
+    auto *maskSES = makeSES(maskDef.container, svgMaskRect, m_rootItem);
     maskSES->setHideSource(true);
-    maskSES->setVisible(false);
-    maskSES->setParent(m_rootItem);
-    maskSES->setParentItem(m_rootItem);
     maskSES->setSourceRect(svgMaskRect);
-    maskSES->setWidth(svgMaskRect.width());
-    maskSES->setHeight(svgMaskRect.height());
 
-    auto *itemSES = new QQuickShaderEffectSource;
-    itemSES->setSourceItem(item);
+    auto *itemSES = makeSES(item, svgMaskRect, m_rootItem);
     itemSES->setHideSource(true);
-    itemSES->setVisible(false);
-    itemSES->setParent(m_rootItem);
-    itemSES->setParentItem(m_rootItem);
     itemSES->setSourceRect(svgMaskRect);
-    itemSES->setWidth(svgMaskRect.width());
-    itemSES->setHeight(svgMaskRect.height());
 
     auto *shaderEffect = new QQuickShaderEffect;
     if (m_context)
@@ -758,15 +758,9 @@ void QQuickItemGenerator::generateFilter(QQuickItem *item, const NodeInfo &info)
     if (filterRect.isEmpty())
         filterRect = itemBounds;
 
-    auto *sourceGraphic = new QQuickShaderEffectSource;
-    sourceGraphic->setSourceItem(item);
+    auto *sourceGraphic = makeSES(item, filterRect, m_rootItem);
     sourceGraphic->setHideSource(true);
-    sourceGraphic->setVisible(false);
     sourceGraphic->setSourceRect(filterRect);
-    sourceGraphic->setWidth(filterRect.width());
-    sourceGraphic->setHeight(filterRect.height());
-    sourceGraphic->setParent(m_rootItem);
-    sourceGraphic->setParentItem(m_rootItem);
     if (filterInfo.wrapMode == QSGTexture::Repeat)
         sourceGraphic->setWrapMode(QQuickShaderEffectSource::Repeat);
 
@@ -789,6 +783,8 @@ void QQuickItemGenerator::generateFilter(QQuickItem *item, const NodeInfo &info)
         }
     };
 
+    QRectF lastStepRect = filterRect;
+
     for (int i = 0; i < filterInfo.steps.size(); ++i) {
         const FilterNodeInfo::FilterStep &step = filterInfo.steps.at(i);
         const QRectF stepRect =
@@ -810,11 +806,12 @@ void QQuickItemGenerator::generateFilter(QQuickItem *item, const NodeInfo &info)
         } else {
             auto *input1 = resolveInput(step.input1, step.namedInput1);
             auto *input2 = resolveInput(step.input2, step.namedInput2);
-            output = generateFilterStep(step, input1, input2, stepRect);
+            output = generateFilterStep(step, input1, input2, stepRect, filterRect);
         }
 
         if (output) {
             lastOutput = output;
+            lastStepRect = stepRect;
             if (!step.outputName.isEmpty()) {
                 namedOutputs[step.outputName] = output;
                 if (step.outputName == sourceAlphaName)
@@ -829,8 +826,6 @@ void QQuickItemGenerator::generateFilter(QQuickItem *item, const NodeInfo &info)
     lastOutput->setParent(parentItem);
     lastOutput->setParentItem(parentItem);
     lastOutput->setVisible(true);
-    lastOutput->setWidth(filterRect.width());
-    lastOutput->setHeight(filterRect.height());
 
     if (!info.isDefaultOpacity)
         lastOutput->setOpacity(info.opacity.defaultValue().toReal());
@@ -838,27 +833,24 @@ void QQuickItemGenerator::generateFilter(QQuickItem *item, const NodeInfo &info)
     if (!info.isDefaultTransform) {
         const QTransform elementXf = info.transform.defaultValue().value<QTransform>();
         QMatrix4x4 mat(elementXf);
-        mat.translate(filterRect.x(), filterRect.y());
+        mat.translate(lastStepRect.x(), lastStepRect.y());
         auto *matrix = new QQuickMatrix4x4(lastOutput);
         matrix->setMatrix(mat);
         auto xformProp = lastOutput->transform();
         xformProp.append(&xformProp, matrix);
-        lastOutput->setX(0);
-        lastOutput->setY(0);
     } else {
-        lastOutput->setX(filterRect.x());
-        lastOutput->setY(filterRect.y());
+        lastOutput->setX(lastStepRect.x());
+        lastOutput->setY(lastStepRect.y());
     }
 }
 
-QQuickShaderEffectSource *
-QQuickItemGenerator::generateFilterStep(const FilterNodeInfo::FilterStep &step,
-                                        QQuickShaderEffectSource *input1,
-                                        QQuickShaderEffectSource *input2, const QRectF &stepRect)
+QQuickShaderEffectSource *QQuickItemGenerator::generateFilterStep(
+        const FilterNodeInfo::FilterStep &step, QQuickShaderEffectSource *input1,
+        QQuickShaderEffectSource *input2, const QRectF &stepRect, const QRectF &filterRect)
 {
     switch (step.filterType) {
     case FilterNodeInfo::Type::Flood:
-        return generateFilterFlood(step, stepRect);
+        return generateFilterFlood(step, input1, stepRect, filterRect);
     case FilterNodeInfo::Type::Offset:
         return generateFilterOffset(step, input1, stepRect);
     case FilterNodeInfo::Type::ColorMatrix:
@@ -889,31 +881,68 @@ QQuickShaderEffectSource *
 QQuickItemGenerator::generateFilterMerge(const QList<QQuickShaderEffectSource *> &inputs,
                                          const QRectF &stepRect)
 {
-    qCDebug(lcQuickVectorImage) << "generateFilterMerge: not yet implemented";
-    Q_UNUSED(inputs)
-    Q_UNUSED(stepRect)
-    return nullptr;
+    const int maxNodeCount = 8;
+    if (inputs.isEmpty()) {
+        qCWarning(lcQuickVectorImage) << "generateFilterMerge: requires at least one input";
+        return nullptr;
+    }
+    if (inputs.size() > maxNodeCount)
+        qCWarning(lcQuickVectorImage)
+                << "generateFilterMerge: maximum of" << maxNodeCount << "nodes exceeded";
+
+    auto *effect = new QQuickShaderEffect;
+    effect->setWidth(inputs.first()->width());
+    effect->setHeight(inputs.first()->height());
+    effect->setVisible(false);
+    effect->setParent(m_rootItem);
+    effect->setParentItem(m_rootItem);
+    effect->setFragmentShader(
+            QUrl(u"qrc:/qt-project.org/quickvectorimage/helpers/shaders_ng/femerge.frag.qsb"_s));
+
+    const int count = qMin(maxNodeCount, inputs.size());
+    effect->setProperty("sourceCount", count);
+    for (int i = 0; i < maxNodeCount; ++i) {
+        QQuickItem *src = i < inputs.size() ? inputs.at(i) : nullptr;
+        effect->setProperty(QStringLiteral("source%1").arg(i + 1).toLatin1(),
+                            QVariant::fromValue(src));
+    }
+
+    return makeSES(effect, stepRect, m_rootItem);
 }
 
 QQuickShaderEffectSource *
 QQuickItemGenerator::generateFilterFlood(const FilterNodeInfo::FilterStep &step,
-                                         const QRectF &stepRect)
+                                         QQuickShaderEffectSource *input, const QRectF &stepRect,
+                                         const QRectF &filterRect)
 {
-    qCDebug(lcQuickVectorImage) << "generateFilterFlood: not yet implemented";
-    Q_UNUSED(step)
-    Q_UNUSED(stepRect)
-    return nullptr;
+    auto *rect = new QQuickRectangle;
+    rect->setWidth(input ? input->width() : filterRect.width());
+    rect->setHeight(input ? input->height() : filterRect.height());
+    rect->setColor(step.filterParameter.value<QColor>());
+    rect->setVisible(false);
+    rect->setParent(m_rootItem);
+    rect->setParentItem(m_rootItem);
+    auto *ses = makeSES(rect, stepRect, m_rootItem);
+    ses->setSourceRect(QRectF(stepRect.x() - filterRect.x(), stepRect.y() - filterRect.y(),
+                              stepRect.width(), stepRect.height()));
+    return ses;
 }
 
 QQuickShaderEffectSource *
 QQuickItemGenerator::generateFilterOffset(const FilterNodeInfo::FilterStep &step,
                                           QQuickShaderEffectSource *input, const QRectF &stepRect)
 {
-    qCDebug(lcQuickVectorImage) << "generateFilterOffset: not yet implemented";
-    Q_UNUSED(step)
-    Q_UNUSED(input)
-    Q_UNUSED(stepRect)
-    return nullptr;
+    const QVector2D offset = step.filterParameter.value<QVector2D>();
+    const qreal offsetX = step.csFilterParameter == FilterNodeInfo::CoordinateSystem::Relative
+            ? offset.x() * stepRect.width()
+            : offset.x();
+    const qreal offsetY = step.csFilterParameter == FilterNodeInfo::CoordinateSystem::Relative
+            ? offset.y() * stepRect.height()
+            : offset.y();
+
+    auto *ses = makeSES(input, stepRect, m_rootItem);
+    ses->setSourceRect(QRectF(-offsetX, -offsetY, stepRect.width(), stepRect.height()));
+    return ses;
 }
 
 QQuickShaderEffectSource *
@@ -1044,16 +1073,10 @@ void QQuickItemGenerator::generatePattern(QQuickShapePath *shapePath, const Path
         offsetY = patternDef.patternRect.y();
     }
 
-    auto *ses = new QQuickShaderEffectSource;
-    ses->setSourceItem(patternDef.container);
+    auto *ses = makeSES(patternDef.container, QRectF(0, 0, tileW, tileH), m_rootItem);
     ses->setHideSource(true);
-    ses->setVisible(false);
-    ses->setParent(m_rootItem);
-    ses->setParentItem(m_rootItem);
     ses->setWrapMode(QQuickShaderEffectSource::Repeat);
     ses->setSourceRect(QRectF(0, 0, tileW, tileH));
-    ses->setWidth(tileW);
-    ses->setHeight(tileH);
 
     shapePath->setFillItem(ses);
     fillTransform.translate(offsetX, offsetY);

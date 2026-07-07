@@ -114,11 +114,12 @@ private:
     QQuickShaderEffectSource *generateFilterStep(const FilterNodeInfo::FilterStep &step,
                                                  QQuickShaderEffectSource *input1,
                                                  QQuickShaderEffectSource *input2,
-                                                 const QRectF &stepRect);
+                                                 const QRectF &stepRect, const QRectF &filterRect);
     QQuickShaderEffectSource *generateFilterMerge(const QList<QQuickShaderEffectSource *> &inputs,
                                                   const QRectF &stepRect);
     QQuickShaderEffectSource *generateFilterFlood(const FilterNodeInfo::FilterStep &step,
-                                                  const QRectF &stepRect);
+                                                  QQuickShaderEffectSource *input,
+                                                  const QRectF &stepRect, const QRectF &filterRect);
     QQuickShaderEffectSource *generateFilterOffset(const FilterNodeInfo::FilterStep &step,
                                                    QQuickShaderEffectSource *input,
                                                    const QRectF &stepRect);
