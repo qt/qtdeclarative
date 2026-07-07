@@ -757,7 +757,7 @@ void tst_PointerHandlers::reparenting()
         QQuickItem *expectedParentItem = (i % 2 ? topItem : bottomItem);
         QQuickItem *unexpectedParentItem = (i % 2 ? bottomItem : topItem);
         qCDebug(lcPointerTests) << "initial parent" << handler->parentItem() << "waiting for" << expectedParentItem;
-        QTRY_COMPARE(handler->parentItem(), expectedParentItem);
+        QTRY_COMPARE_WITH_TIMEOUT(handler->parentItem(), expectedParentItem, 1200);
         QCOMPARE(handler->target(), expectedParentItem);
         QVERIFY(QQuickItemPrivate::get(expectedParentItem)->extra.isAllocated());
         QVERIFY(QQuickItemPrivate::get(expectedParentItem)->extra->resourcesList.contains(handler));
