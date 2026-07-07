@@ -125,32 +125,15 @@ void findCurrentRootObject(QQmlEngine *engine, const QUrl &url, QQmlPreviewHandl
     });
 }
 
-// Walk all compilation units in the engine and replace resolved type references
-// that still point to any of the dropped (old) base CUs with freshly compiled ones.
-// TODO: This is dangerous. We are manipulating compilation units exposed to multiple
-//       engines on potentially multiple threads.
+// Replace resolved type references that still point to any of the dropped (old) base CUs with
+// freshly compiled ones.
 static void updateResolvedTypeReferences(
         QV4::ExecutionEngine *v4,
         const QList<QQmlRefPointer<QV4::CompiledData::CompilationUnit>> &droppedUnits)
 {
-    const auto allCUs = v4->compilationUnits();
-    for (const auto &ecu : allCUs) {
-        const auto &baseCU = ecu->baseCompilationUnit();
-        for (auto *typeRef : std::as_const(baseCU->resolvedTypes)) {
-            if (typeRef->isSelfReference())
-                continue;
-            const auto &refCU = typeRef->compilationUnit();
-            if (!refCU)
-                continue;
-            for (const auto &oldCU : droppedUnits) {
-                if (refCU == oldCU) {
-                    const auto newCU = QQmlMetaType::obtainCompilationUnit(oldCU->finalUrl());
-                    if (newCU)
-                        typeRef->setCompilationUnit(newCU);
-                    break;
-                }
-            }
-        }
+    for (const auto &oldCU : droppedUnits) {
+        if (const auto newCU = QQmlMetaType::obtainCompilationUnit(oldCU->finalUrl()))
+            QQmlPreview::redirectResolvedTypeReferences(v4, oldCU, newCU);
     }
 }
 

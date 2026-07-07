@@ -17,6 +17,7 @@
 #include <private/qqmlcontextdata_p.h>
 #include <private/qqmlboundsignal_p.h>
 #include <private/qqmlpreviewobjectpatch_p.h>
+#include <private/qqmlvmemetaobject_p.h>
 #include <private/qv4engine_p.h>
 #include <private/qv4executablecompilationunit_p.h>
 
@@ -273,6 +274,21 @@ private slots:
     // property-data pointer, so the surviving binding wrote through the wrong
     // offset (heap-use-after-free / clobbered sibling property).
     void compositeBaseLayoutChangeDropsRemovedBaseProperty();
+
+    // Changing the non-composite (C++) base type of a component root: instead of failing the
+    // hot reload, the enclosing component root is rebuilt so the object is recreated with the
+    // new base type. Reaching the topmost scope this way still fails.
+    void inlineComponentBaseTypeChange();
+    void inlineComponentBaseTypeChangeDropsInvalidBinding();
+    void crossCompilationUnitBaseTypeChange();
+    void topLevelBaseTypeChangeFails();
+    void derivedTypeBaseTypeChangeFails();
+
+    // Changing a composite type's non-composite base (Item -> Rectangle) shifts the VME indices of
+    // its own members. When it is used as a composite base of derived instances, recreating those
+    // instances must relink the derived types' property caches to the new base layout; otherwise a
+    // binding calling the shifted VME method lands at a stale index and asserts in vmeMethod().
+    void changedBaseTypeRelinksDerivedInstanceCaches();
 
     // Reproduces coffee demo crash 3: changing a function body in a derived type
     // (that has states with PropertyChanges targeting form aliases) should not
@@ -4081,6 +4097,202 @@ void tst_QQmlPreviewObjectPatch::compositeBaseLayoutChangeDropsRemovedBaseProper
         // The surviving "stay" binding still resolved correctly and was not
         // clobbered by the dropped binding writing through a stale offset.
         QCOMPARE(w->property("stay").toInt(), 7);
+    }
+}
+
+// An inline component's root changes its non-composite base type (Rectangle -> Item). The
+// instance cannot be patched in place, but rebuilding the enclosing document root recreates it
+// from scratch with the new base type.
+void tst_QQmlPreviewObjectPatch::inlineComponentBaseTypeChange()
+{
+    QQmlComponent oldComp(&engine, testFileUrl("InlineComponentBaseChangeOld.qml"));
+    QVERIFY2(oldComp.isReady(), qPrintable(oldComp.errorString()));
+    QScopedPointer<QObject> root(oldComp.create());
+    QVERIFY(root);
+    QObject *inner = root->findChild<QObject *>("inner");
+    QVERIFY(inner);
+    // Rectangle has a "color" property; Item does not. Use it to tell the base types apart.
+    QVERIFY(inner->property("color").isValid());
+    QCOMPARE(inner->property("marker").toInt(), 1);
+
+    QQmlComponent newComp(&engine, testFileUrl("InlineComponentBaseChangeNew.qml"));
+    QVERIFY2(newComp.isReady(), qPrintable(newComp.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldComp)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComp)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QCOMPARE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Rebuilt);
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+
+    inner = root->findChild<QObject *>("inner");
+    QVERIFY(inner);
+    QVERIFY(!inner->property("color").isValid()); // now an Item
+    QCOMPARE(inner->property("marker").toInt(), 2);
+}
+
+// Like inlineComponentBaseTypeChange(), but the old base type carries a binding on a property
+// that only exists on that base type (Rectangle's "color"). After the base type changes to Item
+// the binding is no longer valid. Because the object is recreated from scratch off the new unit
+// rather than patched in place, the stale binding simply ceases to exist: no leftover expression,
+// no crash, and the property is gone with its base type.
+void tst_QQmlPreviewObjectPatch::inlineComponentBaseTypeChangeDropsInvalidBinding()
+{
+    QQmlComponent oldComp(&engine, testFileUrl("InlineComponentBaseChangeInvalidBindingOld.qml"));
+    QVERIFY2(oldComp.isReady(), qPrintable(oldComp.errorString()));
+    QScopedPointer<QObject> root(oldComp.create());
+    QVERIFY(root);
+    QObject *inner = root->findChild<QObject *>("inner");
+    QVERIFY(inner);
+    // The "color" binding is live on the Rectangle base type.
+    QCOMPARE(inner->property("color").value<QColor>(), QColor(Qt::blue));
+    QCOMPARE(inner->property("marker").toInt(), 1);
+
+    QQmlComponent newComp(&engine, testFileUrl("InlineComponentBaseChangeInvalidBindingNew.qml"));
+    QVERIFY2(newComp.isReady(), qPrintable(newComp.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldComp)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComp)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QCOMPARE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Rebuilt);
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+
+    inner = root->findChild<QObject *>("inner");
+    QVERIFY(inner);
+    // Now an Item: the "color" property and its binding are gone.
+    QVERIFY(!inner->property("color").isValid());
+    QCOMPARE(inner->property("marker").toInt(), 2);
+}
+
+// An external type (CrossCuInner) is instantiated inside a container in a different compilation
+// unit. When CrossCuInner's root changes its base type (Rectangle -> Item), the instance is
+// recreated by rebuilding the container root, which lives in the other compilation unit.
+void tst_QQmlPreviewObjectPatch::crossCompilationUnitBaseTypeChange()
+{
+    QQmlComponent container(&engine, testFileUrl("CrossCuContainer.qml"));
+    QVERIFY2(container.isReady(), qPrintable(container.errorString()));
+    QScopedPointer<QObject> root(container.create());
+    QVERIFY(root);
+    QObject *inner = root->findChild<QObject *>("inner");
+    QVERIFY(inner);
+    QVERIFY(inner->property("color").isValid()); // Rectangle
+    QCOMPARE(inner->property("marker").toInt(), 1);
+
+    // The inner instance's innermost VME belongs to CrossCuInner's own compilation unit.
+    const auto oldExecUnit = QQmlVMEMetaObject::get(inner)->compilationUnit();
+    QVERIFY(oldExecUnit);
+
+    QQmlComponent newComp(&engine, testFileUrl("CrossCuInnerNew.qml"));
+    QVERIFY2(newComp.isReady(), qPrintable(newComp.errorString()));
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComp)->compilationUnit();
+    QVERIFY(newExecUnit);
+
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QVERIFY(!objects.empty());
+    QCOMPARE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Rebuilt);
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+
+    inner = root->findChild<QObject *>("inner");
+    QVERIFY(inner);
+    QVERIFY(!inner->property("color").isValid()); // now an Item
+    QCOMPARE(inner->property("marker").toInt(), 2);
+}
+
+// The document root itself changes its non-composite base type and is loaded directly as the
+// preview root. There is no enclosing scope to rebuild, so the reload must fail.
+void tst_QQmlPreviewObjectPatch::topLevelBaseTypeChangeFails()
+{
+    QQmlComponent oldComp(&engine, testFileUrl("BaseTypeOld.qml"));
+    QVERIFY2(oldComp.isReady(), qPrintable(oldComp.errorString()));
+    QScopedPointer<QObject> root(oldComp.create());
+    QVERIFY(root);
+
+    QQmlComponent newComp(&engine, testFileUrl("BaseTypeNew.qml"));
+    QVERIFY2(newComp.isReady(), qPrintable(newComp.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldComp)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComp)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QCOMPARE(QQmlPreview::applyDiff(objects, oldExecUnit, newExecUnit),
+             QQmlPreview::PatchResult::Failed);
+}
+
+// A derived type whose composite base type's non-composite base changed, loaded directly as the
+// preview root. The derived instance is the topmost object, so there is nothing to rebuild above
+// it and the reload must fail.
+void tst_QQmlPreviewObjectPatch::derivedTypeBaseTypeChangeFails()
+{
+    QQmlComponent derComp(&engine, testFileUrl("DerivedFromInner.qml"));
+    QVERIFY2(derComp.isReady(), qPrintable(derComp.errorString()));
+    QScopedPointer<QObject> root(derComp.create());
+    QVERIFY(root);
+
+    // CrossCuInner's own compilation unit is the derived root's base level.
+    const auto oldExecUnit = QQmlVMEMetaObject::get(root.get())->compilationUnit();
+    QVERIFY(oldExecUnit);
+
+    QQmlComponent newComp(&engine, testFileUrl("CrossCuInnerNew.qml"));
+    QVERIFY2(newComp.isReady(), qPrintable(newComp.errorString()));
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComp)->compilationUnit();
+    QVERIFY(newExecUnit);
+
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QVERIFY(!objects.empty());
+    QCOMPARE(QQmlPreview::applyDiff(objects, oldExecUnit, newExecUnit),
+             QQmlPreview::PatchResult::Failed);
+}
+
+void tst_QQmlPreviewObjectPatch::changedBaseTypeRelinksDerivedInstanceCaches()
+{
+    const QString moduleDir = dataDirectory() + QStringLiteral("/HotReloadBaseChangeDerived");
+    const QString patchedDir = dataDirectory() + QStringLiteral("/HotReloadBaseChangeDerivedPatched");
+
+    QQmlComponent host(&engine, QUrl::fromLocalFile(moduleDir + "/Host.qml"));
+    QVERIFY2(host.isReady(), qPrintable(host.errorString()));
+    std::unique_ptr<QObject> root(host.create());
+    QVERIFY(root);
+
+    const QStringList names = { QStringLiteral("d1"), QStringLiteral("d2"), QStringLiteral("d3") };
+    for (const QString &name : names) {
+        QObject *item = root->findChild<QObject *>(name);
+        QVERIFY2(item, qPrintable(name));
+        // The "reported: base.tag()" binding ran during construction.
+        QCOMPARE(item->property("reported").toInt(), 11);
+        QVERIFY(!item->property("color").isValid()); // Item base, no color yet
+    }
+
+    QQmlComponent baseOld(&engine, QUrl::fromLocalFile(moduleDir + "/Base.qml"));
+    QVERIFY2(baseOld.isReady(), qPrintable(baseOld.errorString()));
+    QQmlComponent baseNew(&engine, QUrl::fromLocalFile(patchedDir + "/Base.qml"));
+    QVERIFY2(baseNew.isReady(), qPrintable(baseNew.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&baseOld)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&baseNew)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    // Base's non-composite base changed (Item -> Rectangle), so the derived instances are recreated
+    // by rebuilding the enclosing Host root. Their property caches must be relinked to the new base
+    // layout, or the recreated "reported: base.tag()" binding resolves tag() at the old (unshifted)
+    // VME index and asserts "index >= methodOffset()".
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QVERIFY(!objects.empty());
+    QCOMPARE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Rebuilt);
+
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+
+    for (const QString &name : names) {
+        QObject *item = root->findChild<QObject *>(name);
+        QVERIFY2(item, qPrintable(name + " missing after reload"));
+        // The relinked binding calls the new tag() at its shifted index, and the base is now a
+        // Rectangle (so "color" exists).
+        QCOMPARE(item->property("reported").toInt(), 22);
+        QVERIFY2(item->property("color").isValid(), qPrintable(name + " is not a Rectangle"));
     }
 }
 

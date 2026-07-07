@@ -145,10 +145,44 @@ relinkCache(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &cu, int object
     return cache;
 }
 
-struct ObjectAndIndex
+// Re-link every property cache in cu that (transitively) derives oldBaseCache so it derives
+// newBaseCache instead.
+static void relinkDerivedCaches(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &cu,
+                                const QQmlPropertyCache::ConstPtr &oldBaseCache,
+                                const QQmlPropertyCache::ConstPtr &newBaseCache)
+{
+    QQmlPropertyCacheVector *caches = cu->propertyCachesPtr();
+    Q_ASSERT(caches);
+
+    QHash<const QQmlPropertyCache *, QQmlPropertyCache::ConstPtr> replacements;
+    replacements.insert(oldBaseCache.data(), newBaseCache);
+
+    for (bool changed = true; changed;) {
+        changed = false;
+        for (int i = 0, end = caches->count(); i < end; ++i) {
+            const QQmlPropertyCache::ConstPtr cache = caches->at(i);
+            if (!cache)
+                continue;
+
+            const auto it = replacements.constFind(cache->parent().data());
+            if (it == replacements.constEnd())
+                continue;
+
+            const QQmlPropertyCache::ConstPtr rebased = cache->rebased(*it);
+            replacements.insert(cache.data(), rebased);
+            caches->set(i, rebased);
+            refreshBindingPropertyData(cu, i, rebased);
+            changed = true;
+        }
+    }
+}
+
+struct RebuildTarget
 {
     QObject *object = nullptr;
     int index = -1;
+    QQmlRefPointer<QV4::ExecutableCompilationUnit> oldCu;
+    QQmlRefPointer<QV4::ExecutableCompilationUnit> newCu;
 };
 
 // Walk the type resolution chain starting from the object at cuIndex in unit,
@@ -560,6 +594,95 @@ static void remapObjectsToNewUnit(const std::vector<QObject *> &objects,
     }
 }
 
+// If the object is instantiated as a component root of the old unit (its document root or an
+// inline-component root) whose own non-composite base type differs in the new unit, return the
+// index of the changed element; otherwise return -1.
+static int changedBaseComponentRootIndex(
+        QObject *object,
+        const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit,
+        const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit)
+{
+    for (int index : objectIndices(object, oldUnit)) {
+        if (index >= oldUnit->objectCount())
+            continue;
+        const auto flags = oldUnit->objectAt(index)->flags();
+        if (index != 0 && !(flags & QV4::CompiledData::Object::IsInlineComponentRoot))
+            continue;
+        if (index < newUnit->objectCount()
+            && hasChangedNonCompositeBaseType(oldUnit, newUnit, index)) {
+            return index;
+        }
+    }
+    return -1;
+}
+
+// A component root whose non-composite base type changed cannot be rebuilt in place. Instead we
+// travel the scope hierarchy upwards to the enclosing component root that instantiates it and
+// rebuild that: its reset() + repopulateBindings() recreates the problematic object from scratch,
+// as a fresh QObject of the new C++ class. If that enclosing root's base type changed too (e.g.
+// because several elements were edited at once), we keep travelling up. Returns the object to
+// rebuild, or nullptr if we reach the root scope without finding a rebuildable enclosing root.
+static QObject *outerRebuildTarget(
+        QObject *object,
+        const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit,
+        const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit)
+{
+    Q_ASSERT(object);
+
+    do {
+        QQmlData *ddata = QQmlData::get(object);
+        if (!ddata || !ddata->outerContext)
+            return nullptr;
+
+        QObject *outer = ddata->outerContext->contextObject();
+        if (!outer || outer == object)
+            return nullptr;
+
+        if (changedBaseComponentRootIndex(outer, oldUnit, newUnit) == -1)
+            return outer;
+
+        object = outer;
+    } while (object);
+
+    return nullptr;
+}
+
+// TODO: This is dangerous. We are manipulating compilation units exposed to multiple
+//       engines on potentially multiple threads.
+void redirectResolvedTypeReferences(
+        QV4::ExecutionEngine *engine,
+        const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &oldUnit,
+        const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &newUnit)
+{
+    const auto units = engine->compilationUnits();
+    for (const auto &cu : units) {
+        for (auto *typeRef : std::as_const(cu->baseCompilationUnit()->resolvedTypes)) {
+            if (typeRef->isSelfReference())
+                continue;
+            if (typeRef->compilationUnit() != oldUnit)
+                continue;
+
+            typeRef->setCompilationUnit(newUnit);
+
+            QQmlPropertyCache::ConstPtr newCache;
+            const QQmlType type = typeRef->type();
+            if (type.isInlineComponentType()) {
+                if (const int icId = newUnit->inlineComponentId(type.elementName()); icId >= 0)
+                    newCache = newUnit->propertyCaches.at(icId);
+            } else {
+                newCache = newUnit->rootPropertyCache();
+            }
+
+            if (!newCache)
+                continue;
+
+            const QQmlPropertyCache::ConstPtr oldCache = typeRef->typePropertyCache();
+            typeRef->setTypePropertyCache(newCache);
+            relinkDerivedCaches(cu, oldCache, newCache);
+        }
+    }
+}
+
 PatchResult applyDiff(std::vector<QObject *> &objects,
                       const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit,
                       const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit)
@@ -588,14 +711,32 @@ PatchResult applyDiff(std::vector<QObject *> &objects,
     // full reset() + repopulateBindings() that cascades down the entire instantiation (and
     // through its composite base levels), recreating every object below it. Since every
     // non-root object is, by construction, a descendant of a component root, this is
-    // sufficient.
+    // sufficient. A component root whose own C++ base type changed cannot be rebuilt in place
+    // (see below): there we rebuild the enclosing component root instead, which may live in a
+    // different compilation unit and recreates the root as a fresh object of the new C++ class.
     //
     // A consequence worth remembering: because every live object is recreated, every
     // QQmlJavaScriptExpression on those objects is recreated too, freshly bound to newUnit. By
     // the time refreshBindings() runs, the only expressions still referencing oldUnit are the
     // dead, detached leftovers of the resets. That is why the rebuild path's refreshBindings()
     // can simply disable (null) them instead of remapping them to newUnit.
-    std::vector<ObjectAndIndex> rebuild;
+    // A rebuild target carries the compilation units to rebuild it with. Usually that's oldUnit ->
+    // newUnit. But when we travel up to an enclosing component root in a *different* compilation
+    // unit (because a root's base type changed), that unit is itself unchanged: we rebuild it
+    // against itself (a full re-instantiation of its children) after redirecting the resolved type
+    // references, so the problematic object is recreated with its new C++ base type.
+    std::vector<RebuildTarget> rebuild;
+    QSet<QObject *> rebuildSet;
+    bool redirectedTypes = false;
+
+    const auto addRebuild = [&](QObject *object, int index,
+                                const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldCu,
+                                const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newCu) {
+        if (rebuildSet.contains(object))
+            return;
+        rebuildSet.insert(object);
+        rebuild.push_back({ object, index, oldCu, newCu });
+    };
 
     for (QObject *object : objects) {
         const QVarLengthArray<int, 4> indices = objectIndices(object, oldUnit);
@@ -609,17 +750,42 @@ PatchResult applyDiff(std::vector<QObject *> &objects,
             if (index != 0 && !(flags & QV4::CompiledData::Object::IsInlineComponentRoot))
                 continue;
 
-            // A component root whose own non-composite (C++) base type changed cannot be
-            // rebuilt in place: reset() + repopulateBindings() reuses the same QObject, which is
-            // still of the old C++ class. Bail so the caller falls back to a full reload.
+            // A component root whose own non-composite (C++) base type changed cannot be rebuilt
+            // in place: reset() + repopulateBindings() reuses the same QObject, which is still of
+            // the old C++ class. Rebuild the enclosing component root instead, so that the object
+            // is recreated from scratch as an instance of the new C++ class. Travelling up the
+            // scope hierarchy this way only fails, with a full reload, once we hit the root scope.
             // (If the index no longer exists in the new CU the root is obsolete; rebuildObject()
             // skips it and the remap loop below retires it.)
             if (index < newUnit->objectCount()
                 && hasChangedNonCompositeBaseType(oldUnit, newUnit, index)) {
-                return PatchResult::Failed;
+                QObject *outer = outerRebuildTarget(object, oldUnit, newUnit);
+                if (!outer)
+                    return PatchResult::Failed;
+
+                // The enclosing root may recreate the object from a different compilation unit
+                // (the object was instantiated as an external type). Point that unit at newUnit
+                // first, so the recreated object gets the new C++ base type.
+                if (!redirectedTypes) {
+                    redirectResolvedTypeReferences(newUnit->engine, oldUnit->baseCompilationUnit(),
+                                                   newUnit->baseCompilationUnit());
+                    redirectedTypes = true;
+                }
+
+                // Rebuild the enclosing root against its own compilation unit (or newUnit, if that
+                // root lives in oldUnit itself, e.g. an inline component). The unchanged outer unit
+                // re-instantiates its children, recreating the problematic object.
+                const QQmlRefPointer<QV4::ExecutableCompilationUnit> outerOld =
+                        QQmlData::get(outer)->compilationUnit;
+                const QQmlRefPointer<QV4::ExecutableCompilationUnit> outerNew =
+                        outerOld->baseCompilationUnit() == oldUnit->baseCompilationUnit()
+                                ? newUnit
+                                : outerOld;
+                addRebuild(outer, QQmlData::get(outer)->cuObjectIndex, outerOld, outerNew);
+                break;
             }
 
-            rebuild.push_back({ object, indices.first() });
+            addRebuild(object, indices.first(), oldUnit, newUnit);
             break;
         }
     }
@@ -629,23 +795,23 @@ PatchResult applyDiff(std::vector<QObject *> &objects,
     // oldUnit) and repopulateBindings recreates them. This avoids leaking orphaned
     // children and naturally handles cases where the context needs more ID slots.
     std::sort(rebuild.begin(), rebuild.end(),
-              [](const ObjectAndIndex &a, const ObjectAndIndex &b) { return a.index < b.index; });
+              [](const RebuildTarget &a, const RebuildTarget &b) { return a.index < b.index; });
 
     // Pre-compute which objects to skip: if an ancestor is also in the rebuild
     // list, the child will be properly retired and recreated during the ancestor's
     // rebuild. Rebuilding it individually would be wasted work on a stale pointer.
     QSet<QObject *> skip;
-    for (const auto &[object, cuIndex] : rebuild) {
-        const QObjectList &children = object->children();
+    for (const RebuildTarget &target : rebuild) {
+        const QObjectList &children = target.object->children();
         for (QObject *child : children)
             skip.insert(child);
     }
 
-    for (const auto &[object, cuIndex] : rebuild) {
-        if (skip.contains(object))
+    for (const RebuildTarget &target : rebuild) {
+        if (skip.contains(target.object))
             continue;
 
-        rebuildObject(object, cuIndex, oldUnit, newUnit);
+        rebuildObject(target.object, target.index, target.oldCu, target.newCu);
     }
 
     remapObjectsToNewUnit(objects, oldUnit, newUnit);

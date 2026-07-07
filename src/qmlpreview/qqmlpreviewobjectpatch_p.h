@@ -41,6 +41,12 @@ PatchResult applyDiff(std::vector<QObject *> &objects,
 void refreshBindings(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit,
                      const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit = {});
 
+// Point every resolved type reference in the engine that names oldUnit at newUnit.
+void redirectResolvedTypeReferences(
+        QV4::ExecutionEngine *engine,
+        const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &oldUnit,
+        const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &newUnit);
+
 } // namespace QQmlPreview
 
 QT_END_NAMESPACE
