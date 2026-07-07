@@ -112,6 +112,18 @@ public:
     QQuickWidget *m_quickWidget;
 };
 
+QAccessibleInterface *QQuickWidgetOffscreenWindow::accessibleRoot() const
+{
+    Q_D(const QQuickWidgetOffscreenWindow);
+    if (d->renderControl) {
+        auto *priv = static_cast<QQuickWidgetRenderControlPrivate *>(
+            QQuickRenderControlPrivate::get(d->renderControl)
+        );
+        return QAccessible::queryAccessibleInterface(priv->m_quickWidget);
+    }
+    return nullptr;
+}
+
 QQuickWidgetRenderControl::QQuickWidgetRenderControl(QQuickWidget *quickWidget)
     : QQuickRenderControl(*(new QQuickWidgetRenderControlPrivate(this, quickWidget)), nullptr)
 {
@@ -174,10 +186,8 @@ void QQuickWidgetPrivate::ensureBackingScene()
     Q_Q(QQuickWidget);
     if (!renderControl)
         renderControl = new QQuickWidgetRenderControl(q);
-    if (!offscreenWindow) {
+    if (!offscreenWindow)
         offscreenWindow = new QQuickWidgetOffscreenWindow(*new QQuickWidgetOffscreenWindowPrivate(), renderControl);
-        offscreenWindow->setProperty("_q_parentWidget", QVariant::fromValue(q));
-    }
 
     // Check if the Software Adaptation is being used
     auto sgRendererInterface = offscreenWindow->rendererInterface();

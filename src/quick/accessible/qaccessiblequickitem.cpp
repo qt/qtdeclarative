@@ -313,20 +313,8 @@ QAccessibleInterface *QAccessibleQuickItem::parent() const
 
     if (parent) {
         if (parent == ci) {
-            if (itemWindow && !itemWindow->handle()) {
-                // If the item's window is a QQuickWidgetOffscreenWindow, then use
-                // the QQuickWidget as the accessible parent of the item. Since the
-                // QQuickWidget reports the quick items as its accessible children,
-                // why not report QQuickWidget as their accessible parent?
-                // The QQuickWidget instance has been set as the "_q_parentWidget"
-                // property of the QQuickWidgetOffscreenWindow when creating the
-                // instance of its offscreenWindow
-                const auto parentWidgetProp = itemWindow->property("_q_parentWidget");
-                if (parentWidgetProp.isValid()) {
-                    if (QObject *parentWidget = parentWidgetProp.value<QObject *>())
-                        return QAccessible::queryAccessibleInterface(parentWidget);
-                }
-            }
+            if (auto *iface = itemWindow->accessibleRoot())
+                return iface;
             // Jump out to the window if the parent is the root item
             return QAccessible::queryAccessibleInterface(window());
         } else {
