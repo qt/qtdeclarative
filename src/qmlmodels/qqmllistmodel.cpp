@@ -436,9 +436,8 @@ bool ListModel::sync(ListModel *src, ListModel *target)
                     targetModel->beginInsertRows(QModelIndex(), i, i);
                     targetModel->endInsertRows();
                     ++rowsInserted;
-                } else {
-                    bool validMove = targetModel->beginMoveRows(QModelIndex(), s.targetIndex, s.targetIndex, QModelIndex(), i);
-                    Q_ASSERT(validMove);
+                } else if (targetModel->beginMoveRows(QModelIndex(), s.targetIndex,
+                                                      s.targetIndex, QModelIndex(), i)) {
                     targetModel->endMoveRows();
                     // fixup target indices of elements that still need to move
                     for (int j=i+1; j < targetElementCount; ++j) {
