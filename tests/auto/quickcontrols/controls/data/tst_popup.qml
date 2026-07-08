@@ -292,18 +292,21 @@ TestCase {
         let control = createTemporaryObject(popupControl, testCase, {visible: true, margins: 0})
         verify(control)
 
+        let overlay = control.Overlay.overlay
+        verify(overlay)
+
         control.popupType = Popup.Item
         control.scale = 1.0
-        control.width = control.implicitWidth = testCase.width + 10
-        control.height = control.implicitHeight = testCase.height + 10
+        control.width = control.implicitWidth = overlay.width + 10
+        control.height = control.implicitHeight = overlay.height + 10
 
-        compare(control.width, testCase.width + 10)
-        compare(control.height, testCase.height + 10)
+        compare(control.width, overlay.width + 10)
+        compare(control.height, overlay.height + 10)
 
         control.width = undefined
         control.height = undefined
-        compare(control.width, testCase.width)
-        compare(control.height, testCase.height)
+        compare(control.width, overlay.width)
+        compare(control.height, overlay.height)
     }
 
     function test_negativeMargins() {
@@ -1560,16 +1563,16 @@ TestCase {
         waitForRendering(testCase)
         tryCompare(control, "opened", true)
 
-        // Verify popup position
+        let overlay = control.Overlay.overlay
+        verify(overlay)
+
         if (control.popupType === Popup.Window) {
-            // popup windows don't have edge constraints.
             tryVerify(function(){ return control.x < 0 })
-            compare(control.y, Math.round(control.parent.height / 2 - control.height / 2))
         } else {
-            // popup items have edge constraints.
-            compare(control.x, 0)
-            compare(control.y, control.parent.height / 2 - control.height / 2)
+            let expectedX = control.width >= overlay.width ? 0 : (overlay.width - control.width) / 2
+            fuzzyCompare(control.x, expectedX, 1.0)
         }
+        fuzzyCompare(control.y, overlay.height / 2 - control.height / 2, 1.0)
         control.close()
     }
 
