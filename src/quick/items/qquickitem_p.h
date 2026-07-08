@@ -623,6 +623,7 @@ public:
     void setCulled(bool);
 
     QQuickWindow *window;
+    QWindow *renderWindow(QPoint *offset = nullptr) const;
     int windowRefCount;
     inline QSGContext *sceneGraphContext() const;
     inline QSGRenderContext *sceneGraphRenderContext() const;

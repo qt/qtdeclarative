@@ -561,14 +561,8 @@ QWindow *QQuickAbstractDialog::windowForOpen() const
 {
     if (m_parentWindowExplicitlySet)
         return m_parentWindow;
-    if (auto parentItem = findParentItem()) {
-        QWindow *itemWindow = parentItem->window();
-        if (auto *quickWindow = qobject_cast<QQuickWindow *>(itemWindow)) {
-            if (auto *effectiveWindow = QQuickRenderControl::renderWindowFor(quickWindow, nullptr))
-                itemWindow = effectiveWindow;
-        }
-        return itemWindow;
-    }
+    if (auto parentItem = findParentItem())
+        return QQuickItemPrivate::get(parentItem)->renderWindow();
     return m_parentWindow;
 }
 
