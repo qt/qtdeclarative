@@ -454,6 +454,16 @@ BaseStyle {
         }
     }
 
+    swipeDelegate {
+        text.alignment: Qt.AlignVCenter | Qt.AlignLeft
+        background {
+            radius: 0
+            color: __baseWhite
+            border.width: 0
+        }
+        hovered.background.color: __backgroundDefault
+    }
+
     switchControl {
         background.visible: false
         text.alignment: Qt.AlignVCenter

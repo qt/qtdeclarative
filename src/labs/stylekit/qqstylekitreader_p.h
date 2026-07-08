@@ -66,6 +66,7 @@ public:
         ScrollView,
         Slider,
         SpinBox,
+        SwipeDelegate,
         SwitchControl,
         SwitchDelegate,
         SearchField,

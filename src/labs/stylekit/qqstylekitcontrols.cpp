@@ -413,6 +413,16 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \qmlproperty ControlStyle AbstractStylableControls::swipeDelegate
+
+    Grouped property for styling \l [QtQuickControls]{SwipeDelegate}.
+
+    Unset properties fall back to \l itemDelegate.
+
+    \snippet ControlsSnippets.qml swipeDelegate
+*/
+
+/*!
     \qmlproperty ControlStyle AbstractStylableControls::switchControl
 
     Grouped property for styling \l [QtQuickControls]{Switch}.
@@ -576,6 +586,7 @@ IMPLEMENT_ACCESSORS(scrollView, QQStyleKitReader::ControlType::ScrollView)
 IMPLEMENT_ACCESSORS(searchField, QQStyleKitReader::SearchField)
 IMPLEMENT_ACCESSORS(slider, QQStyleKitReader::ControlType::Slider)
 IMPLEMENT_ACCESSORS(spinBox, QQStyleKitReader::ControlType::SpinBox)
+IMPLEMENT_ACCESSORS(swipeDelegate, QQStyleKitReader::ControlType::SwipeDelegate)
 IMPLEMENT_ACCESSORS(switchControl, QQStyleKitReader::ControlType::SwitchControl)
 IMPLEMENT_ACCESSORS(switchDelegate, QQStyleKitReader::ControlType::SwitchDelegate)
 IMPLEMENT_ACCESSORS(tabBar, QQStyleKitReader::ControlType::TabBar)

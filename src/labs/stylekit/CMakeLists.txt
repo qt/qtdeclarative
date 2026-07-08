@@ -61,6 +61,7 @@ qt_internal_add_qml_module(LabsStyleKit
         Style.qml
         StyleAnimation.qml
         SpinBox.qml
+        SwipeDelegate.qml
         Switch.qml
         SwitchDelegate.qml
         TextField.qml
