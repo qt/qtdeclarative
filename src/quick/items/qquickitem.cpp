@@ -8532,6 +8532,12 @@ void QQuickItemPrivate::setHasHoverInChild(bool hasHover)
 
 #if QT_CONFIG(cursor)
 
+QWindow *QQuickItemPrivate::renderWindow(QPoint *offset) const
+{
+    QWindow *result = QQuickRenderControl::renderWindowFor(window, offset);
+    return result ? result : window;
+}
+
 /*!
     Returns the cursor shape for this item.
 
@@ -8570,10 +8576,9 @@ void QQuickItem::setCursor(const QCursor &cursor)
     if (oldShape != cursor.shape() || oldShape >= Qt::LastCursor || cursor.shape() >= Qt::LastCursor) {
         d->extra.value().cursor = cursor;
         if (d->window) {
-            QWindow *renderWindow = QQuickRenderControl::renderWindowFor(d->window);
-            QWindow *window = renderWindow ? renderWindow : d->window; // this may not be a QQuickWindow
+            QWindow *renderWindow = d->renderWindow();
             if (QQuickWindowPrivate::get(d->window)->cursorItem == this)
-                window->setCursor(cursor);
+                renderWindow->setCursor(cursor);
         }
     }
 
@@ -8581,9 +8586,8 @@ void QQuickItem::setCursor(const QCursor &cursor)
     if (!d->hasCursor) {
         d->hasCursor = true;
         if (d->window) {
-            QWindow *renderWindow = QQuickRenderControl::renderWindowFor(d->window);
-            QWindow *window = renderWindow ? renderWindow : d->window;
-            QPointF pos = window->mapFromGlobal(QGuiApplicationPrivate::lastCursorPosition);
+            QWindow *renderWindow = d->renderWindow();
+            QPointF pos = renderWindow->mapFromGlobal(QGuiApplicationPrivate::lastCursorPosition);
             if (contains(mapFromScene(pos)))
                 updateCursorPos = pos;
         }
@@ -9116,9 +9120,8 @@ QPointF QQuickItem::mapToGlobal(const QPointF &point) const
         return mapToScene(point);
 
     QPoint renderOffset;
-    QWindow *renderWindow = QQuickRenderControl::renderWindowFor(d->window, &renderOffset);
-    QWindow *effectiveWindow = renderWindow ? renderWindow : d->window;
-    return effectiveWindow->mapToGlobal((mapToScene(point) + renderOffset));
+    QWindow *renderWindow = d->renderWindow(&renderOffset);
+    return renderWindow->mapToGlobal((mapToScene(point) + renderOffset));
 }
 
 /*!
@@ -9227,9 +9230,8 @@ QPointF QQuickItem::mapFromGlobal(const QPointF &point) const
     QPointF scenePoint;
     if (Q_LIKELY(d->window)) {
         QPoint renderOffset;
-        QWindow *renderWindow = QQuickRenderControl::renderWindowFor(d->window, &renderOffset);
-        QWindow *effectiveWindow = renderWindow ? renderWindow : d->window;
-        scenePoint = effectiveWindow->mapFromGlobal(point) - renderOffset;
+        QWindow *renderWindow = d->renderWindow();
+        scenePoint = renderWindow->mapFromGlobal(point) - renderOffset;
     } else {
         scenePoint = point;
     }

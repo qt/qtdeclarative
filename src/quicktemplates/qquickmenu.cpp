@@ -537,17 +537,6 @@ void QQuickMenuPrivate::syncWithUseNativeMenu()
     }
 }
 
-static QWindow *effectiveWindow(QWindow *window, QPoint *offset)
-{
-    QQuickWindow *quickWindow = qobject_cast<QQuickWindow *>(window);
-    if (quickWindow) {
-        QWindow *renderWindow = QQuickRenderControl::renderWindowFor(quickWindow, offset);
-        if (renderWindow)
-            return renderWindow;
-    }
-    return window;
-}
-
 void QQuickMenuPrivate::setNativeMenuVisible(bool visible)
 {
     Q_Q(QQuickMenu);
@@ -564,7 +553,7 @@ void QQuickMenuPrivate::setNativeMenuVisible(bool visible)
         QPoint offset;
         QWindow *window = nullptr;
         if (parentItem)
-            window = effectiveWindow(parentItem->window(), &offset);
+            window = QQuickItemPrivate::get(parentItem)->renderWindow(&offset);
 
         lastDevicePixelRatio = window ? window->devicePixelRatio() : qGuiApp->devicePixelRatio();
 
