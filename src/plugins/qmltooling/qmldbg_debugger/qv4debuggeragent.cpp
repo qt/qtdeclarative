@@ -51,7 +51,7 @@ void QV4DebuggerAgent::debuggerPaused(QV4Debugger *debugger, QV4Debugger::PauseR
 //        if (frame->column > 0)
 //            body.insert(QStringLiteral("sourceColumn"), frame->column);
         QJsonArray breakPoints;
-        const QList<int> ids = breakPointIds(frame->source(), frame->lineNumber());
+        const QList<int> ids = breakPointIds(debugger, frame->source(), frame->lineNumber());
         for (int breakPointId : ids)
             breakPoints.push_back(breakPointId);
         body.insert(QStringLiteral("breakpoints"), breakPoints);
@@ -167,13 +167,26 @@ void QV4DebuggerAgent::enableBreakPoint(int id, bool onoff)
     }
 }
 
-QList<int> QV4DebuggerAgent::breakPointIds(const QString &fileName, int lineNumber) const
+QList<int> QV4DebuggerAgent::breakPointIds(QV4Debugger *debugger, const QString &fileName,
+                                           int lineNumber) const
 {
     QList<int> ids;
 
-    for (QHash<int, BreakPoint>::const_iterator i = m_breakPoints.begin(), ei = m_breakPoints.end(); i != ei; ++i)
-        if (i->lineNr == lineNumber && fileName.endsWith(i->fileName))
+    for (QHash<int, BreakPoint>::const_iterator i = m_breakPoints.begin(), ei = m_breakPoints.end(); i != ei; ++i) {
+        if (!fileName.endsWith(i->fileName))
+            continue;
+        // A breakpoint counts as hit either when execution is exactly on its
+        // line, or when its (non-executable) line resolved to the line we
+        // stopped on. The latter lets the client move the marker there. A Ret
+        // instruction reports a negative line, which must not match the -1 of a
+        // breakpoint that resolves to no line at all. Resolution only moves
+        // forward, so a breakpoint below the stop line cannot match.
+        if (i->lineNr == lineNumber
+                || (lineNumber > 0 && i->lineNr < lineNumber
+                    && debugger->resolvedBreakpointLine(i->lineNr) == lineNumber)) {
             ids.push_back(i.key());
+        }
+    }
 
     return ids;
 }

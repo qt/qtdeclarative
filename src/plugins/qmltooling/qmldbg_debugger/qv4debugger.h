@@ -21,6 +21,8 @@
 #include <private/qv4function_p.h>
 #include <private/qv4context_p.h>
 #include <private/qv4persistent_p.h>
+#include <private/qv4executablecompilationunit_p.h>
+#include <private/qqmlrefcount_p.h>
 
 #include <QtCore/qmutex.h>
 #include <QtCore/qwaitcondition.h>
@@ -86,12 +88,15 @@ public:
         int lineNumber;
     };
     ExecutionState currentExecutionState() const;
+    qsizetype executableLinesCacheSize();
 
     QList<QV4::StackFrame> stackTrace(int frameLimit = -1) const;
     QList<QV4::Heap::ExecutionContext::ContextType> getScopeTypes(int frame = 0) const;
 
     QV4::Function *getFunction() const;
     void runInEngine(QV4DebugJob *job);
+
+    int resolvedBreakpointLine(int requestedLine);
 
     // compile-time interface
     void maybeBreakAtInstruction() override;
@@ -110,7 +115,28 @@ Q_SIGNALS:
 private:
     // requires lock to be held
     void pauseAndWait(PauseReason reason);
-    bool reallyHitTheBreakPoint(const QString &filename, int linenr);
+    bool reallyHitTheBreakPoint(QV4::Function *function, const QString &filename, int linenr);
+    struct ExecutableLine {
+        int line;
+        int functionStart; // first line of the function or binding it belongs to
+        friend bool operator==(const ExecutableLine &a, const ExecutableLine &b)
+        {
+            return a.line == b.line && a.functionStart == b.functionStart;
+        }
+        friend bool operator<(const ExecutableLine &a, const ExecutableLine &b)
+        {
+            return a.line < b.line || (a.line == b.line && a.functionStart < b.functionStart);
+        }
+    };
+    struct ExecutableLines {
+        QList<ExecutableLine> lines; // the lines that carry code, sorted
+        QList<int> functionStarts;   // sorted
+    };
+    static ExecutableLines collectExecutableLines(
+            const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &unit);
+    static int firstLineAtOrAfter(const ExecutableLines &executable, int requestedLine);
+    const ExecutableLines &executableLines(QV4::Function *function);
+    void pruneExecutableLines();
     void runInEngine_havingLock(QV4DebugJob *job);
     void runJobUnpaused();
 
@@ -122,9 +148,24 @@ private:
     Speed m_stepping;
     bool m_pauseRequested;
     bool m_haveBreakPoints;
+    bool m_breakPointsChanged = false;
     bool m_breakOnThrow;
 
-    QHash<BreakPoint, QString> m_breakPoints;
+    struct BreakPointData {
+        QString target; // as given by the client, possibly with a path
+        QString condition;
+    };
+    QHash<BreakPoint, BreakPointData> m_breakPoints;
+    struct UnitLines {
+        // Keeps another unit from reusing the address while it is cached. This is
+        // the base unit: pinning the executable unit would keep the engine from
+        // trimming it, so a reloaded ES module could come back stale. The type
+        // loader still keeps the type of a pinned unit, so units are only
+        // cached while their file has breakpoints.
+        QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit;
+        ExecutableLines lines;
+    };
+    QList<UnitLines> m_executableLines; // most recently used first
     QV4::PersistentValue m_returnedValue;
 
     QV4DebugJob *m_gatherSources;

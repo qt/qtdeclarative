@@ -31,7 +31,7 @@ public:
     void removeBreakPoint(int id);
     void removeAllBreakPoints();
     void enableBreakPoint(int id, bool onoff);
-    QList<int> breakPointIds(const QString &fileName, int lineNumber) const;
+    QList<int> breakPointIds(QV4Debugger *debugger, const QString &fileName, int lineNumber) const;
 
     bool breakOnThrow() const { return m_breakOnThrow; }
     void setBreakOnThrow(bool onoff);

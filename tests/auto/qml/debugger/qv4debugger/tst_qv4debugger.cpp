@@ -67,6 +67,12 @@ public:
 
     QV4::ExecutionEngine *v4Engine() { return handle(); }
 
+    Q_INVOKABLE void trimCompilationUnits()
+    {
+        collectGarbage();
+        handle()->trimCompilationUnits();
+    }
+
     Q_INVOKABLE void injectFunction(const QString &functionName, InjectedFunction injectedFunction)
     {
         QV4::ExecutionEngine *v4 = v4Engine();
@@ -306,6 +312,15 @@ private slots:
     void pendingBreakpoint();
     void liveBreakPoint();
     void removePendingBreakPoint();
+    void breakPointOnComment();
+    void breakPointOnCommentInFunction();
+    void breakPointOnCommentAboveConditional();
+    void breakPointOnCommentAfterRecompile();
+    void breakPointOnCommentInSameNamedFile();
+    void breakPointNotMovedIntoLaterFragment();
+    void breakPointNotMovedIntoLaterFunction();
+    void breakPointOnCommentAboveCallback();
+    void executableLinesReleasedWithLastBreakPoint();
     void addBreakPointWhilePaused();
     void removeBreakPointForNextInstruction();
     void conditionalBreakPoint();
@@ -430,6 +445,171 @@ void tst_qv4debugger::removePendingBreakPoint()
     debugger()->removeBreakPoint("removePendingBreakPoint", 2);
     evaluateJavaScript(script, "removePendingBreakPoint");
     QVERIFY(!m_debuggerAgent->m_wasPaused);
+}
+
+void tst_qv4debugger::breakPointOnComment()
+{
+    QString script =
+            "var i = 42;\n"      // 1
+            "// a comment\n"     // 2 (no executable code)
+            "var k = i\n";       // 3
+    debugger()->addBreakPoint("breakPointOnComment", 2);
+    evaluateJavaScript(script, "breakPointOnComment");
+    QVERIFY(m_debuggerAgent->m_wasPaused);
+    QCOMPARE(m_debuggerAgent->m_statesWhenPaused.size(), 1);
+    QV4Debugger::ExecutionState state = m_debuggerAgent->m_statesWhenPaused.first();
+    QCOMPARE(state.fileName, QString("breakPointOnComment"));
+    // The breakpoint moves to the next line that actually has code.
+    QCOMPARE(state.lineNumber, 3);
+}
+
+void tst_qv4debugger::breakPointOnCommentInFunction()
+{
+    QString script =
+            "function f() {\n"       // 1
+            "    // just a comment\n"// 2 (breakpoint here)
+            "    var x = 1;\n"       // 3
+            "    return x;\n"        // 4
+            "}\n"                    // 5
+            "f();\n";                // 6
+    debugger()->addBreakPoint("breakPointOnCommentInFunction", 2);
+    evaluateJavaScript(script, "breakPointOnCommentInFunction");
+    QVERIFY(m_debuggerAgent->m_wasPaused);
+    QCOMPARE(m_debuggerAgent->m_statesWhenPaused.size(), 1);
+    QV4Debugger::ExecutionState state = m_debuggerAgent->m_statesWhenPaused.first();
+    QCOMPARE(state.fileName, QString("breakPointOnCommentInFunction"));
+    QCOMPARE(state.lineNumber, 3);
+}
+
+void tst_qv4debugger::breakPointOnCommentAboveConditional()
+{
+    QString script =
+            "var i = 42;\n"      // 1
+            "// a comment\n"     // 2 (unconditional breakpoint here)
+            "var k = i\n";       // 3 (breakpoint with a false condition)
+    debugger()->addBreakPoint("breakPointOnCommentAboveConditional", 2);
+    debugger()->addBreakPoint("breakPointOnCommentAboveConditional", 3,
+                              QStringLiteral("i > 100"));
+    evaluateJavaScript(script, "breakPointOnCommentAboveConditional");
+    QVERIFY(m_debuggerAgent->m_wasPaused);
+    QCOMPARE(m_debuggerAgent->m_statesWhenPaused.size(), 1);
+    QCOMPARE(m_debuggerAgent->m_statesWhenPaused.first().lineNumber, 3);
+}
+
+void tst_qv4debugger::breakPointOnCommentAfterRecompile()
+{
+    const QString fileName = "breakPointOnCommentAfterRecompile";
+    debugger()->addBreakPoint(fileName, 2);
+
+    QString script =
+            "var i = 42;\n"      // 1
+            "// a comment\n"     // 2 (breakpoint here)
+            "var k = i\n";       // 3
+    evaluateJavaScript(script, fileName);
+    QCOMPARE(m_debuggerAgent->m_statesWhenPaused.size(), 1);
+    QCOMPARE(m_debuggerAgent->m_statesWhenPaused.first().lineNumber, 3);
+
+    // Free the first unit, so that the next one may be allocated at its address.
+    QMetaObject::invokeMethod(m_engine.get(), "trimCompilationUnits",
+                              Qt::BlockingQueuedConnection);
+    m_debuggerAgent->m_statesWhenPaused.clear();
+
+    // The same file, edited: the line table of the first version must not be used.
+    script =
+            "var i = 42;\n"      // 1
+            "// a comment\n"     // 2 (breakpoint here)
+            "// a comment\n"     // 3
+            "var k = i\n";       // 4
+    evaluateJavaScript(script, fileName);
+    QCOMPARE(m_debuggerAgent->m_statesWhenPaused.size(), 1);
+    QCOMPARE(m_debuggerAgent->m_statesWhenPaused.first().lineNumber, 4);
+}
+
+void tst_qv4debugger::breakPointOnCommentInSameNamedFile()
+{
+    QString script =
+            "var i = 42;\n"      // 1
+            "// a comment\n"     // 2 (breakpoint here)
+            "var k = i\n";       // 3
+
+    // A breakpoint in another file of the same name must not be relocated here.
+    debugger()->addBreakPoint("a/sameName.js", 2);
+    evaluateJavaScript(script, "b/sameName.js");
+    QVERIFY(!m_debuggerAgent->m_wasPaused);
+
+    debugger()->removeBreakPoint("a/sameName.js", 2);
+    debugger()->addBreakPoint("b/sameName.js", 2);
+    evaluateJavaScript(script, "b/sameName.js");
+    QVERIFY(m_debuggerAgent->m_wasPaused);
+    QCOMPARE(m_debuggerAgent->m_statesWhenPaused.size(), 1);
+    QCOMPARE(m_debuggerAgent->m_statesWhenPaused.first().lineNumber, 3);
+}
+
+void tst_qv4debugger::breakPointNotMovedIntoLaterFragment()
+{
+    const QString fileName = "breakPointNotMovedIntoLaterFragment";
+    debugger()->addBreakPoint(fileName, 2);
+
+    evaluateJavaScript("var i = 1;\nvar j = 2;\n", fileName, 1);
+    QCOMPARE(m_debuggerAgent->m_statesWhenPaused.size(), 1);
+    QCOMPARE(m_debuggerAgent->m_statesWhenPaused.first().lineNumber, 2);
+
+    // A fragment of the same file that starts after the breakpoint, like a
+    // binding compiled from a string, must not pick it up.
+    evaluateJavaScript("var k = 3;\n", fileName, 5);
+    QCOMPARE(m_debuggerAgent->m_statesWhenPaused.size(), 1);
+}
+
+void tst_qv4debugger::breakPointNotMovedIntoLaterFunction()
+{
+    QString script =
+            "var i = 42;\n"      // 1
+            "// a comment\n"     // 2 (breakpoint here)
+            "function f() {\n"   // 3
+            "    var x = 1;\n"   // 4
+            "}\n"                // 5
+            "f();\n";            // 6
+    debugger()->addBreakPoint("breakPointNotMovedIntoLaterFunction", 2);
+    evaluateJavaScript(script, "breakPointNotMovedIntoLaterFunction");
+    QVERIFY(!m_debuggerAgent->m_wasPaused);
+}
+
+void tst_qv4debugger::breakPointOnCommentAboveCallback()
+{
+    QString script =
+            "var items = [1, 2];\n"           // 1
+            "// process items\n"              // 2 (breakpoint here)
+            "items.forEach(function(x) {\n"   // 3
+            "    var y = x;\n"                // 4
+            "});\n";                          // 5
+    debugger()->addBreakPoint("breakPointOnCommentAboveCallback", 2);
+    evaluateJavaScript(script, "breakPointOnCommentAboveCallback");
+    QVERIFY(m_debuggerAgent->m_wasPaused);
+    // Line 3 is code of the enclosing function, too. Like a breakpoint placed
+    // there, it stops once for the call and once per run of the callback.
+    QCOMPARE(m_debuggerAgent->m_statesWhenPaused.size(), 3);
+    const auto &states = m_debuggerAgent->m_statesWhenPaused;
+    for (const QV4Debugger::ExecutionState &state : states)
+        QCOMPARE(state.lineNumber, 3);
+}
+
+void tst_qv4debugger::executableLinesReleasedWithLastBreakPoint()
+{
+    const QString fileName = "executableLinesReleasedWithLastBreakPoint";
+    QString script =
+            "var i = 42;\n"      // 1
+            "// a comment\n"     // 2 (breakpoint here)
+            "var k = i\n";       // 3
+    debugger()->addBreakPoint(fileName, 2);
+    evaluateJavaScript(script, fileName);
+    QCOMPARE(m_debuggerAgent->m_statesWhenPaused.size(), 1);
+    QCOMPARE(debugger()->executableLinesCacheSize(), 1);
+
+    // Without breakpoints, the cached unit must not stay referenced, as that
+    // keeps the type loader from trimming it.
+    debugger()->removeBreakPoint(fileName, 2);
+    evaluateJavaScript("var j = 1;\n", "otherFile");
+    QCOMPARE(debugger()->executableLinesCacheSize(), 0);
 }
 
 void tst_qv4debugger::addBreakPointWhilePaused()

@@ -8,9 +8,13 @@
 
 #include <private/qqmlcontext_p.h>
 #include <private/qqmlengine_p.h>
+#include <private/qv4compileddata_p.h>
+#include <private/qv4function_p.h>
 #include <private/qv4scopedvalue_p.h>
 #include <private/qv4script_p.h>
 #include <private/qv4stackframe_p.h>
+
+#include <algorithm>
 
 QT_BEGIN_NAMESPACE
 
@@ -95,8 +99,9 @@ void QV4Debugger::addBreakPoint(const QString &fileName, int lineNumber, const Q
 {
     QMutexLocker locker(&m_lock);
     m_breakPoints.insert(BreakPoint(fileName.mid(fileName.lastIndexOf('/') + 1),
-                                            lineNumber), condition);
+                                            lineNumber), {fileName, condition});
     m_haveBreakPoints = true;
+    m_breakPointsChanged = true;
 }
 
 void QV4Debugger::removeBreakPoint(const QString &fileName, int lineNumber)
@@ -105,6 +110,7 @@ void QV4Debugger::removeBreakPoint(const QString &fileName, int lineNumber)
     m_breakPoints.remove(BreakPoint(fileName.mid(fileName.lastIndexOf('/') + 1),
                                             lineNumber));
     m_haveBreakPoints = !m_breakPoints.isEmpty();
+    m_breakPointsChanged = true;
 }
 
 void QV4Debugger::setBreakOnThrow(bool onoff)
@@ -120,6 +126,12 @@ void QV4Debugger::clearPauseRequest()
     m_pauseRequested = false;
 }
 
+qsizetype QV4Debugger::executableLinesCacheSize()
+{
+    QMutexLocker locker(&m_lock);
+    return m_executableLines.size();
+}
+
 QV4Debugger::ExecutionState QV4Debugger::currentExecutionState() const
 {
     ExecutionState state;
@@ -130,7 +142,10 @@ QV4Debugger::ExecutionState QV4Debugger::currentExecutionState() const
 }
 
 bool QV4Debugger::pauseAtNextOpportunity() const {
-    return m_pauseRequested || m_haveBreakPoints || m_gatherSources || m_stepping >= StepOver;
+    // A change of breakpoints has to reach maybeBreakAtInstruction() even when
+    // none are left, so that the cache of executable lines gets pruned.
+    return m_pauseRequested || m_haveBreakPoints || m_breakPointsChanged || m_gatherSources
+            || m_stepping >= StepOver;
 }
 
 QList<QV4::StackFrame> QV4Debugger::stackTrace(int frameLimit) const
@@ -149,6 +164,11 @@ void QV4Debugger::maybeBreakAtInstruction()
         m_gatherSources->run();
         delete m_gatherSources;
         m_gatherSources = nullptr;
+    }
+
+    if (m_breakPointsChanged) {
+        m_breakPointsChanged = false;
+        pruneExecutableLines();
     }
 
     switch (m_stepping) {
@@ -171,7 +191,7 @@ void QV4Debugger::maybeBreakAtInstruction()
         if (QV4::Function *f = getFunction()) {
             // lineNumber will be negative for Ret instructions, so those won't match
             const int lineNumber = engine()->currentStackFrame->lineNumber();
-            if (reallyHitTheBreakPoint(f->sourceFile(), lineNumber))
+            if (reallyHitTheBreakPoint(f, f->sourceFile(), lineNumber))
                 pauseAndWait(BreakPointHit);
         }
     }
@@ -251,23 +271,167 @@ void QV4Debugger::pauseAndWait(PauseReason reason)
     m_state = Running;
 }
 
-bool QV4Debugger::reallyHitTheBreakPoint(const QString &filename, int linenr)
+/*!
+    \internal
+
+    Collects the executable lines of every function in \a unit, i.e. of the
+    whole source file. Resolution has to be file-global: a breakpoint on a
+    comment inside a nested function must not also match the outer function's
+    first line after the comment.
+*/
+QV4Debugger::ExecutableLines QV4Debugger::collectExecutableLines(
+        const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &unit)
 {
-    const auto it = m_breakPoints.constFind(
-                BreakPoint(QUrl(filename).fileName(), linenr));
-    if (it == m_breakPoints.cend())
-        return false;
-    QString condition = it.value();
-    if (condition.isEmpty())
+    ExecutableLines result;
+    const QV4::CompiledData::Unit *data = unit ? unit->unitData() : nullptr;
+    if (!data)
+        return result;
+    for (uint f = 0, fn = data->functionTableSize; f < fn; ++f) {
+        const QV4::CompiledData::Function *cf = data->functionAt(f);
+        const int start = cf->location.line();
+        result.functionStarts.append(start);
+        const QV4::CompiledData::CodeOffsetToLineAndStatement *table
+                = cf->lineAndStatementNumberTable();
+        for (uint i = 0, n = cf->nLineAndStatementNumbers; i < n; ++i) {
+            const int line = table[i].line;
+            if (line > 0) // debug instructions get negative line numbers
+                result.lines.append({line, start});
+        }
+    }
+    std::sort(result.lines.begin(), result.lines.end());
+    result.lines.erase(std::unique(result.lines.begin(), result.lines.end()),
+                       result.lines.end());
+    std::sort(result.functionStarts.begin(), result.functionStarts.end());
+    return result;
+}
+
+int QV4Debugger::firstLineAtOrAfter(const ExecutableLines &executable, int requestedLine)
+{
+    // Lines are sorted by line, then by the start of their function, so the
+    // first one at or after the request is from the earliest starting function.
+    const auto it = std::lower_bound(executable.lines.cbegin(), executable.lines.cend(),
+                                     ExecutableLine{requestedLine, 0});
+    if (it == executable.lines.cend())
+        return -1;
+    // Only move within code that starts at or before the requested line, and
+    // not past the start of another function or binding. A function starting
+    // later runs at an unrelated time, and in QML the requested line may be a
+    // declaration without code, such as an id or a literal binding. A unit may
+    // also cover only a fragment of its file (a binding compiled from a
+    // string, a chunk passed to QJSEngine::evaluate() with a line offset), and
+    // a line before its code belongs to some other unit.
+    if (it->functionStart > requestedLine)
+        return -1;
+    const QList<int> &starts = executable.functionStarts;
+    const auto start = std::upper_bound(starts.cbegin(), starts.cend(), requestedLine);
+    if (start != starts.cend() && *start < it->line)
+        return -1;
+    return it->line;
+}
+
+void QV4Debugger::pruneExecutableLines()
+{
+    // Drop the units of files without breakpoints, so that the cache does not
+    // keep them from being trimmed. This runs on the engine thread, which is
+    // the only one allowed to release a unit.
+    m_executableLines.removeIf([this](const UnitLines &cached) {
+        const QString file = QUrl(cached.unit->fileName()).fileName();
+        for (auto it = m_breakPoints.keyBegin(), end = m_breakPoints.keyEnd(); it != end; ++it) {
+            if (it->fileName == file)
+                return false;
+        }
         return true;
+    });
+}
 
-    Q_ASSERT(m_runningJob == nullptr);
-    EvalJob evilJob(m_engine, condition);
-    m_runningJob = &evilJob;
-    m_runningJob->run();
-    m_runningJob = nullptr;
+/*!
+    \internal
 
-    return evilJob.resultAsBoolean();
+    Returns the executable lines of the compilation unit \a function belongs
+    to, cached for the most recent units.
+*/
+const QV4Debugger::ExecutableLines &QV4Debugger::executableLines(QV4::Function *function)
+{
+    // Enough for execution moving back and forth between the files of a scene
+    // that all have breakpoints, few enough for a linear search.
+    constexpr qsizetype MaxCachedUnits = 8;
+
+    const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &unit
+            = function->executableCompilationUnit()->baseCompilationUnit();
+    for (qsizetype i = 0, n = m_executableLines.size(); i < n; ++i) {
+        if (m_executableLines.at(i).unit == unit) {
+            if (i > 0)
+                m_executableLines.move(i, 0);
+            return m_executableLines.first().lines;
+        }
+    }
+    if (m_executableLines.size() == MaxCachedUnits)
+        m_executableLines.removeLast();
+    m_executableLines.prepend({unit, collectExecutableLines(unit)});
+    return m_executableLines.first().lines;
+}
+
+/*!
+    \internal
+
+    While paused, returns the line a breakpoint requested on \a requestedLine
+    resolves to in the unit currently being executed, or -1. Lets the agent
+    attribute a hit that landed on a shifted line back to the breakpoint the
+    user placed on a non-executable line.
+*/
+int QV4Debugger::resolvedBreakpointLine(int requestedLine)
+{
+    QMutexLocker locker(&m_lock);
+    QV4::Function *f = getFunction();
+    if (!f)
+        return -1;
+    // This runs on the agent's thread, so it must not change the cache: dropping
+    // the reference to an evicted unit could destroy that unit here.
+    const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &unit
+            = f->executableCompilationUnit()->baseCompilationUnit();
+    for (const UnitLines &cached : std::as_const(m_executableLines)) {
+        if (cached.unit == unit)
+            return firstLineAtOrAfter(cached.lines, requestedLine);
+    }
+    return firstLineAtOrAfter(collectExecutableLines(unit), requestedLine);
+}
+
+bool QV4Debugger::reallyHitTheBreakPoint(QV4::Function *function, const QString &filename,
+                                         int linenr)
+{
+    const QString file = QUrl(filename).fileName();
+
+    // Besides a breakpoint exactly on this line, a breakpoint requested on a
+    // non-executable line (e.g. a comment or blank line) counts here if this is
+    // the first executable line at or after it. Any of them can stop execution,
+    // so all of them have to be checked.
+    QStringList conditions;
+    for (auto bp = m_breakPoints.constBegin(), end = m_breakPoints.constEnd(); bp != end; ++bp) {
+        if (bp.key().fileName != file || bp.key().lineNumber > linenr)
+            continue;
+        // Only relocate in a unit the client's target identifies: a same-named
+        // file elsewhere has unrelated executable lines.
+        if (bp.key().lineNumber != linenr
+                && (!filename.endsWith(bp.value().target)
+                    || firstLineAtOrAfter(executableLines(function), bp.key().lineNumber)
+                            != linenr)) {
+            continue;
+        }
+        if (bp.value().condition.isEmpty())
+            return true;
+        conditions.append(bp.value().condition);
+    }
+
+    for (const QString &condition : std::as_const(conditions)) {
+        Q_ASSERT(m_runningJob == nullptr);
+        EvalJob evilJob(m_engine, condition);
+        m_runningJob = &evilJob;
+        m_runningJob->run();
+        m_runningJob = nullptr;
+        if (evilJob.resultAsBoolean())
+            return true;
+    }
+    return false;
 }
 
 void QV4Debugger::runInEngine(QV4DebugJob *job)

@@ -38,6 +38,7 @@ const char *QUIT_JSFILE = "quit.js";
 const char *CHANGEBREAKPOINT_QMLFILE = "changeBreakpoint.qml";
 const char *STEPACTION_QMLFILE = "stepAction.qml";
 const char *BREAKPOINTRELOCATION_QMLFILE = "breakpointRelocation.qml";
+const char *BREAKPOINTONDECLARATION_QMLFILE = "breakpointOnDeclaration.qml";
 const char *ENCODEQMLSCOPE_QMLFILE = "encodeQmlScope.qml";
 const char *BREAKONANCHOR_QMLFILE = "breakOnAnchor.qml";
 const char *BREAKPOINTIDS_QMLFILE = "breakPointIds.qml";
@@ -87,6 +88,8 @@ private slots:
     void setBreakpointInScriptOnComment();
     void setBreakpointInScriptOnEmptyLine_data() { targetData(); }
     void setBreakpointInScriptOnEmptyLine();
+    void setBreakpointInScriptOnDeclaration_data() { targetData(); }
+    void setBreakpointInScriptOnDeclaration();
     void setBreakpointInScriptOnOptimizedBinding_data() { targetData(); }
     void setBreakpointInScriptOnOptimizedBinding();
     void setBreakpointInScriptWithCondition_data() { targetData(); }
@@ -339,14 +342,16 @@ void tst_QQmlDebugJS::setBreakpointInScriptOnComment()
 
     m_client->setBreakpoint(QLatin1String(BREAKPOINTRELOCATION_QMLFILE), sourceLine, -1, true);
     m_client->connect();
-    QEXPECT_FAIL("", "Relocation of breakpoints is disabled right now", Abort);
-    QVERIFY(waitForClientSignal(SIGNAL(stopped()), 1));
+    QVERIFY(waitForClientSignal(SIGNAL(stopped())));
 
     const QJsonObject body = m_client->response().body.toObject();
 
     QCOMPARE(body.value("sourceLine").toInt(), actualLine);
     QCOMPARE(QFileInfo(body.value("script").toObject().value("name").toString()).fileName(),
              QLatin1String(BREAKPOINTRELOCATION_QMLFILE));
+    // The hit at the relocated line is still attributed to the breakpoint, so
+    // the client can move its marker there.
+    QVERIFY(!body.value("breakpoints").toArray().isEmpty());
 }
 
 void tst_QQmlDebugJS::setBreakpointInScriptOnEmptyLine()
@@ -360,14 +365,39 @@ void tst_QQmlDebugJS::setBreakpointInScriptOnEmptyLine()
 
     m_client->setBreakpoint(QLatin1String(BREAKPOINTRELOCATION_QMLFILE), sourceLine, -1, true);
     m_client->connect();
-    QEXPECT_FAIL("", "Relocation of breakpoints is disabled right now", Abort);
-    QVERIFY(waitForClientSignal(SIGNAL(stopped()), 1));
+    QVERIFY(waitForClientSignal(SIGNAL(stopped())));
 
     const QJsonObject body = m_client->response().body.toObject();
 
     QCOMPARE(body.value("sourceLine").toInt(), actualLine);
     QCOMPARE(QFileInfo(body.value("script").toObject().value("name").toString()).fileName(),
              QLatin1String(BREAKPOINTRELOCATION_QMLFILE));
+    // The hit at the relocated line is still attributed to the breakpoint, so
+    // the client can move its marker there.
+    QVERIFY(!body.value("breakpoints").toArray().isEmpty());
+}
+
+void tst_QQmlDebugJS::setBreakpointInScriptOnDeclaration()
+{
+    QFETCH(bool, qmlscene);
+
+    // A literal binding has no code. Its breakpoint must not move into the
+    // handler below it, which runs at an unrelated time.
+    int declarationLine = 7;
+    int handlerLine = 9;
+    QCOMPARE(runAndConnect(qmlscene, BREAKPOINTONDECLARATION_QMLFILE), ConnectSuccess);
+
+    m_client->setBreakpoint(QLatin1String(BREAKPOINTONDECLARATION_QMLFILE), declarationLine, -1,
+                            true);
+    m_client->setBreakpoint(QLatin1String(BREAKPOINTONDECLARATION_QMLFILE), handlerLine, -1,
+                            true);
+    m_client->connect();
+    QVERIFY(waitForClientSignal(SIGNAL(stopped())));
+
+    const QJsonObject body = m_client->response().body.toObject();
+
+    QCOMPARE(body.value("sourceLine").toInt(), handlerLine);
+    QCOMPARE(body.value("breakpoints").toArray().size(), 1);
 }
 
 void tst_QQmlDebugJS::setBreakpointInScriptOnOptimizedBinding()
