@@ -61,7 +61,6 @@ private:
     QHash<QString, QString> m_localToResourcePath;
     QScopedPointer<QQmlDebugConnection> m_connection;
     QScopedPointer<QQmlPreviewClient> m_qmlPreviewClient;
-    QScopedPointer<QQmlProfilerEventReceiver> m_eventReceiver;
     QmlPreviewFileSystemWatcher m_watcher;
 
     QTimer m_loadTimer;

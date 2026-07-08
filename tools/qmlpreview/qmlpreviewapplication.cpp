@@ -70,7 +70,16 @@ QmlPreviewApplication::QmlPreviewApplication(int &argc, char **argv) :
     m_loadTimer.setInterval(100);
     m_loadTimer.setSingleShot(true);
     connect(&m_loadTimer, &QTimer::timeout, this,
-            [this]() { m_qmlPreviewClient->loadUrl(QUrl()); });
+            [this]() {
+
+                // Only replay events if we're not in hot reload mode.
+                // The initial replay in case of a hot reload failure is done when receiving
+                // the settings confirmation.
+                if (!m_confirmedSettings.enableInPlaceUpdates)
+                    m_qmlPreviewClient->replayEvents();
+
+                m_qmlPreviewClient->triggerLoad(QUrl());
+            });
 
     m_connectTimer.setInterval(1000);
     connect(&m_connectTimer, &QTimer::timeout, this, &QmlPreviewApplication::tryToConnect);
@@ -93,9 +102,15 @@ void QmlPreviewApplication::connectQmlPreviewClientSignals()
             &QmlPreviewApplication::serveRequest);
     connect(m_qmlPreviewClient.data(), &QQmlPreviewClient::confirmation, this,
             [this](const QQmlPreviewClient::Settings &settings) {
+
+                // Before we switch to hot reload mode,
+                // replay any input events gathered in the last run.
+                if (settings.enableInPlaceUpdates)
+                    m_qmlPreviewClient->replayEvents();
+
                 m_confirmedSettings = settings;
                 const QString status = QString::fromUtf8("Inplace updates setting confirmed as: %1")
-                                       .arg(m_confirmedSettings.enableInPlaceUpdates ? "enabled" : "disabled");
+                                       .arg(settings.enableInPlaceUpdates ? "enabled" : "disabled");
                 logStatus(status);
             });
     connect(m_qmlPreviewClient.data(), &QQmlPreviewClient::hotReloadFailure, this,
