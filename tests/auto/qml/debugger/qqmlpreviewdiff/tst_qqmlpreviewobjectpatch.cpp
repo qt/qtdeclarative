@@ -27,8 +27,172 @@
 
 #include <QtGui/qfont.h>
 #include <QtGui/qcolor.h>
+#include <QtCore/qpoint.h>
+
+#include <QtQml/qqml.h>
+
+#include <functional>
 
 using namespace QV4::CompiledData;
+
+// A single observable value of a reloaded widget: how to read it, and what it should be
+// before the reload, after the reload, and after mutating the source property (to prove the
+// re-applied binding is live).
+struct DeferredProbe
+{
+    std::function<qreal(QObject *)> read;
+    qreal before;
+    qreal afterReload;
+    qreal afterLive;
+};
+using DeferredProbes = QList<DeferredProbe>;
+Q_DECLARE_METATYPE(DeferredProbes)
+
+// A type with a deferred property of a *value* type (int). Its deferred binding
+// does not create an object; it just assigns a value. Used to verify that the
+// preview rebuild re-arms non-object deferred bindings too.
+class DeferredIntItem : public QQuickItem
+{
+    Q_OBJECT
+    Q_CLASSINFO("DeferredPropertyNames", "amount")
+    Q_PROPERTY(int amount READ amount WRITE setAmount NOTIFY amountChanged)
+public:
+    int amount() const { return m_amount; }
+    void setAmount(int amount)
+    {
+        if (m_amount == amount)
+            return;
+        m_amount = amount;
+        emit amountChanged();
+    }
+
+    void componentComplete() override
+    {
+        QQuickItem::componentComplete();
+        // Opt in to executing the deferred property, like a Control does for its
+        // contentItem/background in its own componentComplete().
+        qmlExecuteDeferred(this);
+    }
+
+Q_SIGNALS:
+    void amountChanged();
+
+private:
+    int m_amount = -1;
+};
+
+// An attached type carrying an observable value. Used to check whether a deferred
+// *attached-property* binding survives a preview rebuild. Such a binding resolves to
+// no QQmlPropertyData on the host object, so QQmlData::deferData files it under the
+// key -1.
+class DeferredAttached : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int amount READ amount WRITE setAmount NOTIFY amountChanged)
+public:
+    DeferredAttached(QObject *parent = nullptr) : QObject(parent) {}
+
+    int amount() const { return m_amount; }
+    void setAmount(int amount)
+    {
+        if (m_amount == amount)
+            return;
+        m_amount = amount;
+        emit amountChanged();
+    }
+
+    static DeferredAttached *qmlAttachedProperties(QObject *object)
+    {
+        return new DeferredAttached(object);
+    }
+
+Q_SIGNALS:
+    void amountChanged();
+
+private:
+    int m_amount = -1;
+};
+QML_DECLARE_TYPEINFO(DeferredAttached, QML_HAS_ATTACHED_PROPERTIES)
+
+// A type that defers *all* bindings except the few listed, the way prominent Qt types
+// (Binding, PropertyChanges) do via ImmediatePropertyNames. Any binding on it that is
+// not one of the listed names — an attached-property binding (DeferredAttached.amount)
+// or a generalized grouped property whose first chain part is an id (someId.x) — is
+// therefore deferred and lands in DeferredData under the key -1.
+//
+// The "target" property is immediate so an id-bearing object can be assigned to it
+// (an id on a deferred object is a compile error), giving the generalized grouped
+// property test something to reference by id.
+class ImmediateHost : public QQuickItem
+{
+    Q_OBJECT
+    Q_CLASSINFO("ImmediatePropertyNames", "objectName,target,spot")
+    Q_PROPERTY(QQuickItem *target READ target WRITE setTarget NOTIFY targetChanged)
+    // px/py are C++ (not VME) properties, so their values survive a preview rebuild that
+    // reuses this QObject. That lets a generalized grouped property targeting a surviving
+    // object be observed after the rebuild.
+    Q_PROPERTY(int px READ px WRITE setPx NOTIFY pxChanged)
+    Q_PROPERTY(int py READ py WRITE setPy NOTIFY pyChanged)
+    // A value-type property with sub-properties, so "spot.x" is a plain value-type group
+    // property (not a generalized grouped property). Its name can be made to clash with an id.
+    Q_PROPERTY(QPoint spot READ spot WRITE setSpot NOTIFY spotChanged)
+public:
+    QQuickItem *target() const { return m_target; }
+    void setTarget(QQuickItem *target)
+    {
+        if (m_target == target)
+            return;
+        m_target = target;
+        emit targetChanged();
+    }
+
+    int px() const { return m_px; }
+    void setPx(int px)
+    {
+        if (m_px == px)
+            return;
+        m_px = px;
+        emit pxChanged();
+    }
+
+    int py() const { return m_py; }
+    void setPy(int py)
+    {
+        if (m_py == py)
+            return;
+        m_py = py;
+        emit pyChanged();
+    }
+
+    QPoint spot() const { return m_spot; }
+    void setSpot(QPoint spot)
+    {
+        if (m_spot == spot)
+            return;
+        m_spot = spot;
+        emit spotChanged();
+    }
+
+    void componentComplete() override
+    {
+        QQuickItem::componentComplete();
+        // Opt in to executing the deferred properties, like a Control does for its
+        // contentItem/background in its own componentComplete().
+        qmlExecuteDeferred(this);
+    }
+
+Q_SIGNALS:
+    void targetChanged();
+    void pxChanged();
+    void pyChanged();
+    void spotChanged();
+
+private:
+    QQuickItem *m_target = nullptr;
+    int m_px = 0;
+    int m_py = 0;
+    QPoint m_spot;
+};
 
 class tst_QQmlPreviewObjectPatch : public QQmlDataTest
 {
@@ -250,22 +414,60 @@ private slots:
 
     void insertBinding();
 
+    // Reproduces the calqlatr hot-reload bug: changing the default value of a
+    // color property in a composite type (CalculatorButton) that is used for
+    // many visual-child instances makes all those instances disappear from the
+    // scene instead of just changing color. A sibling of an unrelated composite
+    // type (BackspaceButton) must survive untouched.
+    void compositePropertyDefaultChangeKeepsVisualChildren();
+
     // Reproduces the calqlatr hot-reload assert: adding a property (e.g.
     // "property int bla") to a composite button type used only as a base type of
     // derived instances (component DigitButton: CalculatorButton {}) inserts a
     // property and its change signal into the base VME meta-object, shifting the
     // index of the base type's own JS methods (getBackgroundColor()/getTextColor()).
-    // The derived instances' property caches still link to the old base cache, so
-    // a base VME method resolved through them used to land at a stale index and
-    // assert "index >= methodOffset()" in QQmlVMEMetaObject::vmeMethod(). The
-    // rebuild must instead relink the derived caches to the new base and patch in
-    // place, surfacing the new property.
+    // The base carries deferred bindings, so the derived instances are recreated by rebuilding the
+    // enclosing root; their property caches must be relinked to the new base layout, otherwise a
+    // base VME method resolved through them lands at a stale index and asserts
+    // "index >= methodOffset()" in QQmlVMEMetaObject::vmeMethod().
     void compositeBaseLayoutChangeRelinksDerivedCaches();
+
+    // A Control-derived composite type appearing only as a composite base of derived instances
+    // (component DigitButton: CalculatorButton {}) carries deferred bindings. A structural edit to
+    // that base recreates the derived instances via the enclosing root ("go up"), rather than an
+    // in-place rebuild that would silently drop their deferred contentItem/background. Verifies the
+    // instances are fresh objects and their deferred content survives.
+    void deferredDerivedInstanceRecreatedOnStructuralReload();
 
     // Same, but the derived type also declares its own property (and thus its own
     // change signal) and its own method, exercising the index-shifting of the
     // derived cache's *own* members when the base grows.
     void compositeBaseLayoutChangeRelinksDerivedOwnMembers();
+
+    // Same as above, but the deferred contentItem is an instance of a composite
+    // type from a separate .qml file (not an inline component, not a built-in
+    // type), and the derived button types are separate .qml files too. The
+    // deferred content must still be recreated on reload.
+    void compositePropertyDefaultChangeExternalDeferredContent();
+    void reloadDeferredContentWithAlias();
+
+    // A deferred binding that must be re-applied when the object is recreated on reload.
+    // Data-driven over the shapes such a binding can take:
+    //  - a plain value-type property (amount: base), which assigns a value rather than
+    //    creating an object;
+    //  - an attached-property binding (DeferredAttached.amount: base) and a generalized
+    //    grouped-property binding (someId.prop: base), which resolve to no QQmlPropertyData
+    //    and land in DeferredData under the key -1 (the case Binding and PropertyChanges
+    //    rely on ImmediatePropertyNames for), and whose old id-named binding must reset
+    //    without asserting;
+    //  - a grouped-property binding whose left-hand side is retargeted (self.px -> self.py),
+    //    where the old left-hand side must be left at its C++ default.
+    void reloadDeferredProperty_data();
+    void reloadDeferredProperty();
+
+    // A value-type group property ("spot.x") whose first chain part is also the id of another
+    // object. The patcher must resolve it to the host's value property, not to the id object.
+    void groupPropertyNameClashesWithId();
 
     // A base-type property that un-reloaded derived instances still bind to is
     // removed on reload. Re-resolving the binding target against the relinked
@@ -323,6 +525,9 @@ static QQmlPreview::PatchResult updateObjects(std::vector<QObject *> &objects,
 tst_QQmlPreviewObjectPatch::tst_QQmlPreviewObjectPatch() : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
     QV4::ExecutionEngine::setPreviewing(true);
+    qmlRegisterType<DeferredIntItem>("Qt.Test.PreviewDeferred", 1, 0, "DeferredIntItem");
+    qmlRegisterType<ImmediateHost>("Qt.Test.PreviewDeferred", 1, 0, "ImmediateHost");
+    qmlRegisterType<DeferredAttached>("Qt.Test.PreviewDeferred", 1, 0, "DeferredAttached");
 }
 
 void tst_QQmlPreviewObjectPatch::granularConstantUpdate()
@@ -3927,6 +4132,121 @@ void tst_QQmlPreviewObjectPatch::derivedTypeFunctionChangeCrash()
     QCOMPARE(object->property("coffeeName").toString(), QString("Cappuccinooooo"));
 }
 
+void tst_QQmlPreviewObjectPatch::compositePropertyDefaultChangeKeepsVisualChildren()
+{
+    const QString moduleDir = dataDirectory() + QStringLiteral("/HotReloadButton");
+    const QString patchedDir = dataDirectory() + QStringLiteral("/HotReloadButtonPatched");
+
+    QQuickWindow window;
+    window.resize(400, 400);
+
+    // Instantiate the "number pad": many CalculatorButton instances plus one
+    // BackspaceButton, laid out as visual children of a GridLayout.
+    QQmlComponent numberPad(&engine, QUrl::fromLocalFile(moduleDir + "/NumberPad.qml"));
+    QVERIFY2(numberPad.isReady(), qPrintable(numberPad.errorString()));
+    std::unique_ptr<QObject> root(numberPad.create());
+    QVERIFY(root);
+
+    QQuickItem *rootItem = qobject_cast<QQuickItem *>(root.get());
+    QVERIFY(rootItem);
+    rootItem->setParentItem(window.contentItem());
+    QCoreApplication::processEvents();
+
+    const QStringList calcButtonNames = { QStringLiteral("d7"), QStringLiteral("d8"),
+                                          QStringLiteral("d9"), QStringLiteral("opdiv"),
+                                          QStringLiteral("d4"), QStringLiteral("d5"),
+                                          QStringLiteral("d6"), QStringLiteral("opmul"),
+                                          QStringLiteral("d1") };
+
+    const auto contentItemOf = [](QQuickItem *button) {
+        return button->property("contentItem").value<QQuickItem *>();
+    };
+    const auto backgroundOf = [](QQuickItem *button) {
+        return button->property("background").value<QQuickItem *>();
+    };
+
+    // Grab a pointer and the visual parent of every CalculatorButton instance
+    // before the reload so we can tell afterwards whether it disappeared. A
+    // RoundButton with no contentItem/background draws nothing, i.e. it looks
+    // like it vanished — so record those too.
+    QHash<QString, QPointer<QQuickItem>> buttons;
+    QHash<QString, QPointer<QQuickItem>> visualParents;
+    for (const QString &name : calcButtonNames) {
+        QQuickItem *item = root->findChild<QQuickItem *>(name);
+        QVERIFY2(item, qPrintable(name));
+        QVERIFY2(item->parentItem(), qPrintable(name));
+        QVERIFY2(contentItemOf(item), qPrintable(name + " has no contentItem before reload"));
+        QVERIFY2(backgroundOf(item), qPrintable(name + " has no background before reload"));
+        buttons.insert(name, item);
+        visualParents.insert(name, item->parentItem());
+    }
+
+    QQuickItem *backspace = root->findChild<QQuickItem *>(QStringLiteral("backspace"));
+    QVERIFY(backspace);
+    QPointer<QQuickItem> backspaceGuard(backspace);
+    QQuickItem *backspaceParent = backspace->parentItem();
+    QVERIFY(backspaceParent);
+    QVERIFY(contentItemOf(backspace));
+
+    // Old CalculatorButton CU (shared with the live instances) and the patched one.
+    QQmlComponent calcOld(&engine, QUrl::fromLocalFile(moduleDir + "/CalculatorButton.qml"));
+    QVERIFY2(calcOld.isReady(), qPrintable(calcOld.errorString()));
+    QQmlComponent calcNew(&engine, QUrl::fromLocalFile(patchedDir + "/CalculatorButton.qml"));
+    QVERIFY2(calcNew.isReady(), qPrintable(calcNew.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&calcOld)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&calcNew)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QVERIFY(!objects.empty());
+    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+
+    // Every CalculatorButton instance is still alive and still parented into the
+    // same GridLayout — the QObject is rebuilt in place, so it never leaves the
+    // visual tree at the item level.
+    for (const QString &name : calcButtonNames) {
+        QVERIFY2(!buttons.value(name).isNull(), qPrintable(name + " was deleted"));
+        QQuickItem *item = buttons.value(name);
+        QVERIFY2(item->parentItem(), qPrintable(name + " lost its visual parent"));
+        QCOMPARE(item->parentItem(), visualParents.value(name).data());
+    }
+
+    // The unrelated BackspaceButton must survive untouched.
+    QVERIFY(!backspaceGuard.isNull());
+    QCOMPARE(backspace->parentItem(), backspaceParent);
+    QVERIFY(contentItemOf(backspace));
+
+    // The regression: rebuilding the composite type must re-establish the
+    // contentItem/background it assigns via (deferred) object bindings. Otherwise
+    // each RoundButton has nothing to draw and appears to vanish.
+    for (const QString &name : calcButtonNames) {
+        QQuickItem *item = buttons.value(name);
+        QVERIFY2(contentItemOf(item), qPrintable(name + " lost its contentItem on reload"));
+        QVERIFY2(backgroundOf(item), qPrintable(name + " lost its background on reload"));
+    }
+
+    for (const QString &name : { QStringLiteral("d7"), QStringLiteral("d1") }) {
+        QQuickItem *content = contentItemOf(buttons.value(name));
+        QVERIFY(content);
+        QCOMPARE(content->property("color").value<QColor>(), QColor::fromString("green"));
+    }
+
+    // The rebuild must recreate only the winning deferred items (CalculatorButton's
+    // Text/Rectangle override), not also the shadowed style defaults. So a reloaded
+    // button has the same number of direct child items as a freshly-created one.
+    const qsizetype freshChildCount =
+            backspace->findChildren<QQuickItem *>(Qt::FindDirectChildrenOnly).size();
+    for (const QString &name : calcButtonNames) {
+        const auto reloadedChildren =
+                buttons.value(name)->findChildren<QQuickItem *>(Qt::FindDirectChildrenOnly);
+        QCOMPARE(reloadedChildren.size(), freshChildCount);
+    }
+}
+
 void tst_QQmlPreviewObjectPatch::compositeBaseLayoutChangeRelinksDerivedCaches()
 {
     const QString moduleDir = dataDirectory() + QStringLiteral("/HotReloadButtonFunc");
@@ -3951,14 +4271,23 @@ void tst_QQmlPreviewObjectPatch::compositeBaseLayoutChangeRelinksDerivedCaches()
                                           QStringLiteral("d6"), QStringLiteral("opmul"),
                                           QStringLiteral("d1") };
 
-    // All instances are derived types (component DigitButton: CalculatorButton {}),
-    // so CalculatorButton appears only as a composite base type in their VME chain.
-    QHash<QString, QPointer<QQuickItem>> buttons;
+    const auto contentItemOf = [](QQuickItem *button) {
+        return button->property("contentItem").value<QQuickItem *>();
+    };
+    const auto backgroundOf = [](QQuickItem *button) {
+        return button->property("background").value<QQuickItem *>();
+    };
+
+    // All instances are derived types (component DigitButton: CalculatorButton {}), so
+    // CalculatorButton appears only as a composite base type in their VME chain. Its deferred
+    // contentItem/background bindings call the type's own getTextColor()/getBackgroundColor() VME
+    // methods.
     for (const QString &name : calcButtonNames) {
         QQuickItem *item = root->findChild<QQuickItem *>(name);
         QVERIFY2(item, qPrintable(name));
         QVERIFY(!item->property("bla").isValid()); // not in the old CU
-        buttons.insert(name, item);
+        QVERIFY2(contentItemOf(item), qPrintable(name + " has no contentItem before reload"));
+        QVERIFY2(backgroundOf(item), qPrintable(name + " has no background before reload"));
     }
 
     QQmlComponent calcOld(&engine, QUrl::fromLocalFile(moduleDir + "/CalculatorButton.qml"));
@@ -3973,20 +4302,86 @@ void tst_QQmlPreviewObjectPatch::compositeBaseLayoutChangeRelinksDerivedCaches()
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
     QVERIFY(!objects.empty());
 
-    // Adding "property int bla" to CalculatorButton shifts its VME method indices.
-    // The rebuild relinks the derived instances' caches to the new base cache, so
-    // getBackgroundColor()/getTextColor() resolve at the correct index rather than
+    // Adding "property int bla" to CalculatorButton shifts its VME method indices. Because the base
+    // carries deferred bindings, the derived instances are recreated by rebuilding the enclosing
+    // NumberPad root, and the derived types' property caches are relinked to the new base layout so
+    // getBackgroundColor()/getTextColor() resolve at the correct (shifted) index rather than
     // asserting in vmeMethod().
     QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
 
     QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
     QCoreApplication::processEvents();
 
+    // The buttons were recreated. Re-find them and check the added property is present, the deferred
+    // contentItem/background were recreated (not dropped), and the deferred bindings that call the
+    // shifted VME methods are live.
     for (const QString &name : calcButtonNames) {
-        QQuickItem *item = buttons.value(name);
-        QVERIFY2(item, qPrintable(name + " was deleted"));
-        // The added property is now part of the derived instances too.
+        QQuickItem *item = root->findChild<QQuickItem *>(name);
+        QVERIFY2(item, qPrintable(name + " missing after reload"));
         QVERIFY2(item->property("bla").isValid(), qPrintable(name + " lacks the added property"));
+        QVERIFY2(contentItemOf(item), qPrintable(name + " lost its contentItem on reload"));
+        QVERIFY2(backgroundOf(item), qPrintable(name + " lost its background on reload"));
+    }
+}
+
+void tst_QQmlPreviewObjectPatch::deferredDerivedInstanceRecreatedOnStructuralReload()
+{
+    const QString moduleDir = dataDirectory() + QStringLiteral("/HotReloadDeferredDerived");
+    const QString patchedDir = dataDirectory() + QStringLiteral("/HotReloadDeferredDerivedPatched");
+
+    QQuickWindow window;
+    window.resize(400, 400);
+
+    QQmlComponent numberPad(&engine, QUrl::fromLocalFile(moduleDir + "/NumberPad.qml"));
+    QVERIFY2(numberPad.isReady(), qPrintable(numberPad.errorString()));
+    std::unique_ptr<QObject> root(numberPad.create());
+    QVERIFY(root);
+
+    QQuickItem *rootItem = qobject_cast<QQuickItem *>(root.get());
+    QVERIFY(rootItem);
+    rootItem->setParentItem(window.contentItem());
+    QCoreApplication::processEvents();
+
+    const auto contentItemOf = [](QQuickItem *button) {
+        return button->property("contentItem").value<QQuickItem *>();
+    };
+
+    // Grab a guard to each derived instance so we can prove it is recreated (not patched in place).
+    const QStringList names = { QStringLiteral("d7"), QStringLiteral("opdiv"), QStringLiteral("d1") };
+    QHash<QString, QPointer<QQuickItem>> oldButtons;
+    for (const QString &name : names) {
+        QQuickItem *item = root->findChild<QQuickItem *>(name);
+        QVERIFY2(item, qPrintable(name));
+        QVERIFY2(contentItemOf(item), qPrintable(name + " has no contentItem before reload"));
+        oldButtons.insert(name, item);
+    }
+
+    QQmlComponent calcOld(&engine, QUrl::fromLocalFile(moduleDir + "/CalculatorButton.qml"));
+    QVERIFY2(calcOld.isReady(), qPrintable(calcOld.errorString()));
+    QQmlComponent calcNew(&engine, QUrl::fromLocalFile(patchedDir + "/CalculatorButton.qml"));
+    QVERIFY2(calcNew.isReady(), qPrintable(calcNew.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&calcOld)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&calcNew)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QVERIFY(!objects.empty());
+    QCOMPARE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Rebuilt);
+
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+
+    for (const QString &name : names) {
+        // The base carries deferred bindings, so the derived instance was recreated via the
+        // enclosing root rather than rebuilt in place: the old QObject is gone.
+        QVERIFY2(oldButtons.value(name).isNull(), qPrintable(name + " was not recreated"));
+
+        // The fresh instance exists, carries the added property, and kept its deferred content.
+        QQuickItem *item = root->findChild<QQuickItem *>(name);
+        QVERIFY2(item, qPrintable(name + " missing after reload"));
+        QVERIFY2(item->property("bla").isValid(), qPrintable(name + " lacks the added property"));
+        QVERIFY2(contentItemOf(item), qPrintable(name + " lost its deferred contentItem on reload"));
     }
 }
 
@@ -4293,6 +4688,336 @@ void tst_QQmlPreviewObjectPatch::changedBaseTypeRelinksDerivedInstanceCaches()
         // Rectangle (so "color" exists).
         QCOMPARE(item->property("reported").toInt(), 22);
         QVERIFY2(item->property("color").isValid(), qPrintable(name + " is not a Rectangle"));
+    }
+}
+
+void tst_QQmlPreviewObjectPatch::compositePropertyDefaultChangeExternalDeferredContent()
+{
+    const QString moduleDir = dataDirectory() + QStringLiteral("/HotReloadButtonExt");
+    const QString patchedDir = dataDirectory() + QStringLiteral("/HotReloadButtonExtPatched");
+
+    QQuickWindow window;
+    window.resize(400, 400);
+
+    QQmlComponent numberPad(&engine, QUrl::fromLocalFile(moduleDir + "/NumberPad.qml"));
+    QVERIFY2(numberPad.isReady(), qPrintable(numberPad.errorString()));
+    std::unique_ptr<QObject> root(numberPad.create());
+    QVERIFY(root);
+
+    QQuickItem *rootItem = qobject_cast<QQuickItem *>(root.get());
+    QVERIFY(rootItem);
+    rootItem->setParentItem(window.contentItem());
+    QCoreApplication::processEvents();
+
+    // Digit buttons use the (patched) default textColor; operator buttons override it.
+    const QStringList digitButtons = { QStringLiteral("d7"), QStringLiteral("d8"),
+                                       QStringLiteral("d9"), QStringLiteral("d4"),
+                                       QStringLiteral("d5"), QStringLiteral("d6"),
+                                       QStringLiteral("d1") };
+    const QStringList operatorButtons = { QStringLiteral("opdiv"), QStringLiteral("opmul") };
+    const QStringList calcButtonNames = digitButtons + operatorButtons;
+
+    const auto contentItemOf = [](QQuickItem *button) {
+        return button->property("contentItem").value<QQuickItem *>();
+    };
+
+    QHash<QString, QPointer<QQuickItem>> buttons;
+    for (const QString &name : calcButtonNames) {
+        QQuickItem *item = root->findChild<QQuickItem *>(name);
+        QVERIFY2(item, qPrintable(name));
+        QQuickItem *content = contentItemOf(item);
+        QVERIFY2(content, qPrintable(name + " has no contentItem before reload"));
+        // The contentItem really is the Badge from the extra .qml file.
+        QVERIFY2(content->property("tint").isValid(), qPrintable(name + " content is not a Badge"));
+        buttons.insert(name, item);
+    }
+
+    QQuickItem *backspace = root->findChild<QQuickItem *>(QStringLiteral("backspace"));
+    QVERIFY(backspace);
+
+    QQmlComponent calcOld(&engine, QUrl::fromLocalFile(moduleDir + "/CalculatorButton.qml"));
+    QVERIFY2(calcOld.isReady(), qPrintable(calcOld.errorString()));
+    QQmlComponent calcNew(&engine, QUrl::fromLocalFile(patchedDir + "/CalculatorButton.qml"));
+    QVERIFY2(calcNew.isReady(), qPrintable(calcNew.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&calcOld)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&calcNew)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QVERIFY(!objects.empty());
+    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+
+    // Every button must keep its (extra-file) Badge contentItem, and only that one.
+    const qsizetype freshChildCount =
+            backspace->findChildren<QQuickItem *>(Qt::FindDirectChildrenOnly).size();
+    for (const QString &name : calcButtonNames) {
+        QVERIFY2(!buttons.value(name).isNull(), qPrintable(name + " was deleted"));
+        QQuickItem *content = contentItemOf(buttons.value(name));
+        QVERIFY2(content, qPrintable(name + " lost its contentItem on reload"));
+        QVERIFY2(content->property("tint").isValid(),
+                 qPrintable(name + " content is no longer a Badge"));
+        const auto children =
+                buttons.value(name)->findChildren<QQuickItem *>(Qt::FindDirectChildrenOnly);
+        QCOMPARE(children.size(), freshChildCount);
+    }
+
+    // Digit buttons show the new default (green); operator buttons keep their override.
+    for (const QString &name : digitButtons)
+        QCOMPARE(contentItemOf(buttons.value(name))->property("tint").value<QColor>(),
+                 QColor::fromString("green"));
+    for (const QString &name : operatorButtons)
+        QCOMPARE(contentItemOf(buttons.value(name))->property("tint").value<QColor>(),
+                 QColor::fromString("#2CDE85"));
+}
+
+void tst_QQmlPreviewObjectPatch::reloadDeferredContentWithAlias()
+{
+    const QString moduleDir = dataDirectory() + QStringLiteral("/HotReloadAlias");
+    const QString patchedDir = dataDirectory() + QStringLiteral("/HotReloadAliasPatched");
+
+    QQuickWindow window;
+    window.resize(400, 400);
+
+    QQmlComponent numberPad(&engine, QUrl::fromLocalFile(moduleDir + "/NumberPad.qml"));
+    QVERIFY2(numberPad.isReady(), qPrintable(numberPad.errorString()));
+    std::unique_ptr<QObject> root(numberPad.create());
+    QVERIFY(root);
+
+    QQuickItem *rootItem = qobject_cast<QQuickItem *>(root.get());
+    QVERIFY(rootItem);
+    rootItem->setParentItem(window.contentItem());
+    QCoreApplication::processEvents();
+
+    const auto labelOf = [](QQuickItem *button) {
+        return button->property("label").value<QQuickItem *>();
+    };
+
+    const QStringList names = { QStringLiteral("d7"), QStringLiteral("d8"), QStringLiteral("d9"),
+                                QStringLiteral("d4") };
+    QHash<QString, QPointer<QQuickItem>> buttons;
+    for (const QString &name : names) {
+        QQuickItem *item = root->findChild<QQuickItem *>(name);
+        QVERIFY2(item, qPrintable(name));
+        // The alias resolves to the deferred content's child.
+        QVERIFY2(labelOf(item), qPrintable(name + " alias 'label' is null before reload"));
+        buttons.insert(name, item);
+    }
+
+    // A button whose aliased deferred content is customized from the using file.
+    QPointer<QQuickItem> ext(root->findChild<QQuickItem *>(QStringLiteral("ext")));
+    QVERIFY(ext);
+    QVERIFY(labelOf(ext));
+    QCOMPARE(labelOf(ext)->property("color").value<QColor>(), QColor::fromString("cyan"));
+
+    QQmlComponent calcOld(&engine, QUrl::fromLocalFile(moduleDir + "/CalculatorButton.qml"));
+    QVERIFY2(calcOld.isReady(), qPrintable(calcOld.errorString()));
+    QQmlComponent calcNew(&engine, QUrl::fromLocalFile(patchedDir + "/CalculatorButton.qml"));
+    QVERIFY2(calcNew.isReady(), qPrintable(calcNew.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&calcOld)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&calcNew)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QVERIFY(!objects.empty());
+    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+
+    // The alias into the recreated deferred content must resolve to the new child
+    // (not dangle), and that child must show the reloaded green color.
+    for (const QString &name : names) {
+        QVERIFY2(!buttons.value(name).isNull(), qPrintable(name + " was deleted"));
+        QQuickItem *label = labelOf(buttons.value(name));
+        QVERIFY2(label, qPrintable(name + " alias 'label' dangled after reload"));
+        QCOMPARE(label->property("color").value<QColor>(), QColor::fromString("green"));
+
+        // The alias target must be the actual, live contentItem child (the state
+        // that targets it via the same id must therefore work too).
+        QQuickItem *content = buttons.value(name)->property("contentItem").value<QQuickItem *>();
+        QVERIFY(content);
+        QCOMPARE(label->parentItem(), content);
+
+        // The recreated deferred content's binding must be live, not frozen: changing
+        // the source property propagates to the content.
+        buttons.value(name)->setProperty("textColor", QColor(Qt::red));
+        QCOMPARE(label->property("color").value<QColor>(), QColor(Qt::red));
+
+        // A state whose PropertyChanges targets the (recreated) deferred content by
+        // id must still apply after the reload.
+        QCOMPARE(label->property("scale").toReal(), 1.0);
+        buttons.value(name)->setProperty("active", true);
+        QCOMPARE(label->property("scale").toReal(), 0.5);
+        buttons.value(name)->setProperty("active", false);
+        QCOMPARE(label->property("scale").toReal(), 1.0);
+    }
+
+    // The external customization on the recreated deferred content must survive.
+    QVERIFY(!ext.isNull());
+    QQuickItem *extLabel = labelOf(ext);
+    QVERIFY2(extLabel, "ext alias 'label' dangled after reload");
+    QCOMPARE(extLabel->property("color").value<QColor>(), QColor::fromString("cyan"));
+}
+
+static int attachedAmount(QObject *object)
+{
+    auto *attached = qobject_cast<DeferredAttached *>(
+            qmlAttachedPropertiesObject<DeferredAttached>(object, false));
+    return attached ? attached->amount() : -42;
+}
+
+void tst_QQmlPreviewObjectPatch::reloadDeferredProperty_data()
+{
+    QTest::addColumn<QString>("moduleName");
+    QTest::addColumn<DeferredProbes>("probes");
+
+    const auto readProperty = [](const char *name) {
+        return [name](QObject *w) -> qreal { return w->property(name).toReal(); };
+    };
+
+    // A deferred value-type binding (amount: base) assigns a value rather than creating an
+    // object; the reloaded value must be re-applied.
+    QTest::newRow("value") << QStringLiteral("HotReloadDeferredValue")
+                           << DeferredProbes{ { readProperty("amount"), 100, 200, 333 } };
+
+    // A deferred attached-property binding (DeferredAttached.amount: base) that resolves to no
+    // QQmlPropertyData and lands in DeferredData under the key -1.
+    QTest::newRow("attached") << QStringLiteral("HotReloadDeferredAttached")
+                              << DeferredProbes{ { [](QObject *w) -> qreal {
+                                                      return attachedAmount(w);
+                                                  },
+                                                   100, 200, 333 } };
+
+    // A deferred generalized grouped-property binding (sibling.x: base) whose first chain part
+    // is an id. Like the attached case it lands under the key -1; resetting the old id-named
+    // binding on rebuild must not assert.
+    QTest::newRow("group") << QStringLiteral("HotReloadDeferredGroup")
+                           << DeferredProbes{ { [](QObject *w) -> qreal {
+                                                   QObject *sibling = w->findChild<QObject *>(
+                                                           QStringLiteral("sibling"));
+                                                   return sibling ? sibling->property("x").toReal()
+                                                                  : -42;
+                                               },
+                                                100, 200, 333 } };
+
+    // Like "group", but the binding's left-hand side is retargeted (self.px -> self.py). The
+    // recreated host applies the new binding (py); the old left-hand side (px) is never
+    // assigned and stays at its C++ default (0), before and after the reload.
+    QTest::newRow("groupRetargeted") << QStringLiteral("HotReloadDeferredGroupExt")
+                                     << DeferredProbes{ { readProperty("px"), 100, 0, 0 },
+                                                        { readProperty("py"), 0, 200, 333 } };
+}
+
+void tst_QQmlPreviewObjectPatch::reloadDeferredProperty()
+{
+    QFETCH(QString, moduleName);
+    QFETCH(DeferredProbes, probes);
+
+    const QString moduleDir = dataDirectory() + QStringLiteral("/") + moduleName;
+    const QString patchedDir = moduleDir + QStringLiteral("Patched");
+
+    QQmlComponent pad(&engine, QUrl::fromLocalFile(moduleDir + "/Pad.qml"));
+    QVERIFY2(pad.isReady(), qPrintable(pad.errorString()));
+    std::unique_ptr<QObject> root(pad.create());
+    QVERIFY(root);
+
+    const QStringList names = { QStringLiteral("w1"), QStringLiteral("w2"), QStringLiteral("w3") };
+    for (const QString &name : names) {
+        QObject *w = root->findChild<QObject *>(name);
+        QVERIFY2(w, qPrintable(name));
+        // The deferred binding ran during construction.
+        for (const DeferredProbe &probe : probes)
+            QCOMPARE(probe.read(w), probe.before);
+    }
+
+    QQmlComponent widgetOld(&engine, QUrl::fromLocalFile(moduleDir + "/Widget.qml"));
+    QVERIFY2(widgetOld.isReady(), qPrintable(widgetOld.errorString()));
+    QQmlComponent widgetNew(&engine, QUrl::fromLocalFile(patchedDir + "/Widget.qml"));
+    QVERIFY2(widgetNew.isReady(), qPrintable(widgetNew.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&widgetOld)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&widgetNew)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QVERIFY(!objects.empty());
+
+    // If the patched Widget adds a child, that structural change forces a full rebuild rather
+    // than an in-place patch, recreating each Widget through the normal creation path (which
+    // re-arms and re-executes the deferred binding). The value case has no such change and is
+    // patched in place. Either way the deferred binding must end up re-applied.
+    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+
+    // Re-find the (possibly recreated) widgets. The deferred binding must be re-applied to the
+    // reloaded value, and must stay live when the source property changes.
+    for (const QString &name : names) {
+        QObject *w = root->findChild<QObject *>(name);
+        QVERIFY2(w, qPrintable(name + " missing after reload"));
+        for (const DeferredProbe &probe : probes)
+            QCOMPARE(probe.read(w), probe.afterReload);
+        w->setProperty("base", 333);
+        for (const DeferredProbe &probe : probes)
+            QCOMPARE(probe.read(w), probe.afterLive);
+    }
+}
+
+void tst_QQmlPreviewObjectPatch::groupPropertyNameClashesWithId()
+{
+    const QString moduleDir = dataDirectory() + QStringLiteral("/HotReloadGroupIdClash");
+    const QString patchedDir = dataDirectory() + QStringLiteral("/HotReloadGroupIdClashPatched");
+
+    QQmlComponent pad(&engine, QUrl::fromLocalFile(moduleDir + "/Pad.qml"));
+    QVERIFY2(pad.isReady(), qPrintable(pad.errorString()));
+    std::unique_ptr<QObject> root(pad.create());
+    QVERIFY(root);
+
+    const QStringList names = { QStringLiteral("w1"), QStringLiteral("w2"), QStringLiteral("w3") };
+    QHash<QString, QPointer<QObject>> widgets;
+    for (const QString &name : names) {
+        QObject *w = root->findChild<QObject *>(name);
+        QVERIFY2(w, qPrintable(name));
+        // "spot.x: 100" set the x of the host's QPoint "spot" property, not the id object.
+        QCOMPARE(w->property("spot").toPoint().x(), 100);
+        QObject *spotItem = w->findChild<QObject *>(QStringLiteral("spotItem"));
+        QVERIFY(spotItem);
+        QCOMPARE(spotItem->property("x").toReal(), 7);
+        widgets.insert(name, w);
+    }
+
+    QQmlComponent widgetOld(&engine, QUrl::fromLocalFile(moduleDir + "/Widget.qml"));
+    QVERIFY2(widgetOld.isReady(), qPrintable(widgetOld.errorString()));
+    QQmlComponent widgetNew(&engine, QUrl::fromLocalFile(patchedDir + "/Widget.qml"));
+    QVERIFY2(widgetNew.isReady(), qPrintable(widgetNew.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&widgetOld)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&widgetNew)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QVERIFY(!objects.empty());
+    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+
+    for (const QString &name : names) {
+        QVERIFY2(!widgets.value(name).isNull(), qPrintable(name + " was deleted"));
+        QObject *w = widgets.value(name);
+
+        // The patched "spot.x: 200" must land on the host's value property...
+        QCOMPARE(w->property("spot").toPoint().x(), 200);
+        // ... and the object with id "spot" must be untouched (its own x stays 7).
+        QObject *spotItem = w->findChild<QObject *>(QStringLiteral("spotItem"));
+        QVERIFY(spotItem);
+        QCOMPARE(spotItem->property("x").toReal(), 7);
     }
 }
 

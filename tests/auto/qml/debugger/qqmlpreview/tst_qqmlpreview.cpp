@@ -99,6 +99,10 @@ private slots:
     void inPlaceObjectTreeRemoveChild();
     void inPlaceObjectTreeAddChild();
     void inPlaceChildComponentMultipleEdits();
+    // Repeated edits of an extra-file component whose contentItem is a deferred
+    // property (a Control): each reload must recreate the deferred content instead
+    // of dropping it (which would make the control render nothing).
+    void inPlaceDeferredChildComponentMultipleEdits();
     void inPlaceLazyComponentUpdateBeforeInstantiation();
     void inPlaceRequiredPropertyDelegateCrash();
 
@@ -1409,6 +1413,47 @@ void tst_QQmlPreview::inPlaceChildComponentMultipleEdits()
 
     QVERIFY2(m_process->state() != QProcess::NotRunning,
              "Process crashed during repeated child component edits");
+
+    m_process->stop();
+    QTRY_COMPARE(m_client->state(), QQmlDebugClient::NotConnected);
+    QVERIFY(m_serviceErrors.isEmpty());
+}
+
+void tst_QQmlPreview::inPlaceDeferredChildComponentMultipleEdits()
+{
+    const QString file("inplace_deferred_test/Main.qml");
+    const QString childFile("inplace_deferred_test/ChildButton.qml");
+    QCOMPARE(startQmlProcess(file), ConnectSuccess);
+    QVERIFY(m_client);
+    QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
+
+    enableInPlaceUpdates();
+    verifyProcessOutputContains("deferred_test content=initial");
+
+    // Edit 1: label "initial" → "first"
+    QByteArray contents = readAndModify(childFile, { { "\"initial\"", "\"first\"" } });
+    QVERIFY(!contents.isEmpty());
+    serveFile(testFile(childFile), contents);
+    m_client->triggerLoad(testFileUrl(childFile));
+    verifyProcessOutputContains("deferred_test content=first");
+
+    // Edit 2: label "first" → "second"
+    contents.replace("\"first\"", "\"second\"");
+    serveFile(testFile(childFile), contents);
+    m_client->triggerLoad(testFileUrl(childFile));
+    verifyProcessOutputContains("deferred_test content=second");
+
+    // Edit 3: label "second" → "third"
+    contents.replace("\"second\"", "\"third\"");
+    serveFile(testFile(childFile), contents);
+    m_client->triggerLoad(testFileUrl(childFile));
+    verifyProcessOutputContains("deferred_test content=third");
+
+    // The deferred content must never be dropped along the way.
+    QVERIFY2(!m_process->output().contains("deferred_test content=NULL"),
+             "The Control's deferred contentItem was lost during a reload");
+    QVERIFY2(m_process->state() != QProcess::NotRunning,
+             "Process crashed during repeated deferred child component edits");
 
     m_process->stop();
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::NotConnected);
