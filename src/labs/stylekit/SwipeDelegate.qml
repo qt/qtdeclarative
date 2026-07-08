@@ -8,7 +8,7 @@ import QtQuick.Templates as T
 import Qt.labs.StyleKit
 import Qt.labs.StyleKit.impl
 
-T.RadioDelegate {
+T.SwipeDelegate {
     id: control
 
     implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
@@ -17,10 +17,10 @@ T.RadioDelegate {
                              implicitContentHeight + topPadding + bottomPadding,
                              implicitIndicatorHeight + topPadding + bottomPadding)
 
-    leftPadding: radioDelegateLayout.padding.left
-    rightPadding: radioDelegateLayout.padding.right
-    topPadding: radioDelegateLayout.padding.top
-    bottomPadding: radioDelegateLayout.padding.bottom
+    leftPadding: styleReader.leftPadding
+    rightPadding: styleReader.rightPadding
+    topPadding: styleReader.topPadding
+    bottomPadding: styleReader.bottomPadding
 
     leftInset: styleReader.background.leftMargin
     rightInset: styleReader.background.rightMargin
@@ -38,7 +38,7 @@ T.RadioDelegate {
     StyleVariation.controlType: styleReader.controlType
     StyleReader {
         id: styleReader
-        controlType: StyleReader.RadioDelegate
+        controlType: StyleReader.SwipeDelegate
         enabled: control.enabled
         focused: control.activeFocus
         checked: control.checked
@@ -48,32 +48,11 @@ T.RadioDelegate {
         palette: control.palette
     }
 
-    StyleKitLayout {
-        id: radioDelegateLayout
-        container: control
-        contentMargins {
-            left: styleReader.leftPadding
-            right: styleReader.rightPadding
-            top: styleReader.topPadding
-            bottom: styleReader.bottomPadding
+    swipe.transition: Transition {
+        SmoothedAnimation {
+            velocity: 3
+            easing.type: Easing.InOutCubic
         }
-        layoutItems: [
-            // We don't lay out the contentItem here because it occupies the remaining space
-            // as calculated by control internal logic.
-            StyleKitLayoutItem {
-                id: indicatorItem
-                item: control.indicator
-                alignment: styleReader.indicator.alignment
-                margins.left: styleReader.indicator.leftMargin
-                margins.right: styleReader.indicator.rightMargin
-                margins.top: styleReader.indicator.topMargin
-                margins.bottom: styleReader.indicator.bottomMargin
-                fillWidth: styleReader.indicator.fillWidth
-                fillHeight: styleReader.indicator.fillHeight
-            }
-        ]
-        spacing: styleReader.spacing
-        mirrored: control.mirrored
     }
 
     contentItem: IconLabel {
@@ -89,15 +68,6 @@ T.RadioDelegate {
         bottomPadding: styleReader.text.bottomPadding
         leftPadding: styleReader.text.leftPadding
         rightPadding: styleReader.text.rightPadding
-    }
-
-    indicator: IndicatorDelegate {
-        quickControl: control
-        indicatorStyle: styleReader.indicator
-        x: indicatorItem.x
-        y: indicatorItem.y
-        width: indicatorItem.width
-        height: indicatorItem.height
     }
 
     background: BackgroundDelegate {

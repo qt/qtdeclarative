@@ -88,6 +88,7 @@ QT_BEGIN_NAMESPACE
     \value StyleReader.SearchField    \l {SearchField}
     \value StyleReader.Slider         \l {Slider}
     \value StyleReader.SpinBox        \l {SpinBox}
+    \value StyleReader.SwipeDelegate  \l {SwipeDelegate}
     \value StyleReader.Switch         \l {Switch}
     \value StyleReader.SwitchDelegate \l {SwitchDelegate}
     \value StyleReader.TabBar         \l {TabBar}

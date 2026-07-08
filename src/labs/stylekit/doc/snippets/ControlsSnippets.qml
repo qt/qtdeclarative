@@ -578,6 +578,18 @@ ApplicationWindow {
         }
         //! [scrollView]
 
+        //! [swipeDelegate]
+        swipeDelegate {
+            text.alignment: Qt.AlignVCenter | Qt.AlignLeft
+            background {
+                radius: 0
+                color: "white"
+                border.width: 0
+            }
+            hovered.background.color: "#f0f0f0"
+        }
+        //! [swipeDelegate]
+
         //! [switchControl]
         switchControl {
             // For a switch control, we typically don't want a background, only an indicator with a handle
