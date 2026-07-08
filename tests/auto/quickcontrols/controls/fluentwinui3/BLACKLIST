@@ -20,10 +20,6 @@ android
 android
 [ComboBox::test_modelReset]
 android
-[Popup::test_popupOverlayCenterIn]
-android
-[Popup::test_resetSize]
-android
 [RangeSlider::test_overlappingHandles]
 android
 [SpinBox::test_editable_doubleSpinBox]
