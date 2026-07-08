@@ -496,6 +496,18 @@ void BindingPatchContext::restoreExternalState()
     }
 }
 
+// The object referenced by the id "name" in the context the object belongs to, or nullptr if
+// there is no such id. Used to resolve the first chain part of a generalized grouped property
+// ("someId.x": here name == "someId").
+static QObject *idTarget(QObject *object, const QString &name)
+{
+    const QQmlData *ddata = QQmlData::get(object);
+    Q_ASSERT(ddata);
+    QQmlContextData *context = ddata->ownContext ? ddata->ownContext.data() : ddata->context;
+    Q_ASSERT(context);
+    return context->asQQmlContext()->objectForName(name);
+}
+
 BindingPatchContext *
 BindingPatchContext::childContext(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit,
                                   const QV4::CompiledData::Binding *binding,
@@ -511,7 +523,25 @@ BindingPatchContext::childContext(const QQmlRefPointer<QV4::ExecutableCompilatio
     if (!seenChildren)
         return nullptr;
 
-    if (QObject *groupObject = m_object->property(name.toUtf8()).value<QObject *>()) {
+    const QByteArray nameUtf8 = name.toUtf8();
+    QObject *groupObject = nullptr;
+    if (m_object->metaObject()->indexOfProperty(nameUtf8.constData()) >= 0) {
+        // "name" is a property of m_object, so it always wins over an id of the same name. A
+        // QObject-valued property recurses into that object; a value-type property
+        // ("font.pixelSize") uses a prefix on m_object (target stays null).
+        groupObject = m_object->property(nameUtf8).value<QObject *>();
+    } else if (binding->hasFlag(QV4::CompiledData::Binding::IsDeferredBinding)) {
+        // Not a property of m_object: a deferred group binding is a generalized grouped
+        // property whose first chain part is an id ("someId.x"), targeting an external object.
+        //
+        // This is a deferred property, so it's not actually guaranteed to do what we think
+        // it does. However, if we actually find the expected object and if we can patch its
+        // property, that is it's current value is the one we'd expect from the old binding, we
+        // assume we're guessing right.
+        groupObject = idTarget(m_object, name);
+    }
+
+    if (groupObject) {
         if (seenChildren->hasSeen(groupObject))
             return nullptr;
         child = std::make_unique<BindingPatchContext>(groupObject, unit,
@@ -785,7 +815,19 @@ void BindingPatchContext::resetBinding(
 
     QQmlProperty prop(m_object, prefix + name);
     QQmlPropertyIndex propIdx = QQmlPropertyPrivate::propertyIndex(prop);
-    Q_ASSERT(propIdx.coreIndex() >= 0);
+    if (propIdx.coreIndex() < 0) {
+        // A generalized grouped property whose first chain part is an id (e.g. "someId.x")
+        // does not name a property of m_object; it targets an external object resolved by id.
+        // Reset the sub-bindings on that target.
+        Q_ASSERT(binding->isGroupProperty());
+        if (BindingPatchContext *child = childContext(oldUnit, binding, nullptr)) {
+            child->resetBindings(
+                    oldUnit, binding->value.objectIndex, newUnit,
+                    reboundSubObjectIndex(rebound, name,
+                                          QV4::CompiledData::Binding::Type_GroupProperty));
+        }
+        return;
+    }
 
     const QMetaType type = prop.propertyMetaType();
 

@@ -78,6 +78,29 @@ hasChangedNonCompositeBaseType(const QQmlRefPointer<QV4::ExecutableCompilationUn
             != nonCompositeBaseType(newTypeRef->typePropertyCache());
 }
 
+// reset() + repopulateBindings() cannot faithfully reproduce some components in place,
+// because either:
+//  - Its non-composite (C++) base type changed: the reused QObject is still an instance of the old
+//    class (see hasChangedNonCompositeBaseType).
+//  - It carries deferred bindings. We cannot re-install those because their handling is in the
+//    type's discretion.
+// Fore those return false here. Otherwise return true.
+static bool
+canRebuildComponentRootInPlace(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit,
+                                  const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit,
+                                  int objectIndex)
+{
+    // An index out of range in the new CU is obsolete: rebuildObject() skips it and the remap loop
+    // retires it. There is nothing to recreate from an enclosing root.
+    if (objectIndex >= newUnit->objectCount())
+        return true;
+
+    if (newUnit->objectAt(objectIndex)->hasFlag(QV4::CompiledData::Object::HasDeferredBindings))
+        return false;
+
+    return !hasChangedNonCompositeBaseType(oldUnit, newUnit, objectIndex);
+}
+
 // Re-resolve the object's precomputed binding-target table against its relinked property cache.
 static void refreshBindingPropertyData(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &cu,
                                        int objectIndex, const QQmlPropertyCache::ConstPtr &cache)
@@ -595,9 +618,9 @@ static void remapObjectsToNewUnit(const std::vector<QObject *> &objects,
 }
 
 // If the object is instantiated as a component root of the old unit (its document root or an
-// inline-component root) whose own non-composite base type differs in the new unit, return the
-// index of the changed element; otherwise return -1.
-static int changedBaseComponentRootIndex(
+// inline-component root) whose own non-composite base type differs in the new unit or which
+// carries deferred bindings, return false. Otherwise return true.
+static bool isRebuildableComponentRoot(
         QObject *object,
         const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit,
         const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit)
@@ -608,20 +631,18 @@ static int changedBaseComponentRootIndex(
         const auto flags = oldUnit->objectAt(index)->flags();
         if (index != 0 && !(flags & QV4::CompiledData::Object::IsInlineComponentRoot))
             continue;
-        if (index < newUnit->objectCount()
-            && hasChangedNonCompositeBaseType(oldUnit, newUnit, index)) {
-            return index;
-        }
+        if (!canRebuildComponentRootInPlace(oldUnit, newUnit, index))
+            return false;
     }
-    return -1;
+    return true;
 }
 
-// A component root whose non-composite base type changed cannot be rebuilt in place. Instead we
-// travel the scope hierarchy upwards to the enclosing component root that instantiates it and
-// rebuild that: its reset() + repopulateBindings() recreates the problematic object from scratch,
-// as a fresh QObject of the new C++ class. If that enclosing root's base type changed too (e.g.
-// because several elements were edited at once), we keep travelling up. Returns the object to
-// rebuild, or nullptr if we reach the root scope without finding a rebuildable enclosing root.
+// A component root whose non-composite base type changed or that carries deferred bindings cannot
+// be rebuilt in place. Instead we travel the scope hierarchy upwards to the enclosing component
+// root that instantiates it and rebuild that: its reset() + repopulateBindings() recreates the
+// problematic object from scratch, as a fresh QObject. If that enclosing root is problematic, too,
+// we keep travelling up. Returns the object to rebuild, or nullptr if we reach the root scope
+// without finding a rebuildable enclosing root.
 static QObject *outerRebuildTarget(
         QObject *object,
         const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit,
@@ -638,7 +659,7 @@ static QObject *outerRebuildTarget(
         if (!outer || outer == object)
             return nullptr;
 
-        if (changedBaseComponentRootIndex(outer, oldUnit, newUnit) == -1)
+        if (isRebuildableComponentRoot(outer, oldUnit, newUnit))
             return outer;
 
         object = outer;
@@ -711,9 +732,10 @@ PatchResult applyDiff(std::vector<QObject *> &objects,
     // full reset() + repopulateBindings() that cascades down the entire instantiation (and
     // through its composite base levels), recreating every object below it. Since every
     // non-root object is, by construction, a descendant of a component root, this is
-    // sufficient. A component root whose own C++ base type changed cannot be rebuilt in place
-    // (see below): there we rebuild the enclosing component root instead, which may live in a
-    // different compilation unit and recreates the root as a fresh object of the new C++ class.
+    // sufficient. A component root that cannot be rebuilt in place - its C++ base type changed, or
+    // it carries deferred bindings (see below) - is handled by rebuilding the enclosing component
+    // root instead, which may live in a different compilation unit and recreates the root as a
+    // fresh object (of the new C++ class, with its deferred bindings armed and executed).
     //
     // A consequence worth remembering: because every live object is recreated, every
     // QQmlJavaScriptExpression on those objects is recreated too, freshly bound to newUnit. By
@@ -750,22 +772,19 @@ PatchResult applyDiff(std::vector<QObject *> &objects,
             if (index != 0 && !(flags & QV4::CompiledData::Object::IsInlineComponentRoot))
                 continue;
 
-            // A component root whose own non-composite (C++) base type changed cannot be rebuilt
-            // in place: reset() + repopulateBindings() reuses the same QObject, which is still of
-            // the old C++ class. Rebuild the enclosing component root instead, so that the object
-            // is recreated from scratch as an instance of the new C++ class. Travelling up the
-            // scope hierarchy this way only fails, with a full reload, once we hit the root scope.
-            // (If the index no longer exists in the new CU the root is obsolete; rebuildObject()
-            // skips it and the remap loop below retires it.)
-            if (index < newUnit->objectCount()
-                && hasChangedNonCompositeBaseType(oldUnit, newUnit, index)) {
+            // A component root whose own non-composite base type changed or which carries deferred
+            // bidnings cannot be rebuilt in place. Rebuild the enclosing component root instead, so
+            // that the object is recreated from scratch as an instance of the new C++ class with
+            // new deferred bindings. Travelling up the scope hierarchy this way only fails once we
+            // hit the root scope.
+            if (!canRebuildComponentRootInPlace(oldUnit, newUnit, index)) {
                 QObject *outer = outerRebuildTarget(object, oldUnit, newUnit);
                 if (!outer)
                     return PatchResult::Failed;
 
                 // The enclosing root may recreate the object from a different compilation unit
                 // (the object was instantiated as an external type). Point that unit at newUnit
-                // first, so the recreated object gets the new C++ base type.
+                // first, so the recreated object gets the new definition.
                 if (!redirectedTypes) {
                     redirectResolvedTypeReferences(newUnit->engine, oldUnit->baseCompilationUnit(),
                                                    newUnit->baseCompilationUnit());
