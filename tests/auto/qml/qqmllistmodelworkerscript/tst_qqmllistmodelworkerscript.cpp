@@ -75,6 +75,7 @@ private slots:
     void property_changes_worker_data();
     void worker_sync_data();
     void worker_sync();
+    void worker_sync_prepend();
     void worker_remove_element_data();
     void worker_remove_element();
     void worker_remove_list_data();
@@ -667,6 +668,33 @@ void tst_qqmllistmodelworkerscript::worker_sync()
     QCOMPARE(childModel->count(), 3);
     QCOMPARE(spyModelInserted.size(), 0);
     QCOMPARE(spyChildInserted.size(), 2);
+
+    item.reset();
+    qApp->processEvents();
+}
+
+
+void tst_qqmllistmodelworkerscript::worker_sync_prepend()
+{
+    // Inserting in front of existing rows makes ListModel::sync() compute a move whose
+    // destination equals the (stale) source row. beginMoveRows() rejects such a no-op move
+    // and endMoveRows() must not be called for it.
+    QQmlListModel model;
+    QQmlEngine eng;
+    QQmlComponent component(&eng, testFileUrl("workersync.qml"));
+    std::unique_ptr<QQuickItem> item = createWorkerTest(&eng, &component, &model);
+    QVERIFY(item);
+
+    QVERIFY(QMetaObject::invokeMethod(item.get(), "addItem0"));
+    QCOMPARE(model.count(), 2);
+
+    QVERIFY(QMetaObject::invokeMethod(item.get(), "prependViaWorker"));
+    waitForWorker(item.get());
+    QCOMPARE(model.count(), 2);
+
+    QVERIFY(QMetaObject::invokeMethod(item.get(), "doSync"));
+    waitForWorker(item.get());
+    QCOMPARE(model.count(), 3);
 
     item.reset();
     qApp->processEvents();

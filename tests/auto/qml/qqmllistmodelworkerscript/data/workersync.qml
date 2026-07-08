@@ -24,6 +24,12 @@ Item {
     worker.sendMessage(msg);
   }
 
+  function prependViaWorker() {
+    done = false
+    var msg = { 'action': 'prepend', 'model': model }
+    worker.sendMessage(msg);
+  }
+
   function doSync() {
     done = false
     var msg = { 'action': 'dosync', 'model': model }
