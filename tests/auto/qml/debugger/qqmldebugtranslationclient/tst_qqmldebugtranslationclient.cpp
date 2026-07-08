@@ -8,7 +8,6 @@
 #include <qqmldebugtranslationservice.h>
 
 #include <private/qqmldebugclient_p.h>
-#include <private/qqmlpreviewclient_p.h>
 #include <private/qqmldebugconnection_p.h>
 #include <private/qqmldebugtranslationprotocol_p.h>
 #include <private/qqmldebugconnector_p.h>
@@ -123,16 +122,11 @@ private:
 
     QList<QQmlDebugClient *> createClients() override
     {
-        m_previewClient = new QQmlPreviewClient(m_connection);
-        // TODO create a simple client here instead of using the will be deleted one
         m_debugTranslationClient = new QQmlDebugTranslationClient(m_connection);
         return {m_debugTranslationClient};
-        //return {m_previewClient};
-        //return {m_previewClient, m_debugTranslationClient};
     }
 
     QPointer<QQmlDebugTranslationClient> m_debugTranslationClient;
-    QPointer<QQmlPreviewClient> m_previewClient;
     qsizetype m_currentOutputLine = 0;
     bool m_enableClientOutput = true;
 };

@@ -17,8 +17,12 @@ QT_BEGIN_NAMESPACE
 QQmlPreviewClient::QQmlPreviewClient(QQmlDebugConnection *connection)
     : QQmlDebugClient(*(new QQmlPreviewClientPrivate(connection)))
 {
-    connect(this, &QQmlPreviewClient::confirmation, this,
-            [this](const QQmlPreviewClient::Settings &) { configureEventReplay(); });
+    Q_D(QQmlPreviewClient);
+    connect(&d->replayClient, &QQmlDebugClient::stateChanged, this,
+            [this](State replayClientState) {
+                if (replayClientState == Enabled)
+                    configureEventReplay();
+            });
 }
 
 void QQmlPreviewClient::messageReceived(const QByteArray &message)
@@ -124,89 +128,52 @@ void QQmlPreviewClient::triggerAnimationSpeed(float factor)
 
 void QQmlPreviewClient::configureEventReplay()
 {
-    Q_ASSERT(connection());
-    if (!d_func()->m_recordingData) {
-        d_func()->m_recordingData =
-                std::make_unique<QQmlPreviewClientPrivate::PreviewRecordingData>(connection());
-    }
+    Q_D(QQmlPreviewClient);
 
-    recordClient().setFlushInterval(1);
-    recordClient().setRecording(true);
-    auto &timer = replayTimer();
-    timer.setInterval(100);
-    connect(&timer, &QTimer::timeout, this, [this, &timer]() {
-        if (eventReceiver().numLoadedEvents() < numExpectedEvents())
+    Q_ASSERT(connection());
+    Q_ASSERT(d->replayClient.state() == Enabled);
+
+    d->recordClient.setFlushInterval(1);
+    d->recordClient.setRecording(true);
+    d->replayTimer.setInterval(100);
+    connect(&d->replayTimer, &QTimer::timeout, this, [this, d]() {
+        if (d->eventReceiver.numLoadedEvents() < d->m_numExpectedEvents)
             return;
         triggerAnimationSpeed(1);
-        timer.stop();
+        d->replayTimer.stop();
     });
-
-    // We want to start the replay as soon as possible after the configuration is confirmed.
-    if (eventReceiver().numLoadedEvents() > 0 && replayClient().state() == Enabled) {
-        replayEventsForUrl(QUrl());
-    }
 }
 
-void QQmlPreviewClient::replayEventsForUrl(const QUrl &url)
-{
-    const auto events = eventReceiver().events();
-    const auto types = eventReceiver().eventTypes();
-    triggerAnimationSpeed(1000);
-    triggerLoad(url);
-    for (const auto &event : events)
-        replayClient().sendEvent(types[event.typeIndex()], event);
-    eventReceiver().clear();
-    replayTimer().start();
-}
-
-void QQmlPreviewClient::loadUrl(const QUrl &url)
-{
-    if (!d_func()->m_recordingData)
-        return triggerLoad(url);
-
-    setNumExpectedEvents(eventReceiver().numLoadedEvents());
-    if (numExpectedEvents() > 0 && replayClient().state() == Enabled) {
-        replayEventsForUrl(url);
-    } else {
-        eventReceiver().clear();
-        triggerLoad(url);
-    }
-}
-
-void QQmlPreviewClient::setNumExpectedEvents(qsizetype eventCount)
+void QQmlPreviewClient::replayEvents()
 {
     Q_D(QQmlPreviewClient);
-    d->m_numExpectedEvents = eventCount;
+
+    const auto events = d->eventReceiver.events();
+    if (events.isEmpty() || d->replayClient.state() != Enabled) {
+        d->eventReceiver.clear();
+        return;
+    }
+
+    const auto types = d->eventReceiver.eventTypes();
+
+    // The replayed events will be recorded again as they are processed. Remember
+    // how many we expect so that replayTimer can restore the animation speed
+    // once they have all arrived.
+    d->m_numExpectedEvents = events.size();
+
+    triggerAnimationSpeed(1000);
+    for (const auto &event : events)
+        d->replayClient.sendEvent(types[event.typeIndex()], event);
+
+    d->eventReceiver.clear();
+    d->replayTimer.start();
 }
 
-qsizetype QQmlPreviewClient::numExpectedEvents() const
+void QQmlPreviewClient::replayEvent(const QQmlProfilerEventType &type,
+                                    const QQmlProfilerEvent &event)
 {
-    Q_D(const QQmlPreviewClient);
-    return d->m_numExpectedEvents;
-}
-
-QTimer &QQmlPreviewClient::replayTimer() const
-{
-    Q_D(const QQmlPreviewClient);
-    return d->m_recordingData->replayTimer;
-}
-
-QQmlProfilerClient &QQmlPreviewClient::recordClient() const
-{
-    Q_D(const QQmlPreviewClient);
-    return d->m_recordingData->recordClient;
-}
-
-QQuickEventReplayClient &QQmlPreviewClient::replayClient() const
-{
-    Q_D(const QQmlPreviewClient);
-    return d->m_recordingData->replayClient;
-}
-
-QQmlProfilerQtdWriter &QQmlPreviewClient::eventReceiver() const
-{
-    Q_D(const QQmlPreviewClient);
-    return d->m_recordingData->eventReceiver;
+    Q_D(QQmlPreviewClient);
+    d->replayClient.sendEvent(type, event);
 }
 
 QT_END_NAMESPACE

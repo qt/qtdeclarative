@@ -79,26 +79,18 @@ public:
     void triggerZoom(float factor);
     void triggerAnimationSpeed(float factor);
 
-    void loadUrl(const QUrl &url);
-    void replayEventsForUrl(const QUrl &url);
+    void replayEvents();
+    void replayEvent(const QQmlProfilerEventType &type, const QQmlProfilerEvent &event);
 
 Q_SIGNALS:
     void request(const QString &path);
     void error(const QString &message);
-    void fps(const FpsInfo &info);
-    void confirmation(const Settings &settings);
+    void fps(const QQmlPreviewClient::FpsInfo &info);
+    void confirmation(const QQmlPreviewClient::Settings &settings);
     void hotReloadFailure(const QString &reason);
 
 private:
     void configureEventReplay();
-
-    void setNumExpectedEvents(qsizetype);
-    qsizetype numExpectedEvents() const;
-
-    QTimer &replayTimer() const;
-    QQmlProfilerClient &recordClient() const;
-    QQuickEventReplayClient &replayClient() const;
-    QQmlProfilerQtdWriter &eventReceiver() const;
 };
 
 QT_END_NAMESPACE

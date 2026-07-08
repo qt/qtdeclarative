@@ -8,7 +8,6 @@
 #include <private/qqmldebugconnection_p.h>
 #include <private/qqmlpreviewclient_p.h>
 #include <private/qqmlprofilerclient_p.h>
-#include <private/qqmlprofilerqtdwriter_p.h>
 #include <private/qquickeventreplayclient_p.h>
 
 #include <QtTest/qtest.h>
@@ -42,9 +41,6 @@ private:
     void verifyProcessOutputContains(const QString &string) const;
 
     QPointer<QQmlPreviewClient> m_client;
-    QPointer<QQmlProfilerQtdWriter> m_qtdWriter;
-    QPointer<QQmlProfilerClient> m_profiler;
-    QPointer<QQuickEventReplayClient> m_replay;
 
     QStringList m_files;
     QStringList m_filesNotFound;
@@ -71,6 +67,7 @@ private slots:
     void qqcStyleSelection();
     void singleton();
     void handleInput();
+    void replayEventsWithoutHotReload();
     void setAnimationSpeed();
     void createDirectory();
 
@@ -159,10 +156,10 @@ void tst_QQmlPreview::serveFile(const QString &path, const QByteArray &contents)
 
 QList<QQmlDebugClient *> tst_QQmlPreview::createClients()
 {
+    // The preview client owns the extra clients it needs (the CanvasFrameRate
+    // recorder and the EventReplay client). Registering them here as well would
+    // add duplicate clients for the same services on the connection.
     m_client = new QQmlPreviewClient(m_connection);
-    m_qtdWriter = new QQmlProfilerQtdWriter(m_connection);
-    m_profiler = new QQmlProfilerClient(m_connection, m_qtdWriter, 1 << ProfileInputEvents);
-    m_replay = new QQuickEventReplayClient(m_connection);
 
     QObject::connect(m_client.data(), &QQmlPreviewClient::request, this, &tst_QQmlPreview::serveRequest);
     QObject::connect(m_client.data(), &QQmlPreviewClient::error, this, [this](const QString &error) {
@@ -181,7 +178,7 @@ QList<QQmlDebugClient *> tst_QQmlPreview::createClients()
         m_hotReloadFailureReasons.append(reason);
     });
 
-    return QList<QQmlDebugClient *>({m_client, m_profiler, m_replay});
+    return QList<QQmlDebugClient *>({m_client});
 }
 
 void tst_QQmlPreview::verifyProcessOutputContains(const QString &string) const
@@ -590,7 +587,7 @@ void tst_QQmlPreview::handleInput()
     }};
 
     for (const QQmlProfilerEvent &event : clickEvents)
-        m_replay->sendEvent(mouseType, event);
+        m_client->replayEvent(mouseType, event);
 
     verifyProcessOutputContains("aaa #ff0000");
 
@@ -603,9 +600,63 @@ void tst_QQmlPreview::handleInput()
     verifyProcessOutputContains("bbb #0000ff");
 
     for (const QQmlProfilerEvent &event : clickEvents)
-        m_replay->sendEvent(mouseType, event);
+        m_client->replayEvent(mouseType, event);
 
     verifyProcessOutputContains("bbb #ff0000");
+
+    m_process->stop();
+    QTRY_COMPARE(m_client->state(), QQmlDebugClient::NotConnected);
+    QVERIFY(m_serviceErrors.isEmpty());
+}
+
+// The preview client owns and enables its own EventReplay and CanvasFrameRate
+// clients as soon as the connection comes up, so input events can be replayed
+// even when in-place (hot reload) updates were never enabled. This exercises
+// the "configure the event replay also if we're not in hot reload mode"
+// restructuring: no separate clients are registered by the test, and
+// replayEvents() must never trigger a LoadUrl on its own (the old
+// loadUrl()/replayEventsForUrl() path did, which reloaded the scene and
+// discarded the very state the replayed input had built up).
+void tst_QQmlPreview::replayEventsWithoutHotReload()
+{
+    const QString file("replaymarker.qml");
+    QCOMPARE(startQmlProcess(file), ConnectSuccess);
+    QVERIFY(m_client);
+    QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
+
+    // Deliberately no enableInPlaceUpdates() here: plain reload mode.
+    m_client->triggerLoad(testFileUrl(file));
+    QTRY_VERIFY(m_files.contains(testFile(file)));
+    verifyProcessOutputContains("aaa #0000ff");
+
+    const QQmlProfilerEventType mouseType {Event, MaximumRangeType, Mouse};
+    const QList<QQmlProfilerEvent> clickEvents {{
+        0ll, 0, QList<int>({InputMouseMove, 12, 13})
+    }, {
+        1ll, 0, QList<int>({InputMousePress, Qt::LeftButton, Qt::LeftButton})
+    }, {
+        2ll, 0, QList<int>({InputMouseRelease, Qt::LeftButton, Qt::NoButton})
+    }};
+
+    // Replaying input through the client-owned EventReplay client works without
+    // ever enabling in-place updates.
+    for (const QQmlProfilerEvent &event : clickEvents)
+        m_client->replayEvent(mouseType, event);
+    verifyProcessOutputContains("aaa #ff0000");
+
+    // replayEvents() must not trigger a LoadUrl by itself. The old
+    // loadUrl()/replayEventsForUrl() path reloaded the scene; the current one
+    // does not. A reload would instantiate the scene again and emit another
+    // "scene loaded" line, so that count must stay constant across the call.
+    const int loadsBefore = m_process->output().count("scene loaded");
+    const qsizetype outputLen = m_process->output().size();
+    m_client->replayEvents();
+
+    // Give the process time to (wrongly) reload and emit several more heartbeat
+    // lines from the 200 ms Timer.
+    QTRY_VERIFY_WITH_TIMEOUT(m_process->output().mid(outputLen).count("aaa #") >= 3, 5000);
+    QCOMPARE(m_process->output().count("scene loaded"), loadsBefore);
+    QVERIFY(m_serviceErrors.isEmpty());
 
     m_process->stop();
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::NotConnected);

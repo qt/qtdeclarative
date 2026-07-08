@@ -30,6 +30,8 @@ private slots:
     void loadFromModuleFileUpdate();
     void settingConfiguration();
     void settingConfirmation();
+    void hotReloadStaysInPlace();
+    void inputNotReplayedOnHotReload();
     void hotReloadFailure();
 
 private:
@@ -89,6 +91,49 @@ static QByteArray makeQmlContent(const QString &marker)
            running: true
            repeat: true
            onTriggered: console.log("%1")
+        })").arg(marker).toUtf8();
+}
+
+// A scene with a click counter and a built-in synthetic input source: once the
+// window is active it injects exactly one mouse click (recorded by the preview
+// tool's input recorder). didClick is preserved across in-place updates, so the
+// synthetic click never fires again on hot reload - any further increment can
+// only come from the tool replaying the recorded event.
+static QByteArray makeCounterQml(const QString &marker)
+{
+    return QLatin1String(R"(
+        import QtQuick
+        import QtTest
+        Window {
+            id: window
+            visible: true
+            width: 100
+            height: 100
+            property int counter: 0
+            property bool didClick: false
+            property string marker: "%1"
+            Component.onCompleted: window.requestActivate()
+            Timer {
+                interval: 50
+                repeat: false
+                running: window.active && !window.didClick
+                onTriggered: {
+                    window.didClick = true;
+                    event.mouseClick(area, 12, 13, Qt.LeftButton, Qt.NoModifier, -1);
+                }
+            }
+            Timer {
+                interval: 100
+                repeat: true
+                running: true
+                onTriggered: console.log(window.marker, "count=" + window.counter)
+            }
+            MouseArea {
+                id: area
+                anchors.fill: parent
+                onClicked: window.counter = window.counter + 1
+            }
+            TestEvent { id: event }
         })").arg(marker).toUtf8();
 }
 
@@ -349,6 +394,87 @@ void tst_QmlPreviewTool::settingConfirmation()
     startPreview({ QLatin1String("--verbose"), m_qmlRuntimePath, qmlFile });
     QVERIFY2(waitForOutput(QLatin1String("Inplace updates setting confirmed as: enabled")),
              qPrintable(QLatin1String("Did not receive confirmation log. Output:\n") + m_output));
+}
+
+// A compatible edit (only the logged marker changes) hot reloads in place.
+// The tool confirmed in-place updates on connect, so the loadTimer must NOT
+// take the "replay recorded events" branch (that branch is reserved for the
+// non-hot-reload workflow), and a successful hot reload must NOT restart the
+// process: the UI is updated in place. This exercises "we must _not_ send the
+// recorded events if hot reload succeeded".
+void tst_QmlPreviewTool::hotReloadStaysInPlace()
+{
+    m_tempDir = std::make_unique<QTemporaryDir>();
+    QVERIFY(m_tempDir->isValid());
+
+    const QString qmlFile = m_tempDir->filePath(QLatin1String("test.qml"));
+    QVERIFY(writeFile(qmlFile, makeQmlContent(QLatin1String("INPLACE_INITIAL"))));
+
+    startPreview({QLatin1String("--verbose"), m_qmlRuntimePath, qmlFile});
+    QVERIFY2(waitForOutput(QLatin1String("Inplace updates setting confirmed as: enabled")),
+             qPrintable(QLatin1String("Did not receive confirmation. Output:\n") + m_output));
+    QVERIFY2(waitForOutput(QLatin1String("INPLACE_INITIAL")),
+             qPrintable(QLatin1String("Initial load failed. Output:\n") + m_output));
+
+    // Change only the marker string: a compatible in-place update.
+    QVERIFY(writeFile(qmlFile, makeQmlContent(QLatin1String("INPLACE_MODIFIED"))));
+    QVERIFY2(waitForOutput(QLatin1String("INPLACE_MODIFIED")),
+             qPrintable(QLatin1String("In-place update not applied. Output:\n") + m_output));
+
+    // The update happened in place: no failure and no restart.
+    QVERIFY2(!m_output.contains(QLatin1String("Hot reload failure")),
+             qPrintable(QLatin1String("Unexpected hot reload failure. Output:\n") + m_output));
+    QVERIFY2(!m_output.contains(QLatin1String("Restarting process")),
+             qPrintable(QLatin1String("Process was restarted instead of updated in place. "
+                                      "Output:\n")
+                        + m_output));
+}
+
+// Regression test for input events destroying UI state on a successful hot
+// reload. The scene injects one click, bumping a click counter to 1. When the
+// file is hot reloaded in place, the tool must NOT replay the recorded click:
+// the counter must stay 1. Before the fix the tool replayed the events even
+// when the hot reload succeeded, so the counter kept incrementing on every
+// reload.
+void tst_QmlPreviewTool::inputNotReplayedOnHotReload()
+{
+    m_tempDir = std::make_unique<QTemporaryDir>();
+    QVERIFY(m_tempDir->isValid());
+
+    const QString qmlFile = m_tempDir->filePath(QLatin1String("test.qml"));
+    QVERIFY(writeFile(qmlFile, makeCounterQml(QLatin1String("MARKER_INITIAL"))));
+
+    startPreview({QLatin1String("--verbose"), m_qmlRuntimePath, qmlFile});
+
+    // The synthetic click has been injected, recorded and applied: counter == 1.
+    QVERIFY2(waitForOutput(QLatin1String("MARKER_INITIAL count=1")),
+             qPrintable(QLatin1String("Synthetic click was not applied. Output:\n") + m_output));
+
+    // Hot reload in place (marker-only, compatible change).
+    QVERIFY(writeFile(qmlFile, makeCounterQml(QLatin1String("MARKER_MODIFIED"))));
+
+    // Wait for a few post-reload heartbeats so a wrongly replayed click would
+    // have had time to bump the counter.
+    QVERIFY2(waitForOutput(QLatin1String("MARKER_MODIFIED count=")),
+             qPrintable(QLatin1String("Hot reload was not applied. Output:\n") + m_output));
+    const bool sawEnoughTicks = QTest::qWaitFor([this]() {
+        readProcessOutput();
+        return m_output.count(QLatin1String("MARKER_MODIFIED count=")) >= 3;
+    }, 5000);
+    QVERIFY2(sawEnoughTicks,
+             qPrintable(QLatin1String("Not enough output after reload. Output:\n") + m_output));
+
+    // The recorded click must not have been replayed into the in-place scene.
+    QVERIFY2(!m_output.contains(QLatin1String("count=2")),
+             qPrintable(QLatin1String("Recorded input was replayed after a successful hot "
+                                      "reload, destroying UI state. Output:\n")
+                        + m_output));
+
+    // And the update happened in place, not via a restart.
+    QVERIFY2(!m_output.contains(QLatin1String("Restarting process")),
+             qPrintable(QLatin1String("Process was restarted instead of updated in place. "
+                                      "Output:\n")
+                        + m_output));
 }
 
 void tst_QmlPreviewTool::hotReloadFailure()
