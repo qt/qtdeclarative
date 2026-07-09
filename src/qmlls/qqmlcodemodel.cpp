@@ -793,8 +793,6 @@ QDebug OpenDocumentSnapshot::dump(QDebug dbg, DumpOptions options)
                          : u"*none*"_s)
             << "\n";
     }
-    dbg << "  scopeDependenciesLoadTime:" << scopeDependenciesLoadTime << "\n";
-    dbg << "  scopeDependenciesChanged" << scopeDependenciesChanged << "\n";
     dbg << "}";
     return dbg;
 }

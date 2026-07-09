@@ -53,8 +53,6 @@ public:
     QQmlJS::Dom::DomItem doc;
     std::optional<int> validDocVersion;
     QQmlJS::Dom::DomItem validDoc;
-    QDateTime scopeDependenciesLoadTime;
-    bool scopeDependenciesChanged = false;
     QQmlJSScope::ConstPtr scope;
     QDebug dump(QDebug dbg, DumpOptions dump = DumpOption::NoCode);
 };
