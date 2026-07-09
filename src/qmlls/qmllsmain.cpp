@@ -81,7 +81,7 @@ public:
                       // message body
                       m_shouldSendData = true;
                   },
-                  [this](QtMsgType, QString) {
+                  [this](QtMsgType, const QString &) {
                       // there was an error
                       m_shouldSendData = true;
                   },
