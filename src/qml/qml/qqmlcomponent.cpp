@@ -718,70 +718,74 @@ QQmlComponent::QQmlComponent(QQmlEngine *engine, QV4::ExecutableCompilationUnit 
     d->m_progress = 1.0;
 }
 
-/*!
-    \since 6.12
-
-    Sets the QQmlComponent to use the given QML \a data. If \a url
-    is provided, it is used to set the component name and to provide
-    a base path for items resolved by this component.
-
-    If \a compilationMode is \l Asynchronous, the component will be loaded and compiled
-    asynchronously.
-
-    \warning The new component will shadow any existing component of
-    the same URL. You should not pass a URL of an existing component.
-*/
-void QQmlComponent::setData(const QByteArray &data, const QUrl &url, CompilationMode compilationMode)
+void QQmlComponentPrivate::setData(const QByteArray &data, const QUrl &url, QQmlComponent::CompilationMode compilationMode)
 {
-    Q_D(QQmlComponent);
-
-    if (!d->m_engine) {
+    if (!m_engine) {
         // ###Qt6: In Qt 6, it should be impossible for users to create a QQmlComponent without an engine, and we can remove this check
         qWarning("QQmlComponent: Must provide an engine before calling setData");
         return;
     }
 
-    d->clear();
+    clear();
 
-    d->m_url = url;
+    m_url = url;
 
     // trim existing components with same URL; they would bloat the cache
     // While the warning tries to discourage it, using an empty URL for the
     // creation of a one-off component is a somewhat common use-case
-    d->m_engine->handle()->trimCompilationUnitsForUrl(url);
+    m_engine->handle()->trimCompilationUnitsForUrl(url);
 
-    QQmlTypeLoader::Mode mode = compilationMode == Asynchronous
+    QQmlTypeLoader::Mode mode = compilationMode == QQmlComponent::Asynchronous
                                     ? QQmlTypeLoader::Asynchronous
                                     : QQmlTypeLoader::PreferSynchronous;
-    QQmlRefPointer<QQmlTypeData> typeData = QQmlTypeLoader::get(d->m_engine)->getType(data, url, mode);
+    QQmlRefPointer<QQmlTypeData> typeData = QQmlTypeLoader::get(m_engine)->getType(data, url, mode);
 
     if (typeData->isCompleteOrError()) {
-        d->fromTypeData(typeData);
-        d->setProgress(1.0);
+        fromTypeData(typeData);
+        setProgress(1.0);
     } else {
-        d->m_typeData = typeData;
-        d->m_typeData->registerCallback(d);
-        d->setProgress(typeData->progress());
+        m_typeData = typeData;
+        m_typeData->registerCallback(this);
+        setProgress(typeData->progress());
     }
-
-    emit statusChanged(status());
 }
 
 /*!
     Sets the QQmlComponent to use the given QML \a data. If \a url
     is provided, it is used to set the component name and to provide
-    a base path for items resolved by this component.
-
-    This is equivalent to calling \c{setData(data, url, QQmlComponent::PreferSynchronous)}.
+    a base path for items resolved by this component. The component will
+    be loaded and compiled synchronously.
 
     \warning The new component will shadow any existing component of
     the same URL. You should not pass a URL of an existing component.
 
-    \overload
+    \sa setDataAsynchronous
 */
 void QQmlComponent::setData(const QByteArray &data, const QUrl &url)
 {
-    setData(data, url, PreferSynchronous);
+    Q_D(QQmlComponent);
+    d->setData(data, url, PreferSynchronous);
+    emit statusChanged(status());
+}
+
+/*!
+    \since 6.12
+
+    Sets the QQmlComponent to use the given QML \a data. If \a baseUrl
+    is provided, it is used to set the component name and to provide
+    a base path for items resolved by this component. The component
+    will be loaded and compiled asynchronously.
+
+    \warning The new component will shadow any existing component of
+    the same URL. You should not pass a URL of an existing component.
+
+    \sa setData
+*/
+void QQmlComponent::setDataAsynchronous(const QByteArray &data, const QUrl &baseUrl)
+{
+    Q_D(QQmlComponent);
+    d->setData(data, baseUrl, Asynchronous);
+    emit statusChanged(status());
 }
 
 /*!
