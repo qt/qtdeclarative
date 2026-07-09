@@ -688,7 +688,7 @@ bool Parser::parse(int startToken)
                 loc(1) = yylloc;
             } else {
               --tos;
-              for (const auto &pending : m_pendingCoverDiagnostics) {
+              for (const auto &pending : std::as_const(m_pendingCoverDiagnostics)) {
                   if (pending.node->parseMode == AST::Pattern::Literal)
                       diagnostic_messages.append(pending.diagnostic);
               }
@@ -2233,7 +2233,8 @@ ObjectLiteral: T_LBRACE PropertyDefinitionList T_RBRACE;
         AST::ObjectPattern *node = new (pool) AST::ObjectPattern(sym(2).PatternPropertyList->finish());
         node->lbraceToken = loc(1);
         node->rbraceToken = loc(3);
-        for (const DiagnosticMessage &diag : node->warningsForAssignments())
+        const QList<DiagnosticMessage> warnings = node->warningsForAssignments();
+        for (const DiagnosticMessage &diag : warnings)
             m_pendingCoverDiagnostics.append({node, diag});
         sym(1).Node = node;
     } break;
@@ -2245,7 +2246,8 @@ ObjectLiteral: T_LBRACE PropertyDefinitionList T_COMMA T_RBRACE;
         AST::ObjectPattern *node = new (pool) AST::ObjectPattern(sym(2).PatternPropertyList->finish());
         node->lbraceToken = loc(1);
         node->rbraceToken = loc(4);
-        for (const DiagnosticMessage &diag : node->warningsForAssignments())
+        const QList<DiagnosticMessage> warnings = node->warningsForAssignments();
+        for (const DiagnosticMessage &diag : warnings)
             m_pendingCoverDiagnostics.append({node, diag});
         sym(1).Node = node;
     } break;
@@ -5149,7 +5151,7 @@ ExportSpecifier: IdentifierName T_AS IdentifierName;
         diagnostic_messages.append(compileError(token_buffer[0].loc, msg));
     }
 
-    for (const auto &pending : m_pendingCoverDiagnostics) {
+    for (const auto &pending : std::as_const(m_pendingCoverDiagnostics)) {
         if (pending.node->parseMode == AST::Pattern::Literal)
             diagnostic_messages.append(pending.diagnostic);
     }
