@@ -598,8 +598,7 @@ void QQmlCodeModel::newDocForOpenFile(const QByteArray &url, int version, const 
     }
     if (codeModelLog().isDebugEnabled()) {
         qCDebug(codeModelLog) << "Finished update doc of " << url << "to version" << version;
-        snapshotByUrl(url).dump(qDebug() << "postSnapshot",
-                                OpenDocumentSnapshot::DumpOption::AllCode);
+        snapshotByUrl(url).dump(qDebug() << "postSnapshot");
     }
     // we should update the scope in the future thus call addOpen(url)
     emit updatedSnapshot(url, policy);
@@ -768,31 +767,20 @@ void QQmlCodeModel::addOpenToUpdate(const QByteArray &url, UpdatePolicy policy)
     openNeedUpdate();
 }
 
-QDebug OpenDocumentSnapshot::dump(QDebug dbg, DumpOptions options)
+QDebug OpenDocumentSnapshot::dump(QDebug dbg)
 {
     dbg.noquote().nospace() << "{";
     dbg << "  url:" << QString::fromUtf8(url) << "\n";
     dbg << "  docVersion:" << (docVersion ? QString::number(*docVersion) : u"*none*"_s) << "\n";
-    if (options & DumpOption::LatestCode) {
-        dbg << "  doc: ------------\n"
-            << doc.field(Fields::code).value().toString() << "\n==========\n";
-    } else {
-        dbg << u"  doc:"
-            << (doc ? u"%1chars"_s.arg(doc.field(Fields::code).value().toString().size())
-                    : u"*none*"_s)
-            << "\n";
-    }
+    dbg << u"  doc:"
+        << (doc ? u"%1chars"_s.arg(doc.field(Fields::code).value().toString().size()) : u"*none*"_s)
+        << "\n";
     dbg << "  validDocVersion:"
         << (validDocVersion ? QString::number(*validDocVersion) : u"*none*"_s) << "\n";
-    if (options & DumpOption::ValidCode) {
-        dbg << "  validDoc: ------------\n"
-            << validDoc.field(Fields::code).value().toString() << "\n==========\n";
-    } else {
-        dbg << u"  validDoc:"
-            << (validDoc ? u"%1chars"_s.arg(validDoc.field(Fields::code).value().toString().size())
-                         : u"*none*"_s)
-            << "\n";
-    }
+    dbg << u"  validDoc:"
+        << (validDoc ? u"%1chars"_s.arg(validDoc.field(Fields::code).value().toString().size())
+                     : u"*none*"_s)
+        << "\n";
     dbg << "  scopeDependenciesLoadTime:" << scopeDependenciesLoadTime << "\n";
     dbg << "  scopeDependenciesChanged" << scopeDependenciesChanged << "\n";
     dbg << "}";

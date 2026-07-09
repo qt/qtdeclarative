@@ -40,13 +40,6 @@ namespace QmlLsp {
 class OpenDocumentSnapshot
 {
 public:
-    enum class DumpOption {
-        NoCode = 0,
-        LatestCode = 0x1,
-        ValidCode = 0x2,
-        AllCode = LatestCode | ValidCode
-    };
-    Q_DECLARE_FLAGS(DumpOptions, DumpOption)
     QStringList searchPath;
     QByteArray url;
     std::optional<int> docVersion;
@@ -56,10 +49,8 @@ public:
     QDateTime scopeDependenciesLoadTime;
     bool scopeDependenciesChanged = false;
     QQmlJSScope::ConstPtr scope;
-    QDebug dump(QDebug dbg, DumpOptions dump = DumpOption::NoCode);
+    QDebug dump(QDebug dbg);
 };
-
-Q_DECLARE_OPERATORS_FOR_FLAGS(OpenDocumentSnapshot::DumpOptions)
 
 class OpenDocument
 {
