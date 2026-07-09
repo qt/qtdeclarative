@@ -367,14 +367,27 @@ void QQmlJSOptimizations::adjustTypes()
         // QQmlJSTypePropagator.
         if (const QQmlJSScope::ConstPtr elementType
                 = it->trackedTypes[0].containedType()->elementType()) {
-            const QQmlJSRegisterContent content = annotation.readRegisters.begin().value().content;
-            const QQmlJSScope::ConstPtr contained = content.containedType();
-
-            // If it's the 1-arg Array ctor, and the argument is a number, that's special.
-            if (mode != ObjectOrArrayDefinition::ArrayConstruct1ArgId
-                    || contained != m_typeResolver->realType()) {
-                if (!m_typeResolver->adjustTrackedType(content, elementType))
+            const auto adjust = [&](const auto it) {
+                const QQmlJSRegisterContent content = it.value().content;
+                const QQmlJSScope::ConstPtr contained = content.containedType();
+                if (!m_typeResolver->adjustTrackedType(content, elementType)) {
                     addError(adjustErrorMessage(content, elementType));
+                    return false;
+                }
+                return true;
+            };
+
+            const auto &readRegisters = annotation.readRegisters;
+            if (mode == ObjectOrArrayDefinition::ArrayConstruct1ArgId) {
+                Q_ASSERT(readRegisters.size() == 1);
+                const auto it = readRegisters.cbegin();
+                if (it.value().content.containedType() != m_typeResolver->realType())
+                    adjust(it);
+            } else {
+                for (auto it = readRegisters.cbegin(); it != readRegisters.cend(); ++it) {
+                    if (!adjust(it))
+                        break;
+                }
             }
         }
 
