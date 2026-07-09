@@ -5101,6 +5101,10 @@ function(qt6_generate_deploy_qml_app_script)
         NO_UNSUPPORTED_PLATFORM_ERROR
         NO_TRANSLATIONS
         NO_COMPILER_RUNTIME
+        # MACOS_BUNDLE_POST_BUILD used to deploy QML modules into the build-tree
+        # bundle (via plugin symlinks) so it could run. That is now handled by the
+        # qt.conf generated next to the executable, so this option is a no-op. It
+        # is still accepted for source compatibility.
         MACOS_BUNDLE_POST_BUILD
         DEPLOY_USER_QML_MODULES_ON_UNSUPPORTED_PLATFORM
     )
@@ -5205,107 +5209,34 @@ function(qt6_generate_deploy_qml_app_script)
     endforeach()
 
     _qt_internal_should_skip_deployment_api(skip_deployment skip_reason)
-    _qt_internal_should_skip_post_build_deployment_api(skip_post_build_deployment
-        post_build_skip_reason)
 
     if(APPLE AND NOT IOS AND QT6_IS_SHARED_LIBS_BUILD AND is_bundle)
         # TODO: Consider handling non-bundle applications in the future using the generic cmake
         # runtime dependency feature.
-
-        set(should_post_build FALSE)
-        if(arg_MACOS_BUNDLE_POST_BUILD AND NOT skip_post_build_deployment)
-            set(should_post_build TRUE)
-        endif()
-
-        # Generate the real deployment script when both post build step either deployment are
-        # enabled.
-        # If we skip deployment, but not the POST_BUILD step, we still need to generate the
-        # regular deploy script to run it during POST_BUILD time.
-        if(NOT skip_deployment OR should_post_build)
-            qt6_generate_deploy_script(
-                TARGET ${arg_TARGET}
-                NAME ${deploy_script_name}
-                OUTPUT_SCRIPT real_deploy_script
-                CONTENT "
-qt6_deploy_qml_imports(TARGET ${arg_TARGET} PLUGINS_FOUND plugins_found)
-if(NOT DEFINED __QT_DEPLOY_POST_BUILD)
-    qt6_deploy_runtime_dependencies(
-        EXECUTABLE \"$<TARGET_FILE_NAME:${arg_TARGET}>.app\"
-        ADDITIONAL_MODULES \${plugins_found}
-    ${common_deploy_args})
-endif()")
-        endif()
-
-        # Generate a no-op script either if we skip deployment or the post build step.
+        #
+        # A build-tree app bundle finds its QML modules in place via the qt.conf
+        # generated next to the executable, so there is nothing to deploy into the
+        # bundle at build time. Deployment happens only at install time, via the
+        # install(SCRIPT) that runs the script generated here.
         if(skip_deployment)
             _qt_internal_generate_no_op_deploy_script(
                 FUNCTION_NAME "qt6_generate_deploy_qml_app_script"
                 SKIP_REASON "${skip_reason}"
                 TARGET ${arg_TARGET}
                 NAME ${deploy_script_name}
-                OUTPUT_SCRIPT no_op_deploy_script
+                OUTPUT_SCRIPT deploy_script
             )
-        endif()
-
-        if(skip_post_build_deployment)
-            _qt_internal_generate_no_op_deploy_script(
-                FUNCTION_NAME "qt6_generate_deploy_qml_app_script"
-                SKIP_REASON "${post_build_skip_reason}"
+        else()
+            qt6_generate_deploy_script(
                 TARGET ${arg_TARGET}
                 NAME ${deploy_script_name}
-                OUTPUT_SCRIPT no_op_post_build_script
-            )
-        endif()
-
-        # Choose which deployment script to use during installation.
-        if(skip_deployment)
-            set(deploy_script "${no_op_deploy_script}")
-        else()
-            set(deploy_script "${real_deploy_script}")
-        endif()
-
-        # Choose which deployment script to use during the post build step.
-        if(should_post_build)
-            set(post_build_deploy_script "${real_deploy_script}")
-        elseif(skip_post_build_deployment)
-            # Explicitly asked to skip post build, show a no-op message.
-            set(post_build_deploy_script "${no_op_post_build_script}")
-        endif()
-
-        if(should_post_build OR skip_post_build_deployment)
-            # We must not deploy the runtime dependencies, otherwise we interfere
-            # with CMake's RPATH rewriting at install time. We only need the QML
-            # imports deployed to the bundle anyway, the build RPATHs will allow
-            # the regular libraries, frameworks and non-QML plugins to still be
-            # found, even if they are outside the app bundle.
-
-            # Support Xcode, which places the application build dir into a configuration specific
-            # subdirectory. Override both the deploy prefix and install prefix, because we
-            # differentiate them in the qml installation implementation due to ENV{DESTDIR}
-            # handling.
-            set(deploy_path_suffix "")
-            get_cmake_property(is_multi_config GENERATOR_IS_MULTI_CONFIG)
-            if(is_multi_config)
-                set(deploy_path_suffix "/$<CONFIG>")
-            endif()
-
-            set(target_binary_dir_with_config_prefix
-                "$<TARGET_PROPERTY:${arg_TARGET},BINARY_DIR>${deploy_path_suffix}")
-
-            set(post_build_install_prefix
-                "CMAKE_INSTALL_PREFIX=${target_binary_dir_with_config_prefix}")
-
-            set(post_build_deploy_prefix
-                "QT_DEPLOY_PREFIX=${target_binary_dir_with_config_prefix}")
-
-            add_custom_command(TARGET ${arg_TARGET} POST_BUILD
-                COMMAND ${CMAKE_COMMAND}
-                -D "${post_build_install_prefix}"
-                -D "${post_build_deploy_prefix}"
-                -D "__QT_DEPLOY_POST_BUILD=TRUE"
-                -P "${post_build_deploy_script}"
-                VERBATIM
-            )
+                OUTPUT_SCRIPT deploy_script
+                CONTENT "
+qt6_deploy_qml_imports(TARGET ${arg_TARGET} PLUGINS_FOUND plugins_found)
+qt6_deploy_runtime_dependencies(
+    EXECUTABLE \"$<TARGET_FILE_NAME:${arg_TARGET}>.app\"
+    ADDITIONAL_MODULES \${plugins_found}
+${common_deploy_args})")
         endif()
     elseif(skip_deployment)
             _qt_internal_generate_no_op_deploy_script(

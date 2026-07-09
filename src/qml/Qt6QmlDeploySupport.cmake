@@ -115,20 +115,6 @@ function(_qt_internal_deploy_qml_imports_for_target)
     get_filename_component(install_prefix_abs "${QT_DEPLOY_PREFIX}" ABSOLUTE)
     set(plugins_found "")
 
-    if(__QT_DEPLOY_POST_BUILD)
-        message(STATUS "Running macOS bundle QML support POST_BUILD routine.")
-
-        # Unset the DESTDIR environment variable if it's set during a post build step, otherwise
-        # file(INSTALL) will install to the wrong location, which will not coincide with where
-        # symlinks will be created using file(CREATE_LINK) + the overridden QT_DEPLOY_PREFIX that
-        # will NOT contain DESTDIR.
-        if(DEFINED ENV{DESTDIR})
-            message(STATUS "Clearing DESTDIR environment variable, because it's not "
-                "supposed to be set during the post build step.")
-            set(ENV{DESTDIR} "")
-        endif()
-    endif()
-
     # Parse the generated cmake file. It is possible for the scanner to find no
     # usage of QML, in which case the import count is 0.
     if(qml_import_scanner_imports_count GREATER 0)
@@ -198,56 +184,6 @@ function(_qt_internal_deploy_qml_imports_for_target)
             if(DEFINED __QT_DEPLOY_TARGET_${entry_LINKTARGET}_FILE AND
                 __QT_DEPLOY_TARGET_${entry_LINKTARGET}_TYPE STREQUAL "STATIC_LIBRARY")
                 # If the QML plugin is built statically, skip further deployment.
-                continue()
-            endif()
-
-            if(__QT_DEPLOY_POST_BUILD)
-                # We are being invoked as a post-build step. The plugin might
-                # not exist yet, so we can't even glob for it, let alone copy
-                # it. We know what its name should be though, so we can create
-                # a symlink to where it will eventually be, which will be enough
-                # to allow it to run from the build tree. It won't matter if
-                # the plugin gets updated later in the build, the symlink will
-                # still be pointing at the right location.
-                # In theory, this could be possible for any platform that
-                # supports symlinks (which all do in some form now, even
-                # Windows if the right permissions are set), but we only really
-                # expect to need this for macOS app bundles.
-                if(DEFINED __QT_DEPLOY_TARGET_${entry_LINKTARGET}_FILE)
-                    set(source_file "${__QT_DEPLOY_TARGET_${entry_LINKTARGET}_FILE}")
-                    get_filename_component(source_file_name "${source_file}" NAME)
-                    set(final_destination "${dest_qmldir}/${source_file_name}")
-                else()
-                    # TODO: This is inconsistent with what we do further down below for the
-                    # installation case. There we file(GLOB) any files we find, whereas here we
-                    # build the path manually, because the file might not exist yet.
-                    # Ideally both cases should use neither file(GLOB) nor manual path building,
-                    # and instead rely on available target information or qmldir information.
-                    # Currently that is not possible because we don't have all targets exposed
-                    # via the __QT_DEPLOY_TARGET_{target} mechanism, only those that are built as
-                    # part of the current project, and the qmldir -> qmlimportscanner does print
-                    # the full file path, because there is one qmldir, but possibly 2+ plugins
-                    # (debug and release).
-                    set(plugin_suffix "")
-                    if(__QT_DEPLOY_ACTIVE_CONFIG STREQUAL "Debug")
-                        string(APPEND plugin_suffix "${__QT_DEPLOY_QT_DEBUG_POSTFIX}")
-                    endif()
-
-                    set(source_file "${entry_PATH}/lib${entry_PLUGIN}${plugin_suffix}.dylib")
-                    set(final_destination "${dest_qmldir}/lib${entry_PLUGIN}${plugin_suffix}.dylib")
-                endif()
-
-                message(STATUS "Symlinking: ${final_destination}")
-                file(CREATE_LINK
-                    "${source_file}"
-                    "${final_destination}"
-                    SYMBOLIC
-                )
-
-                # We don't add this plugin to plugins_found because we don't
-                # actually make a copy of the plugin. We don't want the caller
-                # thinking they should further process what would still be the
-                # original plugin in the build tree.
                 continue()
             endif()
 
@@ -334,6 +270,27 @@ function(_qt_internal_deploy_qml_imports_for_target)
                 endforeach()
             endif()
         endforeach()
+    endif()
+
+    if(arg_BUNDLE)
+        # A build-tree app bundle carries a qt.conf next to the executable (under
+        # Resources) whose QML import paths point at the build directory.
+        # install(TARGETS BUNDLE) copies the bundle wholesale, dragging that file
+        # into the installed bundle, where it is both wrong (build-tree paths) and
+        # unnecessary (the modules are deployed into the bundle and found via the
+        # bundle's import and plugin paths). Remove it - but only if it is the file
+        # we generated, identified by the private MergeQtConf marker, so a qt.conf
+        # the user placed there themselves is left untouched.
+        get_filename_component(bundle_resources_dir "${arg_QML_DIR}" DIRECTORY)
+        set(bundle_qt_conf "${QT_DEPLOY_PREFIX}/${bundle_resources_dir}/qt.conf")
+        if(EXISTS "${bundle_qt_conf}")
+            file(READ "${bundle_qt_conf}" bundle_qt_conf_contents)
+            if(bundle_qt_conf_contents MATCHES "MergeQtConf[ \t]*=[ \t]*true")
+                message(STATUS "Removing generated build-tree qt.conf from installed "
+                    "bundle: ${bundle_qt_conf}")
+                file(REMOVE "${bundle_qt_conf}")
+            endif()
+        endif()
     endif()
 
     set(${arg_PLUGINS_FOUND} ${plugins_found} PARENT_SCOPE)
