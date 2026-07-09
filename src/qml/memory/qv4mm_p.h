@@ -560,8 +560,11 @@ struct GCCriticalSection {
         }
         /* because we blocked the gc, we might be using too much memoryon the unmanaged heap
            and did not run the normal fixup logic. So recheck again, and trigger a gc run
-           if necessary*/
-        if (!m_engine->memoryManager->isAboveUnmanagedHeapLimit())
+           if necessary. But never start one while the engine is shutting down: the final
+           sweep in ~MemoryManager runs destruction handlers that may open a critical
+           section, and re-entering the collector then would mark through already-freed
+           engine state (such as the identifier table). */
+        if (m_engine->inShutdown || !m_engine->memoryManager->isAboveUnmanagedHeapLimit())
             return;
         if (!m_engine->isGCOngoing) {
             m_engine->memoryManager->runGC();
