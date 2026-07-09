@@ -54,7 +54,7 @@ public:
     std::optional<int> validDocVersion;
     QQmlJS::Dom::DomItem validDoc;
     QQmlJSScope::ConstPtr scope;
-    QDebug dump(QDebug dbg, DumpOptions dump = DumpOption::NoCode);
+    QDebug &dump(QDebug &dbg, DumpOptions dump = DumpOption::NoCode);
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(OpenDocumentSnapshot::DumpOptions)

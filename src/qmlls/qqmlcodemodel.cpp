@@ -768,7 +768,7 @@ void QQmlCodeModel::addOpenToUpdate(const QByteArray &url, UpdatePolicy policy)
     openNeedUpdate();
 }
 
-QDebug OpenDocumentSnapshot::dump(QDebug dbg, DumpOptions options)
+QDebug &OpenDocumentSnapshot::dump(QDebug &dbg, DumpOptions options)
 {
     dbg.noquote().nospace() << "{";
     dbg << "  url:" << QString::fromUtf8(url) << "\n";
