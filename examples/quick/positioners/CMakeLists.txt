@@ -40,7 +40,6 @@ install(TARGETS positionersexample
 qt_generate_deploy_qml_app_script(
     TARGET positionersexample
     OUTPUT_SCRIPT deploy_script
-    MACOS_BUNDLE_POST_BUILD
     NO_UNSUPPORTED_PLATFORM_ERROR
     DEPLOY_USER_QML_MODULES_ON_UNSUPPORTED_PLATFORM
 )
