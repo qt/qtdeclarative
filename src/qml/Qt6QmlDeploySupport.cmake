@@ -321,20 +321,16 @@ function(_qt_internal_deploy_qml_imports_for_target)
             endif()
 
             if(arg_BUNDLE)
-                # Actual plugin binaries will be in PlugIns, but qmldir files
-                # expect them to be in the same directory as themselves
-                # (i.e. under Resources/qml/...). Add a symlink at the place
-                # the qmldir expects the binary to be. This arrangement keeps
-                # binaries under PlugIns and non-binaries under Resources,
-                # which is required for code signing to work properly.
-                get_filename_component(dest_qmldir_abs "${dest_qmldir}" ABSOLUTE)
-                file(RELATIVE_PATH rel_path "${dest_qmldir_abs}" "${dest_plugin_abs}")
+                # The app bundle has been installed by copying it wholesale, which
+                # brings along the build-tree development symlinks we created for
+                # each module's plugin binary next to its qmldir under Resources/qml/.
+                # The real plugin binaries are now installed under PlugIns and found
+                # via the plugin search path, and code signing disallows executable
+                # code under Resources, so remove any such stale binary or symlink
+                # left next to the qmldir.
                 foreach(plugin_file IN LISTS files)
                     get_filename_component(filename "${plugin_file}" NAME)
-
-                    set(final_destination "${dest_qmldir}/${filename}")
-                    message(STATUS "Symlinking: ${final_destination}")
-                    file(CREATE_LINK "${rel_path}/${filename}" "${final_destination}" SYMBOLIC)
+                    file(REMOVE "${dest_qmldir}/${filename}")
                 endforeach()
             endif()
         endforeach()
