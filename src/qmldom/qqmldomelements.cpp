@@ -880,7 +880,6 @@ static QList<DomItem> keepDomItemsOrder(const QList<std::pair<SourceLocation, Do
                                         const QStringView &field, const DomItem &refItem)
 {
     DomItem item = refItem.field(field);
-    QStringList keys = keepKeysOrder(attribs, item.sortedKeys());
     QList<DomItem> values = item.values();
 
     QList<DomItem> originalValuesOrder;
