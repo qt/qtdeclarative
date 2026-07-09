@@ -19,7 +19,7 @@ private slots:
 void tst_basicapp::loadComponent()
 {
     QQmlEngine engine;
-#ifdef Q_OS_ANDROID
+#if defined(Q_OS_ANDROID) || defined(Q_OS_OHOS)
     engine.addImportPath(":/");
 #endif
     QQmlComponent c(&engine, QStringLiteral("qrc:/BasicApp/main.qml"));
@@ -80,8 +80,8 @@ void tst_basicapp::fileSystemFiles()
 
 void tst_basicapp::qmldirContents()
 {
-#ifdef Q_OS_ANDROID
-    const QString basedir = QStringLiteral(":"); // Use qrc resource path on Android
+#if defined(Q_OS_ANDROID) || defined(Q_OS_OHOS)
+    const QString basedir = QStringLiteral(":"); // Use qrc resource path on resource-only platforms
 #else
     const QString basedir = QCoreApplication::applicationDirPath();
 #endif
