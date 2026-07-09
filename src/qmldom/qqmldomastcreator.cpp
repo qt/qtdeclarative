@@ -32,11 +32,11 @@ Q_STATIC_LOGGING_CATEGORY(creatorLog, "qt.qmldom.astcreator", QtWarningMsg);
    Avoid crashing on files with JS-elements that are not implemented yet.
    Might be removed (definition + usages) once all script elements are implemented.
 */
-#define Q_SCRIPTELEMENT_DISABLE()                                                      \
-    do {                                                                               \
-        qDebug() << "Could not construct the JS DOM at" << __FILE__ << ":" << __LINE__ \
-                 << ", skipping JS elements...";                                       \
-        disableScriptElements();                                                       \
+#define Q_SCRIPTELEMENT_DISABLE()                                                                 \
+    do {                                                                                          \
+        qCDebug(creatorLog) << "Could not construct the JS DOM at" << __FILE__ << ":" << __LINE__ \
+                            << ", skipping JS elements...";                                       \
+        disableScriptElements();                                                                  \
     } while (false)
 
 #define Q_SCRIPTELEMENT_EXIT_IF(check)            \
