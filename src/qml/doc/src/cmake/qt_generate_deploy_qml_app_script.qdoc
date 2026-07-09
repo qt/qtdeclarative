@@ -32,7 +32,6 @@ qt_generate_deploy_qml_app_script(
     [INCLUDE_PLUGINS name...]                     # since Qt 6.10
     [DEPLOY_TOOL_OPTIONS ...]
     [DEPLOY_USER_QML_MODULES_ON_UNSUPPORTED_PLATFORM]
-    [MACOS_BUNDLE_POST_BUILD]
     [PRE_INCLUDE_REGEXES regexes...]
     [PRE_EXCLUDE_REGEXES regexes...]
     [POST_INCLUDE_REGEXES regexes...]
@@ -92,14 +91,6 @@ To ensure that the QML modules are still installed, specify both the
 \c{DEPLOY_USER_QML_MODULES_ON_UNSUPPORTED_PLATFORM} options.
 The latter option will ensure that QML modules built as part of the project
 are still installed.
-
-The \c{MACOS_BUNDLE_POST_BUILD} option enables an extra step when \c{target}
-is a macOS app bundle. A post-build rule will be created which uses the
-deployment script to deploy enough of the imported QML modules to allow the
-application to run directly from the build directory (essentially just the
-\c{qmldir} files and symlinks to plugins). This is usually desirable to support
-development of the application. \c{MACOS_BUNDLE_POST_BUILD} is ignored for all
-other platforms.
 
 On platforms other than macOS, Qt translations are automatically deployed. To
 inhibit this behavior, specify \c{NO_TRANSLATIONS}. Use
@@ -162,7 +153,6 @@ install(TARGETS MyApp
 qt_generate_deploy_qml_app_script(
     TARGET MyApp
     OUTPUT_SCRIPT deploy_script
-    MACOS_BUNDLE_POST_BUILD
     NO_UNSUPPORTED_PLATFORM_ERROR
     DEPLOY_USER_QML_MODULES_ON_UNSUPPORTED_PLATFORM
 )
