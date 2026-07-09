@@ -37,11 +37,6 @@ void QQmlValueTypeProxyBinding::setEnabled(bool e, QQmlPropertyData::WriteFlags 
     }
 }
 
-QQmlAbstractBinding *QQmlValueTypeProxyBinding::subBindings() const
-{
-    return m_bindings.data();
-}
-
 QQmlAbstractBinding *QQmlValueTypeProxyBinding::binding(QQmlPropertyIndex propertyIndex) const
 {
     QQmlAbstractBinding *binding = m_bindings.data();

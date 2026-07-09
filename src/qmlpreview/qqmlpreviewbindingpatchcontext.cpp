@@ -12,6 +12,7 @@
 #include <private/qqmlpropertybinding_p.h>
 #include <private/qqmlpropertytopropertybinding_p.h>
 #include <private/qqmltypeloader_p.h>
+#include <private/qqmlvaluetypeproxybinding_p.h>
 #include <private/qqmlvme_p.h>
 #include <private/qv4functionobject_p.h>
 #include <private/qv4generatorobject_p.h>
@@ -52,38 +53,12 @@ static bool functionBelongsToObject(const QV4::Function *f,
     return false;
 }
 
-// Determines whether a binding on a property is "external", i.e. not from any of the
-// compilation units that participate in the rebuild of this object.
-// External bindings come from other compilation units (e.g. a parent component setting a
-// property binding on a child instance) and must be preserved across rebuilds.
-static bool isExternalBinding(const QQmlAnyBinding &binding,
-                              const std::vector<CompositeLevel> &internalUnits,
-                              QObject *target)
+// Classifies a single binding's JavaScript function: does it belong to one of the compilation
+// units participating in the rebuild (internal, will be recreated), or to some other component
+// (external, must be preserved)? A null function is treated as external.
+static bool isExternalFunction(const QV4::Function *f,
+                               const std::vector<CompositeLevel> &internalUnits, QObject *target)
 {
-    if (!binding)
-        return false;
-
-    const QV4::Function *f = nullptr;
-
-    if (const QQmlAbstractBinding *abstractBinding = binding.asAbstractBinding()) {
-        // Other kinds of abstract bindings (e.g. ValueTypeProxyBinding) are external
-        if (abstractBinding->kind() == QQmlAbstractBinding::QmlBinding)
-            f = static_cast<const QQmlBinding *>(abstractBinding)->function();
-    } else if (const QPropertyBindingPrivate *priv =
-                       QPropertyBindingPrivate::get(binding.asUntypedPropertyBinding());
-               priv && priv->isQmlBinding()) {
-        // QPropertyBindingPrivate-based binding. Check if it's a QQmlPropertyBinding
-        // with a JS expression we can trace back to a CU.
-
-        const auto base = static_cast<const QQmlPropertyBindingBase *>(priv);
-        if (base->bindingKind() == QQmlPropertyBindingBase::BindingKind::JavaScript) {
-            if (const QQmlPropertyBindingJS *jsExpr =
-                        static_cast<const QQmlPropertyBinding *>(base)->jsExpression()) {
-                f = jsExpr->function();
-            }
-        }
-    }
-
     if (!f)
         return true;
 
@@ -115,6 +90,58 @@ static bool isExternalBinding(const QQmlAnyBinding &binding,
                             return level.oldCu == cu || level.newCu == cu;
                         })) {
             break;
+        }
+    }
+
+    return true;
+}
+
+// Determines whether a binding on a property is "external", i.e. not from any of the
+// compilation units that participate in the rebuild of this object.
+// External bindings come from other compilation units (e.g. a parent component setting a
+// property binding on a child instance) and must be preserved across rebuilds.
+static bool isExternalBinding(const QQmlAnyBinding &binding,
+                              const std::vector<CompositeLevel> &internalUnits, QObject *target)
+{
+    if (!binding)
+        return false;
+
+    if (const QQmlAbstractBinding *abstractBinding = binding.asAbstractBinding()) {
+        switch (abstractBinding->kind()) {
+        case QQmlAbstractBinding::QmlBinding:
+            return isExternalFunction(static_cast<const QQmlBinding *>(abstractBinding)->function(),
+                                      internalUnits, target);
+        case QQmlAbstractBinding::ValueTypeProxy: {
+            // A value-type group binding has no function of its own: it is a proxy holding one
+            // QQmlBinding per bound sub-property. Classify it by its sub-bindings.
+            const auto *proxy = static_cast<const QQmlValueTypeProxyBinding *>(abstractBinding);
+            for (QQmlAbstractBinding *sub = proxy->subBindings(); sub; sub = sub->nextBinding()) {
+                if (sub->kind() != QQmlAbstractBinding::QmlBinding)
+                    continue;
+                if (!isExternalFunction(static_cast<const QQmlBinding *>(sub)->function(),
+                                        internalUnits, target)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        case QQmlAbstractBinding::PropertyToPropertyBinding:
+            return true;
+        }
+        return true;
+    }
+
+    if (const QPropertyBindingPrivate *priv =
+                QPropertyBindingPrivate::get(binding.asUntypedPropertyBinding());
+        priv && priv->isQmlBinding()) {
+        // QPropertyBindingPrivate-based binding. Check if it's a QQmlPropertyBinding
+        // with a JS expression we can trace back to a CU.
+        const auto base = static_cast<const QQmlPropertyBindingBase *>(priv);
+        if (base->bindingKind() == QQmlPropertyBindingBase::BindingKind::JavaScript) {
+            if (const QQmlPropertyBindingJS *jsExpr =
+                        static_cast<const QQmlPropertyBinding *>(base)->jsExpression()) {
+                return isExternalFunction(jsExpr->function(), internalUnits, target);
+            }
         }
     }
 
