@@ -1,0 +1,5 @@
+module ValueTypeSingletonTest
+singleton Colors 1.0 Colors.qml
+Main 1.0 Main.qml
+App 1.0 App.qml
+AppForm 1.0 AppForm.qml

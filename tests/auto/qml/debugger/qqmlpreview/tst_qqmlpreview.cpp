@@ -103,6 +103,11 @@ private slots:
     // property (a Control): each reload must recreate the deferred content instead
     // of dropping it (which would make the control render nothing).
     void inPlaceDeferredChildComponentMultipleEdits();
+    // Reloading an enclosing component recreates a nested control that carries a value-type
+    // group binding (icon.color) reading a singleton. That binding must be torn down with the
+    // old control instead of being stashed as "external" and left dangling on the freed object
+    // (coffee example theme-toggle crash).
+    void inPlaceValueTypeSingletonBindingReload();
     void inPlaceLazyComponentUpdateBeforeInstantiation();
     void inPlaceRequiredPropertyDelegateCrash();
 
@@ -1454,6 +1459,42 @@ void tst_QQmlPreview::inPlaceDeferredChildComponentMultipleEdits()
              "The Control's deferred contentItem was lost during a reload");
     QVERIFY2(m_process->state() != QProcess::NotRunning,
              "Process crashed during repeated deferred child component edits");
+
+    m_process->stop();
+    QTRY_COMPARE(m_client->state(), QQmlDebugClient::NotConnected);
+    QVERIFY(m_serviceErrors.isEmpty());
+}
+
+void tst_QQmlPreview::inPlaceValueTypeSingletonBindingReload()
+{
+    const QString file("inplace_valuetype_singleton_test/Main.qml");
+    const QString appFile("inplace_valuetype_singleton_test/App.qml");
+    QCOMPARE(startQmlProcess(file), ConnectSuccess);
+    QVERIFY(m_client);
+    QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
+
+    enableInPlaceUpdates();
+    verifyProcessOutputContains("valuetype_singleton icon=");
+
+    // Structurally edit the enclosing App component (add a property) so it takes the rebuild
+    // path and recreates the nested Button. The Timer keeps toggling the Colors singleton, which
+    // fires every binding reading Colors.currentTheme -- including a stale icon.color left on the
+    // freed old Button if it wasn't torn down.
+    const qsizetype outputLen = m_process->output().size();
+    QByteArray contents = readAndModify(appFile, {{"// reload marker", "property int marker: 1"}});
+    QVERIFY(!contents.isEmpty());
+    serveFile(testFile(appFile), contents);
+    m_client->triggerLoad(testFileUrl(appFile));
+
+    // Wait for the toggling Timer to keep firing after the reload. Each fire logs one line, so a
+    // steady stream of fresh lines proves the process survived: a stale icon.color binding left on
+    // the freed old Button would crash the process and stall the output instead.
+    QTRY_VERIFY_WITH_TIMEOUT(
+            m_process->output().mid(outputLen).count("valuetype_singleton icon=") >= 15, 30000);
+
+    QVERIFY2(m_process->state() != QProcess::NotRunning,
+             "Process crashed toggling a singleton after reloading a control with a value-type "
+             "group binding");
 
     m_process->stop();
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::NotConnected);
