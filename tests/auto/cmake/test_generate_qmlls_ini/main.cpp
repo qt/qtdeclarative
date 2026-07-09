@@ -43,6 +43,16 @@ static QString contentOf(const QString &fileName)
     return QString::fromUtf8(file.readAll());
 }
 
+// The generated .qmlls.build.ini appends Qt's own qml import path to each
+// importPaths list. We can't use QLibraryInfo::path() to get hold of it: the
+// build-dir qt.conf generated next to this test overrides QmlImports with the
+// test's own build directory, and that path comes first. The Qt-prefixed path,
+// which is the one CMake used, is appended last.
+static QString qtQmlImportPath()
+{
+    return QLibraryInfo::paths(QLibraryInfo::QmlImportsPath).constLast();
+}
+
 void tst_generate_qmlls_ini::qmllsIniAreCorrect_data()
 {
     QTest::addColumn<QString>("folder");
@@ -169,8 +179,7 @@ void tst_generate_qmlls_ini::qmllsBuildIni_data()
                                             build.absoluteFilePath("qml3/MyModule3"_L1),
                                             pathOfCurrentModule,
                                             build.absolutePath(),
-                                            build.absoluteFilePath(QLibraryInfo::path(
-                                                    QLibraryInfo::QmlImportsPath)) }
+                                            qtQmlImportPath() }
                             << QStringList{
                                    build.absoluteFilePath(".qt/rcc/qmake_QmllsBuildIni.qrc"_L1),
                                    build.absoluteFilePath(".qt/rcc/QmllsBuildIni_raw_qml_0.qrc"_L1)
@@ -183,7 +192,7 @@ void tst_generate_qmlls_ini::qmllsBuildIni_data()
             << source.absolutePath()
             << QStringList{ pathOfCurrentModule + "/A"_L1, pathOfCurrentModule + "/B"_L1,
                build.absolutePath(), pathOfCurrentModule,
-               QLibraryInfo::path(QLibraryInfo::QmlImportsPath), }
+               qtQmlImportPath(), }
             << QStringList{ build.absoluteFilePath(".qt/rcc/qmake_ImportPathOrderStudy.qrc"_L1),
                build.absoluteFilePath(
                    ".qt/rcc/appImportPathOrderStudy_raw_qml_0.qrc"_L1), };
