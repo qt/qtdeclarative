@@ -253,46 +253,6 @@ function(_qt_internal_write_qmldir_part target qt_cmake_export_namespace)
     endif()
 endfunction()
 
-function(_qt_internal_writebuilddir_qtconf_nondeferred property_folder writeout_folder)
-    set(qt_all_qml_output_dirs "")
-    get_directory_property(targets
-        DIRECTORY "${property_folder}"
-        QT_QML_TARGETS_FOR_DEFERRED_QTCONF_WRITEOUT
-    )
-    set(qtconf_file "${writeout_folder}/qt.conf")
-
-    # Add the current executable's qml module location as an import path as well.
-    # Helps finding the executable qml module for macOS app bundles.
-    _qt_internal_get_qml_module_import_path("${target}" own_module_import_path)
-    list(APPEND qt_all_qml_output_dirs ${own_module_import_path})
-
-    foreach(target IN LISTS targets)
-        get_target_property(dependency_targets "${target}" QT_QML_DEPENDENT_QML_MODULE_TARGETS)
-        if(NOT dependency_targets)
-            continue()
-        endif()
-        foreach(dep_target ${dependency_targets})
-            _qt_internal_get_qml_module_import_path("${dep_target}" module_import_path)
-            list(APPEND qt_all_qml_output_dirs ${module_import_path})
-        endforeach()
-    endforeach()
-    if (NOT qt_all_qml_output_dirs)
-        return()
-    endif()
-
-    list(REMOVE_DUPLICATES qt_all_qml_output_dirs)
-    # add quotes to deal with whitespace
-    list(TRANSFORM qt_all_qml_output_dirs APPEND "\"")
-    list(TRANSFORM qt_all_qml_output_dirs PREPEND "\"")
-    list(JOIN qt_all_qml_output_dirs ","  qt_all_qml_output_dirs)
-
-    configure_file(
-        ${__qt_qml_macros_module_base_dir}/Qt6qt.conf.in ${qtconf_file}
-        @ONLY
-    )
-endfunction()
-
-
 function(qt6_add_qml_module target)
     set(args_option
         STATIC
@@ -1192,62 +1152,31 @@ Check https://doc.qt.io/qt-6/qt-cmake-policy-qtp0001.html for policy details."
     if((backing_target_type STREQUAL "EXECUTABLE")
         AND all_dependency_targets
         AND NOT arg_NO_GENERATE_QTCONF)
-        if (${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.19.0")
-            # The general logic is that every target writes out a "partial" file,
-            # containing its needed imports.
-            # Once all partial files are written,
-            # we run a helper process which consolidates them.
-            # We need the counter to know when the last finalizer runs,
-            # as only then we'll know that all partial files have been
-            # written out, and we can start merging them.
-            get_directory_property(counter
-                DIRECTORY ${PROJECT_SOURCE_DIR}
-                QT_QMLDIR_DEFERRED_WRITEOUT_COUNTER
-            )
-            if (NOT counter)
-                set(counter "0")
-            endif()
-            math(EXPR counter "${counter} + 1")
-            set_property(
-                DIRECTORY ${PROJECT_SOURCE_DIR}
-                PROPERTY QT_QMLDIR_DEFERRED_WRITEOUT_COUNTER
-                "${counter}"
-            )
-            cmake_language(EVAL CODE "
-                    cmake_language(DEFER DIRECTORY [[${PROJECT_SOURCE_DIR}]]
-                        CALL _qt_internal_write_qmldir_part \"${target}\"
-                        \"${QT_CMAKE_EXPORT_NAMESPACE}\")
-                ")
-        else()
-            # Before CMake 3.19, we don't have DEFER, so we immediately write out the qt.conf
-            # file, overwriting its content if necessary.
-            # That would be fine, as we build up a list and just end up overwriting the file again
-            # Unfortunately, CMake < 3.19 doesn't allow us to set directory properties on
-            # binary dirs, either.
-            # So we'll end up having to set the properties on the source directory
-            get_property(is_multi_config GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
-            if (is_multi_config)
-                message(FATAL
-                "Using TARGET based dependencies in qt_add_qml_module requires at least CMake 3.19 "
-                "when using multi-config generators")
-            else()
-                message(WARNING
-                "Using TARGET based dependencies in qt_add_qml_module with CMake < 3.19 "
-                "might result in missing import paths if they are not added manually.")
-            endif()
-            get_target_property(effective_outdir ${target} RUNTIME_OUTPUT_DIRECTORY)
-            if (NOT "${effective_outdir}")
-                set(effective_outdir "${CMAKE_CURRENT_BINARY_DIR}")
-            endif()
-
-            set_property(
-                DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-                APPEND
-                PROPERTY QT_QML_TARGETS_FOR_DEFERRED_QTCONF_WRITEOUT
-                ${target}
-            )
-            _qt_internal_writebuilddir_qtconf_nondeferred("${CMAKE_CURRENT_SOURCE_DIR}" "${effective_outdir}")
+        # The general logic is that every target writes out a "partial" file,
+        # containing its needed imports.
+        # Once all partial files are written,
+        # we run a helper process which consolidates them.
+        # We need the counter to know when the last finalizer runs,
+        # as only then we'll know that all partial files have been
+        # written out, and we can start merging them.
+        get_directory_property(counter
+            DIRECTORY ${PROJECT_SOURCE_DIR}
+            QT_QMLDIR_DEFERRED_WRITEOUT_COUNTER
+        )
+        if (NOT counter)
+            set(counter "0")
         endif()
+        math(EXPR counter "${counter} + 1")
+        set_property(
+            DIRECTORY ${PROJECT_SOURCE_DIR}
+            PROPERTY QT_QMLDIR_DEFERRED_WRITEOUT_COUNTER
+            "${counter}"
+        )
+        cmake_language(EVAL CODE "
+                cmake_language(DEFER DIRECTORY [[${PROJECT_SOURCE_DIR}]]
+                    CALL _qt_internal_write_qmldir_part \"${target}\"
+                    \"${QT_CMAKE_EXPORT_NAMESPACE}\")
+            ")
     endif()
 
     if(do_qml_aotstats)

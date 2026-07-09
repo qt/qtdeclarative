@@ -1,5 +1,0 @@
-[Paths]
-QmlImports = @qt_all_qml_output_dirs@
-
-[Config]
-MergeQtConf = true
