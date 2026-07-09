@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <qtest.h>
+#include <QSignalSpy>
 #include <QQmlEngine>
 #include <QLoggingCategory>
 #include <QQmlComponent>
@@ -536,10 +537,10 @@ void tst_qv4mm::populateDuringTeardownWithOngoingIncrementalGc()
     QJSEngine::setObjectOwnership(obj, QJSEngine::JavaScriptOwnership);
     QV4::QObjectWrapper::ensureWrapper(&v4, obj);
 
-    connect(obj, &QObject::destroyed, this, [&pending]() {
-        // Runs from ~MemoryManager::sweep(): gcBlocked == NormalBlocked while the
-        // mark stack has already been freed. Populating the unit here reaches the
-        // GCCriticalSection destructor that marks the unit through the null stack.
+    QSignalSpy destroyed(obj, &QObject::destroyed);
+    connect(obj, &QObject::destroyed, this, [pending = std::move(pending)]() {
+        // When run from ~MemoryManager::sweep() during teardown, gcBlocked == NormalBlocked
+        // while the mark stack has already been freed.
         if (pending->engine)
             pending->populate();
     });
@@ -556,10 +557,21 @@ void tst_qv4mm::populateDuringTeardownWithOngoingIncrementalGc()
     QVERIFY(mm->markStack());
     QCOMPARE(mm->gcBlocked, QV4::MemoryManager::NormalBlocked);
 
+    // Push the unmanaged heap over its limit. Otherwise the GCCriticalSection opened by
+    // populate() bails out at the isAboveUnmanagedHeapLimit() check in its destructor and
+    // never reaches the re-entrant GC that the inShutdown guard is meant to suppress.
+    mm->unmanagedHeapSizeGCLimit = 0;
+    mm->changeUnmanagedHeapSizeUsage(1);
+
     // Destroying the engine aborts the incremental GC and runs the final sweep, which
     // destroys obj and invokes the handler above. With the bug present this crashes;
     // once ~MemoryManager also resets gcBlocked the teardown completes cleanly.
     engine.reset();
+
+    // The object may only be scheduled for deferred deletion during teardown rather than
+    // deleted by the final sweep. Wait here for the signal so that any crash in the lambda
+    // is correctly attributed to this test.
+    QVERIFY(!destroyed.isEmpty() || destroyed.wait());
 }
 
 void tst_qv4mm::weakValuesAssignedAfterThePhaseThatShouldHandleWeakValues()
