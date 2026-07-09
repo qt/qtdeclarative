@@ -23,4 +23,9 @@ if(NOT WIN32)
     add_test(NAME tst_models COMMAND tst_models)
 
     add_test(NAME tst_scheduler_app COMMAND tst_scheduler_app)
+
+    if(QT6_IS_SHARED_LIBS_BUILD)
+        add_test(NAME tst_qml_only_import COMMAND tst_qml_only_import)
+        add_test(NAME tst_non_bundle COMMAND tst_non_bundle)
+    endif()
 endif()

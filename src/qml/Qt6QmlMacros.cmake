@@ -117,8 +117,6 @@ function(_qt_internal_get_qml_module_import_path target out_var)
 endfunction()
 
 function(_qt_internal_write_qmldir_part target qt_cmake_export_namespace)
-    set(qt_all_qml_output_dirs "")
-
     # _qt_internal_write_qmldir_part is deferred to be called in the root
     # CMAKE_BINARY_DIR. If find_package(Qt6) is not called in the root of the project (like in the
     # Qt Creator super repo), QT_CMAKE_EXPORT_NAMESPACE will not be defined.
@@ -154,13 +152,6 @@ function(_qt_internal_write_qmldir_part target qt_cmake_export_namespace)
     endif()
     set(qt_conf_file_final "${effective_outdir}/qt.conf")
 
-    get_target_property(dependency_targets "${target}" QT_QML_DEPENDENT_QML_MODULE_TARGETS)
-
-    # Add the current executable's qml module location as an import path as well.
-    # Helps finding the executable qml module for macOS app bundles.
-    _qt_internal_get_qml_module_import_path("${target}" own_module_import_path)
-    list(APPEND qt_all_qml_output_dirs ${own_module_import_path})
-
     get_directory_property(counter
          DIRECTORY ${PROJECT_SOURCE_DIR}
          QT_QMLDIR_DEFERRED_WRITEOUT_COUNTER
@@ -170,42 +161,109 @@ function(_qt_internal_write_qmldir_part target qt_cmake_export_namespace)
         DIRECTORY ${PROJECT_SOURCE_DIR}
         PROPERTY QT_QMLDIR_DEFERRED_WRITEOUT_COUNTER "${counter}"
     )
+
+    # The partial lists the QML import path roots the executable needs. We source
+    # them from two places and take their union:
+    #  - the declared CMake dependencies (this target's own QML module, plus any
+    #    DEPENDENCIES/IMPORTS TARGET), computed here at configure time; and
+    #  - qmlimportscanner, which parses the actual .qml files and so also sees
+    #    QML-only imports that have no CMake dependency.
+    # The former guarantees declared dependencies are always present (even for a
+    # target with no .qml files of its own); the latter covers imports the CMake
+    # dependency graph doesn't know about.
+    set(declared_import_roots "")
+    _qt_internal_get_qml_module_import_path("${target}" own_module_import_path)
+    if(own_module_import_path)
+        list(APPEND declared_import_roots "${own_module_import_path}")
+    endif()
+    get_target_property(dependency_targets "${target}" QT_QML_DEPENDENT_QML_MODULE_TARGETS)
     if(dependency_targets)
         foreach(dep_target ${dependency_targets})
-            _qt_internal_get_qml_module_import_path("${dep_target}" module_import_path)
-            list(APPEND qt_all_qml_output_dirs ${module_import_path})
+            _qt_internal_get_qml_module_import_path("${dep_target}" dep_import_path)
+            if(dep_import_path)
+                list(APPEND declared_import_roots "${dep_import_path}")
+            endif()
         endforeach()
-        if (qt_all_qml_output_dirs)
-            list(REMOVE_DUPLICATES qt_all_qml_output_dirs)
-            # TODO: this will break for paths containing a newline character..
-            list(JOIN qt_all_qml_output_dirs "\n"  qt_all_qml_output_dirs)
+    endif()
+    if(declared_import_roots)
+        list(REMOVE_DUPLICATES declared_import_roots)
+    endif()
 
-            file(GENERATE
-                OUTPUT "${qt_part_conf_file}"
-                CONTENT "${qt_all_qml_output_dirs}\n"
-            )
-            set_property(
-                DIRECTORY ${PROJECT_SOURCE_DIR}
-                APPEND
-                PROPERTY QT_QMLDIR_ALL_PARTS "${qt_part_conf_file}"
-            )
-            set_source_files_properties(
-                "${qt_part_conf_file}"
-                PROPERTIES _qt_qml_final_qt_conf_path "${qt_conf_file_final}"
-            )
-            set_property(
-                DIRECTORY ${PROJECT_SOURCE_DIR}
-                APPEND
-                PROPERTY QT_QMLDIR_DEFERRED_WRITEOUT_ALL_TARGETS "${target}")
-        endif()
+    # The scanner - and thus its ${target}_qmlimportscan target - is created by the
+    # Qt6::Qml deploy finalizer (_qt_internal_generate_deploy_qml_imports_script).
+    # We can't test for that target here, because this deferred call may run before
+    # the finalizer, so we query the answer that was computed and cached back when
+    # qt_add_qml_module() was called.
+    _qt_internal_qml_import_scan_enabled(${target} have_import_scan)
+
+    set(emit_partial FALSE)
+    if(have_import_scan)
+        # The scanner imports-file path, shared with _qt_internal_scan_qml_imports()
+        # via the same helper. The BUILD_PHASE scan has no $<CONFIG> infix: one file
+        # serves all configurations.
+        _qt_internal_qml_imports_file(${target} "build" imports_file)
+
+        # Pass the configure-time roots (and Qt's own import paths, used to filter
+        # out Qt modules the scanner reports without a namespaced LINKTARGET) to
+        # the -P script. Semicolons are escaped so each list arrives as a single
+        # argument rather than being split into multiple command arguments.
+        _qt_internal_get_main_qt_qml_import_paths(qt_main_import_paths)
+        string(REPLACE ";" "$<SEMICOLON>" extra_roots_arg "${declared_import_roots}")
+        string(REPLACE ";" "$<SEMICOLON>" qt_import_paths_arg "${qt_main_import_paths}")
+
+        add_custom_command(
+            OUTPUT "${qt_part_conf_file}"
+            COMMAND "${CMAKE_COMMAND}"
+                -DIMPORTS_FILE=${imports_file}
+                -DOUTPUT_FILE=${qt_part_conf_file}
+                -DEXPORT_NAMESPACE=${QT_CMAKE_EXPORT_NAMESPACE}
+                "-DEXTRA_IMPORT_ROOTS=${extra_roots_arg}"
+                "-DQT_IMPORT_PATHS=${qt_import_paths_arg}"
+                -P "${__qt_qml_macros_module_base_dir}/Qt6WriteQtConfPart.cmake"
+            DEPENDS
+                "${imports_file}"
+                "${__qt_qml_macros_module_base_dir}/Qt6WriteQtConfPart.cmake"
+                ${target}_qmlimportscan
+            COMMENT "Generating qt.conf part for ${target}"
+            VERBATIM
+        )
+        set(emit_partial TRUE)
+    elseif(dependency_targets)
+        # No scanner (static Qt build, or a test executable without the force
+        # override): fall back to the declared dependencies only, generated at
+        # configure time as before. Gated on dependency_targets to match the
+        # pre-existing behaviour, where a target with no declared QML-module
+        # dependencies produced no qt.conf.
+        list(JOIN declared_import_roots "\n" declared_import_roots_content)
+        file(GENERATE
+            OUTPUT "${qt_part_conf_file}"
+            CONTENT "${declared_import_roots_content}\n"
+        )
+        set(emit_partial TRUE)
+    endif()
+
+    if(emit_partial)
+        # Declare the partial as a build-time output. The merge keys a directory
+        # per non-empty line, so an empty partial yields no qt.conf for that
+        # directory.
+        set_property(
+            DIRECTORY ${PROJECT_SOURCE_DIR}
+            APPEND
+            PROPERTY QT_QMLDIR_ALL_PARTS "${qt_part_conf_file}"
+        )
+        set_source_files_properties(
+            "${qt_part_conf_file}"
+            PROPERTIES _qt_qml_final_qt_conf_path "${qt_conf_file_final}"
+        )
+        set_property(
+            DIRECTORY ${PROJECT_SOURCE_DIR}
+            APPEND
+            PROPERTY QT_QMLDIR_DEFERRED_WRITEOUT_ALL_TARGETS "${target}")
     endif()
 
     if (counter EQUAL 0)
         # counter reached zero, all relevant finalizers are done
         get_directory_property(all_parts DIRECTORY ${PROJECT_SOURCE_DIR} QT_QMLDIR_ALL_PARTS)
-        if (NOT all_parts)
-            return()
-        endif()
         list(JOIN all_parts "\n"  all_parts_string)
 
         set(qt_conf_list_path "${PROJECT_BINARY_DIR}/.qt/qtconf_list${config_infix}")
@@ -1147,10 +1205,20 @@ Check https://doc.qt.io/qt-6/qt-cmake-policy-qtp0001.html for policy details."
         endif()
     endif()
 
-    # write out extra qtconf files for executables to automatically set up import paths;
-    # but avoid needless warnings and work if there are no relevant dependencies specified
+    if(backing_target_type STREQUAL "EXECUTABLE")
+        # Settle now, while everything the decision depends on is known and in
+        # scope, whether this executable will have a build-time QML import scan,
+        # caching the answer on the target. The finalizer that sets the scan up and
+        # the deferred call that consumes its output then both query that same
+        # answer, and so cannot disagree about it.
+        _qt_internal_qml_import_scan_enabled(${target} scan_enabled)
+    endif()
+
+    # write out extra qtconf files for executables to automatically set up import paths.
+    # The import paths are sourced from qmlimportscanner (see
+    # _qt_internal_write_qmldir_part), so we generate a partial for every
+    # executable, not just those declaring TARGET-based dependencies.
     if((backing_target_type STREQUAL "EXECUTABLE")
-        AND all_dependency_targets
         AND NOT arg_NO_GENERATE_QTCONF)
         # The general logic is that every target writes out a "partial" file,
         # containing its needed imports.
@@ -4582,6 +4650,64 @@ Possible reasons include:
     set(${out_path} "${tool_path}" PARENT_SCOPE)
 endfunction()
 
+# Whether a build-time QML import scan will be set up for this target.
+#
+# Two places need to agree on this: _qt_internal_generate_deploy_qml_imports_script(),
+# which sets the scan up, and _qt_internal_write_qmldir_part(), which consumes its
+# output. The latter runs from a deferred call that is not ordered against the
+# former, so it cannot observe the scan directly. The answer is therefore computed
+# once, in the scope of the qt_add_qml_module() call, cached on the target, and only
+# queried afterwards.
+function(_qt_internal_qml_import_scan_enabled target out_var)
+    get_property(is_cached TARGET ${target} PROPERTY _qt_qml_import_scan_enabled SET)
+    if(is_cached)
+        get_target_property(enabled ${target} _qt_qml_import_scan_enabled)
+        set(${out_var} ${enabled} PARENT_SCOPE)
+        return()
+    endif()
+
+    get_target_property(no_import_scan ${target} QT_QML_MODULE_NO_IMPORT_SCAN)
+    get_target_property(is_test_executable ${target} _qt_is_test_executable)
+    get_target_property(is_manual_test ${target} _qt_is_manual_test)
+    get_target_property(is_benchmark_test ${target} _qt_is_benchmark_test)
+    get_target_property(is_internal_target ${target} _qt_is_internal_target)
+
+    # The scan is set up by an executable finalizer, and Qt's own internal
+    # executables only run those for a subset of targets and platforms - notably
+    # not for plain tools on desktop, where scanning qmlimportscanner itself would
+    # be circular. Keep in sync with qt_internal_add_executable() in qtbase.
+    set(runs_executable_finalizers TRUE)
+    if(is_internal_target)
+        set(runs_executable_finalizers FALSE)
+        if(NOT QT_INTERNAL_SKIP_TEST_FINALIZERS_V2
+                AND (ANDROID OR WASM
+                    OR is_test_executable OR is_manual_test OR is_benchmark_test))
+            set(runs_executable_finalizers TRUE)
+        endif()
+    endif()
+
+    set(enabled TRUE)
+    if(NOT QT6_IS_SHARED_LIBS_BUILD OR no_import_scan)
+        set(enabled FALSE)
+    elseif((is_test_executable OR is_benchmark_test)
+            AND NOT QT_INTERNAL_FORCE_QML_DEPLOY_SCAN_FOR_TESTS)
+        set(enabled FALSE)
+    elseif(NOT runs_executable_finalizers)
+        set(enabled FALSE)
+    endif()
+
+    set_target_properties(${target} PROPERTIES _qt_qml_import_scan_enabled ${enabled})
+    set(${out_var} ${enabled} PARENT_SCOPE)
+endfunction()
+
+# The file qmlimportscanner writes for a target's import scan. The infix
+# separates the build-time scan ("build") from the configure-time scan ("conf");
+# see _qt_internal_scan_qml_imports().
+function(_qt_internal_qml_imports_file target infix out_var)
+    get_target_property(target_binary_dir ${target} BINARY_DIR)
+    set(${out_var} "${target_binary_dir}/.qt/qml_imports/${target}_${infix}.cmake" PARENT_SCOPE)
+endfunction()
+
 function(_qt_internal_scan_qml_imports target imports_file_var when_to_scan)
     if(NOT "${ARGN}" STREQUAL "")
         message(FATAL_ERROR "Unknown/unexpected arguments: ${ARGN}")
@@ -4602,18 +4728,15 @@ function(_qt_internal_scan_qml_imports target imports_file_var when_to_scan)
     _qt_internal_find_qmlimportscanner_path(tool_path "${scan_at_configure_time}")
 
     get_target_property(target_source_dir ${target} SOURCE_DIR)
-    get_target_property(target_binary_dir ${target} BINARY_DIR)
-    set(out_dir "${target_binary_dir}/.qt/qml_imports")
 
-    # Create separate files for scanning at build time vs configure time. Otherwise calling
-    # ninja clean will re-run qmlimportscanner directly after the clean, which is
-    # both weird and sometimes prints warnings due to the tool not finding qml files that were
-    # cleaned from the build dir.
-    set(file_base_name "${target}_${imports_file_infix}")
-
-    set(imports_file "${out_dir}/${file_base_name}.cmake")
+    # Create separate files for scanning at build time vs configure time (via the
+    # infix). Otherwise calling ninja clean will re-run qmlimportscanner directly
+    # after the clean, which is both weird and sometimes prints warnings due to
+    # the tool not finding qml files that were cleaned from the build dir.
+    _qt_internal_qml_imports_file(${target} "${imports_file_infix}" imports_file)
     set(${imports_file_var} "${imports_file}" PARENT_SCOPE)
-    file(MAKE_DIRECTORY ${out_dir})
+    get_filename_component(out_dir "${imports_file}" DIRECTORY)
+    file(MAKE_DIRECTORY "${out_dir}")
 
     set(cmd_args
         -rootPath "${target_source_dir}"
@@ -4675,7 +4798,7 @@ function(_qt_internal_scan_qml_imports target imports_file_var when_to_scan)
     # of arguments on the command line
     string(LENGTH "${cmd_args}" length)
     if(length GREATER 240)
-        set(rsp_file "${out_dir}/${file_base_name}.rsp")
+        set(rsp_file "${out_dir}/${target}_${imports_file_infix}.rsp")
         list(JOIN cmd_args "\n" rsp_file_content)
         file(WRITE ${rsp_file} "${rsp_file_content}")
         set(cmd_args "@${rsp_file}")
@@ -4720,16 +4843,9 @@ function(_qt_internal_scan_qml_imports target imports_file_var when_to_scan)
     endif()
 endfunction()
 
-# Parse the entry at the specified index, assuming the caller already included
-# the file generated by a call to _qt_internal_scan_qml_imports()
-macro(_qt_internal_parse_qml_imports_entry prefix index)
-    cmake_parse_arguments("${prefix}"
-        ""
-        "CLASSNAME;NAME;PATH;PLUGIN;RELATIVEPATH;TYPE;VERSION;LINKTARGET;PREFER"
-        "COMPONENTS;SCRIPTS"
-        ${qml_import_scanner_import_${index}}
-    )
-endmacro()
+# _qt_internal_parse_qml_imports_entry() lives in Qt6QmlPublicCMakeHelpers.cmake,
+# which is included before this file, so that the same macro can be shared with
+# the Qt6WriteQtConfPart.cmake -P script.
 
 
 # This function is called as a finalizer in qt6_finalize_executable() for any
@@ -4893,9 +5009,6 @@ endfunction()
 # This function may be called as a finalizer in qt6_finalize_executable() for any
 # target that links against the Qml library for a shared Qt.
 function(_qt_internal_generate_deploy_qml_imports_script target)
-    if(NOT QT6_IS_SHARED_LIBS_BUILD)
-        return()
-    endif()
     get_target_property(target_type ${target} TYPE)
     # TODO: Handle Android where executables are module libraries instead
     if(NOT target_type STREQUAL "EXECUTABLE")
@@ -4905,17 +5018,16 @@ function(_qt_internal_generate_deploy_qml_imports_script target)
     # Protect against being called multiple times in case we are being called
     # explicitly before the finalizer is invoked.
     get_target_property(already_generated ${target} _QT_QML_PLUGIN_SCAN_GENERATED)
-    get_target_property(no_import_scan    ${target} QT_QML_MODULE_NO_IMPORT_SCAN)
-    if(already_generated OR no_import_scan)
+    if(already_generated)
         return()
     endif()
 
-    # Return early for test-like executables, because deployment of auto tests doesn't make sense.
-    get_target_property(is_test_executable "${target}" _qt_is_test_executable)
-    get_target_property(is_benchmark_test "${target}" _qt_is_benchmark_test)
-    if((is_test_executable OR is_benchmark_test)
-        AND NOT QT_INTERNAL_FORCE_QML_DEPLOY_SCAN_FOR_TESTS
-        )
+    # Whether to set up the scan at all (shared Qt, import scanning enabled, and
+    # not a test executable unless forced). For a QML module this was settled at
+    # qt_add_qml_module() time; _qt_internal_write_qmldir_part() queries the same
+    # answer to know whether this scan will exist.
+    _qt_internal_qml_import_scan_enabled(${target} scan_enabled)
+    if(NOT scan_enabled)
         return()
     endif()
 
