@@ -213,6 +213,9 @@ public:
             m_url = unit->finalUrl();
     }
 
+    void setData(const QByteArray &data, const QUrl &url,
+                 QQmlComponent::CompilationMode compilationMode);
+
 private:
     ConstructionState m_state;
     QQmlGuardedContextData m_creationContext;

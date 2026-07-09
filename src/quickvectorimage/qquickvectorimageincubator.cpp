@@ -114,11 +114,6 @@ void QQuickVectorImageIncubator::generatorFinished()
     }
 
     if (Q_LIKELY(errorState == QQuickVectorImageGenerator::NoError)) {
-        QQmlComponent::CompilationMode mode =
-                asynchronous
-                ? QQmlComponent::Asynchronous
-                : QQmlComponent::PreferSynchronous;
-
         QQmlEngine *engine = m_qmlContext->engine();
         if (Q_UNLIKELY(engine == nullptr)) {
             qCWarning(lcQuickVectorImage) << "QQuickVectorImageIncubator::generatorFinished: Requires QML engine";
@@ -128,7 +123,10 @@ void QQuickVectorImageIncubator::generatorFinished()
         m_component.reset(new QQmlComponent(engine));
         connect(m_component.get(), &QQmlComponent::statusChanged,
                 this, &QQuickVectorImageIncubator::componentUpdated);
-        m_component->setData(result, QUrl{}, mode);
+        if (asynchronous)
+            m_component->setDataAsynchronous(result, QUrl{});
+        else
+            m_component->setData(result, QUrl{});
     } else {
         m_status = Error;
         emit statusUpdated();
