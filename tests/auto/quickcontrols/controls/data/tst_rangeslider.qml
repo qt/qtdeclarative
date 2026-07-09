@@ -553,7 +553,7 @@ TestCase {
 
         // press and move the first handle of the first slider
         let touch = touchEvent(control1)
-        touch.press(0, control1, 0, 0).commit().move(0, control1, control1.width / 2, control1.height / 2).commit()
+        touch.press(0, control1, 1, 1).commit().move(0, control1, control1.width / 2, control1.height / 2).commit()
         compare(control1.first.pressed, true)
         compare(control1.first.position, 0.5)
         compare(control1.second.pressed, false)
@@ -571,7 +571,7 @@ TestCase {
         verify(control2)
 
         // press and move the first handle of the second slider
-        touch.stationary(0).stationary(1).press(2, control2, 0, 0).commit()
+        touch.stationary(0).stationary(1).press(2, control2, 1, 1).commit()
         touch.stationary(0).stationary(1).move(2, control2, control2.width / 2, control2.height / 2).commit()
         compare(control1.first.pressed, true)
         compare(control1.first.position, 0.5)
