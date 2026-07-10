@@ -130,6 +130,17 @@ ApplicationWindow {
         }
         //! [comboBox]
 
+        //! [dialog]
+        dialog {
+            text {
+                padding: 12
+                alignment: Qt.AlignHCenter | Qt.AlignVCenter
+            }
+
+            background.color: "white"
+        }
+        //! [dialog]
+
         //! [dialogButtonBox]
         dialogButtonBox {
             background {
