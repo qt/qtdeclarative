@@ -33,7 +33,7 @@ using namespace Qt::StringLiterals;
 
 void setupLogger(QQmlJSLogger &logger) // prepare logger to work with compiler
 {
-    for (const auto [id, catOverride] : QQmltc::categoryOverrides()) {
+    for (const auto &[id, catOverride] : QQmltc::categoryOverrides()) {
         if (catOverride.has_value()) {
             const auto level = catOverride.value();
             logger.setCategoryLevel(id, level);
