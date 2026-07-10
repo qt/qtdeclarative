@@ -763,10 +763,10 @@ size_t qHash(const QQuickTextNodeEngine::BinaryTreeNodeKey &key, size_t seed = 0
     return qHashMulti(seed, key.fontEngine, key.clipNode, key.color, key.selectionState);
 }
 
-void QQuickTextNodeEngine::mergeProcessedNodes(QList<BinaryTreeNode *> *regularNodes,
-                                               QList<BinaryTreeNode *> *imageNodes)
+void QQuickTextNodeEngine::mergeProcessedNodes(QVarLengthArray<BinaryTreeNode *, 8> *regularNodes,
+                                               QVarLengthArray<BinaryTreeNode *, 8> *imageNodes)
 {
-    QHash<BinaryTreeNodeKey, QList<BinaryTreeNode *> > map;
+    QHash<BinaryTreeNodeKey, QVarLengthArray<BinaryTreeNode *, 2> > map;
 
     for (int i = 0; i < m_processedNodes.size(); ++i) {
         BinaryTreeNode *node = m_processedNodes.data() + i;
@@ -777,7 +777,7 @@ void QQuickTextNodeEngine::mergeProcessedNodes(QList<BinaryTreeNode *> *regularN
 
             BinaryTreeNodeKey key(node);
 
-            QList<BinaryTreeNode *> &nodes = map[key];
+            QVarLengthArray<BinaryTreeNode *, 2> &nodes = map[key];
             if (nodes.isEmpty())
                 regularNodes->append(node);
 
@@ -791,7 +791,9 @@ void QQuickTextNodeEngine::mergeProcessedNodes(QList<BinaryTreeNode *> *regularN
         BinaryTreeNode *primaryNode = regularNodes->at(i);
         BinaryTreeNodeKey key(primaryNode);
 
-        const QList<BinaryTreeNode *> &nodes = map.value(key);
+        const auto it = map.constFind(key);
+        Q_ASSERT(it != map.constEnd());
+        const QVarLengthArray<BinaryTreeNode *, 2> &nodes = it.value();
         Q_ASSERT(nodes.first() == primaryNode);
 
         int count = 0;
@@ -837,8 +839,8 @@ void QQuickTextNodeEngine::addToSceneGraph(QSGInternalTextNode *parentNode,
     if (m_currentLine.isValid())
         processCurrentLine();
 
-    QList<BinaryTreeNode *> nodes;
-    QList<BinaryTreeNode *> imageNodes;
+    QVarLengthArray<BinaryTreeNode *, 8> nodes;
+    QVarLengthArray<BinaryTreeNode *, 8> imageNodes;
     mergeProcessedNodes(&nodes, &imageNodes);
 
     for (int i = 0; i < m_backgrounds.size(); ++i) {
