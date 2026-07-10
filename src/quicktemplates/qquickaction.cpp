@@ -94,6 +94,8 @@ static QKeySequence variantToKeySequence(const QVariant &var)
 {
     if (var.metaType().id() == QMetaType::Int)
         return QKeySequence(static_cast<QKeySequence::StandardKey>(var.toInt()));
+    else if (var.metaType().id() == QMetaType::QKeySequence)
+        return var.value<QKeySequence>();
     return QKeySequence::fromString(var.toString());
 }
 
