@@ -110,13 +110,13 @@ private:
     void generatePattern(QQuickShapePath *shapePath, const PathNodeInfo &info,
                          const QRectF &boundingRect, QTransform &fillTransform);
     void generateMarkers(const PathNodeInfo &info);
-    void generateFilter(QQuickItem *item, const NodeInfo &info);
+    QQuickItem *generateFilter(QQuickItem *item, const NodeInfo &info);
     QQuickShaderEffectSource *generateFilterStep(const FilterNodeInfo::FilterStep &step,
                                                  QQuickShaderEffectSource *input1,
                                                  QQuickShaderEffectSource *input2,
                                                  const QRectF &stepRect, const QRectF &filterRect);
     QQuickShaderEffectSource *generateFilterMerge(const QList<QQuickShaderEffectSource *> &inputs,
-                                                  const QRectF &stepRect);
+                                                  const QRectF &stepRect, const QRectF &filterRect);
     QQuickShaderEffectSource *generateFilterFlood(const FilterNodeInfo::FilterStep &step,
                                                   QQuickShaderEffectSource *input,
                                                   const QRectF &stepRect, const QRectF &filterRect);
@@ -125,18 +125,21 @@ private:
                                                    const QRectF &stepRect);
     QQuickShaderEffectSource *generateFilterColorMatrix(const FilterNodeInfo::FilterStep &step,
                                                         QQuickShaderEffectSource *input,
-                                                        const QRectF &stepRect);
+                                                        const QRectF &stepRect,
+                                                        const QRectF &filterRect);
     QQuickShaderEffectSource *generateFilterBlend(const FilterNodeInfo::FilterStep &step,
                                                   QQuickShaderEffectSource *input1,
                                                   QQuickShaderEffectSource *input2,
-                                                  const QRectF &stepRect);
+                                                  const QRectF &stepRect, const QRectF &filterRect);
     QQuickShaderEffectSource *generateFilterComposite(const FilterNodeInfo::FilterStep &step,
                                                       QQuickShaderEffectSource *input1,
                                                       QQuickShaderEffectSource *input2,
-                                                      const QRectF &stepRect);
+                                                      const QRectF &stepRect,
+                                                      const QRectF &filterRect);
     QQuickShaderEffectSource *generateFilterGaussianBlur(const FilterNodeInfo::FilterStep &step,
                                                          QQuickShaderEffectSource *input,
-                                                         const QRectF &stepRect);
+                                                         const QRectF &stepRect,
+                                                         const QRectF &filterRect);
 };
 
 QT_END_NAMESPACE

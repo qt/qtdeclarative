@@ -21,6 +21,7 @@ qt_internal_add_module(QuickVectorImageGeneratorPrivate
         Qt::Core
         Qt::QuickPrivate
         Qt::QuickShapesPrivate
+        Qt::QuickEffectsPrivate
         Qt::SvgPrivate
 )
 
