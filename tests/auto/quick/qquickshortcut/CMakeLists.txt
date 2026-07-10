@@ -24,8 +24,10 @@ qt_internal_add_test(tst_qquickshortcut
         tst_qquickshortcut.cpp
     LIBRARIES
         Qt::Gui
+        Qt::GuiPrivate
         Qt::Qml
         Qt::Quick
+        Qt::QuickPrivate
         Qt::QuickTestUtilsPrivate
     TESTDATA ${test_data}
 )
