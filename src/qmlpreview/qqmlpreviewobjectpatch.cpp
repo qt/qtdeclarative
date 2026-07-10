@@ -15,6 +15,9 @@
 #include <private/qqmlscriptdata_p.h>
 #include <private/qqmlvme_p.h>
 #include <private/qqmlvmemetaobject_p.h>
+#include <private/qv4functionobject_p.h>
+#include <private/qv4generatorobject_p.h>
+#include <private/qv4qmlcontext_p.h>
 #include <private/qv4resolvedtypereference_p.h>
 
 #include <QtQml/qqmlcomponent.h>
@@ -704,6 +707,61 @@ void redirectResolvedTypeReferences(
     }
 }
 
+// Re-create the VME method function objects from newUnit so that an object's methods follow the
+// unit remap, mirroring what refreshBindings() does for QQmlJavaScriptExpression-based bindings.
+static void refreshVmeMethods(const std::vector<QObject *> &objects,
+                              const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit)
+{
+    QV4::ExecutionEngine *v4 = newUnit->engine;
+    QV4::Scope scope(v4);
+    QV4::ScopedValue function(scope);
+
+    for (QObject *object : objects) {
+        QQmlData *ddata = QQmlData::get(object);
+        if (!ddata || !ddata->hasVMEMetaObject)
+            continue;
+
+        auto *mainVme = static_cast<QQmlVMEMetaObject *>(QObjectPrivate::get(object)->metaObject);
+        for (QQmlVMEMetaObject *vme = mainVme; vme; vme = vme->parentVMEMetaObject()) {
+            const auto cu = vme->compilationUnit();
+            if (cu != newUnit)
+                continue;
+
+            const QQmlRefPointer<QQmlContextData> context = vme->contextData();
+            if (!context)
+                continue;
+
+            const int objectIndex = vme->qmlObjectId();
+            if (objectIndex < 0 || objectIndex >= cu->objectCount())
+                continue;
+
+            const QV4::CompiledData::Object *obj = cu->objectAt(objectIndex);
+            const QQmlPropertyCache::ConstPtr cache = cu->propertyCachesPtr()->at(objectIndex);
+            if (!cache)
+                continue;
+
+            QV4::Scoped<QV4::QmlContext> qmlContext(
+                    scope, QV4::QmlContext::create(v4->rootContext(), context, object));
+
+            const quint32_le *functionIdx = obj->functionOffsetTable();
+            for (quint32 i = 0; i < obj->nFunctions; ++i, ++functionIdx) {
+                QV4::Function *runtimeFunction = cu->runtimeFunctions[*functionIdx];
+                const QString name = runtimeFunction->name()->toQString();
+
+                const QQmlPropertyData *property = cache->property(name, object, context);
+                if (!property || !property->isVMEFunction())
+                    continue;
+
+                // Mirror QQmlObjectCreator::setupFunctions(): generators need their own creator.
+                function = runtimeFunction->isGenerator()
+                        ? QV4::GeneratorFunction::create(qmlContext, runtimeFunction)
+                        : QV4::FunctionObject::createScriptFunction(qmlContext, runtimeFunction);
+                mainVme->setVmeMethod(property->coreIndex(), function);
+            }
+        }
+    }
+}
+
 PatchResult applyDiff(std::vector<QObject *> &objects,
                       const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit,
                       const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit)
@@ -724,6 +782,7 @@ PatchResult applyDiff(std::vector<QObject *> &objects,
     if (diff.success && isTrivialDiff(diff, oldUnit, newUnit)) {
         patchConstantBindings(objects, diff, oldUnit, newUnit);
         remapObjectsToNewUnit(objects, oldUnit, newUnit);
+        refreshVmeMethods(objects, newUnit);
         return PatchResult::PatchedInPlace;
     }
 
