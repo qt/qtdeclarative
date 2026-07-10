@@ -96,6 +96,7 @@ private slots:
     void inPlaceSingletonBindingEdit();
     void inPlaceSingletonSelfBindingEdit();
     void inPlaceJsFunctionBodyEdit();
+    void inPlaceSelfTypedRequiredPropertyReassign();
     void inPlaceObjectTreeRemoveChild();
     void inPlaceObjectTreeAddChild();
     void inPlaceChildComponentMultipleEdits();
@@ -1307,6 +1308,43 @@ void tst_QQmlPreview::inPlaceJsFunctionBodyEdit()
 
     QVERIFY2(m_process->state() != QProcess::NotRunning,
              "Process crashed during in-place JS function body edit");
+
+    m_process->stop();
+    QTRY_COMPARE(m_client->state(), QQmlDebugClient::NotConnected);
+}
+
+// Reproduces the coffee demo's second failure (preview2.txt): a type (Flow) is edited in place,
+// and one of its methods assigns the instance itself to a `required property Flow` on a page it
+// creates. After the reload, the consumer's Flow type reference is redirected to the new unit, so
+// the still-live instance must also present the new type identity — otherwise the re-run method
+// throws "Cannot assign QObject* to Flow_QMLTYPE_*". The Timer re-invokes run() every tick, so the
+// patched method runs after the reload.
+void tst_QQmlPreview::inPlaceSelfTypedRequiredPropertyReassign()
+{
+    const QString file("typeid/Main.qml");
+    const QString flowFile("typeid/AppFlow.qml");
+    QCOMPARE(startQmlProcess(file), ConnectSuccess);
+    QVERIFY(m_client);
+    QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
+
+    enableInPlaceUpdates();
+
+    verifyProcessOutputContains("typeid run ok v=");
+
+    // A method-body-only edit (change the log marker) is a trivial in-place patch.
+    QByteArray contents = readAndModify(flowFile, {{"typeid run ok v=", "typeid run ok2 v="}});
+    QVERIFY(!contents.isEmpty());
+    const qsizetype outputLen = m_process->output().size();
+    serveFile(testFile(flowFile), contents);
+    m_client->triggerLoad(testFileUrl(flowFile));
+
+    // The patched method must still assign the instance to the page's `required property Flow`.
+    QTRY_VERIFY_WITH_TIMEOUT(m_process->output().mid(outputLen).contains("typeid run ok2 v="),
+                             15000);
+    QVERIFY2(!m_process->output().mid(outputLen).contains("typeid run FAILED"),
+             "Page creation failed after reload: required Flow property could not be assigned");
+    QVERIFY2(!m_process->output().mid(outputLen).contains("Cannot assign"),
+             qPrintable(m_process->output().mid(outputLen)));
 
     m_process->stop();
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::NotConnected);

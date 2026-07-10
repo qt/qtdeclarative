@@ -603,13 +603,23 @@ static void remapObjectsToNewUnit(const std::vector<QObject *> &objects,
             continue;
 
         // Remap (or retire) every VME meta-object in the chain that points at oldUnit.
-        for (QQmlVMEMetaObject *vmeMeta =
-                     static_cast<QQmlVMEMetaObject *>(QObjectPrivate::get(object)->metaObject);
-             vmeMeta; vmeMeta = vmeMeta->parentVMEMetaObject()) {
+        auto *mainVme = static_cast<QQmlVMEMetaObject *>(QObjectPrivate::get(object)->metaObject);
+        for (QQmlVMEMetaObject *vmeMeta = mainVme; vmeMeta;
+             vmeMeta = vmeMeta->parentVMEMetaObject()) {
             if (vmeMeta->compilationUnit() != oldUnit)
                 continue;
             if (vmeMeta->qmlObjectId() < newUnit->objectCount()) {
                 vmeMeta->setCompilationUnit(newUnit);
+
+                // Give the live instance the reloaded type's identity. The instance must present
+                // newUnit's property cache.
+                const QQmlPropertyCache::ConstPtr newCache =
+                        newUnit->propertyCachesPtr()->at(vmeMeta->qmlObjectId());
+                if (newCache) {
+                    vmeMeta->setPropertyCache(newCache);
+                    if (vmeMeta == mainVme)
+                        ddata->propertyCache = newCache;
+                }
             } else {
                 // Obsolete: null it so stale alias lookups (triggered by refreshBindings) safely
                 // return nullptr from findCompiledObject() instead of asserting.

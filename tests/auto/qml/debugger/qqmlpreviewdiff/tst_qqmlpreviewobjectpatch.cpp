@@ -549,14 +549,17 @@ void tst_QQmlPreviewObjectPatch::granularConstantUpdate()
     const auto newExecUnit = QQmlComponentPrivate::get(&newComponent)->compilationUnit();
     QVERIFY(oldExecUnit && newExecUnit);
 
-    // A pure constant change is a trivial diff: it must be patched in place, leaving the same
-    // QObject and the same VME meta-object untouched (no rebuild).
-    const QMetaObject *metaObjectBefore = object->metaObject();
+    // A pure constant change is a trivial diff: it must be patched in place, reusing the same
+    // QObject (no rebuild). The instance does adopt the reloaded unit's type identity though: its
+    // meta-object is re-pointed at newExecUnit's cache so it still satisfies is-a checks against
+    // consumers whose type references were redirected to the new unit.
+    QObject *objectBefore = object.get();
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
     QCOMPARE(updateObjects(objects, oldExecUnit, newExecUnit),
              QQmlPreview::PatchResult::PatchedInPlace);
-    QCOMPARE(object->metaObject(), metaObjectBefore);
+    QCOMPARE(object.get(), objectBefore); // same QObject: patched in place, not rebuilt
+    QCOMPARE(object->metaObject(), newExecUnit->rootPropertyCache()->createMetaObject());
 
     QCOMPARE(object->property("count").toInt(), 20); // updated by diff
     QCOMPARE(object->property("label").toString(), QString("hello")); // not invalidated

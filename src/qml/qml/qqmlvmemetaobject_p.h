@@ -117,6 +117,16 @@ public:
     // Used by auto-tests for inspection
     QQmlPropertyCache::ConstPtr propertyCache() const { return cache; }
 
+    // Re-point this meta-object at an identically-shaped property cache. Used by the QML preview's
+    // in-place patch to give a live instance the reloaded type's identity, so it keeps satisfying
+    // is-a checks against consumers whose type references were redirected to the new unit. The
+    // lazily-built dynamic meta-object is dropped so it is rebuilt from the new cache on next use.
+    void setPropertyCache(const QQmlPropertyCache::ConstPtr &newCache)
+    {
+        cache = newCache;
+        metaObject = QTaggedPointer<const QMetaObject, MetaObjectValidity>();
+    }
+
     bool intercepts(QQmlPropertyIndex propertyIndex) const
     {
         for (auto it = interceptors; it; it = it->m_next) {
