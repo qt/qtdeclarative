@@ -124,6 +124,16 @@ QT_BEGIN_NAMESPACE
     \snippet ControlsSnippets.qml comboBox
 */
 
+/*!
+    \qmlproperty ControlStyle AbstractStylableControls::dialog
+
+    Grouped property for styling \l [QtQuickControls]{Dialog}.
+
+    Unset properties fall back to \l popup.
+
+    \snippet ControlsSnippets.qml dialog
+*/
+
 /*
     \qmlproperty ControlStyle AbstractStylableControls::dialogButtonBox
 
@@ -589,6 +599,7 @@ IMPLEMENT_ACCESSORS(flatButton, QQStyleKitReader::ControlType::FlatButton)
 IMPLEMENT_ACCESSORS(checkBox, QQStyleKitReader::ControlType::CheckBox)
 IMPLEMENT_ACCESSORS(checkDelegate, QQStyleKitReader::ControlType::CheckDelegate)
 IMPLEMENT_ACCESSORS(comboBox, QQStyleKitReader::ControlType::ComboBox)
+IMPLEMENT_ACCESSORS(dialog, QQStyleKitReader::ControlType::Dialog)
 IMPLEMENT_ACCESSORS(dialogButtonBox, QQStyleKitReader::ControlType::DialogButtonBox)
 IMPLEMENT_ACCESSORS(progressBar, QQStyleKitReader::ControlType::ProgressBar)
 IMPLEMENT_ACCESSORS(scrollBar, QQStyleKitReader::ControlType::ScrollBar)

@@ -66,6 +66,7 @@ QT_BEGIN_NAMESPACE
     \value StyleReader.CheckBox         \l {CheckBox}
     \value StyleReader.CheckDelegate    \l {CheckDelegate}
     \value StyleReader.ComboBox         \l {ComboBox}
+    \value StyleReader.Dialog           \l {Dialog}
     \value StyleReader.DialogButtonBox  \l {DialogButtonBox}
     \value StyleReader.Frame            \l {Frame}
     \value StyleReader.GroupBox         \l {GroupBox}

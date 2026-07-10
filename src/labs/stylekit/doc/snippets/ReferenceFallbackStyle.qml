@@ -159,6 +159,14 @@ BaseStyle {
         }
     }
 
+    dialog {
+        text {
+            padding: 12
+            alignment: Qt.AlignVCenter | Qt.AlignLeft
+        }
+        background.color: __baseWhite
+    }
+
     dialogButtonBox {
         background {
             height: 40
