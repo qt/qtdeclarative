@@ -15,6 +15,7 @@
 #endif
 
 #include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
 
 class tst_QQuickShortcut : public QQmlDataTest
 {
@@ -30,6 +31,7 @@ private slots:
     void shortcuts();
     void sequence_data();
     void sequence();
+    void qkeysequence();
     void context_data();
     void context();
     void contextChange_data();
@@ -326,6 +328,30 @@ void tst_QQuickShortcut::sequence()
 
     QCOMPARE(window->property("activatedShortcut").toString(), activatedShortcut);
     QCOMPARE(window->property("ambiguousShortcut").toString(), ambiguousShortcut);
+}
+
+using namespace QQuickVisualTestUtils;
+
+void tst_QQuickShortcut::qkeysequence()
+{
+    const Qt::Key key = Qt::Key_M;
+    const Qt::KeyboardModifiers modifiers = Qt::KeyboardModifiers(Qt::ControlModifier | Qt::AltModifier);
+    const QKeySequence shortcut = QKeySequence(Qt::ControlModifier | Qt::AltModifier | Qt::Key_M);
+
+    QQuickApplicationHelper helper(this, "qkeysequence.qml");
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    window->setProperty("shortcut", shortcut);
+
+    QTest::keyPress(window, key, modifiers);
+    QTest::keyRelease(window, key, modifiers);
+
+    QCOMPARE(window->property("activatedShortcut"), shortcut);
+    QVERIFY(!window->property("ambiguousShortcut").isValid());
 }
 
 void tst_QQuickShortcut::context_data()

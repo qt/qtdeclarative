@@ -104,6 +104,8 @@ static QKeySequence valueToKeySequence(const QVariant &value, const QQuickShortc
                     << templateString.arg(static_cast<QKeySequence::StandardKey>(value.toInt()));
         }
         return s.size() > 0 ? s[0] : QKeySequence {};
+    } else if (value.userType() == QMetaType::QKeySequence) {
+        return value.value<QKeySequence>();
     }
 
     return QKeySequence::fromString(value.toString());
@@ -115,7 +117,10 @@ static QList<QKeySequence> valueToKeySequences(const QVariant &value)
         return QKeySequence::keyBindings(static_cast<QKeySequence::StandardKey>(value.toInt()));
     } else {
         QList<QKeySequence> result;
-        result.push_back(QKeySequence::fromString(value.toString()));
+        if (value.userType() == QMetaType::QKeySequence)
+            result.push_back(value.value<QKeySequence>());
+        else
+            result.push_back(QKeySequence::fromString(value.toString()));
         return result;
     }
 }
