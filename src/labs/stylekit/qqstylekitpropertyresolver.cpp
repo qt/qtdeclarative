@@ -74,6 +74,7 @@ const QList<QQStyleKitExtendableControlType> QQStyleKitPropertyResolver::baseTyp
             { QQStyleKitReader::Popup, QQStyleKitReader::Control };
         return t; }
     case QQStyleKitReader::Page:
+    case QQStyleKitReader::DialogButtonBox:
     case QQStyleKitReader::Frame:
     case QQStyleKitReader::TabBar:
     case QQStyleKitReader::ToolBar: {

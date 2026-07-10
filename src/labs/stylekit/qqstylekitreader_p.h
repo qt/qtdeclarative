@@ -59,6 +59,7 @@ public:
         CheckBox,
         CheckDelegate,
         ComboBox,
+        DialogButtonBox,
         FlatButton,
         ProgressBar,
         ScrollBar,

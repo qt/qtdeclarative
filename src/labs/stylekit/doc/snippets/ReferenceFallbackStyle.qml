@@ -159,6 +159,15 @@ BaseStyle {
         }
     }
 
+    dialogButtonBox {
+        background {
+            height: 40
+            radius: 0
+            color: __transparent
+            border.width: 0
+        }
+    }
+
     flatButton {
         background.visible: false
         hovered.background.visible: true

@@ -130,6 +130,17 @@ ApplicationWindow {
         }
         //! [comboBox]
 
+        //! [dialogButtonBox]
+        dialogButtonBox {
+            background {
+                height: 40
+                radius: 0
+                color: "transparent"
+                border.width: 0
+            }
+        }
+        //! [dialogButtonBox]
+
         //! [flatButton]
         flatButton {
             // Hide background normally, show on hover
