@@ -152,7 +152,7 @@ Function::Function(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
     const auto isEnumUsedAsType = [&](const QV4::ExecutableCompilationUnit *unit,
                                       int elementNameId, QQmlTypeLoader *typeLoader,
                                       const quint16 *parameter = nullptr) {
-        const QStringView name = unit->baseCompilationUnit()->stringAt(elementNameId);
+        const QString name = unit->baseCompilationUnit()->stringAt(elementNameId);
         const auto split = name.tokenize(u'.').toContainer<QVarLengthArray<QStringView, 4>>();
         if (split.size() != 2)
             return false;
