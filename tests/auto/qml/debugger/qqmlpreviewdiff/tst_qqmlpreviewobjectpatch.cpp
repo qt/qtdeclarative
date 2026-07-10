@@ -209,6 +209,7 @@ private slots:
     void granularPropertyRemovalWithStash();
     void updateObjectsFunctionAdd();
     void updateObjectsGeneratorFunctionAdd();
+    void updateObjectsGeneratorMethodChange();
     void updateObjectsFunctionChange();
     void updateObjectsFunctionRemove();
 
@@ -496,6 +497,7 @@ private slots:
     // (that has states with PropertyChanges targeting form aliases) should not
     // trigger an assert in "canGetTypeFromVariant<T>(this)" during rebuild.
     void derivedTypeFunctionChangeCrash();
+    void nestedDerivedIdMethodChange();
 
 private:
     QQmlEngine engine;
@@ -699,6 +701,36 @@ void tst_QQmlPreviewObjectPatch::updateObjectsGeneratorFunctionAdd()
     QVERIFY(QMetaObject::invokeMethod(object.data(), "runGen", Q_RETURN_ARG(QVariant, result)));
     QCOMPARE(result.metaType(), QMetaType::fromType<int>());
     QCOMPARE(result.toInt(), 18);
+}
+
+void tst_QQmlPreviewObjectPatch::updateObjectsGeneratorMethodChange()
+{
+    // A generator method (function*) whose body changes must be re-homed in place like any other
+    // VME method: the trivial patch's refreshVmeMethods() re-creates it with
+    // GeneratorFunction::create(). Regular createScriptFunction() would produce a non-generator and
+    // break iteration; simply skipping it would leave the stale old generator in the slot.
+    QQmlComponent oldComponent(&engine, testFileUrl("GeneratorMethodOld.qml"));
+    QVERIFY2(oldComponent.isReady(), qPrintable(oldComponent.errorString()));
+    QScopedPointer<QObject> object(oldComponent.create());
+    QVERIFY(object);
+
+    QVariant result;
+    QVERIFY(QMetaObject::invokeMethod(object.data(), "first", Q_RETURN_ARG(QVariant, result)));
+    QCOMPARE(result.toInt(), 10);
+
+    QQmlComponent newComponent(&engine, testFileUrl("GeneratorMethodNew.qml"));
+    QVERIFY2(newComponent.isReady(), qPrintable(newComponent.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldComponent)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComponent)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QCOMPARE(updateObjects(objects, oldExecUnit, newExecUnit),
+             QQmlPreview::PatchResult::Rebuilt);
+
+    QVERIFY(QMetaObject::invokeMethod(object.data(), "first", Q_RETURN_ARG(QVariant, result)));
+    QCOMPARE(result.toInt(), 20);
 }
 
 void tst_QQmlPreviewObjectPatch::updateObjectsFunctionChange()
@@ -4130,6 +4162,43 @@ void tst_QQmlPreviewObjectPatch::derivedTypeFunctionChangeCrash()
     // If we survive, verify the function was updated.
     QVERIFY(QMetaObject::invokeMethod(object.get(), "selectCoffee"));
     QCOMPARE(object->property("coffeeName").toString(), QString("Cappuccinooooo"));
+}
+
+// Reproduces the coffee demo failure exactly: the derived-with-id-method type (ApplicationFlow)
+// is instantiated *nested* inside an outer document (Main.qml). Changing the method body must
+// re-home the VME method against the context that actually owns the id so that a self-referencing
+// id lookup ("applicationFlow.foo") still resolves. Historically refreshVmeMethods used the wrong
+// context here, so after the patch the method threw "applicationFlow is not defined".
+void tst_QQmlPreviewObjectPatch::nestedDerivedIdMethodChange()
+{
+    QQmlComponent wrapper(&engine, testFileUrl("IdMethodWrapper.qml"));
+    QVERIFY2(wrapper.isReady(), qPrintable(wrapper.errorString()));
+    std::unique_ptr<QObject> root(wrapper.create());
+    QVERIFY(root);
+
+    QObject *inner = root->property("inner").value<QObject *>();
+    QVERIFY(inner);
+
+    QVERIFY(QMetaObject::invokeMethod(inner, "bump"));
+    QCOMPARE(inner->property("value").toInt(), 10);
+
+    QQmlComponent oldComp(&engine, testFileUrl("IdMethodOld.qml"));
+    QVERIFY2(oldComp.isReady(), qPrintable(oldComp.errorString()));
+    QQmlComponent newComp(&engine, testFileUrl("IdMethodNew.qml"));
+    QVERIFY2(newComp.isReady(), qPrintable(newComp.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldComp)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComp)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QVERIFY(!objects.empty());
+    QCOMPARE(updateObjects(objects, oldExecUnit, newExecUnit),
+             QQmlPreview::PatchResult::Rebuilt);
+
+    // The refreshed method must still resolve the "applicationFlow" id and write the new value.
+    QVERIFY(QMetaObject::invokeMethod(inner, "bump"));
+    QCOMPARE(inner->property("value").toInt(), 20);
 }
 
 void tst_QQmlPreviewObjectPatch::compositePropertyDefaultChangeKeepsVisualChildren()

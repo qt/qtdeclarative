@@ -78,7 +78,7 @@ struct GeneratorFunction : ArrowFunction
 
     static inline constexpr quint8 IsTailCallable = false;
 
-    static Heap::FunctionObject *create(ExecutionContext *scope, Function *function);
+    static Q_QML_EXPORT Heap::FunctionObject *create(ExecutionContext *scope, Function *function);
     static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 
