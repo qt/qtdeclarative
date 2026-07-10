@@ -165,8 +165,8 @@ public:
                             int start, int end,
                             int selectionStart, int selectionEnd);
 
-    void mergeProcessedNodes(QList<BinaryTreeNode *> *regularNodes,
-                             QList<BinaryTreeNode *> *imageNodes);
+    void mergeProcessedNodes(QVarLengthArray<BinaryTreeNode *, 8> *regularNodes,
+                             QVarLengthArray<BinaryTreeNode *, 8> *imageNodes);
     void addToSceneGraph(QSGInternalTextNode *parent,
                          QSGInternalTextNode::RecycleBin *recycleBin,
                          QQuickText::TextStyle style = QQuickText::Normal,
