@@ -270,7 +270,8 @@ void tst_QQmlPreviewDiff::bindingChange()
     const auto diff = diffFiles("BindingOld.qml", "BindingNew.qml");
     QVERIFY(diff.success);
 
-    QCOMPARE(countByType(diff, ChangeType::BindingChanged), 1);
+    QCOMPARE(countByType(diff, ChangeType::BindingChanged), 0);
+    QCOMPARE(countByType(diff, ChangeType::FunctionChanged), 1);
 }
 
 void tst_QQmlPreviewDiff::sameSizeBindingChange()
@@ -317,10 +318,11 @@ void tst_QQmlPreviewDiff::sameSizeBindingChange()
     // Verify same code size (this is what we're testing - that size alone isn't enough)
     QCOMPARE(oldFunc->codeSize, newFunc->codeSize);
 
-    // Now verify the diff detects the change despite identical size
+    // Now verify the diff detects the change despite identical size.
     const auto diff = diffCompilationUnits(oldUnit->unitData(), newUnit->unitData());
     QVERIFY(diff.success);
-    QCOMPARE(countByType(diff, ChangeType::BindingChanged), 1);
+    QCOMPARE(countByType(diff, ChangeType::BindingChanged), 0);
+    QCOMPARE(countByType(diff, ChangeType::FunctionChanged), 1);
 }
 
 void tst_QQmlPreviewDiff::bindingToConstant()

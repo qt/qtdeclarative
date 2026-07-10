@@ -727,7 +727,7 @@ void tst_QQmlPreviewObjectPatch::updateObjectsGeneratorMethodChange()
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
     QCOMPARE(updateObjects(objects, oldExecUnit, newExecUnit),
-             QQmlPreview::PatchResult::Rebuilt);
+             QQmlPreview::PatchResult::PatchedInPlace);
 
     QVERIFY(QMetaObject::invokeMethod(object.data(), "first", Q_RETURN_ARG(QVariant, result)));
     QCOMPARE(result.toInt(), 20);
@@ -736,8 +736,9 @@ void tst_QQmlPreviewObjectPatch::updateObjectsGeneratorMethodChange()
 void tst_QQmlPreviewObjectPatch::updateObjectsFunctionChange()
 {
     // Verifies that changing a function body via live patching updates the VME method slot
-    // so that subsequent calls use the new implementation. ObjectChanged (triggered by
-    // objectContentEqual detecting the body change) is the carrier that drives the rebuild.
+    // so that subsequent calls use the new implementation. This is an in-place patch: a method
+    // body change is a FunctionChanged (trivial), and refreshVmeMethods() re-creates the VME
+    // method function object from the new unit -- no full rebuild required.
 
     QQmlComponent oldComponent(&engine, testFileUrl("FunctionChangeOld.qml"));
     QVERIFY2(oldComponent.isReady(), qPrintable(oldComponent.errorString()));
@@ -4102,10 +4103,12 @@ void tst_QQmlPreviewObjectPatch::insertBinding()
     QVERIFY2(object->objectName().isEmpty(), qPrintable(object->objectName()));
 }
 
-// Reproduces coffee demo crash 3: changing a function body in a derived type
-// (ApplicationFlow extending ApplicationFlowForm) that uses states with
-// PropertyChanges targeting form aliases. The rebuild should not trigger
-// ASSERT "canGetTypeFromVariant<T>(this)" in qvariant.h.
+// Reproduces the coffee demo: changing a function body in a derived type (ApplicationFlow
+// extending ApplicationFlowForm) that uses states with PropertyChanges targeting form aliases,
+// while the StackView holds imperatively pushed content. A function-body change is now a trivial
+// in-place patch (refreshVmeMethods re-homes the method), so it must NOT rebuild: it must not
+// crash (the old rebuild path could hit ASSERT "canGetTypeFromVariant<T>(this)" during state
+// anchor backup/restore) and must not tear down the StackView.
 void tst_QQmlPreviewObjectPatch::derivedTypeFunctionChangeCrash()
 {
     QQmlEngine localEngine;
@@ -4135,6 +4138,10 @@ void tst_QQmlPreviewObjectPatch::derivedTypeFunctionChangeCrash()
     QCoreApplication::processEvents();
     QCoreApplication::processEvents();
 
+    // The StackView now holds its initialItem plus the imperatively pushed page.
+    const int stackDepthBefore = stack->property("depth").toInt();
+    QCOMPARE(stackDepthBefore, 2);
+
     QQmlComponent newComp(&localEngine, testFileUrl("DerivedFunctionChangeNew.qml"));
     QVERIFY2(newComp.isReady(), qPrintable(newComp.errorString()));
 
@@ -4142,18 +4149,23 @@ void tst_QQmlPreviewObjectPatch::derivedTypeFunctionChangeCrash()
     const auto newExecUnit = QQmlComponentPrivate::get(&newComp)->compilationUnit();
     QVERIFY(oldExecUnit && newExecUnit);
 
-    // This may crash with ASSERT "canGetTypeFromVariant<T>(this)" when the state
-    // system tries to backup/restore anchor properties during rebuild while
-    // the StackView has active content.
+    // A function-body change is a trivial (in-place) patch, not a rebuild. Historically the
+    // rebuild path could crash here with ASSERT "canGetTypeFromVariant<T>(this)" during state
+    // anchor backup/restore.
     auto objects = objectsForCompilationUnit(&localEngine, oldExecUnit);
     QVERIFY(!objects.empty());
-    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
+    QCOMPARE(updateObjects(objects, oldExecUnit, newExecUnit),
+             QQmlPreview::PatchResult::PatchedInPlace);
 
     QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
     QCoreApplication::processEvents();
 
-    // After rebuild, changing state exercises the state machine's property
-    // backup/restore mechanism with potentially stale anchor values.
+    // The in-place patch leaves the StackView intact: its imperatively pushed content is
+    // preserved (a full rebuild would recreate an empty StackView).
+    QCOMPARE(stack->property("depth").toInt(), stackDepthBefore);
+    QVERIFY(stack->property("currentItem").value<QObject *>() != nullptr);
+
+    // Changing state exercises the state machine's property backup/restore mechanism.
     object->setProperty("state", "Home");
     QCoreApplication::processEvents();
     object->setProperty("state", "Settings");
@@ -4194,7 +4206,7 @@ void tst_QQmlPreviewObjectPatch::nestedDerivedIdMethodChange()
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
     QVERIFY(!objects.empty());
     QCOMPARE(updateObjects(objects, oldExecUnit, newExecUnit),
-             QQmlPreview::PatchResult::Rebuilt);
+             QQmlPreview::PatchResult::PatchedInPlace);
 
     // The refreshed method must still resolve the "applicationFlow" id and write the new value.
     QVERIFY(QMetaObject::invokeMethod(inner, "bump"));
