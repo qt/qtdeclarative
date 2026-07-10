@@ -361,10 +361,6 @@ struct UnitDiffer
         for (quint32 i = 0; i < oldObj.nFunctions; ++i) {
             if (oldFuncs[i] != newFuncs[i])
                 return false;
-            if (!functionContentEqual(*oldUnit->functionAt(oldFuncs[i]),
-                                      *newUnit->functionAt(newFuncs[i]))) {
-                return false;
-            }
         }
 
         return stringsEqual(oldObj.inheritedTypeNameIndex, newObj.inheritedTypeNameIndex)
@@ -497,14 +493,8 @@ struct UnitDiffer
                     && stringsEqual(oldTrans.commentIndex, newTrans.commentIndex)
                     && oldTrans.number == newTrans.number;
         }
-        case Binding::Type_Script: {
-            if (oldBinding.value.compiledScriptIndex != newBinding.value.compiledScriptIndex)
-                return false;
-            const auto *oldFunc = oldUnit->functionAt(oldBinding.value.compiledScriptIndex);
-            const auto *newFunc = newUnit->functionAt(newBinding.value.compiledScriptIndex);
-            return oldFunc->nFormals == newFunc->nFormals && oldFunc->codeSize == newFunc->codeSize
-                    && std::memcmp(oldFunc->code(), newFunc->code(), oldFunc->codeSize) == 0;
-        }
+        case Binding::Type_Script:
+            return oldBinding.value.compiledScriptIndex == newBinding.value.compiledScriptIndex;
         case Binding::Type_Object:
         case Binding::Type_AttachedProperty:
         case Binding::Type_GroupProperty:

@@ -484,11 +484,10 @@ static bool changeIsTrivial(const QV4::CompiledData::Change &change,
     case ChangeType::TranslationDataRemoved:
         return true;
     case ChangeType::FunctionChanged:
-        // A recompiled function body at a stable index. A binding expression picks up its new body
-        // via function translation. (FunctionAdded/Removed shift indices and are rejected below.
-        // A changed *method* body additionally produces an ObjectChanged for the object's function
-        // offset table, which is rejected below, so method changes still take the rebuild path:
-        // their VME function objects are cached and not refreshed by translation.)
+        // A recompiled function body at a stable index. Binding/handler expressions pick up the new
+        // body via refreshBindings(), VME methods via refreshVmeMethods(). Neither needs a rebuild,
+        // so a function change is trivial regardless of whether the function backs a binding or a
+        // method.
         return true;
     case ChangeType::BindingChanged: {
         Q_ASSERT(change.objectIndex >= 0);
