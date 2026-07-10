@@ -447,6 +447,10 @@ QAccessible::State QAccessibleQuickItem::state() const
          || role() == QAccessible::Switch)
         && object()->property("checked").toBool())
         state.checked = true;
+    if (role() == QAccessible::Button && object()->property("expandable").toBool()) {
+        state.expandable = true;
+        state.expanded = object()->property("expanded").toBool();
+    }
     if (item()->activeFocusOnTab() || isTextRole(role()))
         state.focusable = true;
     if (item()->hasActiveFocus())
@@ -516,8 +520,11 @@ QStringList QAccessibleQuickItem::actionNames() const
 {
     QStringList actions;
     switch (role()) {
+    case QAccessible::Button:
+        if (state().expandable)
+            actions << QAccessibleActionInterface::toggleAction();
+        Q_FALLTHROUGH();
     case QAccessible::Link:
-    case QAccessible::PushButton:
     case QAccessible::MenuItem:
         actions << QAccessibleActionInterface::pressAction();
         break;
@@ -576,9 +583,8 @@ void QAccessibleQuickItem::doAction(const QString &actionName)
     case QAccessible::Switch: {
         QVariant checked = object()->property("checked");
         if (checked.isValid()) {
-            if (actionName == QAccessibleActionInterface::toggleAction() ||
-                    actionName == QAccessibleActionInterface::pressAction()) {
-
+            if (actionName == QAccessibleActionInterface::toggleAction()
+                || actionName == QAccessibleActionInterface::pressAction()) {
                 object()->setProperty("checked",  QVariant(!checked.toBool()));
             }
         }
@@ -617,6 +623,16 @@ void QAccessibleQuickItem::doAction(const QString &actionName)
             }
 
             valueIface->setCurrentValue(QVariant(newValue));
+        }
+        break;
+    }
+    case QAccessible::Button: {
+        QVariant expanded = object()->property("expanded");
+        if (expanded.isValid()) {
+            if (actionName == QAccessibleActionInterface::toggleAction()
+                || actionName == QAccessibleActionInterface::pressAction()) {
+                object()->setProperty("expanded", QVariant(!expanded.toBool()));
+            }
         }
         break;
     }
