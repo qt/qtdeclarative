@@ -1452,7 +1452,9 @@ private:
 template<typename T>
 std::shared_ptr<T> DomItem::ownerAs() const
 {
-    if constexpr (domTypeIsOwningItem(T::kindValue)) {
+    static_assert(domTypeIsOwningItem(T::kindValue),
+                  "unexpected non owning value in ownerAs");
+    {
         if (!std::holds_alternative<std::monostate>(m_owner)) {
             if constexpr (T::kindValue == DomType::FileLocationsNode) {
                 if (std::holds_alternative<std::shared_ptr<FileLocations::Node>>(m_owner))
@@ -1472,8 +1474,6 @@ std::shared_ptr<T> DomItem::ownerAs() const
                 }
             }
         }
-    } else {
-        Q_ASSERT_X(false, "DomItem::ownerAs", "unexpected non owning value in ownerAs");
     }
     return std::shared_ptr<T> {};
 }
