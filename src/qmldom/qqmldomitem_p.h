@@ -1200,6 +1200,14 @@ public:
     }
 
 private:
+    template <typename T>
+    std::shared_ptr<T> ownerAs_impl() const
+    {
+        if (std::holds_alternative<std::shared_ptr<T>>(m_owner))
+            return std::get<std::shared_ptr<T>>(m_owner);
+        return nullptr;
+    }
+
     enum class WriteOutCheckResult { Success, Failed };
     WriteOutCheckResult performWriteOutChecks(const DomItem &, OutWriter &, WriteOutChecks) const;
     const DomBase *base() const;
@@ -1455,28 +1463,14 @@ std::shared_ptr<T> DomItem::ownerAs() const
 {
     static_assert(domTypeIsOwningItem(T::kindValue),
                   "unexpected non owning value in ownerAs");
-    {
-        {
-            if constexpr (T::kindValue == DomType::FileLocationsNode) {
-                if (std::holds_alternative<std::shared_ptr<FileLocations::Node>>(m_owner))
-                    return std::static_pointer_cast<T>(
-                            std::get<std::shared_ptr<FileLocations::Node>>(m_owner));
-            } else if constexpr (T::kindValue == DomType::ExternalItemInfo) {
-                if (std::holds_alternative<std::shared_ptr<ExternalItemInfoBase>>(m_owner))
-                    return std::static_pointer_cast<T>(
-                            std::get<std::shared_ptr<ExternalItemInfoBase>>(m_owner));
-            } else if constexpr (T::kindValue == DomType::ExternalItemPair) {
-                if (std::holds_alternative<std::shared_ptr<ExternalItemPairBase>>(m_owner))
-                    return std::static_pointer_cast<T>(
-                            std::get<std::shared_ptr<ExternalItemPairBase>>(m_owner));
-            } else {
-                if (std::holds_alternative<std::shared_ptr<T>>(m_owner)) {
-                    return std::get<std::shared_ptr<T>>(m_owner);
-                }
-            }
-        }
-    }
-    return std::shared_ptr<T> {};
+    if constexpr (T::kindValue == DomType::FileLocationsNode)
+        return std::static_pointer_cast<T>(ownerAs_impl<FileLocations::Node>());
+    else if constexpr (T::kindValue == DomType::ExternalItemInfo)
+        return std::static_pointer_cast<T>(ownerAs_impl<ExternalItemInfoBase>());
+    else if constexpr (T::kindValue == DomType::ExternalItemPair)
+        return std::static_pointer_cast<T>(ownerAs_impl<ExternalItemPairBase>());
+    else
+        return ownerAs_impl<T>();
 }
 
 template<int I>
