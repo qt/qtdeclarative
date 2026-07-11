@@ -1455,7 +1455,7 @@ std::shared_ptr<T> DomItem::ownerAs() const
     static_assert(domTypeIsOwningItem(T::kindValue),
                   "unexpected non owning value in ownerAs");
     {
-        if (!std::holds_alternative<std::monostate>(m_owner)) {
+        {
             if constexpr (T::kindValue == DomType::FileLocationsNode) {
                 if (std::holds_alternative<std::shared_ptr<FileLocations::Node>>(m_owner))
                     return std::static_pointer_cast<T>(
