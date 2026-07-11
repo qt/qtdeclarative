@@ -50,6 +50,8 @@
 
 QT_BEGIN_NAMESPACE
 
+QT_ENABLE_P0846_SEMANTICS_FOR(get_if)
+
 QT_DECLARE_EXPORTED_QT_LOGGING_CATEGORY(writeOutLog, QMLDOM_EXPORT);
 
 namespace QQmlJS {
@@ -1202,8 +1204,8 @@ private:
     template <typename T>
     std::shared_ptr<T> ownerAs_impl() const
     {
-        if (std::holds_alternative<std::shared_ptr<T>>(m_owner))
-            return std::get<std::shared_ptr<T>>(m_owner);
+        if (auto p = get_if<std::shared_ptr<T>>(&m_owner))
+            return *p;
         return nullptr;
     }
 
