@@ -431,7 +431,7 @@ void QmlTypeRegistrar::write(QTextStream &output, QAnyStringView outFileName) co
 
                 const BaseType::Container superClasses = classDef.superClasses();
 
-                for (const BaseType &object : classDef.superClasses()) {
+                for (const BaseType &object : superClasses) {
                         if (object.access != Access::Public)
                             continue;
 

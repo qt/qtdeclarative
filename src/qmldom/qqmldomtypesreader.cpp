@@ -217,7 +217,6 @@ void QmltypesReader::insertComponent(const QQmlJSScope::ConstPtr &jsScope,
     comp.setMetaRevisions(metaRevs);
 
     // exports:
-    QList<Export> exports;
     for (const QQmlJSScope::Export &jsE : exportsList) {
         auto v = jsE.version();
         int metaRev = v.toEncodedVersion<int>();

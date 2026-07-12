@@ -149,9 +149,8 @@ private slots:
     void testList()
     {
         QList<int> l({ 1, 2, 3, 4 });
-        QList<int> l2 = l;
         QList<int> l3({ 1 });
-        QList<int> l4 = l3;
+        // QList<int> l4 = l3;
         QCOMPARE(&(l[1]), &(l[1]));
         QCOMPARE(&(l3[0]), &(l3[0]));
         // QCOMPARE(&(l3[0]), &(l4[0])); // shallow copy actually copies els (QVector behavior)...
