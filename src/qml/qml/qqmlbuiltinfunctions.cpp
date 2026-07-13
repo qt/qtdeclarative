@@ -1158,11 +1158,22 @@ QString QtObject::formatDateTime(const QString &string, const QLocale &locale,
     Attempts to open the specified \a target url in an external application, based on the user's
     desktop preferences. Returns \c true if it succeeds, \c false otherwise.
 
+    If \a target is a relative URL, it will be resolved. Afterwards, the URL will be forwarded
+    to \l{QDesktopServices::openUrl}.
+
     \warning A return value of \c true indicates that the application has successfully requested
     the operating system to open the URL in an external application. The external application may
     still fail to launch or fail to open the requested URL. This result will not be reported back
     to the application.
+
+    \warning Passing untrusted URLs to openUrlExternally can result in unexpected behaviour.
+    If untrusted URLs are to be passed to this function, create a JavaScript URL object
+    and check its \c{protocol} property against a list of allowed protocols. You can also do
+    further filtering based on other properties like \c{host}.
 */
+// TODO: \l{QDesktopServices::setUrlHandler}  doesn't help, as it doesn't allow a catch-all
+// handler. If it would, that could be used for global rejection of undesired schemes.
+// Amend documentation if this should change.
 bool QtObject::openUrlExternally(const QUrl &url) const
 {
     return QQml_guiProvider()->openUrlExternally(resolvedUrl(url));
