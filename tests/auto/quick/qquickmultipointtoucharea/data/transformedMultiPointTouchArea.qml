@@ -18,9 +18,16 @@ Rectangle {
             objectName: "touchArea"
 
             property int pointCount: 0
+            property point startPosition : Qt.point(0,0)
 
             onPressed: (points) => pointCount = points.length;
-            onTouchUpdated: (points) => pointCount = points.length;
+            onTouchUpdated: (points) => {
+                pointCount = points.length
+                if (pointCount > 0) {
+                    let p = points[0]
+                    startPosition = Qt.point(p.startX, p.startY)
+                }
+            }
         }
     }
 }

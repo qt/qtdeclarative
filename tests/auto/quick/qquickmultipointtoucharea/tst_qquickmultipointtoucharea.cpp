@@ -47,6 +47,7 @@ private slots:
     void invisible();
     void transformedTouchArea_data();
     void transformedTouchArea();
+    void transformedTouchArea_startXY();
     void mouseInteraction();
     void mouseInteraction_data();
     void mouseGestureStarted_data();
@@ -1222,6 +1223,36 @@ void tst_QQuickMultiPointTouchArea::transformedTouchArea()
 
     sequence.stationary(0).stationary(1).press(2, p3).commit();
     QCOMPARE(area->property("pointCount").toInt(), total3);
+}
+
+void tst_QQuickMultiPointTouchArea::transformedTouchArea_startXY()  // QTBUG-142050
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("transformedMultiPointTouchArea.qml")));
+
+    QQuickMultiPointTouchArea *area = window.rootObject()->findChild<QQuickMultiPointTouchArea *>("touchArea");
+    QVERIFY(area != nullptr);
+
+    QTest::QTouchEventSequence sequence = QTest::touchEvent(&window, touchscreen.get());
+
+    {   // TOUCH
+    sequence.press(0, QPoint(140, 200)).commit();
+    const QPoint startPosition(area->property("startPosition").toPoint());
+    sequence.move(0, QPoint(160, 200)).commit();
+    QCOMPARE(area->property("startPosition").toPoint(), startPosition);
+    sequence.move(0, QPoint(200, 200)).commit();
+    QCOMPARE(area->property("startPosition").toPoint(), startPosition);
+    sequence.release(0, QPoint(200, 200)).commit();
+    }
+    {   // MOUSE
+    QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, QPoint(140, 200));
+    const QPoint startPosition(area->property("startPosition").toPoint());
+    QTest::mouseMove(&window, QPoint(160, 200));
+    QCOMPARE(area->property("startPosition").toPoint(), startPosition);
+    QTest::mouseMove(&window, QPoint(200, 200));
+    QCOMPARE(area->property("startPosition").toPoint(), startPosition);
+    QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, QPoint(200, 200));
+    }
 }
 
 void tst_QQuickMultiPointTouchArea::mouseInteraction_data()
