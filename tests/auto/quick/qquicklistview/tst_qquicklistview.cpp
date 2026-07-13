@@ -9024,7 +9024,7 @@ void tst_QQuickListView::QTBUG_38209()
 
     // simulate mouse flick
     QQuickTest::pointerFlick(device, window.data(), 0, QPoint(200, 200), QPoint(200, 50), 100);
-    QTRY_VERIFY(!listview->isMoving());
+    QTRY_VERIFY_WITH_TIMEOUT(!listview->isMoving(), 3s);
     qreal contentY = listview->contentY();
 
     // flick down
