@@ -2031,6 +2031,16 @@ void TestQmllint::cleanQmlSnippet_data()
                     }
                 )"_s
             << defaultOptions;
+    CallQmllintOptions withUnusedImports;
+    withUnusedImports.enableCategories.append("unused-import"_L1);
+    QTest::newRow("used-import") << uR"(import QtQuick
+import QtQuick.Controls
+Item { id: root; Component.onCompleted: { root.ToolTip.text = "Hola" }})"_s
+                                 << withUnusedImports;
+    QTest::newRow("used-import2") << uR"(import QtQuick
+import QtQuick.Controls as QQC
+Item { id: root; Component.onCompleted: { root.QQC.ToolTip.text = "Hola" }})"_s
+                                  << withUnusedImports;
     QTest::newRow("usefulExpressionStatement") << u"x: y + 3;"_s << defaultOptions;
     QTest::newRow("usefulExpressionStatement") << u"x: 3;"_s << defaultOptions;
     QTest::newRow("void") << u"function f(): void {}"_s << defaultOptions;

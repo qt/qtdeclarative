@@ -3267,7 +3267,7 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::FieldMemberExpression *fieldMemb
         if (type.scope.isNull()) {
             if (m_rootScopeImports.hasType(name))
                 m_usedTypes.insert(name);
-        } else if (!type.scope->ownAttachedTypeName().isEmpty()) {
+        } else if (!type.scope->attachedTypeName().isEmpty()) {
             m_usedTypes.insert(name);
         }
     }
