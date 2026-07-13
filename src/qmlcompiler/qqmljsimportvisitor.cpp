@@ -119,11 +119,11 @@ void QQmlJSImportVisitor::setScopeName(QQmlJSScope::Ptr &scope, QQmlJSScope::Sco
     case QQmlSA::ScopeType::AttachedPropertyScope:
         scope->setInternalName(name);
         scope->setBaseTypeName(name);
-        QQmlJSScope::resolveTypes(scope, m_rootScopeImports.contextualTypes(), &m_usedTypes);
+        QQmlJSScope::resolveTypes(scope, m_rootScopeImports.contextualTypes(), usedTypes());
         return;
     case QQmlSA::ScopeType::QMLScope:
         scope->setBaseTypeName(name);
-        QQmlJSScope::resolveTypes(scope, m_rootScopeImports.contextualTypes(), &m_usedTypes);
+        QQmlJSScope::resolveTypes(scope, m_rootScopeImports.contextualTypes(), usedTypes());
         return;
     case QQmlSA::ScopeType::JSFunctionScope:
     case QQmlSA::ScopeType::BindingFunctionScope:
@@ -416,14 +416,13 @@ void QQmlJSImportVisitor::resolveGroupProperties()
                 if (object->isNameDeferred(name)) {
                     const QQmlJSScope::ConstPtr deferred = m_scopesById.scope(name, childScope);
                     if (!deferred.isNull()) {
-                        QQmlJSScope::resolveGroup(
-                                childScope, deferred, m_rootScopeImports.contextualTypes(),
-                                &m_usedTypes);
+                        QQmlJSScope::resolveGroup(childScope, deferred,
+                                                  m_rootScopeImports.contextualTypes(),
+                                                  usedTypes());
                     }
                 } else if (const QQmlJSScope::ConstPtr propType = object->property(name).type()) {
-                    QQmlJSScope::resolveGroup(
-                            childScope, propType, m_rootScopeImports.contextualTypes(),
-                            &m_usedTypes);
+                    QQmlJSScope::resolveGroup(childScope, propType,
+                                              m_rootScopeImports.contextualTypes(), usedTypes());
                 }
             }
             objects.enqueue(childScope);
@@ -575,25 +574,6 @@ void QQmlJSImportVisitor::endVisit(UiProgram *)
     processPropertyBindings();
     processPropertyBindingObjects();
     checkRequiredProperties();
-
-    auto unusedImports = m_importLocations;
-    for (const QString &type : std::as_const(m_usedTypes)) {
-        const auto &importLocations = m_importTypeLocationMap.values(type);
-        for (const auto &importLocation : importLocations)
-            unusedImports.remove(importLocation);
-
-        // If there are no more unused imports left we can abort early
-        if (unusedImports.isEmpty())
-            break;
-    }
-
-    const auto &imports = m_importStaticModuleLocationMap.values();
-    for (const QQmlJS::SourceLocation &import : imports)
-        unusedImports.remove(import);
-
-    for (const auto &import : unusedImports) {
-        m_logger->log(QString::fromLatin1("Unused import"), qmlUnusedImports, import);
-    }
 
     populateRuntimeFunctionIndicesForDocument();
 }
@@ -1872,8 +1852,8 @@ bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
                                   definition->firstSourceLocation());
         m_bindings.append(createNonUniqueScopeBinding(m_currentScope, superType,
                                                       definition->firstSourceLocation()));
-        QQmlJSScope::resolveTypes(
-                m_currentScope, m_rootScopeImports.contextualTypes(), &m_usedTypes);
+        QQmlJSScope::resolveTypes(m_currentScope, m_rootScopeImports.contextualTypes(),
+                                  usedTypes());
     }
 
     m_currentScope->setAnnotations(parseAnnotations(definition->annotations));
@@ -1883,7 +1863,7 @@ bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
 
 void QQmlJSImportVisitor::endVisit(UiObjectDefinition *)
 {
-    QQmlJSScope::resolveTypes(m_currentScope, m_rootScopeImports.contextualTypes(), &m_usedTypes);
+    QQmlJSScope::resolveTypes(m_currentScope, m_rootScopeImports.contextualTypes(), usedTypes());
     leaveEnvironment();
 }
 
@@ -1983,12 +1963,6 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
             }
             };
             tryParseAlias();
-        } else {
-            if (m_rootScopeImports.hasType(typeName)
-                && !m_rootScopeImports.type(typeName).scope.isNull()) {
-                if (m_importTypeLocationMap.contains(typeName))
-                    m_usedTypes.insert(typeName);
-            }
         }
         QQmlJSMetaProperty prop;
         prop.setPropertyName(propertyName);
@@ -2706,23 +2680,6 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiEnumDeclaration *uied)
     return true;
 }
 
-void QQmlJSImportVisitor::addImportWithLocation(
-        const QString &name, const QQmlJS::SourceLocation &loc, bool hadWarnings)
-{
-    if (m_importTypeLocationMap.contains(name)
-            && m_importTypeLocationMap.values(name).contains(loc)) {
-        return;
-    }
-
-    m_importTypeLocationMap.insert(name, loc);
-
-    // If the import had warnings it may be "unused" because we haven't found all of its types.
-    // If the type's location is not valid it's a builtin.
-    // We don't need to complain about those being unused.
-    if (!hadWarnings && loc.isValid())
-        m_importLocations.insert(loc);
-}
-
 QList<QQmlJS::DiagnosticMessage> QQmlJSImportVisitor::importFromHost(
         const QString &path, const QString &prefix, const QQmlJS::SourceLocation &location)
 {
@@ -2847,13 +2804,8 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiImport *import)
         addImportWithLocation(*it, import->firstSourceLocation(), !warnings.isEmpty());
 
     if (prefix.isEmpty()) {
-        for (const QString &staticModule : std::as_const(staticModulesProvided)) {
-            // Always prefer a direct import of static module to it being imported as a dependency
-            if (path != staticModule && m_importStaticModuleLocationMap.contains(staticModule))
-                continue;
-
-            m_importStaticModuleLocationMap[staticModule] = import->firstSourceLocation();
-        }
+        for (const QString &staticModule : std::as_const(staticModulesProvided))
+            addStaticImportWithLocation(path, import->firstSourceLocation(), path != staticModule);
     }
 
     processImportWarnings(
@@ -3085,8 +3037,8 @@ void QQmlJSImportVisitor::createAttachedAndGroupedScopes(UiQualifiedId *property
 
     // recursively resolve types for current scope if new scopes are found
     if (needsResolution) {
-        QQmlJSScope::resolveTypes(
-                m_currentScope, m_rootScopeImports.contextualTypes(), &m_usedTypes);
+        QQmlJSScope::resolveTypes(m_currentScope, m_rootScopeImports.contextualTypes(),
+                                  usedTypes());
     }
 }
 
@@ -3142,7 +3094,7 @@ int QQmlJSImportVisitor::openAttachedAndGroupedScopes(UiQualifiedId *propertyNam
 
 void QQmlJSImportVisitor::endVisit(QQmlJS::AST::UiObjectBinding *uiob)
 {
-    QQmlJSScope::resolveTypes(m_currentScope, m_rootScopeImports.contextualTypes(), &m_usedTypes);
+    QQmlJSScope::resolveTypes(m_currentScope, m_rootScopeImports.contextualTypes(), usedTypes());
     // must be mutable, as we might mark it as implicitly wrapped in a component
     const QQmlJSScope::Ptr childScope = m_currentScope;
     leaveEnvironment();
@@ -3240,8 +3192,8 @@ bool QQmlJSImportVisitor::visit(ESModule *module)
 
 void QQmlJSImportVisitor::endVisit(ESModule *)
 {
-    QQmlJSScope::resolveTypes(
-            m_exportedRootScope, m_rootScopeImports.contextualTypes(), &m_usedTypes);
+    QQmlJSScope::resolveTypes(m_exportedRootScope, m_rootScopeImports.contextualTypes(),
+                              usedTypes());
 }
 
 bool QQmlJSImportVisitor::visit(Program *program)
@@ -3256,34 +3208,8 @@ bool QQmlJSImportVisitor::visit(Program *program)
 
 void QQmlJSImportVisitor::endVisit(Program *)
 {
-    QQmlJSScope::resolveTypes(
-            m_exportedRootScope, m_rootScopeImports.contextualTypes(), &m_usedTypes);
-}
-
-void QQmlJSImportVisitor::endVisit(QQmlJS::AST::FieldMemberExpression *fieldMember)
-{
-    // This is a rather rough approximation of "used type" but the "unused import"
-    // info message doesn't have to be 100% accurate.
-    const QString name = fieldMember->name.toString();
-    if (m_importTypeLocationMap.contains(name)) {
-        const QQmlJSImportedScope type = m_rootScopeImports.type(name);
-        if (type.scope.isNull()) {
-            if (m_rootScopeImports.hasType(name))
-                m_usedTypes.insert(name);
-        } else if (!type.scope->attachedTypeName().isEmpty()) {
-            m_usedTypes.insert(name);
-        }
-    }
-}
-
-bool QQmlJSImportVisitor::visit(QQmlJS::AST::IdentifierExpression *idexp)
-{
-    const QString name = idexp->name.toString();
-    if (m_importTypeLocationMap.contains(name)) {
-        m_usedTypes.insert(name);
-    }
-
-    return true;
+    QQmlJSScope::resolveTypes(m_exportedRootScope, m_rootScopeImports.contextualTypes(),
+                              usedTypes());
 }
 
 bool QQmlJSImportVisitor::visit(QQmlJS::AST::PatternElement *element)

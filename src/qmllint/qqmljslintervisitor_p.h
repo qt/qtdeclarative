@@ -68,11 +68,21 @@ protected:
     bool visit(QQmlJS::AST::Type *typeAnnotation) override;
     bool visit(QQmlJS::AST::UiPragma *pragma) override;
 
+    bool visit(QQmlJS::AST::IdentifierExpression *idexp) override;
+    void endVisit(QQmlJS::AST::FieldMemberExpression *fieldMember) override;
+
     bool visit(QQmlJS::AST::UiProgram *ast) override;
     void endVisit(QQmlJS::AST::UiProgram *ast) override;
 
     bool safeInsertJSIdentifier(QQmlJSScope::Ptr &scope, const QString &name,
                                 const QQmlJSScope::JavaScriptIdentifier &identifier) override;
+
+    void addImportWithLocation(const QString &name, const QQmlJS::SourceLocation &loc,
+                               bool hadWarnings) override;
+    void addStaticImportWithLocation(const QString &name, const QQmlJS::SourceLocation &loc,
+                                     bool isDependency) override;
+
+    QSet<QString> *usedTypes() override { return &m_usedTypes; }
 
 private:
     struct SeenImport
@@ -108,6 +118,15 @@ private:
     std::vector<QQmlJS::AST::Node *> m_ancestryIncludingCurrentNode;
     QQmlJS::LinterRenamedComponents m_renamedComponents;
 
+    // Maps all qmlNames to the source location of their import
+    QMultiHash<QString, QQmlJS::SourceLocation> m_importTypeLocationMap;
+    // Maps all static modules to the source location of their import
+    QMultiHash<QString, QQmlJS::SourceLocation> m_importStaticModuleLocationMap;
+    // Contains all import source locations (could be extracted from above but that is expensive)
+    QSet<QQmlJS::SourceLocation> m_importLocations;
+    // A set of all types that have been used during type resolution
+    QSet<QString> m_usedTypes;
+
     void handleDuplicateEnums(QQmlJS::AST::UiEnumMemberList *members, QStringView key,
                               const QQmlJS::SourceLocation &location);
     void warnCaseNoFlowControl(QQmlJS::SourceLocation caseToken) const;
@@ -123,6 +142,7 @@ private:
     void handleRenamedType(QQmlJS::AST::UiQualifiedId *id);
     void checkSingletonRoot();
     void checkFileSelections();
+    void checkUnusedImports();
 
     bool m_rootIsSingleton = false;
 };

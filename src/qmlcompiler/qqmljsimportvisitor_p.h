@@ -143,9 +143,6 @@ protected:
     bool visit(QQmlJS::AST::Program *program) override;
     void endVisit(QQmlJS::AST::Program *program) override;
 
-    void endVisit(QQmlJS::AST::FieldMemberExpression *) override;
-    bool visit(QQmlJS::AST::IdentifierExpression *idexp) override;
-
     bool visit(QQmlJS::AST::PatternElement *) override;
 
     bool visit(QQmlJS::AST::IfStatement *) override;
@@ -184,14 +181,7 @@ protected:
     // This way we can look up objects by IR location later.
     QHash<QV4::CompiledData::Location, QQmlJSScope::ConstPtr> m_scopesByIrLocation;
 
-    // Maps all qmlNames to the source location of their import
-    QMultiHash<QString, QQmlJS::SourceLocation> m_importTypeLocationMap;
-    // Maps all static modules to the source location of their import
-    QMultiHash<QString, QQmlJS::SourceLocation> m_importStaticModuleLocationMap;
-    // Contains all import source locations (could be extracted from above but that is expensive)
-    QSet<QQmlJS::SourceLocation> m_importLocations;
-    // A set of all types that have been used during type resolution
-    QSet<QString> m_usedTypes;
+    virtual QSet<QString> *usedTypes() { return nullptr; };
 
     QList<UnfinishedBinding> m_bindings;
 
@@ -403,8 +393,13 @@ private:
     void processImportWarnings(
             const QString &what, const QList<QQmlJS::DiagnosticMessage> &warnings,
             const QQmlJS::SourceLocation &srcLocation = QQmlJS::SourceLocation());
-    void addImportWithLocation(
-            const QString &name, const QQmlJS::SourceLocation &loc, bool hadWarnings);
+protected:
+    virtual void addImportWithLocation(const QString &, const QQmlJS::SourceLocation &, bool) { }
+    virtual void addStaticImportWithLocation(const QString &, const QQmlJS::SourceLocation &, bool)
+    {
+    }
+
+private:
     void populateCurrentScope(QQmlJSScope::ScopeType type, const QString &name,
                               const QQmlJS::SourceLocation &location);
     void enterRootScope(QQmlJSScope::ScopeType type, const QString &name,

@@ -760,10 +760,33 @@ bool LinterVisitor::visit(UiProgram *ast)
     return result;
 }
 
+void LinterVisitor::checkUnusedImports()
+{
+    auto unusedImports = m_importLocations;
+    for (const QString &type : std::as_const(m_usedTypes)) {
+        const auto &importLocations = m_importTypeLocationMap.values(type);
+        for (const auto &importLocation : importLocations)
+            unusedImports.remove(importLocation);
+
+        // If there are no more unused imports left we can abort early
+        if (unusedImports.isEmpty())
+            break;
+    }
+
+    const auto &imports = m_importStaticModuleLocationMap.values();
+    for (const QQmlJS::SourceLocation &import : imports)
+        unusedImports.remove(import);
+
+    for (const auto &import : unusedImports) {
+        m_logger->log(QString::fromLatin1("Unused import"), qmlUnusedImports, import);
+    }
+}
+
 void LinterVisitor::endVisit(UiProgram *ast)
 {
     QQmlJSImportVisitor::endVisit(ast);
     checkFileSelections();
+    checkUnusedImports();
 }
 
 static constexpr QLatin1String s_method = "method"_L1;
@@ -961,6 +984,15 @@ bool LinterVisitor::visit(UiPublicMember *publicMember)
         warnForDuplicates(m_currentScope, propertyName, s_property, publicMember->identifierToken,
                           flags, m_logger);
         handleRenamedType(publicMember->memberType);
+
+        const QString typeName = publicMember->memberType->toString();
+        if (typeName != "alias"_L1) {
+            if (m_rootScopeImports.hasType(typeName)
+                && !m_rootScopeImports.type(typeName).scope.isNull()) {
+                if (m_importTypeLocationMap.contains(typeName))
+                    m_usedTypes.insert(typeName);
+            }
+        }
         break;
     }
     }
@@ -1040,6 +1072,59 @@ void LinterVisitor::checkFileSelections()
     m_logger->log("File-selected type %1 is potentially incompatible with %2."_L1.arg(
                           name, info.mainType->filePath()),
                   qmlImport, m_exportedRootScope->sourceLocation());
+}
+
+void LinterVisitor::addImportWithLocation(const QString &name, const QQmlJS::SourceLocation &loc,
+                                          bool hadWarnings)
+{
+    if (m_importTypeLocationMap.contains(name)
+        && m_importTypeLocationMap.values(name).contains(loc)) {
+        return;
+    }
+
+    m_importTypeLocationMap.insert(name, loc);
+
+    // If the import had warnings it may be "unused" because we haven't found all of its types.
+    // If the type's location is not valid it's a builtin.
+    // We don't need to complain about those being unused.
+    if (!hadWarnings && loc.isValid())
+        m_importLocations.insert(loc);
+}
+
+void LinterVisitor::addStaticImportWithLocation(const QString &name,
+                                                const QQmlJS::SourceLocation &loc,
+                                                bool isDependency)
+{
+    // Always prefer a direct import of static module to it being imported as a dependency
+    if (isDependency && m_importStaticModuleLocationMap.contains(name))
+        return;
+    m_importStaticModuleLocationMap[name] = loc;
+}
+
+bool LinterVisitor::visit(QQmlJS::AST::IdentifierExpression *idexp)
+{
+    const QString name = idexp->name.toString();
+    if (m_importTypeLocationMap.contains(name)) {
+        m_usedTypes.insert(name);
+    }
+
+    return true;
+}
+
+void LinterVisitor::endVisit(QQmlJS::AST::FieldMemberExpression *fieldMember)
+{
+    // This is a rather rough approximation of "used type" but the "unused import"
+    // info message doesn't have to be 100% accurate.
+    const QString name = fieldMember->name.toString();
+    if (m_importTypeLocationMap.contains(name)) {
+        const QQmlJSImportedScope type = m_rootScopeImports.type(name);
+        if (type.scope.isNull()) {
+            if (m_rootScopeImports.hasType(name))
+                m_usedTypes.insert(name);
+        } else if (!type.scope->attachedTypeName().isEmpty()) {
+            m_usedTypes.insert(name);
+        }
+    }
 }
 
 } // namespace QQmlJS
