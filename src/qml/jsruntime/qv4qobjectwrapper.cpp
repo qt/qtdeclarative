@@ -1948,6 +1948,24 @@ static bool requiresStrictArguments(const QQmlObjectOrGadget &object)
             && metaObject->classInfo(indexOfClassInfo).value() == QByteArrayView("true");
 }
 
+static ReturnedValue doConvertReturnValue(ExecutionEngine *engine, QMetaType type, const void *data)
+{
+    if (type.flags() & QMetaType::PointerToQObject) {
+        // We consider QObjects returned from invokables as owned by the QML engine unless
+        // explicitly configured otherwise.
+        if (QObject *object = *static_cast<QObject *const *>(data))
+            QQmlData::get(object, true)->setImplicitDestructible();
+    }
+    return engine->fromData(type, data);
+}
+
+static ReturnedValue doConvertReturnValue(ExecutionEngine *engine, const QVariant &value)
+{
+    // QVariant is treated as transparent when returned. That means we still adopt
+    // QObjects if they're wrapped in QVariant. See above.
+    return doConvertReturnValue(engine, value.metaType(), value.constData());
+}
+
 ReturnedValue QObjectMethod::callPrecise(
         const QQmlObjectOrGadget &object, const QQmlPropertyData &data, ExecutionEngine *engine,
         CallData *callArgs, QMetaObject::Call callType)
@@ -1965,19 +1983,15 @@ ReturnedValue QObjectMethod::callPrecise(
         // a URL object from a QUrl here like metaTypeFromJS does. This is for compatibility.
         // URL objects are proper, specified, objects that behave different from our variant
         // objects when it comes to equality comparisons.
-        const ReturnedValue result = returnType == QMetaType::fromType<QVariant>()
-                ? engine->fromVariant(*reinterpret_cast<const QVariant *>(returnValue))
-                : engine->fromData(returnType, returnValue);
 
-        const auto typeFlags = returnType.flags();
-        if (typeFlags & QMetaType::NeedsDestruction) {
+        const ReturnedValue result = returnType == QMetaType::fromType<QVariant>()
+                ? doConvertReturnValue(engine, *reinterpret_cast<const QVariant *>(returnValue))
+                : doConvertReturnValue(engine, returnType, returnValue);
+
+        // NB: A type can be both a PointerToQObject and NeedsDestruction if the user registers
+        //     such a thing explicitly. We respect that.
+        if (returnType.flags() & QMetaType::NeedsDestruction)
             returnType.destruct(returnValue);
-        } else if (typeFlags & QMetaType::PointerToQObject) {
-            // We consider QObjects returned from invokables as owned by the QML engine unless
-            // explicitly configured otherwise.
-            if (QObject *object = *reinterpret_cast<QObject **>(returnValue))
-                QQmlData::get(object, true)->setImplicitDestructible();
-        }
         return result;
     };
 
