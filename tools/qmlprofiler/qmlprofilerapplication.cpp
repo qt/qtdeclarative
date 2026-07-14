@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
 #include "qmlprofilerapplication.h"
-#include "constants.h"
 #include <QtCore/QStringList>
 #include <QtCore/QProcess>
 #include <QtCore/QTimer>
@@ -17,22 +16,7 @@
 
 #include <iostream>
 
-static const char commandTextC[] =
-        "The following commands are available:\n"
-        "'r', 'record'\n"
-        "    Switch recording on or off.\n"
-        "'o [file]', 'output [file]'\n"
-        "    Output profiling data to <file>. If no <file>\n"
-        "    parameter is given, output to whatever was given\n"
-        "    with --output, or standard output.\n"
-        "'c', 'clear'\n"
-        "    Clear profiling data recorded so far from memory.\n"
-        "'f [file]', 'flush [file]'\n"
-        "    Stop recording if it is running, then output the\n"
-        "    data, and finally clear it from memory.\n"
-        "'q', 'quit'\n"
-        "    Terminate the target process if started from\n"
-        "    qmlprofiler, and qmlprofiler itself.";
+using namespace Qt::StringLiterals;
 
 static const char *features[] = {
     "javascript",
@@ -87,6 +71,10 @@ QmlProfilerApplication::QmlProfilerApplication(int &argc, char **argv) :
     connect(m_profilerData.data(), &QQmlProfilerEventReceiver::dataReady,
             this, &QmlProfilerApplication::traceFinished);
 
+    registerCommands();
+
+    // Closing standard input ends the interactive session.
+    connect(&m_console, &QQmlDebugConsole::endOfInput, this, &QCoreApplication::quit);
 }
 
 QmlProfilerApplication::~QmlProfilerApplication()
@@ -167,7 +155,8 @@ void QmlProfilerApplication::parseArguments()
     QCommandLineOption interactive(QLatin1String("interactive"),
                                    tr("Manually control the recording from the command line. The "
                                       "profiler will not terminate itself when the application "
-                                      "does so in this case.") + QChar::Space + tr(commandTextC));
+                                      "does so in this case. Type 'help' at the prompt to see the "
+                                      "list of available commands."));
     parser.addOption(interactive);
 
     QCommandLineOption verbose(QStringList() << QLatin1String("verbose"),
@@ -256,6 +245,11 @@ bool QmlProfilerApplication::isInteractive() const
     return m_interactive;
 }
 
+void QmlProfilerApplication::startConsole()
+{
+    m_console.start();
+}
+
 quint64 QmlProfilerApplication::parseFeatures(const QStringList &featureList, const QString &values,
                                               bool exclude)
 {
@@ -312,105 +306,100 @@ void QmlProfilerApplication::output()
     m_pendingRequest = REQUEST_NONE;
 }
 
-bool QmlProfilerApplication::checkOutputFile(PendingRequest pending)
+void QmlProfilerApplication::confirmOverwriteThen(std::function<void()> action)
 {
-    if (m_interactiveOutputFile.isEmpty())
-        return true;
-    QFileInfo file(m_interactiveOutputFile);
-    if (file.exists()) {
-        if (!file.isFile()) {
-            prompt(tr("Cannot overwrite %1.").arg(m_interactiveOutputFile));
-            m_interactiveOutputFile.clear();
-        } else {
-            prompt(tr("%1 exists. Overwrite (y/n)?").arg(m_interactiveOutputFile));
-            m_pendingRequest = pending;
-        }
-        return false;
-    } else {
-        return true;
+    if (m_interactiveOutputFile.isEmpty()) {
+        action();
+        return;
     }
+
+    const QFileInfo info(m_interactiveOutputFile);
+    if (!info.exists()) {
+        action();
+        return;
+    }
+
+    if (!info.isFile()) {
+        prompt(tr("Cannot overwrite %1.").arg(m_interactiveOutputFile));
+        m_interactiveOutputFile.clear();
+        return;
+    }
+
+    m_console.askConfirmation(tr("%1 exists. Overwrite (y/n)?").arg(m_interactiveOutputFile),
+                              std::move(action), [this]() { m_interactiveOutputFile.clear(); });
 }
 
-void QmlProfilerApplication::userCommand(const QString &command)
+void QmlProfilerApplication::registerCommands()
 {
-    auto args = QStringView{command}.split(QChar::Space, Qt::SkipEmptyParts);
-    if (args.isEmpty()) {
-        prompt();
-        return;
-    }
+    m_console.registerCommand({ "record"_L1, "r"_L1 }, {}, tr("Switch recording on or off."),
+                              [this](const QStringList &) {
+                                  if (!m_connection->isConnected()) {
+                                      prompt(tr("Not connected to a running application. "
+                                                "Cannot change the recording state."));
+                                      return;
+                                  }
+                                  m_pendingRequest = REQUEST_TOGGLE_RECORDING;
+                                  m_qmlProfilerClient->setRecording(!m_recording);
+                              });
 
-    QByteArray cmd = args.takeFirst().trimmed().toLatin1();
+    m_console.registerCommand(
+            { "quit"_L1, "q"_L1 }, {},
+            tr("Terminate the target process if started from qmlprofiler, and "
+               "qmlprofiler itself."),
+            [this](const QStringList &) {
+                if (m_recording) {
+                    m_console.askConfirmation(
+                            tr("The application is still generating data. Really quit (y/n)?"),
+                            [] { quit(); });
+                } else if (!m_profilerData->isEmpty()) {
+                    m_console.askConfirmation(
+                            tr("There is still trace data in memory. Really quit (y/n)?"),
+                            [] { quit(); });
+                } else {
+                    quit();
+                }
+            });
 
-    if (m_pendingRequest == REQUEST_QUIT) {
-        if (cmd == Constants::CMD_YES || cmd == Constants::CMD_YES2) {
-            quit();
-        } else if (cmd == Constants::CMD_NO || cmd == Constants::CMD_NO2) {
-            m_pendingRequest = REQUEST_NONE;
-            prompt();
-        } else {
-            prompt(tr("Really quit (y/n)?"));
-        }
-        return;
-    }
+    m_console.registerCommand(
+            { "output"_L1, "o"_L1 }, "[file]"_L1,
+            tr("Output profiling data to <file>. If no <file> parameter is given, "
+               "output to whatever was given with --output, or standard output."),
+            [this](const QStringList &args) {
+                if (m_recording) {
+                    prompt(tr("Cannot output while recording data."));
+                } else if (m_profilerData->isEmpty()) {
+                    prompt(tr("No data was recorded so far."));
+                } else {
+                    m_interactiveOutputFile = args.isEmpty() ? m_outputFile : args.first();
+                    confirmOverwriteThen([this] { output(); });
+                }
+            });
 
-    if (m_pendingRequest == REQUEST_OUTPUT_FILE || m_pendingRequest == REQUEST_FLUSH_FILE) {
-        if (cmd == Constants::CMD_YES || cmd == Constants::CMD_YES2) {
-            if (m_pendingRequest == REQUEST_OUTPUT_FILE)
-                output();
-            else
-                flush();
-        } else if (cmd == Constants::CMD_NO || cmd == Constants::CMD_NO2) {
-            m_pendingRequest = REQUEST_NONE;
-            m_interactiveOutputFile.clear();
-            prompt();
-        } else {
-            prompt(tr("%1 exists. Overwrite (y/n)?"));
-        }
-        return;
-    }
+    m_console.registerCommand({ "clear"_L1, "c"_L1 }, {},
+                              tr("Clear profiling data recorded so far from memory."),
+                              [this](const QStringList &) {
+                                  if (m_recording) {
+                                      prompt(tr("Cannot clear data while recording."));
+                                  } else if (m_profilerData->isEmpty()) {
+                                      prompt(tr("No data was recorded so far."));
+                                  } else {
+                                      m_profilerData->clear();
+                                      prompt(tr("Trace data cleared."));
+                                  }
+                              });
 
-    if (cmd == Constants::CMD_RECORD || cmd == Constants::CMD_RECORD2) {
-        m_pendingRequest = REQUEST_TOGGLE_RECORDING;
-        m_qmlProfilerClient->setRecording(!m_recording);
-    } else if (cmd == Constants::CMD_QUIT || cmd == Constants::CMD_QUIT2) {
-        m_pendingRequest = REQUEST_QUIT;
-        if (m_recording) {
-            prompt(tr("The application is still generating data. Really quit (y/n)?"));
-        } else if (!m_profilerData->isEmpty()) {
-            prompt(tr("There is still trace data in memory. Really quit (y/n)?"));
-        } else {
-            quit();
-        }
-    } else if (cmd == Constants::CMD_OUTPUT || cmd == Constants::CMD_OUTPUT2) {
-        if (m_recording) {
-            prompt(tr("Cannot output while recording data."));
-        } else if (m_profilerData->isEmpty()) {
-            prompt(tr("No data was recorded so far."));
-        } else {
-            m_interactiveOutputFile = args.size() > 0 ? args.at(0).toString() : m_outputFile;
-            if (checkOutputFile(REQUEST_OUTPUT_FILE))
-                output();
-        }
-    } else if (cmd == Constants::CMD_CLEAR || cmd == Constants::CMD_CLEAR2) {
-        if (m_recording) {
-            prompt(tr("Cannot clear data while recording."));
-        } else if (m_profilerData->isEmpty()) {
-            prompt(tr("No data was recorded so far."));
-        } else {
-            m_profilerData->clear();
-            prompt(tr("Trace data cleared."));
-        }
-    } else if (cmd == Constants::CMD_FLUSH || cmd == Constants::CMD_FLUSH2) {
-        if (!m_recording && m_profilerData->isEmpty()) {
-            prompt(tr("No data was recorded so far."));
-        } else {
-            m_interactiveOutputFile = args.size() > 0 ? args.at(0).toString() : m_outputFile;
-            if (checkOutputFile(REQUEST_FLUSH_FILE))
-                flush();
-        }
-    } else {
-        prompt(tr(commandTextC));
-    }
+    m_console.registerCommand(
+            { "flush"_L1, "f"_L1 }, "[file]"_L1,
+            tr("Stop recording if it is running, then output the data, and finally "
+               "clear it from memory."),
+            [this](const QStringList &args) {
+                if (!m_recording && m_profilerData->isEmpty()) {
+                    prompt(tr("No data was recorded so far."));
+                } else {
+                    m_interactiveOutputFile = args.isEmpty() ? m_outputFile : args.first();
+                    confirmOverwriteThen([this] { flush(); });
+                }
+            });
 }
 
 void QmlProfilerApplication::notifyTraceStarted()
@@ -568,13 +557,8 @@ void QmlProfilerApplication::traceFinished()
 
 void QmlProfilerApplication::prompt(const QString &line, bool ready)
 {
-    if (m_interactive) {
-        if (!line.isEmpty())
-            std::cerr << qPrintable(line) << std::endl;
-        std::cerr << "> ";
-        if (ready)
-            emit readyForCommand();
-    }
+    if (m_interactive)
+        m_console.prompt(line, ready);
 }
 
 void QmlProfilerApplication::logError(const QString &error)

@@ -13,6 +13,8 @@ qt_internal_add_module(QmlDebugPrivate
     SOURCES
         qqmldebugclient.cpp qqmldebugclient_p.h
         qqmldebugclient_p_p.h
+        qqmldebugcommandlistener.cpp qqmldebugcommandlistener_p.h
+        qqmldebugconsole.cpp qqmldebugconsole_p.h
         qqmldebugconnection.cpp qqmldebugconnection_p.h
         qqmldebugmessageclient.cpp qqmldebugmessageclient_p.h
         qqmldebugtranslationclient.cpp qqmldebugtranslationclient_p.h
