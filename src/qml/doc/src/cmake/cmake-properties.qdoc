@@ -36,6 +36,41 @@ You can enable folder support by calling
 
 
 /*!
+\group cmake-target-properties-qtqml
+\title CMake Target Properties in Qt6 Qml
+
+\l{CMake Command Reference#Qt6::Qml}{CMake Commands} know about the following
+CMake target properties:
+
+\sa{CMake Property Reference}
+*/
+
+
+/*!
+\page cmake-target-property-qt-qml-no-qml-preview.html
+\ingroup cmake-properties-qtqml
+\ingroup cmake-target-properties-qtqml
+
+\title QT_QML_NO_QML_PREVIEW (target property)
+\target cmake-target-property-QT_QML_NO_QML_PREVIEW
+
+\summary {Opts a target out of automatic qmlpreview target creation.}
+
+\cmakepropertysince 6.12
+
+Set this property to a true value on a target to prevent it from
+automatically getting a \l qmlpreview target created for it. By default, such
+a target is created for every executable that links against \c{Qt6::Qml}.
+
+This property only has an effect on the automatic behavior, which can also be
+disabled globally via \l QT_QML_NO_QML_PREVIEW. It has no effect on an explicit
+call to \l qt_add_qml_preview() for the same target.
+
+\sa{QT_QML_NO_QML_PREVIEW (global property)}, qt_add_qml_preview()
+*/
+
+
+/*!
 \group cmake-source-file-properties-qtqml
 \title CMake Source File Properties in Qt6 Qml
 
