@@ -9063,7 +9063,7 @@
                         "type": "number"
                     },
                     {
-                        "name": "ImhDecimaNumbersOnly",
+                        "name": "ImhDecimalNumbersOnly",
                         "type": "number"
                     },
                     {
