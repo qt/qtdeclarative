@@ -10,6 +10,8 @@
 #include <private/qqmlprofilerevent_p.h>
 #include <private/qqmlprofilereventtype_p.h>
 
+#include <QtCore/qxpfunctional.h>
+
 //
 //  W A R N I N G
 //  -------------
@@ -29,9 +31,11 @@ class QQuickEventReplayClient : public QQmlDebugClient
     Q_OBJECT
 public:
     QQuickEventReplayClient(QQmlDebugConnection *connection);
-    bool sendEvents(const QString &fileName);
+    bool loadEvents(const QString &fileName,
+                    qxp::function_ref<void(const QQmlProfilerEventType &,
+                                           QQmlProfilerEvent &&)> &&handler);
 
-    void sendEvent(const QQmlProfilerEventType &type, const QQmlProfilerEvent &event);
+    void sendEvent(const QQmlProfilerEventType &type, QQmlProfilerEvent &&event);
 };
 
 QT_END_NAMESPACE

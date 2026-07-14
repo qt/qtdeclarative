@@ -19,12 +19,9 @@ QQuickEventReplayClient::QQuickEventReplayClient(QQmlDebugConnection *connection
 {
 }
 
-struct SendEventType {
-    int eventType = -1;
-    int detailType = -1;
-};
-
-bool QQuickEventReplayClient::sendEvents(const QString &fileName)
+bool QQuickEventReplayClient::loadEvents(
+        const QString &fileName,
+        qxp::function_ref<void(const QQmlProfilerEventType &, QQmlProfilerEvent &&)> &&handler)
 {
     QFile file(fileName);
     if (!file.open(QIODevice::ReadOnly)) {
@@ -34,7 +31,7 @@ bool QQuickEventReplayClient::sendEvents(const QString &fileName)
 
     int currentEventIndex = -1;
 
-    QHash<int, SendEventType> types;
+    QHash<int, QQmlProfilerEventType> types;
 
     QXmlStreamReader reader(&file);
     while (!reader.atEnd()) {
@@ -44,30 +41,19 @@ bool QQuickEventReplayClient::sendEvents(const QString &fileName)
         const QStringView name = reader.name();
         if (name == "event"_L1) {
             currentEventIndex = reader.attributes().value("index"_L1).toInt();
-        } else if (name == "mouseEvent"_L1) {
-            types[currentEventIndex] = SendEventType {
-                QQmlProfilerDefinitions::EventType::Mouse,
-                reader.readElementText().toInt(),
-            };
-        } else if (name == "keyEvent"_L1) {
-            types[currentEventIndex] = SendEventType {
-                QQmlProfilerDefinitions::EventType::Key,
-                reader.readElementText().toInt(),
-            };
+        } else if (name == "mouseEvent"_L1 || name == "keyEvent"_L1) {
+            types[currentEventIndex] = QQmlProfilerEventType(
+                    Message::Event, RangeType::MaximumRangeType, reader.readElementText().toInt());
         } else if (name == "range"_L1) {
             const QXmlStreamAttributes attributes = reader.attributes();
-            const int eventIndex = attributes.value("eventIndex"_L1).toInt();
-            const SendEventType &type = types[eventIndex];
-            if (type.eventType != -1) {
-                const qint64 startTime = attributes.value("startTime"_L1).toLongLong();
-                const int inputType = attributes.value("type"_L1).toInt();
-                const int data1 = attributes.value("data1"_L1).toInt();
-                const int data2 = attributes.value("data2"_L1).toInt();
-
-                QPacket stream(connection()->currentDataStreamVersion());
-                stream << startTime << QQmlProfilerDefinitions::Message::Event
-                       << type.detailType << inputType << data1 << data2;
-                sendMessage(stream.data());
+            const int typeIndex = attributes.value("eventIndex"_L1).toInt();
+            const auto type = types.constFind(typeIndex);
+            if (type != types.constEnd()) {
+                handler(*type,
+                        QQmlProfilerEvent(attributes.value("startTime"_L1).toLongLong(), typeIndex,
+                                          { attributes.value("type"_L1).toInt(),
+                                            attributes.value("data1"_L1).toInt(),
+                                            attributes.value("data2"_L1).toInt() }));
             }
         }
     }
@@ -76,7 +62,7 @@ bool QQuickEventReplayClient::sendEvents(const QString &fileName)
 }
 
 void QQuickEventReplayClient::sendEvent(
-        const QQmlProfilerEventType &type, const QQmlProfilerEvent &event)
+        const QQmlProfilerEventType &type, QQmlProfilerEvent &&event)
 {
     QPacket stream(connection()->currentDataStreamVersion());
     stream << event.timestamp() << QQmlProfilerDefinitions::Message::Event

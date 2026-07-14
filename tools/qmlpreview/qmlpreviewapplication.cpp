@@ -17,6 +17,8 @@
 #include <QtCore/QFile>
 #include <QtCore/QLibraryInfo>
 
+using namespace Qt::StringLiterals;
+
 static QString qmlPreviewServices()
 {
     return QStringLiteral("QmlPreview,CanvasFrameRate,EventReplay");
@@ -59,10 +61,7 @@ bool QmlPreviewApplication::argumentsFromCommandLineAndFile(
     return true;
 }
 
-QmlPreviewApplication::QmlPreviewApplication(int &argc, char **argv) :
-    QCoreApplication(argc, argv),
-    m_verbose(false),
-    m_connectionAttempts(0)
+QmlPreviewApplication::QmlPreviewApplication(int &argc, char **argv) : QCoreApplication(argc, argv)
 {
     m_connection.reset(new QQmlDebugConnection);
     m_qmlPreviewClient.reset(new QQmlPreviewClient(m_connection.data()));
@@ -73,10 +72,10 @@ QmlPreviewApplication::QmlPreviewApplication(int &argc, char **argv) :
             [this]() {
 
                 // Only replay events if we're not in hot reload mode.
-                // The initial replay in case of a hot reload failure is done when receiving
-                // the settings confirmation.
+                // In hot reload mode the replay is done when receiving the
+                // settings confirmation.
                 if (!m_confirmedSettings.enableInPlaceUpdates)
-                    m_qmlPreviewClient->replayEvents();
+                    replayEvents();
 
                 m_qmlPreviewClient->triggerLoad(QUrl());
             });
@@ -87,6 +86,14 @@ QmlPreviewApplication::QmlPreviewApplication(int &argc, char **argv) :
     connectConnectionSignals();
     connectQmlPreviewClientSignals();
     connectWatcherSignals();
+    registerCommands();
+
+    // Closing standard input ends the interactive session, saving any recorded
+    // events to the --output file first.
+    connect(&m_console, &QQmlDebugConsole::endOfInput, this, [this]() {
+        saveEventsToOutput();
+        quit();
+    });
 }
 
 QmlPreviewApplication::~QmlPreviewApplication()
@@ -97,16 +104,25 @@ QmlPreviewApplication::~QmlPreviewApplication()
 void QmlPreviewApplication::connectQmlPreviewClientSignals()
 {
     connect(m_qmlPreviewClient.data(), &QQmlPreviewClient::error, this,
-            &QmlPreviewApplication::logError);
+            [this](const QString &message) {
+                // If it rejects the configuration message, replay initial events.
+                // Otherwise replay initial events from the Confirmation handler.
+                static_assert(QQmlPreviewClient::Configuration == 10);
+                if (message == QLatin1String("Invalid command: 10"))
+                    replayEvents();
+                else
+                    logError(message);
+            });
     connect(m_qmlPreviewClient.data(), &QQmlPreviewClient::request, this,
             &QmlPreviewApplication::serveRequest);
     connect(m_qmlPreviewClient.data(), &QQmlPreviewClient::confirmation, this,
             [this](const QQmlPreviewClient::Settings &settings) {
 
-                // Before we switch to hot reload mode,
-                // replay any input events gathered in the last run.
+                // Before we switch to hot reload mode, replay the events gathered
+                // in the last run, or, on a fresh start, the stream from the
+                // --replay file.
                 if (settings.enableInPlaceUpdates)
-                    m_qmlPreviewClient->replayEvents();
+                    replayEvents();
 
                 m_confirmedSettings = settings;
                 const QString status = QString::fromUtf8("Inplace updates setting confirmed as: %1")
@@ -130,6 +146,14 @@ void QmlPreviewApplication::connectConnectionSignals()
                                        .arg(settings.enableInPlaceUpdates ? "enabled" : "disabled");
         logStatus(status);
         m_connectTimer.stop();
+
+        // Kick off the interactive command loop once, on the first connection.
+        // Reconnections (e.g. after 'restart') are re-prompted by the command
+        // handler that triggered them.
+        if (m_interactive && !m_promptShown) {
+            m_promptShown = true;
+            prompt(tr("Connected. Type a command ('help' shows the list)."));
+        }
     });
 }
 
@@ -190,6 +214,24 @@ void QmlPreviewApplication::parseArguments()
                                tr("Print debugging output."));
     parser.addOption(verbose);
 
+    QCommandLineOption interactive(QStringList() <<  QLatin1String("interactive"),
+                                   tr("Manually control the preview from the command line. Type "
+                                      "'help' at the prompt to see the list of available "
+                                      "commands."));
+    parser.addOption(interactive);
+
+    QCommandLineOption output(QStringList() << QLatin1String("o") << QLatin1String("output"),
+                              tr("Save the recorded input event stream to <file> (a .qtd file) "
+                                 "when quitting."),
+                              QLatin1String("file"));
+    parser.addOption(output);
+
+    QCommandLineOption replay(QStringList() << QLatin1String("r") << QLatin1String("replay"),
+                              tr("Load the input event stream from <file> (a .qtd file) on startup "
+                                 "and replay it to restore the UI state from a previous session."),
+                              QLatin1String("file"));
+    parser.addOption(replay);
+
     parser.addHelpOption();
     parser.addVersionOption();
 
@@ -217,6 +259,10 @@ void QmlPreviewApplication::parseArguments()
     if (parser.isSet(verbose))
         m_verbose = true;
 
+    m_interactive = parser.isSet(interactive);
+    m_outputFile = parser.value(output);
+    m_replayFile = parser.value(replay);
+
     m_arguments = parser.positionalArguments();
     if (!m_arguments.isEmpty())
         m_executablePath = m_arguments.takeFirst();
@@ -233,6 +279,118 @@ int QmlPreviewApplication::exec()
 {
     QTimer::singleShot(0, this, &QmlPreviewApplication::run);
     return QCoreApplication::exec();
+}
+
+bool QmlPreviewApplication::isInteractive() const
+{
+    return m_interactive;
+}
+
+void QmlPreviewApplication::startConsole()
+{
+    m_console.start();
+}
+
+void QmlPreviewApplication::prompt(const QString &line, bool ready)
+{
+    if (m_interactive)
+        m_console.prompt(line, ready);
+}
+
+void QmlPreviewApplication::replayEvents()
+{
+    // If we have been running before and recorded input events, replay those to
+    // restore the UI state. On a fresh start there is nothing recorded yet, so
+    // replay the stream from the file given with --replay instead. Once the file's
+    // events have been replayed they are recorded too, so any later replay (e.g.
+    // after a reload or 'restart') naturally comes from memory again.
+    if (m_qmlPreviewClient->hasRecordedEvents()) {
+        m_qmlPreviewClient->replayEvents();
+    } else if (!m_replayFile.isEmpty()) {
+        if (m_qmlPreviewClient->replayEventsFromFile(m_replayFile))
+            logStatus(QString::fromUtf8("Replaying events from %1").arg(m_replayFile));
+        else
+            logError(QString::fromUtf8("Could not replay events from %1").arg(m_replayFile));
+    }
+}
+
+void QmlPreviewApplication::saveEventsToOutput()
+{
+    if (m_outputFile.isEmpty())
+        return;
+    if (m_qmlPreviewClient->saveEvents(m_outputFile))
+        logStatus(QString::fromUtf8("Events written to %1").arg(m_outputFile));
+    else
+        logError(QString::fromUtf8("Could not write events to %1").arg(m_outputFile));
+}
+
+void QmlPreviewApplication::registerCommands()
+{
+    m_console.registerCommand(
+            { "load"_L1, "l"_L1 }, "[file]"_L1,
+            tr("Load a .qtd input event file and replay it. Uses the file given with "
+               "--replay if no argument is provided."),
+            [this](const QStringList &args) {
+                const QString file = args.isEmpty() ? m_replayFile : args.first();
+                if (file.isEmpty())
+                    prompt(tr("No file given and no --replay file configured."));
+                else if (m_qmlPreviewClient->replayEventsFromFile(file))
+                    prompt(tr("Replaying events from %1.").arg(file));
+                else
+                    prompt(tr("Could not replay events from %1.").arg(file));
+            });
+
+    m_console.registerCommand(
+            { "output"_L1, "o"_L1 }, "[file]"_L1,
+            tr("Output the recorded input event stream to a .qtd file. Uses the file "
+               "given with --output if no argument is provided."),
+            [this](const QStringList &args) {
+                const QString file = args.isEmpty() ? m_outputFile : args.first();
+                if (file.isEmpty())
+                    prompt(tr("No file given and no --output file configured."));
+                else if (m_qmlPreviewClient->saveEvents(file))
+                    prompt(tr("Events written to %1.").arg(file));
+                else
+                    prompt(tr("Saving to %1 failed.").arg(file));
+            });
+
+    m_console.registerCommand(
+            { "replay"_L1 }, {},
+            tr("Replay the input events recorded so far into the running target."),
+            [this](const QStringList &) {
+                m_qmlPreviewClient->replayEvents();
+                prompt(tr("Replaying recorded events."));
+            });
+
+    m_console.registerCommand({ "clear"_L1, "c"_L1 }, {},
+                              tr("Discard the input events recorded so far."),
+                              [this](const QStringList &) {
+                                  m_qmlPreviewClient->clearRecordedEvents();
+                                  prompt(tr("Recorded events cleared."));
+                              });
+
+    m_console.registerCommand(
+            { "kill"_L1, "k"_L1 }, {}, tr("Forcefully terminate the target application."),
+            [this](const QStringList &) {
+                killProcess();
+                prompt(tr("Target process terminated. Use 'restart' to relaunch."));
+            });
+
+    m_console.registerCommand({ "restart"_L1, "r"_L1 }, {},
+                              tr("Restart the target application and replay the recorded events to "
+                                 "restore the UI state."),
+                              [this](const QStringList &) {
+                                  restartProcess();
+                                  prompt(tr("Target process restarting ..."));
+                              });
+
+    m_console.registerCommand(
+            { "quit"_L1, "q"_L1 }, {},
+            tr("Save the recorded events to the --output file if configured, then quit."),
+            [this](const QStringList &) {
+                saveEventsToOutput();
+                quit();
+            });
 }
 
 void QmlPreviewApplication::startProcess()
@@ -291,6 +449,13 @@ void QmlPreviewApplication::processFinished()
         logError("Process crashed!");
         exitCode = 3;
     }
+
+    // In interactive mode keep running so the user can inspect the situation or
+    // relaunch the target with 'restart'.
+    if (m_interactive)
+        return;
+
+    saveEventsToOutput();
     exit(exitCode);
 }
 

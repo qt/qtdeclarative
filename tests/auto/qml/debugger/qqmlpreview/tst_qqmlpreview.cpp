@@ -596,8 +596,8 @@ void tst_QQmlPreview::handleInput()
         2ll, 0, QList<int>({InputMouseRelease, Qt::LeftButton, Qt::NoButton})
     }};
 
-    for (const QQmlProfilerEvent &event : clickEvents)
-        m_client->replayEvent(mouseType, event);
+    for (QQmlProfilerEvent event : clickEvents)
+        m_client->replayEvent(mouseType, std::move(event));
 
     verifyProcessOutputContains("aaa #ff0000");
 
@@ -609,8 +609,8 @@ void tst_QQmlPreview::handleInput()
     m_client->triggerLoad(testFileUrl(file));
     verifyProcessOutputContains("bbb #0000ff");
 
-    for (const QQmlProfilerEvent &event : clickEvents)
-        m_client->replayEvent(mouseType, event);
+    for (QQmlProfilerEvent event : clickEvents)
+        m_client->replayEvent(mouseType, std::move(event));
 
     verifyProcessOutputContains("bbb #ff0000");
 
@@ -650,8 +650,8 @@ void tst_QQmlPreview::replayEventsWithoutHotReload()
 
     // Replaying input through the client-owned EventReplay client works without
     // ever enabling in-place updates.
-    for (const QQmlProfilerEvent &event : clickEvents)
-        m_client->replayEvent(mouseType, event);
+    for (QQmlProfilerEvent event : clickEvents)
+        m_client->replayEvent(mouseType, std::move(event));
     verifyProcessOutputContains("aaa #ff0000");
 
     // replayEvents() must not trigger a LoadUrl by itself. The old
