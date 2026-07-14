@@ -12,8 +12,6 @@ qt_internal_add_tool(${target_name}
     TARGET_DESCRIPTION "QML Profiler"
     TOOLS_TARGET Qml # special case
     SOURCES
-        commandlistener.cpp commandlistener.h
-        constants.h
         main.cpp
         qmlprofilerapplication.cpp qmlprofilerapplication.h
         qmlprofilerclient.cpp qmlprofilerclient.h
