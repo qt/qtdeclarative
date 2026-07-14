@@ -285,6 +285,7 @@ private slots:
     void concatAfterUnshift();
     void sortSparseArray();
     void compileBrokenRegexp();
+    void deeplyNestedRegexpDoesNotCrash();
     void sortNonStringArray();
     void iterateInvalidProxy();
     void applyOnHugeArray();
@@ -5585,6 +5586,32 @@ void tst_QJSEngine::compileBrokenRegexp()
 
     QVERIFY(value.isError());
     QCOMPARE(value.toString(), "SyntaxError: Invalid flags supplied to RegExp constructor");
+}
+
+void tst_QJSEngine::deeplyNestedRegexpDoesNotCrash()
+{
+    // verify that we detect when a regular expression would run out of stack space
+    QString result;
+    bool isError = true;
+    std::unique_ptr<QThread> worker(QThread::create([&result, &isError]() {
+        QJSEngine engine;
+        const QJSValue value = engine.evaluate(
+            "(function() {"
+            "    var n = 50000;"
+            "    var src = '('.repeat(n) + 'a' + ')'.repeat(n);"
+            "    try { new RegExp(src); return 'compiled'; }"
+            "    catch (e) { return e instanceof SyntaxError ? 'SyntaxError' : String(e); }"
+            "})();"
+        );
+        isError = value.isError();
+        result = value.toString();
+    }));
+    worker->setStackSize(512 * 1024);
+    worker->start();
+    QVERIFY(worker->wait());
+
+    QVERIFY(!isError);
+    QCOMPARE(result, QLatin1String("SyntaxError"));
 }
 
 void tst_QJSEngine::tostringRecursionCheck()

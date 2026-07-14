@@ -51,9 +51,10 @@ uint RegExp::match(const QString &string, int start, uint *matchOffsets)
     auto *priv = d();
 
     auto regenerateByteCode = [](Heap::RegExp *regexp) {
+        const void* stackLimit = regexp->internalClass->engine->cppStackLimit;
         JSC::Yarr::ErrorCode error = JSC::Yarr::ErrorCode::NoError;
         JSC::Yarr::YarrPattern yarrPattern(WTF::String(*regexp->pattern), jscFlags(regexp->flags),
-                                           error);
+                                           error, const_cast<void *>(stackLimit));
 
         // As we successfully parsed the pattern before, we should still be able to.
         Q_ASSERT(error == JSC::Yarr::ErrorCode::NoError);
@@ -85,8 +86,9 @@ uint RegExp::match(const QString &string, int start, uint *matchOffsets)
             removeByteCode(priv);
 
             JSC::Yarr::ErrorCode error = JSC::Yarr::ErrorCode::NoError;
+            const void* stackLimit = internalClass()->engine->cppStackLimit;
             JSC::Yarr::YarrPattern yarrPattern(
-                    WTF::String(*priv->pattern), jscFlags(priv->flags), error);
+                    WTF::String(*priv->pattern), jscFlags(priv->flags), error, const_cast<void *>(stackLimit));
             if (!yarrPattern.m_containsBackreferences) {
                 priv->jitCode = new JSC::Yarr::YarrCodeBlock;
                 JSC::VM *vm = static_cast<JSC::VM *>(priv->internalClass->engine);
@@ -215,7 +217,8 @@ void Heap::RegExp::init(ExecutionEngine *engine, const QString &pattern, uint fl
     this->flags = flags;
 
     JSC::Yarr::ErrorCode error = JSC::Yarr::ErrorCode::NoError;
-    JSC::Yarr::YarrPattern yarrPattern(WTF::String(pattern), jscFlags(flags), error);
+    const void* stackLimit = internalClass->engine->cppStackLimit;
+    JSC::Yarr::YarrPattern yarrPattern(WTF::String(pattern), jscFlags(flags), error, const_cast<void *>(stackLimit));
     if (error != JSC::Yarr::ErrorCode::NoError)
         return;
     subPatternCount = yarrPattern.m_numSubpatterns;
