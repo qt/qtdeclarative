@@ -2741,14 +2741,12 @@ void tst_qquickitem::testUpdateOfInvisibleItem()
 
     // Image is visible, make sure we get an update
     view.rootObject()->setProperty("itemColor", "blue");
-    spy.wait(1000);
-    QCOMPARE(spy.count(), 1);
+    QTRY_COMPARE(spy.count(), 1);
     spy.clear();
 
     // One update for hiding the Image
     view.rootObject()->setProperty("itemVisible", false);
-    spy.wait(1000);
-    QCOMPARE(spy.count(), 1);
+    QTRY_COMPARE(spy.count(), 1);
     spy.clear();
 
     // Make sure we don't get an update when the invisible Item changes
