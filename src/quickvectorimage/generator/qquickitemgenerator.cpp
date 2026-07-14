@@ -621,7 +621,7 @@ static QQuickShaderEffectSource *makeSES(QQuickItem *item, const QRectF &rect, Q
     return ses;
 }
 
-static QQuickShaderEffect *makeFilterEffect(qreal w, qreal h, const QUrl &shader,
+static QQuickShaderEffect *makeFilterEffect(QQuickItem *inputItem, const QUrl &shader,
                                             QQmlContext *context, QQuickItem *parent)
 {
     auto *effect = new QQuickShaderEffect;
@@ -629,8 +629,9 @@ static QQuickShaderEffect *makeFilterEffect(qreal w, qreal h, const QUrl &shader
         QQmlEngine::setContextForObject(effect, context);
     auto *parserStatus = qobject_cast<QQmlParserStatus *>(effect);
     parserStatus->classBegin();
-    effect->setWidth(w);
-    effect->setHeight(h);
+    effect->bindableWidth().setBinding([inputItem] { return inputItem->width(); });
+    effect->bindableHeight().setBinding([inputItem] { return inputItem->height(); });
+    effect->setVisible(false);
     effect->setParent(parent);
     effect->setParentItem(parent);
     effect->setFragmentShader(shader);
@@ -811,6 +812,25 @@ QQuickItem *QQuickItemGenerator::generateFilter(QQuickItem *item, const NodeInfo
     if (filterInfo.wrapMode == QSGTexture::Repeat)
         sourceGraphic->setWrapMode(QQuickShaderEffectSource::Repeat);
 
+    if (filterInfo.csFilterRect == FilterNodeInfo::CoordinateSystem::Relative) {
+        const qreal wFactor = filterInfo.filterRect.width();
+        const qreal hFactor = filterInfo.filterRect.height();
+        sourceGraphic->bindableWidth().setBinding(
+                [item, wFactor] { return item->width() * wFactor; });
+        sourceGraphic->bindableHeight().setBinding(
+                [item, hFactor] { return item->height() * hFactor; });
+
+        const QRectF fractions = filterInfo.filterRect;
+        auto updateSourceRect = [sourceGraphic, item, fractions]() {
+            sourceGraphic->setSourceRect(QRectF(item->x() + fractions.x() * item->width(),
+                                                item->y() + fractions.y() * item->height(),
+                                                fractions.width() * item->width(),
+                                                fractions.height() * item->height()));
+        };
+        QObject::connect(item, &QQuickItem::widthChanged, sourceGraphic, updateSourceRect);
+        QObject::connect(item, &QQuickItem::heightChanged, sourceGraphic, updateSourceRect);
+    }
+
     QHash<QString, QQuickShaderEffectSource *> namedOutputs;
     const QString sourceAlphaName = filterInfo.id + u"_source_alpha"_s;
     QQuickShaderEffectSource *sourceAlpha = nullptr;
@@ -940,8 +960,7 @@ QQuickItemGenerator::generateFilterMerge(const QList<QQuickShaderEffectSource *>
 
     static const QUrl shader(
             u"qrc:/qt-project.org/quickvectorimage/helpers/shaders_ng/femerge.frag.qsb"_s);
-    auto *effect = makeFilterEffect(inputs.first()->width(), inputs.first()->height(), shader,
-                                    m_context, m_rootItem);
+    auto *effect = makeFilterEffect(inputs.first(), shader, m_context, m_rootItem);
 
     const int count = qMin(maxNodeCount, inputs.size());
     effect->setProperty("sourceCount", count);
@@ -961,12 +980,17 @@ QQuickItemGenerator::generateFilterFlood(const FilterNodeInfo::FilterStep &step,
                                          const QRectF &filterRect)
 {
     auto *rect = new QQuickRectangle;
-    rect->setWidth(input ? input->width() : filterRect.width());
-    rect->setHeight(input ? input->height() : filterRect.height());
     rect->setColor(step.filterParameter.value<QColor>());
     rect->setVisible(false);
     rect->setParent(m_rootItem);
     rect->setParentItem(m_rootItem);
+    if (input) {
+        rect->bindableWidth().setBinding([input] { return input->width(); });
+        rect->bindableHeight().setBinding([input] { return input->height(); });
+    } else {
+        rect->setWidth(filterRect.width());
+        rect->setHeight(filterRect.height());
+    }
     auto *ses = makeSES(rect, stepRect, m_rootItem);
     ses->setSourceRect(QRectF(stepRect.x() - filterRect.x(), stepRect.y() - filterRect.y(),
                               stepRect.width(), stepRect.height()));
@@ -997,7 +1021,7 @@ QQuickItemGenerator::generateFilterColorMatrix(const FilterNodeInfo::FilterStep 
 {
     static const QUrl shader(
             u"qrc:/qt-project.org/quickvectorimage/helpers/shaders_ng/fecolormatrix.frag.qsb"_s);
-    auto *effect = makeFilterEffect(input->width(), input->height(), shader, m_context, m_rootItem);
+    auto *effect = makeFilterEffect(input, shader, m_context, m_rootItem);
     effect->setProperty("source", QVariant::fromValue(input));
 
     const auto matrix = step.filterParameter.value<QGenericMatrix<5, 5, qreal>>();
@@ -1039,8 +1063,7 @@ QQuickShaderEffectSource *QQuickItemGenerator::generateFilterBlend(
 
     const QUrl shaderUrl(u"qrc:/qt-project.org/quickvectorimage/helpers/shaders_ng/"_s + shaderName
                          + u".frag.qsb"_s);
-    auto *effect =
-            makeFilterEffect(input1->width(), input1->height(), shaderUrl, m_context, m_rootItem);
+    auto *effect = makeFilterEffect(input1, shaderUrl, m_context, m_rootItem);
     effect->setProperty("source", QVariant::fromValue(input1));
     effect->setProperty("source2", QVariant::fromValue(input2));
     qobject_cast<QQmlParserStatus *>(effect)->componentComplete();
@@ -1080,8 +1103,7 @@ QQuickShaderEffectSource *QQuickItemGenerator::generateFilterComposite(
 
     const QUrl shaderUrl(u"qrc:/qt-project.org/quickvectorimage/helpers/shaders_ng/"_s + shaderName
                          + u".frag.qsb"_s);
-    auto *effect =
-            makeFilterEffect(input1->width(), input1->height(), shaderUrl, m_context, m_rootItem);
+    auto *effect = makeFilterEffect(input1, shaderUrl, m_context, m_rootItem);
     effect->setProperty("source", QVariant::fromValue(input1));
     effect->setProperty("source2", QVariant::fromValue(input2));
     if (step.filterType == FilterNodeInfo::Type::CompositeArithmetic)
@@ -1106,8 +1128,9 @@ QQuickItemGenerator::generateFilterGaussianBlur(const FilterNodeInfo::FilterStep
         QQmlEngine::setContextForObject(effect, m_context);
     auto *parserStatus = qobject_cast<QQmlParserStatus *>(effect);
     parserStatus->classBegin();
-    effect->setWidth(input->width());
-    effect->setHeight(input->height());
+    effect->bindableWidth().setBinding([input] { return input->width(); });
+    effect->bindableHeight().setBinding([input] { return input->height(); });
+    effect->setVisible(false);
     effect->setParent(m_rootItem);
     effect->setParentItem(m_rootItem);
     effect->setSource(input);
