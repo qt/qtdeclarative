@@ -1,0 +1,81 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qt-add-qml-preview.html
+\ingroup cmake-commands-qtqml
+
+\title qt_add_qml_preview
+\keyword qt_add_qml_preview()
+
+\summary{Sets up qmlpreview support for an executable that isn't itself a QML module.}
+
+\cmakecommandsince 6.12
+\preliminarycmakecommand
+
+\include cmake-find-package-qml.qdocinc
+
+\section1 Synopsis
+
+\badcode
+qt_add_qml_preview(target)
+\endcode
+
+\versionlessCMakeCommandsNote qt6_add_qml_preview()
+
+\section1 Description
+
+\c{qt_add_qml_preview()} sets up \l qmlpreview live-reload support for an
+executable \c target that loads QML from one or more QML modules created with
+\l qt_add_qml_module(), but which is not itself created by
+\l qt_add_qml_module(). It creates an additional build target named
+\c{<target>_qmlpreview} that launches \l qmlpreview on the executable.
+
+The \c target must be an executable target built by the current project.
+Passing a library target, or a target imported from another package, results
+in a configure-time error.
+
+If \c target is itself a QML module, this command returns immediately without
+doing anything, because such targets already get \l qmlpreview support as part
+of \l qt_add_qml_module().
+
+If \c target links against \c{Qt6::Qml} but no in-project QML modules can be
+found in its link closure, a warning is emitted at build time, because live
+reload of QML embedded in Qt resources will not work in that case. If this
+happens, link the \l qt_add_qml_module() target(s) whose QML files you want to
+preview to \c target.
+
+\note To make use of the resulting \c{<target>_qmlpreview} target, \c target
+      itself needs to be built with
+      \l{QML debugging support enabled}{QML debugging infrastructure}, the
+      same requirement as for using the \l qmlpreview tool directly.
+      Moreover, the target is not created when cross-compiling.
+
+By default, \l qmlpreview support is already set up automatically for every
+executable target that links against \c{Qt6::Qml}, so you normally don't need
+to call \c{qt_add_qml_preview()} at all. It is only useful as a per-target
+override when that automatic behavior has been switched off: calling it enables
+\l qmlpreview support for \c target even if preview has been disabled globally
+via the \l QT_QML_NO_QML_PREVIEW variable, or for that target via its
+\l{cmake-target-property-QT_QML_NO_QML_PREVIEW}{QT_QML_NO_QML_PREVIEW}
+property.
+
+\section1 Example
+
+\badcode
+qt_add_library(mylib STATIC)
+qt_add_qml_module(mylib
+    URI My.Lib
+    VERSION 1.0
+    QML_FILES
+        Main.qml
+)
+
+qt_add_executable(myapp main.cpp)
+target_link_libraries(myapp PRIVATE mylib)
+
+qt_add_qml_preview(myapp)
+\endcode
+
+\sa qmlpreview, qt_add_qml_module
+*/

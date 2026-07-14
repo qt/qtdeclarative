@@ -68,6 +68,13 @@ The \l{qt_target_compile_qml_to_cpp} command enables compilation of QML files to
 \l{qmltc}(the QML type compiler). This provides an alternative to component-based
 instantiation with improved performance for statically-known QML types.
 
+\section2 qt_add_qml_preview
+
+The \l{qt_add_qml_preview} command sets up \l{qmlpreview} live-reload support for an
+executable target that loads QML from one or more \l{qt_add_qml_module} targets, but is
+not itself a QML module. It creates an additional \c{<target>_qmlpreview} build target that
+can be used to preview the executable's QML files.
+
 \section1 CMake Variables and Properties
 
 Qt Qml provides several CMake variables and properties to configure QML module behavior:
@@ -89,6 +96,12 @@ used to customize aspects like linter target organization and build-time code ge
 within a module. You can use these properties to mark files as singletons, exclude them from
 compilation steps, specify custom type names, or control other per-file behaviors in the QML type
 system.
+
+\section2 Target Properties
+
+\l{CMake Target Properties in Qt6 Qml} let you fine-tune the behavior of individual targets,
+for example to opt a target out of behavior that would otherwise be enabled for it project-wide,
+such as automatic \l{qmlpreview} target creation.
 
 \section1 CMake Policies
 

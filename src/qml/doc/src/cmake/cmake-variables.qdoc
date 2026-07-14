@@ -190,3 +190,38 @@ one of the following methods:
         \endcode
 \endlist
 */
+
+/*!
+\page cmake-variable-qt-qml-no-qml-preview.html
+\ingroup cmake-variables-qtqml
+
+\title QT_QML_NO_QML_PREVIEW (global property)
+
+\summary{Controls whether qmlpreview support is automatically set up for executables linking against Qt6::Qml.}
+\cmakevariablesince 6.12
+
+By default, every executable target that links against \c{Qt6::Qml}
+automatically gets \l qmlpreview support set up for it at target finalization,
+as if \l qt_add_qml_preview() had been called on it explicitly. Executable
+targets that are themselves QML modules created by \l qt_add_qml_module() are
+unaffected, as they already get \l qmlpreview support from that command.
+
+Setting this variable to a true value disables the automatic behavior for all
+targets. This skips the small amount of extra configure-time work spent
+creating a preview target for each executable, which is worthwhile for projects
+that don't use \l qmlpreview, for example applications that only drive QML
+through a \l QJSEngine for scripting, or release and CI builds where live reload
+is irrelevant. Disable it for an entire build by passing
+\badcode
+-DQT_QML_NO_QML_PREVIEW=ON
+\endcode
+to the cmake executable, or set it in the project's \c CMakeLists.txt if preview
+is never needed.
+
+For finer control, individual targets can opt out with the
+\l{cmake-target-property-QT_QML_NO_QML_PREVIEW}{QT_QML_NO_QML_PREVIEW}
+property, or opt back in with \l qt_add_qml_preview() even when preview is
+disabled globally.
+
+\sa qt_add_qml_preview(), {cmake-target-property-QT_QML_NO_QML_PREVIEW}{QT_QML_NO_QML_PREVIEW}
+*/
