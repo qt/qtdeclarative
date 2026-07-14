@@ -5,6 +5,7 @@
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qdir.h>
 #include <QtCore/qfile.h>
+#include <QtCore/qfileinfo.h>
 #include <QtCore/qlibraryinfo.h>
 #include <QtCore/qprocess.h>
 #include <QtCore/qtemporarydir.h>
@@ -33,6 +34,9 @@ private slots:
     void hotReloadStaysInPlace();
     void inputNotReplayedOnHotReload();
     void hotReloadFailure();
+    void interactiveCommands();
+    void saveAndReplayRoundTrip();
+    void classicModeReplaysRecordedInput();
 
 private:
     QString m_qmlPreviewPath;
@@ -45,6 +49,7 @@ private:
     std::unique_ptr<QTemporaryDir> m_tempDir;
 
     void startPreview(const QStringList &args);
+    void sendCommand(const QString &command);
     void readProcessOutput();
     bool waitForOutput(const QString &needle, int timeout = 30000);
 };
@@ -137,6 +142,36 @@ static QByteArray makeCounterQml(const QString &marker)
         })").arg(marker).toUtf8();
 }
 
+// A scene that does not inject any input of its own. Its click counter can only
+// be incremented by input the preview tool replays into it, so reaching count=1
+// proves that a recorded click was replayed to restore the UI state.
+static QByteArray makeReplayTargetQml(const QString &marker)
+{
+    return QLatin1String(R"(
+        import QtQuick
+        Window {
+            id: window
+            visible: true
+            width: 100
+            height: 100
+            property int counter: 0
+            property string marker: "%1"
+            Component.onCompleted: window.requestActivate()
+            Timer {
+                interval: 100
+                repeat: true
+                running: true
+                onTriggered: console.log(window.marker, "count=" + window.counter)
+            }
+            MouseArea {
+                anchors.fill: parent
+                onClicked: window.counter = window.counter + 1
+            }
+        })")
+            .arg(marker)
+            .toUtf8();
+}
+
 static bool writeQrcFile(const QString &path, const QString &prefix, const QStringList &files)
 {
     QByteArray content = "<!DOCTYPE RCC>\n<RCC version=\"1.0\">\n";
@@ -185,6 +220,12 @@ void tst_QmlPreviewTool::startPreview(const QStringList &args)
     m_process.start(m_qmlPreviewPath, args);
     QVERIFY2(m_process.waitForStarted(5000),
              qPrintable(QLatin1String("Failed to start qmlpreview: ") + m_process.errorString()));
+}
+
+void tst_QmlPreviewTool::sendCommand(const QString &command)
+{
+    m_process.write(command.toUtf8() + '\n');
+    m_process.waitForBytesWritten(2000);
 }
 
 void tst_QmlPreviewTool::readProcessOutput()
@@ -510,6 +551,132 @@ void tst_QmlPreviewTool::hotReloadFailure()
 
     QVERIFY2(m_output.contains(QLatin1String("Starting '")),
              qPrintable(QLatin1String("Missing 'Starting' message. Output:\n") + m_output));
+}
+
+// In interactive mode the tool reads commands from standard input. Verify that
+// the command loop starts, 'help' lists the registered commands, a command is
+// dispatched to its handler, and 'quit' terminates the tool.
+void tst_QmlPreviewTool::interactiveCommands()
+{
+    m_tempDir = std::make_unique<QTemporaryDir>();
+    QVERIFY(m_tempDir->isValid());
+
+    const QString qmlFile = m_tempDir->filePath(QLatin1String("test.qml"));
+    QVERIFY(writeFile(qmlFile, makeQmlContent(QLatin1String("INTERACTIVE_OK"))));
+
+    startPreview({ QLatin1String("--interactive"), QLatin1String("--verbose"), m_qmlRuntimePath,
+                   qmlFile });
+
+    QVERIFY2(waitForOutput(QLatin1String("Connected. Type a command")),
+             qPrintable(QLatin1String("Interactive prompt did not appear. Output:\n") + m_output));
+
+    sendCommand(QLatin1String("help"));
+    QVERIFY2(waitForOutput(QLatin1String("'restart', 'r'")),
+             qPrintable(QLatin1String("help did not list the commands. Output:\n") + m_output));
+
+    sendCommand(QLatin1String("clear"));
+    QVERIFY2(waitForOutput(QLatin1String("Recorded events cleared.")),
+             qPrintable(QLatin1String("clear command was not handled. Output:\n") + m_output));
+
+    sendCommand(QLatin1String("quit"));
+    QVERIFY2(m_process.waitForFinished(10000),
+             qPrintable(QLatin1String("quit did not terminate the tool. Output:\n") + m_output));
+    QCOMPARE(m_process.exitCode(), 0);
+}
+
+// End-to-end round trip: record the input event stream of one session to a .qtd
+// file, then load it in the next session and replay it to restore the UI state.
+void tst_QmlPreviewTool::saveAndReplayRoundTrip()
+{
+    m_tempDir = std::make_unique<QTemporaryDir>();
+    QVERIFY(m_tempDir->isValid());
+
+    const QString recordQml = m_tempDir->filePath(QLatin1String("record.qml"));
+    const QString replayQml = m_tempDir->filePath(QLatin1String("replay.qml"));
+    const QString eventFile = m_tempDir->filePath(QLatin1String("events.qtd"));
+    QVERIFY(writeFile(recordQml, makeCounterQml(QLatin1String("RECORD"))));
+    QVERIFY(writeFile(replayQml, makeReplayTargetQml(QLatin1String("REPLAY"))));
+
+    // Session 1: the scene injects one click; the tool records it. Save the
+    // recorded stream to a .qtd file, then quit.
+    startPreview({ QLatin1String("--interactive"), QLatin1String("--verbose"), m_qmlRuntimePath,
+                   recordQml });
+    QVERIFY2(waitForOutput(QLatin1String("RECORD count=1")),
+             qPrintable(QLatin1String("Synthetic click was not recorded. Output:\n") + m_output));
+
+    sendCommand(QLatin1String("output ") + eventFile);
+    QVERIFY2(waitForOutput(QLatin1String("Events written to")),
+             qPrintable(QLatin1String("output command failed. Output:\n") + m_output));
+
+    sendCommand(QLatin1String("quit"));
+    QVERIFY(m_process.waitForFinished(10000));
+
+    QVERIFY2(QFile::exists(eventFile), "The .qtd event file was not created.");
+    QVERIFY(QFileInfo(eventFile).size() > 0);
+
+    // Session 2: a scene that never injects input of its own. Loading and
+    // replaying the recorded stream must bump its counter to 1.
+    m_output.clear();
+    m_process.start(m_qmlPreviewPath,
+                    { QLatin1String("--verbose"), QLatin1String("--replay"), eventFile,
+                      m_qmlRuntimePath, replayQml });
+    QVERIFY2(m_process.waitForStarted(5000),
+             qPrintable(QLatin1String("Failed to start qmlpreview: ") + m_process.errorString()));
+
+    QVERIFY2(waitForOutput(QLatin1String("REPLAY count=1")),
+             qPrintable(QLatin1String("Replayed events did not restore the UI state. Output:\n")
+                        + m_output));
+}
+
+// Same round trip as above, but with hot reload disabled (QMLPREVIEW_HOTRELOAD=0),
+// so the target answers the configuration with an error instead of a confirmation.
+// The replay then happens from the load timer, which only fires once the preview
+// has issued its initial Load - so this also exercises that the client sends that
+// Load without hot reload.
+void tst_QmlPreviewTool::classicModeReplaysRecordedInput()
+{
+    m_tempDir = std::make_unique<QTemporaryDir>();
+    QVERIFY(m_tempDir->isValid());
+
+    const QString recordQml = m_tempDir->filePath(QLatin1String("record.qml"));
+    const QString replayQml = m_tempDir->filePath(QLatin1String("replay.qml"));
+    const QString eventFile = m_tempDir->filePath(QLatin1String("events.qtd"));
+    QVERIFY(writeFile(recordQml, makeCounterQml(QLatin1String("RECORD"))));
+    QVERIFY(writeFile(replayQml, makeReplayTargetQml(QLatin1String("REPLAY"))));
+
+    // Session 1: record the synthetic click and save it to a .qtd file.
+    startPreview({ QLatin1String("--interactive"), QLatin1String("--verbose"), m_qmlRuntimePath,
+                   recordQml });
+    QVERIFY2(waitForOutput(QLatin1String("RECORD count=1")),
+             qPrintable(QLatin1String("Synthetic click was not recorded. Output:\n") + m_output));
+
+    sendCommand(QLatin1String("output ") + eventFile);
+    QVERIFY2(waitForOutput(QLatin1String("Events written to")),
+             qPrintable(QLatin1String("output command failed. Output:\n") + m_output));
+
+    sendCommand(QLatin1String("quit"));
+    QVERIFY(m_process.waitForFinished(10000));
+    QVERIFY(QFileInfo(eventFile).size() > 0);
+
+    // Session 2: replay with hot reload disabled. Restoring the counter to 1
+    // requires the preview to have loaded the scene and then replayed the click.
+    m_output.clear();
+    QStringList env = QProcess::systemEnvironment();
+    env.removeIf([](const QString &entry) {
+        return entry.startsWith(QLatin1String("QMLPREVIEW_HOTRELOAD="));
+    });
+    env << QLatin1String("QMLPREVIEW_HOTRELOAD=0");
+    m_process.setEnvironment(env);
+    m_process.start(m_qmlPreviewPath,
+                    { QLatin1String("--verbose"), QLatin1String("--replay"), eventFile,
+                      m_qmlRuntimePath, replayQml });
+    QVERIFY2(m_process.waitForStarted(5000),
+             qPrintable(QLatin1String("Failed to start qmlpreview: ") + m_process.errorString()));
+
+    QVERIFY2(waitForOutput(QLatin1String("REPLAY count=1")),
+             qPrintable(QLatin1String("Replayed events did not restore the UI state without hot "
+                                      "reload. Output:\n")
+                        + m_output));
 }
 
 QTEST_MAIN(tst_QmlPreviewTool)

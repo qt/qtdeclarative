@@ -1899,6 +1899,7 @@ function(_qt_internal_target_enable_qmlpreview target)
     )
 
     set(preview_args
+        --interactive
         ${qrc_args}
         $<TARGET_FILE:${target}>
     )

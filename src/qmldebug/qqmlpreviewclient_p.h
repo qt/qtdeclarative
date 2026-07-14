@@ -80,7 +80,12 @@ public:
     void triggerAnimationSpeed(float factor);
 
     void replayEvents();
-    void replayEvent(const QQmlProfilerEventType &type, const QQmlProfilerEvent &event);
+    void replayEvent(const QQmlProfilerEventType &type, QQmlProfilerEvent &&event);
+
+    bool saveEvents(const QString &fileName);
+    bool replayEventsFromFile(const QString &fileName);
+    bool hasRecordedEvents() const;
+    void clearRecordedEvents();
 
 Q_SIGNALS:
     void request(const QString &path);
