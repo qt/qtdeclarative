@@ -32,6 +32,7 @@ class QQmlContext;
 class QQuickShaderEffect;
 class QQuickShaderEffectSource;
 class QQuickMatrix4x4;
+class QQuickItemSpy;
 
 class Q_QUICKVECTORIMAGEGENERATOR_EXPORT QQuickItemGenerator : public QQuickGenerator
 {
@@ -98,12 +99,15 @@ private:
     QHash<QString, PatternDef> m_patternDefs;
     QHash<QString, MarkerDef> m_markerDefs;
     QHash<QString, FilterNodeInfo> m_filterDefs;
+    QQuickItemSpy *m_topLevelScaleSpy = nullptr;
 
     QList<std::function<void()>> *activeRecord() const;
     QQuickShape *createShapeContainer();
     void pushItem(QQuickItem *item);
     QQuickItem *popItem();
     QQuickItem *currentItem() const;
+
+    void bindTextureSize(QQuickShaderEffectSource *ses);
     void generateMaskContainer(const MaskNodeInfo &info);
     void generateMask(QQuickItem *item, const NodeInfo &info);
     void generatePatternContainer(const PatternNodeInfo &info);

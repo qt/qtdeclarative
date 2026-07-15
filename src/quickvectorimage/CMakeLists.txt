@@ -5,6 +5,23 @@
 ## QuickVectorGraphics Module:
 #####################################################################
 
+qt_internal_add_qml_module(QuickVectorImageHelpers
+    URI "QtQuick.VectorImage.Helpers"
+    VERSION "${PROJECT_VERSION}"
+    PLUGIN_TARGET qquickvectorimagehelpersplugin
+    NO_PLUGIN_OPTIONAL
+    CLASS_NAME QtQuickVectorImageHelpersPlugin
+    DEPENDENCIES
+        QtQuick/auto
+    SOURCES
+        helpers/qquickcoloropacityanimation_p.h helpers/qquickcoloropacityanimation.cpp
+        helpers/qquicktransformgroup_p.h helpers/qquicktransformgroup.cpp
+        helpers/qquickitemspy_p.h helpers/qquickitemspy.cpp
+        helpers/qquickpathinterpolated_p.h helpers/qquickpathinterpolated.cpp
+    LIBRARIES
+        Qt::QuickPrivate
+)
+
 qt_internal_add_module(QuickVectorImageGeneratorPrivate
     INTERNAL_MODULE
     SOURCES
@@ -21,6 +38,7 @@ qt_internal_add_module(QuickVectorImageGeneratorPrivate
         Qt::Core
         Qt::QuickPrivate
         Qt::QuickShapesPrivate
+        Qt::QuickVectorImageHelpersPrivate
         Qt::QuickEffectsPrivate
         Qt::SvgPrivate
 )
@@ -48,24 +66,6 @@ qt_internal_add_qml_module(QuickVectorImage
         Qt::QuickPrivate
         Qt::QuickVectorImageGeneratorPrivate
         Qt::SvgPrivate
-)
-
-qt_internal_add_qml_module(QuickVectorImageHelpers
-    URI "QtQuick.VectorImage.Helpers"
-    VERSION "${PROJECT_VERSION}"
-    PLUGIN_TARGET qquickvectorimagehelpersplugin
-    NO_PLUGIN_OPTIONAL
-    CLASS_NAME QtQuickVectorImageHelpersPlugin
-    DEPENDENCIES
-        QtQuick/auto
-    SOURCES
-        helpers/qquickcoloropacityanimation_p.h helpers/qquickcoloropacityanimation.cpp
-        helpers/qquicktransformgroup_p.h helpers/qquicktransformgroup.cpp
-        helpers/qquickitemspy_p.h helpers/qquickitemspy.cpp
-        helpers/qquickpathinterpolated_p.h helpers/qquickpathinterpolated.cpp
-    LIBRARIES
-        Qt::QuickPrivate
-        Qt::QuickVectorImageGeneratorPrivate
 )
 
 qt_internal_add_shaders(QuickVectorImageHelpers "vectorimage_shaders"

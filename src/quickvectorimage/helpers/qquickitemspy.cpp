@@ -42,8 +42,10 @@ QSizeF QQuickItemSpy::requiredTextureSize() const
 
     const qreal dpr = window() != nullptr ? window()->devicePixelRatio() : 1.0;
 
-    sz.setWidth(std::max(1.0, sz.width() * dpr));
-    sz.setHeight(std::max(1.0, sz.height() * dpr));
+    const qreal mappedWidth = sz.width() * dpr;
+    const qreal mappedHeight = sz.height() * dpr;
+    sz.setWidth(qIsFinite(mappedWidth) ? std::max(1.0, mappedWidth) : 1.0);
+    sz.setHeight(qIsFinite(mappedHeight) ? std::max(1.0, mappedHeight) : 1.0);
 
     if (window() != nullptr && window()->rhi() != nullptr) {
         QRhi *rhi = window()->rhi();

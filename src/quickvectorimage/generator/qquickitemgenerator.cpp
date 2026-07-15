@@ -3,6 +3,7 @@
 
 #include "qquickitemgenerator_p.h"
 #include "qquicknodeinfo_p.h"
+#include <QtQuickVectorImageHelpers/private/qquickitemspy_p.h>
 
 #include <private/qquickitem_p.h>
 #include <private/qquicktranslate_p.h>
@@ -150,6 +151,11 @@ bool QQuickItemGenerator::generateRootNode(const StructureNodeInfo &info)
             scale->setYScale(info.size.height() / info.viewBox.height());
             xformProp.append(&xformProp, scale);
         }
+
+        m_topLevelScaleSpy = new QQuickItemSpy(root);
+        m_topLevelScaleSpy->setWidth(1);
+        m_topLevelScaleSpy->setHeight(1);
+        m_topLevelScaleSpy->setVisible(false);
 
         pushItem(root);
         generateNodeBase(info);
@@ -656,6 +662,24 @@ static QQuickShaderEffectSource *makeEffectSES(QQuickShaderEffect *effect, const
     return ses;
 }
 
+void QQuickItemGenerator::bindTextureSize(QQuickShaderEffectSource *ses)
+{
+    if (!m_topLevelScaleSpy)
+        return;
+
+    QQuickItemSpy *scaleSpy = m_topLevelScaleSpy;
+    auto updateTextureSize = [ses, scaleSpy]() {
+        const QSizeF unitScale = scaleSpy->requiredTextureSize();
+        const qreal width = ses->width() * unitScale.width();
+        const qreal height = ses->height() * unitScale.height();
+        ses->setTextureSize(QSize(qRound(width), qRound(height)));
+    };
+    QObject::connect(scaleSpy, &QQuickItemSpy::requiredTextureSizeChanged, ses, updateTextureSize);
+    QObject::connect(ses, &QQuickItem::widthChanged, ses, updateTextureSize);
+    QObject::connect(ses, &QQuickItem::heightChanged, ses, updateTextureSize);
+    updateTextureSize();
+}
+
 void QQuickItemGenerator::generateMaskContainer(const MaskNodeInfo &info)
 {
     QQuickItem *transformer = nullptr;
@@ -721,6 +745,7 @@ void QQuickItemGenerator::generateMask(QQuickItem *item, const NodeInfo &info)
     auto *maskSES = makeSES(maskDef.container, svgMaskRect, m_rootItem);
     maskSES->setHideSource(true);
     maskSES->setSourceRect(svgMaskRect);
+    bindTextureSize(maskSES);
 
     auto *itemSES = makeSES(item, svgMaskRect, m_rootItem);
     itemSES->setHideSource(true);
@@ -728,6 +753,7 @@ void QQuickItemGenerator::generateMask(QQuickItem *item, const NodeInfo &info)
         itemSES->setSourceRect(QRectF(0, 0, item->width(), item->height()));
     else
         itemSES->setSourceRect(svgMaskRect);
+    bindTextureSize(itemSES);
 
     auto *shaderEffect = new QQuickShaderEffect;
     if (m_context)
@@ -831,6 +857,8 @@ QQuickItem *QQuickItemGenerator::generateFilter(QQuickItem *item, const NodeInfo
         QObject::connect(item, &QQuickItem::heightChanged, sourceGraphic, updateSourceRect);
     }
 
+    bindTextureSize(sourceGraphic);
+
     QHash<QString, QQuickShaderEffectSource *> namedOutputs;
     const QString sourceAlphaName = filterInfo.id + u"_source_alpha"_s;
     QQuickShaderEffectSource *sourceAlpha = nullptr;
@@ -876,6 +904,7 @@ QQuickItem *QQuickItemGenerator::generateFilter(QQuickItem *item, const NodeInfo
         }
 
         if (output) {
+            bindTextureSize(output);
             lastOutput = output;
             lastStepRect = stepRect;
             if (!step.outputName.isEmpty()) {
@@ -1237,8 +1266,24 @@ void QQuickItemGenerator::generatePattern(QQuickShapePath *shapePath, const Path
     ses->setHideSource(true);
     ses->setWrapMode(QQuickShaderEffectSource::Repeat);
     ses->setSourceRect(QRectF(0, 0, tileW, tileH));
-
     shapePath->setFillItem(ses);
+    bindTextureSize(ses);
+
+    if (m_topLevelScaleSpy) {
+        const QTransform baseTransform = fillTransform;
+        auto *scaleSpy = m_topLevelScaleSpy;
+        auto updateFillTransform = [shapePath, offsetX, offsetY, baseTransform, scaleSpy]() {
+            const QSizeF unitScale = scaleSpy->requiredTextureSize();
+            QTransform xf = baseTransform;
+            xf.translate(offsetX, offsetY);
+            xf.scale(1.0 / unitScale.width(), 1.0 / unitScale.height());
+            shapePath->setFillTransform(QMatrix4x4(xf));
+        };
+        QObject::connect(scaleSpy, &QQuickItemSpy::requiredTextureSizeChanged, shapePath,
+                         updateFillTransform);
+        updateFillTransform();
+    }
+
     fillTransform.translate(offsetX, offsetY);
 }
 
