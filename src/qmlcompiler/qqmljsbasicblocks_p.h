@@ -41,10 +41,15 @@ public:
     struct BasicBlocksValidationResult { bool success = true; QString errorMessage; };
     BasicBlocksValidationResult basicBlocksValidation();
 
-    static BasicBlocks::iterator
-    basicBlockForInstruction(QFlatMap<int, BasicBlock> &container, int instructionOffset);
-    static BasicBlocks::const_iterator
-    basicBlockForInstruction(const QFlatMap<int, BasicBlock> &container, int instructionOffset);
+    static BasicBlocks::iterator basicBlockForInstruction(BasicBlocks &blocks, int offset)
+    {
+        return findBasicBlockForInstruction(blocks, offset);
+    }
+    static BasicBlocks::const_iterator constBasicBlockForInstruction(const BasicBlocks &blocks,
+                                                                     int offset)
+    {
+        return findBasicBlockForInstruction(blocks, offset);
+    }
 
     QList<ObjectOrArrayDefinition> objectAndArrayDefinitions() const;
 
@@ -72,6 +77,15 @@ private:
 
     void dumpBasicBlocks();
     void dumpDOTGraph();
+
+    template <typename Container, typename Iterator = decltype(Container().lower_bound(1))>
+    static Iterator findBasicBlockForInstruction(Container &container, int instructionOffset)
+    {
+        auto block = container.lower_bound(instructionOffset);
+        if (block == container.end() || block->first != instructionOffset)
+            --block;
+        return block;
+    }
 
     const QV4::Compiler::Context *m_context;
     QList<ObjectOrArrayDefinition> m_objectAndArrayDefinitions;

@@ -504,7 +504,7 @@ QQmlJSRegisterContent QQmlJSRegisterContent::conversionResultScope() const
     return std::get<QQmlJSRegisterContentPrivate::ConvertedTypes>(d->m_content).resultScope;
 }
 
-QList<QQmlJSRegisterContent> QQmlJSRegisterContent::conversionOrigins() const
+const QList<QQmlJSRegisterContent> &QQmlJSRegisterContent::conversionOrigins() const
 {
     Q_ASSERT(isConversion());
     return std::get<QQmlJSRegisterContentPrivate::ConvertedTypes>(d->m_content).origins;

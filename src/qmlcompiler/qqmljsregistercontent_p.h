@@ -120,7 +120,7 @@ public:
     bool isConversion() const;
     QQmlJSScope::ConstPtr conversionResultType() const;
     QQmlJSRegisterContent conversionResultScope() const;
-    QList<QQmlJSRegisterContent> conversionOrigins() const;
+    const QList<QQmlJSRegisterContent> &conversionOrigins() const;
 
     bool isMethodCall() const;
     QQmlJSMetaMethod methodCall() const;

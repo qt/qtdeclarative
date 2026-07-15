@@ -287,21 +287,6 @@ void QQmlJSBasicBlocks::processJump(int offset, JumpMode mode)
         m_basicBlocks.insert(nextInstructionOffset(), BasicBlock());
 }
 
-QQmlJSCompilePass::BasicBlocks::iterator QQmlJSBasicBlocks::basicBlockForInstruction(
-        QFlatMap<int, BasicBlock> &container, int instructionOffset)
-{
-    auto block = container.lower_bound(instructionOffset);
-    if (block == container.end() || block->first != instructionOffset)
-        --block;
-    return block;
-}
-
-QQmlJSCompilePass::BasicBlocks::const_iterator QQmlJSBasicBlocks::basicBlockForInstruction(
-        const BasicBlocks &container, int instructionOffset)
-{
-    return basicBlockForInstruction(const_cast<BasicBlocks &>(container), instructionOffset);
-}
-
 QQmlJSBasicBlocks::BasicBlocksValidationResult QQmlJSBasicBlocks::basicBlocksValidation()
 {
     if (m_basicBlocks.empty())
@@ -329,7 +314,7 @@ QQmlJSBasicBlocks::BasicBlocksValidationResult QQmlJSBasicBlocks::basicBlocksVal
     QMultiHash<int, int> forwardEdges;
     for (auto it = blocks.cbegin(), end = blocks.cend(); it != end; ++it) {
         for (int originOffset : it.value().jumpOrigins)
-            forwardEdges.insert(basicBlockForInstruction(blocks, originOffset).key(), it.key());
+            forwardEdges.insert(constBasicBlockForInstruction(blocks, originOffset).key(), it.key());
     }
 
     QSet<int> visitedBlockOffsets;

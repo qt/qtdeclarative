@@ -67,7 +67,7 @@ private:
 
 void QQmlJSOptimizations::populateReaderLocations()
 {
-    for (auto writeIt = m_annotations.begin(), writeEnd = m_annotations.end();
+    for (auto writeIt = m_annotations.cbegin(), writeEnd = m_annotations.cend();
          writeIt != writeEnd; ++writeIt) {
         const int writtenRegister = writeIt->second.changedRegisterIndex;
 
@@ -82,7 +82,7 @@ void QQmlJSOptimizations::populateReaderLocations()
             // This happens at jump targets where different types are merged. A StoreReg or similar
             // instruction must be optimized out if none of the types it can hold is read anymore.
             access.trackedTypes.clear();
-            const auto origins = writeIt->second.changedRegister.conversionOrigins();
+            const auto &origins = writeIt->second.changedRegister.conversionOrigins();
             for (QQmlJSRegisterContent origin : origins)
                 access.trackedTypes.append(origin);
         } else {
@@ -90,26 +90,28 @@ void QQmlJSOptimizations::populateReaderLocations()
             Q_ASSERT(!access.trackedTypes.last().isNull());
         }
 
-        auto blockIt = QQmlJSBasicBlocks::basicBlockForInstruction(m_basicBlocks, writeIt.key());
-        QList<PendingBlock> blocks = { { {}, blockIt->first, true } };
-        QHash<int, PendingBlock> processedBlocks;
+        const auto blockIt = QQmlJSBasicBlocks::constBasicBlockForInstruction(m_basicBlocks,
+                                                                              writeIt.key());
+        std::vector<PendingBlock> blocks = { { {}, blockIt->first, true } };
+        std::unordered_map<int, PendingBlock> processedBlocks;
         bool isFirstBlock = true;
 
-        while (!blocks.isEmpty()) {
-            const PendingBlock block = blocks.takeLast();
+        while (!blocks.empty()) {
+            const PendingBlock &block = blocks.back(); // popped below
 
             // We can re-enter the first block from the beginning.
             // We will then find any reads before the write we're currently examining.
             if (!isFirstBlock)
-                processedBlocks.insert(block.start, block);
+                processedBlocks.insert_or_assign(block.start, block);
 
             auto nextBlock = m_basicBlocks.find(block.start);
-            auto currentBlock = nextBlock++;
+            const auto currentBlock = nextBlock++;
             bool registerActive = block.registerActive;
             Conversions conversions = block.conversions;
+            blocks.pop_back();
 
             const auto blockEnd = (nextBlock == m_basicBlocks.end())
-                    ? m_annotations.end()
+                    ? m_annotations.cend()
                     : m_annotations.find(nextBlock->first);
 
             auto blockInstr = isFirstBlock
@@ -127,7 +129,7 @@ void QQmlJSOptimizations::populateReaderLocations()
                     if (blockInstr->second.isRename) {
                         // Nothing to do
                     } else if (readIt->second.content.isConversion()) {
-                        const QList<QQmlJSRegisterContent> conversionOrigins
+                        const QList<QQmlJSRegisterContent> &conversionOrigins
                                 = readIt->second.content.conversionOrigins();
                         for (QQmlJSRegisterContent origin : conversionOrigins) {
                             if (!access.trackedTypes.contains(origin))
@@ -156,15 +158,15 @@ void QQmlJSOptimizations::populateReaderLocations()
                 // we need to re-evaluate it. We also need to propagate any newly found conversions.
                 const auto processed = processedBlocks.find(blockStart);
                 if (processed == processedBlocks.end()) {
-                    blocks.append({conversions, blockStart, registerActive});
-                } else if (registerActive && !processed->registerActive) {
-                    blocks.append({conversions, blockStart, registerActive});
+                    blocks.push_back({conversions, blockStart, registerActive});
+                } else if (registerActive && !processed->second.registerActive) {
+                    blocks.push_back({conversions, blockStart, registerActive});
                 } else {
-                    Conversions merged = processed->conversions;
+                    Conversions merged = processed->second.conversions;
                     merged.unite(conversions);
 
-                    if (merged.size() > processed->conversions.size())
-                        blocks.append({std::move(merged), blockStart, registerActive});
+                    if (merged.size() > processed->second.conversions.size())
+                        blocks.push_back({std::move(merged), blockStart, registerActive});
                 }
             };
 
@@ -284,8 +286,8 @@ bool QQmlJSOptimizations::canMove(int instructionOffset,
 {
     if (access.typeReaders.size() != 1)
         return false;
-    return QQmlJSBasicBlocks::basicBlockForInstruction(m_basicBlocks, instructionOffset)
-            == QQmlJSBasicBlocks::basicBlockForInstruction(m_basicBlocks, access.typeReaders.begin().key());
+    return QQmlJSBasicBlocks::constBasicBlockForInstruction(m_basicBlocks, instructionOffset)
+            == QQmlJSBasicBlocks::constBasicBlockForInstruction(m_basicBlocks, access.typeReaders.begin().key());
 }
 
 QList<QQmlJSCompilePass::ObjectOrArrayDefinition>
@@ -495,7 +497,7 @@ void QQmlJSOptimizations::adjustTypes()
             QQmlJSScope::ConstPtr newResult;
             const auto content = conversion->second.content;
             if (content.isConversion() && !content.original().isValid()) {
-                const auto conversionOrigins = content.conversionOrigins();
+                const auto &conversionOrigins = content.conversionOrigins();
                 for (const auto &origin : conversionOrigins)
                     newResult = m_typeResolver->merge(newResult, origin.containedType());
                 if (!m_typeResolver->adjustTrackedType(content, newResult))

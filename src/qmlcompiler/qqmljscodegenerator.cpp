@@ -1475,7 +1475,7 @@ bool QQmlJSCodeGenerator::isRegisterAffectedBySideEffects(int registerIndex)
         // A conversion can be affected by side effects if any of its origins can.
         // Conversions are unrolled on creation, so we don't have to recurse.
 
-        const auto origins = baseType.conversionOrigins();
+        const auto &origins = baseType.conversionOrigins();
         for (QQmlJSRegisterContent origin : origins) {
             if (canTypeBeAffectedBySideEffects(m_typeResolver, m_typeResolver->original(origin)))
                 return true;
