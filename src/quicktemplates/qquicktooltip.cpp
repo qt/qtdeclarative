@@ -15,6 +15,8 @@
 #include <QtQml/qqmlcomponent.h>
 #include <QtQuick/qquickwindow.h>
 
+#include <QtCore/q26numeric.h>
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -138,8 +140,11 @@ public:
 QQuickToolTipPrivate::QQuickToolTipPrivate()
 {
     windowFlags = Qt::ToolTip;
-    if (qt_quicktooltipattachedprivate_delay == -1)
-        qt_quicktooltipattachedprivate_delay = qGuiApp->styleHints()->toolTipWakeUpDelay();
+    if (qt_quicktooltipattachedprivate_delay == -1) {
+        qt_quicktooltipattachedprivate_delay = q26::saturating_cast<int>(
+            qGuiApp->styleHints()->toolTipWakeUpDelay().count()
+        );
+    }
 #if QT_CONFIG(wayland)
     extendedWindowType = QNativeInterface::Private::QWaylandWindow::ToolTip;
 #endif
