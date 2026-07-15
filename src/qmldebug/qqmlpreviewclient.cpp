@@ -162,8 +162,12 @@ void QQmlPreviewClient::replayEvents()
     d->m_numExpectedEvents = events.size();
 
     triggerAnimationSpeed(1000);
-    for (const auto &event : events)
+    qint64 timestamp = 0;
+    for (QQmlProfilerEvent event : events) {
+        // Compress the timestamps so that the events are processed in quick succession.
+        event.setTimestamp(++timestamp);
         d->replayClient.sendEvent(types[event.typeIndex()], event);
+    }
 
     d->eventReceiver.clear();
     d->replayTimer.start();
