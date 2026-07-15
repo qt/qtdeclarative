@@ -138,7 +138,7 @@ void readFileContent(QStringList *content, const QString &url, Predicate filter)
 
 void tst_qmltc_examples::helloWorld()
 {
-#if defined(Q_OS_ANDROID) || defined(Q_OS_OHOS)
+#if defined(Q_OS_ANDROID) || defined(Q_OS_OHOS) || defined(Q_OS_HARMONY)
     QSKIP("expected C++ files are not bundled on this platform.");
 #endif
     QStringList generatedCode;

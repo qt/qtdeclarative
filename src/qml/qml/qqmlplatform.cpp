@@ -38,7 +38,7 @@ QString QQmlPlatform::os()
     return QStringLiteral("osx");
 #elif defined(Q_OS_WIN)
     return QStringLiteral("windows");
-#elif defined(Q_OS_OHOS)
+#elif defined(Q_OS_OHOS) || defined(Q_OS_HARMONY)
     return QStringLiteral("harmonyos");
 #elif defined(Q_OS_LINUX)
     return QStringLiteral("linux");
