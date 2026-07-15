@@ -5117,8 +5117,14 @@ endfunction()
 # target that links against the Qml library for a shared Qt.
 function(_qt_internal_generate_deploy_qml_imports_script target)
     get_target_property(target_type ${target} TYPE)
-    # TODO: Handle Android where executables are module libraries instead
-    if(NOT target_type STREQUAL "EXECUTABLE")
+    # Android and HarmonyOS build applications as module libraries, not executables.
+    set(app_target_type "")
+    if(ANDROID)
+        get_target_property(app_target_type ${target} _qt_android_target_type)
+    elseif(OHOS)
+        get_target_property(app_target_type ${target} _qt_harmonyos_target_type)
+    endif()
+    if(NOT target_type STREQUAL "EXECUTABLE" AND NOT app_target_type STREQUAL "APPLICATION")
         return()
     endif()
 
