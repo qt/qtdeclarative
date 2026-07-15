@@ -361,7 +361,6 @@ bool QHeaderDataProxyModel::setData(const QModelIndex &index, const QVariant &va
         return false;
     auto section = m_orientation == Qt::Vertical ? index.row() : index.column();
     auto ret = m_model->setHeaderData(section, m_orientation, value, role);
-    emit dataChanged(index, index, { role });
     return ret;
 }
 
