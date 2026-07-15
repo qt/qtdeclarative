@@ -1327,6 +1327,11 @@ void QQuickTextControlPrivate::inputMethodEvent(QInputMethodEvent *e)
     bool forceSelectionChanged = false;
     int oldCursorPos = cursor.position();
 
+    // Input method commits (e.g. accented characters such as é, ç, à) edit the document
+    // without going through keyPressEvent. Mark it edited here too, so that
+    // QQuickTextEdit::q_textChanged emits textEdited() for committed input-method text.
+    QScopedValueRollback<bool> rollbackBeingEdited(beingEdited, isGettingInput && textEditable);
+
     cursor.beginEditBlock();
     if (isGettingInput && textEditable) {
         cursor.removeSelectedText();

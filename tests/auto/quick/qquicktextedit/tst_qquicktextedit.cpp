@@ -41,6 +41,8 @@
 #include <qmath.h>
 #include <QtGui/private/qhighdpiscaling_p.h>
 
+using namespace Qt::StringLiterals;
+
 Q_DECLARE_METATYPE(QQuickTextEdit::SelectionMode)
 Q_DECLARE_METATYPE(Qt::Key)
 DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
@@ -163,6 +165,7 @@ private slots:
     void implicitSizeBinding();
     void textEditedSignal();
     void textEditedSignalNotEmittedOnProgrammaticChange();
+    void textEditedSignalOnInputMethodCommit();
     void largeTextObservesViewport_data();
     void largeTextObservesViewport();
     void largeTextSelection();
@@ -3856,6 +3859,32 @@ void tst_qquicktextedit::textEditedSignalNotEmittedOnProgrammaticChange()
     // Test Case 5 : Call textFormat and check that textEdited signal is not emitted
     textEdit->setTextFormat(QQuickTextEdit::RichText);
     QCOMPARE(textEditedSpy.count(), 0);
+}
+
+void tst_qquicktextedit::textEditedSignalOnInputMethodCommit()
+{
+    // Committing input-method text (e.g. accented characters such as é, ç, à)
+    // must emit textEdited(), just like direct key input. (QTBUG-146177)
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("textEdit.qml")));
+
+    QQuickTextEdit *textEdit = qmlobject_cast<QQuickTextEdit *>(window.rootObject());
+    QVERIFY(textEdit != nullptr);
+
+    textEdit->forceActiveFocus();
+    QVERIFY_ACTIVE_FOCUS(textEdit);
+
+    QSignalSpy textEditedSpy(textEdit, &QQuickTextEdit::textEdited);
+
+    // Commit a single accented character via the input method.
+    {
+        QInputMethodEvent ev;
+        ev.setCommitString(u"é"_s);
+        QGuiApplication::sendEvent(textEdit, &ev);
+    }
+
+    QCOMPARE(textEditedSpy.count(), 1);
+    QCOMPARE(textEdit->text(), u"é"_s);
 }
 
 void tst_qquicktextedit::geometrySignals()
