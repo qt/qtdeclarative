@@ -511,7 +511,7 @@ int quick_test_main_with_setup(int argc, char **argv, const char *name, const ch
             testPath = s;
     }
 
-#if defined(Q_OS_ANDROID) || defined(Q_OS_INTEGRITY) || defined(Q_OS_OHOS)
+#if defined(Q_OS_ANDROID) || defined(Q_OS_INTEGRITY) || defined(Q_OS_OHOS) || defined(Q_OS_HARMONY)
             if (testPath.isEmpty())
                     testPath = QLatin1String(":/");
 #endif

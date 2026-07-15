@@ -2471,7 +2471,7 @@ void tst_qqmlproperty::compatResolveUrls()
 
     QCOMPARE(qvariant_cast<QUrl>(o->property("a")), QUrl(QStringLiteral("relative/url.png")));
 
-#if defined(Q_OS_ANDROID) || defined(Q_OS_OHOS)
+#if defined(Q_OS_ANDROID) || defined(Q_OS_OHOS) || defined(Q_OS_HARMONY)
     QSKIP("Cannot launch external process on this platform");
 #endif
 

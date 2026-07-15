@@ -1175,7 +1175,7 @@ void tst_qqmlxmlhttprequest::sendFileRequest()
 
 #if QT_CONFIG(process)
 void tst_qqmlxmlhttprequest::sendFileRequestNotSet() {
-#if defined(Q_OS_ANDROID) || defined(Q_OS_OHOS)
+#if defined(Q_OS_ANDROID) || defined(Q_OS_OHOS) || defined(Q_OS_HARMONY)
     QSKIP("Cannot launch external process on this platform (QTBUG-99214)");
 #endif
     if (qEnvironmentVariableIsSet("TEST_CUSTOM_PERMISSIONS")) {
@@ -1232,7 +1232,7 @@ void tst_qqmlxmlhttprequest::sendFileRequestNotSet() {
 
 #if QT_CONFIG(process)
 void tst_qqmlxmlhttprequest::sendFileRequestNoWrite() {
-#if defined(Q_OS_ANDROID) || defined(Q_OS_OHOS)
+#if defined(Q_OS_ANDROID) || defined(Q_OS_OHOS) || defined(Q_OS_HARMONY)
     QSKIP("Cannot launch external process on this platform (QTBUG-99214)");
 #endif
 
@@ -1265,7 +1265,7 @@ void tst_qqmlxmlhttprequest::sendFileRequestNoWrite() {
 
 #if QT_CONFIG(process)
 void tst_qqmlxmlhttprequest::sendFileRequestNoRead() {
-#if defined(Q_OS_ANDROID) || defined(Q_OS_OHOS)
+#if defined(Q_OS_ANDROID) || defined(Q_OS_OHOS) || defined(Q_OS_HARMONY)
     QSKIP("Cannot launch external process on this platform (QTBUG-99214)");
 #endif
 

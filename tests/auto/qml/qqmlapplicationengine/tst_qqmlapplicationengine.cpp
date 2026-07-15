@@ -114,7 +114,7 @@ void tst_qqmlapplicationengine::testNonResolvedPath()
 
 void tst_qqmlapplicationengine::application_data()
 {
-#if defined(Q_OS_ANDROID) || defined(Q_OS_OHOS)
+#if defined(Q_OS_ANDROID) || defined(Q_OS_OHOS) || defined(Q_OS_HARMONY)
     QSKIP("Cannot launch external process on this platform");
 #endif
     QTest::addColumn<QByteArray>("qmlFile");
@@ -289,7 +289,7 @@ void tst_qqmlapplicationengine::loadFromModuleTranslation_data()
 
 void tst_qqmlapplicationengine::loadFromModuleTranslation()
 {
-#if defined(Q_OS_ANDROID) || defined(Q_OS_OHOS)
+#if defined(Q_OS_ANDROID) || defined(Q_OS_OHOS) || defined(Q_OS_HARMONY)
     QSKIP("Cannot launch external process on this platform");
 #endif
 

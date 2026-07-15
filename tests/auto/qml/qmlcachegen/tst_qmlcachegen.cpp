@@ -716,7 +716,7 @@ void tst_qmlcachegen::qrcScriptImport()
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(!obj.isNull());
     QTRY_COMPARE(obj->property("value").toInt(), 42);
-#if QT_CONFIG(process) && !defined(Q_OS_OHOS)
+#if QT_CONFIG(process) && !defined(Q_OS_OHOS) && !defined(Q_OS_HARMONY)
     if (qEnvironmentVariableIsEmpty("QMLCACHEGEN_TEST_FILE_PATH")) {
         testWithEnvironment("qrcScriptImport", ":/data/jsimport.qml", "aot-native", false);
         testWithEnvironment("qrcScriptImport", ":/data/jsimport.qml", "aot-bytecode", true);

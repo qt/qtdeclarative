@@ -567,7 +567,7 @@ static void checkCleanCacheLoad(const QString &testCase)
     // QProcess is restricted on Android 8+ (exec from outside nativeLibraryDir is blocked).
     // See QTBUG-133037. In practice unreachable on Android: the test suite is not built
     // there (QT_FEATURE_private_tests=OFF).
-#if QT_CONFIG(process) && !defined(Q_OS_ANDROID) && !defined(Q_OS_OHOS)
+#if QT_CONFIG(process) && !defined(Q_OS_ANDROID) && !defined(Q_OS_OHOS) && !defined(Q_OS_HARMONY)
     const char *skipKey = "QT_TST_QQMLTYPELOADER_SKIP_MISMATCH";
     if (qEnvironmentVariableIsSet(skipKey))
         return;
@@ -635,7 +635,7 @@ void tst_QQMLTypeLoader::implicitComponentModule()
 
 void tst_QQMLTypeLoader::customDiskCachePath()
 {
-#if defined(Q_OS_ANDROID) || defined(Q_OS_OHOS)
+#if defined(Q_OS_ANDROID) || defined(Q_OS_OHOS) || defined(Q_OS_HARMONY)
     QSKIP("Cannot launch external process on this platform");
 #endif
 
