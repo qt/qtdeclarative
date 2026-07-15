@@ -4,6 +4,7 @@
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlexpression.h>
 #include <QtQml/qqmlcomponent.h>
+#include <QtQuick/qquickitemgrabresult.h>
 #include <QtQuick/qquickview.h>
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <private/qquickimage_p.h>
@@ -15,6 +16,19 @@
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 
 Q_DECLARE_METATYPE(QQuickImageBase::Status)
+
+static QImage grabItem(QQuickItem *item)
+{
+    const QSharedPointer<QQuickItemGrabResult> result = item->grabToImage();
+    if (!result)
+        return {};
+
+    QSignalSpy readySpy(result.data(), &QQuickItemGrabResult::ready);
+    if (result->image().isNull() && !readySpy.wait())
+        return {};
+
+    return result->image();
+}
 
 template <typename T> static T evaluate(QObject *scope, const QString &expression)
 {
@@ -199,11 +213,13 @@ void tst_qquickanimatedimage::mirror_running()
     QCOMPARE(anim->frameCount(), 2);
 
     QCOMPARE(anim->currentFrame(), 0);
-    QImage frame0 = window.grabWindow();
+    QImage frame0 = grabItem(anim);
+    QVERIFY(!frame0.isNull());
 
     anim->setCurrentFrame(1);
     QCOMPARE(anim->currentFrame(), 1);
-    QImage frame1 = window.grabWindow();
+    QImage frame1 = grabItem(anim);
+    QVERIFY(!frame1.isNull());
 
     anim->setCurrentFrame(0);
 
@@ -215,11 +231,15 @@ void tst_qquickanimatedimage::mirror_running()
     anim->setMirror(true);
 
     QCOMPARE(anim->currentFrame(), 1);
-    QImage frame1_flipped = window.grabWindow();
+    QImage frame1_flipped = grabItem(anim);
+    QVERIFY(!frame1_flipped.isNull());
+    QCOMPARE(anim->currentFrame(), 1);
 
     QTRY_VERIFY(spy.size() == 1); spy.clear();
     QCOMPARE(anim->currentFrame(), 0);  // animation only has 2 frames, should cycle back to first
-    QImage frame0_flipped = window.grabWindow();
+    QImage frame0_flipped = grabItem(anim);
+    QVERIFY(!frame0_flipped.isNull());
+    QCOMPARE(anim->currentFrame(), 0);
 
     QTransform transform;
     transform.translate(width, 0).scale(-1, 1.0);
@@ -249,7 +269,8 @@ void tst_qquickanimatedimage::mirror_notRunning()
     QVERIFY(anim);
 
     int width = anim->property("width").toInt();
-    QImage screenshot = window.grabWindow();
+    QImage screenshot = grabItem(anim);
+    QVERIFY(!screenshot.isNull());
 
     QTransform transform;
     transform.translate(width, 0).scale(-1, 1.0);
@@ -260,7 +281,8 @@ void tst_qquickanimatedimage::mirror_notRunning()
     bool paused = anim->isPaused();
 
     anim->setProperty("mirror", true);
-    screenshot = window.grabWindow();
+    screenshot = grabItem(anim);
+    QVERIFY(!screenshot.isNull());
 
     if (window.devicePixelRatio() != 1.0 && window.rendererInterface()->graphicsApi() == QSGRendererInterface::Software)
         QSKIP("QTBUG-53823");
