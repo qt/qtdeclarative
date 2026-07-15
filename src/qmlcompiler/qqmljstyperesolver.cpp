@@ -660,7 +660,7 @@ QQmlJSRegisterContent QQmlJSTypeResolver::merge(
 
     QQmlJSRegisterContent aResultScope;
     if (a.isConversion()) {
-        const auto aOrigins = a.conversionOrigins();
+        const auto &aOrigins = a.conversionOrigins();
         for (const auto &aOrigin : aOrigins)
             origins.insert(aOrigin);
         aResultScope = a.conversionResultScope();
@@ -671,7 +671,7 @@ QQmlJSRegisterContent QQmlJSTypeResolver::merge(
 
     QQmlJSRegisterContent bResultScope;
     if (b.isConversion()) {
-        const auto bOrigins = b.conversionOrigins();
+        const auto &bOrigins = b.conversionOrigins();
         for (const auto &bOrigin : bOrigins)
             origins.insert(bOrigin);
         bResultScope = b.conversionResultScope();
@@ -834,7 +834,7 @@ bool QQmlJSTypeResolver::canHoldUndefined(QQmlJSRegisterContent content) const
     if (!content.isConversion())
         return true;
 
-    const auto origins = content.conversionOrigins();
+    const auto &origins = content.conversionOrigins();
     for (const auto &origin : origins) {
         if (canBeUndefined(originalContainedType(origin)))
             return true;
@@ -848,7 +848,7 @@ bool QQmlJSTypeResolver::isOptionalType(QQmlJSRegisterContent content) const
     if (!content.isConversion())
         return false;
 
-    const auto origins = content.conversionOrigins();
+    const auto &origins = content.conversionOrigins();
     if (origins.length() != 2)
         return false;
 
@@ -867,12 +867,13 @@ QQmlJSRegisterContent QQmlJSTypeResolver::extractNonVoidFromOptionalType(
     // Conversion origins are always adjusted to the conversion result. None of them will be void.
     // Therefore, retrieve the originals first.
 
-    auto origins = content.conversionOrigins();
+    QList<QQmlJSRegisterContent> origins(content.conversionOrigins());
     std::transform(origins.cbegin(), origins.cend(), origins.begin(),
                    [this](QQmlJSRegisterContent content) {return original(content);});
-    const QQmlJSRegisterContent result = origins[0].contains(m_voidType)
-            ? origins[1]
-            : origins[0];
+    const auto &constOrigins = origins;
+    const QQmlJSRegisterContent result = constOrigins[0].contains(m_voidType)
+            ? constOrigins[1]
+            : constOrigins[0];
 
     // The result may still be undefined. You can write "undefined ?? undefined ?? 1"
     return result;
