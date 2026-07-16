@@ -295,6 +295,7 @@ private slots:
     // signal handlers, Component children, instance-level alias bindings.
     void multipleCompositeInstances();
     void nestedCompositeAlias();
+    void nestedCompositeConstantBindingAddRemoveReverts();
     void compositeSignalHandler();
     void compositeRepeater();
     void instanceBindingReadsAlias();
@@ -2507,6 +2508,67 @@ void tst_QQmlPreviewObjectPatch::nestedCompositeAlias()
     QCOMPARE(nested->property("counter").toInt(), 99);
     // The deep alias chain (headerText → header.text) must resolve.
     QCOMPARE(nested->property("headerText").toString(), QStringLiteral("Deep Nested"));
+}
+
+// Reproduces the coffee demo bug: a literal binding added to a *nested composite*
+// child during hot reload, then removed again, must revert the child's property to
+// its default. Structure mirrors ApplicationFlow -> Home -> HomeForm ->
+// (getStartedButton = CustomButton -> CustomButtonForm), where HomeForm.ui.qml is
+// the reloaded file and "col" plays the role of CustomButtonForm's buttonColor
+// (default "grey", set to "green" by the edit).
+//
+// The trigger is that the outer component attaches an external handler to the button
+// through the alias ("theButton.onActivated", like ApplicationFlow's
+// "getStartedbutton.onClicked"). That anchors the button's stash context to the outer
+// CU's group-property view, so without the fix stashExternalState never learns that the
+// reloaded HomeForm CU set "col: green" on this instance. It then mistakes the reloaded
+// value for an external user override, stashes it, and restores it onto the rebuilt
+// button — defeating the reset and leaving the button green forever.
+void tst_QQmlPreviewObjectPatch::nestedCompositeConstantBindingAddRemoveReverts()
+{
+    QQmlComponent outerComp(&engine, testFileUrl("RevertOuter.qml"));
+    QVERIFY2(outerComp.isReady(), qPrintable(outerComp.errorString()));
+    std::unique_ptr<QObject> outer(outerComp.create());
+    QVERIFY(outer);
+
+    QObject *btn = outer->property("theButton").value<QObject *>();
+    QVERIFY(btn);
+    QCOMPARE(btn->property("col").toString(), QStringLiteral("grey"));
+    QCOMPARE(btn->property("effective").toString(), QStringLiteral("grey-effect"));
+
+    QQmlComponent oldForm(&engine, testFileUrl("RevertHomeFormOld.ui.qml"));
+    QVERIFY2(oldForm.isReady(), qPrintable(oldForm.errorString()));
+    QQmlComponent midForm(&engine, testFileUrl("RevertHomeFormMid.ui.qml"));
+    QVERIFY2(midForm.isReady(), qPrintable(midForm.errorString()));
+    QQmlComponent newForm(&engine, testFileUrl("RevertHomeFormNew.ui.qml"));
+    QVERIFY2(newForm.isReady(), qPrintable(newForm.errorString()));
+
+    const auto oldUnit = QQmlComponentPrivate::get(&oldForm)->compilationUnit();
+    const auto midUnit = QQmlComponentPrivate::get(&midForm)->compilationUnit();
+    const auto newUnit = QQmlComponentPrivate::get(&newForm)->compilationUnit();
+    QVERIFY(oldUnit && midUnit && newUnit);
+
+    // Reload #1: add "col: green" to the nested button.
+    auto objects = objectsForCompilationUnit(&engine, oldUnit);
+    QVERIFY(!objects.empty());
+    QCOMPARE_NE(updateObjects(objects, oldUnit, midUnit), QQmlPreview::PatchResult::Failed);
+
+    btn = outer->property("theButton").value<QObject *>();
+    QVERIFY(btn);
+    QCOMPARE(btn->property("col").toString(), QStringLiteral("green"));
+    QCOMPARE(btn->property("effective").toString(), QStringLiteral("green-effect"));
+
+    QCoreApplication::processEvents();
+
+    // Reload #2: remove "col" again. The button must revert to its default "grey".
+    objects = objectsForCompilationUnit(&engine, midUnit);
+    QVERIFY(!objects.empty());
+    QCOMPARE_NE(updateObjects(objects, midUnit, newUnit), QQmlPreview::PatchResult::Failed);
+
+    btn = outer->property("theButton").value<QObject *>();
+    QVERIFY(btn);
+    QCOMPARE(btn->property("col").toString(), QStringLiteral("grey"));
+    QCOMPARE(btn->property("effective").toString(), QStringLiteral("grey-effect"));
 }
 
 // Composite with signal handler referencing internal IDs.
