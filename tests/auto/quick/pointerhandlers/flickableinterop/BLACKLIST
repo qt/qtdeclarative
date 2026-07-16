@@ -1,9 +1,3 @@
-[touchAndDragHandlerOnFlickable]
-windows gcc
-[touchDragFlickableBehindSlider]
-windows gcc
-[touchDragFlickableBehindButton]
-windows gcc
 # QTBUG-103061
 [touchDragFlickableBehindItemWithHandlers]
 android
