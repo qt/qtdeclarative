@@ -2206,6 +2206,110 @@ void QQmlObjectCreator::repopulateBindings(
     qSwap(_qobject, instance);
 }
 
+/*!
+ * \internal
+ *
+ * Install the binding at \a bindingIndex of the compiled object \a index onto
+ * the already created \a instance (at \a instanceContext), reusing the normal
+ * binding-setup path. Only that one binding is applied and the \a{instance}'s
+ * identity (ddata, compilation unit and property cache) is preserved. The
+ * caller must call finalize() afterwards to enable and evaluate the installed
+ * binding.
+ *
+ * Used by the QML preview's in-place patch to add a binding without rebuilding.
+ * Returns true if the binding was installed.
+ */
+bool QQmlObjectCreator::applyLateBinding(int index, QObject *instance,
+                                         const QQmlRefPointer<QQmlContextData> &instanceContext,
+                                         int bindingIndex)
+{
+    phase = QQmlObjectCreator::ObjectsCreated;
+
+    if (compilationUnit->objectCount() <= index)
+        return false;
+
+    const auto oldContext = std::exchange(context, instanceContext);
+    const auto contextGuard = qScopeGuard([&]() { context = oldContext; });
+
+    auto rootContextGuard = qScopeGuard([&]() { sharedState->rootContext.reset(); });
+    if (!sharedState->rootContext)
+        sharedState->rootContext = context;
+    else
+        rootContextGuard.dismiss();
+
+    QV4::Scope scope(engine->handle());
+    auto jsObjectsGuard = qScopeGuard(
+            [&]() { sharedState->allJavaScriptObjects = ObjectInCreationGCAnchorList(); });
+    if (!sharedState->allJavaScriptObjects.canTrack())
+        sharedState->allJavaScriptObjects = ObjectInCreationGCAnchorList(scope);
+    else
+        jsObjectsGuard.dismiss();
+
+    QQmlData *ddata = QQmlData::get(instance, /*create=*/true);
+    Q_ASSERT(ddata);
+
+    // Unlike repopulateBindings(), we are patching a binding onto a level of an already-live
+    // instance and must not disturb its identity: the instance keeps its own (possibly more derived)
+    // compilation unit and property cache. Snapshot and restore them around the apply.
+    const QQmlRefPointer<QV4::ExecutableCompilationUnit> savedUnit = ddata->compilationUnit;
+    const QQmlPropertyCache::ConstPtr savedCache = ddata->propertyCache;
+    const int savedCuObjectIndex = ddata->cuObjectIndex;
+    const auto ddataGuard = qScopeGuard([&]() {
+        ddata->compilationUnit = savedUnit;
+        ddata->propertyCache = savedCache;
+        ddata->cuObjectIndex = savedCuObjectIndex;
+    });
+
+    QQmlVMEMetaObject *vmeMetaObject = QQmlVMEMetaObject::get(instance, engine->handle());
+    const QV4::CompiledData::Object *obj = compilationUnit->objectAt(index);
+    if (bindingIndex < 0 || uint(bindingIndex) >= obj->nBindings)
+        return false;
+
+    qSwap(_qobject, instance);
+    qSwap(_compiledObjectIndex, index);
+    qSwap(_compiledObject, obj);
+    qSwap(_ddata, ddata);
+    QObject *bindingTarget = _qobject;
+    qSwap(_bindingTarget, bindingTarget);
+    QObject *scopeObject = _qobject;
+    qSwap(_scopeObject, scopeObject);
+    const QQmlPropertyData *valueTypeProperty = nullptr;
+    qSwap(_valueTypeProperty, valueTypeProperty);
+
+    Q_ASSERT(sharedState->allJavaScriptObjects.canTrack());
+    sharedState->allJavaScriptObjects.trackObject(v4, _qobject);
+
+    QV4::QmlContext *qmlContext = static_cast<QV4::QmlContext *>(scope.constructUndefined(1));
+    qSwap(_qmlContext, qmlContext);
+
+    QQmlPropertyCache::ConstPtr cache = propertyCaches->at(_compiledObjectIndex);
+    qSwap(_propertyCache, cache);
+    qSwap(_vmeMetaObject, vmeMetaObject);
+
+    const QV4::CompiledData::Binding *binding = _compiledObject->bindingTable() + bindingIndex;
+    const QQmlPropertyData *defaultProperty = _compiledObject->indexOfDefaultPropertyOrAlias != -1
+            ? _propertyCache->parent()->defaultProperty()
+            : _propertyCache->defaultProperty();
+    const QQmlPropertyData *property = binding->propertyNameIndex != 0
+            ? _propertyCache->property(stringAt(binding->propertyNameIndex), _qobject, context)
+            : defaultProperty;
+
+    const bool installed = property && setPropertyBinding(property, binding);
+
+    qSwap(_vmeMetaObject, vmeMetaObject);
+    qSwap(_propertyCache, cache);
+    qSwap(_qmlContext, qmlContext);
+    qSwap(_valueTypeProperty, valueTypeProperty);
+    qSwap(_scopeObject, scopeObject);
+    qSwap(_bindingTarget, bindingTarget);
+    qSwap(_ddata, ddata);
+    qSwap(_compiledObject, obj);
+    qSwap(_compiledObjectIndex, index);
+    qSwap(_qobject, instance);
+
+    return installed;
+}
+
 QQmlObjectCreatorRecursionWatcher::QQmlObjectCreatorRecursionWatcher(QQmlObjectCreator *creator)
     : sharedState(creator->sharedState)
     , watcher(creator->sharedState.data())

@@ -220,6 +220,13 @@ static QVariant literalBindingValue(const QQmlRefPointer<QV4::ExecutableCompilat
     }
 }
 
+QVariant
+BindingPatchContext::literalValue(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit,
+                                  const QV4::CompiledData::Binding *binding)
+{
+    return literalBindingValue(unit, binding);
+}
+
 static QVariant coerceToPropertyType(QV4::ExecutionEngine *v4, const QVariant &value,
                               QMetaType propertyType)
 {

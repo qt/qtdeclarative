@@ -57,6 +57,11 @@ public:
     static void retireObject(QObject *object);
     static void clearBindingsRecursive(QObject *object);
 
+    // The constant value a literal binding assigns, or an invalid QVariant for a script (or other
+    // non-literal) binding. Used by the in-place patch to install/reset literal bindings.
+    static QVariant literalValue(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit,
+                                 const QV4::CompiledData::Binding *binding);
+
     BindingPatchContext(QObject *object, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit,
                         int objectIndex, const QString &prefix)
         : m_object(object), unit(unit), objectIndex(objectIndex), prefix(prefix + QLatin1Char('.'))

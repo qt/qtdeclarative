@@ -206,6 +206,9 @@ public:
             int index, QObject *instance,
             const QQmlRefPointer<QQmlContextData> &instanceContext, InitFlags flags);
 
+    bool applyLateBinding(int index, QObject *instance,
+                          const QQmlRefPointer<QQmlContextData> &instanceContext, int bindingIndex);
+
 private:
     QQmlObjectCreator(
             const QQmlRefPointer<QQmlContextData> &contextData,

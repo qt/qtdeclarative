@@ -11,6 +11,7 @@
 #include <private/qqmlobjectcreator_p.h>
 #include <private/qqmlpreviewbindingpatchcontext_p.h>
 #include <private/qqmlpreviewdiff_p.h>
+#include <private/qqmlproperty_p.h>
 #include <private/qqmlpropertyresolver_p.h>
 #include <private/qqmlscriptdata_p.h>
 #include <private/qqmlsignalnames_p.h>
@@ -653,10 +654,30 @@ static bool changeIsTrivial(const QV4::CompiledData::Change &change,
         return BindingPatchContext::targetPropertyName(oldUnit, change.objectIndex, oldBinding)
                 == BindingPatchContext::targetPropertyName(newUnit, change.objectIndex, newBinding);
     }
+    case ChangeType::BindingAdded:
+    case ChangeType::BindingRemoved: {
+        // Installing/removing a binding in place is possible for plain value and script bindings
+        // whose target is a direct property of a real object. A binding on a value-type group or
+        // attached sub-object (which has no inherited type, hence no live QObject at its own index)
+        // still rebuilds; applyBindingChanges() drives the rest, respecting cross-level precedence.
+        const bool added = change.type == ChangeType::BindingAdded;
+        const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit = added ? newUnit : oldUnit;
+        const quint32 bindingIndex = added ? change.newIndex : change.oldIndex;
+
+        Q_ASSERT(change.objectIndex >= 0 && change.objectIndex < unit->objectCount());
+        const QV4::CompiledData::Object *obj = unit->objectAt(change.objectIndex);
+        Q_ASSERT(bindingIndex < obj->nBindings);
+
+        if (bindingKind(obj->bindingTable() + bindingIndex) == BindingKind::Unpatchable)
+            return false;
+
+        // Group/attached sub-objects have no inherited type.
+        return unit->resolvedType(obj->inheritedTypeNameIndex) != nullptr;
+    }
     default:
-        // ObjectAdded/Removed/Changed, Binding Added/Removed, Property/Signal/Alias/Enum content
-        // changes, Signal/Alias/Function Added/Removed, Import/InlineComponent/RequiredPropertyExtraData
-        // changes: structural, need a rebuild.
+        // ObjectAdded/Removed/Changed, Property/Signal/Alias/Enum content changes, Signal/Alias/
+        // Function Added/Removed, Import/InlineComponent/RequiredPropertyExtraData changes: structural,
+        // need a rebuild.
         return false;
     }
 }
@@ -1059,6 +1080,236 @@ static void relinkDerivedInstanceCaches(const std::vector<QObject *> &objects)
     }
 }
 
+// The composite levels of a live instance, most-derived first, each with the context it lives in.
+// Like collectCompositeLevels() but for an already-created instance: the base levels' contexts are
+// read from the instance's linked-context chain (matched by type compilation unit) instead of being
+// created. Used to reason about binding precedence across type levels.
+static std::vector<CompositeLevel>
+instanceCompositeLevels(QObject *object,
+                        const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit,
+                        const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit)
+{
+    QQmlData *ddata = QQmlData::get(object);
+    CompositeLevel instanceLevel{ ddata->compilationUnit, ddata->compilationUnit,
+                                  ddata->cuObjectIndex, QString(),
+                                  QQmlRefPointer<QQmlContextData>(ddata->context) };
+
+    std::vector<CompositeLevel> levels;
+    levels.push_back(instanceLevel);
+    for (const CompositeLevel &base : collectCompositeLevels(instanceLevel, oldUnit, newUnit))
+        levels.push_back(base);
+
+    for (CompositeLevel &level : levels) {
+        if (level.context)
+            continue;
+        for (QQmlRefPointer<QQmlContextData> ctx(ddata->context); ctx; ctx = ctx->linkedContext()) {
+            const auto typeUnit = ctx->typeCompilationUnit();
+            if (typeUnit && level.newCu
+                && typeUnit->baseCompilationUnit() == level.newCu->baseCompilationUnit()) {
+                level.context = ctx;
+                break;
+            }
+        }
+    }
+    return levels;
+}
+
+// Index of the (patchable) binding on the object at objectIndex in cu that targets property `name`,
+// or -1 if none binds it.
+static int bindingIndexForProperty(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &cu,
+                                   int objectIndex, const QString &name)
+{
+    if (objectIndex < 0 || objectIndex >= cu->objectCount())
+        return -1;
+    const QV4::CompiledData::Object *obj = cu->objectAt(objectIndex);
+    const QV4::CompiledData::Binding *bindings = obj->bindingTable();
+    for (quint32 i = 0; i < obj->nBindings; ++i) {
+        if (bindingKind(bindings + i) != BindingKind::Unpatchable
+            && BindingPatchContext::targetPropertyName(cu, objectIndex, bindings + i) == name) {
+            return int(i);
+        }
+    }
+    return -1;
+}
+
+// Install, on the live instance, the binding at bindingIndex of the object at level.objectIndex in
+// level.newCu that targets property `name`. A literal is written directly (no context needed); a
+// script binding goes through the object creator so precedence/override with any lower-level binding
+// is handled by the engine.
+static void installBinding(QObject *object, const CompositeLevel &level, int bindingIndex,
+                           const QString &name)
+{
+    if (!level.newCu)
+        return;
+
+    const QV4::CompiledData::Binding *binding =
+            level.newCu->objectAt(level.objectIndex)->bindingTable() + bindingIndex;
+    const QVariant literal = BindingPatchContext::literalValue(level.newCu, binding);
+    if (literal.isValid()) {
+        QQmlProperty(object, name).write(literal);
+        return;
+    }
+
+    if (!level.context)
+        return;
+    QQmlData *ddata = QQmlData::get(object);
+    QQmlObjectCreator creator(level.context, level.newCu,
+                              QQmlRefPointer<QQmlContextData>(ddata->outerContext), level.icName,
+                              nullptr);
+    if (creator.applyLateBinding(level.objectIndex, object, level.context, bindingIndex)) {
+        QQmlInstantiationInterrupt interrupt;
+        creator.finalize(interrupt);
+    }
+}
+
+using CuRef = QQmlRefPointer<QV4::ExecutableCompilationUnit>;
+
+static const QV4::CompiledData::Binding *bindingAt(const CuRef &unit, int objectIndex,
+                                                   quint32 bindingIndex)
+{
+    return unit->objectAt(objectIndex)->bindingTable() + bindingIndex;
+}
+
+static bool isScriptBinding(const QV4::CompiledData::Binding *b)
+{
+    return b->type() == QV4::CompiledData::Binding::Type_Script;
+}
+
+// Collect, per changed object index, the set of target property names whose effective binding
+// must be recomputed.
+static QHash<int, QSet<QString>> collectAffectedProperties(
+        const QV4::CompiledData::CompilationUnitDiff &diff, const CuRef &oldUnit,
+        const CuRef &newUnit)
+{
+    using ChangeType = QV4::CompiledData::ChangeType;
+
+    QHash<int, QSet<QString>> affected;
+    for (const QV4::CompiledData::Change &change : diff.changes) {
+        QString name;
+        switch (change.type) {
+        case ChangeType::BindingAdded:
+            name = BindingPatchContext::targetPropertyName(
+                    newUnit, change.objectIndex,
+                    bindingAt(newUnit, change.objectIndex, change.newIndex));
+            break;
+        case ChangeType::BindingRemoved:
+            name = BindingPatchContext::targetPropertyName(
+                    oldUnit, change.objectIndex,
+                    bindingAt(oldUnit, change.objectIndex, change.oldIndex));
+            break;
+        case ChangeType::BindingChanged:
+            // Only a literal<->script flip needs (re)installing here; a same-kind change is handled
+            // by patchConstantBindings (literal) or refreshBindings (script).
+            if (isScriptBinding(bindingAt(newUnit, change.objectIndex, change.newIndex))
+                != isScriptBinding(bindingAt(oldUnit, change.objectIndex, change.oldIndex))) {
+                name = BindingPatchContext::targetPropertyName(
+                        newUnit, change.objectIndex,
+                        bindingAt(newUnit, change.objectIndex, change.newIndex));
+            }
+            break;
+        default:
+            break;
+        }
+        if (!name.isEmpty())
+            affected[change.objectIndex].insert(name);
+    }
+    return affected;
+}
+
+// Index into levels of the level that was reloaded (now on newUnit) and owns the change to the
+// object at changedObjectIndex, or -1 if this instance doesn't carry the changed level.
+static int reloadedLevelIndex(const std::vector<CompositeLevel> &levels, int changedObjectIndex,
+                              const CuRef &newUnit)
+{
+    const auto baseOf = [](const CuRef &unit) {
+        return unit ? unit->baseCompilationUnit() : nullptr;
+    };
+    for (int i = 0, end = int(levels.size()); i < end; ++i) {
+        if (levels[i].objectIndex == changedObjectIndex
+            && baseOf(levels[i].newCu) == newUnit->baseCompilationUnit()) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+// Whether a level more derived than `reloaded` binds the property, and thus keeps overriding it.
+static bool isOverriddenByDerivedLevel(const std::vector<CompositeLevel> &levels, int reloaded,
+                                       const QString &name)
+{
+    return std::any_of(levels.begin(), levels.begin() + reloaded, [&](const CompositeLevel &level) {
+        return bindingIndexForProperty(level.newCu, level.objectIndex, name) >= 0;
+    });
+}
+
+// Drop the current binding of the property, then (re)install the most-derived binding at or below
+// the reloaded level, or reset the property if nothing binds it anymore.
+static void reinstallProperty(QObject *object, const std::vector<CompositeLevel> &levels,
+                              int reloaded, const QString &name)
+{
+    const QQmlProperty prop(object, name);
+    if (prop.isValid()) {
+        QQmlPropertyPrivate::removeBinding(
+                object, QQmlPropertyIndex(QQmlPropertyPrivate::get(prop)->core.coreIndex()));
+    }
+
+    for (auto it = levels.begin() + reloaded, end = levels.end(); it != end; ++it) {
+        const int bindingIndex = bindingIndexForProperty(it->newCu, it->objectIndex, name);
+        if (bindingIndex >= 0) {
+            installBinding(object, *it, bindingIndex, name);
+            return;
+        }
+    }
+
+    if (!prop.isValid())
+        return;
+
+    // Revert to what a freshly created instance without the initializer would show:
+    // its reset value if resettable, otherwise the type's default.
+    if (prop.isResettable())
+        prop.reset();
+    else
+        prop.write(QVariant(prop.propertyMetaType()));
+}
+
+// Apply binding structure changes in place, honoring cross-level precedence: only the highest-
+// precedence (most-derived) binding of a property is live. Handles BindingAdded, BindingRemoved, and
+// a BindingChanged that flips a property between a literal value and a script binding (a same-kind
+// change is already covered by patchConstantBindings / refreshBindings). For each affected instance
+// and target property, the effective binding is recomputed: if a more-derived level binds it the
+// change is a no-op; otherwise the current binding is dropped and the most-derived binding at or
+// below the reloaded level is (re)installed, or the property is reset if nothing binds it anymore.
+static void applyBindingChanges(const std::vector<QObject *> &objects,
+                                const QV4::CompiledData::CompilationUnitDiff &diff,
+                                const CuRef &oldUnit, const CuRef &newUnit)
+{
+    const QHash<int, QSet<QString>> affected = collectAffectedProperties(diff, oldUnit, newUnit);
+    if (affected.isEmpty())
+        return;
+
+    for (QObject *object : objects) {
+        QQmlData *ddata = QQmlData::get(object);
+        if (!ddata || !ddata->context || !ddata->outerContext || !ddata->outerContext->isValid()
+            || ddata->isQueuedForDeletion) {
+            continue;
+        }
+
+        const std::vector<CompositeLevel> levels =
+                instanceCompositeLevels(object, oldUnit, newUnit);
+
+        for (auto it = affected.constBegin(), end = affected.constEnd(); it != end; ++it) {
+            const int reloaded = reloadedLevelIndex(levels, it.key(), newUnit);
+            if (reloaded < 0)
+                continue;
+
+            for (const QString &name : it.value()) {
+                if (!isOverriddenByDerivedLevel(levels, reloaded, name))
+                    reinstallProperty(object, levels, reloaded, name);
+            }
+        }
+    }
+}
+
 PatchResult applyDiff(std::vector<QObject *> &objects,
                       const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit,
                       const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit)
@@ -1094,6 +1345,9 @@ PatchResult applyDiff(std::vector<QObject *> &objects,
         if (derivedAffected)
             relinkDerivedInstanceCaches(objects);
         refreshVmeMethods(objects, newUnit);
+        // Install/remove added/removed bindings (post-remap: the objects present newUnit's caches
+        // and their methods are refreshed, so a new binding's expression resolves correctly).
+        applyBindingChanges(objects, diff, oldUnit, newUnit);
         return PatchResult::PatchedInPlace;
     }
 

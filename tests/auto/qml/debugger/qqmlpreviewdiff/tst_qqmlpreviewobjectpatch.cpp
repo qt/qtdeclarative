@@ -224,6 +224,12 @@ private slots:
     void addRemoveBareProperty();
     void addPropertyShiftsSignal();
     void addPropertyShiftsAlias();
+    void addScriptBinding();
+    void removeScriptBinding();
+    void addScriptBindingKeepsSiblingLive();
+    void bindingAddShadowedByDerived();
+    void bindingRemoveOverriddenByDerived();
+    void groupBindingAddRebuilds();
     void swapBindingPositions();
     void swapAliasPositions();
     void swapSignalPositions();
@@ -241,7 +247,7 @@ private slots:
     void literalToTranslationBinding();
     void translationLiteralBindingSwap();
     void bindableTranslationBindingSwap();
-    void reattachLosesListChildUserOverrides();
+    void reattachPreservesListChildUserOverrides();
     void varPropertyStashTypeMismatch();
     void reattachPreservesIdBinding();
     void inPlaceOnChildNeedlesslyReattaches();
@@ -709,6 +715,7 @@ void tst_QQmlPreviewObjectPatch::granularPropertyAdditionWithStash()
 
     QCOMPARE(object->property("count").toInt(), 10);
     QVERIFY(!object->property("newProp").isValid()); // not in old CU
+    QObject *objectBefore = object.get();
 
     // Simulate a user-modified property value during a live-preview session.
     object->setProperty("count", 42);
@@ -720,8 +727,12 @@ void tst_QQmlPreviewObjectPatch::granularPropertyAdditionWithStash()
     const auto newExecUnit = QQmlComponentPrivate::get(&newComponent)->compilationUnit();
     QVERIFY(oldExecUnit && newExecUnit);
 
+    // Adding "property string newProp: \"added\"" is PropertyAdded + a literal BindingAdded, both
+    // trivial: the property table grows and the literal is written, all in place.
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
+    QCOMPARE(updateObjects(objects, oldExecUnit, newExecUnit),
+             QQmlPreview::PatchResult::PatchedInPlace);
+    QCOMPARE(object.get(), objectBefore); // reused, so the user value survives without stashing
 
     QCOMPARE(object->property("count").toInt(), 42);
     QCOMPARE(object->property("newProp").toString(), QString("added"));
@@ -736,6 +747,7 @@ void tst_QQmlPreviewObjectPatch::granularPropertyRemovalWithStash()
 
     QCOMPARE(object->property("count").toInt(), 10);
     QCOMPARE(object->property("removedProp").toString(), QString("gone"));
+    QObject *objectBefore = object.get();
 
     // Simulate a user-modified property value during a live-preview session.
     object->setProperty("count", 77);
@@ -747,8 +759,12 @@ void tst_QQmlPreviewObjectPatch::granularPropertyRemovalWithStash()
     const auto newExecUnit = QQmlComponentPrivate::get(&newComponent)->compilationUnit();
     QVERIFY(oldExecUnit && newExecUnit);
 
+    // Removing "property string removedProp: \"gone\"" is PropertyRemoved + a literal BindingRemoved,
+    // both trivial: the property table shrinks in place.
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
+    QCOMPARE(updateObjects(objects, oldExecUnit, newExecUnit),
+             QQmlPreview::PatchResult::PatchedInPlace);
+    QCOMPARE(object.get(), objectBefore); // reused
 
     QCOMPARE(object->property("count").toInt(), 77);
     QVERIFY(!object->property("removedProp").isValid());
@@ -973,6 +989,175 @@ void tst_QQmlPreviewObjectPatch::addPropertyShiftsAlias()
     QCOMPARE(object->property("childX").toInt(), 5);
     object->setProperty("childX", 9);
     QCOMPARE(object->property("childX").toInt(), 9);
+}
+
+// Adding a script binding also adds its compiled function to the unit. Because functions are matched
+// by name (see the differ), that FunctionAdded no longer misaligns the other functions, so the
+// binding is installed in place and stays live.
+void tst_QQmlPreviewObjectPatch::addScriptBinding()
+{
+    QQmlComponent oldComponent(&engine, testFileUrl("AddScriptBindingOld.qml"));
+    QVERIFY2(oldComponent.isReady(), qPrintable(oldComponent.errorString()));
+    QScopedPointer<QObject> object(oldComponent.create());
+    QVERIFY(object);
+    QObject *objectBefore = object.get();
+    QCOMPARE(object->property("derived").toInt(), 0); // unbound
+
+    QQmlComponent newComponent(&engine, testFileUrl("AddScriptBindingNew.qml"));
+    QVERIFY2(newComponent.isReady(), qPrintable(newComponent.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldComponent)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComponent)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QCOMPARE(updateObjects(objects, oldExecUnit, newExecUnit),
+             QQmlPreview::PatchResult::PatchedInPlace);
+    QCOMPARE(object.get(), objectBefore);
+
+    QCOMPARE(object->property("derived").toInt(), 10); // 5 * 2, binding live
+    object->setProperty("source", 20);
+    QCOMPARE(object->property("derived").toInt(), 40);
+}
+
+void tst_QQmlPreviewObjectPatch::removeScriptBinding()
+{
+    QQmlComponent oldComponent(&engine, testFileUrl("AddScriptBindingNew.qml"));
+    QVERIFY2(oldComponent.isReady(), qPrintable(oldComponent.errorString()));
+    QScopedPointer<QObject> object(oldComponent.create());
+    QVERIFY(object);
+    QObject *objectBefore = object.get();
+    QCOMPARE(object->property("derived").toInt(), 10);
+
+    QQmlComponent newComponent(&engine, testFileUrl("AddScriptBindingOld.qml"));
+    QVERIFY2(newComponent.isReady(), qPrintable(newComponent.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldComponent)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComponent)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    // Removing the script binding tears it down in place; the property resets and no longer tracks.
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QCOMPARE(updateObjects(objects, oldExecUnit, newExecUnit),
+             QQmlPreview::PatchResult::PatchedInPlace);
+    QCOMPARE(object.get(), objectBefore);
+
+    QCOMPARE(object->property("derived").toInt(), 0);
+    object->setProperty("source", 20);
+    QCOMPARE(object->property("derived").toInt(), 0); // no longer bound
+}
+
+// Inserting a script binding adds a function ahead of an existing binding's function, shifting its
+// table index. Because functions are matched by name, the surviving binding keeps working.
+void tst_QQmlPreviewObjectPatch::addScriptBindingKeepsSiblingLive()
+{
+    QQmlComponent oldComponent(&engine, testFileUrl("AddScriptShiftsSiblingOld.qml"));
+    QVERIFY2(oldComponent.isReady(), qPrintable(oldComponent.errorString()));
+    QScopedPointer<QObject> object(oldComponent.create());
+    QVERIFY(object);
+    QObject *objectBefore = object.get();
+    QCOMPARE(object->property("keep").toInt(), 3); // a + 1 = 2 + 1
+
+    QQmlComponent newComponent(&engine, testFileUrl("AddScriptShiftsSiblingNew.qml"));
+    QVERIFY2(newComponent.isReady(), qPrintable(newComponent.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldComponent)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComponent)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QCOMPARE(updateObjects(objects, oldExecUnit, newExecUnit),
+             QQmlPreview::PatchResult::PatchedInPlace);
+    QCOMPARE(object.get(), objectBefore);
+
+    QCOMPARE(object->property("added").toInt(), 102); // new binding: a + 100
+    QCOMPARE(object->property("keep").toInt(), 3); // survivor still bound
+    object->setProperty("a", 5);
+    QCOMPARE(object->property("added").toInt(), 105); // both still live
+    QCOMPARE(object->property("keep").toInt(), 6);
+}
+
+void tst_QQmlPreviewObjectPatch::bindingAddShadowedByDerived()
+{
+    // Base gains "a: 1"; Derived already overrides it with "a: 2".
+    QQmlComponent oldComponent(&engine, testFileUrl("PrecedenceNoBaseBinding.qml"));
+    QVERIFY2(oldComponent.isReady(), qPrintable(oldComponent.errorString()));
+    QScopedPointer<QObject> object(oldComponent.create());
+    QVERIFY(object);
+    QObject *der = object->property("der").value<QObject *>();
+    QObject *bas = object->property("bas").value<QObject *>();
+    QVERIFY(der && bas);
+    QCOMPARE(der->property("a").toInt(), 2); // Derived override
+    QCOMPARE(bas->property("a").toInt(), 0); // Base has no binding yet
+
+    QQmlComponent newComponent(&engine, testFileUrl("PrecedenceWithBaseBinding.qml"));
+    QVERIFY2(newComponent.isReady(), qPrintable(newComponent.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldComponent)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComponent)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QCOMPARE(updateObjects(objects, oldExecUnit, newExecUnit),
+             QQmlPreview::PatchResult::PatchedInPlace);
+
+    // The added base binding is shadowed on the derived instance (still 2), but takes effect on the
+    // plain Base instance (now 1).
+    QCOMPARE(der->property("a").toInt(), 2);
+    QCOMPARE(bas->property("a").toInt(), 1);
+}
+
+void tst_QQmlPreviewObjectPatch::bindingRemoveOverriddenByDerived()
+{
+    // Base loses "a: 1"; Derived still overrides it with "a: 2".
+    QQmlComponent oldComponent(&engine, testFileUrl("PrecedenceWithBaseBinding.qml"));
+    QVERIFY2(oldComponent.isReady(), qPrintable(oldComponent.errorString()));
+    QScopedPointer<QObject> object(oldComponent.create());
+    QVERIFY(object);
+    QObject *der = object->property("der").value<QObject *>();
+    QObject *bas = object->property("bas").value<QObject *>();
+    QVERIFY(der && bas);
+    QCOMPARE(der->property("a").toInt(), 2); // Derived override
+    QCOMPARE(bas->property("a").toInt(), 1); // Base binding effective
+
+    QQmlComponent newComponent(&engine, testFileUrl("PrecedenceNoBaseBinding.qml"));
+    QVERIFY2(newComponent.isReady(), qPrintable(newComponent.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldComponent)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComponent)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QCOMPARE(updateObjects(objects, oldExecUnit, newExecUnit),
+             QQmlPreview::PatchResult::PatchedInPlace);
+
+    // Removing the overridden base binding is a no-op on the derived instance (still 2). On the plain
+    // Base instance the effective binding is gone, so it resets to the default.
+    QCOMPARE(der->property("a").toInt(), 2);
+    QCOMPARE(bas->property("a").toInt(), 0);
+}
+
+void tst_QQmlPreviewObjectPatch::groupBindingAddRebuilds()
+{
+    QQmlComponent oldComponent(&engine, testFileUrl("GroupBindingAddOld.qml"));
+    QVERIFY2(oldComponent.isReady(), qPrintable(oldComponent.errorString()));
+    QScopedPointer<QObject> object(oldComponent.create());
+    QVERIFY(object);
+
+    QQmlComponent newComponent(&engine, testFileUrl("GroupBindingAddNew.qml"));
+    QVERIFY2(newComponent.isReady(), qPrintable(newComponent.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldComponent)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComponent)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    // Adding a value-type group binding (font.pixelSize) is not patched in place yet; it rebuilds.
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QCOMPARE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Rebuilt);
+
+    QObject *reloaded = objects.empty() ? nullptr : objects.front();
+    QVERIFY(reloaded);
+    QCOMPARE(reloaded->property("font").value<QFont>().pixelSize(), 20);
 }
 
 void tst_QQmlPreviewObjectPatch::swapBindingPositions()
@@ -1551,9 +1736,9 @@ void tst_QQmlPreviewObjectPatch::scriptBindingChangeDropsCppPropertyOverride()
     QCOMPARE(object->property("value").toInt(), 2); // aux * 2 = 1 * 2 = 2
 }
 
-// Renaming the property a binding assigns to (at a stable binding-table index) is reported
-// by the positional diff as a single BindingChanged. Patching it in place leaves the live
-// expression bound to the old property and never installs it on the new one.
+// Renaming the property a binding assigns to (width -> height) is a BindingRemoved(width) plus
+// BindingAdded(height) under name-based diffing. Patched in place: the new binding is installed on
+// height and the old one is removed from width, which resets width to its default.
 void tst_QQmlPreviewObjectPatch::bindingPropertyRename()
 {
     QQmlComponent oldComp(&engine, testFileUrl("BindingPropertyRenameOld.qml"));
@@ -1759,8 +1944,9 @@ void tst_QQmlPreviewObjectPatch::bindableTranslationBindingSwap()
     QCOMPARE(object->objectName(), QStringLiteral("world"));
 }
 
-// User-overridden values on children are retained during the patching.
-void tst_QQmlPreviewObjectPatch::reattachLosesListChildUserOverrides()
+// Adding a bare-plus-literal property (newFlag: true) is now a trivial in-place patch, so the list
+// children are reused rather than recreated and user overrides on them are retained.
+void tst_QQmlPreviewObjectPatch::reattachPreservesListChildUserOverrides()
 {
 
     QQmlComponent oldComp(&engine, testFileUrl("ListUserOverrideOld.qml"));
@@ -1773,6 +1959,7 @@ void tst_QQmlPreviewObjectPatch::reattachLosesListChildUserOverrides()
     QCOMPARE(ref.count(), 2);
 
     // User modifies the first child object's property during a live-preview session.
+    QObject *firstChildBefore = ref.at(0);
     ref.at(0)->setProperty("val", 99);
     QCOMPARE(ref.at(0)->property("val").toInt(), 99);
 
@@ -1784,12 +1971,13 @@ void tst_QQmlPreviewObjectPatch::reattachLosesListChildUserOverrides()
     QVERIFY(oldExecUnit && newExecUnit);
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
+    QCOMPARE(updateObjects(objects, oldExecUnit, newExecUnit),
+             QQmlPreview::PatchResult::PatchedInPlace);
 
     QCOMPARE(ref.count(), 2);
-
-    QEXPECT_FAIL("", "We do not preserve user overrides", Continue);
-    QCOMPARE(ref.at(0)->property("val").toInt(), 99);
+    QCOMPARE(ref.at(0), firstChildBefore); // reused, not recreated
+    QCOMPARE(ref.at(0)->property("val").toInt(), 99); // override retained
+    QCOMPARE(object->property("newFlag").toBool(), true); // added property applied
 }
 
 void tst_QQmlPreviewObjectPatch::varPropertyStashTypeMismatch()
