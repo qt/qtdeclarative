@@ -662,7 +662,9 @@ static QObject *outerRebuildTarget(
 {
     Q_ASSERT(object);
 
-    do {
+    // Eventually we either reach the outermost context or a context without context object.
+    // Then we return nullptr if we haven't found anything better before.
+    while (true) {
         QQmlData *ddata = QQmlData::get(object);
         if (!ddata || !ddata->outerContext)
             return nullptr;
@@ -675,9 +677,9 @@ static QObject *outerRebuildTarget(
             return outer;
 
         object = outer;
-    } while (object);
+    }
 
-    return nullptr;
+    Q_UNREACHABLE_RETURN(nullptr);
 }
 
 // TODO: This is dangerous. We are manipulating compilation units exposed to multiple
