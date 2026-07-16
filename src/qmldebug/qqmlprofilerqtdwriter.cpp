@@ -330,6 +330,8 @@ struct StreamWriter {
     }
 
     ~StreamWriter() {
+        if (!error.isEmpty())
+            return;
         writeEndElement();
         stream.writeEndDocument();
         file.close();
