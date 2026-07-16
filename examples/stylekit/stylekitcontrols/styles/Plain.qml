@@ -126,6 +126,10 @@ Style {
         padding: 0
     }
 
+    scrollIndicator {
+        padding: 2
+    }
+
     pane {
         /* The controls change background color on states like hover, but panes
          * should not. Override the property here to disable that behavior for panes. */
