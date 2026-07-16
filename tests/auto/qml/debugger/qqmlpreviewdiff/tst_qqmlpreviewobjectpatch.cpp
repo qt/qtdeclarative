@@ -233,6 +233,7 @@ private slots:
     void updateObjectsGeneratorMethodChange();
     void updateObjectsFunctionChange();
     void updateObjectsFunctionRemove();
+    void functionTableShiftPatchedInPlace();
 
     void scriptBindingChangeDropsCppPropertyOverride();
     void bindingPropertyRename();
@@ -1218,6 +1219,40 @@ void tst_QQmlPreviewObjectPatch::updateObjectsFunctionChange()
 
     QVERIFY(QMetaObject::invokeMethod(object.data(), "compute", Q_RETURN_ARG(QVariant, result)));
     QCOMPARE(result.toInt(), 30); // value(10) * 3
+}
+
+void tst_QQmlPreviewObjectPatch::functionTableShiftPatchedInPlace()
+{
+    QQmlComponent oldComponent(&engine, testFileUrl("FunctionShiftOld.qml"));
+    QVERIFY2(oldComponent.isReady(), qPrintable(oldComponent.errorString()));
+    QScopedPointer<QObject> object(oldComponent.create());
+    QVERIFY(object);
+    QObject *objectBefore = object.get();
+
+    QQmlComponent newComponent(&engine, testFileUrl("FunctionShiftNew.qml"));
+    QVERIFY2(newComponent.isReady(), qPrintable(newComponent.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldComponent)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComponent)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    // A nested closure in first() adds an entry to the function table, which shifts the indices of
+    // the functions that follow. The binding, the handler and the method must still find their own
+    // function by name.
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QCOMPARE(updateObjects(objects, oldExecUnit, newExecUnit),
+             QQmlPreview::PatchResult::PatchedInPlace);
+    QCOMPARE(object.get(), objectBefore);
+
+    object->setProperty("base", 5);
+    QCOMPARE(object->property("doubled").toInt(), 10);
+    QCOMPARE(object->property("marker").toString(), QStringLiteral("base"));
+
+    QVariant result;
+    QVERIFY(QMetaObject::invokeMethod(object.data(), "second", Q_RETURN_ARG(QVariant, result)));
+    QCOMPARE(result.toInt(), 105);
+    QVERIFY(QMetaObject::invokeMethod(object.data(), "first", Q_RETURN_ARG(QVariant, result)));
+    QCOMPARE(result.toInt(), 2);
 }
 
 void tst_QQmlPreviewObjectPatch::updateObjectsFunctionRemove()

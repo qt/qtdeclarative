@@ -611,11 +611,14 @@ static bool changeIsTrivial(const QV4::CompiledData::Change &change,
     case ChangeType::TranslationDataChanged:
     case ChangeType::TranslationDataRemoved:
         return true;
+    case ChangeType::FunctionAdded:
     case ChangeType::FunctionChanged:
-        // A recompiled function body at a stable index. Binding/handler expressions pick up the new
-        // body via refreshBindings(), VME methods via refreshVmeMethods(). Neither needs a rebuild,
-        // so a function change is trivial regardless of whether the function backs a binding or a
-        // method.
+    case ChangeType::FunctionIndexChanged:
+    case ChangeType::FunctionRemoved:
+        // Functions are matched by name across the reload (see the differ). Binding/handler
+        // expressions pick up their new function by name via refreshBindings(), VME methods via
+        // refreshVmeMethods() — both name-based, so an added/removed/reordered/changed function needs
+        // no rebuild. (A newly added function backs a newly added binding, applied separately.)
         return true;
     case ChangeType::BindingChanged: {
         Q_ASSERT(change.objectIndex >= 0);
@@ -1068,9 +1071,8 @@ PatchResult applyDiff(std::vector<QObject *> &objects,
     // meta-object, and no objects added or removed -- patch the affected objects in place. We
     // leave every object and its VME meta-object where it is, re-apply the changed literal
     // bindings (patchConstantBindings), point the objects at newUnit (remapObjectsToNewUnit), and
-    // let the in-place refreshBindings() translate the still-live expressions' functions to
-    // newUnit. Because no functions are added or removed in a trivial diff, function indices are
-    // stable, which is what makes that same-index translation correct.
+    // let the in-place refreshBindings() translate the still-live expressions' functions to newUnit
+    // by name (so an added/removed/reordered function doesn't misalign the survivors).
     const QV4::CompiledData::CompilationUnitDiff diff =
             QV4::CompiledData::diffCompilationUnits(oldUnit->unitData(), newUnit->unitData());
     if (diff.success && isTrivialDiff(diff, oldUnit, newUnit)) {
@@ -1215,15 +1217,65 @@ PatchResult applyDiff(std::vector<QObject *> &objects,
     return PatchResult::Rebuilt;
 }
 
-// Translate a still-live expression's function from oldUnit to the function at the same index in
-// newUnit, or clear it if there is no newUnit. Expressions whose function does not point into
-// oldUnit are left untouched. Same-index translation is valid because we only do this with trivial
-// diffs that neither add nor remove functions.
-// Returns true if the resulting function is valid afterwards (and should be re-evaluated)
+// Map each of oldUnit's runtime functions to its newUnit counterpart, matched by name. Function
+// names are only unique within an object (a method "foo"; a binding's "expression for <property>"),
+// so matching is done per object index (positional; valid because a trivial diff neither adds nor
+// removes objects) with an ordinal to disambiguate same-named functions within an object. This
+// tolerates a function being added/removed/reordered in the table: an unchanged expression still
+// finds its function even though the raw index moved.
+static QHash<QV4::Function *, QV4::Function *>
+buildFunctionTranslationMap(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit,
+                            const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit)
+{
+    const auto collect = [](const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit,
+                            int objectIndex) {
+        QHash<QString, int> keyToGlobalIndex;
+        QHash<QString, int> seen;
+        const QV4::CompiledData::Unit *data = unit->unitData();
+        const QV4::CompiledData::Object *obj = data->qmlUnit()->objectAt(objectIndex);
+        const auto add = [&](quint32 globalIndex) {
+            const QString name = data->stringAtInternal(data->functionAt(globalIndex)->nameIndex);
+            keyToGlobalIndex.insert(name + QChar(QChar::Null) + QString::number(seen[name]++),
+                                    int(globalIndex));
+        };
+        const quint32_le *methods = obj->functionOffsetTable();
+        for (quint32 m = 0; m < obj->nFunctions; ++m)
+            add(methods[m]);
+        const QV4::CompiledData::Binding *bindings = obj->bindingTable();
+        for (quint32 b = 0; b < obj->nBindings; ++b) {
+            if (bindings[b].type() == QV4::CompiledData::Binding::Type_Script)
+                add(bindings[b].value.compiledScriptIndex);
+        }
+        return keyToGlobalIndex;
+    };
+
+    QHash<QV4::Function *, QV4::Function *> map;
+    const int count = std::min(oldUnit->objectCount(), newUnit->objectCount());
+    for (int o = 0; o < count; ++o) {
+        const QHash<QString, int> oldKeys = collect(oldUnit, o);
+        const QHash<QString, int> newKeys = collect(newUnit, o);
+        for (auto it = oldKeys.constBegin(), end = oldKeys.constEnd(); it != end; ++it) {
+            const auto newIt = newKeys.constFind(it.key());
+            if (newIt == newKeys.constEnd())
+                continue;
+            QV4::Function *oldFunction = oldUnit->runtimeFunctions.value(it.value());
+            QV4::Function *newFunction = newUnit->runtimeFunctions.value(newIt.value());
+            if (oldFunction && newFunction)
+                map.insert(oldFunction, newFunction);
+        }
+    }
+    return map;
+}
+
+// Translate a still-live expression's function from oldUnit to its name-matched counterpart in
+// newUnit (see buildFunctionTranslationMap), or clear it if there is no newUnit. Expressions whose
+// function does not point into oldUnit are left untouched.
+// Returns true if the resulting function is valid afterwards (and should be re-evaluated).
 static bool
 translateExpressionFunction(QQmlJavaScriptExpression *expr,
                             const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit,
-                            const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit)
+                            const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit,
+                            const QHash<QV4::Function *, QV4::Function *> &functionMap)
 {
     QV4::Function *f = expr->function();
     if (!f)
@@ -1232,13 +1284,19 @@ translateExpressionFunction(QQmlJavaScriptExpression *expr,
     if (f->executableCompilationUnit() != oldUnit.data())
         return true;
 
-    if (newUnit) {
+    if (!newUnit) {
+        expr->setFunction(nullptr);
+        return false;
+    }
+
+    if (QV4::Function *mapped = functionMap.value(f)) {
+        expr->setFunction(mapped);
+    } else {
+        // Not reached from an object's methods/bindings (e.g. a nested closure). Fall back to the
+        // same index, which is correct as long as the function table didn't shift around it.
         const qsizetype index = oldUnit->runtimeFunctions.indexOf(f);
         if (index >= 0 && index < newUnit->runtimeFunctions.size())
             expr->setFunction(newUnit->runtimeFunctions[index]);
-    } else {
-        expr->setFunction(nullptr);
-        return false;
     }
 
     return true;
@@ -1247,13 +1305,14 @@ translateExpressionFunction(QQmlJavaScriptExpression *expr,
 static void translateAndRefreshExpressionsRecursive(
         const QQmlRefPointer<QQmlContextData> &context,
         const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit,
-        const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit)
+        const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit,
+        const QHash<QV4::Function *, QV4::Function *> &functionMap)
 {
     for (auto child = context->childContexts(); child; child = child->nextChild())
-        translateAndRefreshExpressionsRecursive(child, oldUnit, newUnit);
+        translateAndRefreshExpressionsRecursive(child, oldUnit, newUnit, functionMap);
 
     for (auto *expr = context->expressions(); expr; expr = expr->nextExpression()) {
-        if (translateExpressionFunction(expr, oldUnit, newUnit))
+        if (translateExpressionFunction(expr, oldUnit, newUnit, functionMap))
             expr->refresh();
     }
 }
@@ -1261,8 +1320,12 @@ static void translateAndRefreshExpressionsRecursive(
 void refreshBindings(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit,
                      const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit)
 {
+    const QHash<QV4::Function *, QV4::Function *> functionMap = newUnit
+            ? buildFunctionTranslationMap(oldUnit, newUnit)
+            : QHash<QV4::Function *, QV4::Function *>();
     translateAndRefreshExpressionsRecursive(
-            QQmlContextData::get(oldUnit->engine->qmlEngine()->rootContext()), oldUnit, newUnit);
+            QQmlContextData::get(oldUnit->engine->qmlEngine()->rootContext()), oldUnit, newUnit,
+            functionMap);
 }
 
 } // namespace QQmlPreview
