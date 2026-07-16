@@ -619,14 +619,19 @@ void tst_qquickanimatedimage::noCaching()
 
     QCOMPARE(anim->frameCount(), anim_nocache->frameCount());
 
+    anim->setPlaying(false);
+    anim_nocache->setPlaying(false);
+
     // colors.gif only has 3 frames so this should be fast
     for (int loops = 0; loops <= 2; ++loops) {
         for (int frame = 0; frame < anim->frameCount(); ++frame) {
             anim->setCurrentFrame(frame);
             anim_nocache->setCurrentFrame(frame);
 
-            QImage image_cache = window.grabWindow();
-            QImage image_nocache = window_nocache.grabWindow();
+            QImage image_cache = grabItem(anim);
+            QVERIFY(!image_cache.isNull());
+            QImage image_nocache = grabItem(anim_nocache);
+            QVERIFY(!image_nocache.isNull());
 
             QCOMPARE(image_cache, image_nocache);
         }
