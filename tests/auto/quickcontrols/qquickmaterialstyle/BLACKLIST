@@ -1,3 +1,5 @@
 [Material::test_comboBox]
 wayland
 
+[Material::test_background]
+wayland #QTBUG-148358
