@@ -1313,4 +1313,362 @@ void tst_qmlls_highlighting::shiftHighlights()
     }
 }
 
+void tst_qmlls_highlighting::regexFallbackHighlights_data()
+{
+    using namespace Qt::StringLiterals;
+
+    QTest::addColumn<QString>("code");
+    QTest::addColumn<HighlightToken>("expectedHighlightedToken");
+
+    { // Comments
+        QTest::addRow("line-comment")
+                << u"// abc"_s
+                << HighlightToken(QQmlJS::SourceLocation(0, 6, 1, 1), QmlHighlightKind::Comment,
+                                  QmlHighlightModifier::None);
+        QTest::addRow("block-comment-single-line")
+                << u"/* c */"_s
+                << HighlightToken(QQmlJS::SourceLocation(0, 7, 1, 1), QmlHighlightKind::Comment,
+                                  QmlHighlightModifier::None);
+
+        const QString multilineComment = u"/*a\nb*/"_s;
+        QTest::addRow("block-comment-multiline-first-line")
+                << multilineComment
+                << HighlightToken(QQmlJS::SourceLocation(0, 3, 1, 1), QmlHighlightKind::Comment,
+                                  QmlHighlightModifier::None);
+        QTest::addRow("block-comment-multiline-second-line")
+                << multilineComment
+                << HighlightToken(QQmlJS::SourceLocation(4, 3, 2, 1), QmlHighlightKind::Comment,
+                                  QmlHighlightModifier::None);
+    }
+    { // Strings and template literals
+        QTest::addRow("string-double-quoted")
+                << u"\"abc\""_s
+                << HighlightToken(QQmlJS::SourceLocation(0, 5, 1, 1), QmlHighlightKind::String,
+                                  QmlHighlightModifier::None);
+        QTest::addRow("string-single-quoted")
+                << u"'abc'"_s
+                << HighlightToken(QQmlJS::SourceLocation(0, 5, 1, 1), QmlHighlightKind::String,
+                                  QmlHighlightModifier::None);
+
+        const QString multilineTemplate = u"`ab\ncd`"_s;
+        QTest::addRow("template-literal-first-line")
+                << multilineTemplate
+                << HighlightToken(QQmlJS::SourceLocation(0, 3, 1, 1), QmlHighlightKind::String,
+                                  QmlHighlightModifier::None);
+        QTest::addRow("template-literal-second-line")
+                << multilineTemplate
+                << HighlightToken(QQmlJS::SourceLocation(4, 3, 2, 1), QmlHighlightKind::String,
+                                  QmlHighlightModifier::None);
+    }
+    { // Template literal interpolations: the "${ expr }" part is JS code, not string content,
+        // so it must not be swallowed into the surrounding String token.
+        const QString code = u"`a${1}b`"_s;
+        QTest::addRow("template-interpolation-leading-string")
+                << code
+                << HighlightToken(QQmlJS::SourceLocation(0, 2, 1, 1), QmlHighlightKind::String,
+                                  QmlHighlightModifier::None);
+        QTest::addRow("template-interpolation-dollar-brace")
+                << code
+                << HighlightToken(QQmlJS::SourceLocation(2, 2, 1, 3), QmlHighlightKind::Operator,
+                                  QmlHighlightModifier::None);
+        QTest::addRow("template-interpolation-number")
+                << code
+                << HighlightToken(QQmlJS::SourceLocation(4, 1, 1, 5), QmlHighlightKind::Number,
+                                  QmlHighlightModifier::None);
+        QTest::addRow("template-interpolation-close-brace")
+                << code
+                << HighlightToken(QQmlJS::SourceLocation(5, 1, 1, 6), QmlHighlightKind::Operator,
+                                  QmlHighlightModifier::None);
+        QTest::addRow("template-interpolation-trailing-string")
+                << code
+                << HighlightToken(QQmlJS::SourceLocation(6, 2, 1, 7), QmlHighlightKind::String,
+                                  QmlHighlightModifier::None);
+
+        // The interpolated expression is highlighted as ordinary JS/QML code (via the same
+        // rule table used everywhere else), not just recognized as a boundary.
+        QTest::addRow("template-interpolation-function-call")
+                << u"`x${k()}y`"_s
+                << HighlightToken(QQmlJS::SourceLocation(4, 1, 1, 5), QmlHighlightKind::QmlMethod,
+                                  QmlHighlightModifier::None);
+
+        // A tagged template literal's tag is a function reference.
+        QTest::addRow("template-literal-tag")
+                << u"tag`x`"_s
+                << HighlightToken(QQmlJS::SourceLocation(0, 3, 1, 1), QmlHighlightKind::QmlMethod,
+                                  QmlHighlightModifier::None);
+
+        // Interpolations spanning multiple lines: line numbers must stay correct across the
+        // "${", the expression content, the "}", and the string segment that follows.
+        const QString multilineInterpolation = u"`abc\n${k()}\ndef`"_s;
+        QTest::addRow("template-interpolation-multiline-leading-string")
+                << multilineInterpolation
+                << HighlightToken(QQmlJS::SourceLocation(0, 4, 1, 1), QmlHighlightKind::String,
+                                  QmlHighlightModifier::None);
+        QTest::addRow("template-interpolation-multiline-dollar-brace")
+                << multilineInterpolation
+                << HighlightToken(QQmlJS::SourceLocation(5, 2, 2, 1), QmlHighlightKind::Operator,
+                                  QmlHighlightModifier::None);
+        QTest::addRow("template-interpolation-multiline-function-call")
+                << multilineInterpolation
+                << HighlightToken(QQmlJS::SourceLocation(7, 1, 2, 3), QmlHighlightKind::QmlMethod,
+                                  QmlHighlightModifier::None);
+        QTest::addRow("template-interpolation-multiline-close-brace")
+                << multilineInterpolation
+                << HighlightToken(QQmlJS::SourceLocation(10, 1, 2, 6), QmlHighlightKind::Operator,
+                                  QmlHighlightModifier::None);
+        QTest::addRow("template-interpolation-multiline-trailing-string")
+                << multilineInterpolation
+                << HighlightToken(QQmlJS::SourceLocation(12, 4, 3, 1), QmlHighlightKind::String,
+                                  QmlHighlightModifier::None);
+        const QString adjacentInterpolations = u"`${a}${b}`"_s;
+        QTest::addRow("template-interpolation-adjacent-first-close-brace")
+                << adjacentInterpolations
+                << HighlightToken(QQmlJS::SourceLocation(4, 1, 1, 5), QmlHighlightKind::Operator,
+                                  QmlHighlightModifier::None);
+        QTest::addRow("template-interpolation-adjacent-second-dollar-brace")
+                << adjacentInterpolations
+                << HighlightToken(QQmlJS::SourceLocation(5, 2, 1, 6), QmlHighlightKind::Operator,
+                                  QmlHighlightModifier::None);
+    }
+    { // Imports
+        const QString code = u"import QtQuick 2.0 as Quick"_s;
+        QTest::addRow("import-module-id")
+                << code
+                << HighlightToken(QQmlJS::SourceLocation(7, 7, 1, 8), QmlHighlightKind::QmlImportId,
+                                  QmlHighlightModifier::None);
+        QTest::addRow("import-version")
+                << code
+                << HighlightToken(QQmlJS::SourceLocation(15, 3, 1, 16), QmlHighlightKind::Number,
+                                  QmlHighlightModifier::None);
+        QTest::addRow("import-namespace")
+                << code
+                << HighlightToken(QQmlJS::SourceLocation(22, 5, 1, 23),
+                                  QmlHighlightKind::QmlNamespace, QmlHighlightModifier::None);
+    }
+    {
+        const QString code = u"component Slice: PieSlice {"_s;
+        QTest::addRow("component-keyword")
+                << code
+                << HighlightToken(QQmlJS::SourceLocation(0, 9, 1, 1), QmlHighlightKind::QmlKeyword,
+                                  QmlHighlightModifier::None);
+        QTest::addRow("component-name")
+                << code
+                << HighlightToken(QQmlJS::SourceLocation(10, 5, 1, 11), QmlHighlightKind::QmlType,
+                                  QmlHighlightModifier::None);
+        QTest::addRow("component-base-type")
+                << code
+                << HighlightToken(QQmlJS::SourceLocation(17, 8, 1, 18), QmlHighlightKind::QmlType,
+                                  QmlHighlightModifier::None);
+    }
+    {
+        QTest::addRow("required-standalone-keyword")
+                << u"required model"_s
+                << HighlightToken(QQmlJS::SourceLocation(0, 8, 1, 1), QmlHighlightKind::QmlKeyword,
+                                  QmlHighlightModifier::None);
+        QTest::addRow("required-standalone-name")
+                << u"required model"_s
+                << HighlightToken(QQmlJS::SourceLocation(9, 5, 1, 10),
+                                  QmlHighlightKind::QmlProperty,
+                                  QmlHighlightModifier::QmlRequiredProperty);
+        QTest::addRow("required-standalone-name-color")
+                << u"required color"_s
+                << HighlightToken(QQmlJS::SourceLocation(9, 5, 1, 10),
+                                  QmlHighlightKind::QmlProperty,
+                                  QmlHighlightModifier::QmlRequiredProperty);
+        // Must not misfire on the full declaration form (still handled by the property rule).
+        QTest::addRow("required-property-not-standalone")
+                << u"required property int foo"_s
+                << HighlightToken(QQmlJS::SourceLocation(22, 3, 1, 23),
+                                  QmlHighlightKind::QmlProperty,
+                                  QmlHighlightModifier::QmlPropertyDefinition
+                                          | QmlHighlightModifier::QmlRequiredProperty);
+    }
+    { // Property definitions
+        QTest::addRow("property-type")
+                << u"readonly property int myProp"_s
+                << HighlightToken(QQmlJS::SourceLocation(18, 3, 1, 19), QmlHighlightKind::QmlType,
+                                  QmlHighlightModifier::None);
+        QTest::addRow("property-readonly-modifier")
+                << u"readonly property int myProp"_s
+                << HighlightToken(QQmlJS::SourceLocation(22, 6, 1, 23),
+                                  QmlHighlightKind::QmlProperty,
+                                  QmlHighlightModifier::QmlPropertyDefinition
+                                          | QmlHighlightModifier::QmlReadonlyProperty);
+
+        const QString aliasCode = u"property alias foo: bar"_s;
+        QTest::addRow("property-alias-keyword")
+                << aliasCode
+                << HighlightToken(QQmlJS::SourceLocation(9, 5, 1, 10), QmlHighlightKind::QmlKeyword,
+                                  QmlHighlightModifier::None);
+        QTest::addRow("property-alias-name")
+                << aliasCode
+                << HighlightToken(QQmlJS::SourceLocation(15, 3, 1, 16),
+                                  QmlHighlightKind::QmlProperty,
+                                  QmlHighlightModifier::QmlPropertyDefinition);
+
+        // final/virtual/override modifiers, matching data/highlights/properties.qml, which the
+        // DOM-based highlighter already handles correctly (see the "final-modifier",
+        // "virtual-modifier" and "override-modifier" rows of highlights_data() above).
+        QTest::addRow("property-final-keyword")
+                << u"final property int kkkkk"_s
+                << HighlightToken(QQmlJS::SourceLocation(0, 5, 1, 1), QmlHighlightKind::QmlKeyword,
+                                  QmlHighlightModifier::None);
+        QTest::addRow("property-final-modifier")
+                << u"final property int kkkkk"_s
+                << HighlightToken(QQmlJS::SourceLocation(19, 5, 1, 20),
+                                  QmlHighlightKind::QmlProperty,
+                                  QmlHighlightModifier::QmlPropertyDefinition
+                                          | QmlHighlightModifier::QmlFinalProperty);
+        QTest::addRow("property-virtual-keyword")
+                << u"virtual property int v"_s
+                << HighlightToken(QQmlJS::SourceLocation(0, 7, 1, 1), QmlHighlightKind::QmlKeyword,
+                                  QmlHighlightModifier::None);
+        QTest::addRow("property-virtual-modifier")
+                << u"virtual property int v"_s
+                << HighlightToken(QQmlJS::SourceLocation(21, 1, 1, 22),
+                                  QmlHighlightKind::QmlProperty,
+                                  QmlHighlightModifier::QmlPropertyDefinition
+                                          | QmlHighlightModifier::QmlVirtualProperty);
+        QTest::addRow("property-override-keyword")
+                << u"override property int o"_s
+                << HighlightToken(QQmlJS::SourceLocation(0, 8, 1, 1), QmlHighlightKind::QmlKeyword,
+                                  QmlHighlightModifier::None);
+        QTest::addRow("property-override-modifier")
+                << u"override property int o"_s
+                << HighlightToken(QQmlJS::SourceLocation(22, 1, 1, 23),
+                                  QmlHighlightKind::QmlProperty,
+                                  QmlHighlightModifier::QmlPropertyDefinition
+                                          | QmlHighlightModifier::QmlOverrideProperty);
+    }
+    { // Signals
+        const QString code = u"signal clicked(int x, string y)"_s;
+        QTest::addRow("signal-name")
+                << code
+                << HighlightToken(QQmlJS::SourceLocation(7, 7, 1, 8), QmlHighlightKind::QmlSignal,
+                                  QmlHighlightModifier::None);
+        QTest::addRow("signal-param-type")
+                << code
+                << HighlightToken(QQmlJS::SourceLocation(15, 3, 1, 16), QmlHighlightKind::QmlType,
+                                  QmlHighlightModifier::None);
+        QTest::addRow("signal-param-name")
+                << code
+                << HighlightToken(QQmlJS::SourceLocation(19, 1, 1, 20),
+                                  QmlHighlightKind::QmlMethodParameter, QmlHighlightModifier::None);
+
+        // "name: Type" parameter order (as opposed to "Type name") is also valid
+        // UiParameterList grammar, including qualified/namespaced types.
+        const QString typedCode = u"signal f(a: QQ.Item)"_s;
+        QTest::addRow("signal-typed-param-name")
+                << typedCode
+                << HighlightToken(QQmlJS::SourceLocation(9, 1, 1, 10),
+                                  QmlHighlightKind::QmlMethodParameter, QmlHighlightModifier::None);
+        QTest::addRow("signal-typed-param-qualified-type")
+                << typedCode
+                << HighlightToken(QQmlJS::SourceLocation(12, 7, 1, 13), QmlHighlightKind::QmlType,
+                                  QmlHighlightModifier::None);
+    }
+    { // Functions
+        QTest::addRow("function-name")
+                << u"function doStuff()"_s
+                << HighlightToken(QQmlJS::SourceLocation(9, 7, 1, 10), QmlHighlightKind::QmlMethod,
+                                  QmlHighlightModifier::None);
+    }
+    { // id
+        QTest::addRow("id-value") << u"id: root"_s
+                                  << HighlightToken(QQmlJS::SourceLocation(4, 4, 1, 5),
+                                                    QmlHighlightKind::QmlLocalId,
+                                                    QmlHighlightModifier::None);
+    }
+    { // Signal handlers
+        QTest::addRow("signal-handler")
+                << u"onClicked: foo"_s
+                << HighlightToken(QQmlJS::SourceLocation(0, 9, 1, 1),
+                                  QmlHighlightKind::QmlSignalHandler, QmlHighlightModifier::None);
+    }
+    { // Pragmas
+        const QString code = u"pragma ValueType int"_s;
+        QTest::addRow("pragma-name")
+                << code
+                << HighlightToken(QQmlJS::SourceLocation(7, 9, 1, 8),
+                                  QmlHighlightKind::QmlPragmaName, QmlHighlightModifier::None);
+        QTest::addRow("pragma-value")
+                << code
+                << HighlightToken(QQmlJS::SourceLocation(17, 3, 1, 18),
+                                  QmlHighlightKind::QmlPragmaValue, QmlHighlightModifier::None);
+    }
+    { // Generic property/binding assignment
+        const QString code = u"width: 100"_s;
+        QTest::addRow("binding-property-name")
+                << code
+                << HighlightToken(QQmlJS::SourceLocation(0, 5, 1, 1), QmlHighlightKind::QmlProperty,
+                                  QmlHighlightModifier::None);
+        QTest::addRow("binding-number")
+                << code
+                << HighlightToken(QQmlJS::SourceLocation(7, 3, 1, 8), QmlHighlightKind::Number,
+                                  QmlHighlightModifier::None);
+    }
+    { // Generic keyword
+        QTest::addRow("keyword-if")
+                << u"if (x) { return y }"_s
+                << HighlightToken(QQmlJS::SourceLocation(0, 2, 1, 1), QmlHighlightKind::QmlKeyword,
+                                  QmlHighlightModifier::None);
+    }
+    { // Numbers
+        QTest::addRow("number-literal")
+                << u"3.14"_s
+                << HighlightToken(QQmlJS::SourceLocation(0, 4, 1, 1), QmlHighlightKind::Number,
+                                  QmlHighlightModifier::None);
+    }
+    { // Field access
+        QTest::addRow("field-access")
+                << u"a.b"_s
+                << HighlightToken(QQmlJS::SourceLocation(2, 1, 1, 3), QmlHighlightKind::Field,
+                                  QmlHighlightModifier::None);
+    }
+    { // Capitalized identifiers are assumed to be type names
+        QTest::addRow("capitalized-type")
+                << u"Item"_s
+                << HighlightToken(QQmlJS::SourceLocation(0, 4, 1, 1), QmlHighlightKind::QmlType,
+                                  QmlHighlightModifier::None);
+    }
+    { // Function call sites
+        QTest::addRow("function-call-site")
+                << u"doThing()"_s
+                << HighlightToken(QQmlJS::SourceLocation(0, 7, 1, 1), QmlHighlightKind::QmlMethod,
+                                  QmlHighlightModifier::None);
+    }
+}
+
+void tst_qmlls_highlighting::regexFallbackHighlights()
+{
+    QFETCH(QString, code);
+    QFETCH(HighlightToken, expectedHighlightedToken);
+
+    const auto highlights = QmlHighlighting::Utils::regexFallbackHighlights(code, std::nullopt);
+
+    [&]() {
+        QVERIFY(highlights.contains(expectedHighlightedToken.loc.offset));
+        QCOMPARE(highlights.value(expectedHighlightedToken.loc.offset), expectedHighlightedToken);
+    }();
+
+    if (QTest::currentTestFailed()) {
+        const auto &expected = expectedHighlightedToken;
+        if (highlights.contains(expected.loc.offset)) {
+            const auto &actual = highlights[expected.loc.offset];
+            qDebug() << "Actual length" << actual.loc.length << "Expected length"
+                     << expected.loc.length;
+            qDebug() << "Actual startLine" << actual.loc.startLine << "Expected startLine"
+                     << expected.loc.startLine;
+            qDebug() << "Actual startColumn" << actual.loc.startColumn << "Expected startColumn"
+                     << expected.loc.startColumn;
+            qDebug() << "Actual tokenType" << static_cast<int>(actual.kind) << "Expected tokenType"
+                     << static_cast<int>(expected.kind);
+            qDebug() << "Actual tokenModifier" << static_cast<int>(actual.modifiers)
+                     << "Expected tokenModifier" << static_cast<int>(expected.modifiers);
+        } else {
+            qDebug() << "Expected token not found in highlights at offset" << expected.loc.offset;
+        }
+    }
+}
+
 QTEST_MAIN(tst_qmlls_highlighting)

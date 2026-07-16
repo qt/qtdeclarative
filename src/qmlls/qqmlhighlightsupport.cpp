@@ -56,8 +56,12 @@ static QList<unsigned> generateHighlights(QmlLsp::RegisteredSemanticTokens &cach
                 cached.highlights, lastValidItem->code(), doc.textDocument->toPlainText());
                 return QmlHighlighting::Utils::encodeSemanticTokens(shiftedHighlights, mode);
         } else {
-            // TODO: Implement regexp based fallback highlighting
-            return {};
+            const QString code = doc.textDocument->toPlainText();
+            const HighlightsContainer highlights =
+                    QmlHighlighting::Utils::regexFallbackHighlights(code, range);
+            if (highlights.isEmpty())
+                return {};
+            return QmlHighlighting::Utils::encodeSemanticTokens(highlights, mode);
         }
     } else {
         HighlightsContainer highlights = QmlHighlighting::Utils::visitTokens(file, range);

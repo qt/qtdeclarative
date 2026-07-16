@@ -171,6 +171,8 @@ void addHighlight(HighlightsContainer &out, const QQmlJS::SourceLocation &loc, Q
 void applyDiffs(HighlightsContainer &highlights, const QList<QQmlLSUtils::Diff> &diffs);
 HighlightsContainer shiftHighlights(const HighlightsContainer &cachedHighlights,
                                     const QString &lastValidCode, const QString &currentCode);
+HighlightsContainer regexFallbackHighlights(QStringView code,
+                                            const std::optional<HighlightsRange> &range);
 } // namespace Utils
 
 class HighlightingVisitor

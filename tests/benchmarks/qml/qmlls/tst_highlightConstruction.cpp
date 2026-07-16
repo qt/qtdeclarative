@@ -42,6 +42,9 @@ private slots:
 
     void highlightShifting_data();
     void highlightShifting();
+
+    void regexFallbackHighlightConstruction_data();
+    void regexFallbackHighlightConstruction();
 };
 
 void tst_highlightConstruction::highlightConstruction_data()
@@ -92,6 +95,31 @@ void tst_highlightConstruction::highlightShifting()
         QmlHighlighting::HighlightsContainer shiftedHighlights =
                 QmlHighlighting::Utils::shiftHighlights(originalHighlights, code, modifiedCode);
         QVERIFY(!shiftedHighlights.isEmpty());
+    }
+}
+
+// regexFallbackHighlights() is the line-based regex scanner used when a document cannot be
+// parsed into a DomItem at all (e.g. while the user is mid-edit). It is deliberately much
+// simpler than the DOM-based visitTokens() used by highlightConstruction() above, so this
+// benchmark exists to quantify that difference on the same input files.
+void tst_highlightConstruction::regexFallbackHighlightConstruction_data()
+{
+    QTest::addColumn<QLatin1StringView>("filePath");
+
+    QTest::addRow("bigFile") << benchmarkFiles[0]; // big file
+    QTest::addRow("smallFile") << benchmarkFiles[1]; // small file
+}
+
+void tst_highlightConstruction::regexFallbackHighlightConstruction()
+{
+    using namespace QQmlJS::Dom;
+    QFETCH(QLatin1StringView, filePath);
+    const auto [fileItem, code] = fileObject(filePath);
+    QVERIFY(fileItem.field(Fields::isValid).value().toBool());
+    QBENCHMARK {
+        QmlHighlighting::HighlightsContainer fallbackHighlights =
+                QmlHighlighting::Utils::regexFallbackHighlights(code, std::nullopt);
+        QVERIFY(!fallbackHighlights.isEmpty());
     }
 }
 

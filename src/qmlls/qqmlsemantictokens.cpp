@@ -11,6 +11,8 @@
 
 #include <QtLanguageServer/private/qlanguageserverprotocol_p.h>
 
+#include <QtCore/qregularexpression.h>
+
 QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(semanticTokens, "qt.languageserver.semanticTokens")
@@ -886,6 +888,40 @@ void HighlightingVisitor::addHighlight(const QQmlJS::SourceLocation &loc, QmlHig
     return Utils::addHighlight(m_highlights, loc, highlightKind, modifierKind);
 }
 
+// A single physical line's worth of content within a multiline span, as found by
+// splitIntoLineSegments(): offset is absolute (into the QStringView that was split), and length
+// excludes whatever line-break characters follow it.
+struct LineSegment
+{
+    qsizetype offset;
+    qsizetype length;
+};
+
+// Splits [start, end) of `text` into per-physical-line segments, so a construct spanning
+// multiple lines (a comment, a string literal, a template literal's literal portions, ...) can
+// be reported one token per line. Treats both "\n" and "\r\n" as line breaks, excluding the break
+// itself from the segment. The final (partial) line is included unless the span ends exactly on
+// a line break, with nothing following it.
+static std::vector<LineSegment> splitIntoLineSegments(QStringView text, qsizetype start,
+                                                      qsizetype end)
+{
+    std::vector<LineSegment> segments;
+    qsizetype segmentStart = start;
+    qsizetype pos = text.indexOf(u'\n', start);
+    while (pos != -1 && pos < end) {
+        qsizetype contentEnd = pos;
+        if (contentEnd > start + 1 && text[contentEnd - 1] == u'\r')
+            --contentEnd;
+        segments.push_back({ segmentStart, contentEnd - segmentStart });
+        segmentStart = pos + 1;
+        pos = text.indexOf(u'\n', segmentStart);
+    }
+    // Push the last line
+    if (segmentStart < end)
+        segments.push_back({ segmentStart, end - segmentStart });
+    return segments;
+}
+
 /*!
 \internal
 \brief Returns multiple source locations for a given raw comment
@@ -899,45 +935,15 @@ QList<QQmlJS::SourceLocation>
 Utils::sourceLocationsFromMultiLineToken(QStringView stringLiteral,
                                          const QQmlJS::SourceLocation &locationInDocument)
 {
-    auto lineBreakLength = qsizetype(std::char_traits<char>::length("\n"));
-    const auto lineLengths = [&lineBreakLength](QStringView literal) {
-        std::vector<qsizetype> lineLengths;
-        qsizetype startIndex = 0;
-        qsizetype pos = literal.indexOf(u'\n');
-        while (pos != -1) {
-            // TODO: QTBUG-106813
-            // Since a document could be opened in normalized form
-            // we can't use platform dependent newline handling here.
-            // Thus, we check manually if the literal contains \r so that we split
-            // the literal at the correct offset.
-            if (pos - 1 > 0 && literal[pos - 1] == u'\r') {
-                // Handle Windows line endings
-                lineBreakLength = qsizetype(std::char_traits<char>::length("\r\n"));
-                // Move pos to the index of '\r'
-                pos = pos - 1;
-            }
-            lineLengths.push_back(pos - startIndex);
-            // Advance the lookup index, so it won't find the same index.
-            startIndex = pos + lineBreakLength;
-            pos = literal.indexOf('\n'_L1, startIndex);
-        }
-        // Push the last line
-        if (startIndex < literal.length()) {
-            lineLengths.push_back(literal.length() - startIndex);
-        }
-        return lineLengths;
-    };
-
     QList<QQmlJS::SourceLocation> result;
     // First token location should start from the "stringLiteral"'s
     // location in the qml document.
     QQmlJS::SourceLocation lineLoc = locationInDocument;
-    for (const auto lineLength : lineLengths(stringLiteral)) {
-        lineLoc.length = lineLength;
+    for (const auto &segment : splitIntoLineSegments(stringLiteral, 0, stringLiteral.size())) {
+        lineLoc.offset = locationInDocument.offset + quint32(segment.offset);
+        lineLoc.length = quint32(segment.length);
         result.push_back(lineLoc);
 
-        // update for the next line
-        lineLoc.offset += lineLoc.length + lineBreakLength;
         ++lineLoc.startLine;
         lineLoc.startColumn = 1;
     }
@@ -1087,6 +1093,405 @@ HighlightsContainer Utils::shiftHighlights(const HighlightsContainer &cachedHigh
     HighlightsContainer shifts = cachedHighlights;
     applyDiffs(shifts, diffs);
     return shifts;
+}
+
+namespace {
+
+struct LineAnchor
+{
+    qsizetype offset = 0;
+    quint32 number = 1;
+};
+
+struct FallbackRule
+{
+    QRegularExpression regex;
+    void (*action)(HighlightsContainer &, const QRegularExpressionMatch &, LineAnchor line);
+};
+
+static void addFallbackToken(HighlightsContainer &out, LineAnchor line, qsizetype offset,
+                             qsizetype length, QmlHighlightKind kind,
+                             QmlHighlightModifiers modifiers = QmlHighlightModifier::None)
+{
+    Q_ASSERT(length > 0);
+    const auto loc = QQmlJS::SourceLocation::fromQSizeType(offset, length, line.number,
+                                                           offset - line.offset + 1);
+    Utils::addHighlight(out, loc, kind, modifiers);
+}
+
+static void addGroup(HighlightsContainer &out, const QRegularExpressionMatch &m, int group,
+                     LineAnchor line, QmlHighlightKind kind,
+                     QmlHighlightModifiers modifiers = QmlHighlightModifier::None)
+{
+    if (!m.hasCaptured(group))
+        return;
+    addFallbackToken(out, line, line.offset + m.capturedStart(group), m.capturedLength(group), kind,
+                     modifiers);
+}
+
+static void highlightSignalParameters(HighlightsContainer &out, const QRegularExpressionMatch &m,
+                                      LineAnchor line)
+{
+    static const QRegularExpression paramRe(
+            uR"re((?:([\w.<>]+)\s+(\w+))|(?:(\w+)\s*:\s*([\w.<>]+)))re"_s);
+    const qsizetype paramsStart = m.capturedStart(3);
+    Q_ASSERT(paramsStart >= 0);
+    auto it = paramRe.globalMatch(m.capturedView(3));
+    while (it.hasNext()) {
+        const auto pm = it.next();
+        if (pm.capturedStart(1) >= 0) {
+            addFallbackToken(out, line, line.offset + paramsStart + pm.capturedStart(1),
+                             pm.capturedLength(1), QmlHighlightKind::QmlType);
+            addFallbackToken(out, line, line.offset + paramsStart + pm.capturedStart(2),
+                             pm.capturedLength(2), QmlHighlightKind::QmlMethodParameter);
+        } else {
+            addFallbackToken(out, line, line.offset + paramsStart + pm.capturedStart(3),
+                             pm.capturedLength(3), QmlHighlightKind::QmlMethodParameter);
+            addFallbackToken(out, line, line.offset + paramsStart + pm.capturedStart(4),
+                             pm.capturedLength(4), QmlHighlightKind::QmlType);
+        }
+    }
+}
+
+static QmlHighlightModifiers propertyModifiers(QStringView modifierWord)
+{
+    QmlHighlightModifiers modifiers = QmlHighlightModifier::QmlPropertyDefinition;
+    if (modifierWord == u"readonly")
+        modifiers |= QmlHighlightModifier::QmlReadonlyProperty;
+    else if (modifierWord == u"required")
+        modifiers |= QmlHighlightModifier::QmlRequiredProperty;
+    else if (modifierWord == u"default")
+        modifiers |= QmlHighlightModifier::QmlDefaultProperty;
+    else if (modifierWord == u"final")
+        modifiers |= QmlHighlightModifier::QmlFinalProperty;
+    else if (modifierWord == u"virtual")
+        modifiers |= QmlHighlightModifier::QmlVirtualProperty;
+    else if (modifierWord == u"override")
+        modifiers |= QmlHighlightModifier::QmlOverrideProperty;
+    return modifiers;
+}
+
+// Rules are tried in order at every position; the earliest match in the line wins, and ties are
+// broken by priority (the rule listed first). This lets specific QML constructs (property
+// definitions, signals, imports, ...) take precedence over the generic keyword/identifier rules
+// that follow them.
+const QList<FallbackRule> &fallbackRules()
+{
+    static const QList<FallbackRule> rules = [] {
+        QList<FallbackRule> r;
+        // Line comments.
+        r.append({ QRegularExpression(uR"re(//.*)re"_s),
+                   [](HighlightsContainer &out, const QRegularExpressionMatch &m, LineAnchor line) {
+                       addGroup(out, m, 0, line, QmlHighlightKind::Comment);
+                   } });
+        // Single-line strings.
+        r.append({ QRegularExpression(uR"re("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')re"_s),
+                   [](HighlightsContainer &out, const QRegularExpressionMatch &m, LineAnchor line) {
+                       addGroup(out, m, 0, line, QmlHighlightKind::String);
+                   } });
+
+        // import <ModuleOrPath> [version] [as Alias]
+        r.append(
+                { QRegularExpression(
+                          uR"re(\b(import)\b\s+(?:("(?:[^"\\]|\\.)*")|([\w.]+))(?:\s+(\d+\.\d+))?(?:\s+(as)\s+(\w+))?)re"_s),
+                  [](HighlightsContainer &out, const QRegularExpressionMatch &m, LineAnchor line) {
+                      addGroup(out, m, 1, line, QmlHighlightKind::QmlKeyword);
+                      addGroup(out, m, 2, line, QmlHighlightKind::String);
+                      addGroup(out, m, 3, line, QmlHighlightKind::QmlImportId);
+                      addGroup(out, m, 4, line, QmlHighlightKind::Number);
+                      addGroup(out, m, 5, line, QmlHighlightKind::QmlKeyword);
+                      addGroup(out, m, 6, line, QmlHighlightKind::QmlNamespace);
+                  } });
+        // [default|readonly|required|final|virtual|override] property <type|alias> <name>
+        r.append(
+                { QRegularExpression(
+                          uR"re(\b(?:(default|readonly|required|final|virtual|override)\s+)*(property)\s+(alias|[A-Za-z_][\w.<>]*)\s+(\w+))re"_s),
+                  [](HighlightsContainer &out, const QRegularExpressionMatch &m, LineAnchor line) {
+                      addGroup(out, m, 1, line, QmlHighlightKind::QmlKeyword);
+                      addGroup(out, m, 2, line, QmlHighlightKind::QmlKeyword);
+                      const QStringView type = m.capturedView(3);
+                      addGroup(out, m, 3, line,
+                               type == u"alias" ? QmlHighlightKind::QmlKeyword
+                                                : QmlHighlightKind::QmlType);
+                      addGroup(out, m, 4, line, QmlHighlightKind::QmlProperty,
+                               propertyModifiers(m.capturedView(1)));
+                  } });
+        // required <name>
+        r.append({ QRegularExpression(uR"re((?:^|[{;])\s*(required)\s+(?!property\b)(\w+))re"_s),
+                   [](HighlightsContainer &out, const QRegularExpressionMatch &m, LineAnchor line) {
+                       addGroup(out, m, 1, line, QmlHighlightKind::QmlKeyword);
+                       addGroup(out, m, 2, line, QmlHighlightKind::QmlProperty,
+                                QmlHighlightModifier::QmlRequiredProperty);
+                   } });
+        // signal <name>(<type name>, ...)
+        r.append({ QRegularExpression(uR"re(\b(signal)\s+(\w+)\s*\(([^)]*)\))re"_s),
+                   [](HighlightsContainer &out, const QRegularExpressionMatch &m, LineAnchor line) {
+                       addGroup(out, m, 1, line, QmlHighlightKind::QmlKeyword);
+                       addGroup(out, m, 2, line, QmlHighlightKind::QmlSignal);
+                       highlightSignalParameters(out, m, line);
+                   } });
+        // function <name>(
+        r.append({ QRegularExpression(uR"re(\b(function)\s+(\w+)\s*(?=\())re"_s),
+                   [](HighlightsContainer &out, const QRegularExpressionMatch &m, LineAnchor line) {
+                       addGroup(out, m, 1, line, QmlHighlightKind::QmlKeyword);
+                       addGroup(out, m, 2, line, QmlHighlightKind::QmlMethod);
+                   } });
+        // id: <identifier>
+        r.append({ QRegularExpression(uR"re((?:^|[{;])\s*(id)\s*:\s*(\w+))re"_s),
+                   [](HighlightsContainer &out, const QRegularExpressionMatch &m, LineAnchor line) {
+                       addGroup(out, m, 1, line, QmlHighlightKind::QmlKeyword);
+                       addGroup(out, m, 2, line, QmlHighlightKind::QmlLocalId);
+                   } });
+        // onSomething: <handler> signal handler properties.
+        r.append({ QRegularExpression(uR"re(\bon[A-Z]\w*(?=\s*:))re"_s),
+                   [](HighlightsContainer &out, const QRegularExpressionMatch &m, LineAnchor line) {
+                       addGroup(out, m, 0, line, QmlHighlightKind::QmlSignalHandler);
+                   } });
+        // pragma <Name> [Value]
+        r.append({ QRegularExpression(uR"re((?:^|[{;])\s*(pragma)\s+(\w+)(?:\s+(\w+))?)re"_s),
+                   [](HighlightsContainer &out, const QRegularExpressionMatch &m, LineAnchor line) {
+                       addGroup(out, m, 1, line, QmlHighlightKind::QmlKeyword);
+                       addGroup(out, m, 2, line, QmlHighlightKind::QmlPragmaName);
+                       addGroup(out, m, 3, line, QmlHighlightKind::QmlPragmaValue);
+                   } });
+        // <name>: property/binding assignment.
+        r.append({ QRegularExpression(uR"re((?:^|[{;])\s*([a-z_]\w*(?:\.[a-z_]\w*)*)\s*(?=:))re"_s),
+                   [](HighlightsContainer &out, const QRegularExpressionMatch &m, LineAnchor line) {
+                       addGroup(out, m, 1, line, QmlHighlightKind::QmlProperty);
+                   } });
+        // QML/JS keywords.
+        r.append(
+                { QRegularExpression(
+                          uR"re(\b(?:as|async|await|break|case|catch|class|component|const|continue|
+                                   debugger|default|delete|do|else|enum|export|extends|false|final|finally|
+                                   for|function|id|if|import|in|instanceof|let|new|null|on|override|pragma|
+                                   property|readonly|required|return|signal|super|switch|this|throw|true|
+                                   try|typeof|undefined|var|virtual|void|while|with|yield)\b)re"_s),
+                  [](HighlightsContainer &out, const QRegularExpressionMatch &m, LineAnchor line) {
+                      addGroup(out, m, 0, line, QmlHighlightKind::QmlKeyword);
+                  } });
+        // Numbers.
+        r.append({ QRegularExpression(uR"re(\b\d+(?:\.\d+)?(?:[eE][+-]?\d+)?\b)re"_s),
+                   [](HighlightsContainer &out, const QRegularExpressionMatch &m, LineAnchor line) {
+                       addGroup(out, m, 0, line, QmlHighlightKind::Number);
+                   } });
+        // Property/enum access after a dot, e.g. mouse.x or Text.AlignHCenter.
+        r.append({ QRegularExpression(uR"re((?<=\.)\w+)re"_s),
+                   [](HighlightsContainer &out, const QRegularExpressionMatch &m, LineAnchor line) {
+                       addGroup(out, m, 0, line, QmlHighlightKind::Field);
+                   } });
+        // Capitalized identifiers are QML type names by convention.
+        r.append({ QRegularExpression(uR"re(\b[A-Z]\w*\b)re"_s),
+                   [](HighlightsContainer &out, const QRegularExpressionMatch &m, LineAnchor line) {
+                       addGroup(out, m, 0, line, QmlHighlightKind::QmlType);
+                   } });
+        // Function call sites, including the tag of a tagged template literal (tag`...`).
+        r.append({ QRegularExpression(uR"re(\b[A-Za-z_]\w*(?=\s*[(`]))re"_s),
+                   [](HighlightsContainer &out, const QRegularExpressionMatch &m, LineAnchor line) {
+                       addGroup(out, m, 0, line, QmlHighlightKind::QmlMethod);
+                   } });
+        return r;
+    }();
+    return rules;
+}
+
+// Emits one token per physical line for the span [start, end), so a construct that runs across
+// a line break (a block comment, or the literal text portions of a template literal) is still
+// reported as one token per line, matching how every other multi-line construct is split.
+static void addMultilineToken(HighlightsContainer &out, QStringView text, qsizetype start,
+                              qsizetype end, LineAnchor &line, QmlHighlightKind kind)
+{
+    const auto segments = splitIntoLineSegments(text, start, end);
+    for (size_t i = 0; i < segments.size(); ++i) {
+        if (segments[i].length > 0)
+            addFallbackToken(out, line, segments[i].offset, segments[i].length, kind);
+        if (i + 1 < segments.size()) {
+            ++line.number;
+            line.offset = segments[i + 1].offset;
+        }
+    }
+    if (!segments.empty() && segments.back().offset + segments.back().length < end) {
+        // the span ends exactly on a line break, with nothing following it on that new line
+        ++line.number;
+        line.offset = end;
+    }
+}
+
+// Highlights a "/* ... */" block comment starting at the opening slash. May span multiple
+// lines; returns the offset just past the closing "*/" (or text.size() if left unterminated).
+static qsizetype scanBlockComment(HighlightsContainer &out, QStringView text, qsizetype pos,
+                                  LineAnchor &line)
+{
+    const qsizetype closeIdx = text.indexOf(u"*/", pos + 2);
+    const qsizetype end = closeIdx == -1 ? text.size() : closeIdx + 2;
+    addMultilineToken(out, text, pos, end, line, QmlHighlightKind::Comment);
+    return end;
+}
+
+// Forward declared: scanTemplateLiteral() recurses into this to highlight the contents of a
+// `${ expr }` interpolation
+static qsizetype scanSpan(HighlightsContainer &out, QStringView text, qsizetype pos,
+                          LineAnchor &line, bool stopAtUnbalancedBrace);
+
+// Highlights a "`...`" template literal starting at the opening backtick, including any
+// "${ expr }" interpolations, which may themselves span lines or contain further, nested
+// template literals. Returns the offset just past the closing backtick (or text.size() if the
+// literal is left unterminated).
+static qsizetype scanTemplateLiteral(HighlightsContainer &out, QStringView text, qsizetype pos,
+                                     LineAnchor &line)
+{
+    const qsizetype size = text.size();
+    qsizetype segmentStart = pos;
+    ++pos; // step over the opening backtick
+    while (pos < size) {
+        const QChar c = text[pos];
+        if (c == u'\\') {
+            pos += 2; // an escaped character (e.g. \` or \\) never terminates the literal
+            continue;
+        }
+        if (c == u'`') {
+            ++pos;
+            addMultilineToken(out, text, segmentStart, pos, line, QmlHighlightKind::String);
+            return pos;
+        }
+        if (c == u'$' && pos + 1 < size && text[pos + 1] == u'{') {
+            addMultilineToken(out, text, segmentStart, pos, line, QmlHighlightKind::String);
+            addFallbackToken(out, line, pos, 2, QmlHighlightKind::Operator);
+            pos = scanSpan(out, text, pos + 2, line, /* stopAtUnbalancedBrace = */ true);
+            if (pos < size) {
+                addFallbackToken(out, line, pos, 1, QmlHighlightKind::Operator);
+                ++pos;
+            }
+            segmentStart = pos;
+            continue;
+        }
+        ++pos;
+    }
+    // Unterminated: whatever is left is highlighted as string content.
+    addMultilineToken(out, text, segmentStart, size, line, QmlHighlightKind::String);
+    return size;
+}
+
+enum class SpecialChar { None, BlockComment, TemplateLiteral, OpenBrace, CloseBrace };
+struct SpecialCharMatch
+{
+    qsizetype col = -1;
+    SpecialChar kind = SpecialChar::None;
+};
+
+static SpecialCharMatch nextSpecialChar(QStringView lineView, qsizetype col, bool trackBraces)
+{
+    for (qsizetype i = col; i < lineView.size(); ++i) {
+        const QChar c = lineView[i];
+        if (c == u'`')
+            return { i, SpecialChar::TemplateLiteral };
+        if (c == u'/' && i + 1 < lineView.size() && lineView[i + 1] == u'*')
+            return { i, SpecialChar::BlockComment };
+        if (trackBraces && c == u'{')
+            return { i, SpecialChar::OpenBrace };
+        if (trackBraces && c == u'}')
+            return { i, SpecialChar::CloseBrace };
+    }
+    return {};
+}
+
+// Applies the fallback rule table to `text`, starting at `pos`.
+// When stopAtUnbalancedBrace is true (used to scan the contents of a `${ expr }`
+// interpolation), scanning stops at the first "}" that doesn't close a "{" seen since `pos`,
+// returning its offset without consuming it. Returns the offset scanning stopped at (text.size()
+// for a top-level/unbounded scan that ran off the end).
+static qsizetype scanSpan(HighlightsContainer &out, QStringView text, qsizetype pos,
+                          LineAnchor &line, bool stopAtUnbalancedBrace)
+{
+    const qsizetype size = text.size();
+    const QList<FallbackRule> &rules = fallbackRules();
+    int braceDepth = 0;
+
+    while (pos <= size) {
+        qsizetype physLineEnd = text.indexOf(u'\n', pos);
+        if (physLineEnd == -1)
+            physLineEnd = size;
+        const QStringView lineView = text.mid(line.offset, physLineEnd - line.offset);
+        const qsizetype col = pos - line.offset;
+
+        const FallbackRule *bestRule = nullptr;
+        QRegularExpressionMatch bestMatch;
+        for (const auto &rule : rules) {
+            const auto m = rule.regex.matchView(lineView, col);
+            if (!m.hasMatch())
+                continue;
+            if (!bestRule || m.capturedStart(0) < bestMatch.capturedStart(0)) {
+                bestRule = &rule;
+                bestMatch = m;
+            }
+        }
+
+        const SpecialCharMatch special = nextSpecialChar(lineView, col, stopAtUnbalancedBrace);
+        const bool ruleWins = bestRule
+                && (special.kind == SpecialChar::None || bestMatch.capturedStart(0) <= special.col);
+
+        if (!bestRule && special.kind == SpecialChar::None) {
+            if (physLineEnd >= size)
+                return size;
+            line.offset = physLineEnd + 1;
+            pos = line.offset;
+            ++line.number;
+            continue;
+        }
+
+        if (ruleWins) {
+            bestRule->action(out, bestMatch, line);
+            pos = line.offset + qMax(bestMatch.capturedEnd(0), col + 1);
+            continue;
+        }
+
+        const qsizetype absPos = line.offset + special.col;
+        switch (special.kind) {
+        case SpecialChar::BlockComment:
+            pos = scanBlockComment(out, text, absPos, line);
+            break;
+        case SpecialChar::TemplateLiteral:
+            pos = scanTemplateLiteral(out, text, absPos, line);
+            break;
+        case SpecialChar::OpenBrace:
+            ++braceDepth;
+            pos = absPos + 1;
+            break;
+        case SpecialChar::CloseBrace:
+            if (braceDepth == 0)
+                return absPos;
+            --braceDepth;
+            pos = absPos + 1;
+            break;
+        case SpecialChar::None:
+            Q_UNREACHABLE();
+        }
+    }
+    return pos;
+}
+
+} // namespace
+
+// Highlighting for code that cannot be parsed into a DomItem at all
+// Scans the document against a table of QML/JS regular expressions. Requires no
+// semantic information, so it degrades gracefully on incomplete or invalid QML/JS.
+HighlightsContainer Utils::regexFallbackHighlights(QStringView code,
+                                                   const std::optional<HighlightsRange> &range)
+{
+    HighlightsContainer highlights;
+    LineAnchor line;
+    scanSpan(highlights, code, 0, line, /* stopAtUnbalancedBrace = */ false);
+
+    if (range) {
+        for (auto it = highlights.begin(); it != highlights.end();) {
+            if (!rangeOverlapsWithSourceLocation(it->loc, *range))
+                it = highlights.erase(it);
+            else
+                ++it;
+        }
+    }
+
+    return highlights;
 }
 
 static std::pair<quint32, quint32> newlineCountAndLastLineLength(const QString &text)

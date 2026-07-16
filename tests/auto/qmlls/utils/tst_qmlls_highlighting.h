@@ -36,6 +36,9 @@ private slots:
     void shiftHighlights_data();
     void shiftHighlights();
 
+    void regexFallbackHighlights_data();
+    void regexFallbackHighlights();
+
 private:
     QString m_highlightingDataDir;
 };
