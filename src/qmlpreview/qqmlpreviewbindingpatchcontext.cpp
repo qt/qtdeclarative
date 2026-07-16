@@ -262,12 +262,20 @@ void BindingPatchContext::stashExternalState(const std::vector<CompositeLevel> &
     QHash<QString, QVariant> constantValues;
     recordBindingValues(unit, objectIndex, &constantValues, seenChildren);
 
-    if (prefix.isEmpty() && QQmlData::get(m_object)->hasVMEMetaObject) {
-        for (QQmlVMEMetaObject *vmeMeta =
-                     static_cast<QQmlVMEMetaObject *>(QObjectPrivate::get(m_object)->metaObject);
-             vmeMeta; vmeMeta = vmeMeta->parentVMEMetaObject()) {
-            if (auto cu = vmeMeta->compilationUnit())
-                recordBindingValues(cu, vmeMeta->qmlObjectId(), &constantValues, seenChildren);
+    if (prefix.isEmpty()) {
+        const QQmlData *ddata = QQmlData::get(m_object);
+        if (ddata->compilationUnit) {
+            recordBindingValues(ddata->compilationUnit, ddata->cuObjectIndex, &constantValues,
+                                seenChildren);
+        }
+
+        if (ddata->hasVMEMetaObject) {
+            for (QQmlVMEMetaObject *vmeMeta = static_cast<QQmlVMEMetaObject *>(
+                         QObjectPrivate::get(m_object)->metaObject);
+                 vmeMeta; vmeMeta = vmeMeta->parentVMEMetaObject()) {
+                if (auto cu = vmeMeta->compilationUnit())
+                    recordBindingValues(cu, vmeMeta->qmlObjectId(), &constantValues, seenChildren);
+            }
         }
     }
 
