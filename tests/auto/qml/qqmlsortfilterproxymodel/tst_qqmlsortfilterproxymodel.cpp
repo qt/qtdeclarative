@@ -57,6 +57,8 @@ private slots:
     void primarySorter_data();
     void primarySorter();
 
+    void primaryColumnWithoutSourceModel();
+
     void anyOfFilter();
     void allOfFilter();
     void anyOfFilterInverted();
@@ -1152,6 +1154,22 @@ void tst_QQmlSortFilterProxyModel::primarySorter()
         for (const auto &data: columnData)
             QCOMPARE(sfpmModel->data(sfpmModel->index(row++, column, QModelIndex()), Qt::DisplayRole), data);
     }
+}
+
+void tst_QQmlSortFilterProxyModel::primaryColumnWithoutSourceModel()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("sfpmCommon.qml"));
+    QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    auto *sfpmModel = object->property("sfpmProxyModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(sfpmModel);
+    QVERIFY(!sfpmModel->sourceModel());
+
+    // This used to assert in create_mapping() because no source model was set.
+    sfpmModel->setPrimarySortColumn(1);
 }
 
 void tst_QQmlSortFilterProxyModel::anyOfFilter()

@@ -897,7 +897,7 @@ bool QQmlSortFilterProxyModelPrivate::updatePrimaryColumn()
 {
     int old_primayColumn = m_primarySortColumn;
 
-    if (m_proxySortColumn == -1) {
+    if (m_proxySortColumn == -1 || !proxyModel()->sourceModel()) {
         m_primarySortColumn = -1;
     } else {
         // We cannot use index mapping here because in case of a still-empty
