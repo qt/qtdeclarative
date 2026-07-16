@@ -161,6 +161,8 @@ public:
     QQmlPropertyCache::ConstPtr cache;
 
 protected:
+    void remapInterceptorPropertyIndices(int coreBase, const QList<int> &oldToNew, int delta);
+
     int metaCall(QObject *o, QMetaObject::Call c, int id, void **a) override;
     bool intercept(QMetaObject::Call c, int id, void **a)
     {
@@ -232,6 +234,8 @@ public:
     void setVmeMethod(int index, const QV4::Value &function);
     QV4::ReturnedValue vmeProperty(int index) const;
     void setVMEProperty(int index, const QV4::Value &v);
+
+    void remapProperties(int newPropertyCount, const QList<int> &oldToNew);
 
     static void connectAlias(QObject *o, int coreIndex, bool indexInSignalRange);
 
@@ -355,6 +359,9 @@ private:
     QV4::WeakValue m_propertyAndMethodStorage;
 
     QList<QQmlVMEVariantQObjectPtr *> m_varObjectGuards;
+
+    void remapStoredValues(int newPropertyCount, const QList<int> &oldToNew);
+    void remapObjectGuards(const QList<int> &oldToNew);
 
     // keep a reference to the compilation unit in order to still
     // do property access when the context has been invalidated.

@@ -218,6 +218,12 @@ private slots:
     void granularPropertyAdditionWithStash();
     void granularPropertyRemovalWithStash();
     void swapPropertyPositions();
+    void reorderPropertyChangeHandlers();
+    void reorderVarProperty();
+    void addRemoveBareProperty_data();
+    void addRemoveBareProperty();
+    void addPropertyShiftsSignal();
+    void addPropertyShiftsAlias();
     void swapBindingPositions();
     void swapAliasPositions();
     void swapSignalPositions();
@@ -460,7 +466,7 @@ private slots:
     // that base recreates the derived instances via the enclosing root ("go up"), rather than an
     // in-place rebuild that would silently drop their deferred contentItem/background. Verifies the
     // instances are fresh objects and their deferred content survives.
-    void deferredDerivedInstanceRecreatedOnStructuralReload();
+    void deferredDerivedInstancePatchedInPlaceOnBaseGrowth();
 
     // Same, but the derived type also declares its own property (and thus its own
     // change signal) and its own method, exercising the index-shifting of the
@@ -755,6 +761,7 @@ void tst_QQmlPreviewObjectPatch::swapPropertyPositions()
     QVERIFY(object);
     QCOMPARE(object->property("base").toInt(), 10);
     QCOMPARE(object->property("scaled").toInt(), 20);
+    QObject *objectBefore = object.get();
 
     QQmlComponent newComponent(&engine, testFileUrl("SwapPropertiesNew.qml"));
     QVERIFY2(newComponent.isReady(), qPrintable(newComponent.errorString()));
@@ -763,10 +770,13 @@ void tst_QQmlPreviewObjectPatch::swapPropertyPositions()
     const auto newExecUnit = QQmlComponentPrivate::get(&newComponent)->compilationUnit();
     QVERIFY(oldExecUnit && newExecUnit);
 
-    // Only the declaration order of the two properties (and their bindings) changed; their
-    // identities, values and bindings are unchanged.
+    // Only the declaration order of the two properties (and their bindings) changed. A property's
+    // position is a coreIndex into the instance's VME storage, but that per-instance state is
+    // relocated to the new layout, so a reorder is a trivial in-place patch (no rebuild).
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
+    QCOMPARE(updateObjects(objects, oldExecUnit, newExecUnit),
+             QQmlPreview::PatchResult::PatchedInPlace);
+    QCOMPARE(object.get(), objectBefore); // reused in place
 
     QCOMPARE(object->property("base").toInt(), 10);
     QCOMPARE(object->property("scaled").toInt(), 20);
@@ -774,6 +784,194 @@ void tst_QQmlPreviewObjectPatch::swapPropertyPositions()
     // The reordered binding is still live: changing its source updates it.
     object->setProperty("base", 100);
     QCOMPARE(object->property("scaled").toInt(), 200);
+}
+
+void tst_QQmlPreviewObjectPatch::reorderPropertyChangeHandlers()
+{
+    QQmlComponent oldComponent(&engine, testFileUrl("ReorderHandlersOld.qml"));
+    QVERIFY2(oldComponent.isReady(), qPrintable(oldComponent.errorString()));
+    QScopedPointer<QObject> object(oldComponent.create());
+    QVERIFY(object);
+    QObject *objectBefore = object.get();
+
+    QQmlComponent newComponent(&engine, testFileUrl("ReorderHandlersNew.qml"));
+    QVERIFY2(newComponent.isReady(), qPrintable(newComponent.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldComponent)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComponent)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    // Reordering the two properties moves their change-notify signal indices. Relocating the
+    // notify endpoints (not just the value slots) must keep each onXChanged handler bound to its
+    // own property.
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QCOMPARE(updateObjects(objects, oldExecUnit, newExecUnit),
+             QQmlPreview::PatchResult::PatchedInPlace);
+    QCOMPARE(object.get(), objectBefore); // reused in place
+
+    object->setProperty("marker", QString());
+    object->setProperty("base", 111);
+    QCOMPARE(object->property("marker").toString(), QStringLiteral("base"));
+
+    object->setProperty("marker", QString());
+    object->setProperty("other", 222);
+    QCOMPARE(object->property("marker").toString(), QStringLiteral("other"));
+}
+
+void tst_QQmlPreviewObjectPatch::reorderVarProperty()
+{
+    QQmlComponent oldComponent(&engine, testFileUrl("ReorderVarPropertyOld.qml"));
+    QVERIFY2(oldComponent.isReady(), qPrintable(oldComponent.errorString()));
+    QScopedPointer<QObject> object(oldComponent.create());
+    QVERIFY(object);
+
+    // Store a QObject in the "var" property, which creates a QObject guard keyed by the property's
+    // (pre-reorder) storage slot.
+    QScopedPointer<QObject> held(new QObject);
+    held->setObjectName(QStringLiteral("heldObject"));
+    object->setProperty("payload", QVariant::fromValue(held.get()));
+    QCOMPARE(qvariant_cast<QObject *>(object->property("payload")), held.get());
+
+    QQmlComponent newComponent(&engine, testFileUrl("ReorderVarPropertyNew.qml"));
+    QVERIFY2(newComponent.isReady(), qPrintable(newComponent.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldComponent)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComponent)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    // Reordering moves the var property's storage slot; the stored value (and its guard) must
+    // follow to the new slot.
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QCOMPARE(updateObjects(objects, oldExecUnit, newExecUnit),
+             QQmlPreview::PatchResult::PatchedInPlace);
+
+    QCOMPARE(qvariant_cast<QObject *>(object->property("payload")), held.get());
+
+    // The guard tracks the value at its new slot: destroying the object clears the property.
+    held.reset();
+    QVERIFY(!qvariant_cast<QObject *>(object->property("payload")));
+}
+
+void tst_QQmlPreviewObjectPatch::addRemoveBareProperty_data()
+{
+    QTest::addColumn<QString>("oldFile");
+    QTest::addColumn<QString>("newFile");
+    // Values the user set during the session; they must survive the in-place patch.
+    QTest::addColumn<QVariantMap>("setValues");
+    // Expected values afterwards. An invalid QVariant means the property is gone.
+    QTest::addColumn<QVariantMap>("expected");
+
+    // A bare property (no initializer) has no BindingAdded hunk, so adding or removing it is a
+    // trivial in-place patch: the storage grows or shrinks and existing values are preserved.
+    QTest::newRow("add-at-end") << "AddRemovePropertyEndTwo.qml" << "AddRemovePropertyEndThree.qml"
+                                << QVariantMap{ { "a", 7 }, { "b", 8 } }
+                                << QVariantMap{ { "a", 7 }, { "b", 8 }, { "c", 0 } };
+    QTest::newRow("remove-at-end")
+            << "AddRemovePropertyEndThree.qml" << "AddRemovePropertyEndTwo.qml"
+            << QVariantMap{ { "a", 7 }, { "b", 8 } }
+            << QVariantMap{ { "a", 7 }, { "b", 8 }, { "c", QVariant() } };
+    // Inserting or removing in the middle also shifts a later property's slot; its value must
+    // follow.
+    QTest::newRow("add-in-middle")
+            << "AddRemovePropertyMidTwo.qml" << "AddRemovePropertyMidThree.qml"
+            << QVariantMap{ { "a", 7 }, { "c", 9 } }
+            << QVariantMap{ { "a", 7 }, { "b", 0 }, { "c", 9 } };
+    QTest::newRow("remove-in-middle")
+            << "AddRemovePropertyMidThree.qml" << "AddRemovePropertyMidTwo.qml"
+            << QVariantMap{ { "a", 7 }, { "c", 9 } }
+            << QVariantMap{ { "a", 7 }, { "b", QVariant() }, { "c", 9 } };
+}
+
+void tst_QQmlPreviewObjectPatch::addRemoveBareProperty()
+{
+    QFETCH(QString, oldFile);
+    QFETCH(QString, newFile);
+    QFETCH(QVariantMap, setValues);
+    QFETCH(QVariantMap, expected);
+
+    QQmlComponent oldComponent(&engine, testFileUrl(oldFile));
+    QVERIFY2(oldComponent.isReady(), qPrintable(oldComponent.errorString()));
+    QScopedPointer<QObject> object(oldComponent.create());
+    QVERIFY(object);
+    QObject *objectBefore = object.get();
+
+    for (auto it = setValues.cbegin(), end = setValues.cend(); it != end; ++it)
+        QVERIFY(object->setProperty(qPrintable(it.key()), it.value()));
+
+    QQmlComponent newComponent(&engine, testFileUrl(newFile));
+    QVERIFY2(newComponent.isReady(), qPrintable(newComponent.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldComponent)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComponent)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QCOMPARE(updateObjects(objects, oldExecUnit, newExecUnit),
+             QQmlPreview::PatchResult::PatchedInPlace);
+    QCOMPARE(object.get(), objectBefore); // reused in place
+
+    for (auto it = expected.cbegin(), end = expected.cend(); it != end; ++it) {
+        const QVariant value = object->property(qPrintable(it.key()));
+        if (it.value().isValid())
+            QCOMPARE(value.toInt(), it.value().toInt());
+        else
+            QVERIFY2(!value.isValid(), qPrintable(it.key()));
+    }
+}
+
+void tst_QQmlPreviewObjectPatch::addPropertyShiftsSignal()
+{
+    QQmlComponent oldComponent(&engine, testFileUrl("AddPropertySignalShiftOld.qml"));
+    QVERIFY2(oldComponent.isReady(), qPrintable(oldComponent.errorString()));
+    QScopedPointer<QObject> object(oldComponent.create());
+    QVERIFY(object);
+    QObject *objectBefore = object.get();
+
+    QQmlComponent newComponent(&engine, testFileUrl("AddPropertySignalShiftNew.qml"));
+    QVERIFY2(newComponent.isReady(), qPrintable(newComponent.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldComponent)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComponent)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    // Adding a property shifts the index of the explicit signal declared after it. The signal's
+    // handler endpoint must shift with it, so emitting the signal still fires its handler.
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QCOMPARE(updateObjects(objects, oldExecUnit, newExecUnit),
+             QQmlPreview::PatchResult::PatchedInPlace);
+    QCOMPARE(object.get(), objectBefore); // reused in place
+
+    QCOMPARE(object->property("marker").toString(), QString());
+    QVERIFY(QMetaObject::invokeMethod(object.get(), "ping"));
+    QCOMPARE(object->property("marker").toString(), QStringLiteral("pinged"));
+}
+
+void tst_QQmlPreviewObjectPatch::addPropertyShiftsAlias()
+{
+    QQmlComponent oldComponent(&engine, testFileUrl("AddPropertyAliasShiftOld.qml"));
+    QVERIFY2(oldComponent.isReady(), qPrintable(oldComponent.errorString()));
+    QScopedPointer<QObject> object(oldComponent.create());
+    QVERIFY(object);
+    QObject *objectBefore = object.get();
+    QCOMPARE(object->property("childX").toInt(), 5);
+
+    QQmlComponent newComponent(&engine, testFileUrl("AddPropertyAliasShiftNew.qml"));
+    QVERIFY2(newComponent.isReady(), qPrintable(newComponent.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldComponent)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComponent)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    // Adding a property shifts the alias declared after it (coreIndex and notify signal). The alias
+    // must still read and write through to its target.
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QCOMPARE(updateObjects(objects, oldExecUnit, newExecUnit),
+             QQmlPreview::PatchResult::PatchedInPlace);
+    QCOMPARE(object.get(), objectBefore); // reused in place
+
+    QCOMPARE(object->property("childX").toInt(), 5);
+    object->setProperty("childX", 9);
+    QCOMPARE(object->property("childX").toInt(), 9);
 }
 
 void tst_QQmlPreviewObjectPatch::swapBindingPositions()
@@ -4950,7 +5148,7 @@ void tst_QQmlPreviewObjectPatch::compositeBaseLayoutChangeRelinksDerivedCaches()
     }
 }
 
-void tst_QQmlPreviewObjectPatch::deferredDerivedInstanceRecreatedOnStructuralReload()
+void tst_QQmlPreviewObjectPatch::deferredDerivedInstancePatchedInPlaceOnBaseGrowth()
 {
     const QString moduleDir = dataDirectory() + QStringLiteral("/HotReloadDeferredDerived");
     const QString patchedDir = dataDirectory() + QStringLiteral("/HotReloadDeferredDerivedPatched");
@@ -4972,7 +5170,7 @@ void tst_QQmlPreviewObjectPatch::deferredDerivedInstanceRecreatedOnStructuralRel
         return button->property("contentItem").value<QQuickItem *>();
     };
 
-    // Grab a guard to each derived instance so we can prove it is recreated (not patched in place).
+    // Guard each derived instance so we can prove it is patched in place, not recreated.
     const QStringList names = { QStringLiteral("d7"), QStringLiteral("opdiv"), QStringLiteral("d1") };
     QHash<QString, QPointer<QQuickItem>> oldButtons;
     for (const QString &name : names) {
@@ -4991,23 +5189,38 @@ void tst_QQmlPreviewObjectPatch::deferredDerivedInstanceRecreatedOnStructuralRel
     const auto newExecUnit = QQmlComponentPrivate::get(&calcNew)->compilationUnit();
     QVERIFY(oldExecUnit && newExecUnit);
 
+    // Adding "property int bla" to the CalculatorButton base shifts the meta-object indices of the
+    // derived instances' inherited members, including the getBackgroundColor()/getTextColor() VME
+    // methods. Rather than rebuilding, the in-place patch reshapes the base level and relinks the
+    // derived types' caches onto the new base layout, so the instances are reused.
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
     QVERIFY(!objects.empty());
-    QCOMPARE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Rebuilt);
+    QCOMPARE(updateObjects(objects, oldExecUnit, newExecUnit),
+             QQmlPreview::PatchResult::PatchedInPlace);
 
     QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
     QCoreApplication::processEvents();
 
-    for (const QString &name : names) {
-        // The base carries deferred bindings, so the derived instance was recreated via the
-        // enclosing root rather than rebuilt in place: the old QObject is gone.
-        QVERIFY2(oldButtons.value(name).isNull(), qPrintable(name + " was not recreated"));
+    const auto invokeColor = [](QQuickItem *button, const char *method) {
+        QVariant color;
+        const bool ok = QMetaObject::invokeMethod(button, method, Q_RETURN_ARG(QVariant, color));
+        return ok ? color.value<QColor>() : QColor();
+    };
 
-        // The fresh instance exists, carries the added property, and kept its deferred content.
-        QQuickItem *item = root->findChild<QQuickItem *>(name);
-        QVERIFY2(item, qPrintable(name + " missing after reload"));
+    for (const QString &name : names) {
+        // Reused in place: the original QObject is still alive.
+        QQuickItem *item = oldButtons.value(name);
+        QVERIFY2(item, qPrintable(name + " was recreated instead of patched in place"));
+
+        // It carries the added property, kept its deferred content, and the shifted VME methods
+        // still resolve to the right (relinked) index.
         QVERIFY2(item->property("bla").isValid(), qPrintable(name + " lacks the added property"));
         QVERIFY2(contentItemOf(item), qPrintable(name + " lost its deferred contentItem on reload"));
+
+        const QColor textColor = item->property("textColor").value<QColor>();
+        const QColor backgroundColor = item->property("backgroundColor").value<QColor>();
+        QCOMPARE(invokeColor(item, "getTextColor"), textColor);
+        QCOMPARE(invokeColor(item, "getBackgroundColor"), backgroundColor);
     }
 }
 

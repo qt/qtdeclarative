@@ -51,6 +51,8 @@ public:
     // Encoding is:  coreIndex | (valueTypeIndex << 16)
     QQmlPropertyIndex targetPropertyIndex() const { return m_targetIndex; }
 
+    void remapTargetPropertyIndex(QQmlPropertyIndex index) { m_targetIndex = index; }
+
     // Should return the object for the binding.  Should return this object even if the
     // binding is not enabled or added to the object.
     QObject *targetObject() const { return m_target.data(); }

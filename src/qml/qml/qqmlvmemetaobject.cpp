@@ -5,6 +5,7 @@
 
 #include "qqmlvmemetaobject_p.h"
 
+#include <private/qqmlabstractbinding_p.h>
 #include <private/qqmlrefcount_p.h>
 #include "qqmlpropertyvalueinterceptor_p.h"
 #include <qqmlinfo.h>
@@ -25,6 +26,7 @@
 #include <private/qv4variantobject_p.h>
 
 #include <QtCore/qmetasequence.h>
+#include <QtCore/qvarlengtharray.h>
 
 #include <climits> // for CHAR_BIT
 
@@ -333,6 +335,51 @@ void QQmlInterceptorMetaObject::registerInterceptor(QQmlPropertyIndex index, QQm
     interceptor->m_propertyIndex = index;
     interceptor->m_next = interceptors;
     interceptors = interceptor;
+}
+
+/*!
+ * \internal
+ *
+ * Rewrite (or drop) each interceptor's target coreIndex when the property
+ * layout of a VME level changes: \a coreBase is that level's property offset.
+ * A coreIndex inside the level's property block
+ * [\a{coreBase}, \a{coreBase} + oldToNew.size()) maps through oldToNew (-1
+ * drops the interceptor), while anything at or beyond it (the level's aliases
+ * and the members of derived levels) shifts by delta.
+ *
+ * Used by the QML preview's in-place patch.
+ */
+void QQmlInterceptorMetaObject::remapInterceptorPropertyIndices(int coreBase,
+                                                                const QList<int> &oldToNew,
+                                                                int delta)
+{
+    const int oldPropCount = oldToNew.size();
+    QQmlPropertyValueInterceptor **link = &interceptors;
+    while (QQmlPropertyValueInterceptor *vi = *link) {
+        const int local = vi->m_propertyIndex.coreIndex() - coreBase;
+        int newCore;
+        if (local < 0) {
+            newCore = vi->m_propertyIndex.coreIndex(); // below the changed level: unchanged
+        } else if (local < oldPropCount) {
+            const bool dropInterceptor = (oldToNew[local] == -1);
+            newCore = dropInterceptor ? -1 : coreBase + oldToNew[local];
+        } else {
+            // This level's aliases and the members of derived levels.
+            newCore = vi->m_propertyIndex.coreIndex() + delta;
+        }
+
+        if (newCore == vi->m_propertyIndex.coreIndex()) {
+            link = &vi->m_next;
+            continue;
+        }
+        if (newCore < 0) {
+            // The intercepted property was removed: unlink the interceptor.
+            *link = vi->m_next;
+            continue;
+        }
+        vi->m_propertyIndex = QQmlPropertyIndex(newCore, vi->m_propertyIndex.valueTypeIndex());
+        link = &vi->m_next;
+    }
 }
 
 int QQmlInterceptorMetaObject::metaCall(QObject *o, QMetaObject::Call c, int id, void **a)
@@ -1474,6 +1521,255 @@ void QQmlVMEMetaObject::setVMEProperty(int index, const QV4::Value &v)
         return;
     }
     return writeVarProperty(index - propOffset(), v);
+}
+
+/*!
+    \internal
+
+    Describes how the property block of one VME level changes. A property add/remove/reorder
+    changes the level's own property block and, on a count change, shifts everything the *derived*
+    levels above it own (plus this level's own aliases and signals) by delta. mapCore/mapSignal
+    express that mapping across the whole instance: below this level's own range -> unchanged;
+    inside the property block -> the permutation (or -1 if removed); at or beyond it -> shifted by
+    delta.
+*/
+struct PropertyRemap
+{
+    const QList<int> &oldToNew;
+    int coreBase;
+    int ownSignalBase;
+    int delta;
+
+    int oldPropertyCount() const { return oldToNew.size(); }
+
+    int mapCore(int coreIndex) const
+    {
+        const int local = coreIndex - coreBase;
+        if (local < 0)
+            return coreIndex;
+        if (local < oldPropertyCount())
+            return oldToNew[local] < 0 ? -1 : coreBase + oldToNew[local];
+        return coreIndex + delta;
+    }
+
+    int mapSignal(int signalIndex) const
+    {
+        const int k = signalIndex - ownSignalBase;
+        if (k < 0)
+            return signalIndex;
+        if (k < oldPropertyCount())
+            return oldToNew[k] < 0 ? -1 : ownSignalBase + oldToNew[k];
+        return signalIndex + delta;
+    }
+};
+
+/*!
+    \internal
+
+    Property-change notify endpoints (bindings that captured us, onXChanged handlers, alias
+    endpoints, explicit-signal handlers) are keyed by signal index. Remap every own signal of the
+    instance from this level up.
+*/
+static void remapNotifyEndpoints(QQmlData *ddata, QObject *object, QV4::ExecutionEngine *v4,
+                                 const PropertyRemap &remap, int totalSignals)
+{
+    // Gather first, because reconnecting rewrites the notify lists.
+    struct EndpointMove
+    {
+        QQmlNotifierEndpoint *endpoint;
+        int newSignalIndex; // -1: the signal is gone, disconnect the endpoint.
+    };
+    QVarLengthArray<EndpointMove, 8> moves;
+    for (int oldSignal = remap.ownSignalBase; oldSignal < totalSignals; ++oldSignal) {
+        const int newSignal = remap.mapSignal(oldSignal);
+        if (newSignal == oldSignal)
+            continue;
+        for (QQmlNotifierEndpoint *ep = ddata->notify(oldSignal); ep; ep = ep->nextEndpoint())
+            moves.append({ ep, newSignal });
+    }
+
+    if (moves.isEmpty())
+        return;
+
+    QQmlEngine *engine = v4->qmlEngine();
+    for (const EndpointMove &move : moves) {
+        if (move.newSignalIndex < 0)
+            move.endpoint->disconnect();
+        else
+            QQmlData::connectEndpoint(move.endpoint, object, move.newSignalIndex, engine);
+    }
+}
+
+/*!
+    \internal
+
+    Bindings store the coreIndex of the property (or alias) they write. Re-target those whose
+    destination moved. A binding on a *removed* property does not occur in a trivial diff (its
+    BindingRemoved hunk forces a rebuild), so mapCore never returns -1 for a live binding here.
+*/
+static void remapBindingTargets(QQmlData *ddata, QObject *object, const PropertyRemap &remap)
+{
+    for (QQmlAbstractBinding *binding = ddata->bindings; binding;
+         binding = binding->nextBinding()) {
+        if (binding->targetObject() != object)
+            continue;
+        const QQmlPropertyIndex targetIndex = binding->targetPropertyIndex();
+        const int newCore = remap.mapCore(targetIndex.coreIndex());
+        if (newCore < 0 || newCore == targetIndex.coreIndex())
+            continue;
+        binding->remapTargetPropertyIndex(QQmlPropertyIndex(newCore, targetIndex.valueTypeIndex()));
+    }
+}
+
+/*!
+    \internal
+
+    Binding bits (and their pending counterparts) are keyed by coreIndex. Snapshot the whole own
+    range, clear it, then set each survivor's bits at its new position.
+*/
+static void remapBindingBits(QQmlData *ddata, QObject *object, const PropertyRemap &remap,
+                             int totalProperties)
+{
+    const int coreBase = remap.coreBase;
+    const int managed = totalProperties - coreBase;
+    QVarLengthArray<quint8, 16> bits(managed);
+    for (int i = 0; i < managed; ++i) {
+        bits[i] = (ddata->hasBindingBit(coreBase + i) ? 0x1 : 0)
+                | (ddata->hasPendingBindingBit(coreBase + i) ? 0x2 : 0);
+    }
+    for (int i = 0; i < managed; ++i) {
+        ddata->clearBindingBit(coreBase + i);
+        ddata->clearPendingBindingBit(coreBase + i);
+    }
+    for (int i = 0; i < managed; ++i) {
+        const int newCore = remap.mapCore(coreBase + i);
+        if (newCore < 0)
+            continue;
+        if (bits[i] & 0x1)
+            ddata->setBindingBit(object, newCore);
+        if (bits[i] & 0x2)
+            ddata->setPendingBindingBit(object, newCore);
+    }
+}
+
+/*!
+    \internal
+
+    Stored values. Layout is [properties | methods]; a count change slides the method block by
+    delta. Gather both, grow the storage if the new layout no longer fits, then scatter: survivor
+    property values to their new slots (added slots stay undefined), method function objects by
+    delta (refreshVmeMethods re-derives them afterwards regardless).
+*/
+void QQmlVMEMetaObject::remapStoredValues(int newPropertyCount, const QList<int> &oldToNew)
+{
+    QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
+    if (!md)
+        return;
+
+    const int oldPropCount = oldToNew.size();
+    const int nFunctions = methodCount();
+
+    QVarLengthArray<QV4::Value, 8> propValues(oldPropCount);
+    QVarLengthArray<QV4::Value, 8> methodValues(nFunctions);
+    const QV4::Value *data = md->data();
+    for (int i = 0; i < oldPropCount; ++i)
+        propValues[i] = data[i];
+    for (int j = 0; j < nFunctions; ++j)
+        methodValues[j] = data[oldPropCount + j];
+
+    const int newTotal = newPropertyCount + nFunctions;
+    if (uint(newTotal) > md->size()) {
+        QV4::Heap::MemberData *grown = QV4::MemberData::allocate(m_engine, newTotal);
+        QV4::WriteBarrier::markCustom(m_engine, [grown](QV4::MarkStack *ms) { grown->mark(ms); });
+        m_propertyAndMethodStorage.set(m_engine, grown);
+        md = propertyAndMethodStorageAsMemberData();
+    }
+
+    for (uint i = 0, end = md->size(); i < end; ++i)
+        md->set(m_engine, i, QV4::Value::undefinedValue());
+    for (int i = 0; i < oldPropCount; ++i) {
+        if (oldToNew[i] >= 0)
+            md->set(m_engine, oldToNew[i], propValues[i]);
+    }
+    for (int j = 0; j < nFunctions; ++j)
+        md->set(m_engine, newPropertyCount + j, methodValues[j]);
+}
+
+/*!
+    \internal
+
+    QObject guards for var/QObject properties track their storage slot. Drop guards whose property
+    was removed; otherwise follow the property to its new slot.
+*/
+void QQmlVMEMetaObject::remapObjectGuards(const QList<int> &oldToNew)
+{
+    const int oldPropCount = oldToNew.size();
+    for (auto it = m_varObjectGuards.begin(); it != m_varObjectGuards.end();) {
+        QQmlVMEVariantQObjectPtr *guard = *it;
+        if (guard->m_index >= 0 && guard->m_index < oldPropCount) {
+            const int mapped = oldToNew[guard->m_index];
+            if (mapped < 0) {
+                delete guard;
+                it = m_varObjectGuards.erase(it);
+                continue;
+            }
+            guard->m_index = mapped;
+        }
+        ++it;
+    }
+}
+
+/*!
+ * \internal
+ *
+ * Relocate this object's per-instance property state to a new property layout.
+ * \a oldToNew has one entry per *current* local property: oldToNew[i] is that
+ * property's new local index, or -1 if it was removed. \a newPropertyCount is
+ * the property count afterwards, so a growing count adds slots (added
+ * properties occupy the new indices not named by oldToNew) and a shrinking
+ * count drops them. Relocates the stored values, QObject guards, interceptors,
+ * property-change notify endpoints, bindings and binding bits — and shifts the
+ * aliases and explicit signals declared after the property block by the net
+ * count change - so a live instance keeps working after the QML preview
+ * re-points it at the reshaped cache.
+ */
+void QQmlVMEMetaObject::remapProperties(int newPropertyCount, const QList<int> &oldToNew)
+{
+    const int oldPropCount = oldToNew.size();
+    Q_ASSERT(oldPropCount == propCount());
+    const int delta = newPropertyCount - oldPropCount;
+
+    // A same-count identity permutation is a no-op.
+    if (delta == 0) {
+        bool moved = false;
+        for (int i = 0; i < oldPropCount; ++i) {
+            if (oldToNew[i] != i) {
+                moved = true;
+                break;
+            }
+        }
+        if (!moved)
+            return;
+    }
+
+    QQmlData *ddata = QQmlData::get(object.data());
+    Q_ASSERT(ddata);
+
+    const PropertyRemap remap{ oldToNew, propOffset(), cache->signalOffset(), delta };
+
+    // Use absolute property and signal counts from the main property cache, so the index-keyed
+    // passes reach the members of any derived levels above this one, not just this level's own.
+    const QQmlPropertyCache::ConstPtr mainCache =
+            ddata->propertyCache ? ddata->propertyCache : cache;
+
+    // The stored values and QObject guards are this level's own and stay level-local; the rest is
+    // keyed by absolute coreIndex/signal index.
+    remapStoredValues(newPropertyCount, oldToNew);
+    remapObjectGuards(oldToNew);
+    remapInterceptorPropertyIndices(remap.coreBase, oldToNew, delta);
+    remapNotifyEndpoints(ddata, object.data(), m_engine, remap, mainCache->signalCount());
+    remapBindingTargets(ddata, object.data(), remap);
+    remapBindingBits(ddata, object.data(), remap, mainCache->propertyCount());
 }
 
 void QQmlVMEMetaObject::ensureQObjectWrapper()

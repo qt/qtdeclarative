@@ -563,11 +563,22 @@ static bool changeIsTrivial(const QV4::CompiledData::Change &change,
     // Index-only changes where the element's own position moved but it carries no per-instance
     // state addressed by that position: a binding is re-applied by its target property, an enum is
     // resolved at compile time. Remapping the object to the new unit is enough; no rebuild needed.
-    // Property/Alias/Signal index changes, in contrast, _are_ significant.
     case ChangeType::BindingIndexChanged:
     case ChangeType::EnumIndexChanged:
     case ChangeType::InlineComponentIndexChanged:
     case ChangeType::RequiredPropertyExtraDataIndexChanged:
+
+    // A property's position is a coreIndex into the live instance's VME meta-object storage.
+    // Adding, removing or reordering a property reshapes that storage; remapProperties() relocates
+    // the per-instance state (and shifts trailing aliases/signals) before the unit remap re-points
+    // the property cache (see applyDiff()), so these patch in place. A property added or removed
+    // *with* an initializer also emits a BindingAdded/BindingRemoved hunk, which is not trivial, so
+    // the reload rebuilds anyway until those are supported. We don't have to do anything here in
+    // that case. Alias/Signal index changes carry state outside that storage (alias endpoint
+    // arrays, method-index-keyed connections) and still rebuild explicitly.
+    case ChangeType::PropertyAdded:
+    case ChangeType::PropertyIndexChanged:
+    case ChangeType::PropertyRemoved:
 
     // Internal table changes that are byproducts of recompiling expressions. They are picked up
     // when we translate functions and remap compilation units; no structure changes.
@@ -640,9 +651,9 @@ static bool changeIsTrivial(const QV4::CompiledData::Change &change,
                 == BindingPatchContext::targetPropertyName(newUnit, change.objectIndex, newBinding);
     }
     default:
-        // ObjectAdded/Removed/Changed, Binding Added/Removed, Property/Signal/Alias/Enum changes,
-        // Function Added/Removed, Import/InlineComponent/RequiredPropertyExtraData changes:
-        // structural, need a rebuild.
+        // ObjectAdded/Removed/Changed, Binding Added/Removed, Property/Signal/Alias/Enum content
+        // changes, Signal/Alias/Function Added/Removed, Import/InlineComponent/RequiredPropertyExtraData
+        // changes: structural, need a rebuild.
         return false;
     }
 }
@@ -899,6 +910,152 @@ static void refreshVmeMethods(const std::vector<QObject *> &objects,
     }
 }
 
+// Apply property adds/removes/reorders to live instances by reshaping their VME meta-object storage,
+// before remapObjectsToNewUnit() re-points them at the reshaped property cache. Each affected object
+// index yields an old->new local-property map (oldToNew, -1 for removed) plus the new property count;
+// these are handed to the VME level in each instance that carries that object index.
+struct PropertyReshape
+{
+    QList<int> oldToNew;
+    int newPropertyCount = 0;
+};
+
+static void reshapeProperties(const std::vector<QObject *> &objects,
+                              const QV4::CompiledData::CompilationUnitDiff &diff,
+                              const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit,
+                              const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit)
+{
+    using ChangeType = QV4::CompiledData::ChangeType;
+
+    QHash<int, PropertyReshape> reshapes;
+    const auto ensure = [&](int objectIndex) -> PropertyReshape & {
+        auto it = reshapes.find(objectIndex);
+        if (it != reshapes.end())
+            return *it;
+
+        Q_ASSERT(objectIndex >= 0 && objectIndex < oldUnit->objectCount());
+        const int oldCount = oldUnit->objectAt(objectIndex)->nProperties;
+        const int newCount = objectIndex < newUnit->objectCount()
+                ? newUnit->objectAt(objectIndex)->nProperties
+                : oldCount;
+        PropertyReshape reshape;
+        reshape.newPropertyCount = newCount;
+        reshape.oldToNew.resize(oldCount);
+        for (int i = 0; i < oldCount; ++i)
+            reshape.oldToNew[i] = i;
+        return *reshapes.insert(objectIndex, reshape);
+    };
+
+    for (const QV4::CompiledData::Change &change : diff.changes) {
+        switch (change.type) {
+        case ChangeType::PropertyIndexChanged: {
+            PropertyReshape &reshape = ensure(change.objectIndex);
+            Q_ASSERT(change.oldIndex < quint32(reshape.oldToNew.size()));
+            Q_ASSERT(change.newIndex < quint32(reshape.newPropertyCount));
+            reshape.oldToNew[change.oldIndex] = int(change.newIndex);
+            break;
+        }
+        case ChangeType::PropertyRemoved: {
+            // For a Removed change oldIndex holds the old position.
+            PropertyReshape &reshape = ensure(change.objectIndex);
+            Q_ASSERT(change.oldIndex < quint32(reshape.oldToNew.size()));
+            reshape.oldToNew[change.oldIndex] = -1;
+            break;
+        }
+        case ChangeType::PropertyAdded:
+            // The new property occupies a slot not named by oldToNew; ensuring the reshape exists
+            // makes remapProperties() grow the storage.
+            ensure(change.objectIndex);
+            break;
+        default:
+            break;
+        }
+    }
+
+    if (reshapes.isEmpty())
+        return;
+
+    for (QObject *object : objects) {
+        QQmlData *ddata = QQmlData::get(object);
+        if (!ddata || !ddata->hasVMEMetaObject)
+            continue;
+
+        for (QQmlVMEMetaObject *vme =
+                     static_cast<QQmlVMEMetaObject *>(QObjectPrivate::get(object)->metaObject);
+             vme; vme = vme->parentVMEMetaObject()) {
+            if (vme->compilationUnit() != oldUnit)
+                continue;
+            const auto it = reshapes.constFind(vme->qmlObjectId());
+            if (it != reshapes.constEnd())
+                vme->remapProperties(it->newPropertyCount, it->oldToNew);
+        }
+    }
+}
+
+// A property add/remove changes oldUnit's property count, which shifts the coreIndex/signal indices
+// of everything declared after it. When oldUnit contains a composite *base* type of a live derived
+// instance, the members the derived levels own shift too, and the derived types' property caches
+// must be rebased onto the new base layout. remapProperties() already shifts the per-instance state
+// across the whole chain; this detects that the derived caches additionally need relinking.
+//
+// It doesn't matter whether the base type is the main type of oldUnit or an inline component. In
+// either case vme->compilationUnit() == oldUnit will hold.
+static bool
+propertyCountChangeAffectsDerived(const QV4::CompiledData::CompilationUnitDiff &diff,
+                                  const std::vector<QObject *> &objects,
+                                  const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit)
+{
+    using ChangeType = QV4::CompiledData::ChangeType;
+    const bool countChanges = std::any_of(diff.changes.cbegin(), diff.changes.cend(),
+                                          [](const QV4::CompiledData::Change &change) {
+                                              return change.type == ChangeType::PropertyAdded
+                                                      || change.type == ChangeType::PropertyRemoved;
+                                          });
+    if (!countChanges)
+        return false;
+
+    for (QObject *object : objects) {
+        QQmlData *ddata = QQmlData::get(object);
+        if (!ddata || !ddata->hasVMEMetaObject)
+            continue;
+        auto *mainVme = static_cast<QQmlVMEMetaObject *>(QObjectPrivate::get(object)->metaObject);
+        for (QQmlVMEMetaObject *vme = mainVme->parentVMEMetaObject(); vme;
+             vme = vme->parentVMEMetaObject()) {
+            if (vme->compilationUnit() == oldUnit)
+                return true;
+        }
+    }
+    return false;
+}
+
+// After redirectResolvedTypeReferences() has rebased the derived types' caches in their compilation
+// units, give each live instance the refreshed cache for every VME level, so a derived level adopts
+// the cache rebased onto the changed base's new layout.
+static void relinkDerivedInstanceCaches(const std::vector<QObject *> &objects)
+{
+    for (QObject *object : objects) {
+        QQmlData *ddata = QQmlData::get(object);
+        if (!ddata || !ddata->hasVMEMetaObject)
+            continue;
+
+        auto *mainVme = static_cast<QQmlVMEMetaObject *>(QObjectPrivate::get(object)->metaObject);
+        for (QQmlVMEMetaObject *vme = mainVme; vme; vme = vme->parentVMEMetaObject()) {
+            const auto cu = vme->compilationUnit();
+            if (!cu)
+                continue;
+            const QQmlPropertyCacheVector *caches = cu->propertyCachesPtr();
+            if (vme->qmlObjectId() < 0 || vme->qmlObjectId() >= caches->count())
+                continue;
+            const QQmlPropertyCache::ConstPtr cache = caches->at(vme->qmlObjectId());
+            if (cache && cache != vme->propertyCache()) {
+                vme->setPropertyCache(cache);
+                if (vme == mainVme)
+                    ddata->propertyCache = cache;
+            }
+        }
+    }
+}
+
 PatchResult applyDiff(std::vector<QObject *> &objects,
                       const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit,
                       const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit)
@@ -918,7 +1075,22 @@ PatchResult applyDiff(std::vector<QObject *> &objects,
             QV4::CompiledData::diffCompilationUnits(oldUnit->unitData(), newUnit->unitData());
     if (diff.success && isTrivialDiff(diff, oldUnit, newUnit)) {
         patchConstantBindings(objects, diff, oldUnit, newUnit);
+        // Reshape per-instance property state (add/remove/reorder) to the new layout while the
+        // objects still present the old cache, so remapObjectsToNewUnit()'s re-point lines up with
+        // the resized storage.
+        reshapeProperties(objects, diff, oldUnit, newUnit);
+
+        // A property count change on a composite base type shifts the members its derived types
+        // inherit. Rebase the derived types' caches onto the new base layout (relinking their
+        // compilation units), then give the live derived instances those refreshed caches.
+        const bool derivedAffected = propertyCountChangeAffectsDerived(diff, objects, oldUnit);
+        if (derivedAffected) {
+            redirectResolvedTypeReferences(newUnit->engine, oldUnit->baseCompilationUnit(),
+                                           newUnit->baseCompilationUnit());
+        }
         remapObjectsToNewUnit(objects, oldUnit, newUnit);
+        if (derivedAffected)
+            relinkDerivedInstanceCaches(objects);
         refreshVmeMethods(objects, newUnit);
         return PatchResult::PatchedInPlace;
     }
