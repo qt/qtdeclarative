@@ -58,6 +58,8 @@ enum class ChangeType : quint8 {
     RequiredPropertyExtraDataAdded,
     RequiredPropertyExtraDataChanged,
     RequiredPropertyExtraDataRemoved,
+    RequiredPropertyExtraDataLocationChanged,
+    RequiredPropertyExtraDataIndexChanged,
 
     StringDataAdded,
     StringDataChanged,
@@ -77,21 +79,25 @@ enum class ChangeType : quint8 {
     AliasChanged,
     AliasRemoved,
     AliasLocationChanged,
+    AliasIndexChanged,
 
     BindingAdded,
     BindingChanged,
     BindingRemoved,
     BindingLocationChanged,
+    BindingIndexChanged,
 
     EnumAdded,
     EnumChanged,
     EnumRemoved,
     EnumLocationChanged,
+    EnumIndexChanged,
 
     FunctionAdded,
     FunctionChanged,
     FunctionRemoved,
     FunctionLocationChanged,
+    FunctionIndexChanged,
 
     ImportAdded,
     ImportChanged,
@@ -102,6 +108,7 @@ enum class ChangeType : quint8 {
     InlineComponentChanged,
     InlineComponentRemoved,
     InlineComponentLocationChanged,
+    InlineComponentIndexChanged,
 
     ObjectAdded,
     ObjectChanged,
@@ -112,11 +119,13 @@ enum class ChangeType : quint8 {
     PropertyChanged,
     PropertyRemoved,
     PropertyLocationChanged,
+    PropertyIndexChanged,
 
     SignalAdded,
     SignalChanged,
     SignalRemoved,
     SignalLocationChanged,
+    SignalIndexChanged,
 
     Unknown,
 };
@@ -203,8 +212,13 @@ struct Change
     ChangeType type = ChangeType::None;
     int objectIndex = -1;
 
-    // binding/property/function/object/etc index depending on type
-    quint32 index = 0;
+    // Position in the *new* unit (binding/property/function/object/etc newIndex depending on type).
+    // For a Removed change there is no new position; newIndex then holds the old position instead.
+    quint32 newIndex = 0;
+
+    // Position in the *old* unit. For positionally-matched tables this equals newIndex.
+    // For an Added change there is no old position; oldIndex then holds the new position instead.
+    quint32 oldIndex = 0;
 
     std::variant<NoHunk, ConstantHunk, BindingHunk, PropertyHunk, AliasHunk, EnumHunk, SignalHunk,
                  ObjectHunk, UnitHunk, StringHunk, LookupHunk, RegExpHunk, FunctionHunk,

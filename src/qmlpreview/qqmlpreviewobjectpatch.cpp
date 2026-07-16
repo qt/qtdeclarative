@@ -557,7 +557,18 @@ static bool changeIsTrivial(const QV4::CompiledData::Change &change,
     case ChangeType::InlineComponentLocationChanged:
     case ChangeType::ObjectLocationChanged:
     case ChangeType::PropertyLocationChanged:
+    case ChangeType::RequiredPropertyExtraDataLocationChanged:
     case ChangeType::SignalLocationChanged:
+
+    // Index-only changes where the element's own position moved but it carries no per-instance
+    // state addressed by that position: a binding is re-applied by its target property, an enum is
+    // resolved at compile time. Remapping the object to the new unit is enough; no rebuild needed.
+    // Property/Alias/Signal index changes, in contrast, _are_ significant.
+    case ChangeType::BindingIndexChanged:
+    case ChangeType::EnumIndexChanged:
+    case ChangeType::InlineComponentIndexChanged:
+    case ChangeType::RequiredPropertyExtraDataIndexChanged:
+
     // Internal table changes that are byproducts of recompiling expressions. They are picked up
     // when we translate functions and remap compilation units; no structure changes.
     case ChangeType::UnitMetadataChanged:
@@ -601,12 +612,12 @@ static bool changeIsTrivial(const QV4::CompiledData::Change &change,
         Q_ASSERT(change.objectIndex < newUnit->objectCount());
 
         const QV4::CompiledData::Object *oldObj = oldUnit->objectAt(change.objectIndex);
-        Q_ASSERT(change.index < oldObj->nBindings);
-        const QV4::CompiledData::Binding *oldBinding = oldObj->bindingTable() + change.index;
+        Q_ASSERT(change.oldIndex < oldObj->nBindings);
+        const QV4::CompiledData::Binding *oldBinding = oldObj->bindingTable() + change.oldIndex;
 
         const QV4::CompiledData::Object *newObj = newUnit->objectAt(change.objectIndex);
-        Q_ASSERT(change.index < newObj->nBindings);
-        const QV4::CompiledData::Binding *newBinding = newObj->bindingTable() + change.index;
+        Q_ASSERT(change.newIndex < newObj->nBindings);
+        const QV4::CompiledData::Binding *newBinding = newObj->bindingTable() + change.newIndex;
 
         const BindingKind oldKind = bindingKind(oldBinding);
         const BindingKind newKind = bindingKind(newBinding);

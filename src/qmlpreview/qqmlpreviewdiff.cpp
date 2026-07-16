@@ -197,6 +197,7 @@ struct ComparisonTraits<Element> \
 { \
     static constexpr ChangeType Changed = ChangeType::Element ## Changed; \
     static constexpr ChangeType LocationChanged = ChangeType::None; \
+    static constexpr ChangeType IndexChanged = ChangeType::None; \
     static constexpr ChangeType Removed = ChangeType::Element ## Removed; \
     static constexpr ChangeType Added = ChangeType::Element ## Added; \
 };
@@ -208,30 +209,43 @@ struct ComparisonTraits<Element> \
 { \
     static constexpr ChangeType Changed = ChangeType::Element ## Changed; \
     static constexpr ChangeType LocationChanged = ChangeType::Element ## LocationChanged; \
+    static constexpr ChangeType IndexChanged = ChangeType::None; \
     static constexpr ChangeType Removed = ChangeType::Element ## Removed; \
     static constexpr ChangeType Added = ChangeType::Element ## Added; \
 };
 
-COMPARISON_TRAITS_WITH_LOCATION(Object)
-COMPARISON_TRAITS_WITH_LOCATION(Property)
-COMPARISON_TRAITS_WITH_LOCATION(Alias)
-COMPARISON_TRAITS_WITH_LOCATION(Enum)
-COMPARISON_TRAITS_WITH_LOCATION(Signal)
-COMPARISON_TRAITS_WITH_LOCATION(InlineComponent)
-COMPARISON_TRAITS_WITH_LOCATION(Binding)
-COMPARISON_TRAITS_WITH_LOCATION(Import)
-COMPARISON_TRAITS_WITH_LOCATION(Function)
+#define COMPARISON_TRAITS_WITH_LOCATION_AND_INDEX(Element) \
+template <> \
+struct ComparisonTraits<Element> \
+{ \
+    static constexpr ChangeType Changed = ChangeType::Element ## Changed; \
+    static constexpr ChangeType LocationChanged = ChangeType::Element ## LocationChanged; \
+    static constexpr ChangeType IndexChanged = ChangeType::Element ## IndexChanged; \
+    static constexpr ChangeType Removed = ChangeType::Element ## Removed; \
+    static constexpr ChangeType Added = ChangeType::Element ## Added; \
+};
 
-COMPARISON_TRAITS(RequiredPropertyExtraData)
+COMPARISON_TRAITS(Block)
+COMPARISON_TRAITS(Class)
 COMPARISON_TRAITS(Constant)
+COMPARISON_TRAITS(JSClass)
 COMPARISON_TRAITS(Lookup)
 COMPARISON_TRAITS(RegExp)
-COMPARISON_TRAITS(Class)
-COMPARISON_TRAITS(TemplateObject)
-COMPARISON_TRAITS(JSClass)
-COMPARISON_TRAITS(Block)
-COMPARISON_TRAITS(TranslationData)
 COMPARISON_TRAITS(StringData)
+COMPARISON_TRAITS(TemplateObject)
+COMPARISON_TRAITS(TranslationData)
+
+COMPARISON_TRAITS_WITH_LOCATION(Import)
+COMPARISON_TRAITS_WITH_LOCATION(Object)
+
+COMPARISON_TRAITS_WITH_LOCATION_AND_INDEX(Alias)
+COMPARISON_TRAITS_WITH_LOCATION_AND_INDEX(Binding)
+COMPARISON_TRAITS_WITH_LOCATION_AND_INDEX(Enum)
+COMPARISON_TRAITS_WITH_LOCATION_AND_INDEX(Function)
+COMPARISON_TRAITS_WITH_LOCATION_AND_INDEX(InlineComponent)
+COMPARISON_TRAITS_WITH_LOCATION_AND_INDEX(Property)
+COMPARISON_TRAITS_WITH_LOCATION_AND_INDEX(RequiredPropertyExtraData)
+COMPARISON_TRAITS_WITH_LOCATION_AND_INDEX(Signal)
 
 template <typename AccessorFn>
 struct IndexedElements
@@ -268,15 +282,20 @@ struct UnitDiffer
             if (!contentEq(oldElem, newElem)) {
                 Change change;
                 change.objectIndex = m_currentObjectIndex;
-                change.index = i;
+                change.newIndex = i;
+                change.oldIndex = i;
                 change.type = Traits::Changed;
                 change.data = extractData(newElem);
                 changes.append(change);
-            } else if (LocationExtractor<ElementT>::extract(oldElem)
-                       != LocationExtractor<ElementT>::extract(newElem)) {
+            }
+
+            if (Traits::LocationChanged != ChangeType::None
+                && LocationExtractor<ElementT>::extract(oldElem)
+                        != LocationExtractor<ElementT>::extract(newElem)) {
                 Change change;
                 change.objectIndex = m_currentObjectIndex;
-                change.index = i;
+                change.newIndex = i;
+                change.oldIndex = i;
                 change.type = Traits::LocationChanged;
                 change.data = extractData(newElem);
                 changes.append(change);
@@ -288,7 +307,8 @@ struct UnitDiffer
             Change change;
             change.type = Traits::Removed;
             change.objectIndex = m_currentObjectIndex;
-            change.index = i;
+            change.newIndex = i;
+            change.oldIndex = i;
             changes.append(change);
         }
 
@@ -297,9 +317,80 @@ struct UnitDiffer
             Change change;
             change.type = Traits::Added;
             change.objectIndex = m_currentObjectIndex;
-            change.index = i;
+            change.newIndex = i;
+            change.oldIndex = i;
             change.data = extractData(newAccessor(i));
             changes.append(change);
+        }
+    }
+
+    // keyFn retrieves the name of the element as string, so that we can compare
+    // by name and sequential number of duplicate (if there are duplicates).
+    template <typename ElementT, typename OldSource, typename NewSource, typename KeyFn,
+              typename ContentEqFn>
+    void compareNamedElements(OldSource oldSource, NewSource newSource, KeyFn keyFn,
+                              ContentEqFn contentEq)
+    {
+        using Traits = ComparisonTraits<ElementT>;
+        const auto &oldAccessor = oldSource.accessor;
+        const auto &newAccessor = newSource.accessor;
+        const quint32 oldCount = oldSource.count;
+        const quint32 newCount = newSource.count;
+
+        const auto disambiguatedKeys = [&](auto accessor, quint32 count, const Unit *unit) {
+            QList<QString> keys;
+            keys.reserve(count);
+            QHash<QString, int> seen;
+            for (quint32 i = 0; i < count; ++i) {
+                const QString base = keyFn(accessor(i), unit);
+                keys.append(base + QChar(QChar::Null) + QString::number(seen[base]++));
+            }
+            return keys;
+        };
+
+        const QList<QString> oldKeys = disambiguatedKeys(oldAccessor, oldCount, oldUnit);
+        const QList<QString> newKeys = disambiguatedKeys(newAccessor, newCount, newUnit);
+
+        QHash<QString, quint32> oldByKey;
+        oldByKey.reserve(oldCount);
+        for (quint32 i = 0; i < oldCount; ++i)
+            oldByKey.insert(oldKeys[i], i);
+
+        QList<bool> oldMatched(oldCount, false);
+        for (quint32 j = 0; j < newCount; ++j) {
+            const auto it = oldByKey.constFind(newKeys[j]);
+            if (it == oldByKey.constEnd()) {
+                changes.append(Change{ Traits::Added, m_currentObjectIndex, j, j,
+                                       extractData(newAccessor(j)) });
+                continue;
+            }
+
+            const quint32 i = it.value();
+            oldMatched[i] = true;
+            const ElementT &oldElem = oldAccessor(i);
+            const ElementT &newElem = newAccessor(j);
+
+            if (!contentEq(oldElem, newElem)) {
+                changes.append(Change{ Traits::Changed, m_currentObjectIndex, j, i,
+                                       extractData(newElem) });
+            }
+
+            if (Traits::LocationChanged != ChangeType::None
+                && LocationExtractor<ElementT>::extract(oldElem)
+                        != LocationExtractor<ElementT>::extract(newElem)) {
+                changes.append(Change{ Traits::LocationChanged, m_currentObjectIndex, j, i,
+                                       extractData(newElem) });
+            }
+
+            if (Traits::IndexChanged != ChangeType::None && i != j) {
+                changes.append(Change{ Traits::IndexChanged, m_currentObjectIndex, j, i,
+                                       extractData(newElem) });
+            }
+        }
+
+        for (quint32 i = 0; i < oldCount; ++i) {
+            if (!oldMatched[i])
+                changes.append(Change{ Traits::Removed, m_currentObjectIndex, i, i, NoHunk{} });
         }
     }
 
@@ -307,8 +398,7 @@ struct UnitDiffer
     {
         Q_ASSERT(oldName < oldUnit->stringTableSize);
         Q_ASSERT(newName < newUnit->stringTableSize);
-        return oldName == newName
-                && oldUnit->stringAtInternal(oldName) == newUnit->stringAtInternal(newName);
+        return oldUnit->stringAtInternal(oldName) == newUnit->stringAtInternal(newName);
     }
 
     bool unitMetadataContentEqual() const
@@ -341,11 +431,17 @@ struct UnitDiffer
         if (oldObj.nFunctions != newObj.nFunctions)
             return false;
 
+        // The object references its methods by their global function-table index. Those indices
+        // shift whenever any function is added/removed/reordered elsewhere in the unit, so compare
+        // the referenced functions by name instead of by raw index: a mere reindexing must not make
+        // the object look structurally changed (body changes are reported at the function level).
         const quint32_le *oldFuncs = oldObj.functionOffsetTable();
         const quint32_le *newFuncs = newObj.functionOffsetTable();
         for (quint32 i = 0; i < oldObj.nFunctions; ++i) {
-            if (oldFuncs[i] != newFuncs[i])
+            if (!stringsEqual(oldUnit->functionAt(oldFuncs[i])->nameIndex,
+                              newUnit->functionAt(newFuncs[i])->nameIndex)) {
                 return false;
+            }
         }
 
         return stringsEqual(oldObj.inheritedTypeNameIndex, newObj.inheritedTypeNameIndex)
@@ -448,7 +544,7 @@ struct UnitDiffer
             const uint newIdx = newBinding.value.constantValueIndex;
             Q_ASSERT(oldIdx < oldUnit->constantTableSize);
             Q_ASSERT(newIdx < newUnit->constantTableSize);
-            return oldIdx == newIdx && oldUnit->constants()[oldIdx] == newUnit->constants()[newIdx];
+            return oldUnit->constants()[oldIdx] == newUnit->constants()[newIdx];
         }
         case Binding::Type_String:
             return stringsEqual(oldBinding.stringIndex, newBinding.stringIndex);
@@ -526,6 +622,36 @@ struct UnitDiffer
         }
 
         return std::memcmp(oldFunc.code(), newFunc.code(), oldFunc.codeSize) == 0;
+    }
+
+    // Functions live in a single unit-global table, but their names are only meaningful within the
+    // object that declares them (a method "foo", or a binding's "expression for <property>"). Build a
+    // per-function key that qualifies the name with the owning object index, so two objects that both
+    // bind, say, "width" don't get matched to each other across the reload. Functions not reachable
+    // from an object's methods or script bindings (e.g. nested closures) keep their bare name.
+    QHash<const Function *, QString> functionOwnerKeys(const Unit *unit) const
+    {
+        QHash<const Function *, QString> keys;
+        const QmlUnit *qml = unit->qmlUnit();
+        if (!qml)
+            return keys;
+        for (quint32 o = 0; o < qml->nObjects; ++o) {
+            const Object *obj = qml->objectAt(o);
+            const QString prefix = QString::number(o) + QChar(QChar::Null);
+            const quint32_le *methods = obj->functionOffsetTable();
+            for (quint32 m = 0; m < obj->nFunctions; ++m) {
+                const Function *f = unit->functionAt(methods[m]);
+                keys.insert(f, prefix + unit->stringAtInternal(f->nameIndex));
+            }
+            const Binding *bindings = obj->bindingTable();
+            for (quint32 b = 0; b < obj->nBindings; ++b) {
+                if (bindings[b].type() != Binding::Type_Script)
+                    continue;
+                const Function *f = unit->functionAt(bindings[b].value.compiledScriptIndex);
+                keys.insert(f, prefix + unit->stringAtInternal(f->nameIndex));
+            }
+        }
+        return keys;
     }
 
     bool translationContentEqual(const TranslationData &oldTrans,
@@ -622,11 +748,14 @@ struct UnitDiffer
     {
         const Property *oldProps = oldObj->propertyTable();
         const Property *newProps = newObj->propertyTable();
-        compareIndexedElements<Property>(
+        compareNamedElements<Property>(
                 IndexedElements{ [oldProps](quint32 i) { return oldProps[i]; },
                                  oldObj->nProperties },
                 IndexedElements{ [newProps](quint32 i) { return newProps[i]; },
                                  newObj->nProperties },
+                [](const Property &p, const Unit *unit) {
+                    return unit->stringAtInternal(p.nameIndex());
+                },
                 [this](const Property &a, const Property &b) {
                     return propertyContentEqual(a, b);
                 });
@@ -636,33 +765,40 @@ struct UnitDiffer
     {
         const Alias *oldAliases = oldObj->aliasesBegin();
         const Alias *newAliases = newObj->aliasesBegin();
-        compareIndexedElements<Alias>(
+        compareNamedElements<Alias>(
                 IndexedElements{ [oldAliases](quint32 i) { return oldAliases[i]; },
                                  oldObj->nAliases },
                 IndexedElements{ [newAliases](quint32 i) { return newAliases[i]; },
                                  newObj->nAliases },
+                [](const Alias &a, const Unit *unit) {
+                    return unit->stringAtInternal(a.nameIndex());
+                },
                 [this](const Alias &a, const Alias &b) { return aliasContentEqual(a, b); });
     }
 
     void compareObjectEnums(const Object *oldObj, const Object *newObj)
     {
-        compareIndexedElements<Enum>(
+        compareNamedElements<Enum>(
                 IndexedElements{ [oldObj](quint32 i) -> const Enum & { return *oldObj->enumAt(i); },
                                  oldObj->nEnums },
                 IndexedElements{ [newObj](quint32 i) -> const Enum & { return *newObj->enumAt(i); },
                                  newObj->nEnums },
+                [](const Enum &e, const Unit *unit) { return unit->stringAtInternal(e.nameIndex); },
                 [this](const Enum &a, const Enum &b) { return enumContentEqual(a, b); });
     }
 
     void compareObjectSignals(const Object *oldObj, const Object *newObj)
     {
-        compareIndexedElements<Signal>(
+        compareNamedElements<Signal>(
                 IndexedElements{
                         [oldObj](quint32 i) -> const Signal & { return *oldObj->signalAt(i); },
                         oldObj->nSignals },
                 IndexedElements{
                         [newObj](quint32 i) -> const Signal & { return *newObj->signalAt(i); },
                         newObj->nSignals },
+                [](const Signal &s, const Unit *unit) {
+                    return unit->stringAtInternal(s.nameIndex);
+                },
                 [this](const Signal &a, const Signal &b) { return signalContentEqual(a, b); });
     }
 
@@ -670,11 +806,14 @@ struct UnitDiffer
     {
         const InlineComponent *oldICs = oldObj->inlineComponentTable();
         const InlineComponent *newICs = newObj->inlineComponentTable();
-        compareIndexedElements<InlineComponent>(
+        compareNamedElements<InlineComponent>(
                 IndexedElements{ [oldICs](quint32 i) { return oldICs[i]; },
                                  oldObj->nInlineComponents },
                 IndexedElements{ [newICs](quint32 i) { return newICs[i]; },
                                  newObj->nInlineComponents },
+                [](const InlineComponent &ic, const Unit *unit) {
+                    return unit->stringAtInternal(ic.nameIndex);
+                },
                 [this](const InlineComponent &a, const InlineComponent &b) {
                     return a.objectIndex == b.objectIndex && stringsEqual(a.nameIndex, b.nameIndex);
                 });
@@ -684,11 +823,14 @@ struct UnitDiffer
     {
         const RequiredPropertyExtraData *oldRPED = oldObj->requiredPropertyExtraDataTable();
         const RequiredPropertyExtraData *newRPED = newObj->requiredPropertyExtraDataTable();
-        compareIndexedElements<RequiredPropertyExtraData>(
+        compareNamedElements<RequiredPropertyExtraData>(
                 IndexedElements{ [oldRPED](quint32 i) { return oldRPED[i]; },
                                  oldObj->nRequiredPropertyExtraData },
                 IndexedElements{ [newRPED](quint32 i) { return newRPED[i]; },
                                  newObj->nRequiredPropertyExtraData },
+                [](const RequiredPropertyExtraData &r, const Unit *unit) {
+                    return unit->stringAtInternal(r.nameIndex);
+                },
                 [this](const RequiredPropertyExtraData &a, const RequiredPropertyExtraData &b) {
                     return stringsEqual(a.nameIndex, b.nameIndex);
                 });
@@ -698,11 +840,15 @@ struct UnitDiffer
     {
         const Binding *oldBindings = oldObj->bindingTable();
         const Binding *newBindings = newObj->bindingTable();
-        compareIndexedElements<Binding>(
+        compareNamedElements<Binding>(
                 IndexedElements{ [oldBindings](quint32 i) { return oldBindings[i]; },
                                  oldObj->nBindings },
                 IndexedElements{ [newBindings](quint32 i) { return newBindings[i]; },
                                  newObj->nBindings },
+                [](const Binding &b, const Unit *unit) {
+                    return b.propertyNameIndex == 0 ? QString()
+                                                    : unit->stringAtInternal(b.propertyNameIndex);
+                },
                 [this](const Binding &a, const Binding &b) { return bindingContentEqual(a, b); });
     }
 
@@ -782,17 +928,28 @@ struct UnitDiffer
                             && a.version == b.version;
                 });
 
-        compareIndexedElements<Function>(IndexedElements{ [this](quint32 i) -> const Function & {
-                                                             return *oldUnit->functionAt(i);
-                                                         },
-                                                          oldUnit->functionTableSize },
-                                         IndexedElements{ [this](quint32 i) -> const Function & {
-                                                             return *newUnit->functionAt(i);
-                                                         },
-                                                          newUnit->functionTableSize },
-                                         [this](const Function &a, const Function &b) {
-                                             return functionContentEqual(a, b);
-                                         });
+        // Functions are matched by name: a named method carries its own name, and a binding's
+        // expression is named "expression for <property>" (see QmlIR::IRBuilder). Since those names
+        // are only unique within their object, the key is qualified by the owning object (see
+        // functionOwnerKeys). This keeps a function insertion/removal isolated (FunctionAdded/Removed
+        // + FunctionIndexChanged for the ones that shift) instead of a cascade of content changes.
+        const QHash<const Function *, QString> oldFunctionKeys = functionOwnerKeys(oldUnit);
+        const QHash<const Function *, QString> newFunctionKeys = functionOwnerKeys(newUnit);
+        compareNamedElements<Function>(
+                IndexedElements{
+                        [this](quint32 i) -> const Function & { return *oldUnit->functionAt(i); },
+                        oldUnit->functionTableSize },
+                IndexedElements{
+                        [this](quint32 i) -> const Function & { return *newUnit->functionAt(i); },
+                        newUnit->functionTableSize },
+                [&](const Function &f, const Unit *unit) {
+                    const QHash<const Function *, QString> &keys =
+                            unit == oldUnit ? oldFunctionKeys : newFunctionKeys;
+                    return keys.value(&f, unit->stringAtInternal(f.nameIndex));
+                },
+                [this](const Function &a, const Function &b) {
+                    return functionContentEqual(a, b);
+                });
 
         compareIndexedElements<TranslationData>(
                 IndexedElements{ [this](quint32 i) { return oldUnit->translations()[i]; },
@@ -929,14 +1086,23 @@ static Severity classifyChange(const Change &change)
         return AddBinding;
     case QV4::CompiledData::ChangeType::ObjectRemoved:
         return RemoveObject;
+    case QV4::CompiledData::ChangeType::AliasIndexChanged:
     case QV4::CompiledData::ChangeType::AliasLocationChanged:
+    case QV4::CompiledData::ChangeType::BindingIndexChanged:
     case QV4::CompiledData::ChangeType::BindingLocationChanged:
+    case QV4::CompiledData::ChangeType::EnumIndexChanged:
     case QV4::CompiledData::ChangeType::EnumLocationChanged:
+    case QV4::CompiledData::ChangeType::FunctionIndexChanged:
     case QV4::CompiledData::ChangeType::FunctionLocationChanged:
     case QV4::CompiledData::ChangeType::ImportLocationChanged:
+    case QV4::CompiledData::ChangeType::InlineComponentIndexChanged:
     case QV4::CompiledData::ChangeType::InlineComponentLocationChanged:
     case QV4::CompiledData::ChangeType::ObjectLocationChanged:
+    case QV4::CompiledData::ChangeType::PropertyIndexChanged:
     case QV4::CompiledData::ChangeType::PropertyLocationChanged:
+    case QV4::CompiledData::ChangeType::RequiredPropertyExtraDataIndexChanged:
+    case QV4::CompiledData::ChangeType::RequiredPropertyExtraDataLocationChanged:
+    case QV4::CompiledData::ChangeType::SignalIndexChanged:
     case QV4::CompiledData::ChangeType::SignalLocationChanged:
         return Ignore;
     case QV4::CompiledData::ChangeType::ConstantAdded:

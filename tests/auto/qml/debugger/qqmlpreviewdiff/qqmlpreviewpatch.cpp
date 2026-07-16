@@ -236,11 +236,11 @@ private:
                             ChangeType removeType)
     {
         if (change.type == addType)
-            cs.insertions.insert(change.index, std::get<VariantType>(change.data));
+            cs.insertions.insert(change.newIndex, std::get<VariantType>(change.data));
         else if (change.type == removeType)
-            cs.removals.insert(change.index);
+            cs.removals.insert(change.oldIndex);
         else
-            cs.replacements.insert(change.index, std::get<VariantType>(change.data));
+            cs.replacements.insert(change.oldIndex, std::get<VariantType>(change.data));
     }
 
     // ===== Merge helpers =====
@@ -594,9 +594,11 @@ private:
             case ChangeType::FunctionAdded:
             case ChangeType::FunctionChanged:
             case ChangeType::FunctionLocationChanged:
+            case ChangeType::FunctionIndexChanged:
             case ChangeType::FunctionRemoved:
-                routeChange(m_functions, change, ChangeType::FunctionAdded,
-                            ChangeType::FunctionRemoved);
+                // Functions are name-matched (like per-object attributes), so they are reconstructed
+                // by placing each at its new index rather than via a positional ChangeSet.
+                m_functionChanges.append(&change);
                 break;
             case ChangeType::LookupAdded:
             case ChangeType::LookupChanged:
@@ -683,6 +685,13 @@ private:
         if (m_oldToNewStringIndex.isEmpty())
             return oldIdx;
         return m_oldToNewStringIndex.value(oldIdx, oldIdx);
+    }
+
+    quint32 remapConstantIndex(quint32 oldIdx) const
+    {
+        if (m_oldToNewConstantIndex.isEmpty())
+            return oldIdx;
+        return m_oldToNewConstantIndex.value(oldIdx, oldIdx);
     }
 
     ParameterType remapParameterType(ParameterType pt) const
@@ -773,7 +782,7 @@ private:
         QList<const Change *> addedObjects;
         for (const Change &change : m_diff.changes) {
             if (change.type == ChangeType::ObjectRemoved) {
-                removedObjects.insert(static_cast<quint32>(change.index));
+                removedObjects.insert(static_cast<quint32>(change.newIndex));
             } else if (change.type == ChangeType::ObjectAdded) {
                 addedObjects.append(&change);
             }
@@ -781,7 +790,7 @@ private:
 
         // Sort added objects by index
         std::sort(addedObjects.begin(), addedObjects.end(),
-                  [](const Change *a, const Change *b) { return a->index < b->index; });
+                  [](const Change *a, const Change *b) { return a->newIndex < b->newIndex; });
 
         // Build the new object list
         QList<QByteArray> newObjects;
@@ -792,7 +801,7 @@ private:
         while (oldIdx < oldQml->nObjects || addedIdx < static_cast<quint32>(addedObjects.size())) {
             // Check if there's an object to add at this position
             while (addedIdx < static_cast<quint32>(addedObjects.size())
-                   && addedObjects[addedIdx]->index == newObjIdx) {
+                   && addedObjects[addedIdx]->newIndex == newObjIdx) {
                 QByteArray objData =
                         buildNewObject(std::get<ObjectHunk>(addedObjects[addedIdx]->data));
                 if (objData.isEmpty()) {
@@ -835,9 +844,9 @@ private:
         for (const Change &change : m_diff.changes) {
             if (change.type == ChangeType::ImportChanged
                 || change.type == ChangeType::ImportLocationChanged) {
-                changedImports[change.index] = &change;
+                changedImports[change.newIndex] = &change;
             } else if (change.type == ChangeType::ImportRemoved) {
-                removedImports.insert(change.index);
+                removedImports.insert(change.newIndex);
             } else if (change.type == ChangeType::ImportAdded) {
                 addedImports.append(&change);
             }
@@ -882,10 +891,13 @@ private:
                     const ImportHunk &id = std::get<ImportHunk>(change->data);
                     applyImport(newImports[newIdx], id);
                 } else {
-                    // Copy from old - indices remain the same (string table is position-rebuilt)
+                    // Copy from old, remapping the string indices in case a moved string shifted
+                    // the uri/qualifier this surviving import references.
                     const Import *oldImport = oldQml->importAt(oldIdx);
                     Import &imp = newImports[newIdx];
                     std::memcpy(&imp, oldImport, sizeof(Import));
+                    imp.uriIndex = remapStringIndex(oldImport->uriIndex);
+                    imp.qualifierIndex = remapStringIndex(oldImport->qualifierIndex);
                 }
                 ++newIdx;
             }
@@ -960,6 +972,11 @@ private:
         BindingHunk bd = *b;
         bd.propertyNameIndex = remapStringIndex(b->propertyNameIndex);
         bd.stringIndex = remapStringIndex(b->stringIndex);
+        // A surviving numeric-literal binding keeps its value but may reference a constant whose
+        // table index shifted (the diff reports such a shift as no change on the binding itself).
+        // Fix up the stored index.
+        if (b->type() == Binding::Type_Number)
+            bd.value.constantValueIndex = remapConstantIndex(b->value.constantValueIndex);
         return bd;
     }
 
@@ -1021,47 +1038,49 @@ private:
         return data;
     }
 
+    // Rebuild a name-matched attribute table by placing each element at its new index. The diff
+    // reports every element whose content, location or own index changed (all carrying the new
+    // data at the new index); an element with no change stays put, so new slot j that has no
+    // change is simply the old element at index j (with its referenced string/constant indices
+    // remapped). This mirrors how compareNamedElements matches by identity, and handles insertions,
+    // removals and reorderings uniformly.
     template <typename Hunk, typename Iterator>
-    QList<Hunk> rebuildObjectAttributes(ChangeSet<Hunk> &&cs, Iterator oldBegin,
-                                        Iterator oldEnd) const
+    QList<Hunk> rebuildNamedAttributes(const QList<const Change *> &changes, ChangeType addedType,
+                                       ChangeType removedType, Iterator oldBegin,
+                                       quint32 oldCount) const
     {
-        QList<Hunk> result;
-
-        quint32 newIdx = 0;
-        Iterator oldItem = oldBegin;
-
-        while (oldItem != oldEnd || !cs.insertions.isEmpty()) {
-            while (cs.insertions.contains(newIdx)) {
-                result.append(cs.insertions.take(newIdx));
-                ++newIdx;
+        QHash<quint32, Hunk> byNewIndex;
+        quint32 addedCount = 0;
+        quint32 removedCount = 0;
+        for (const Change *c : changes) {
+            if (c->type == removedType) {
+                ++removedCount;
+                continue;
             }
-
-            if (oldItem != oldEnd) {
-                const int oldIndex = oldItem - oldBegin;
-                if (!cs.removals.contains(oldIndex)) {
-                    const auto it = cs.replacements.find(oldIndex);
-                    result.append(it == cs.replacements.end() ? extractDataFromOld(oldItem) : *it);
-                    ++newIdx;
-                }
-                ++oldItem;
-            }
+            byNewIndex.insert(c->newIndex, std::get<Hunk>(c->data));
+            if (c->type == addedType)
+                ++addedCount;
         }
 
-        for (auto it = cs.insertions.begin(); it != cs.insertions.end(); ++it)
-            result.append(it.value());
-
+        const quint32 newCount = oldCount + addedCount - removedCount;
+        QList<Hunk> result;
+        result.reserve(newCount);
+        for (quint32 j = 0; j < newCount; ++j) {
+            const auto it = byNewIndex.constFind(j);
+            result.append(it != byNewIndex.constEnd() ? *it : extractDataFromOld(oldBegin + j));
+        }
         return result;
     }
 
     QByteArray rebuildObject(quint32 objIdx, const Object *oldObj)
     {
-        ChangeSet<BindingHunk> bindings;
-        ChangeSet<PropertyHunk> properties;
-        ChangeSet<AliasHunk> aliases;
-        ChangeSet<RequiredPropertyExtraDataHunk> rpeds;
-        ChangeSet<EnumHunk> enums;
-        ChangeSet<SignalHunk> signalChanges;
-        ChangeSet<InlineComponentHunk> ics;
+        QList<const Change *> bindings;
+        QList<const Change *> properties;
+        QList<const Change *> aliases;
+        QList<const Change *> rpeds;
+        QList<const Change *> enums;
+        QList<const Change *> signalChanges;
+        QList<const Change *> ics;
 
         const QList<const Change *> &changes = m_changesByObject.value(objIdx);
         for (const Change *c : changes) {
@@ -1069,68 +1088,76 @@ private:
             case ChangeType::BindingAdded:
             case ChangeType::BindingChanged:
             case ChangeType::BindingLocationChanged:
+            case ChangeType::BindingIndexChanged:
             case ChangeType::BindingRemoved:
-                routeChange(bindings, *c, ChangeType::BindingAdded, ChangeType::BindingRemoved);
+                bindings.append(c);
                 break;
             case ChangeType::PropertyAdded:
             case ChangeType::PropertyChanged:
             case ChangeType::PropertyLocationChanged:
+            case ChangeType::PropertyIndexChanged:
             case ChangeType::PropertyRemoved:
-                routeChange(properties, *c, ChangeType::PropertyAdded,
-                            ChangeType::PropertyRemoved);
+                properties.append(c);
                 break;
             case ChangeType::AliasAdded:
             case ChangeType::AliasChanged:
             case ChangeType::AliasLocationChanged:
+            case ChangeType::AliasIndexChanged:
             case ChangeType::AliasRemoved:
-                routeChange(aliases, *c, ChangeType::AliasAdded, ChangeType::AliasRemoved);
+                aliases.append(c);
                 break;
             case ChangeType::RequiredPropertyExtraDataAdded:
             case ChangeType::RequiredPropertyExtraDataChanged:
             case ChangeType::RequiredPropertyExtraDataRemoved:
-                routeChange(rpeds, *c, ChangeType::RequiredPropertyExtraDataAdded,
-                            ChangeType::RequiredPropertyExtraDataRemoved);
+                rpeds.append(c);
                 break;
             case ChangeType::EnumAdded:
             case ChangeType::EnumChanged:
             case ChangeType::EnumLocationChanged:
+            case ChangeType::EnumIndexChanged:
             case ChangeType::EnumRemoved:
-                routeChange(enums, *c, ChangeType::EnumAdded, ChangeType::EnumRemoved);
+                enums.append(c);
                 break;
             case ChangeType::SignalAdded:
             case ChangeType::SignalChanged:
             case ChangeType::SignalLocationChanged:
+            case ChangeType::SignalIndexChanged:
             case ChangeType::SignalRemoved:
-                routeChange(signalChanges, *c, ChangeType::SignalAdded, ChangeType::SignalRemoved);
+                signalChanges.append(c);
                 break;
             case ChangeType::InlineComponentAdded:
             case ChangeType::InlineComponentChanged:
             case ChangeType::InlineComponentLocationChanged:
             case ChangeType::InlineComponentRemoved:
-                routeChange(ics, *c, ChangeType::InlineComponentAdded,
-                            ChangeType::InlineComponentRemoved);
+                ics.append(c);
                 break;
             default:
                 break;
             }
         }
 
-        const auto newBindings = rebuildObjectAttributes<BindingHunk>(
-                std::move(bindings), oldObj->bindingsBegin(), oldObj->bindingsEnd());
-        const auto newProperties = rebuildObjectAttributes<PropertyHunk>(
-                std::move(properties), oldObj->propertiesBegin(), oldObj->propertiesEnd());
-        const auto newAliases = rebuildObjectAttributes<AliasHunk>(
-                std::move(aliases), oldObj->aliasesBegin(), oldObj->aliasesEnd());
-        const auto newEnums = rebuildObjectAttributes<EnumHunk>(
-                std::move(enums), oldObj->enumsBegin(), oldObj->enumsEnd());
-        const auto newSignals = rebuildObjectAttributes<SignalHunk>(
-                std::move(signalChanges), oldObj->signalsBegin(), oldObj->signalsEnd());
-        const auto newInlineComponents = rebuildObjectAttributes<InlineComponentHunk>(
-                std::move(ics), oldObj->inlineComponentsBegin(), oldObj->inlineComponentsEnd());
-        const auto newRequiredPropExtraData =
-                rebuildObjectAttributes<RequiredPropertyExtraDataHunk>(
-                        std::move(rpeds), oldObj->requiredPropertyExtraDataBegin(),
-                        oldObj->requiredPropertyExtraDataEnd());
+        const auto newBindings = rebuildNamedAttributes<BindingHunk>(
+                bindings, ChangeType::BindingAdded, ChangeType::BindingRemoved,
+                oldObj->bindingsBegin(), oldObj->nBindings);
+        const auto newProperties = rebuildNamedAttributes<PropertyHunk>(
+                properties, ChangeType::PropertyAdded, ChangeType::PropertyRemoved,
+                oldObj->propertiesBegin(), oldObj->nProperties);
+        const auto newAliases = rebuildNamedAttributes<AliasHunk>(
+                aliases, ChangeType::AliasAdded, ChangeType::AliasRemoved, oldObj->aliasesBegin(),
+                oldObj->nAliases);
+        const auto newEnums = rebuildNamedAttributes<EnumHunk>(
+                enums, ChangeType::EnumAdded, ChangeType::EnumRemoved, oldObj->enumsBegin(),
+                oldObj->nEnums);
+        const auto newSignals = rebuildNamedAttributes<SignalHunk>(
+                signalChanges, ChangeType::SignalAdded, ChangeType::SignalRemoved,
+                oldObj->signalsBegin(), oldObj->nSignals);
+        const auto newInlineComponents = rebuildNamedAttributes<InlineComponentHunk>(
+                ics, ChangeType::InlineComponentAdded, ChangeType::InlineComponentRemoved,
+                oldObj->inlineComponentsBegin(), oldObj->nInlineComponents);
+        const auto newRequiredPropExtraData = rebuildNamedAttributes<RequiredPropertyExtraDataHunk>(
+                rpeds, ChangeType::RequiredPropertyExtraDataAdded,
+                ChangeType::RequiredPropertyExtraDataRemoved,
+                oldObj->requiredPropertyExtraDataBegin(), oldObj->nRequiredPropertyExtraData);
 
         // Check for ObjectChanged to get updated fields
         quint32 newNFunctions = oldObj->nFunctions;
@@ -1152,7 +1179,7 @@ private:
         bool newHasAliasAsDefaultProperty = oldObj->hasAliasAsDefaultProperty();
 
         for (const Change &change : m_diff.changes) {
-            if (change.index != objIdx)
+            if (change.newIndex != objIdx)
                 continue;
 
             if (change.type == ChangeType::ObjectChanged) {
@@ -1382,11 +1409,15 @@ private:
                 newStringToIndex.insert(allStrings[i], static_cast<quint32>(i));
 
             m_oldToNewStringIndex.clear();
+            m_stringsReordered = false;
             for (quint32 i = 0; i < oldUnit->stringTableSize; ++i) {
                 const QString oldStr = oldUnit->stringAtInternal(i);
                 auto it = newStringToIndex.constFind(oldStr);
-                if (it != newStringToIndex.constEnd())
+                if (it != newStringToIndex.constEnd()) {
                     m_oldToNewStringIndex[i] = it.value();
+                    if (it.value() != i)
+                        m_stringsReordered = true;
+                }
                 // If the old string was removed entirely, there's no mapping;
                 // remapStringIndex() will return the old index as-is (shouldn't
                 // be referenced by any surviving element).
@@ -1490,6 +1521,21 @@ private:
                 m_constants, oldUnit->constantTableSize, [&](quint32 i) { return oldConstants[i]; },
                 [](quint64 v) { return v; });
 
+        // Map each old constant index to where the same value ended up in the new table, so a
+        // surviving numeric-literal binding whose constant merely moved can be fixed up
+        // (see extractDataFromOld(Binding)).
+        m_oldToNewConstantIndex.clear();
+        if (oldConstants) {
+            QHash<quint64, quint32> newValueToIndex;
+            for (qsizetype i = allConstants.size(); i-- > 0;)
+                newValueToIndex.insert(allConstants[i], static_cast<quint32>(i));
+            for (quint32 i = 0; i < oldUnit->constantTableSize; ++i) {
+                const auto it = newValueToIndex.constFind(oldConstants[i]);
+                if (it != newValueToIndex.constEnd())
+                    m_oldToNewConstantIndex[i] = it.value();
+            }
+        }
+
         spliceFlatTable<quint64>(allConstants, oldUnit->offsetToConstantTable,
                                  oldUnit->constantTableSize, offsetof(Unit, constantTableSize),
                                  offsetof(Unit, offsetToConstantTable));
@@ -1501,17 +1547,27 @@ private:
 
     bool rebuildTranslationTable()
     {
-        if (m_translations.isEmpty())
-            return true;
-
         const Unit *oldUnit = reinterpret_cast<const Unit *>(m_patchedData.constData());
+
+        if (m_translations.isEmpty()
+            && (!m_stringsReordered || oldUnit->translationTableSize == 0)) {
+            return true;
+        }
 
         const TranslationData *oldEntries =
                 oldUnit->translationTableSize > 0 ? oldUnit->translations() : nullptr;
 
         QList<TranslationData> allEntries = mergeEntriesOldKeyed<TranslationData>(
                 m_translations, oldUnit->translationTableSize,
-                [&](quint32 i) { return oldEntries[i]; }, toTranslationData);
+                [&](quint32 i) {
+                    TranslationData t = oldEntries[i];
+                    t.stringIndex = remapStringIndex(t.stringIndex);
+                    t.commentIndex = remapStringIndex(t.commentIndex);
+                    if (t.contextIndex != TranslationData::NoContextIndex)
+                        t.contextIndex = remapStringIndex(t.contextIndex);
+                    return t;
+                },
+                toTranslationData);
 
         qsizetype oldTableSize = oldUnit->translationTableSize * sizeof(TranslationData);
         qsizetype newTableSize = allEntries.size() * sizeof(TranslationData);
@@ -1590,7 +1646,12 @@ private:
 
         QList<Lookup> allLookups =
                 mergeSimpleEntries<Lookup>(m_lookups, oldUnit->lookupTableSize,
-                                           [&](quint32 i) { return oldUnit->lookupTable()[i]; });
+                                           [&](quint32 i) {
+                                               const Lookup &l = oldUnit->lookupTable()[i];
+                                               return Lookup(static_cast<Lookup::Type>(l.type()),
+                                                             static_cast<Lookup::Mode>(l.mode()),
+                                                             remapStringIndex(l.nameIndex()));
+                                           });
 
         spliceFlatTable<Lookup>(allLookups, oldUnit->offsetToLookupTable, oldUnit->lookupTableSize,
                                 offsetof(Unit, lookupTableSize),
@@ -1602,7 +1663,7 @@ private:
 
     bool rebuildRegExpTable()
     {
-        if (m_regexps.isEmpty())
+        if (m_regexps.isEmpty() && !m_stringsReordered)
             return true;
 
         const Unit *oldUnit = reinterpret_cast<const Unit *>(m_patchedData.constData());
@@ -1634,7 +1695,7 @@ private:
                                      IndirectTable tableEnum, size_t countFieldOff,
                                      size_t offsetFieldOff)
     {
-        if (changes.isEmpty())
+        if (changes.isEmpty() && !m_stringsReordered)
             return true;
 
         if (!validateIndirectTable<EntryType>(tableOffset, tableSize, calcSize))
@@ -1643,6 +1704,23 @@ private:
         QVector<Hunk> finalEntries = mergeIndirectEntries<Hunk>(
                 changes, tableSize, std::forward<ExtractOldFn>(extractOld));
 
+        if (!emitIndirectEntries<EntryType>(finalEntries, tableOffset, tableSize, calcSize,
+                                            std::forward<SerializeFn>(serialize), tableEnum,
+                                            countFieldOff, offsetFieldOff))
+            return false;
+
+        changes.clear();
+        return true;
+    }
+
+    // Serialize a fully-computed indirect table (offset table + variable-sized data) and splice it
+    // into the patched unit. Shared by the positional (ChangeSet) rebuild and the name-based
+    // function rebuild.
+    template <typename EntryType, typename Hunk, typename SizeCalc, typename SerializeFn>
+    bool emitIndirectEntries(const QVector<Hunk> &finalEntries, quint32 tableOffset,
+                             quint32 tableSize, const SizeCalc &calcSize, SerializeFn &&serialize,
+                             IndirectTable tableEnum, size_t countFieldOff, size_t offsetFieldOff)
+    {
         QByteArray entryData;
         QVector<qsizetype> entrySizes;
         for (const Hunk &h : std::as_const(finalEntries)) {
@@ -1658,14 +1736,10 @@ private:
             dataStart = dataEnd = oldUnit->offsetToStringTable;
         }
 
-        if (!spliceAndShiftIndirectTable(tableOffset, tableSize * sizeof(quint32_le), dataStart,
-                                         dataEnd, static_cast<quint32>(finalEntries.size()),
-                                         entryData, entrySizes, tableEnum, countFieldOff,
-                                         offsetFieldOff))
-            return false;
-
-        changes.clear();
-        return true;
+        return spliceAndShiftIndirectTable(tableOffset, tableSize * sizeof(quint32_le), dataStart,
+                                           dataEnd, static_cast<quint32>(finalEntries.size()),
+                                           entryData, entrySizes, tableEnum, countFieldOff,
+                                           offsetFieldOff);
     }
 
     bool rebuildClassTable()
@@ -2160,32 +2234,63 @@ private:
     bool rebuildFunctionTable()
     {
         const Unit *u = reinterpret_cast<const Unit *>(m_patchedData.constData());
+        if (m_functionChanges.isEmpty() && !m_stringsReordered)
+            return true;
+
         auto funcSize = [](const Function *f) {
             return Function::calculateSize(f->nFormals, f->nLocals, f->nLineAndStatementNumbers,
                                            f->nLabelInfos, f->codeSize);
         };
-        return rebuildIndirectTableGeneric<Function>(
-                m_functions, u->offsetToFunctionTable, u->functionTableSize, funcSize,
-                [&](quint32 i) -> std::optional<FunctionHunk> {
-                    const Function &old = *u->functionAt(i);
-                    FunctionHunk fd;
-                    fd.data = old;
-                    fd.data.nameIndex = remapStringIndex(old.nameIndex);
-                    fd.data.returnType = remapParameterType(old.returnType);
-                    for (quint16 j = 0, end = old.nFormals; j != end; ++j)
-                        fd.formals.append(remapParameter(old.formalsTable()[j]));
-                    for (quint16 j = 0, end = old.nLocals; j != end; ++j) {
-                        quint32_le val;
-                        val = remapStringIndex(old.localsTable()[j]);
-                        fd.locals.append(val);
-                    }
-                    for (quint16 j = 0, end = old.nLineAndStatementNumbers; j != end; ++j)
-                        fd.lineAndStatementNumbers.append(old.lineAndStatementNumberTable()[j]);
-                    for (quint32 j = 0, end = old.nLabelInfos; j != end; ++j)
-                        fd.labelInfos.append(old.labelInfoTable()[j]);
-                    fd.code = QByteArray(old.code(), old.codeSize);
-                    return fd;
-                },
+        if (!validateIndirectTable<Function>(u->offsetToFunctionTable, u->functionTableSize,
+                                             funcSize))
+            return false;
+
+        const auto extractOld = [&](quint32 i) -> FunctionHunk {
+            const Function &old = *u->functionAt(i);
+            FunctionHunk fd;
+            fd.data = old;
+            fd.data.nameIndex = remapStringIndex(old.nameIndex);
+            fd.data.returnType = remapParameterType(old.returnType);
+            for (quint16 j = 0, end = old.nFormals; j != end; ++j)
+                fd.formals.append(remapParameter(old.formalsTable()[j]));
+            for (quint16 j = 0, end = old.nLocals; j != end; ++j) {
+                quint32_le val;
+                val = remapStringIndex(old.localsTable()[j]);
+                fd.locals.append(val);
+            }
+            for (quint16 j = 0, end = old.nLineAndStatementNumbers; j != end; ++j)
+                fd.lineAndStatementNumbers.append(old.lineAndStatementNumberTable()[j]);
+            for (quint32 j = 0, end = old.nLabelInfos; j != end; ++j)
+                fd.labelInfos.append(old.labelInfoTable()[j]);
+            fd.code = QByteArray(old.code(), old.codeSize);
+            return fd;
+        };
+
+        // Functions are name-matched: place each at its new index. A Changed/IndexChanged/
+        // LocationChanged/Added change carries the new function at its newIndex; unchanged survivors
+        // stay at their (unshifted) index and are copied from the old table.
+        QHash<quint32, FunctionHunk> byNewIndex;
+        quint32 addedCount = 0;
+        quint32 removedCount = 0;
+        for (const Change *c : std::as_const(m_functionChanges)) {
+            if (c->type == ChangeType::FunctionRemoved) {
+                ++removedCount;
+                continue;
+            }
+            byNewIndex.insert(c->newIndex, std::get<FunctionHunk>(c->data));
+            if (c->type == ChangeType::FunctionAdded)
+                ++addedCount;
+        }
+        const quint32 newCount = u->functionTableSize + addedCount - removedCount;
+        QVector<FunctionHunk> finalEntries;
+        finalEntries.reserve(newCount);
+        for (quint32 j = 0; j < newCount; ++j) {
+            const auto it = byNewIndex.constFind(j);
+            finalEntries.append(it != byNewIndex.constEnd() ? *it : extractOld(j));
+        }
+
+        const bool ok = emitIndirectEntries<Function>(
+                finalEntries, u->offsetToFunctionTable, u->functionTableSize, funcSize,
                 [](const FunctionHunk &fd) -> QByteArray {
                     int sz = Function::calculateSize(fd.data.nFormals, fd.data.nLocals,
                                                      fd.data.nLineAndStatementNumbers,
@@ -2212,6 +2317,8 @@ private:
                 },
                 IndirectTable::Function, offsetof(Unit, functionTableSize),
                 offsetof(Unit, offsetToFunctionTable));
+        m_functionChanges.clear();
+        return ok;
     }
 
     qsizetype calculateOldStringTableSize() const
@@ -2255,9 +2362,15 @@ private:
 
     ChangeSet<QString> m_strings;
     QHash<quint32, quint32> m_oldToNewStringIndex; // old string index -> new string index
+    QHash<quint32, quint32> m_oldToNewConstantIndex; // old constant index -> new constant index
+    // Set when the string table was reordered (not just replaced in place). The positionally
+    // rebuilt internal tables that reference strings by index must then remap their surviving
+    // entries, even ones with no change of their own, since content-based comparison no longer
+    // flags a pure index shift.
+    bool m_stringsReordered = false;
 
     ChangeSet<quint64> m_constants;
-    ChangeSet<FunctionHunk> m_functions;
+    QList<const Change *> m_functionChanges;
     ChangeSet<LookupHunk> m_lookups;
     ChangeSet<TranslationDataHunk> m_translations;
     ChangeSet<RegExpHunk> m_regexps;

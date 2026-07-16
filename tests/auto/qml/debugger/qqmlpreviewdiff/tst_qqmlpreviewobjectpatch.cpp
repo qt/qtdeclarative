@@ -217,6 +217,11 @@ private slots:
     void inPlacePatchLoopingAnimationDuration();
     void granularPropertyAdditionWithStash();
     void granularPropertyRemovalWithStash();
+    void swapPropertyPositions();
+    void swapBindingPositions();
+    void swapAliasPositions();
+    void swapSignalPositions();
+    void swapEnumPositions();
     void updateObjectsFunctionAdd();
     void updateObjectsGeneratorFunctionAdd();
     void updateObjectsGeneratorMethodChange();
@@ -739,6 +744,159 @@ void tst_QQmlPreviewObjectPatch::granularPropertyRemovalWithStash()
 
     QCOMPARE(object->property("count").toInt(), 77);
     QVERIFY(!object->property("removedProp").isValid());
+}
+
+void tst_QQmlPreviewObjectPatch::swapPropertyPositions()
+{
+    QQmlComponent oldComponent(&engine, testFileUrl("SwapPropertiesOld.qml"));
+    QVERIFY2(oldComponent.isReady(), qPrintable(oldComponent.errorString()));
+    QScopedPointer<QObject> object(oldComponent.create());
+    QVERIFY(object);
+    QCOMPARE(object->property("base").toInt(), 10);
+    QCOMPARE(object->property("scaled").toInt(), 20);
+
+    QQmlComponent newComponent(&engine, testFileUrl("SwapPropertiesNew.qml"));
+    QVERIFY2(newComponent.isReady(), qPrintable(newComponent.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldComponent)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComponent)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    // Only the declaration order of the two properties (and their bindings) changed; their
+    // identities, values and bindings are unchanged.
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
+
+    QCOMPARE(object->property("base").toInt(), 10);
+    QCOMPARE(object->property("scaled").toInt(), 20);
+
+    // The reordered binding is still live: changing its source updates it.
+    object->setProperty("base", 100);
+    QCOMPARE(object->property("scaled").toInt(), 200);
+}
+
+void tst_QQmlPreviewObjectPatch::swapBindingPositions()
+{
+    QQmlComponent oldComponent(&engine, testFileUrl("SwapBindingsOld.qml"));
+    QVERIFY2(oldComponent.isReady(), qPrintable(oldComponent.errorString()));
+    QScopedPointer<QObject> object(oldComponent.create());
+    QVERIFY(object);
+    QCOMPARE(object->property("width").toInt(), 100);
+    QCOMPARE(object->property("height").toInt(), 200);
+    QObject *objectBefore = object.get();
+
+    QQmlComponent newComponent(&engine, testFileUrl("SwapBindingsNew.qml"));
+    QVERIFY2(newComponent.isReady(), qPrintable(newComponent.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldComponent)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComponent)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    // Only the declaration order of the two bindings changed. A binding is re-applied by its
+    // target property, so a binding index change is a trivial in-place patch (no rebuild).
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QCOMPARE(updateObjects(objects, oldExecUnit, newExecUnit),
+             QQmlPreview::PatchResult::PatchedInPlace);
+    QCOMPARE(object.get(), objectBefore); // reused in place
+
+    QCOMPARE(object->property("width").toInt(), 100);
+    QCOMPARE(object->property("height").toInt(), 200);
+
+    // The reordered script binding is still live.
+    object->setProperty("width", 50);
+    QCOMPARE(object->property("height").toInt(), 100);
+}
+
+void tst_QQmlPreviewObjectPatch::swapAliasPositions()
+{
+    QQmlComponent oldComponent(&engine, testFileUrl("SwapAliasesOld.qml"));
+    QVERIFY2(oldComponent.isReady(), qPrintable(oldComponent.errorString()));
+    QScopedPointer<QObject> object(oldComponent.create());
+    QVERIFY(object);
+    QCOMPARE(object->property("aa").toInt(), 5);
+    QCOMPARE(object->property("bb").toInt(), 7);
+
+    QQmlComponent newComponent(&engine, testFileUrl("SwapAliasesNew.qml"));
+    QVERIFY2(newComponent.isReady(), qPrintable(newComponent.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldComponent)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComponent)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    // An alias occupies a VME property slot (a coreIndex into the instance's storage), so
+    // reordering aliases must rebuild to relocate that state; an in-place cache re-point alone
+    // would read through the wrong slot.
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
+
+    QCOMPARE(object->property("aa").toInt(), 5);
+    QCOMPARE(object->property("bb").toInt(), 7);
+
+    // The reordered alias still writes through to its target.
+    object->setProperty("aa", 42);
+    QCOMPARE(object->property("aa").toInt(), 42);
+    QCOMPARE(object->property("bb").toInt(), 7);
+}
+
+void tst_QQmlPreviewObjectPatch::swapSignalPositions()
+{
+    QQmlComponent oldComponent(&engine, testFileUrl("SwapSignalsOld.qml"));
+    QVERIFY2(oldComponent.isReady(), qPrintable(oldComponent.errorString()));
+    QScopedPointer<QObject> object(oldComponent.create());
+    QVERIFY(object);
+    QCOMPARE(object->property("marker").toInt(), 0);
+
+    QQmlComponent newComponent(&engine, testFileUrl("SwapSignalsNew.qml"));
+    QVERIFY2(newComponent.isReady(), qPrintable(newComponent.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldComponent)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComponent)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    // Signals become meta-object methods; reordering them shifts method indices, so this must
+    // rebuild rather than patch in place.
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
+
+    // After the rebuild each signal still triggers its handler.
+    QVERIFY(QMetaObject::invokeMethod(object.get(), "alpha"));
+    QCOMPARE(object->property("marker").toInt(), 1);
+    QVERIFY(QMetaObject::invokeMethod(object.get(), "beta"));
+    QCOMPARE(object->property("marker").toInt(), 2);
+}
+
+void tst_QQmlPreviewObjectPatch::swapEnumPositions()
+{
+    QQmlComponent oldComponent(&engine, testFileUrl("SwapEnumsOld.qml"));
+    QVERIFY2(oldComponent.isReady(), qPrintable(oldComponent.errorString()));
+    QScopedPointer<QObject> object(oldComponent.create());
+    QVERIFY(object);
+    QCOMPARE(object->property("marker").toInt(), 7);
+    QObject *objectBefore = object.get();
+
+    QQmlComponent newComponent(&engine, testFileUrl("SwapEnumsNew.qml"));
+    QVERIFY2(newComponent.isReady(), qPrintable(newComponent.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldComponent)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComponent)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    // Enums are resolved at compile time and carry no per-instance state, so reordering them is a
+    // trivial in-place patch.
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QCOMPARE(updateObjects(objects, oldExecUnit, newExecUnit),
+             QQmlPreview::PatchResult::PatchedInPlace);
+    QCOMPARE(object.get(), objectBefore); // reused in place
+    QCOMPARE(object->property("marker").toInt(), 7);
+
+    // The reordered enums still resolve to their values after the in-place remap.
+    const QMetaObject *mo = object->metaObject();
+    const int alphaIdx = mo->indexOfEnumerator("Alpha");
+    const int betaIdx = mo->indexOfEnumerator("Beta");
+    QVERIFY(alphaIdx >= 0);
+    QVERIFY(betaIdx >= 0);
+    QCOMPARE(mo->enumerator(alphaIdx).keyToValue("B"), 22);
+    QCOMPARE(mo->enumerator(betaIdx).keyToValue("D"), 44);
 }
 
 void tst_QQmlPreviewObjectPatch::updateObjectsFunctionAdd()

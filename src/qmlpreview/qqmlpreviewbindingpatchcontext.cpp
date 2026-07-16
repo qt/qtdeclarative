@@ -979,7 +979,7 @@ void BindingPatchContext::patchBinding(
         const QV4::CompiledData::Change &change)
 {
     const QV4::CompiledData::Binding *newBinding =
-            newUnit->objectAt(change.objectIndex)->bindingTable() + change.index;
+            newUnit->objectAt(change.objectIndex)->bindingTable() + change.newIndex;
     const QVariant newValue = literalBindingValue(newUnit, newBinding);
     if (!newValue.isValid())
         return; // Script binding: handled by function translation.
@@ -993,7 +993,7 @@ void BindingPatchContext::patchBinding(
     const QMetaType metaType = qProp.propertyMetaType();
 
     const QV4::CompiledData::Binding *oldBinding =
-            unit->objectAt(change.objectIndex)->bindingTable() + change.index;
+            unit->objectAt(change.objectIndex)->bindingTable() + change.oldIndex;
     const QVariant expectedOld =
             coerceToPropertyType(v4, literalBindingValue(unit, oldBinding), metaType);
     if (qProp.read() == expectedOld)

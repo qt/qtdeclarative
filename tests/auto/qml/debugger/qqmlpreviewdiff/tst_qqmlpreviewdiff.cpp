@@ -92,6 +92,11 @@ private slots:
     void signalLocationOnlyChange();
     void signalContentAndLocationChange();
 
+    // Name-based (rather than index-based) matching of per-object attributes: an insertion in
+    // the middle must produce a single Added change, not a cascade of index-shift Changed changes.
+    void bindingInsertionInMiddle();
+    void propertyInsertionInMiddle();
+
     // Patch verification tests
     void patch_data();
     void patch();
@@ -196,7 +201,7 @@ void tst_QQmlPreviewDiff::verifyPatchProducesByteIdenticalUnit(const QString &ol
         for (quint32 i = 0; i < patchedUnit->stringTableSize; i++)
             qDebug() << "  " << i << ":" << patchedUnit->stringAtInternal(i);
         for (const auto &c : diff.changes)
-            qDebug() << "Change type:" << int(c.type) << "obj:" << c.objectIndex << "idx:" << c.index;
+            qDebug() << "Change type:" << int(c.type) << "obj:" << c.objectIndex << "idx:" << c.newIndex;
     }
     QVERIFY2(std::memcmp(patchedUnit, expectedUnit, expectedUnit->unitSize) == 0,
              "Patched unit does not match new unit byte-for-byte");
@@ -237,9 +242,9 @@ void tst_QQmlPreviewDiff::constantValueChange()
     // Load the new unit to verify the index points to the correct binding
     const auto newUnit = loadUnit("ConstantNew.qml");
     const auto *newObj = newUnit->unitData()->qmlUnit()->objectAt(change->objectIndex);
-    QVERIFY(change->index < newObj->nBindings);
+    QVERIFY(change->newIndex < newObj->nBindings);
 
-    const auto *changedBinding = newObj->bindingTable() + change->index;
+    const auto *changedBinding = newObj->bindingTable() + change->newIndex;
     QString propName = newUnit->unitData()->stringAtInternal(changedBinding->propertyNameIndex);
     QCOMPARE(propName, QString("width")); // The width property changed from 100 to 150
 }
@@ -259,10 +264,10 @@ void tst_QQmlPreviewDiff::multipleConstantChanges()
         if (change.type != ChangeType::BindingChanged)
             continue;
 
-        QVERIFY(change.index < newObj->nBindings);
+        QVERIFY(change.newIndex < newObj->nBindings);
 
-        // The index should point to a valid binding
-        const auto *changedBinding = newObj->bindingTable() + change.index;
+        // The newIndex should point to a valid binding
+        const auto *changedBinding = newObj->bindingTable() + change.newIndex;
         QString propName = newUnit->unitData()->stringAtInternal(changedBinding->propertyNameIndex);
 
         // Should be one of the changed properties
@@ -365,12 +370,15 @@ void tst_QQmlPreviewDiff::objectBindingAddRemove()
     const auto diff = diffCompilationUnits(oldUnit->unitData(), newUnit->unitData());
     QVERIFY(diff.success);
 
-    // The change from anchors.fill to anchors.centerIn involves string and potentially location changes
-    // With location-separated comparison, we may get BindingChanged or BindingLocationChanged
-    // Just verify that some binding-related change was detected
-    QVERIFY(countByType(diff, ChangeType::BindingChanged)
+    // The change from anchors.fill to anchors.centerIn retargets a binding to a different
+    // property. Matched by property name, that is a removal of the fill binding and an addition
+    // of the centerIn binding (and the corresponding string add/remove), not a Changed.
+    QVERIFY(countByType(diff, ChangeType::BindingAdded)
+                    + countByType(diff, ChangeType::BindingRemoved)
+                    + countByType(diff, ChangeType::BindingChanged)
                     + countByType(diff, ChangeType::BindingLocationChanged)
-                    + countByType(diff, ChangeType::StringDataChanged)
+                    + countByType(diff, ChangeType::StringDataAdded)
+                    + countByType(diff, ChangeType::StringDataRemoved)
             > 0);
 }
 
@@ -418,9 +426,9 @@ void tst_QQmlPreviewDiff::propertyAddition()
     QVERIFY(change != nullptr);
 
     const auto *newObj = newUnit->unitData()->qmlUnit()->objectAt(change->objectIndex);
-    QVERIFY(change->index < newObj->nProperties);
+    QVERIFY(change->newIndex < newObj->nProperties);
 
-    const auto *addedProp = newObj->propertyTable() + change->index;
+    const auto *addedProp = newObj->propertyTable() + change->newIndex;
     QString propName = newUnit->unitData()->stringAtInternal(addedProp->nameIndex());
     QCOMPARE(propName, QString("myProp"));
 }
@@ -448,9 +456,9 @@ void tst_QQmlPreviewDiff::propertyRemoval()
     QVERIFY(change != nullptr);
 
     const auto *oldObj = oldUnit->unitData()->qmlUnit()->objectAt(change->objectIndex);
-    QVERIFY(change->index < oldObj->nProperties);
+    QVERIFY(change->newIndex < oldObj->nProperties);
 
-    const auto *removedProp = oldObj->propertyTable() + change->index;
+    const auto *removedProp = oldObj->propertyTable() + change->newIndex;
     QString propName = oldUnit->unitData()->stringAtInternal(removedProp->nameIndex());
     QCOMPARE(propName, QString("myProp"));
 }
@@ -491,9 +499,10 @@ void tst_QQmlPreviewDiff::baseTypeChange()
 
     const auto diff = diffCompilationUnits(oldUnit->unitData(), newUnit->unitData());
 
-    // With position-based comparison, the type name change is detected via StringChanged
-    // (the string at position N changed from "Rectangle" to "Item")
-    // ObjectChanged is only emitted when indices differ, not when string content differs
+    // The inherited type name changed from "Rectangle" to "Item". The string table is compared
+    // positionally, so the affected slot is a StringDataChanged, and the object referencing it is
+    // reported changed.
+    QVERIFY(countByType(diff, ChangeType::ObjectChanged) >= 1);
     QVERIFY(countByType(diff, ChangeType::StringDataChanged) >= 1);
 }
 
@@ -502,9 +511,10 @@ void tst_QQmlPreviewDiff::nestedObjectChange()
     const auto diff = diffFiles("NestedOld.qml", "NestedNew.qml");
     QVERIFY(diff.success);
 
-    // The change from text: "Hello" to text: "World" is detected via StringChanged
-    // (string at the stringIndex position changed from "Hello" to "World")
-    // With position-based comparison, binding structure doesn't change if indices are same
+    // text: "Hello" -> text: "World". The text binding, matched by its property name, now points
+    // at a different string value and is reported as a genuine content change; the string table
+    // slot itself is a StringDataChanged.
+    QVERIFY(countByType(diff, ChangeType::BindingChanged) >= 1);
     QVERIFY(countByType(diff, ChangeType::StringDataChanged) >= 1);
 }
 
@@ -824,9 +834,9 @@ void tst_QQmlPreviewDiff::enumContentAndLocationChange()
     const auto diff = diffCompilationUnits(oldUnit->unitData(), newUnit->unitData());
     QVERIFY(diff.success);
 
-    // EnumChanged subsumes location; no separate EnumLocationChanged needed
+    // Content and location are reported independently, so a change to both yields both hunks.
     QCOMPARE(countByType(diff, ChangeType::EnumChanged), 1);
-    QCOMPARE(countByType(diff, ChangeType::EnumLocationChanged), 0);
+    QCOMPARE(countByType(diff, ChangeType::EnumLocationChanged), 1);
     QCOMPARE(countByType(diff, ChangeType::EnumAdded), 0);
     QCOMPARE(countByType(diff, ChangeType::EnumRemoved), 0);
 
@@ -896,14 +906,88 @@ void tst_QQmlPreviewDiff::signalContentAndLocationChange()
     const auto diff = diffCompilationUnits(oldUnit->unitData(), newUnit->unitData());
     QVERIFY(diff.success);
 
-    // SignalChanged subsumes location; no separate SignalLocationChanged needed
+    // Content and location are reported independently, so a change to both yields both hunks.
     QCOMPARE(countByType(diff, ChangeType::SignalChanged), 1);
-    QCOMPARE(countByType(diff, ChangeType::SignalLocationChanged), 0);
+    QCOMPARE(countByType(diff, ChangeType::SignalLocationChanged), 1);
     QCOMPARE(countByType(diff, ChangeType::SignalAdded), 0);
     QCOMPARE(countByType(diff, ChangeType::SignalRemoved), 0);
 
     verifyPatchProducesByteIdenticalUnit("SignalContentAndLocationOld.qml",
                                          "SignalContentAndLocationNew.qml");
+}
+
+void tst_QQmlPreviewDiff::bindingInsertionInMiddle()
+{
+    // radius is inserted between width and height. Name-based matching reports exactly one added
+    // binding. The pre-existing bindings that shifted keep their content, so none is reported as
+    // a content change: each is either a location change (its line moved) or an index change (a
+    // referenced constant/string index moved) -- which the patcher can treat as trivial.
+    const auto diff = diffFiles("BindingInsertMiddleOld.qml", "BindingInsertMiddleNew.qml");
+    QVERIFY(diff.success);
+
+    QCOMPARE(countByType(diff, ChangeType::BindingAdded), 1);
+    QCOMPARE(countByType(diff, ChangeType::BindingChanged), 0);
+    QCOMPARE(countByType(diff, ChangeType::BindingRemoved), 0);
+    // The three original bindings (width, height, color) are all reported as index/location
+    // changes, never as content changes, and at least one exercises the new IndexChanged type.
+    QVERIFY(countByType(diff, ChangeType::BindingIndexChanged) >= 1);
+    QCOMPARE(countByType(diff, ChangeType::BindingIndexChanged)
+                     + countByType(diff, ChangeType::BindingLocationChanged),
+             3);
+
+    const Change *added = nullptr;
+    for (const auto &c : diff.changes) {
+        if (c.type == ChangeType::BindingAdded) {
+            added = &c;
+            break;
+        }
+    }
+    QVERIFY(added);
+    const auto newUnit = loadUnit("BindingInsertMiddleNew.qml");
+    const auto *newObj = newUnit->unitData()->qmlUnit()->objectAt(added->objectIndex);
+    QVERIFY(added->newIndex < newObj->nBindings);
+    const auto *binding = newObj->bindingTable() + added->newIndex;
+    QCOMPARE(newUnit->unitData()->stringAtInternal(binding->propertyNameIndex), QString("radius"));
+
+    verifyPatchProducesByteIdenticalUnit("BindingInsertMiddleOld.qml",
+                                         "BindingInsertMiddleNew.qml");
+}
+
+void tst_QQmlPreviewDiff::propertyInsertionInMiddle()
+{
+    // property b is inserted between a and c. Name-based matching detects a single added property
+    // and a single added binding. The c property and the shifted bindings keep their content, so
+    // they show up as index/location changes, never as content changes.
+    const auto diff = diffFiles("PropertyInsertMiddleOld.qml", "PropertyInsertMiddleNew.qml");
+    QVERIFY(diff.success);
+
+    QCOMPARE(countByType(diff, ChangeType::PropertyAdded), 1);
+    QCOMPARE(countByType(diff, ChangeType::PropertyChanged), 0);
+    QCOMPARE(countByType(diff, ChangeType::PropertyRemoved), 0);
+    // c keeps its content but shifts down one slot: its own index moved, so it is reported as a
+    // PropertyIndexChanged (and, because its line also moved, a PropertyLocationChanged) -- never
+    // as a content change.
+    QCOMPARE(countByType(diff, ChangeType::PropertyIndexChanged), 1);
+    QCOMPARE(countByType(diff, ChangeType::PropertyLocationChanged), 1);
+    QCOMPARE(countByType(diff, ChangeType::BindingAdded), 1);
+    QCOMPARE(countByType(diff, ChangeType::BindingChanged), 0);
+
+    const Change *added = nullptr;
+    for (const auto &c : diff.changes) {
+        if (c.type == ChangeType::PropertyAdded) {
+            added = &c;
+            break;
+        }
+    }
+    QVERIFY(added);
+    const auto newUnit = loadUnit("PropertyInsertMiddleNew.qml");
+    const auto *newObj = newUnit->unitData()->qmlUnit()->objectAt(added->objectIndex);
+    QVERIFY(added->newIndex < newObj->nProperties);
+    const auto *prop = newObj->propertyTable() + added->newIndex;
+    QCOMPARE(newUnit->unitData()->stringAtInternal(prop->nameIndex()), QString("b"));
+
+    verifyPatchProducesByteIdenticalUnit("PropertyInsertMiddleOld.qml",
+                                         "PropertyInsertMiddleNew.qml");
 }
 
 // Patch verification tests
