@@ -236,8 +236,7 @@ BaseStyle {
             color: __transparent
             border.width: 0
             foreground {
-                width: 10
-                height: 10
+                fillHeight: false
                 color: __transparent
                 image.color: __textDefault
                 image.fillMode: Image.PreserveAspectFit
@@ -245,11 +244,19 @@ BaseStyle {
             }
             first {
                 alignment: Qt.AlignLeft
-                foreground.image.source: "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/check.png"
+                foreground {
+                    width: 20
+                    height: 20
+                    image.source: "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/check.png"
+                }
             }
             second {
                 alignment: Qt.AlignRight
-                foreground.image.source: "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/arrow-indicator.png"
+                foreground {
+                    width: 10
+                    height: 10
+                    image.source: "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/arrow-indicator.png"
+                }
             }
         }
         hovered.background.color: __backgroundSubtle
