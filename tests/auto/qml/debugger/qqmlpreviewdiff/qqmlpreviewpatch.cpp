@@ -1164,9 +1164,20 @@ private:
         QList<quint32_le> newFunctionIndices;
         // Initialize from old object
         if (oldObj->nFunctions > 0) {
+            // The differ compares an object's methods by name, so a function that merely moved in
+            // the unit-wide table does not make the object "changed". Follow the move here.
+            QHash<quint32, quint32> movedFunctions;
+            for (const Change &change : m_diff.changes) {
+                if (change.type == ChangeType::FunctionChanged
+                    || change.type == ChangeType::FunctionIndexChanged
+                    || change.type == ChangeType::FunctionLocationChanged) {
+                    movedFunctions.insert(change.oldIndex, change.newIndex);
+                }
+            }
+
             const quint32_le *oldFuncs = oldObj->functionOffsetTable();
             for (quint32 i = 0; i < oldObj->nFunctions; ++i)
-                newFunctionIndices.append(oldFuncs[i]);
+                newFunctionIndices.append(quint32_le(movedFunctions.value(oldFuncs[i], oldFuncs[i])));
         }
 
         // ObjectChanged fields (initialized from old object, updated from change if present)
