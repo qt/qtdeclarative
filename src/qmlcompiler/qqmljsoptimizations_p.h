@@ -53,7 +53,8 @@ private:
     void endInstruction(QV4::Moth::Instr::Type) override { }
 
     void populateBasicBlocks();
-    void populateReaderLocations();
+    void populateReaderLocationsTypeReaders();
+    void populateReaderLocationsConversions();
     void adjustTypes();
     bool canMove(int instructionOffset, const RegisterAccess &access) const;
 
