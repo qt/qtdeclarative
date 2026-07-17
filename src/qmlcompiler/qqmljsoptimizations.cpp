@@ -6,6 +6,8 @@
 #include "qqmljsbasicblocks_p.h"
 #include "qqmljsutils_p.h"
 
+#include <QtCore/qhash.h>
+
 QT_BEGIN_NAMESPACE
 
 using namespace Qt::Literals::StringLiterals;
@@ -15,7 +17,8 @@ QQmlJSCompilePass::BlocksAndAnnotations QQmlJSOptimizations::run(const Function 
     m_function = function;
 
     populateBasicBlocks();
-    populateReaderLocations();
+    populateReaderLocationsTypeReaders();
+    populateReaderLocationsConversions();
     removeDeadStoresUntilStable();
     adjustTypes();
 
@@ -26,7 +29,6 @@ struct PendingBlock
 {
     QQmlJSOptimizations::Conversions conversions;
     int start = -1;
-    bool registerActive = false;
 };
 
 template<typename ContainerA, typename ContainerB>
@@ -65,34 +67,77 @@ private:
     typename OriginalFlatMap::mapped_container_type values;
 };
 
-void QQmlJSOptimizations::populateReaderLocations()
+void QQmlJSOptimizations::populateReaderLocationsTypeReaders()
 {
-    for (auto writeIt = m_annotations.cbegin(), writeEnd = m_annotations.cend();
-         writeIt != writeEnd; ++writeIt) {
-        const int writtenRegister = writeIt->second.changedRegisterIndex;
+    // Register every write's tracked content(s), indexed by content identity.
+    QMultiHash<QQmlJSRegisterContent, int> trackedBy;
+
+    for (const auto &[offset, annotation] : m_annotations) {
+        const int writtenRegister = annotation.changedRegisterIndex;
 
         // Instructions that don't write can't be dead stores, no need to populate reader locations
         if (writtenRegister == InvalidRegister)
             continue;
 
-        RegisterAccess &access = m_readerLocations[writeIt.key()];
+        RegisterAccess &access = m_readerLocations[offset];
         access.trackedRegister = writtenRegister;
-        if (writeIt->second.changedRegister.isConversion()) {
+        if (annotation.changedRegister.isConversion()) {
             // If it's a conversion, we have to check for all readers of the conversion origins.
             // This happens at jump targets where different types are merged. A StoreReg or similar
             // instruction must be optimized out if none of the types it can hold is read anymore.
-            access.trackedTypes.clear();
-            const auto &origins = writeIt->second.changedRegister.conversionOrigins();
+            const auto &origins = annotation.changedRegister.conversionOrigins();
             for (QQmlJSRegisterContent origin : origins)
                 access.trackedTypes.append(origin);
         } else {
-            access.trackedTypes.append(writeIt->second.changedRegister);
+            access.trackedTypes.append(annotation.changedRegister);
             Q_ASSERT(!access.trackedTypes.last().isNull());
         }
 
+        for (const QQmlJSRegisterContent &tracked : std::as_const(access.trackedTypes))
+            trackedBy.insert(tracked, offset);
+    }
+
+    // One sweep over every read in the function, attributing it to whichever write(s)
+    // it matches (directly, or through a conversion whose origins include a tracked content).
+    for (const auto &[offset, annotation] : m_annotations) {
+        if (annotation.isRename)
+            continue;
+
+        for (auto readIt = annotation.readRegisters.constBegin(),
+             readEnd = annotation.readRegisters.constEnd(); readIt != readEnd; ++readIt) {
+            const QQmlJSRegisterContent &content = readIt->second.content;
+
+            if (content.isConversion()) {
+                Q_ASSERT(content.conversionResultType());
+                const QList<QQmlJSRegisterContent> &conversionOrigins = content.conversionOrigins();
+                for (QQmlJSRegisterContent origin : conversionOrigins) {
+                    for (auto [it, last] = trackedBy.equal_range(origin); it != last; ++it)
+                        m_readerLocations[it.value()].typeReaders[offset] = content;
+                }
+            } else {
+                for (auto [it, last] = trackedBy.equal_range(content); it != last; ++it)
+                    m_readerLocations[it.value()].typeReaders[offset] = content;
+            }
+        }
+    }
+}
+
+void QQmlJSOptimizations::populateReaderLocationsConversions()
+{
+    // For each write, find reads of its *specific register slot* while that slot is
+    // still live (registerReadersAndConversions), plus the type-conversion instructions
+    // crossed in the meantime.
+    for (auto writeIt = m_annotations.cbegin(), writeEnd = m_annotations.cend();
+         writeIt != writeEnd; ++writeIt) {
+        const int writtenRegister = writeIt->second.changedRegisterIndex;
+        if (writtenRegister == InvalidRegister)
+            continue;
+
+        RegisterAccess &access = m_readerLocations[writeIt.key()];
+
         const auto blockIt = QQmlJSBasicBlocks::constBasicBlockForInstruction(m_basicBlocks,
                                                                               writeIt.key());
-        std::vector<PendingBlock> blocks = { { {}, blockIt->first, true } };
+        std::vector<PendingBlock> blocks = { { {}, blockIt->first } };
         std::unordered_map<int, PendingBlock> processedBlocks;
         bool isFirstBlock = true;
 
@@ -106,7 +151,7 @@ void QQmlJSOptimizations::populateReaderLocations()
 
             auto nextBlock = m_basicBlocks.find(block.start);
             const auto currentBlock = nextBlock++;
-            bool registerActive = block.registerActive;
+            bool registerActive = true;
             Conversions conversions = block.conversions;
             blocks.pop_back();
 
@@ -117,33 +162,14 @@ void QQmlJSOptimizations::populateReaderLocations()
             auto blockInstr = isFirstBlock
                     ? (writeIt + 1)
                     : m_annotations.find(currentBlock->first);
-            for (; blockInstr != blockEnd; ++blockInstr) {
-                if (registerActive
-                        && blockInstr->second.typeConversions.contains(writtenRegister)) {
+            for (; registerActive && blockInstr != blockEnd; ++blockInstr) {
+                if (blockInstr->second.typeConversions.contains(writtenRegister))
                     conversions.insert(blockInstr.key());
-                }
 
                 for (auto readIt = blockInstr->second.readRegisters.constBegin(),
                      end = blockInstr->second.readRegisters.constEnd();
                      readIt != end; ++readIt) {
-                    if (blockInstr->second.isRename) {
-                        // Nothing to do
-                    } else if (readIt->second.content.isConversion()) {
-                        const QList<QQmlJSRegisterContent> &conversionOrigins
-                                = readIt->second.content.conversionOrigins();
-                        for (QQmlJSRegisterContent origin : conversionOrigins) {
-                            if (!access.trackedTypes.contains(origin))
-                                continue;
-
-                            Q_ASSERT(readIt->second.content.conversionResultType());
-                            access.typeReaders[blockInstr.key()] = readIt->second.content;
-                            break;
-                        }
-                    } else if (access.trackedTypes.contains(readIt->second.content)) {
-                        // We've used the original content instead of converting it
-                        access.typeReaders[blockInstr.key()] = readIt->second.content;
-                    }
-                    if (registerActive && readIt->first == writtenRegister)
+                    if (readIt->first == writtenRegister)
                         access.registerReadersAndConversions[blockInstr.key()] = conversions;
                 }
 
@@ -153,21 +179,25 @@ void QQmlJSOptimizations::populateReaderLocations()
                 }
             }
 
+            if (isFirstBlock)
+                isFirstBlock = false;
+
+            // Nothing more can be discovered for this write once its register is dead: don't
+            // bother scheduling successor blocks at all in that case.
+            if (!registerActive)
+                continue;
+
             auto scheduleBlock = [&](int blockStart) {
-                // If we find that an already processed block has the register activated by this jump,
-                // we need to re-evaluate it. We also need to propagate any newly found conversions.
                 const auto processed = processedBlocks.find(blockStart);
                 if (processed == processedBlocks.end()) {
-                    blocks.push_back({conversions, blockStart, registerActive});
-                } else if (registerActive && !processed->second.registerActive) {
-                    blocks.push_back({conversions, blockStart, registerActive});
-                } else {
-                    Conversions merged = processed->second.conversions;
-                    merged.unite(conversions);
-
-                    if (merged.size() > processed->second.conversions.size())
-                        blocks.push_back({std::move(merged), blockStart, registerActive});
+                    blocks.push_back({ conversions, blockStart });
+                    return;
                 }
+                // Propagate any newly found conversions to an already-processed block.
+                Conversions merged = processed->second.conversions;
+                merged.unite(conversions);
+                if (merged.size() > processed->second.conversions.size())
+                    blocks.push_back({ std::move(merged), blockStart });
             };
 
             if (!currentBlock->second.jumpIsUnconditional && nextBlock != m_basicBlocks.end())
@@ -176,9 +206,6 @@ void QQmlJSOptimizations::populateReaderLocations()
             const int jumpTarget = currentBlock->second.jumpTarget;
             if (jumpTarget != -1)
                 scheduleBlock(jumpTarget);
-
-            if (isFirstBlock)
-                isFirstBlock = false;
         }
     }
 }
