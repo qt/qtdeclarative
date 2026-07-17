@@ -163,6 +163,8 @@ BaseStyle {
     }
 
     toolButton {
+        background.width: 40
+        background.height: 40
         indicator {
             color: __transparent
             border.width: 0
@@ -593,6 +595,8 @@ BaseStyle {
 
     toolBar {
         background.height: 40
+        padding: 2
+        vertical.background.width: 40
     }
 
     toolSeparator {

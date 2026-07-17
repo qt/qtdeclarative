@@ -1745,6 +1745,33 @@ void QStyleKitStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt,
         return;
     }
 #endif // QT_CONFIG(toolbutton)
+#if QT_CONFIG(toolbar)
+    case PE_IndicatorToolBarHandle:
+        return; // no handle in Controls style
+    case PE_IndicatorToolBarSeparator: {
+        const auto r = d->resolve(w, QQStyleKitReader::ControlType::ToolSeparator, opt->state);
+        if (!r.isValid())
+            break;
+        const auto &metrics = *r.metrics;
+        // background
+        QRect frameRect = opt->rect.marginsRemoved(metrics.margins);
+        d->drawStyledItemRect(r.background(), frameRect, p);
+        // indicator
+        const auto *indicator = r.indicator();
+        if (!indicator || !indicator->visible() || indicator->opacity() == 0)
+            return;
+        QRect contentRect = frameRect.marginsRemoved(metrics.padding);
+        const int iw = resolvedWidth(indicator,
+            contentRect.width() - metrics.indicatorMargins.left() - metrics.indicatorMargins.right());
+        const int ih = resolvedHeight(indicator,
+            contentRect.height() - metrics.indicatorMargins.top() - metrics.indicatorMargins.bottom());
+        const uint alignment = resolvedAlignment(indicator->alignment(), Qt::AlignHCenter, Qt::AlignVCenter);
+        const QRect indicatorRect = d->getAlignedRectInContainer(
+            contentRect, QSize(iw, ih), alignment, QMargins(), metrics.indicatorMargins);
+        d->drawControlIndicator(indicator, visualRect(opt->direction, contentRect, indicatorRect), p);
+        return;
+    }
+#endif
     default:
         break;
     }
@@ -2264,6 +2291,17 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
         }
         break;
 #endif // QT_CONFIG(menubar)
+#if QT_CONFIG(toolbar)
+    case CE_ToolBar:
+        if (const auto *toolBar = qstyleoption_cast<const QStyleOptionToolBar *>(opt)) {
+            const auto r = d->resolve(w, QQStyleKitReader::ControlType::ToolBar, toolBar->state);
+            if (!r.isValid())
+                break;
+            d->drawStyledItemRect(r.background(), opt->rect.marginsRemoved(r.metrics->margins), p);
+            return;
+        }
+        break;
+#endif // QT_CONFIG(toolbar)
     default:
         break;
     }
@@ -2531,6 +2569,12 @@ QRect QStyleKitStyle::subElementRect(SubElement r, const QStyleOption *opt, cons
         }
 #endif // textedit
         break;
+#if QT_CONFIG(toolbar)
+    case SE_ToolBarHandle:
+        // ToolBarHandle is not supported in Controls style,
+        // return an empty rect to keep consistent
+        return QRect();
+#endif // QT_CONFIG(toolbar)
     default:
         break;
     }
@@ -3548,6 +3592,41 @@ int QStyleKitStyle::pixelMetric(PixelMetric m, const QStyleOption *opt, const QW
         break;
     }
 #endif
+#if QT_CONFIG(toolbar)
+    case PM_ToolBarFrameWidth:
+        // The frame is folded into the resolved background/margins (see CE_ToolBar);
+        return 0;
+    case PM_ToolBarItemMargin: {
+        const auto resolved = d->resolveLayout(QQStyleKitReader::ControlType::ToolBar,
+                                                opt ? opt->state : QStyle::State_None);
+        if (!resolved.isValid())
+            break;
+        return resolved.metrics->padding.left();
+    }
+    case PM_ToolBarItemSpacing: {
+        const auto resolved = d->resolveLayout(QQStyleKitReader::ControlType::ToolBar,
+                                                opt ? opt->state : QStyle::State_None);
+        if (resolved.isValid())
+            return resolved.metrics->spacing;
+        break;
+    }
+    case PM_ToolBarHandleExtent: {
+        // The only lever available to honor the style's background width/height
+        // QToolBarLayout uses this to calculate the minimum size of the toolbar
+        const auto resolved = d->resolveLayout(QQStyleKitReader::ControlType::ToolBar,
+                                                opt ? opt->state : QStyle::State_None);
+        if (!resolved.isValid())
+            break;
+        const auto &metrics = *resolved.metrics;
+        const bool horizontal = !opt || (opt->state & State_Horizontal);
+        const int crossImplicit = horizontal ? metrics.bgImplicitSize.height() : metrics.bgImplicitSize.width();
+        const int crossMargins = horizontal ? metrics.margins.top() + metrics.margins.bottom()
+                                             : metrics.margins.left() + metrics.margins.right();
+        const int crossPadding = horizontal ? metrics.padding.top() + metrics.padding.bottom()
+                                             : metrics.padding.left() + metrics.padding.right();
+        return qMax(0, crossImplicit + crossMargins - crossPadding);
+    }
+#endif // QT_CONFIG(toolbar)
     default:
         break;
     }
@@ -3559,7 +3638,9 @@ int QStyleKitStyle::styleHint(StyleHint sh, const QStyleOption *opt, const QWidg
     QStyleHintReturn *shret) const
 {
     switch (sh) {
+    // keep consistent with the Controls style behavior
     case SH_SpinBox_SelectOnStep:
+    case SH_ToolBar_Movable:
         return 0;
     case SH_Menu_MouseTracking:
     case SH_MenuBar_MouseTracking:
