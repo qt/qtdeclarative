@@ -412,25 +412,23 @@ static void rebuildObject(QObject *object, int cuIndex,
     }
 }
 
-static bool isPatchableBinding(const QV4::CompiledData::Binding *binding)
+enum class BindingKind { Literal, Script, Translation, Unpatchable };
+static BindingKind bindingKind(const QV4::CompiledData::Binding *binding)
 {
-    // Only plain value and script bindings can be patched in place. A change to the object,
-    // group or attached-property binding itself reassigns a sub-object: that is structural.
-
     switch (binding->type()) {
     case QV4::CompiledData::Binding::Type_Script:
+        return BindingKind::Script;
+    case QV4::CompiledData::Binding::Type_Translation:
+    case QV4::CompiledData::Binding::Type_TranslationById:
+        return BindingKind::Translation;
     case QV4::CompiledData::Binding::Type_Number:
     case QV4::CompiledData::Binding::Type_Boolean:
     case QV4::CompiledData::Binding::Type_String:
     case QV4::CompiledData::Binding::Type_Null:
-    case QV4::CompiledData::Binding::Type_Translation:
-    case QV4::CompiledData::Binding::Type_TranslationById:
-        return true;
+        return BindingKind::Literal;
     default:
-        break;
+        return BindingKind::Unpatchable;
     }
-
-    return false;
 }
 
 // A trivial diff is one we can apply without rebuilding any VME meta-object and without
@@ -494,24 +492,30 @@ static bool changeIsTrivial(const QV4::CompiledData::Change &change,
         Q_ASSERT(change.objectIndex < oldUnit->objectCount());
         Q_ASSERT(change.objectIndex < newUnit->objectCount());
 
+        const QV4::CompiledData::Object *oldObj = oldUnit->objectAt(change.objectIndex);
+        Q_ASSERT(change.index < oldObj->nBindings);
+        const QV4::CompiledData::Binding *oldBinding = oldObj->bindingTable() + change.index;
+
         const QV4::CompiledData::Object *newObj = newUnit->objectAt(change.objectIndex);
         Q_ASSERT(change.index < newObj->nBindings);
-
         const QV4::CompiledData::Binding *newBinding = newObj->bindingTable() + change.index;
-        if (!isPatchableBinding(newBinding))
+
+        const BindingKind oldKind = bindingKind(oldBinding);
+        const BindingKind newKind = bindingKind(newBinding);
+        if (oldKind == BindingKind::Unpatchable || newKind == BindingKind::Unpatchable)
+            return false;
+
+        // We cannot swap a binding for one of a different kind, yet: turning a literal into a
+        // script or translation binding (or vice versa) would have to install or drop a live
+        // binding, and we cannot recompile a script binding into a translation binding either.
+        // TODO: Fix this.
+        if (oldKind != newKind)
             return false;
 
         // A BindingChanged at a stable index can also mean the binding was moved to a different
         // target property (its propertyNameIndex changed). In-place patching cannot relocate a
         // binding: it would have to remove it from the old property and install it on the new one.
         // That is structural, so fall back to the rebuild path.
-
-        const QV4::CompiledData::Object *oldObj = oldUnit->objectAt(change.objectIndex);
-        Q_ASSERT(change.index < oldObj->nBindings);
-
-        const QV4::CompiledData::Binding *oldBinding = oldObj->bindingTable() + change.index;
-        if (!isPatchableBinding(oldBinding))
-            return false;
 
         return BindingPatchContext::targetPropertyName(oldUnit, change.objectIndex, oldBinding)
                 == BindingPatchContext::targetPropertyName(newUnit, change.objectIndex, newBinding);

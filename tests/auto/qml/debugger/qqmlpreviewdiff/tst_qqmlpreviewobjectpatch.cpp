@@ -11,6 +11,8 @@
 #include <QtCore/qdir.h>
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qcoreevent.h>
+#include <QtCore/qscopeguard.h>
+#include <QtCore/qtranslator.h>
 
 #include <private/qqmlcomponent_p.h>
 #include <private/qqmldata_p.h>
@@ -215,6 +217,8 @@ private slots:
 
     void scriptBindingChangeDropsCppPropertyOverride();
     void bindingPropertyRename();
+    void scriptLiteralBindingSwap();
+    void literalToTranslationBinding();
     void reattachLosesListChildUserOverrides();
     void varPropertyStashTypeMismatch();
     void reattachPreservesIdBinding();
@@ -1091,6 +1095,91 @@ void tst_QQmlPreviewObjectPatch::bindingPropertyRename()
     // no longer be bound.
     QCOMPARE(object->property("height").toReal(), 60.0);
     QCOMPARE(object->property("width").toReal(), 0.0);
+}
+
+// Swapping a script binding and a literal binding between two properties keeps each binding at its
+// original binding-table index, so the positional diff reports two BindingChanged with a stable
+// target property name -- one flipping script->literal, the other literal->script. Neither carries
+// a property/binding add or remove, so the diff looks trivial. But patching in place cannot install
+// or drop a binding's compiled function: it only re-applies literal values and translates the
+// expressions that are already live. The property that gained a script binding keeps its old
+// literal value (the new expression is never installed), and the property that lost its script
+// keeps evaluating the old, now-dangling expression instead of taking the new literal. Only a
+// rebuild produces the correct result.
+void tst_QQmlPreviewObjectPatch::scriptLiteralBindingSwap()
+{
+    QQmlComponent oldComp(&engine, testFileUrl("ScriptLiteralSwapOld.qml"));
+    QVERIFY2(oldComp.isReady(), qPrintable(oldComp.errorString()));
+    QScopedPointer<QObject> object(oldComp.create());
+    QVERIFY(object);
+
+    // Old source: x is script-bound to factor * 2 (= 14), y is the literal 42.
+    QCOMPARE(object->property("x").toReal(), 14.0);
+    QCOMPARE(object->property("y").toReal(), 42.0);
+
+    QQmlComponent newComp(&engine, testFileUrl("ScriptLiteralSwapNew.qml"));
+    QVERIFY2(newComp.isReady(), qPrintable(newComp.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldComp)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComp)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
+
+    // New source: the bindings swapped. x must now be the literal 42, y must now be script-bound to
+    // factor * 2 (= 14).
+    QCOMPARE(object->property("x").toReal(), 42.0);
+    QCOMPARE(object->property("y").toReal(), 14.0);
+}
+
+// Turning a literal binding into a translation binding at a stable binding-table index is not a
+// trivial change even though the positional diff reports it as a single BindingChanged with an
+// unchanged target property. A translation binding is a live QQmlTranslationBinding (re-evaluated
+// when the installed translator changes), not a constant. Patching in place cannot install that
+// live binding: it would write the translation's *untranslated source* string as a plain value, so
+// the property would show the source text and never track the translator. Only a rebuild installs
+// the live binding. A translator is installed so the translated text differs from the source and
+// the two outcomes are distinguishable.
+void tst_QQmlPreviewObjectPatch::literalToTranslationBinding()
+{
+    class HelloTranslator : public QTranslator
+    {
+    public:
+        QString translate(const char *, const char *sourceText, const char *, int) const override
+        {
+            return qstrcmp(sourceText, "hello") == 0 ? QStringLiteral("bonjour") : QString();
+        }
+        bool isEmpty() const override { return false; }
+    };
+
+    HelloTranslator translator;
+    QCoreApplication::installTranslator(&translator);
+    const auto removeTranslator =
+            qScopeGuard([&] { QCoreApplication::removeTranslator(&translator); });
+
+    QQmlComponent oldComp(&engine, testFileUrl("LiteralToTranslationOld.qml"));
+    QVERIFY2(oldComp.isReady(), qPrintable(oldComp.errorString()));
+    QScopedPointer<QObject> object(oldComp.create());
+    QVERIFY(object);
+
+    // Old source: label is the literal "world".
+    QCOMPARE(object->property("label").toString(), QStringLiteral("world"));
+
+    QQmlComponent newComp(&engine, testFileUrl("LiteralToTranslationNew.qml"));
+    QVERIFY2(newComp.isReady(), qPrintable(newComp.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldComp)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComp)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    // The kind change forces a rebuild rather than an in-place patch.
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QCOMPARE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Rebuilt);
+
+    // New source: label is now translation-bound to qsTr("hello"), which the translator maps to
+    // "bonjour". A stale in-place patch would leave label at the untranslated source "hello".
+    QCOMPARE(object->property("label").toString(), QStringLiteral("bonjour"));
 }
 
 // User-overridden values on children are retained during the patching.
