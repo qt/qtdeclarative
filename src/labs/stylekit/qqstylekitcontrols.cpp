@@ -119,6 +119,8 @@ QT_BEGIN_NAMESPACE
 
     Unset properties fall back to \l control.
 
+    \note Style the popup through \l popup, and its items through \l itemDelegate.
+
     \snippet ControlsSnippets.qml comboBox
 */
 
