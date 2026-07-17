@@ -53,6 +53,37 @@ static bool functionBelongsToObject(const QV4::Function *f,
     return false;
 }
 
+// A binding that lives in one of target's outer contexts is recreated when that context's root is
+// rebuilt, so it is not actually external. Returns true if `cu` is reachable through the context
+// chain before we leave the set of units being rebuilt.
+static bool rebuildReachesUnitViaContext(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &cu,
+                                         const std::vector<CompositeLevel> &internalUnits,
+                                         QObject *target)
+{
+    const QQmlData *ddata = QQmlData::get(target);
+    if (!ddata)
+        return false;
+
+    for (QQmlRefPointer<QQmlContextData> context = ddata->outerContext; context;
+         context = context->parent()) {
+        const QQmlRefPointer<QV4::ExecutableCompilationUnit> ctxCu = context->typeCompilationUnit();
+        if (!ctxCu)
+            continue;
+
+        if (ctxCu == cu)
+            return true;
+
+        if (std::any_of(internalUnits.begin(), internalUnits.end(),
+                        [&](const CompositeLevel &level) {
+                            return level.oldCu == ctxCu || level.newCu == ctxCu;
+                        })) {
+            break;
+        }
+    }
+
+    return false;
+}
+
 // Classifies a single binding's JavaScript function: does it belong to one of the compilation
 // units participating in the rebuild (internal, will be recreated), or to some other component
 // (external, must be preserved)? A null function is treated as external.
@@ -69,31 +100,24 @@ static bool isExternalFunction(const QV4::Function *f,
         }
     }
 
-    const QQmlData *ddata = QQmlData::get(target);
-    if (!ddata)
+    return !rebuildReachesUnitViaContext(f->executableCompilationUnit(), internalUnits, target);
+}
+
+// A translation binding has no JavaScript function, so it cannot be classified via
+// isExternalFunction. Classify it by its compilation unit instead: it is internal if that unit is
+// one of the units being rebuilt, directly or through the context chain.
+static bool isExternalUnitBinding(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &cu,
+                                  const std::vector<CompositeLevel> &internalUnits, QObject *target)
+{
+    if (!cu)
         return true;
 
-    // If the binding lives in an outer context that's still part of the rebuild, it is not
-    // actually external since it will be re-recreated.
-
-    for (QQmlRefPointer<QQmlContextData> context = ddata->outerContext; context;
-         context = context->parent()) {
-        const QQmlRefPointer<QV4::ExecutableCompilationUnit> cu = context->typeCompilationUnit();
-        if (!cu)
-            continue;
-
-        if (f->executableCompilationUnit() == cu)
+    for (const auto &internalUnit : internalUnits) {
+        if (internalUnit.oldCu == cu || internalUnit.newCu == cu)
             return false;
-
-        if (std::any_of(internalUnits.begin(), internalUnits.end(),
-                        [&](const CompositeLevel &level) {
-                            return level.oldCu == cu || level.newCu == cu;
-                        })) {
-            break;
-        }
     }
 
-    return true;
+    return !rebuildReachesUnitViaContext(cu, internalUnits, target);
 }
 
 // Determines whether a binding on a property is "external", i.e. not from any of the
@@ -108,9 +132,13 @@ static bool isExternalBinding(const QQmlAnyBinding &binding,
 
     if (const QQmlAbstractBinding *abstractBinding = binding.asAbstractBinding()) {
         switch (abstractBinding->kind()) {
-        case QQmlAbstractBinding::QmlBinding:
-            return isExternalFunction(static_cast<const QQmlBinding *>(abstractBinding)->function(),
-                                      internalUnits, target);
+        case QQmlAbstractBinding::QmlBinding: {
+            const auto *qmlBinding = static_cast<const QQmlBinding *>(abstractBinding);
+            if (const QV4::Function *f = qmlBinding->function())
+                return isExternalFunction(f, internalUnits, target);
+            // No function: this may be a translation binding. Classify it by its compilation unit.
+            return isExternalUnitBinding(qmlBinding->compilationUnit(), internalUnits, target);
+        }
         case QQmlAbstractBinding::ValueTypeProxy: {
             // A value-type group binding has no function of its own: it is a proxy holding one
             // QQmlBinding per bound sub-property. Classify it by its sub-bindings.
@@ -132,16 +160,21 @@ static bool isExternalBinding(const QQmlAnyBinding &binding,
     }
 
     if (const QPropertyBindingPrivate *priv =
-                QPropertyBindingPrivate::get(binding.asUntypedPropertyBinding());
-        priv && priv->isQmlBinding()) {
-        // QPropertyBindingPrivate-based binding. Check if it's a QQmlPropertyBinding
-        // with a JS expression we can trace back to a CU.
-        const auto base = static_cast<const QQmlPropertyBindingBase *>(priv);
-        if (base->bindingKind() == QQmlPropertyBindingBase::BindingKind::JavaScript) {
-            if (const QQmlPropertyBindingJS *jsExpr =
-                        static_cast<const QQmlPropertyBinding *>(base)->jsExpression()) {
-                return isExternalFunction(jsExpr->function(), internalUnits, target);
+                QPropertyBindingPrivate::get(binding.asUntypedPropertyBinding())) {
+        if (priv->isQmlBinding()) {
+            // Check if it's a QQmlPropertyBinding with a JS expression we can trace back to a CU.
+            const auto base = static_cast<const QQmlPropertyBindingBase *>(priv);
+            if (base->bindingKind() == QQmlPropertyBindingBase::BindingKind::JavaScript) {
+                if (const QQmlPropertyBindingJS *jsExpr =
+                            static_cast<const QQmlPropertyBinding *>(base)->jsExpression()) {
+                    return isExternalFunction(jsExpr->function(), internalUnits, target);
+                }
             }
+        } else if (const auto cu = QQmlTranslationPropertyBinding::compilationUnit(priv)) {
+            // A translation binding on a bindable property is a plain QUntypedPropertyBinding
+            // rather than a QQmlPropertyBinding. Recover its compilation unit to classify it like
+            // the QQmlBinding case.
+            return isExternalUnitBinding(cu, internalUnits, target);
         }
     }
 
