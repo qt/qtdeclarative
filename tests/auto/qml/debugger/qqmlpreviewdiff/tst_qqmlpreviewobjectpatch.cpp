@@ -219,6 +219,8 @@ private slots:
     void bindingPropertyRename();
     void scriptLiteralBindingSwap();
     void literalToTranslationBinding();
+    void translationLiteralBindingSwap();
+    void bindableTranslationBindingSwap();
     void reattachLosesListChildUserOverrides();
     void varPropertyStashTypeMismatch();
     void reattachPreservesIdBinding();
@@ -1180,6 +1182,99 @@ void tst_QQmlPreviewObjectPatch::literalToTranslationBinding()
     // New source: label is now translation-bound to qsTr("hello"), which the translator maps to
     // "bonjour". A stale in-place patch would leave label at the untranslated source "hello".
     QCOMPARE(object->property("label").toString(), QStringLiteral("bonjour"));
+}
+
+// Swapping a translation binding and a literal binding between two properties exercises both
+// directions of a translation kind change at once: greeting loses its translation binding and
+// becomes a literal, while subject gains one. The rebuild must drop the old translation binding on
+// greeting -- a translation QQmlBinding has no JavaScript function, so it must be recognised as an
+// internal binding by its compilation unit rather than mistaken for an external one and preserved.
+void tst_QQmlPreviewObjectPatch::translationLiteralBindingSwap()
+{
+    class HelloTranslator : public QTranslator
+    {
+    public:
+        QString translate(const char *, const char *sourceText, const char *, int) const override
+        {
+            return qstrcmp(sourceText, "hello") == 0 ? QStringLiteral("bonjour") : QString();
+        }
+        bool isEmpty() const override { return false; }
+    };
+
+    HelloTranslator translator;
+    QCoreApplication::installTranslator(&translator);
+    const auto removeTranslator =
+            qScopeGuard([&] { QCoreApplication::removeTranslator(&translator); });
+
+    QQmlComponent oldComp(&engine, testFileUrl("TranslationLiteralSwapOld.qml"));
+    QVERIFY2(oldComp.isReady(), qPrintable(oldComp.errorString()));
+    QScopedPointer<QObject> object(oldComp.create());
+    QVERIFY(object);
+
+    // Old source: greeting is translation-bound to qsTr("hello") (= "bonjour"), subject is the
+    // literal "world".
+    QCOMPARE(object->property("greeting").toString(), QStringLiteral("bonjour"));
+    QCOMPARE(object->property("subject").toString(), QStringLiteral("world"));
+
+    QQmlComponent newComp(&engine, testFileUrl("TranslationLiteralSwapNew.qml"));
+    QVERIFY2(newComp.isReady(), qPrintable(newComp.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldComp)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComp)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QCOMPARE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Rebuilt);
+
+    // New source: the bindings swapped. greeting must now be the literal "world" (the old
+    // translation binding is gone), and subject must be translation-bound to qsTr("hello")
+    // (= "bonjour").
+    QCOMPARE(object->property("greeting").toString(), QStringLiteral("world"));
+    QCOMPARE(object->property("subject").toString(), QStringLiteral("bonjour"));
+}
+
+// Same as above, but on a bindable (QProperty) property. A translation binding on a bindable
+// property is a lambda-based QUntypedPropertyBinding rather than a QQmlBinding, so it must be
+// recognised as an internal binding by the compilation unit captured in the binding. Otherwise the
+// stale QProperty translation binding survives the rebuild and keeps overriding the new literal.
+void tst_QQmlPreviewObjectPatch::bindableTranslationBindingSwap()
+{
+    class HelloTranslator : public QTranslator
+    {
+    public:
+        QString translate(const char *, const char *sourceText, const char *, int) const override
+        {
+            return qstrcmp(sourceText, "hello") == 0 ? QStringLiteral("bonjour") : QString();
+        }
+        bool isEmpty() const override { return false; }
+    };
+
+    HelloTranslator translator;
+    QCoreApplication::installTranslator(&translator);
+    const auto removeTranslator =
+            qScopeGuard([&] { QCoreApplication::removeTranslator(&translator); });
+
+    QQmlComponent oldComp(&engine, testFileUrl("BindableTranslationSwapOld.qml"));
+    QVERIFY2(oldComp.isReady(), qPrintable(oldComp.errorString()));
+    QScopedPointer<QObject> object(oldComp.create());
+    QVERIFY(object);
+
+    // Old source: objectName is translation-bound to qsTr("hello") (= "bonjour").
+    QCOMPARE(object->objectName(), QStringLiteral("bonjour"));
+
+    QQmlComponent newComp(&engine, testFileUrl("BindableTranslationSwapNew.qml"));
+    QVERIFY2(newComp.isReady(), qPrintable(newComp.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldComp)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComp)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QCOMPARE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Rebuilt);
+
+    // New source: objectName is now the literal "world"; the old QProperty translation binding must
+    // be gone rather than restored on top of it.
+    QCOMPARE(object->objectName(), QStringLiteral("world"));
 }
 
 // User-overridden values on children are retained during the patching.

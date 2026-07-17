@@ -186,16 +186,101 @@ inline const QtPrivate::BindingFunctionVTable *bindingFunctionVTableForQQmlPrope
 #undef FOR_TYPE
 }
 
+struct QQmlTranslationPropertyBindingFunctorBase
+{
+public:
+    const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit() const
+    {
+        return m_compilationUnit;
+    }
+
+protected:
+    QQmlTranslationPropertyBindingFunctorBase(
+            const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit)
+        : m_compilationUnit(compilationUnit)
+    {
+    }
+
+    template <typename TranslateWithUnit>
+    bool translate(QMetaType metaType, void *dataPtr, TranslateWithUnit &&translateWithUnit) const
+    {
+        // Create a dependency to the translationLanguage
+        QQmlEnginePrivate::get(m_compilationUnit->engine)->translationLanguage.value();
+
+        QVariant resultVariant(translateWithUnit());
+        if (metaType != QMetaType::fromType<QString>())
+            resultVariant.convert(metaType);
+
+        const bool hasChanged = !metaType.equals(resultVariant.constData(), dataPtr);
+        metaType.destruct(dataPtr);
+        metaType.construct(dataPtr, resultVariant.constData());
+        return hasChanged;
+    }
+
+private:
+    QQmlRefPointer<QV4::ExecutableCompilationUnit> m_compilationUnit;
+};
+
+struct QQmlTranslationPropertyBindingFunctor : public QQmlTranslationPropertyBindingFunctorBase
+{
+public:
+    QQmlTranslationPropertyBindingFunctor(
+            const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit,
+            const QV4::CompiledData::Binding *binding)
+        : QQmlTranslationPropertyBindingFunctorBase(compilationUnit), binding(binding)
+    {
+    }
+
+    bool operator()(QMetaType metaType, void *dataPtr)
+    {
+        return translate(metaType, dataPtr,
+                         [this]() { return compilationUnit()->bindingValueAsString(binding); });
+    }
+
+private:
+    const QV4::CompiledData::Binding *binding = nullptr;
+};
+
+struct QQmlTranslationPropertyTranslationDataFunctor
+    : public QQmlTranslationPropertyBindingFunctorBase
+{
+public:
+    QQmlTranslationPropertyTranslationDataFunctor(
+            const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit,
+            const QQmlTranslation &translationData)
+        : QQmlTranslationPropertyBindingFunctorBase(compilationUnit),
+          translationData(translationData)
+    {
+    }
+
+    bool operator()(QMetaType metaType, void *dataPtr)
+    {
+        return translate(metaType, dataPtr, [this]() { return translationData.translate(); });
+    }
+
+private:
+    const QQmlTranslation translationData;
+};
+
 class QQmlTranslationPropertyBinding
 {
 public:
-    static QUntypedPropertyBinding Q_QML_EXPORT create(const QQmlPropertyData *pd,
-                                          const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit,
-                                          const QV4::CompiledData::Binding *binding);
+    // These must not be inlined: the bindingFunctionVTable<Functor> template variable has internal
+    // linkage under Qt's hidden visibility, so each binary gets its own copy at a distinct address.
+    // Creating a binding and later recovering its compilation unit both compare against that vtable
+    // pointer, so both operations must resolve it in the same shared object (QtQml).
     static QUntypedPropertyBinding Q_QML_EXPORT
-    create(const QMetaType &pd,
+    create(const QQmlPropertyData *pd,
+           const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit,
+           const QV4::CompiledData::Binding *binding);
+
+    static QUntypedPropertyBinding Q_QML_EXPORT
+    create(const QMetaType &propertyType,
            const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit,
            const QQmlTranslation &translationData);
+
+    static QQmlRefPointer<QV4::ExecutableCompilationUnit> Q_QML_EXPORT
+    compilationUnit(const QPropertyBindingPrivate *priv);
 };
 
 inline const QQmlPropertyBinding *QQmlPropertyBindingJS::asBinding() const
