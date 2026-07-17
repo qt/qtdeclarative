@@ -1042,14 +1042,14 @@ void QQuickLayout::itemSiblingOrderChanged(QQuickItem *item)
 
 void QQuickLayout::itemImplicitWidthChanged(QQuickItem *item)
 {
-    if (!isReady() || item->signalsBlocked())
+    if (!isReady())
         return;
     invalidate(item);
 }
 
 void QQuickLayout::itemImplicitHeightChanged(QQuickItem *item)
 {
-    if (!isReady() || item->signalsBlocked())
+    if (!isReady())
         return;
     invalidate(item);
 }
