@@ -1305,7 +1305,7 @@ QTypeRevision QQmlImports::addFileImport(
 
     if (QQmlFile::isLocalFile(qmldirUrl)) {
 
-        QString localFileOrQrc = QQmlFile::urlToLocalFileOrQrc(qmldirUrl);
+        const QString localFileOrQrc = QQmlFile::urlToLocalFileOrQrc(qmldirUrl);
         Q_ASSERT(!localFileOrQrc.isEmpty());
 
         const QString dir = localFileOrQrc.left(localFileOrQrc.lastIndexOf(Slash) + 1);
@@ -1325,8 +1325,8 @@ QTypeRevision QQmlImports::addFileImport(
         if (importUri.endsWith(Slash))
             importUri.chop(1);
 
-        if (!typeLoader->absoluteFilePath(localFileOrQrc).isEmpty()) {
-            qmldirIdentifier = std::move(localFileOrQrc);
+        if (QString cleanPath = typeLoader->cleanFilePath(localFileOrQrc); !cleanPath.isEmpty()) {
+            qmldirIdentifier = std::move(cleanPath);
             if (localQmldir)
                 *localQmldir = qmldirIdentifier;
         }

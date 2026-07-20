@@ -506,7 +506,6 @@ static bool isPathAbsolute(const QString &path)
 #endif
 }
 
-
 /*!
     \internal
 */
@@ -1504,7 +1503,7 @@ QQmlRefPointer<QQmlQmldirData> QQmlTypeLoader::getQmldir(const QUrl &url)
 }
 
 /*!
-Returns the absolute filename of path via a directory cache.
+Returns the clean filename of path via a directory cache.
 Returns a empty string if the path does not exist.
 
 Why a directory cache?  QML checks for files in many paths with
@@ -1512,38 +1511,43 @@ invalid directories.  By caching whether a directory exists
 we avoid many stats.  We also cache the files' existence in the
 directory, for the same reason.
 */
-QString QQmlTypeLoader::absoluteFilePath(const QString &path) const
+QString QQmlTypeLoader::cleanFilePath(const QString &path) const
 {
     // Can be called from either thread.
 
     if (path.isEmpty())
         return QString();
-    if (path.at(0) == QLatin1Char(':')) {
+
+    const QString cleanPath = QDir::cleanPath(path);
+    if (cleanPath.at(0) == QLatin1Char(':')) {
         // qrc resource
-        QFileInfo fileInfo(path);
-        return fileInfo.isFile() ? fileInfo.absoluteFilePath() : QString();
-    } else if (path.size() > 3 && path.at(3) == QLatin1Char(':') &&
-               path.startsWith(QLatin1String("qrc"), Qt::CaseInsensitive)) {
-        // qrc resource url
-        QFileInfo fileInfo(QQmlFile::urlToLocalFileOrQrc(path));
-        return fileInfo.isFile() ? fileInfo.absoluteFilePath() : QString();
+        QFileInfo fileInfo(cleanPath);
+        return fileInfo.isFile() ? cleanPath : QString();
+    } else if (cleanPath.size() > 3 && cleanPath.at(3) == QLatin1Char(':')
+               && cleanPath.startsWith(QLatin1String("qrc"), Qt::CaseInsensitive)) {
+        // qrc resource url. Turn into path by stripping "qrc".
+        const QString actualPath = cleanPath.mid(3);
+        QFileInfo fileInfo(actualPath);
+        return fileInfo.isFile() ? actualPath : QString();
     }
 #if defined(Q_OS_ANDROID)
-    else if (path.size() > 7 && path.at(6) == QLatin1Char(':') && path.at(7) == QLatin1Char('/') &&
-           path.startsWith(QLatin1String("assets"), Qt::CaseInsensitive)) {
+    else if (cleanPath.size() > 7 && cleanPath.at(6) == QLatin1Char(':')
+             && cleanPath.at(7) == QLatin1Char('/')
+             && cleanPath.startsWith(QLatin1String("assets"), Qt::CaseInsensitive)) {
         // assets resource url
-        QFileInfo fileInfo(QQmlFile::urlToLocalFileOrQrc(path));
-        return fileInfo.isFile() ? fileInfo.absoluteFilePath() : QString();
-    } else if (path.size() > 8 && path.at(7) == QLatin1Char(':') && path.at(8) == QLatin1Char('/') &&
-           path.startsWith(QLatin1String("content"), Qt::CaseInsensitive)) {
+        QFileInfo fileInfo(cleanPath);
+        return fileInfo.isFile() ? cleanPath : QString();
+    } else if (cleanPath.size() > 8 && cleanPath.at(7) == QLatin1Char(':')
+               && cleanPath.at(8) == QLatin1Char('/')
+               && cleanPath.startsWith(QLatin1String("content"), Qt::CaseInsensitive)) {
         // content url
-        QFileInfo fileInfo(QQmlFile::urlToLocalFileOrQrc(path));
-        return fileInfo.isFile() ? fileInfo.absoluteFilePath() : QString();
+        QFileInfo fileInfo(cleanPath);
+        return fileInfo.isFile() ? cleanPath : QString();
     }
 #endif
 
-    return fileExists(path)
-            ? QFileInfo(path).absoluteFilePath()
+    return fileExists(cleanPath)
+            ? cleanPath
             : QString();
 }
 
@@ -1676,7 +1680,7 @@ bool QQmlTypeLoader::fileExists(const QString &dirPath, const QString &file) con
 
 /*!
 Returns true if the path is a directory via a directory cache.  Cache is
-shared with absoluteFilePath().
+shared with cleanFilePath().
 */
 bool QQmlTypeLoader::directoryExists(const QString &path)
 {
@@ -1711,11 +1715,14 @@ bool QQmlTypeLoader::directoryExists(const QString &path)
 
 
 /*!
-Return a QQmlTypeLoaderQmldirContent for absoluteFilePath.  The QQmlTypeLoaderQmldirContent may be cached.
 
-\a filePath is a local file path.
+\internal
 
-It can also be a remote path for a remote directory import, but it will have been cached by now in this case.
+Return a QQmlTypeLoaderQmldirContent for \a filePathIn.
+The QQmlTypeLoaderQmldirContent may be cached.
+
+It can also be a remote path for a remote directory import, but it will have
+been cached by now in this case.
 */
 const QQmlTypeLoaderQmldirContent QQmlTypeLoader::qmldirContent(const QString &filePathIn)
 {
@@ -1942,10 +1949,10 @@ QStringList QQmlTypeLoader::urlsForModule(const QString &module) const
     const auto completedImportPaths = QQmlImports::completeQmldirPaths(module, importPaths, {});
     QStringList urls;
     for (const auto &importPath : completedImportPaths) {
-        const auto absolutePath = absoluteFilePath(importPath);
-        if (absolutePath.isEmpty())
+        const auto cleanPath = cleanFilePath(importPath);
+        if (cleanPath.isEmpty())
             continue;
-        if (const std::optional<QString> url = pathToUrl(absolutePath))
+        if (const std::optional<QString> url = pathToUrl(cleanPath))
             urls.append(url.value());
     }
 
@@ -2013,7 +2020,7 @@ QQmlTypeLoader::LocalQmldirResult QQmlTypeLoader::locateLocalQmldir(
     const QStringList qmlDirPaths = QQmlImports::completeQmldirPaths(
             import->uri, localImportPaths, import->version);
 
-    QString qmldirAbsoluteFilePath;
+    QString qmldirCleanFilePath;
     for (QString qmldirPath : qmlDirPaths) {
         if (hasInterceptors) {
             // TODO:
@@ -2038,15 +2045,19 @@ QQmlTypeLoader::LocalQmldirResult QQmlTypeLoader::locateLocalQmldir(
             }
         }
 
-        qmldirAbsoluteFilePath = absoluteFilePath(qmldirPath);
-        if (!qmldirAbsoluteFilePath.isEmpty()) {
-            QString url = pathToUrl(qmldirAbsoluteFilePath);
+        // qmldirPath can be a path or a URL at this point because we've inherited that property
+        // from importPathList(). cleanFilePath() however, wants only paths, not URLs. It may
+        // also be empty here if an interceptor redirected it to a non-local URL above.
+        qmldirCleanFilePath = cleanFilePath(qmldirPath);
+
+        if (!qmldirCleanFilePath.isEmpty()) {
+            QString url = pathToUrl(qmldirCleanFilePath);
             if (url.startsWith(QStringLiteral("file:")))
-                sanitizeUNCPath(&qmldirAbsoluteFilePath);
+                sanitizeUNCPath(&qmldirCleanFilePath);
 
             QQmlTypeLoaderThreadData::QmldirInfo *cache = new QQmlTypeLoaderThreadData::QmldirInfo;
             cache->version = import->version;
-            cache->qmldirFilePath = qmldirAbsoluteFilePath;
+            cache->qmldirFilePath = qmldirCleanFilePath;
             cache->qmldirPathUrl = url;
             cache->next = nullptr;
             if (cacheTail)
@@ -2057,7 +2068,7 @@ QQmlTypeLoader::LocalQmldirResult QQmlTypeLoader::locateLocalQmldir(
 
             if (result != QmldirFound) {
                 result = blob->handleLocalQmldirForImport(
-                                 import, qmldirAbsoluteFilePath, url, errors)
+                                 import, qmldirCleanFilePath, url, errors)
                         ? QmldirFound
                         : QmldirRejected;
             }
@@ -2086,7 +2097,7 @@ QQmlTypeLoader::LocalQmldirResult QQmlTypeLoader::locateLocalQmldir(
     } else {
         qCDebug(lcQmlImport)
                 << "locateLocalQmldir:" << qPrintable(import->uri) << "module's qmldir found at"
-                << qmldirAbsoluteFilePath;
+                << qmldirCleanFilePath;
     }
 
     return result;

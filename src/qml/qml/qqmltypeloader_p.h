@@ -195,7 +195,7 @@ public:
     QQmlRefPointer<QQmlScriptBlob> getScript(const QUrl &unNormalizedUrl, const QUrl &relativeUrl);
     QQmlRefPointer<QQmlQmldirData> getQmldir(const QUrl &);
 
-    QString absoluteFilePath(const QString &path) const;
+    QString cleanFilePath(const QString &path) const;
 
     bool fileExists(const QString &filePath) const
     {
