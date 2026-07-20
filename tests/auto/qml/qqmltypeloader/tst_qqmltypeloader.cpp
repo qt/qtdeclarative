@@ -1032,7 +1032,7 @@ void tst_QQMLTypeLoader::resourceRegistrationInvalidatesCache()
 
     // Probe while the resource is absent. This caches a negative entry for the directory.
     QVERIFY(!typeLoader->fileExists(dir, file));
-    QVERIFY(typeLoader->absoluteFilePath(path).isEmpty());
+    QVERIFY(typeLoader->cleanFilePath(path).isEmpty());
 
     // The resource appears (as it would when a module's plugin registers its qrc mid-load).
     QVERIFY(QResource::registerResource(rcc));
@@ -1042,7 +1042,7 @@ void tst_QQMLTypeLoader::resourceRegistrationInvalidatesCache()
     // A register can only turn "missing" into "present": the type loader must not keep serving
     // the stale "absent" answer it cached above.
     QVERIFY(typeLoader->fileExists(dir, file));
-    QCOMPARE(typeLoader->absoluteFilePath(path), path);
+    QCOMPARE(typeLoader->cleanFilePath(path), path);
 
     // Symmetrically, once the resource is unregistered again, the cached "present" answer must
     // not stick: an unregister can turn "present" back into "missing".
@@ -1050,7 +1050,7 @@ void tst_QQMLTypeLoader::resourceRegistrationInvalidatesCache()
     unregister.dismiss();
     QVERIFY(!QFileInfo::exists(path));
     QVERIFY(!typeLoader->fileExists(dir, file));
-    QVERIFY(typeLoader->absoluteFilePath(path).isEmpty());
+    QVERIFY(typeLoader->cleanFilePath(path).isEmpty());
 }
 
 void tst_QQMLTypeLoader::removeFromCache()
