@@ -778,13 +778,11 @@ void QQmlTypeData::dataReceived(const SourceCodeData &data)
     if (isError())
         return;
 
-    if (!m_backupSourceCode.exists() || m_backupSourceCode.isEmpty()) {
+    if (!m_backupSourceCode.exists()) {
         if (m_cachedUnitStatus == QQmlMetaType::CachedUnitLookupError::VersionMismatch)
             setError(QQmlTypeLoader::tr("File was compiled ahead of time with an incompatible version of Qt and the original file cannot be found. Please recompile"));
-        else if (!m_backupSourceCode.exists())
-            setError(QQmlTypeLoader::tr("No such file or directory"));
         else
-            setError(QQmlTypeLoader::tr("File is empty"));
+            setError(QQmlTypeLoader::tr("No such file or directory"));
         return;
     }
 

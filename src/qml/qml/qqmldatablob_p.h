@@ -88,8 +88,7 @@ public:
         QString readAll(QString *error) const;
         QDateTime sourceTimeStamp() const;
         QByteArray checksum() const;
-        bool exists() const;
-        bool isEmpty() const;
+        bool exists() const { return hasInlineSourceCode || fileExists; }
         bool isCacheable() const { return !hasStaticData; }
         bool isValid() const
         {
@@ -103,6 +102,7 @@ public:
         QFileInfo fileInfo;
         bool hasInlineSourceCode = false;
         bool hasStaticData = false;
+        bool fileExists = false;
     };
 
     template<typename Loader = QQmlTypeLoader>

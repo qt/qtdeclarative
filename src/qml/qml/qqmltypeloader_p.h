@@ -298,6 +298,8 @@ public:
 
     QStringList urlsForModule(const QString &module) const;
 
+    static bool isResource(const QString &path);
+
 private:
     friend struct PlainLoader;
     friend struct CachedLoader;
@@ -342,7 +344,7 @@ private:
 
     enum class DataOrigin { Device, Static };
     void setData(const QQmlDataBlob::Ptr &, const QByteArray &, DataOrigin);
-    void setData(const QQmlDataBlob::Ptr &, const QString &fileName);
+    void setData(const QQmlDataBlob::Ptr &, const QString &fileName, bool exists);
     void setData(const QQmlDataBlob::Ptr &, const QQmlDataBlob::SourceCodeData &);
     void setCachedUnit(const QQmlDataBlob::Ptr &blob, const QQmlPrivate::CachedQmlUnit *unit);
 
