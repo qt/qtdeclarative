@@ -303,9 +303,12 @@ void QQmlTypeLoader::loadThread(const QQmlDataBlob::Ptr &blob)
 
     if (QQmlFile::isSynchronous(blob->m_url)) {
         const QString fileName = QQmlFile::urlToLocalFileOrQrc(blob->m_url);
-        if (!fileExists(fileName) && QFileInfo::exists(fileName)) {
+
+        const bool exists = fileExists(fileName);
+        if (!exists && !isResource(fileName) && QFileInfo::exists(fileName)) {
             // If the file doesn't exist at all, that's fine. It may be cached. If it's a case
             // mismatch, though, we have to error out.
+            // NB: The resource file system is case-sensitive. No need to check there.
             blob->setError(QLatin1String("File name case mismatch"));
             return;
         }
@@ -313,7 +316,7 @@ void QQmlTypeLoader::loadThread(const QQmlDataBlob::Ptr &blob)
         if (blob->setProgress(1.f) && blob->isAsync())
             thread()->callDownloadProgressChanged(blob, 1.);
 
-        setData(blob, fileName);
+        setData(blob, fileName, exists);
 
     } else {
 #if QT_CONFIG(qml_network)
@@ -449,12 +452,13 @@ void QQmlTypeLoader::setData(const QQmlDataBlob::Ptr &blob, const QByteArray &da
     setData(blob, d);
 }
 
-void QQmlTypeLoader::setData(const QQmlDataBlob::Ptr &blob, const QString &fileName)
+void QQmlTypeLoader::setData(const QQmlDataBlob::Ptr &blob, const QString &fileName, bool exists)
 {
     ASSERT_LOADTHREAD();
 
     QQmlDataBlob::SourceCodeData d;
     d.fileInfo = QFileInfo(fileName);
+    d.fileExists = exists;
     setData(blob, d);
 }
 
@@ -1588,7 +1592,7 @@ static QString stripTrailingSlashes(const QString &path)
     return QString();
 }
 
-static bool isResource(const QString &path)
+bool QQmlTypeLoader::isResource(const QString &path)
 {
     const bool startsWithColon = path.at(0) == QLatin1Char(':');
 #if defined(Q_OS_ANDROID)
