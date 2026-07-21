@@ -64,6 +64,7 @@ public:
         {}
     };
 
+    struct ResultBuilder;
     struct Result
     {
         enum Flag {
@@ -72,22 +73,87 @@ public:
             AutoFixable = 0x4,
             UseSettings = 0x8
         };
-
         Q_DECLARE_FLAGS(Flags, Flag)
 
-        static Result clean() { return Result { {}, {}, {}, { NoMessages, ExitsNormally } }; }
-        static Result cleanWithSettings()
+    private:
+        friend struct ResultBuilder;
+        Result() = default;
+        Result(const QList<Message> &expectedMessages, const QList<Message> &unexpectedMessages,
+               const QList<Fix> &fixes, Flags flags)
+            : expectedMessages(expectedMessages), unexpectedMessages(unexpectedMessages),
+              expectedFixes(fixes), flags(flags) { }
+
+    public:
+        QList<Message> expectedMessages = {};
+        QList<Message> unexpectedMessages = {};
+        QList<Fix> expectedFixes = {};
+        Flags flags = {};
+    };
+
+    struct ResultBuilder
+    {
+        ResultBuilder &addExpected(const QString &text, quint32 line = 0, quint32 column = 0,
+                                   QtMsgType severity = QtWarningMsg)
         {
-            return Result{ {}, {}, {}, { NoMessages, ExitsNormally, UseSettings } };
+            result.expectedMessages.append({ text, line, column, severity });
+            return *this;
         }
 
-        QList<Message> expectedMessages = {};
-        QList<Message> badMessages = {};
-        QList<Fix> expectedFixes = {};
+        ResultBuilder &addUnexpected(const QString &text, quint32 line = 0, quint32 column = 0,
+                                     QtMsgType severity = QtWarningMsg)
+        {
+            result.unexpectedMessages.append({ text, line, column, severity });
+            return *this;
+        }
 
-        Flags flags = {};
+        ResultBuilder &addFix(const QString &text, const QList<Edit> &&edits = {}, quint32 line = 0,
+                              quint32 column = 0)
+        {
+            result.expectedFixes.append(Fix(text, std::move(edits), line, column));
+            return *this;
+        }
+        ResultBuilder &addFix(const QString &text, Edit &&edit, quint32 line = 0,
+                              quint32 column = 0)
+        {
+            result.expectedFixes.append(Fix(text, std::move(edit), line, column));
+            return *this;
+        }
 
-        Result &withFlags(Flags flags) { this->flags =flags; return *this;  }
+        ResultBuilder &setFlag(Result::Flag f, bool v = true)
+        {
+            result.flags.setFlag(f, v);
+            return *this;
+        }
+
+        Result build() { return result; }
+
+        static Result singleExpected(const QString &text, quint32 line = 0, quint32 column = 0,
+                                     QtMsgType severity = QtWarningMsg)
+        {
+            Result result;
+            result.expectedMessages.append({ text, line, column, severity });
+            return result;
+        }
+
+        static Result cleanResult()
+        {
+            Result result;
+            result.flags |= Result::Flags(Result::NoMessages | Result::ExitsNormally);
+            return result;
+        }
+
+        static Result cleanResultWithSettings()
+        {
+            Result result;
+            result.flags |= Result::Flags(Result::NoMessages | Result::ExitsNormally
+                                          | Result::UseSettings);
+            return result;
+        }
+
+        static Result ignoredResult() { return Result{}; }
+
+    private:
+        Result result;
     };
 
     struct Environment : public QList<std::pair<QString, QString>>
@@ -393,135 +459,116 @@ void TestQmllint::testUnqualified_data()
     // id from nowhere (as with setContextProperty)
     QTest::newRow("IdFromOuterSpace")
             << QStringLiteral("IdFromOuterSpace.qml")
-            << Result { { Message { QStringLiteral("Unqualified access"), 4, 8 },
-                          Message { QStringLiteral("Unqualified access"), 7, 21 } } };
+            << ResultBuilder()
+               .addExpected("Unqualified access"_L1, 4, 8)
+               .addExpected("Unqualified access"_L1, 7, 21)
+               .build();
     // access property of root object
     QTest::newRow("FromRootDirect")
             << QStringLiteral("FromRoot.qml")
-            << Result {
-                   {
-                           Message { QStringLiteral("Unqualified access"), 9, 16 }, // new property
-                           Message { QStringLiteral("Unqualified access"), 13,
-                                     33 } // builtin property
-                   },
-                   {},
-                   { { { u"unqualified is a member of a parent element.\n      "_s
-                         u"You can qualify the access with its id to avoid this warning."_s,
-                         Edit{ u"root."_s, 9, 16 } },
-                       { u"x is a member of a parent element.\n      "_s
-                         u"You can qualify the access with its id to avoid this warning."_s,
-                         Edit{ u"root."_s, 13, 33 } } } } };
+            << ResultBuilder()
+               .addExpected("Unqualified access"_L1, 9, 16) // new property
+               .addExpected("Unqualified access"_L1, 13, 33) // builtin property
+               .addFix("unqualified is a member of a parent element.\n      "_L1
+                       "You can qualify the access with its id to avoid this warning."_L1,
+                       Edit{ u"root."_s, 9, 16 })
+               .addFix("x is a member of a parent element.\n      "_L1
+                       "You can qualify the access with its id to avoid this warning."_L1,
+                       Edit{ u"root."_s, 13, 33 })
+               .build();
     // access injected name from signal
     QTest::newRow("SignalHandler")
             << QStringLiteral("SignalHandler.qml")
-            << Result{ { { "Unqualified access"_L1, 5, 21 },
-                         { "Unqualified access"_L1, 10, 21 },
-                         { "Unqualified access"_L1, 8, 29 },
-                         { "Unqualified access"_L1, 12, 34 } },
-                       { },
-                       { { "\"mouse\" is ambiguous. Use a function instead: function(mouse) { ... }"_L1,
-                           Edit{ "function(mouse) "_L1, 4, 22 } },
-                         { "\"mouse\" is ambiguous. Use a function instead: function(mouse) { ... }"_L1,
-                           Edit{ "function(mouse) "_L1, 9, 24 } },
-                         { "\"mouse\" is ambiguous. Use a function instead: (mouse) => ..."_L1,
-                           Edit{ "(mouse) => "_L1, 8, 16 } },
-                         { "\"mouse\" is ambiguous. Use a function instead: (mouse) => ..."_L1,
-                           Edit{ "(mouse) => "_L1, 12, 21 } } } };
+            << ResultBuilder()
+               .addExpected("Unqualified access"_L1, 5, 21)
+               .addExpected("Unqualified access"_L1, 10, 21)
+               .addExpected("Unqualified access"_L1, 8, 29)
+               .addExpected("Unqualified access"_L1, 12, 34)
+               .addFix("\"mouse\" is ambiguous. Use a function instead: function(mouse) { ... }"_L1,
+                       Edit{ "function(mouse) "_L1, 4, 22 })
+               .addFix("\"mouse\" is ambiguous. Use a function instead: function(mouse) { ... }"_L1,
+                       Edit{ "function(mouse) "_L1, 9, 24 })
+               .addFix("\"mouse\" is ambiguous. Use a function instead: (mouse) => ..."_L1,
+                       Edit{ "(mouse) => "_L1, 8, 16 })
+               .addFix("\"mouse\" is ambiguous. Use a function instead: (mouse) => ..."_L1,
+                       Edit{ "(mouse) => "_L1, 12, 21 })
+               .build();
     // access catch identifier outside catch block
     QTest::newRow("CatchStatement")
             << QStringLiteral("CatchStatement.qml")
-            << Result { { Message { QStringLiteral("Unqualified access"), 6, 21 } } };
+            << ResultBuilder().addExpected("Unqualified access"_L1, 6, 21).build();
     QTest::newRow("NonSpuriousParent")
             << QStringLiteral("nonSpuriousParentWarning.qml")
-            << Result{ { { "Unqualified access"_L1, 6, 25 } },
-                       { },
-                       { { { u"You can qualify the access with its id to avoid this warning "_s
-                             u"(You first have to give the element an id)."_s,
-                             Edit{ u"<id>."_s, 6, 25 } } } } };
+            << ResultBuilder()
+               .addExpected("Unqualified access"_L1, 6, 25)
+               .addFix("You can qualify the access with its id to avoid this warning "_L1
+                       "(You first have to give the element an id)."_L1, Edit{ u"<id>."_s, 6, 25 })
+               .build();
 
     QTest::newRow("crashConnections")
             << QStringLiteral("crashConnections.qml")
-            << Result { { Message { QStringLiteral("Unqualified access"), 4, 13 } } };
+            << ResultBuilder().addExpected("Unqualified access"_L1, 4, 13).build();
 
     QTest::newRow("delegateContextProperties")
             << QStringLiteral("delegateContextProperties.qml")
-            << Result { { Message { QStringLiteral("Unqualified access"), 6, 14 },
-                          Message { QStringLiteral("Unqualified access"), 7, 15 },
-                          Message { QStringLiteral("'model' is implicitly injected into this "
-                                                   "delegate. Add a required property 'model' to "
-                                                   "the delegate instead.") },
-                          Message {
-                                  QStringLiteral("'index' is implicitly injected into this "
-                                                 "delegate. Add a required property 'index' to the "
-                                                 "delegate instead.") } } };
+            << ResultBuilder()
+               .addExpected("Unqualified access"_L1, 6, 14)
+               .addExpected("Unqualified access"_L1, 7, 15)
+               .addExpected("'model' is implicitly injected into this delegate. Add a required "
+                            "property 'model' to the delegate instead.")
+               .addExpected("'index' is implicitly injected into this delegate. Add a required "
+                            "property 'index' to the delegate instead.")
+               .build();
     QTest::newRow("storeSloppy")
             << QStringLiteral("UnqualifiedInStoreSloppy.qml")
-            << Result{ { Message{ QStringLiteral("Unqualified access"), 9, 26} } };
+            << ResultBuilder().addExpected("Unqualified access"_L1, 9, 26).build();
     QTest::newRow("storeStrict")
             << QStringLiteral("UnqualifiedInStoreStrict.qml")
-            << Result{ { Message{ QStringLiteral("Unqualified access"), 9, 52} } };
+            << ResultBuilder().addExpected("Unqualified access", 9, 52).build();
 }
 
 void TestQmllint::testUnknownCausesFail()
 {
     runTest("unknownElement.qml",
-            Result { { Message {
-                    QStringLiteral(
-                            "Unknown was not found. "
-                            "Did you add all imports and dependencies?"),
-                    4, 5,
-                    QtWarningMsg
-            } } });
+            ResultBuilder()
+            .addExpected("Unknown was not found. Did you add all imports and dependencies?"_L1,
+                         4, 5, QtWarningMsg)
+            .build());
     runTest("TypeWithUnknownPropertyType.qml",
-            Result { { Message {
-                    QStringLiteral(
-                            "Something was not found. "
-                            "Did you add all imports and dependencies?"),
-                    4, 5,
-                    QtWarningMsg
-            } } });
+            ResultBuilder()
+            .addExpected("Something was not found. Did you add all imports and dependencies?",
+                         4, 5, QtWarningMsg)
+            .build());
 }
 
 void TestQmllint::directoryPassedAsQmlTypesFile()
 {
     runTest("unknownElement.qml",
-            Result { { Message { QStringLiteral("QML types file cannot be a directory: ")
-                                 + dataDirectory() } } },
+            ResultBuilder()
+            .addExpected("QML types file cannot be a directory: "_L1 + dataDirectory())
+            .build(),
             {}, { dataDirectory() });
 }
 
 void TestQmllint::oldQmltypes()
 {
     runTest("oldQmltypes.qml",
-            Result { {
-                             Message { QStringLiteral("typeinfo not declared in qmldir file") },
-                             Message {
-                                     QStringLiteral("Found deprecated dependency specifications") },
-                             Message { QStringLiteral(
-                                     "Meta object revision and export version differ.") },
-                             Message { QStringLiteral(
-                                     "Revision 0 corresponds to version 0.0; it should be 1.0.") },
-                     },
-                     {
-                             Message { QStringLiteral("QQuickItem was not found. "
-                                                      "Did you add all imports and dependencies?")
-                     }
-            } });
+            ResultBuilder()
+            .addExpected("typeinfo not declared in qmldir file"_L1)
+            .addExpected("Found deprecated dependency specifications"_L1)
+            .addExpected("Meta object revision and export version differ."_L1)
+            .addExpected("Revision 0 corresponds to version 0.0; it should be 1.0."_L1)
+            .addUnexpected("QQuickItem was not found. Did you add all imports and dependencies?"_L1)
+            .build());
 
     runTest("oldUnusedQmlTypes.qml",
-            Result { {
-                             Message { QStringLiteral("typeinfo not declared in qmldir file") },
-                             Message {
-                                      QStringLiteral("Found deprecated dependency specifications") },
-                             Message { QStringLiteral(
-                                     "Meta object revision and export version differ.") },
-                             Message { QStringLiteral(
-                                     "Revision 0 corresponds to version 0.0; it should be 1.0.") },
-                      },
-                      {
-                             Message { QStringLiteral("Unused import"), 1, 1, QtInfoMsg
-                      }
-            } });
+            ResultBuilder()
+            .addExpected("typeinfo not declared in qmldir file"_L1)
+            .addExpected("Found deprecated dependency specifications"_L1)
+            .addExpected("Meta object revision and export version differ."_L1)
+            .addExpected("Revision 0 corresponds to version 0.0; it should be 1.0.")
+            .addUnexpected("Unused import"_L1, 1, 1, QtInfoMsg)
+            .build());
 }
 
 void TestQmllint::qmltypes_data()
@@ -625,20 +672,20 @@ void TestQmllint::typeInstantiatedRecursively_data()
 
     QTest::newRow("withQmldirAlias")
             << u"qmldirs/renameSnippetToCustomName/Snippet.qml"_s
-            << Result{ { { "Type \"Snippet\" can't be instantiated recursively"_L1, 4, 5 } } }
+            << ResultBuilder::singleExpected("Type \"Snippet\" can't be instantiated recursively"_L1, 4, 5)
             << defaultOptions;
 
     constexpr QLatin1String warningForRecursiveMain =
             "Type \"%1\" can't be instantiated recursively"_L1;
     QTest::newRow("withMultipleQmldirAliases")
             << u"qmldirs/renameFileToMultipleNames/Main.qml"_s
-            << Result{ {
-                       { warningForRecursiveMain.arg("Main"_L1), 4, 5 },
-                       { warningForRecursiveMain.arg("Name1"_L1), 5, 5 },
-                       { warningForRecursiveMain.arg("Name2"_L1), 6, 5 },
-                       { warningForRecursiveMain.arg("Name3"_L1), 7, 5 },
-                       { warningForRecursiveMain.arg("Name4"_L1), 8, 5 },
-               } }
+            << ResultBuilder()
+               .addExpected(warningForRecursiveMain.arg("Main"_L1), 4, 5)
+               .addExpected(warningForRecursiveMain.arg("Name1"_L1), 5, 5)
+               .addExpected(warningForRecursiveMain.arg("Name2"_L1), 6, 5)
+               .addExpected(warningForRecursiveMain.arg("Name3"_L1), 7, 5)
+               .addExpected(warningForRecursiveMain.arg("Name4"_L1), 8, 5)
+               .build()
             << defaultOptions;
 }
 
@@ -657,12 +704,12 @@ void TestQmllint::typeInstantiatedRecursivelyInBuildFolder()
     checkResult(
             callQmllint(testFile("mymodule-source/MyModule/Main.qml"), options,
                         CallQmllintCheck::ShouldFail),
-            Result{ {
-                    { "Type \"Main\" can't be instantiated recursively"_L1, 4, 5 },
-                    { "\"Main\" is explicitly renamed to \"NewName\" via a qmldir entry or QT_QML_SOURCE_TYPENAME CMake property, use \"NewName\" instead."_L1,
-                      4, 5 },
-                    { "Type \"NewName\" can't be instantiated recursively"_L1, 5, 5 },
-            } });
+            ResultBuilder()
+                .addExpected("Type \"Main\" can't be instantiated recursively"_L1, 4, 5)
+                .addExpected("\"Main\" is explicitly renamed to \"NewName\" via a qmldir entry or "
+                             "QT_QML_SOURCE_TYPENAME CMake property, use \"NewName\" instead."_L1, 4, 5)
+                .addExpected("Type \"NewName\" can't be instantiated recursively"_L1, 5, 5)
+                .build());
 }
 
 void TestQmllint::dirtyQmlCode_data()
@@ -675,888 +722,964 @@ void TestQmllint::dirtyQmlCode_data()
 
     QTest::newRow("2Interceptors")
             << QStringLiteral("2interceptors.qml")
-            << Result{ { { "Duplicate interceptor on property \"x\""_L1 } } } << defaultOptions;
+            << ResultBuilder::singleExpected("Duplicate interceptor on property \"x\""_L1)
+            << defaultOptions;
     QTest::newRow("2ValueSources")
             << QStringLiteral("2valueSources.qml")
-            << Result{ { { "Duplicate value source on property \"x\""_L1 } } } << defaultOptions;
+            << ResultBuilder::singleExpected("Duplicate value source on property \"x\""_L1)
+            << defaultOptions;
     QTest::newRow("AssignToReadOnlyProperty")
             << QStringLiteral("assignToReadOnlyProperty.qml")
-            << Result{ { { "Cannot assign to read-only property activeFocus"_L1 } } }
+            << ResultBuilder::singleExpected("Cannot assign to read-only property activeFocus"_L1)
             << defaultOptions;
     QTest::newRow("AssignToReadOnlyProperty2")
             << QStringLiteral("assignToReadOnlyProperty2.qml")
-            << Result{ { { "Cannot assign to read-only property activeFocus"_L1 } } }
+            << ResultBuilder::singleExpected("Cannot assign to read-only property activeFocus"_L1)
             << defaultOptions;
     QTest::newRow("AutomatchedSignalHandler")
             << QStringLiteral("AutomatchedSignalHandler.qml")
-            << Result{ {
-                       { "Unqualified access"_L1, 12, 36 },
-                       { "Implicitly defining \"onClicked\" as signal handler in Connections "
-                         "is deprecated. Create a function instead: \"function onClicked() "
-                         "{ ... }\""_L1 },
-               } }
+            << ResultBuilder()
+               .addExpected("Unqualified access"_L1, 12, 36)
+               .addExpected("Implicitly defining \"onClicked\" as signal handler in Connections "
+                            "is deprecated. Create a function instead: \"function onClicked() "
+                            "{ ... }\""_L1)
+               .build()
             << defaultOptions;
     QTest::newRow("BadAttached")
             << QStringLiteral("badAttached.qml")
-            << Result{ { { "unknown attached property scope WrongAttached."_L1 } } }
+            << ResultBuilder::singleExpected("unknown attached property scope WrongAttached."_L1)
             << defaultOptions;
-    QTest::newRow("BadBinding") << QStringLiteral("badBinding.qml")
-                                << Result{ { { "Could not find property \"doesNotExist\"."_L1 } } }
-                                << defaultOptions;
+    QTest::newRow("BadBinding")
+            << QStringLiteral("badBinding.qml")
+            << ResultBuilder::singleExpected("Could not find property \"doesNotExist\"."_L1)
+            << defaultOptions;
     QTest::newRow("BadLiteralBinding")
             << QStringLiteral("badLiteralBinding.qml")
-            << Result{ { { "Cannot assign literal of type string to int"_L1 } } } << defaultOptions;
+            << ResultBuilder::singleExpected("Cannot assign literal of type string to int"_L1)
+            << defaultOptions;
     QTest::newRow("BadLiteralBindingDate")
             << QStringLiteral("badLiteralBindingDate.qml")
-            << Result{ { { "Cannot assign binding of type QString to QDateTime"_L1 } } }
+            << ResultBuilder::singleExpected("Cannot assign binding of type QString to QDateTime"_L1)
             << defaultOptions;
     QTest::newRow("BadModulePrefix")
             << QStringLiteral("badModulePrefix.qml")
-            << Result{ { { "Cannot access singleton as a property of an object"_L1 } } }
+            << ResultBuilder::singleExpected("Cannot access singleton as a property of an object"_L1)
             << defaultOptions;
     QTest::newRow("BadModulePrefix2")
             << QStringLiteral("badModulePrefix2.qml")
-            << Result{ { { "Cannot use non-QObject type QRectF to access prefixed import"_L1 } },
-                       { { "Type not found in namespace"_L1 },
-                         { "Member \"BirthdayParty\" not found on type \"QRectF\""_L1 } } }
+            << ResultBuilder()
+               .addExpected("Cannot use non-QObject type QRectF to access prefixed import"_L1)
+               .addUnexpected("Type not found in namespace"_L1)
+               .addUnexpected("Member \"BirthdayParty\" not found on type \"QRectF\""_L1)
+               .build()
             << defaultOptions;
     QTest::newRow("BadPropertyType")
             << QStringLiteral("badPropertyType.qml")
-            << Result{ { { "No type found for property \"bad\". This may be due to a missing "_L1
-                           "import statement or incomplete qmltypes files."_L1 } } }
+            << ResultBuilder::singleExpected("No type found for property \"bad\". This may be due "
+                                             "to a missing import statement or incomplete qmltypes "
+                                             "files."_L1)
             << defaultOptions;
     QTest::newRow("BadScriptBindingOnAttachedSignalHandler")
             << QStringLiteral("badScriptBinding.attachedSignalHandler.qml")
-            << Result{ { { "no matching signal found for handler \"onBogusSignal\""_L1, 3, 10 } } }
+            << ResultBuilder::singleExpected("no matching signal found for handler \"onBogusSignal\""_L1, 3, 10)
             << defaultOptions;
     QTest::newRow("BadScriptBindingOnAttachedType")
             << QStringLiteral("badScriptBinding.attached.qml")
-            << Result{ { { "Could not find property \"bogusProperty\"."_L1, 5, 12 } } }
+            << ResultBuilder::singleExpected("Could not find property \"bogusProperty\"."_L1, 5, 12)
             << defaultOptions;
     QTest::newRow("BadScriptBindingOnGroup")
             << QStringLiteral("badScriptBinding.group.qml")
-            << Result{ { { "Could not find property \"bogusProperty\"."_L1, 3, 10 } } }
+            << ResultBuilder::singleExpected("Could not find property \"bogusProperty\"."_L1, 3, 10)
             << defaultOptions;
     QTest::newRow("CoerceToVoid")
             << QStringLiteral("coercetovoid.qml")
-            << Result{ { { "Function without return type annotation returns double"_L1 } } }
+            << ResultBuilder::singleExpected("Function without return type annotation returns double"_L1)
             << defaultOptions;
     QTest::newRow("DefaultPropertyLookupInUnknownType")
             << QStringLiteral("unknownParentDefaultPropertyCheck.qml")
-            << Result{ { { "Alien was not found. Did you add all imports and dependencies?"_L1 } } }
+            << ResultBuilder::singleExpected("Alien was not found. Did you add all imports and dependencies?"_L1)
             << defaultOptions;
     QTest::newRow("DefaultPropertyWithWrongType(string)")
             << QStringLiteral("defaultPropertyWithWrongType.qml")
-            << Result{ { { "Cannot assign to default property of incompatible type"_L1 } },
-                       { { "Cannot assign to non-existent default property"_L1 } } }
+            << ResultBuilder()
+               .addExpected("Cannot assign to default property of incompatible type"_L1)
+               .addUnexpected("Cannot assign to non-existent default property"_L1)
+               .build()
             << defaultOptions;
     QTest::newRow("Deprecation (Property binding, no reason)")
             << QStringLiteral("deprecatedPropertyBinding.qml")
-            << Result{ { { "Binding on deprecated property \"deprecated\""_L1 } } }
+            << ResultBuilder::singleExpected("Binding on deprecated property \"deprecated\""_L1)
             << defaultOptions;
     QTest::newRow("Deprecation (Property binding, with reason)")
             << QStringLiteral("deprecatedPropertyBindingReason.qml")
-            << Result{ { { "Binding on deprecated property \"deprecatedReason\" (Reason: Test)"_L1 } } }
+            << ResultBuilder::singleExpected("Binding on deprecated property \"deprecatedReason\" (Reason: Test)"_L1)
             << defaultOptions;
     QTest::newRow("Deprecation (Property, no reason)")
             << QStringLiteral("deprecatedProperty.qml")
-            << Result{ { { "Property \"deprecated\" is deprecated"_L1 } } } << defaultOptions;
+            << ResultBuilder::singleExpected("Property \"deprecated\" is deprecated"_L1)
+            << defaultOptions;
     QTest::newRow("Deprecation (Property, with reason)")
             << QStringLiteral("deprecatedPropertyReason.qml")
-            << Result{ { { "Property \"deprecated\" is deprecated (Reason: Test)"_L1 } } }
+            << ResultBuilder::singleExpected("Property \"deprecated\" is deprecated (Reason: Test)"_L1)
             << defaultOptions;
     QTest::newRow("Deprecation (Type, no reason)")
             << QStringLiteral("deprecatedType.qml")
-            << Result{ { { "Type \"TypeDeprecated\" is deprecated"_L1 } } } << defaultOptions;
+            << ResultBuilder::singleExpected("Type \"TypeDeprecated\" is deprecated"_L1)
+            << defaultOptions;
     QTest::newRow("Deprecation (Type, with reason)")
             << QStringLiteral("deprecatedTypeReason.qml")
-            << Result{ { { "Type \"TypeDeprecatedReason\" is deprecated (Reason: Test)"_L1 } } }
+            << ResultBuilder::singleExpected("Type \"TypeDeprecatedReason\" is deprecated (Reason: Test)"_L1)
             << defaultOptions;
     QTest::newRow("DoubleAssignToDefaultProperty")
             << QStringLiteral("defaultPropertyWithDoubleAssignment.qml")
-            << Result{ { { "Cannot assign multiple objects to a default non-list property"_L1 } } }
+            << ResultBuilder::singleExpected("Cannot assign multiple objects to a default non-list property"_L1)
             << defaultOptions;
     CallQmllintOptions withFileSelectorResourceFile = defaultOptions;
     withFileSelectorResourceFile.resources.append(testFile("FileSelector3/resources.qrc"));
     QTest::newRow("fileSelectorIncompatibleType")
             << QStringLiteral("FileSelector3/Bad.qml")
-            << Result{ {
-                               { "Type Bad has a potentially incompatible file-selected variant %1."_L1
-                                         .arg(testFile("FileSelector3/+Material/Bad.qml")),
-                                 3, 1 },
-                       },
-                       {
-                               { "Ambiguous"_L1 },
-                       } }
-                       .withFlags(Result::UseSettings)
+            << ResultBuilder()
+               .addExpected("Type Bad has a potentially incompatible file-selected variant %1."_L1
+                            .arg(testFile("FileSelector3/+Material/Bad.qml")), 3, 1)
+               .addUnexpected("Ambiguous"_L1)
+               .setFlag(Result::UseSettings)
+               .build()
             << withFileSelectorResourceFile;
     QTest::newRow("fileSelectorIncompatibleType2")
             << QStringLiteral("FileSelector3/SubCircle.qml")
-            << Result{ {
-                               { "Type SubCircle is ambiguous due to file selector usage, ignoring %1."_L1
-                                         .arg(testFile("FileSelector3/+Material/SubCircle.qml")),
-                                 3, 1 },
-                       },
-                       {
-                               { "potentially incompatible"_L1 },
-                       } }
-                       .withFlags(Result::UseSettings)
+            << ResultBuilder()
+               .addExpected("Type SubCircle is ambiguous due to file selector usage, ignoring %1."_L1
+                            .arg(testFile("FileSelector3/+Material/SubCircle.qml")), 3, 1)
+               .addUnexpected("potentially incompatible"_L1)
+               .setFlag(Result::UseSettings)
+               .build()
             << withFileSelectorResourceFile;
     QTest::newRow("fileSelectorIncompatibleFileSelectedType")
             << QStringLiteral("FileSelector3/+Material/Bad.qml")
-            << Result{ {
-                       { "File-selected type Bad is potentially incompatible with %1."_L1.arg(
-                                 testFile("FileSelector3/Bad.qml")),
-                         3, 1 },
-               } }
+            << ResultBuilder()
+               .addExpected("File-selected type Bad is potentially incompatible with %1."_L1
+                              .arg(testFile("FileSelector3/Bad.qml")), 3, 1)
+               .build()
             << withFileSelectorResourceFile;
     QTest::newRow("fileSelectorIncompatibleFileSelectedType2")
             << QStringLiteral("FileSelector3/+Material/SubCircle.qml")
-            << Result{ {
-                               { "File-selected type SubCircle is ambiguous due to file selector usage, this file will be ignored in favour of %1."_L1
-                                         .arg(testFile("FileSelector3/SubCircle.qml")),
-                                 3, 1 },
-                       },
-                       {
-                               { "potentially incompatible"_L1 },
-                       } }
-                       .withFlags(Result::UseSettings)
+            << ResultBuilder()
+               .addExpected("File-selected type SubCircle is ambiguous due to file selector usage, "
+                            "this file will be ignored in favour of %1."_L1
+                            .arg(testFile("FileSelector3/SubCircle.qml")), 3, 1)
+               .addUnexpected("potentially incompatible"_L1)
+               .setFlag(Result::UseSettings)
+               .build()
             << withFileSelectorResourceFile;
     // This might be debatable: Maybe someone alwyas has 2 selectors at the same time
     // But for now, we assume that warning about it leads to a better trade-off.
     QTest::newRow("fileSelectorAccessingFileFromOtherSelector")
             << QStringLiteral("FileSelector5/+bar/Type.qml")
-            << Result{ {
-                       { "FooInternal was not found"_L1, 3, 1 },
-               } }
+            << ResultBuilder::singleExpected("FooInternal was not found"_L1, 3, 1)
             << defaultOptions;
     QTest::newRow(("ImportModuleWithFileSelector"))
-            << QStringLiteral("FileSelector/main.qml") << Result::cleanWithSettings()
+            << QStringLiteral("FileSelector/main.qml") << ResultBuilder::cleanResultWithSettings()
             << defaultOptions;
 
     QTest::newRow(("ImportFileSelector"))
             << QStringLiteral("FileSelector/ToolBar.qml")
-            << Result{ { { "Type ToolBar is ambiguous due to file selector usage, ignoring %1"_L1
-                                   .arg(testFile("FileSelector/+Material/ToolBar.qml")),
-                           3, 1, QtInfoMsg } } }
-                       .withFlags(Result::Flags(Result::UseSettings | Result::ExitsNormally))
+            << ResultBuilder()
+               .addExpected("Type ToolBar is ambiguous due to file selector usage, ignoring %1"_L1
+                            .arg(testFile("FileSelector/+Material/ToolBar.qml")), 3, 1, QtInfoMsg)
+               .setFlag(Result::UseSettings)
+               .setFlag(Result::ExitsNormally)
+               .build()
             << defaultOptions;
     QTest::newRow(("ImportFileSelector2ToolBar"))
             << QStringLiteral("FileSelector2/ToolBar.qml")
-            << Result{ {
-                               { "Type ToolBar is ambiguous due to file selector usage, ignoring %1"_L1
-                                         .arg(testFile("FileSelector2/+Material/ToolBar.qml")),
-                                 3, 1, QtMsgType::QtInfoMsg },
-                       },
-                       { { "Type ToolBar is ambiguous due to file selector usage, ignoring %1"_L1
-                                   .arg(testFile("FileSelector2/+Material/ToolBar.qml")),
-                           3, 1, QtMsgType::QtWarningMsg },
-                         { "Item was not found."_L1 },
-                         { "Broken"_L1 } } }
-                       .withFlags(Result::Flags(Result::UseSettings | Result::ExitsNormally))
+            << ResultBuilder()
+               .addExpected("Type ToolBar is ambiguous due to file selector usage, ignoring %1"_L1
+                            .arg(testFile("FileSelector2/+Material/ToolBar.qml")),
+                            3, 1, QtMsgType::QtInfoMsg)
+               .addUnexpected("Type ToolBar is ambiguous due to file selector usage, ignoring %1"_L1
+                              .arg(testFile("FileSelector2/+Material/ToolBar.qml")),
+                              3, 1, QtMsgType::QtWarningMsg)
+               .addUnexpected("Item was not found."_L1)
+               .addUnexpected("Broken"_L1)
+               .setFlag(Result::UseSettings)
+               .setFlag(Result::ExitsNormally)
+               .build()
             << defaultOptions;
     QTest::newRow(("ImportFileSelector2Broken"))
             << QStringLiteral("FileSelector2/ToolBar.qml")
-            << Result{ {
-                               { "Type ToolBar is ambiguous due to file selector usage, ignoring %1"_L1
-                                         .arg(testFile("FileSelector2/+Material/ToolBar.qml")),
-                                 3, 1, QtMsgType::QtInfoMsg },
-                       },
-                       { { "Type ToolBar is ambiguous due to file selector usage, ignoring %1"_L1
-                                   .arg(testFile("FileSelector2/+Material/ToolBar.qml")),
-                           3, 1, QtMsgType::QtWarningMsg },
-                         { "ToolBar"_L1 } } }
-                       .withFlags(Result::Flags(Result::UseSettings | Result::ExitsNormally))
+            << ResultBuilder()
+               .addExpected("Type ToolBar is ambiguous due to file selector usage, ignoring %1"_L1
+                            .arg(testFile("FileSelector2/+Material/ToolBar.qml")),
+                            3, 1, QtMsgType::QtInfoMsg)
+               .addUnexpected("Type ToolBar is ambiguous due to file selector usage, ignoring %1"_L1
+                              .arg(testFile("FileSelector2/+Material/ToolBar.qml")),
+                              3, 1, QtMsgType::QtWarningMsg)
+               .addUnexpected("ToolBar"_L1)
+               .setFlag(Result::UseSettings)
+               .setFlag(Result::ExitsNormally)
+               .build()
             << defaultOptions;
     QTest::newRow("InvalidImport")
             << QStringLiteral("invalidImport.qml")
-            << Result{ { { "Failed to import FooBar. Are your import paths set up properly?"_L1, 2,
-                           1 } } }
+            << ResultBuilder::singleExpected("Failed to import FooBar. Are your import paths set "
+                                             "up properly?"_L1, 2, 1)
             << defaultOptions;
     QTest::newRow("Invalid_id_blockstatement")
             << QStringLiteral("invalidId2.qml")
-            << Result{ { { "id must be followed by an identifier"_L1 } } } << defaultOptions;
+            << ResultBuilder::singleExpected("id must be followed by an identifier"_L1)
+            << defaultOptions;
     QTest::newRow("Invalid_id_expression")
-            << QStringLiteral("invalidId1.qml") << Result{ { { "Failed to parse id"_L1 } } }
+            << QStringLiteral("invalidId1.qml")
+            << ResultBuilder::singleExpected("Failed to parse id"_L1)
             << defaultOptions;
     QTest::newRow("Invalid_syntax_JS")
-            << QStringLiteral("failure1.js") << Result{ { { "Expected token `;'"_L1, 4, 12 } } }
+            << QStringLiteral("failure1.js")
+            << ResultBuilder::singleExpected("Expected token `;'"_L1, 4, 12)
             << defaultOptions;
     QTest::newRow("Invalid_syntax_QML")
-            << QStringLiteral("failure1.qml") << Result{ { { "Expected token `:'"_L1, 4, 8 } } }
+            << QStringLiteral("failure1.qml")
+            << ResultBuilder::singleExpected("Expected token `:'"_L1, 4, 8)
             << defaultOptions;
     QTest::newRow("IsNotAnEntryOfEnum")
             << QStringLiteral("IsNotAnEntryOfEnum.qml")
-            << Result{ { { "Member \"Mode\" not found on type \"IsNotAnEntryOfEnum\""_L1, 12, 29 },
-                         { "\"Hour\" is not an entry of enum \"Mode\"."_L1, 13, 62 } },
-                       {},
-                       { { "Did you mean \"mode\"?"_L1, Edit{ "mode"_L1, 12, 29 } },
-                         { "Did you mean \"Hours\"?"_L1, Edit{ "Hours"_L1, 13, 62 } } } }
+            << ResultBuilder()
+               .addExpected("Member \"Mode\" not found on type \"IsNotAnEntryOfEnum\""_L1, 12, 29)
+               .addExpected("\"Hour\" is not an entry of enum \"Mode\"."_L1, 13, 62)
+               .addFix("Did you mean \"mode\"?"_L1, Edit{ "mode"_L1, 12, 29 })
+               .addFix("Did you mean \"Hours\"?"_L1, Edit{ "Hours"_L1, 13, 62 })
+               .build()
             << defaultOptions;
     QTest::newRow("MemberNotFound")
             << QStringLiteral("memberNotFound.qml")
-            << Result{ { { "Member \"foo\" not found on type \"memberNotFound\""_L1, 6, 31 } } }
+            << ResultBuilder::singleExpected("Member \"foo\" not found on type \"memberNotFound\""_L1, 6, 31)
             << defaultOptions;
     QTest::newRow("MissingDefaultProperty")
             << QStringLiteral("defaultPropertyWithoutKeyword.qml")
-            << Result{ { { "Cannot assign to non-existent default property"_L1 } } }
+            << ResultBuilder::singleExpected("Cannot assign to non-existent default property"_L1)
             << defaultOptions;
     QTest::newRow("MissingDefaultPropertyDefinedInTheSameType")
             << QStringLiteral("defaultPropertyWithinTheSameType.qml")
-            << Result{ { { "Cannot assign to non-existent default property"_L1 } } }
+            << ResultBuilder::singleExpected("Cannot assign to non-existent default property"_L1)
             << defaultOptions;
     QTest::newRow("MultiDefaultPropertyWithWrongType")
             << QStringLiteral("multiDefaultPropertyWithWrongType.qml")
-            << Result{ { { "Cannot assign to default property of incompatible type"_L1 } },
-                       { { "Cannot assign to non-existent default property"_L1 } } }
+            << ResultBuilder()
+               .addExpected("Cannot assign to default property of incompatible type"_L1)
+               .addUnexpected("Cannot assign to non-existent default property"_L1)
+               .build()
             << defaultOptions;
     QTest::newRow("NonExistentListProperty")
             << QStringLiteral("nonExistentListProperty.qml")
-            << Result{ { { "Could not find property \"objs\"."_L1 } } } << defaultOptions;
+            << ResultBuilder::singleExpected("Could not find property \"objs\"."_L1)
+            << defaultOptions;
     QTest::newRow("OnAssignment")
             << QStringLiteral("onAssignment.qml")
-            << Result{ { { "Member \"loops\" not found on type \"bool\""_L1 } } } << defaultOptions;
+            << ResultBuilder::singleExpected("Member \"loops\" not found on type \"bool\""_L1)
+            << defaultOptions;
     QTest::newRow("PropertyAliasCycles") << QStringLiteral("settings/propertyAliasCycle/file.qml")
-                                         << Result::cleanWithSettings() << defaultOptions;
+                                         << ResultBuilder::cleanResultWithSettings() << defaultOptions;
     // make sure that warnings are triggered without settings:
     QTest::newRow("PropertyAliasCycles2")
             << QStringLiteral("settings/propertyAliasCycle/file.qml")
-            << Result{ { { "\"cycle1\" is part of an alias cycle"_L1 },
-                         { "\"cycle1\" is part of an alias cycle"_L1 } } }
+            << ResultBuilder()
+               .addExpected("\"cycle1\" is part of an alias cycle"_L1)
+               .addExpected("\"cycle1\" is part of an alias cycle"_L1)
+               .build()
             << defaultOptions;
     QTest::newRow("QtQuick.Window 2.0")
             << QStringLiteral("qtquickWindow20.qml")
-            << Result{ { { "Member \"window\" not found on type \"QQuickWindow\""_L1 } } }
+            << ResultBuilder::singleExpected("Member \"window\" not found on type \"QQuickWindow\""_L1)
             << defaultOptions;
     QTest::newRow("SignalParameterMismatch")
             << QStringLiteral("namedSignalParameters.qml")
-            << Result{ { { "Parameter 1 to signal handler for \"onSig\" is called \"argarg\". "
-                           "The signal has a parameter of the same name in position 2."_L1 } },
-                       { { "onSig2"_L1 } } }
+            << ResultBuilder()
+               .addExpected("Parameter 1 to signal handler for \"onSig\" is called \"argarg\". "
+                            "The signal has a parameter of the same name in position 2."_L1)
+               .addUnexpected("onSig2"_L1)
+               .build()
             << defaultOptions;
     QTest::newRow("StoreNameMethod")
             << QStringLiteral("storeNameMethod.qml")
-            << Result{ { { "Cannot assign to method foo"_L1 } } } << defaultOptions;
+            << ResultBuilder::singleExpected("Cannot assign to method foo"_L1)
+            << defaultOptions;
     QTest::newRow("TooManySignalParameters")
             << QStringLiteral("tooManySignalParameters.qml")
-            << Result{ { { "Signal handler for \"onSig\" has more formal parameters than the "
-                           "signal it handles."_L1 } } }
+            << ResultBuilder::singleExpected("Signal handler for \"onSig\" has more formal "
+                                             "parameters than the signal it handles."_L1)
             << defaultOptions;
     QTest::newRow("TypePropertAccess")
-            << QStringLiteral("typePropertyAccess.qml") << Result{ } << defaultOptions;
+            << QStringLiteral("typePropertyAccess.qml")
+            << ResultBuilder::ignoredResult() << defaultOptions;
     QTest::newRow("UnknownJavascriptMethd")
             << QStringLiteral("unknownJavascriptMethod.qml")
-            << Result{ { { "Member \"foo2\" not found on type \"Methods\""_L1, 5, 25 } } }
+            << ResultBuilder::singleExpected("Member \"foo2\" not found on type \"Methods\""_L1, 5, 25)
             << defaultOptions;
-    QTest::newRow("Unused Import (prefix)") << QStringLiteral("unused_prefix.qml")
-                                            << Result{ { { "Unused import"_L1, 1, 1, QtInfoMsg } },
-                                                       { },
-                                                       { },
-                                                       Result::ExitsNormally }
-                                            << defaultOptions;
-    QTest::newRow("Unused Import (simple)") << QStringLiteral("unused_simple.qml")
-                                            << Result{ { { "Unused import"_L1, 1, 1, QtInfoMsg } },
-                                                       { },
-                                                       { },
-                                                       Result::ExitsNormally }
-                                            << defaultOptions;
+    QTest::newRow("Unused Import (prefix)")
+            << QStringLiteral("unused_prefix.qml")
+            << ResultBuilder()
+               .addExpected("Unused import"_L1, 1, 1, QtInfoMsg)
+               .setFlag(Result::ExitsNormally)
+               .build()
+            << defaultOptions;
+    QTest::newRow("Unused Import (simple)")
+            << QStringLiteral("unused_simple.qml")
+            << ResultBuilder()
+               .addExpected("Unused import"_L1, 1, 1, QtInfoMsg)
+               .setFlag(Result::ExitsNormally)
+               .build()
+            << defaultOptions;
     QTest::newRow("ValueSource+2Interceptors")
             << QStringLiteral("valueSourceBetween2interceptors.qml")
-            << Result{ { { "Duplicate interceptor on property \"x\""_L1 } } } << defaultOptions;
+            << ResultBuilder::singleExpected("Duplicate interceptor on property \"x\""_L1)
+            << defaultOptions;
     QTest::newRow("ValueSource+ListValue")
             << QStringLiteral("valueSource_listValue.qml")
-            << Result{ { { "Cannot combine value source and binding on property \"objs\""_L1 } } }
+            << ResultBuilder::singleExpected("Cannot combine value source and binding on property \"objs\""_L1)
             << defaultOptions;
     QTest::newRow("ValueSource+Value")
             << QStringLiteral("valueSource_Value.qml")
-            << Result{ { { "Cannot combine value source and binding on property \"obj\""_L1 } } }
+            << ResultBuilder::singleExpected("Cannot combine value source and binding on property \"obj\""_L1)
             << defaultOptions;
     QTest::newRow("VariableUsedBeforeDeclaration")
             << QStringLiteral("useBeforeDeclaration.qml")
-            << Result{ {
-                       { "Identifier 'argq' is used here before its declaration"_L1, 5, 9 },
-                       { "Note: declaration of 'argq' here"_L1, 6, 13 },
-               } }
+            << ResultBuilder()
+               .addExpected("Identifier 'argq' is used here before its declaration"_L1, 5, 9)
+               .addExpected("Note: declaration of 'argq' here"_L1, 6, 13)
+               .build()
             << defaultOptions;
     QTest::newRow("WithStatement")
             << QStringLiteral("WithStatement.qml")
-            << Result{ { { "with statements are strongly discouraged"_L1 } } } << defaultOptions;
-    QTest::newRow("aliasCycle1") << QStringLiteral("aliasCycle.qml")
-                                 << Result{ {
-                                            { "Alias \"b\" is part of an alias cycle"_L1, 6, 5 },
-                                            { "Alias \"a\" is part of an alias cycle"_L1, 5, 5 },
-                                    } }
-                                 << defaultOptions;
+            << ResultBuilder::singleExpected("with statements are strongly discouraged"_L1)
+            << defaultOptions;
+    QTest::newRow("aliasCycle1")
+            << QStringLiteral("aliasCycle.qml")
+            << ResultBuilder()
+               .addExpected("Alias \"b\" is part of an alias cycle"_L1, 6, 5)
+               .addExpected("Alias \"a\" is part of an alias cycle"_L1, 5, 5)
+               .build()
+            << defaultOptions;
     QTest::newRow("anchors3")
             << QStringLiteral("anchors3.qml")
-            << Result{ { { "Cannot assign binding of type QQuickItem to QQuickAnchorLine"_L1 } } }
+            << ResultBuilder::singleExpected("Cannot assign binding of type QQuickItem to QQuickAnchorLine"_L1)
             << defaultOptions;
     QTest::newRow("annotatedDefaultParameter")
             << QStringLiteral("annotatedDefaultParameter.qml")
-            << Result{ { { "Type annotations on default parameters are not supported"_L1 } } }
+            << ResultBuilder::singleExpected("Type annotations on default parameters are not supported"_L1)
             << defaultOptions;
     QTest::newRow("assignNonExistingTypeToVarProp")
             << QStringLiteral("assignNonExistingTypeToVarProp.qml")
-            << Result{ { { "NonExistingType was not found. Did you add all imports and "
-                           "dependencies?"_L1 } } }
+            << ResultBuilder::singleExpected("NonExistingType was not found. Did you add all "
+                                             "imports and dependencies?"_L1)
             << defaultOptions;
     // should succeed, but it does not:
     QTest::newRow("attachedPropertyAccess") << QStringLiteral("goodAttachedPropertyAccess.qml")
-                                            << Result::clean() << defaultOptions;
+                                            << ResultBuilder::cleanResult() << defaultOptions;
     // should succeed, but it does not:
     QTest::newRow("attachedPropertyNested") << QStringLiteral("goodAttachedPropertyNested.qml")
-                                            << Result::clean() << defaultOptions;
+                                            << ResultBuilder::cleanResult() << defaultOptions;
     QTest::newRow("autoFixConnectionsBinding")
             << QStringLiteral("autofix/ConnectionsHandler.qml")
-            << Result{ { { "Implicitly defining \"onWidthChanged\" as signal handler in "
-                           "Connections is deprecated. Create a function instead: \"function "
-                           "onWidthChanged() { ... }\"."_L1 },
-                         { "Implicitly defining \"onColorChanged\" as signal handler in "
-                           "Connections is deprecated. Create a function instead: \"function "
-                           "onColorChanged(collie) { ... }\"."_L1 } } }
+            << ResultBuilder()
+               .addExpected("Implicitly defining \"onWidthChanged\" as signal handler in "
+                            "Connections is deprecated. Create a function instead: \"function "
+                            "onWidthChanged() { ... }\"."_L1)
+               .addExpected("Implicitly defining \"onColorChanged\" as signal handler in "
+                            "Connections is deprecated. Create a function instead: \"function "
+                            "onColorChanged(collie) { ... }\"."_L1)
+               .build()
             << defaultOptions;
     QTest::newRow("bad constant number to string")
             << QStringLiteral("numberToStringProperty.qml")
-            << Result{ { { "Cannot assign literal of type double to QString"_L1 } } }
+            << ResultBuilder::singleExpected("Cannot assign literal of type double to QString"_L1)
             << defaultOptions;
     QTest::newRow("bad string binding (QT_TR_NOOP)")
             << QStringLiteral("bad_QT_TR_NOOP.qml")
-            << Result{ { { "Cannot assign literal of type string to int"_L1 } } } << defaultOptions;
+            << ResultBuilder::singleExpected("Cannot assign literal of type string to int"_L1)
+            << defaultOptions;
     QTest::newRow("bad template literal (simple)")
             << QStringLiteral("badTemplateStringSimple.qml")
-            << Result{ { { "Cannot assign literal of type string to int"_L1 } } } << defaultOptions;
+            << ResultBuilder::singleExpected("Cannot assign literal of type string to int"_L1)
+            << defaultOptions;
     QTest::newRow("bad tranlsation binding (qsTr)")
-            << QStringLiteral("bad_qsTr.qml") << Result{ } << defaultOptions;
+            << QStringLiteral("bad_qsTr.qml") << ResultBuilder::ignoredResult() << defaultOptions;
     QTest::newRow("bad unary minus to string")
             << QStringLiteral("unaryMinusToStringProperty.qml")
-            << Result{ { { "Cannot assign literal of type double to QString"_L1 } } }
+            << ResultBuilder::singleExpected("Cannot assign literal of type double to QString"_L1)
             << defaultOptions;
-    QTest::newRow("badAlias") << QStringLiteral("badAlias.qml")
-                              << Result{ { { "Cannot resolve alias \"wrong\""_L1, 4, 5 } } }
-                              << defaultOptions;
+    QTest::newRow("badAlias")
+            << QStringLiteral("badAlias.qml")
+            << ResultBuilder::singleExpected("Cannot resolve alias \"wrong\""_L1, 4, 5)
+            << defaultOptions;
     QTest::newRow("badAliasExpression")
             << QStringLiteral("badAliasExpression.qml")
-            << Result{ { { "Invalid alias expression. Only IDs and field member expressions can "_L1
-                           "be aliased"_L1,
-                           5, 26 } } }
+            << ResultBuilder::singleExpected("Invalid alias expression. Only IDs and field member "
+                                             "expressions can be aliased"_L1, 5, 26)
             << defaultOptions;
     QTest::newRow("badAliasNotAnExpression")
             << QStringLiteral("badAliasNotAnExpression.qml")
-            << Result{ { { "Invalid alias expression. Only IDs and field member expressions can "_L1
-                           "be aliased"_L1,
-                           4, 30 } } }
+            << ResultBuilder::singleExpected("Invalid alias expression. Only IDs and field member "
+                                             "expressions can be aliased"_L1, 4, 30)
             << defaultOptions;
     QTest::newRow("badAliasObject")
             << QStringLiteral("badAliasObject.qml")
-            << Result{ { { "Member \"wrongwrongwrong\" not found on type \"QtObject\""_L1, 8,
-                           40 } } }
+            << ResultBuilder::singleExpected("Member \"wrongwrongwrong\" not found on type "
+                                             "\"QtObject\""_L1, 8, 40)
             << defaultOptions;
     QTest::newRow("badAliasProperty1")
             << QStringLiteral("badAliasProperty.qml")
-            << Result{ { { "Cannot resolve alias \"wrong\""_L1, 5, 5 } } } << defaultOptions;
+            << ResultBuilder::singleExpected("Cannot resolve alias \"wrong\""_L1, 5, 5)
+            << defaultOptions;
     QTest::newRow("badAttachedProperty")
             << QStringLiteral("badAttachedProperty.qml")
-            << Result{ { { "Member \"progress\" not found on type \"TestTypeAttached\""_L1 } } }
+            << ResultBuilder::singleExpected("Member \"progress\" not found on type \"TestTypeAttached\""_L1)
             << defaultOptions;
     QTest::newRow("badAttachedPropertyNested")
             << QStringLiteral("badAttachedPropertyNested.qml")
-            << Result{ { { "Member \"progress\" not found on type \"QObject\""_L1, 12, 41 } },
-                       { { "Member \"progress\" not found on type \"QObject\""_L1, 6, 37 } } }
+            << ResultBuilder()
+               .addExpected("Member \"progress\" not found on type \"QObject\""_L1, 12, 41)
+               .addUnexpected("Member \"progress\" not found on type \"QObject\""_L1, 6, 37)
+               .build()
             << defaultOptions;
     QTest::newRow("badAttachedPropertyTypeQtObject")
             << QStringLiteral("badAttachedPropertyTypeQtObject.qml")
-            << Result{ { { "Cannot assign object of type QtObject to int"_L1 } } }
+            << ResultBuilder::singleExpected("Cannot assign object of type QtObject to int"_L1)
             << defaultOptions;
     QTest::newRow("badAttachedPropertyTypeString")
             << QStringLiteral("badAttachedPropertyTypeString.qml")
-            << Result{ { { "Cannot assign literal of type string to int"_L1 } } } << defaultOptions;
+            << ResultBuilder::singleExpected("Cannot assign literal of type string to int"_L1)
+            << defaultOptions;
     QTest::newRow("badEnumFromQtQml")
             << QStringLiteral("badEnumFromQtQml.qml")
-            << Result{ { { "Member \"Linear123\" not found on type \"QQmlEasing\""_L1, 4, 30 } } }
+            << ResultBuilder::singleExpected("Member \"Linear123\" not found on type \"QQmlEasing\""_L1, 4, 30)
             << defaultOptions;
     QTest::newRow("badGeneralizedGroup1")
             << QStringLiteral("badGeneralizedGroup1.qml")
-            << Result{ { { "Could not find property \"aaaa\"."_L1 } } } << defaultOptions;
+            << ResultBuilder::singleExpected("Could not find property \"aaaa\"."_L1)
+            << defaultOptions;
     QTest::newRow("badGeneralizedGroup2")
             << QStringLiteral("badGeneralizedGroup2.qml")
-            << Result{ { { "unknown grouped property scope aself"_L1 } } } << defaultOptions;
-    QTest::newRow("badParent") << QStringLiteral("badParent.qml")
-                               << Result{ { { "Member \"rrr\" not found on type \"badParent\""_L1,
-                                              5, 34 } } }
-                               << defaultOptions;
+            << ResultBuilder::singleExpected("unknown grouped property scope aself"_L1)
+            << defaultOptions;
+    QTest::newRow("badParent")
+            << QStringLiteral("badParent.qml")
+            << ResultBuilder::singleExpected("Member \"rrr\" not found on type \"badParent\""_L1, 5, 34)
+            << defaultOptions;
     QTest::newRow("badQmldirImportAndDepend")
             << QStringLiteral("qmldirImportAndDepend/bad.qml")
-            << Result{ { { "Item was not found. Did you add all imports and dependencies?"_L1, 3,
-                           1 } } }
+            << ResultBuilder::singleExpected("Item was not found. Did you add all imports and "
+                                             "dependencies?"_L1, 3, 1)
             << defaultOptions;
-    QTest::newRow("badScript") << QStringLiteral("badScript.qml")
-                               << Result{ { { "Member \"stuff\" not found on type \"Empty\""_L1, 5,
-                                              21 } } }
-                               << defaultOptions;
+    QTest::newRow("badScript")
+            << QStringLiteral("badScript.qml")
+            << ResultBuilder::singleExpected("Member \"stuff\" not found on type \"Empty\""_L1, 5, 21)
+            << defaultOptions;
     QTest::newRow("badScriptOnAttachedProperty")
             << QStringLiteral("badScript.attached.qml")
-            << Result{ { { "Unqualified access"_L1, 3, 26 } } } << defaultOptions;
+            << ResultBuilder::singleExpected("Unqualified access"_L1, 3, 26)
+            << defaultOptions;
     QTest::newRow("badTypeAssertion")
             << QStringLiteral("badTypeAssertion.qml")
-            << Result{ { { "Member \"rrr\" not found on type \"QQuickItem\""_L1, 5, 39 } } }
+            << ResultBuilder::singleExpected("Member \"rrr\" not found on type \"QQuickItem\""_L1, 5, 39)
             << defaultOptions;
     QTest::newRow("badlyBoundComponents")
             << QStringLiteral("badlyBoundComponents.qml")
-            << Result{ { { "Unqualified access"_L1, 18, 36 } } } << defaultOptions;
+            << ResultBuilder::singleExpected("Unqualified access"_L1, 18, 36)
+            << defaultOptions;
     QTest::newRow("brokenNamespace")
             << QStringLiteral("brokenNamespace.qml")
-            << Result{ { { "Type not found in namespace"_L1, 4, 19 } } } << defaultOptions;
+            << ResultBuilder::singleExpected("Type not found in namespace"_L1, 4, 19)
+            << defaultOptions;
     QTest::newRow("cachedDependency")
             << QStringLiteral("cachedDependency.qml")
-            << Result{ { { "Unused import"_L1, 1, 1, QtInfoMsg } },
-                       { { "Cannot assign binding of type QQuickItem to QObject"_L1 } },
-                       { },
-                       Result::ExitsNormally }
+            << ResultBuilder()
+               .addExpected("Unused import"_L1, 1, 1, QtInfoMsg)
+               .addUnexpected("Cannot assign binding of type QQuickItem to QObject"_L1)
+               .setFlag(Result::ExitsNormally)
+               .build()
             << defaultOptions;
     QTest::newRow("componentDefinitionInnerRequiredProperty")
             << u"componentDefinitionInnerRequiredProperty.qml"_s
-            << Result{ { { "Component is missing required property bar from Rectangle"_L1, 11,
-                           13 } } }
+            << ResultBuilder::singleExpected("Component is missing required property bar from "
+                                             "Rectangle"_L1, 11, 13)
             << defaultOptions;
     QTest::newRow("cppPropertyChangeHandlers-no-property")
             << QStringLiteral("badCppPropertyChangeHandlers3.qml")
-            << Result{ { { "no matching signal found for handler \"onXChanged\""_L1 } } }
+            << ResultBuilder::singleExpected("no matching signal found for handler \"onXChanged\""_L1)
             << defaultOptions;
     QTest::newRow("cppPropertyChangeHandlers-not-a-signal")
             << QStringLiteral("badCppPropertyChangeHandlers4.qml")
-            << Result{ { { "no matching signal found for handler \"onWannabeSignal\""_L1 } } }
+            << ResultBuilder::singleExpected("no matching signal found for handler \"onWannabeSignal\""_L1)
             << defaultOptions;
     QTest::newRow("cppPropertyChangeHandlers-wrong-parameters-size-bindable")
             << QStringLiteral("badCppPropertyChangeHandlers1.qml")
-            << Result{ { { "Signal handler for \"onAChanged\" has more formal parameters than "
-                           "the signal it handles"_L1 } } }
+            << ResultBuilder::singleExpected("Signal handler for \"onAChanged\" has more formal "
+                                             "parameters than the signal it handles"_L1)
             << defaultOptions;
     QTest::newRow("cppPropertyChangeHandlers-wrong-parameters-size-notify")
             << QStringLiteral("badCppPropertyChangeHandlers2.qml")
-            << Result{ { { "Signal handler for \"onBChanged\" has more formal parameters than "
-                           "the signal it handles"_L1 } } }
+            << ResultBuilder::singleExpected("Signal handler for \"onBChanged\" has more formal "
+                                             "parameters than the signal it handles"_L1)
             << defaultOptions;
     QTest::newRow("cycle in import")
             << QStringLiteral("cycleHead.qml")
-            << Result{ { { "MenuItem is part of an inheritance cycle: MenuItem -> MenuItem"_L1 } } }
+            << ResultBuilder::singleExpected("MenuItem is part of an inheritance cycle: "
+                                             "MenuItem -> MenuItem"_L1)
             << defaultOptions;
     QTest::newRow("deprecatedFunction")
             << QStringLiteral("deprecatedFunction.qml")
-            << Result{ { { "Method \"deprecated(foobar)\" is deprecated (Reason: No particular "
-                           "reason.)"_L1 } } }
+            << ResultBuilder::singleExpected("Method \"deprecated(foobar)\" is deprecated "
+                                             "(Reason: No particular reason.)"_L1)
             << defaultOptions;
     QTest::newRow("deprecatedFunctionInherited")
             << QStringLiteral("deprecatedFunctionInherited.qml")
-            << Result{ { { "Method \"deprecatedInherited(c, d)\" is deprecated (Reason: This "
-                           "deprecation should be visible!)"_L1 } } }
+            << ResultBuilder::singleExpected("Method \"deprecatedInherited(c, d)\" is deprecated "
+                                             "(Reason: This deprecation should be visible!)"_L1)
             << defaultOptions;
     QTest::newRow("didYouMean(binding)")
             << QStringLiteral("didYouMeanBinding.qml")
-            << Result{ { { "Could not find property \"witdh\"."_L1 } },
-                       { },
-                       { { "Did you mean \"width\"?"_L1, Edit{ "width"_L1 } } } }
+            << ResultBuilder()
+               .addExpected("Could not find property \"witdh\"."_L1)
+               .addFix("Did you mean \"width\"?"_L1, Edit{ "width"_L1 })
+               .build()
             << defaultOptions;
     QTest::newRow("didYouMean(component)")
             << QStringLiteral("didYouMeanComponent.qml")
-            << Result{ { { "Itym was not found. Did you add all imports and dependencies?"_L1 },
-                         { },
-                         { { "Item"_L1 } } } }
+            << ResultBuilder()
+               .addExpected("Itym was not found. Did you add all imports and dependencies?"_L1)
+               .addFix("Item"_L1)
+               .build()
             << defaultOptions;
     QTest::newRow("didYouMean(enum)")
             << QStringLiteral("didYouMeanEnum.qml")
-            << Result{ { { "Member \"Readx\" not found on type \"QQuickImage\""_L1 },
-                         { },
-                         { { "Ready"_L1 } } } }
+            << ResultBuilder()
+               .addExpected("Member \"Readx\" not found on type \"QQuickImage\""_L1)
+               .addFix("Ready"_L1)
+               .build()
             << defaultOptions;
     QTest::newRow("didYouMean(property)")
             << QStringLiteral("didYouMeanProperty.qml")
-            << Result{ { { "Member \"hoight\" not found on type \"Rectangle\""_L1 },
-                         { },
-                         { { "height"_L1 } } } }
+            << ResultBuilder()
+               .addExpected("Member \"hoight\" not found on type \"Rectangle\""_L1)
+               .addFix("height"_L1)
+               .build()
             << defaultOptions;
     QTest::newRow("didYouMean(propertyCall)")
             << QStringLiteral("didYouMeanPropertyCall.qml")
-            << Result{ { { "Member \"lgg\" not found on type \"Console\""_L1 },
-                         { },
-                         { { "log"_L1 } } } }
+            << ResultBuilder()
+               .addExpected("Member \"lgg\" not found on type \"Console\""_L1)
+               .addFix("log"_L1)
+               .build()
             << defaultOptions;
     QTest::newRow("didYouMean(unqualified)")
             << QStringLiteral("didYouMeanUnqualified.qml")
-            << Result{ { { "Unqualified access"_L1 } },
-                       { },
-                       { { "Did you mean \"height\"?"_L1, Edit{ "height"_L1 } } } }
+            << ResultBuilder()
+               .addExpected("Unqualified access"_L1)
+               .addFix("Did you mean \"height\"?"_L1, Edit{ "height"_L1 })
+               .build()
             << defaultOptions;
     QTest::newRow("didYouMean(unqualifiedCall)")
             << QStringLiteral("didYouMeanUnqualifiedCall.qml")
-            << Result{ { { "Unqualified access"_L1 } },
-                       { },
-                       { { "Did you mean \"func\""_L1, Edit{ "func"_L1 } } } }
+            << ResultBuilder()
+               .addExpected("Unqualified access"_L1)
+               .addFix("Did you mean \"func\""_L1, Edit{ "func"_L1 })
+               .build()
             << defaultOptions;
     QTest::newRow("duplicateImportsDirty")
             << QStringLiteral("duplicateImportsDirty.qml")
-            << Result{ { { "Duplicate import 'QtQml'"_L1, 2, 8 },
-                         { "Note: previous import 'QtQml' here"_L1, 1, 8 },
-                         { "Duplicate import 'Truc'"_L1, 6, 8 },
-                         { "Note: previous import 'Truc' here", 5, 8 },
-                         { "Duplicate import 'QtQuick.Controls'"_L1, 9, 8 },
-                         { "Note: previous import 'QtQuick.Controls' here"_L1, 8, 8 },
-                         { "Duplicate import '..'"_L1, 12, 8 },
-                         { "Note: previous import '..' here"_L1, 11, 8 } },
-                       { { "Duplicate import 'QtQml'"_L1, 3, 8 } } }
+            << ResultBuilder()
+               .addExpected("Duplicate import 'QtQml'"_L1, 2, 8)
+               .addExpected("Note: previous import 'QtQml' here"_L1, 1, 8)
+               .addExpected("Duplicate import 'Truc'"_L1, 6, 8)
+               .addExpected("Note: previous import 'Truc' here", 5, 8)
+               .addExpected("Duplicate import 'QtQuick.Controls'"_L1, 9, 8)
+               .addExpected("Note: previous import 'QtQuick.Controls' here"_L1, 8, 8)
+               .addExpected("Duplicate import '..'"_L1, 12, 8)
+               .addExpected("Note: previous import '..' here"_L1, 11, 8)
+               .addUnexpected("Duplicate import 'QtQml'"_L1, 3, 8)
+               .build()
             << defaultOptions;
     QTest::newRow("duplicated id")
             << QStringLiteral("duplicateId.qml")
-            << Result{ { { "Found a duplicated id. id root was first declared "_L1, 0, 0,
-                           QtCriticalMsg } } }
+            << ResultBuilder::singleExpected("Found a duplicated id. id root was first declared "_L1,
+                                             0, 0, QtCriticalMsg)
             << defaultOptions;
     QTest::newRow("duplicatedPropertyName")
             << QStringLiteral("duplicatedPropertyName.qml")
-            << Result{ {
-                       { "Duplicated property name \"cat\", \"cat\" is already a property."_L1, 5,
-                         21 },
-                       { "Duplicated signal name \"clicked\", \"clicked\" is already a signal"_L1,
-                         8, 12 },
-               } }
+            << ResultBuilder()
+               .addExpected("Duplicated property name \"cat\", \"cat\" is already a property."_L1, 5, 21)
+               .addExpected("Duplicated signal name \"clicked\", \"clicked\" is already a signal"_L1, 8, 12)
+               .build()
             << defaultOptions;
     QTest::newRow("enumInvalid")
             << QStringLiteral("enumInvalid.qml")
-            << Result{ {
-                               { "Member \"red\" not found on type \"QtObject\""_L1, 5, 25 },
-                               { "Member \"red\" not found on type \"QtObject\""_L1, 6, 25 },
-                               { "Member \"S2\" not found on type \"EnumTesterScoped\""_L1, 8, 38 },
-                       },
-                       {},
-                       { { "Did you mean \"U2\"?"_L1, Edit{ "U2"_L1, 8, 38 } } } }
+            << ResultBuilder()
+               .addExpected("Member \"red\" not found on type \"QtObject\""_L1, 5, 25)
+               .addExpected("Member \"red\" not found on type \"QtObject\""_L1, 6, 25)
+               .addExpected("Member \"S2\" not found on type \"EnumTesterScoped\""_L1, 8, 38)
+               .addFix("Did you mean \"U2\"?"_L1, Edit{ "U2"_L1, 8, 38 })
+               .build()
             << defaultOptions;
     QTest::newRow("enumsAreNotTypes_functionAnnotations")
             << QStringLiteral("EnumsAreNotTypes_functionAnnotations.qml")
-            << Result{ { { "QML enumerations are not types. Use int, or use double if the enum's underlying type does not fit into int."_L1,
-                           5, 17 },
-                         { "QML enumerations are not types. Use int, or use double if the enum's underlying type does not fit into int."_L1,
-                           6, 9 } } }
+            << ResultBuilder()
+               .addExpected("QML enumerations are not types. Use int, or use double if the enum's "
+                            "underlying type does not fit into int."_L1, 5, 17)
+               .addExpected("QML enumerations are not types. Use int, or use double if the enum's "
+                            "underlying type does not fit into int."_L1, 6, 9)
+               .build()
             << defaultOptions;
     QTest::newRow("id_in_value_type")
             << QStringLiteral("idInValueType.qml")
-            << Result{ { { "id declarations are only allowed in objects"_L1 } } } << defaultOptions;
+            << ResultBuilder::singleExpected("id declarations are only allowed in objects"_L1)
+            << defaultOptions;
     QTest::newRow("inaccessibleId")
             << QStringLiteral("inaccessibleId.qml")
-            << Result{ { { "Member \"objectName\" not found on type \"int\""_L1 } } }
+            << ResultBuilder::singleExpected("Member \"objectName\" not found on type \"int\""_L1)
             << defaultOptions;
     QTest::newRow("inaccessibleId2")
             << QStringLiteral("inaccessibleId2.qml")
-            << Result{ { { "Member \"objectName\" not found on type \"int\""_L1 } } }
+            << ResultBuilder::singleExpected("Member \"objectName\" not found on type \"int\""_L1)
             << defaultOptions;
     QTest::newRow("incompleteQmltypes")
             << QStringLiteral("incompleteQmltypes.qml")
-            << Result{ { { "Type \"QPalette\" of property \"palette\" not found"_L1, 5, 26 } } }
+            << ResultBuilder::singleExpected("Type \"QPalette\" of property \"palette\" not found"_L1, 5, 26)
             << defaultOptions;
     QTest::newRow("incompleteQmltypes2")
             << QStringLiteral("incompleteQmltypes2.qml")
-            << Result{ { { "Type CustomPalette is used but it is not resolved"_L1, 5, 35 } } }
+            << ResultBuilder::singleExpected("Type CustomPalette is used but it is not resolved"_L1, 5, 35)
             << defaultOptions;
     QTest::newRow("incompleteQmltypes3")
             << QStringLiteral("incompleteQmltypes3.qml")
-            << Result{ { { "Type \"QPalette\" of property \"palette\" not found"_L1, 5, 21 } } }
+            << ResultBuilder::singleExpected("Type \"QPalette\" of property \"palette\" not found"_L1, 5, 21)
             << defaultOptions;
     QTest::newRow("inheritanceCycle")
             << QStringLiteral("Cycle1.qml")
-            << Result{ { { "Cycle1 is part of an inheritance cycle: Cycle1 -> Cycle2 -> "
-                           "Cycle3 -> Cycle1"_L1,
-                           2, 1 } } }
+            << ResultBuilder::singleExpected("Cycle1 is part of an inheritance cycle: Cycle1 -> "
+                                             "Cycle2 -> Cycle3 -> Cycle1"_L1, 2, 1)
             << defaultOptions;
     QTest::newRow("inlineComponentNoComponent")
             << QStringLiteral("inlineComponentNoComponent.qml")
-            << Result{ { { "Inline component declaration must be followed by a typename"_L1, 3,
-                           2 } } }
+            << ResultBuilder::singleExpected("Inline component declaration must be followed by a "
+                                             "typename"_L1, 3, 2)
             << defaultOptions;
     QTest::newRow("inlineComponentSearchInfiniteLoop")
             << QStringLiteral("InlineComponentSearchInfiniteLoop_Main.qml")
-            << Result{ { { "InlineComponentSearchInfiniteLoop_Other.a was not found. "
-                           "Did you add all imports and dependencies?"_L1,
-                           5, 5 } } }
+            << ResultBuilder::singleExpected("InlineComponentSearchInfiniteLoop_Other.a was not "
+                                             "found. Did you add all imports and dependencies?"_L1,
+                                             5, 5)
             << defaultOptions;
     QTest::newRow("invalidAliasTarget1")
             << QStringLiteral("invalidAliasTarget.qml")
-            << Result{ {
-                       { "Invalid alias expression - an initializer is needed."_L1, 6, 18 },
-                       { "Invalid alias expression. Only IDs and field member expressions can "
-                         "be aliased"_L1,
-                         7, 30 },
-                       { "Invalid alias expression. Only IDs and field member expressions can be "
-                         "aliased"_L1,
-                         9, 34 },
-               } }
+            << ResultBuilder()
+               .addExpected("Invalid alias expression - an initializer is needed."_L1, 6, 18)
+               .addExpected("Invalid alias expression. Only IDs and field member expressions can "
+                            "be aliased"_L1, 7, 30)
+               .addExpected("Invalid alias expression. Only IDs and field member expressions can be "
+                            "aliased"_L1, 9, 34)
+               .build()
             << defaultOptions;
     QTest::newRow("invalidInterceptor")
             << QStringLiteral("invalidInterceptor.qml")
-            << Result{ { { "On-binding for property \"angle\" has wrong type \"Item\""_L1 } } }
+            << ResultBuilder::singleExpected("On-binding for property \"angle\" has wrong "
+                                             "type \"Item\""_L1)
             << defaultOptions;
     QTest::newRow("javascriptMethodsInModule")
             << QStringLiteral("javascriptMethodsInModuleBad.qml")
-            << Result{ { { "Member \"unknownFunc\" not found on type \"Foo\""_L1, 5, 21 } } }
+            << ResultBuilder::singleExpected("Member \"unknownFunc\" not found on type \"Foo\""_L1, 5, 21)
             << defaultOptions;
     QTest::newRow("jsVarDeclarationsWriteConst")
             << QStringLiteral("jsVarDeclarationsWriteConst.qml")
-            << Result{ { { "Cannot assign to read-only property constProp"_L1 } } }
+            << ResultBuilder::singleExpected("Cannot assign to read-only property constProp"_L1)
             << defaultOptions;
-    QTest::newRow("lintInnerFunctionsToo") << QStringLiteral("lintInnerFunctionsToo.qml")
-                                           << Result{ { { "Unqualified access"_L1, 5, 17 },
-                                                        { "Unqualified access"_L1, 6, 23 },
-                                                        { "Unqualified access"_L1, 7, 25 },
-                                                        { "Unqualified access"_L1, 8, 26 },
-                                                        { "Unqualified access"_L1, 11, 17 },
-                                                        { "Unqualified access"_L1, 16, 30 },
-                                                        { "Unqualified access"_L1, 17, 38 },
-                                                        { "Unqualified access"_L1, 18, 35 },
-                                                        { "Unqualified access"_L1, 19, 51 } } }
-                                           << defaultOptions;
+    QTest::newRow("lintInnerFunctionsToo")
+            << QStringLiteral("lintInnerFunctionsToo.qml")
+            << ResultBuilder()
+               .addExpected("Unqualified access"_L1, 5, 17)
+               .addExpected("Unqualified access"_L1, 6, 23)
+               .addExpected("Unqualified access"_L1, 7, 25)
+               .addExpected("Unqualified access"_L1, 8, 26)
+               .addExpected("Unqualified access"_L1, 11, 17)
+               .addExpected("Unqualified access"_L1, 16, 30)
+               .addExpected("Unqualified access"_L1, 17, 38)
+               .addExpected("Unqualified access"_L1, 18, 35)
+               .addExpected("Unqualified access"_L1, 19, 51)
+               .build()
+            << defaultOptions;
     QTest::newRow("lowerCaseQualifiedImport")
             << QStringLiteral("lowerCaseQualifiedImport.qml")
-            << Result{ { { "Import qualifier 'test' must start with a capital letter."_L1 },
-                         { "Namespace 'test' of 'test.Rectangle' must start with an upper case "
-                           "letter."_L1 } } }
+            << ResultBuilder()
+               .addExpected("Import qualifier 'test' must start with a capital letter."_L1)
+               .addExpected("Namespace 'test' of 'test.Rectangle' must start with an upper case "
+                            "letter."_L1)
+               .build()
             << defaultOptions;
     QTest::newRow("lowerCaseQualifiedImport2")
             << QStringLiteral("lowerCaseQualifiedImport2.qml")
-            << Result{ { { "Import qualifier 'test' must start with a capital letter."_L1 },
-                         { "Namespace 'test' of 'test.Item' must start with an upper case letter."_L1 },
-                         { "Namespace 'test' of 'test.Rectangle' must start with an upper case letter."_L1 },
-                         { "Namespace 'test' of 'test.color' must start with an upper case letter."_L1 },
-                         { "Namespace 'test' of 'test.Grid' must start with an upper case letter."_L1 } } }
+            << ResultBuilder()
+               .addExpected("Import qualifier 'test' must start with a capital letter."_L1)
+               .addExpected("Namespace 'test' of 'test.Item' must start with an upper case letter."_L1)
+               .addExpected("Namespace 'test' of 'test.Rectangle' must start with an upper case letter."_L1)
+               .addExpected("Namespace 'test' of 'test.color' must start with an upper case letter."_L1)
+               .addExpected("Namespace 'test' of 'test.Grid' must start with an upper case letter."_L1)
+               .build()
             << defaultOptions;
     QTest::newRow("missingComponentBehaviorBound")
             << QStringLiteral("missingComponentBehaviorBound.qml")
-            << Result{ { { "Unqualified access"_L1, 8, 31  } },
-                       {},
-                       { { "Set \"pragma ComponentBehavior: Bound\" in order to use IDs from "
-                           "outer components in nested components."_L1,
-                           Edit{ "pragma ComponentBehavior: Bound\n"_L1, 0, 0 } } },
-                       Result::AutoFixable }
+            << ResultBuilder()
+               .addExpected("Unqualified access"_L1, 8, 31)
+               .addFix("Set \"pragma ComponentBehavior: Bound\" in order to use IDs from "
+                       "outer components in nested components."_L1,
+                       Edit{ "pragma ComponentBehavior: Bound\n"_L1, 0, 0 })
+               .setFlag(Result::AutoFixable)
+               .build()
             << defaultOptions;
     QTest::newRow("missingQmltypes")
             << QStringLiteral("missingQmltypes.qml")
-            << Result{ { { "QML types file does not exist"_L1 } } } << defaultOptions;
+            << ResultBuilder::singleExpected("QML types file does not exist"_L1)
+            << defaultOptions;
     QTest::newRow("missingRequiredAlias")
             << QStringLiteral("missingRequiredAlias.qml")
-            << Result{ { { "Component is missing required property foo from Item"_L1 } } }
+            << ResultBuilder::singleExpected("Component is missing required property foo from Item"_L1)
             << defaultOptions;
     QTest::newRow("missingRequiredOnObjectDefinitionBinding")
             << QStringLiteral("missingRequiredPropertyOnObjectDefinitionBinding.qml")
-            << Result{ { { uR"(Component is missing required property i from QtObject)"_s, 4,
-                           26 } } }
+            << ResultBuilder::singleExpected(
+                   uR"(Component is missing required property i from QtObject)"_s, 4, 26)
             << defaultOptions;
     QTest::newRow("missingSingletonPragma")
             << QStringLiteral("Singletons/MissingPragma.qml")
-            << Result{ { { "Type MissingPragma declared as singleton in qmldir but missing pragma "
-                           "Singleton"_L1 } } }
+            << ResultBuilder::singleExpected("Type MissingPragma declared as singleton in qmldir "
+                                             "but missing pragma Singleton"_L1)
             << defaultOptions;
     QTest::newRow("missingSingletonQmldir")
             << QStringLiteral("Singletons/MissingQmldirSingleton.qml")
-            << Result{ { { "Type MissingQmldirSingleton not declared as singleton in qmldir but "
-                           "using pragma Singleton"_L1 } } }
+            << ResultBuilder::singleExpected("Type MissingQmldirSingleton not declared as "
+                                             "singleton in qmldir but using pragma Singleton"_L1)
             << defaultOptions;
     QTest::addRow("multifix")
             << QStringLiteral("multifix.qml")
-            << Result{ { { "Unqualified access"_L1, 7,  19, QtWarningMsg },
-                         { "Unqualified access"_L1, 11, 19, QtWarningMsg } },
-                       {},
-                       { { "Set \"pragma ComponentBehavior: Bound\" in order to use IDs from "
-                           "outer components in nested components."_L1,
-                           Edit{ "pragma ComponentBehavior: Bound\n"_L1, 1, 1 } } },
-                       { Result::AutoFixable } }
+            << ResultBuilder()
+               .addExpected("Unqualified access"_L1, 7,  19, QtWarningMsg)
+               .addExpected("Unqualified access"_L1, 11,  19, QtWarningMsg)
+               .addFix("Set \"pragma ComponentBehavior: Bound\" in order to use IDs from "
+                       "outer components in nested components."_L1,
+                       Edit{ "pragma ComponentBehavior: Bound\n"_L1, 1, 1 })
+               .setFlag(Result::AutoFixable)
+               .build()
             << defaultOptions;
     QTest::newRow("multilineString")
             << QStringLiteral("multilineString.qml")
-            << Result{ { { "String contains unescaped line terminator which is deprecated."_L1, 0,
-                           0, QtInfoMsg } },
-                       { },
-                       { { "Use a template literal instead."_L1,
-                           Edit{ "`Foo\nmultiline\\`\nstring`"_L1, 4, 32 } },
-                         { "Use a template literal instead."_L1,
-                           Edit{ "`another\\`\npart\nof it`"_L1, 6, 11 } },
-                         { "Use a template literal instead."_L1,
-                           Edit{ R"(`
+            << ResultBuilder()
+               .addExpected("String contains unescaped line terminator which is deprecated."_L1,
+                            0, 0, QtInfoMsg)
+               .addFix("Use a template literal instead."_L1,
+                       Edit{ "`Foo\nmultiline\\`\nstring`"_L1, 4, 32 })
+               .addFix("Use a template literal instead."_L1,
+                       Edit{ "`another\\`\npart\nof it`"_L1, 6, 11 })
+               .addFix("Use a template literal instead."_L1,
+                       Edit{ R"(`
 quote: " \\" \\\\"
 ticks: \` \` \\\` \\\`
 singleTicks: ' \' \\' \\\'
 expression: \${expr} \${expr} \\\${expr} \\\${expr}`)"_L1,
-                                 10, 28 } },
-                         { "Use a template literal instead."_L1,
-                           Edit{ R"(`
+                             10, 28 })
+               .addFix("Use a template literal instead."_L1,
+                       Edit{ R"(`
 quote: " \" \\" \\\"
 ticks: \` \` \\\` \\\`
 singleTicks: ' \\' \\\\'
 expression: \${expr} \${expr} \\\${expr} \\\${expr}`)"_L1,
-                                 16, 27 } } },
-                       { Result::ExitsNormally, Result::AutoFixable } }
+                             16, 27 })
+               .setFlag(Result::ExitsNormally)
+               .setFlag(Result::AutoFixable)
+               .build()
             << defaultOptions;
 
     // The warning should show up only once even though
     // we have to run the type propagator multiple times.
-    QTest::newRow("multiplePasses") << testFile("multiplePasses.qml")
-                                    << Result{ { { "Unqualified access"_L1 } } } << defaultOptions;
-    QTest::newRow("nanchors1") << QStringLiteral("nanchors1.qml")
-                               << Result{ { { "unknown grouped property scope nanchors."_L1 } } }
-                               << defaultOptions;
-    QTest::newRow("nanchors2") << QStringLiteral("nanchors2.qml")
-                               << Result{ { { "unknown grouped property scope nanchors."_L1 } } }
-                               << defaultOptions;
-    QTest::newRow("nanchors3") << QStringLiteral("nanchors3.qml")
-                               << Result{ { { "unknown grouped property scope nanchors."_L1 } } }
-                               << defaultOptions;
+    QTest::newRow("multiplePasses")
+            << testFile("multiplePasses.qml")
+            << ResultBuilder::singleExpected("Unqualified access"_L1)
+            << defaultOptions;
+    QTest::newRow("nanchors1")
+            << QStringLiteral("nanchors1.qml")
+            << ResultBuilder::singleExpected("unknown grouped property scope nanchors."_L1)
+            << defaultOptions;
+    QTest::newRow("nanchors2")
+            << QStringLiteral("nanchors2.qml")
+            << ResultBuilder::singleExpected("unknown grouped property scope nanchors."_L1)
+            << defaultOptions;
+    QTest::newRow("nanchors3")
+            << QStringLiteral("nanchors3.qml")
+            << ResultBuilder::singleExpected("unknown grouped property scope nanchors."_L1)
+            << defaultOptions;
     QTest::newRow("nestedInlineComponents")
             << QStringLiteral("nestedInlineComponents.qml")
-            << Result{ { { "Nested inline components are not supported"_L1 } } } << defaultOptions;
+            << ResultBuilder::singleExpected("Nested inline components are not supported"_L1)
+            << defaultOptions;
     QTest::newRow("nonNullStored")
             << QStringLiteral("nonNullStored.qml")
-            << Result{ { { "Type Foozle is used but it is not resolved"_L1 } },
-                       { { "Unqualified access"_L1 } } }
+            << ResultBuilder()
+               .addExpected("Type Foozle is used but it is not resolved"_L1)
+               .addUnexpected("Unqualified access"_L1)
+               .build()
             << defaultOptions;
     QTest::newRow("notQmlRootMethods")
             << QStringLiteral("notQmlRootMethods.qml")
-            << Result{ { { "Member \"deleteLater\" not found on type \"notQmlRootMethods\""_L1 },
-                         { "Member \"destroyed\" not found on type \"notQmlRootMethods\""_L1 } } }
+            << ResultBuilder()
+               .addExpected("Member \"deleteLater\" not found on type \"notQmlRootMethods\""_L1)
+               .addExpected("Member \"destroyed\" not found on type \"notQmlRootMethods\""_L1)
+               .build()
             << defaultOptions;
     QTest::newRow("nullBinding")
             << QStringLiteral("nullBinding.qml")
-            << Result{ { { "Cannot assign literal of type null to double"_L1 } } }
+            << ResultBuilder::singleExpected("Cannot assign literal of type null to double"_L1)
             << defaultOptions;
     QTest::newRow("parentIsComponent")
             << QStringLiteral("parentIsComponent.qml")
-            << Result{ { { "Member \"progress\" not found on type \"QQuickItem\""_L1, 7, 39 } } }
+            << ResultBuilder::singleExpected(
+                   "Member \"progress\" not found on type \"QQuickItem\""_L1, 7, 39)
             << defaultOptions;
     QTest::newRow("redundantOptionalChainingEnums")
             << QStringLiteral("RedundantOptionalChainingEnums.qml")
-            << Result{ { { "Redundant optional chaining for enum lookup"_L1, 5, 54 },
-                         { "Redundant optional chaining for enum lookup"_L1, 6, 26 } } }
+            << ResultBuilder()
+               .addExpected("Redundant optional chaining for enum lookup"_L1, 5, 54)
+               .addExpected("Redundant optional chaining for enum lookup"_L1, 6, 26)
+               .build()
             << defaultOptions;
     QTest::newRow("renamedType")
             << u"qmldirs/renameSnippetToCustomName/UseOldName.qml"_s
-            << Result{ {
-                       { "\"UseOldName\" is explicitly renamed to \"NewName\" via a qmldir entry or QT_QML_SOURCE_TYPENAME CMake property, use \"NewName\" instead."_L1,
-                         4, 14 },
-                       { "\"UseOldName\" is explicitly renamed to \"NewName\" via a qmldir entry or QT_QML_SOURCE_TYPENAME CMake property, use \"NewName\" instead."_L1,
-                         5, 19 },
-                       { "\"UseOldName\" is explicitly renamed to \"NewName\" via a qmldir entry or QT_QML_SOURCE_TYPENAME CMake property, use \"NewName\" instead."_L1,
-                         5, 32 },
-               } }
+            << ResultBuilder()
+               .addExpected("\"UseOldName\" is explicitly renamed to \"NewName\" via a qmldir "
+                            "entry or QT_QML_SOURCE_TYPENAME CMake property, use \"NewName\" "
+                            "instead."_L1, 4, 14)
+               .addExpected("\"UseOldName\" is explicitly renamed to \"NewName\" via a qmldir "
+                            "entry or QT_QML_SOURCE_TYPENAME CMake property, use \"NewName\" "
+                            "instead."_L1, 5, 19)
+               .addExpected("\"UseOldName\" is explicitly renamed to \"NewName\" via a qmldir "
+                            "entry or QT_QML_SOURCE_TYPENAME CMake property, use \"NewName\" "
+                            "instead."_L1, 5, 32)
+               .build()
             << defaultOptions;
     constexpr QLatin1String renameTypeWarning =
             "\"Main\" is explicitly renamed to \"Name1\", \"Name2\", \"Name3\", \"Name4\" via a qmldir entry or QT_QML_SOURCE_TYPENAME CMake property, use \"Name1\", \"Name2\", \"Name3\", \"Name4\" instead."_L1;
-    QTest::newRow("renamedTypeUsage") << u"qmldirs/renameFileToMultipleNames/AnotherFile.qml"_s
-                                      << Result{ {
-                                                 { renameTypeWarning, 4, 5 },
-                                                 { renameTypeWarning, 10, 26 },
-                                                 { renameTypeWarning, 16, 19 },
-                                                 { renameTypeWarning, 16, 38 },
-                                         } }
-                                      << defaultOptions;
+    QTest::newRow("renamedTypeUsage")
+            << u"qmldirs/renameFileToMultipleNames/AnotherFile.qml"_s
+            << ResultBuilder()
+               .addExpected(renameTypeWarning, 4, 5)
+               .addExpected(renameTypeWarning, 10, 26)
+               .addExpected(renameTypeWarning, 16, 19)
+               .addExpected(renameTypeWarning, 16, 38)
+               .build()
+            << defaultOptions;
     QTest::newRow("segFault (bad)")
             << QStringLiteral("SegFault.bad.qml")
-            << Result{ { { "Member \"foobar\" not found on type \"QQuickScreenAttached\""_L1 } } }
+            << ResultBuilder::singleExpected(
+                   "Member \"foobar\" not found on type \"QQuickScreenAttached\""_L1)
             << defaultOptions;
     {
-        const auto msgGen = [](const QString &name, quint32 line, quint32 col) {
-            return Message{ "Reading non-constant and non-notifiable property %1. Binding might "_L1
-                            "not update when the property changes."_L1.arg(name), line, col };
-        };
+       constexpr QLatin1String msg = "Reading non-constant and non-notifiable property %1. Binding "
+                                     "might not update when the property changes."_L1;
         QTest::newRow("stalePropertyRead")
                 << QStringLiteral("StalePropertyRead.qml")
-                << Result{ { msgGen("cppStale"_L1, 10, 24), msgGen("cppReadonly"_L1, 11, 24) },
-                           { msgGen("cppConstant"_L1, 14, 24), msgGen("cppNotifiable"_L1, 15, 24),
-                             msgGen("cppConstantNotifiable"_L1, 16, 24), msgGen("i"_L1, 17, 24),
-                             msgGen("ro"_L1, 18, 24) } }
+                << ResultBuilder()
+                   .addExpected(msg.arg("cppStale"_L1), 10, 24)
+                   .addExpected(msg.arg("cppReadonly"_L1), 11, 24)
+                   .addUnexpected(msg.arg("cppConstant"_L1), 14, 24)
+                   .addUnexpected(msg.arg("cppNotifiable"_L1), 15, 24)
+                   .addUnexpected(msg.arg("cppConstantNotifiable"_L1), 16, 24)
+                   .addUnexpected(msg.arg("i"_L1), 17, 24)
+                   .addUnexpected(msg.arg("ro"_L1), 18, 24)
+                   .build()
                 << defaultOptions;
     }
-    QTest::newRow("string as id") << QStringLiteral("stringAsId.qml")
-                                  << Result{ { { "ids do not need quotation marks"_L1 } } }
-                                  << defaultOptions;
+    QTest::newRow("string as id")
+            << QStringLiteral("stringAsId.qml")
+            << ResultBuilder::singleExpected("ids do not need quotation marks"_L1)
+            << defaultOptions;
     QTest::newRow("stringIdUsedInWarning")
             << QStringLiteral("stringIdUsedInWarning.qml")
-            << Result{ { {
-                               "i is a member of a parent element"_L1,
-                       } },
-                       { },
-                       { { "i is a member of a parent element.\n      "
-                           "You can qualify the access with its id to avoid this warning."_L1,
-                           Edit{ "stringy."_L1 } } } }
+            << ResultBuilder()
+               .addExpected("i is a member of a parent element"_L1)
+               .addFix("i is a member of a parent element.\n      "
+                       "You can qualify the access with its id to avoid this warning."_L1,
+                       Edit{ "stringy."_L1 })
+               .build()
             << defaultOptions;
-    QTest::newRow("unboundComponents") << QStringLiteral("unboundComponents.qml")
-                                       << Result{ { { "Unqualified access"_L1, 10, 25 },
-                                                    { "Unqualified access"_L1, 14, 33 } } }
-                                       << defaultOptions;
+    QTest::newRow("unboundComponents")
+            << QStringLiteral("unboundComponents.qml")
+            << ResultBuilder()
+               .addExpected("Unqualified access"_L1, 10, 25)
+               .addExpected("Unqualified access"_L1, 14, 33)
+               .build()
+            << defaultOptions;
     QTest::newRow("unknownTypeCustomParser")
             << QStringLiteral("unknownTypeCustomParser.qml")
-            << Result{ { { "TypeDoesNotExist was not found."_L1 } } } << defaultOptions;
+            << ResultBuilder::singleExpected("TypeDoesNotExist was not found."_L1)
+            << defaultOptions;
     QTest::newRow("unresolvedArrayBinding")
             << QStringLiteral("unresolvedArrayBinding.qml")
-            << Result{ { { "Declaring an object which is not a Qml object as a list member."_L1 } } }
+            << ResultBuilder::singleExpected(
+                   "Declaring an object which is not a Qml object as a list member."_L1)
             << defaultOptions;
     QTest::newRow("unresolvedAttachedType")
             << QStringLiteral("unresolvedAttachedType.qml")
-            << Result{ { { "unknown attached property scope UnresolvedAttachedType."_L1 } },
-                       { { "Could not find property \"property\"."_L1 } } }
+            << ResultBuilder()
+               .addExpected("unknown attached property scope UnresolvedAttachedType."_L1)
+               .addUnexpected("Could not find property \"property\"."_L1)
+               .build()
             << defaultOptions;
     QTest::newRow("unresolvedType")
             << QStringLiteral("unresolvedType.qml")
-            << Result{ { { "UnresolvedType was not found. Did you add all imports and dependencies"_L1 } },
-                       { { "incompatible type"_L1 } } }
+            << ResultBuilder()
+               .addExpected("UnresolvedType was not found. Did you add all imports and dependencies"_L1)
+               .addUnexpected("incompatible type"_L1)
+               .build()
             << defaultOptions;
     // We want to see the warning about the missing type only once.
     QTest::newRow("unresolvedType2")
             << QStringLiteral("unresolvedType2.qml")
-            << Result{ { { "QQC2.Label was not found. Did you add all imports and dependencies?"_L1 } },
-                       { { "'QQC2.Label' is used but it is not resolved"_L1 },
-                         { "Type QQC2.Label is used but it is not resolved"_L1 } } }
+            << ResultBuilder()
+               .addExpected("QQC2.Label was not found. Did you add all imports and dependencies?"_L1)
+               .addUnexpected("'QQC2.Label' is used but it is not resolved"_L1)
+               .addUnexpected("Type QQC2.Label is used but it is not resolved"_L1)
+               .build()
             << defaultOptions;
     QTest::newRow("unresolvedTypeAnnotation")
             << QStringLiteral("unresolvedTypeAnnotations.qml")
-            << Result{ {
-                       { uR"("A" was not found for the type of parameter "a" in method "f".)"_s, 4,
-                         17 },
-                       { uR"("B" was not found for the type of parameter "b" in method "f".)"_s, 4,
-                         23 },
-                       { uR"("R" was not found for the return type of method "g".)"_s, 5, 18 },
-                       { uR"("C" was not found for the type of parameter "c" in method "h".)"_s, 6,
-                         17 },
-                       { uR"("R" was not found for the return type of method "h".)"_s, 6, 22 },
-                       { uR"("D" was not found for the type of parameter "d" in method "i".)"_s, 7,
-                         17 },
-                       { uR"("G" was not found for the type of parameter "g" in method "i".)"_s, 7,
-                         26 },
-               } }
+            << ResultBuilder()
+               .addExpected(R"("A" was not found for the type of parameter "a" in method "f".)"_L1, 4, 17)
+               .addExpected(R"("B" was not found for the type of parameter "b" in method "f".)"_L1, 4, 23)
+               .addExpected(R"("R" was not found for the return type of method "g".)"_L1, 5, 18)
+               .addExpected(R"("C" was not found for the type of parameter "c" in method "h".)"_L1, 6, 17)
+               .addExpected(R"("R" was not found for the return type of method "h".)"_L1, 6, 22)
+               .addExpected(R"("D" was not found for the type of parameter "d" in method "i".)"_L1, 7, 17)
+               .addExpected(R"("G" was not found for the type of parameter "g" in method "i".)"_L1, 7, 26)
+               .build()
             << defaultOptions;
 
     QTest::newRow("jsdeclInQmlScope")
             << QStringLiteral("jsdeclInQmlScope.qml")
-            << Result{ { { "JavaScript declarations are not allowed in QML elements"_L1, 4, 13 } } }
+            << ResultBuilder::singleExpected(
+                   "JavaScript declarations are not allowed in QML elements"_L1, 4, 13)
             << defaultOptions;
 
     QTest::newRow("contextPropertiesFromUser")
             << u"ContextProperties/qml/MyUserContextProperties.qml"_s
-            << Result{
-                   {
-                           Message{ "Potential context property access detected. Context "
-                                    "properties are "
-                                    "discouraged in QML: use normal, required, or singleton "
-                                    "properties "
-                                    "instead.\nNote: 'myUserCP1' assumed to be a potential context "
-                                    "property "
-                                    "because it is not declared as required property."_L1,
-                                    7, 22 },
-                           Message{ "Potential context property access detected. Context "
-                                    "properties are "
-                                    "discouraged in QML: use normal, required, or singleton "
-                                    "properties "
-                                    "instead.\nNote: 'myUserCP2' assumed to be a potential context "
-                                    "property "
-                                    "because it is not declared as required property."_L1,
-                                    8, 22 },
-                   },
-                   {
-                           Message{ "Unqualified access"_L1 },
-                   },
-               } << defaultOptions;
+            << ResultBuilder()
+               .addExpected("Potential context property access detected. Context properties are "
+                            "discouraged in QML: use normal, required, or singleton properties "
+                            "instead.\nNote: 'myUserCP1' assumed to be a potential context "
+                            "property because it is not declared as required property."_L1,
+                            7, 22)
+               .addExpected("Potential context property access detected. Context properties are "
+                            "discouraged in QML: use normal, required, or singleton properties "
+                            "instead.\nNote: 'myUserCP2' assumed to be a potential context "
+                            "property because it is not declared as required property."_L1,
+                            8, 22)
+               .addUnexpected("Unqualified access"_L1)
+               .build()
+            << defaultOptions;
 }
 
 void TestQmllint::dirtyQmlCode()
@@ -1611,7 +1734,7 @@ static void addLocationOffsetTo(TestQmllint::Result *result, qsizetype lineOffse
 
     for (auto &expectedMessage : result->expectedMessages)
         adjustLineAndColumn(expectedMessage);
-    for (auto &badMessage : result->badMessages)
+    for (auto &badMessage : result->unexpectedMessages)
         adjustLineAndColumn(badMessage);
     for (auto &expectedFix : result->expectedFixes) {
         adjustLineAndColumn(expectedFix);
@@ -1630,46 +1753,49 @@ void TestQmllint::dirtyQmlSnippet_data()
 
     QTest::newRow("assignLhsLocation")
             << u"id: root; property int i; Item { Component.onCompleted: i = root.i + 5 }"_s
-            << Result{ { { "Unqualified access"_L1, 1, 57 } },
-                       { { "Unqualified access"_L1, 1, 66 } } }
+            << ResultBuilder()
+               .addExpected("Unqualified access"_L1, 1, 57)
+               .addUnexpected("Unqualified access"_L1, 1, 66)
+               .build()
             << defaultOptions;
     QTest::newRow("color-hex")
             << u"property color myColor: \"#12345\""_s
-            << Result{ { { "Invalid color"_L1, 1, 25 } } }
+            << ResultBuilder::singleExpected("Invalid color"_L1, 1, 25)
             << defaultOptions;
     QTest::newRow("color-hex2")
             << u"property color myColor: \"#123456789\""_s
-            << Result{ { { "Invalid color"_L1, 1, 25 } } }
+            << ResultBuilder::singleExpected("Invalid color"_L1, 1, 25)
             << defaultOptions;
     QTest::newRow("color-hex3")
             << u"property color myColor: \"##123456\""_s
-            << Result{ { { "Invalid color"_L1, 1, 25 } } }
+            << ResultBuilder::singleExpected("Invalid color"_L1, 1, 25)
             << defaultOptions;
     QTest::newRow("color-hex4")
             << u"property color myColor: \"#123456#\""_s
-            << Result{ { { "Invalid color"_L1, 1, 25 } } }
+            << ResultBuilder::singleExpected("Invalid color"_L1, 1, 25)
             << defaultOptions;
     QTest::newRow("color-hex5")
             << u"property color myColor: \"#HELLOL\""_s
-            << Result{ { { "Invalid color"_L1, 1, 25 } } }
+            << ResultBuilder::singleExpected("Invalid color"_L1, 1, 25)
             << defaultOptions;
     QTest::newRow("color-hex6")
             << u"property color myColor: \"#1234567\""_s
-            << Result{ { { "Invalid color"_L1, 1, 25 } } }
+            << ResultBuilder::singleExpected("Invalid color"_L1, 1, 25)
             << defaultOptions;
     QTest::newRow("color-name")
             << u"property color myColor: \"lbue\""_s
-            << Result{ { { "Invalid color \"lbue\""_L1, 1, 25 } },
-                       {},
-                       { { "Did you mean \"blue\"?", Edit{ "blue"_L1, 1, 25 } } } }
+            << ResultBuilder()
+               .addExpected("Invalid color \"lbue\""_L1, 1, 25)
+               .addFix("Did you mean \"blue\"?", Edit{ "blue"_L1, 1, 25 })
+               .build()
             << defaultOptions;
     QTest::newRow("componentExactlyOneChild1")
             << u"Component { Item {} Item {} }"_s
-            << Result{ { { "Components must have exactly one child"_L1, 1, 1 } } }
+            << ResultBuilder::singleExpected("Components must have exactly one child"_L1, 1, 1)
             << defaultOptions;
     QTest::newRow("componentExactlyOneChild2")
             << u"Component {}"_s
-            << Result{ { { "Components must have exactly one child"_L1, 1, 1 } } }
+            << ResultBuilder::singleExpected("Components must have exactly one child"_L1, 1, 1)
             << defaultOptions;
     {
         CallQmllintOptions options;
@@ -1706,244 +1832,311 @@ void TestQmllint::dirtyQmlSnippet_data()
                        property var a: myContextProperty1
                        property var b: myContextProperty2
                        property var c: myContextProperty3)"_s
-                << Result{ {
-                           Message{ myContextProperty1Warning, 2, 40 },
-                           Message{ warning.arg("myContextProperty2"_L1, cppFile,
-                                                QString::number(16), QString::number(19)),
-                                    3, 40 },
-                           Message{ warning.arg("myContextProperty3"_L1, cppFileInSubfolder,
-                                                QString::number(14), QString::number(21)),
-                                    4, 40 },
-                   } }
+                << ResultBuilder()
+                   .addExpected(myContextProperty1Warning, 2, 40)
+                   .addExpected(warning.arg("myContextProperty2"_L1, cppFile,
+                                            QString::number(16), QString::number(19)), 3, 40)
+                   .addExpected(warning.arg("myContextProperty3"_L1, cppFileInSubfolder,
+                                            QString::number(14), QString::number(21)), 4, 40)
+                   .build()
                 << options;
 
         QTest::newRow("contextProperties2")
                 << u"property var d: myContextProperty4"_s
-                << Result{ {
-                           { QString(warningHead)
-                                     .append(warningRequiredPropertyBit)
-                                     .append("Note: candidate context property declaration '%1' at "
-                                             "%2:%3:%4\n"
-                                             "Note: candidate context property declaration '%1' at %5:%6:%7"_L1)
-                                     .arg("myContextProperty4"_L1, cppFileInSubfolder,
-                                          QString::number(18), QString::number(55),
-                                          cppFileInSubfolder, QString::number(21),
-                                          QString::number(53)),
-                             1, 17 },
-                   } }
+                << ResultBuilder()
+                   .addExpected(QString(warningHead)
+                                .append(warningRequiredPropertyBit)
+                                .append("Note: candidate context property declaration '%1' at "
+                                        "%2:%3:%4\n"
+                                        "Note: candidate context property declaration '%1' at %5:%6:%7"_L1)
+                                .arg("myContextProperty4"_L1, cppFileInSubfolder,
+                                     QString::number(18), QString::number(55),
+                                     cppFileInSubfolder, QString::number(21),
+                                     QString::number(53)), 1, 17)
+                   .build()
                 << options;
 
         QTest::newRow("contextPropertiesImplicitWrapping")
                 << u"property Component c: Item { function f() { return myContextProperty1; } }"_s
-                << Result{ { Message{ unqualifiedAccessWarning, 1, 52 },
-                             Message{ myContextProperty1WarningWithRequiredProperty, 1, 52 } } }
+                << ResultBuilder()
+                   .addExpected(unqualifiedAccessWarning, 1, 52)
+                   .addExpected(myContextProperty1WarningWithRequiredProperty, 1, 52)
+                   .build()
                 << options;
 
         QTest::newRow("contextPropertiesImplicitWrappingWithRequired")
                 << u"property Component c: Item { required property int i;"
                    u"function f() { return myContextProperty1; } }"_s
-                << Result{ { Message{ unqualifiedAccessWarning, 1, 76 },
-                             Message{ myContextProperty1Warning, 1, 76 } } }
+                << ResultBuilder()
+                   .addExpected(unqualifiedAccessWarning, 1, 76)
+                   .addExpected(myContextProperty1Warning, 1, 76)
+                   .build()
                 << options;
 
         QTest::newRow("contextPropertiesInlineComponent")
                 << u"component IC: Item { function f() { return myContextProperty1; } }"_s
-                << Result{ { Message{ unqualifiedAccessWarning, 1, 44 },
-                             Message{ myContextProperty1WarningWithRequiredProperty, 1, 44 } } }
+                << ResultBuilder()
+                   .addExpected(unqualifiedAccessWarning, 1, 44)
+                   .addExpected(myContextProperty1WarningWithRequiredProperty, 1, 44)
+                   .build()
                 << options;
 
         QTest::newRow("contextPropertiesInlineComponentWithRequired")
                 << u"component IC: Item { required property int i;"
                    u"function f() { return myContextProperty1; } }"_s
-                << Result{ { Message{ unqualifiedAccessWarning, 1, 68 },
-                             Message{ myContextProperty1Warning, 1, 68 } } }
+                << ResultBuilder()
+                   .addExpected(unqualifiedAccessWarning, 1, 68)
+                   .addExpected(myContextProperty1Warning, 1, 68)
+                   .build()
                 << options;
 
         QTest::newRow("contextPropertiesRootElement")
                 << u"function f() { return myContextProperty1; }"_s
-                << Result{ { Message{ unqualifiedAccessWarning, 1, 23 },
-                             Message{ myContextProperty1WarningWithRequiredProperty, 1, 23 } } }
+                << ResultBuilder()
+                   .addExpected(unqualifiedAccessWarning, 1, 23)
+                   .addExpected(myContextProperty1WarningWithRequiredProperty, 1, 23)
+                   .build()
                 << options;
 
         QTest::newRow("contextPropertiesRootElementWithRequired")
                 << u"required property int i; function f() { return myContextProperty1; }"_s
-                << Result{ { Message{ unqualifiedAccessWarning, 1, 48 },
-                             Message{ myContextProperty1Warning, 1, 48 } } }
+                << ResultBuilder()
+                   .addExpected(unqualifiedAccessWarning, 1, 48)
+                   .addExpected(myContextProperty1Warning, 1, 48)
+                   .build()
                 << options;
 
         QTest::newRow("contextPropertiesNotHidden")
                 << u"required property int myContextProperty2; function f() { return myContextProperty1; }"_s
-                << Result{ { Message{ unqualifiedAccessWarning, 1, 65 },
-                             Message{ myContextProperty1Warning, 1, 65 } } }
+                << ResultBuilder()
+                   .addExpected(unqualifiedAccessWarning, 1, 65)
+                   .addExpected(myContextProperty1Warning, 1, 65)
+                   .build()
                 << options;
 
         QTest::newRow("contextPropertiesNotHidden2")
                 << u"required property int unrelated; function f() { return myContextProperty1; }"_s
-                << Result{ { Message{ unqualifiedAccessWarning, 1, 56 },
-                             Message{ myContextProperty1Warning, 1, 56 } } }
+                << ResultBuilder()
+                   .addExpected(unqualifiedAccessWarning, 1, 56)
+                   .addExpected(myContextProperty1Warning, 1, 56)
+                   .build()
                 << options;
 
         QTest::newRow("contextPropertiesWithoutRequired")
                 << u"property var a: myContextProperty1"_s
-                << Result{ { Message{ unqualifiedAccessWarning, 1, 17 },
-                             Message{ myContextProperty1WarningWithRequiredProperty, 1, 17 } } }
+                << ResultBuilder()
+                   .addExpected(unqualifiedAccessWarning, 1, 17)
+                   .addExpected(myContextProperty1WarningWithRequiredProperty, 1, 17)
+                   .build()
                 << options;
     }
 
     QTest::newRow("duplicateBinding")
             << u"property int i; i: 42; i: 43;"_s
-            << Result{ { { "Duplicate binding on property 'i'"_L1, 1, 27 },
-                         { "Note: previous binding on 'i' here"_L1, 1, 20 } } }
+            << ResultBuilder()
+               .addExpected("Duplicate binding on property 'i'"_L1, 1, 27)
+               .addExpected("Note: previous binding on 'i' here"_L1, 1, 20)
+               .build()
             << defaultOptions;
     QTest::newRow("duplicateBinding2")
             << u"property int i: 42; i: 43;"_s
-            << Result{ { { "Duplicate binding on property 'i'"_L1, 1, 24 },
-                         { "Note: previous binding on 'i' here"_L1, 1, 17 } } }
+            << ResultBuilder()
+               .addExpected("Duplicate binding on property 'i'"_L1, 1, 24)
+               .addExpected("Note: previous binding on 'i' here"_L1, 1, 17)
+               .build()
             << defaultOptions;
     QTest::newRow("duplicateGrouped")
             << u"Text { font.pixelSize: 5; font.pixelSize: 10; }"_s
-            << Result{ { { "Duplicate binding on property 'pixelSize'"_L1, 1, 43 },
-                         { "Note: previous binding on 'pixelSize' here"_L1, 1, 24 } } }
+            << ResultBuilder()
+               .addExpected("Duplicate binding on property 'pixelSize'"_L1, 1, 43)
+               .addExpected("Note: previous binding on 'pixelSize' here"_L1, 1, 24)
+               .build()
             << defaultOptions;
     QTest::newRow("duplicateGrouped2")
             << u"Text { font.pixelSize: 5; font { pixelSize: 10 } }"_s
-            << Result{ { { "Duplicate binding on property 'pixelSize'"_L1, 1, 45 },
-                         { "Note: previous binding on 'pixelSize' here"_L1, 1, 24 } } }
+            << ResultBuilder()
+               .addExpected("Duplicate binding on property 'pixelSize'"_L1, 1, 45)
+               .addExpected("Note: previous binding on 'pixelSize' here"_L1, 1, 24)
+               .build()
             << defaultOptions;
     QTest::newRow("duplicateGrouped3")
             << u"Text { font { pixelSize: 5; pixelSize: 10 } }"_s
-            << Result{ { { "Duplicate binding on property 'pixelSize'"_L1, 1, 40 },
-                         { "Note: previous binding on 'pixelSize' here"_L1, 1, 26 } } }
+            << ResultBuilder()
+               .addExpected("Duplicate binding on property 'pixelSize'"_L1, 1, 40)
+               .addExpected("Note: previous binding on 'pixelSize' here"_L1, 1, 26)
+               .build()
             << defaultOptions;
     QTest::newRow("duplicateInlineComponent")
             << u"component A: QtObject {}\n"_s
                u"Item { component A: Item {} }\n"_s
-            << Result{ { { "Duplicate inline component 'A'"_L1, 2, 8 },
-                         { "Note: previous component named 'A' here"_L1, 1, 1 } } }
+            << ResultBuilder()
+               .addExpected("Duplicate inline component 'A'"_L1, 2, 8)
+               .addExpected("Note: previous component named 'A' here"_L1, 1, 1)
+               .build()
             << defaultOptions;
     QTest::newRow("enumsAreNotTypes")
             << u"function f(a: enum) {}"_s
-            << Result{ { { "QML does not have an `enum` type. Use int, or use double if the enum's underlying type does not fit into int."_L1,
-               1, 15 } },
-    { { "QML enumerations are not types"_L1} }, }
+            << ResultBuilder()
+               .addExpected("QML does not have an `enum` type. Use int, or use double if the "
+                            "enum's underlying type does not fit into int."_L1, 1, 15)
+               .addUnexpected("QML enumerations are not types"_L1)
+               .build()
             << defaultOptions;
     QTest::newRow("equality-with-coercion")
             << u"function f(a: int, b: string): bool { return a == b; }"_s
-            << Result{ { { "== and != may perform type coercion, use === or !== to avoid it."_L1, 1,
-                           46 } } }
+            << ResultBuilder::singleExpected("== and != may perform type coercion, use === or !== to "
+                                             "avoid it."_L1, 1, 46)
             << defaultOptions;
     QTest::newRow("equality-with-coercion2")
             << u"function f(a: int): bool { return a == {}; }"_s
-            << Result{ { { "== and != may perform type coercion, use === or !== to avoid it."_L1, 1,
-                           35 } } }
+            << ResultBuilder::singleExpected("== and != may perform type coercion, use === or !== to "
+                                             "avoid it."_L1, 1, 35)
             << defaultOptions;
     QTest::newRow("equality-with-coercion3")
             << u"function f(a: int): bool { return a == true; }"_s
-            << Result{ { { "== and != may perform type coercion, use === or !== to avoid it."_L1, 1,
-                           35 } } }
+            << ResultBuilder::singleExpected("== and != may perform type coercion, use === or !== to "
+                                             "avoid it."_L1, 1, 35)
             << defaultOptions;
     QTest::newRow("duplicateObjectBinding")
             << u"property Item i; i: Item {} i: Item {}"_s
-            << Result{ { { "Duplicate binding on property 'i'"_L1, 1, 29 },
-                         { "Note: previous binding on 'i' here"_L1, 1, 18 } } }
+            << ResultBuilder()
+               .addExpected("Duplicate binding on property 'i'"_L1, 1, 29)
+               .addExpected("Note: previous binding on 'i' here"_L1, 1, 18)
+               .build()
             << defaultOptions;
     QTest::newRow("duplicateObjectBinding2")
             << u"property Item i: Item {} i: Item {}"_s
-            << Result{ { { "Duplicate binding on property 'i'"_L1, 1, 26 },
-                         { "Note: previous binding on 'i' here"_L1, 1, 15 } } }
+            << ResultBuilder()
+               .addExpected("Duplicate binding on property 'i'"_L1, 1, 26)
+               .addExpected("Note: previous binding on 'i' here"_L1, 1, 15)
+               .build()
             << defaultOptions;
     QTest::newRow("enum")
             << u"enum Hello { World, Kitty, World, dlrow }"_s
-            << Result{ { { "Enum key 'World' has already been declared"_L1, 1, 28 },
-                         { "Note: previous declaration of 'World' here"_L1, 1, 14 },
-                         { "Enum keys should start with an uppercase"_L1, 1, 35 } } }
+            << ResultBuilder()
+               .addExpected("Enum key 'World' has already been declared"_L1, 1, 28)
+               .addExpected("Note: previous declaration of 'World' here"_L1, 1, 14)
+               .addExpected("Enum keys should start with an uppercase"_L1, 1, 35)
+               .build()
             << defaultOptions;
     QTest::newRow("enumEntryMatchesEnum")
             << u"enum A { A, B, C }"_s
-            << Result{ { { "Enum entry should be named differently than the enum itself to avoid "
-                           "confusion."_L1, 1, 10 } } }
+            << ResultBuilder::singleExpected("Enum entry should be named differently than the enum "
+                                             "itself to avoid confusion."_L1, 1, 10)
             << defaultOptions;
     QTest::newRow("final-override-warning-from-parser")
             << u"virtual final property int evil"_s
-            << Result{ { { "The 'virtual' cannot be combined with 'final', as these attributes are mutually exclusive"_L1,
-                           1, 1 } } }
+            << ResultBuilder::singleExpected("The 'virtual' cannot be combined with 'final', as "
+                                             "these attributes are mutually exclusive"_L1, 1, 1)
             << defaultOptions;
     QTest::newRow("functionDefinitionInGroupedProperty")
             // should not crash for now, see QTBUG-142091 to get the actual warning
-            << u"Item { foo { bar: Array.from((i) => (1)) } }"_s << Result{} << defaultOptions;
+            << u"Item { foo { bar: Array.from((i) => (1)) } }"_s
+            << ResultBuilder::ignoredResult()
+            << defaultOptions;
     QTest::newRow("invalidLint")
             << u"Item {} // qmllint disable ThisCategoryDoesNotExist\n"_s
-            << Result{ { { "qmllint directive on unknown category \"ThisCategoryDoesNotExist\""_L1,
-                           1, 11 } } }
+            << ResultBuilder::singleExpected(
+                   "qmllint directive on unknown category \"ThisCategoryDoesNotExist\""_L1, 1, 11)
             << defaultOptions;
 
     QTest::newRow("missingTypeAccessMethod")
             << u"MyThing { id: bad } Component.onCompleted: console.log(bad.asdf())"_s
-            << Result{ { { "MyThing was not found"_L1 } }, { { "asdf"_L1 } } } << defaultOptions;
+            << ResultBuilder()
+               .addExpected("MyThing was not found"_L1)
+               .addUnexpected("asdf"_L1)
+               .build()
+            << defaultOptions;
     QTest::newRow("missingTypeAccessProperty")
             << u"MyThing { id: bad } Component.onCompleted: console.log(bad.asdf)"_s
-            << Result{ { { "MyThing was not found"_L1 } }, { { "asdf"_L1 } } } << defaultOptions;
+            << ResultBuilder()
+               .addExpected("MyThing was not found"_L1)
+               .addUnexpected("asdf"_L1)
+               .build()
+            << defaultOptions;
     QTest::newRow("missingTypeBinding")
             << u"MyThing { asdf: 123 }"_s
-            << Result{ { { "MyThing was not found"_L1 } }, { { "asdf"_L1 } } } << defaultOptions;
+            << ResultBuilder()
+               .addExpected("MyThing was not found"_L1)
+               .addUnexpected("asdf"_L1)
+               .build()
+            << defaultOptions;
     QTest::newRow("missingTypeDefaultBinding")
             << u"MyThing { Item{} }"_s
-            << Result{ { { "MyThing was not found"_L1 } }, { { "default"_L1 } } } << defaultOptions;
+            << ResultBuilder()
+               .addExpected("MyThing was not found"_L1)
+               .addUnexpected("default"_L1)
+               .build()
+            << defaultOptions;
     QTest::newRow("missingTypeObjectBinding")
             << u"MyThing { asdf: Item{} }"_s
-            << Result{ { { "MyThing was not found"_L1 } }, { { "asdf"_L1 } } } << defaultOptions;
+            << ResultBuilder()
+               .addExpected("MyThing was not found"_L1)
+               .addUnexpected("asdf"_L1)
+               .build()
+            << defaultOptions;
     QTest::newRow("nonRootEnum1")
             << u"Item { enum E { A, B, C } }"_s
-            << Result{ { { "Enum declared outside the root element. It won't be accessible."_L1,
-                           1, 8 } } }
+            << ResultBuilder::singleExpected(
+                   "Enum declared outside the root element. It won't be accessible."_L1, 1, 8)
             << defaultOptions;
     QTest::newRow("nonRootEnum2")
             << u"Component { enum E1 { A, B, C } Item { enum E2 { A, B, C } } }"_s
-            << Result{ { { "Enum declared outside the root element. It won't be accessible."_L1,
-                           1, 13 } },
-                       { { "Enum declared outside the root element. It won't be accessible."_L1,
-                           1, 40 } } }
+            << ResultBuilder()
+               .addExpected("Enum declared outside the root element. It won't be accessible."_L1, 1, 13)
+               .addUnexpected("Enum declared outside the root element. It won't be accessible."_L1, 1, 40)
+               .build()
             << defaultOptions;
     QTest::newRow("preferNonVarProperties")
             << u"readonly property var i: 1     \n"_s
                u"readonly property var r: 1.0   \n"_s
                u"readonly property var s: \"s\" \n"_s
                u"readonly property var b: true  \n"_s
-            << Result{ { { "Prefer more specific type int over var", 1, 1 },
-                         { "Prefer more specific type real or double over var", 2, 1 },
-                         { "Prefer more specific type string over var", 3, 1 },
-                         { "Prefer more specific type bool over var", 4, 1 } } }
+            << ResultBuilder()
+               .addExpected("Prefer more specific type int over var", 1, 1)
+               .addExpected("Prefer more specific type real or double over var", 2, 1)
+               .addExpected("Prefer more specific type string over var", 3, 1)
+               .addExpected("Prefer more specific type bool over var", 4, 1)
+               .build()
             << defaultOptions;
     QTest::newRow("renamedDoesntCrash")
             << u"import QML\n"
                u"import QtQuick as QQ\n"
                u"QQ.Item { component Yo: MissingType {} }"_s
-            << Result{ { { "MissingType was not found."_L1, 3, 25 } } } << defaultOptions;
+            << ResultBuilder::singleExpected("MissingType was not found."_L1, 3, 25)
+            << defaultOptions;
     QTest::newRow("reservedIdentifier")
             << u"property int interface"_s
-            << Result { { {"Reserved keyword \"interface\" cannot be used as a QML identifier.", 1, 14} } }
+            << ResultBuilder::singleExpected(
+                   "Reserved keyword \"interface\" cannot be used as a QML identifier.", 1, 14)
             << defaultOptions;
     QTest::newRow("requiredInInlineComponent")
             << u"Item { component Foo: Item { required property var bla; } } Foo {}"_s
-            << Result{ { { "Component is missing required property bla from Foo"_L1, 1, 61 } } }
+            << ResultBuilder::singleExpected(
+                   "Component is missing required property bla from Foo"_L1, 1, 61)
             << defaultOptions;
     QTest::newRow("requiredPropertyOwnerMixup")
             << u"component Foo: Item { required property var bla }\n"_s
                u"Foo { Item { property int bla: 43 } }\n"_s
                u"Foo {}\n"_s
-            << Result{ { { "Component is missing required property bla from Foo"_L1, 2, 1 },
-                         { "Component is missing required property bla from Foo"_L1, 3, 1 } } }
+            << ResultBuilder()
+               .addExpected("Component is missing required property bla from Foo"_L1, 2, 1)
+               .addExpected("Component is missing required property bla from Foo"_L1, 3, 1)
+               .build()
             << defaultOptions;
     QTest::newRow("requiredPropertyInChild")
             << u"Item { required property var r1 }"_s
-            << Result{ { { "Component is missing required property r1 from Item"_L1, 1, 1 } } }
+            << ResultBuilder::singleExpected(
+                   "Component is missing required property r1 from Item"_L1, 1, 1)
             << defaultOptions;
     QTest::newRow("requiredPropertyInRoot")
             << u"component Foo: Item { required property var bla }\n"_s
                u"Foo { Item { property int bla: 43 } }\n"_s
                u"Foo {}\n"_s
-            << Result{ { { "Component is missing required property bla from Foo"_L1, 2, 1 },
-                         { "Component is missing required property bla from Foo"_L1, 3, 1 } } }
+            << ResultBuilder()
+               .addExpected("Component is missing required property bla from Foo"_L1, 2, 1)
+               .addExpected("Component is missing required property bla from Foo"_L1, 3, 1)
+               .build()
             << defaultOptions;
     QTest::newRow("requiredPropertyUnsatisfiedByAlias")
             << u"component Foo: Item { required property var r1; }\n"
@@ -1951,7 +2144,8 @@ void TestQmllint::dirtyQmlSnippet_data()
                "property alias r1: foo.r1;\n"
                "Foo { id: foo }\n"
                "}"_s
-            << Result{ { { "Component is missing required property r1 from Foo"_L1, 4, 1 } } }
+            << ResultBuilder::singleExpected(
+                   "Component is missing required property r1 from Foo"_L1, 4, 1)
             << defaultOptions;
     QTest::newRow("requiredUnsatisfiedByAlias2")
             << u"component Foo: Item { required property var r1; }\n"
@@ -1959,7 +2153,8 @@ void TestQmllint::dirtyQmlSnippet_data()
                "property alias r1: foo.r1;\n"
                u"Item{ Item{ Item{ Item {Foo { id: foo }}}}}\n"
                "}"_s
-            << Result{ { { "Component is missing required property r1 from Foo"_L1, 4, 25 } } }
+            << ResultBuilder::singleExpected(
+                   "Component is missing required property r1 from Foo"_L1, 4, 25)
             << defaultOptions;
     QTest::newRow("requiredUnsatisfiedByAlias3")
             << u"component Foo: Item { required property var r1; }\n"
@@ -1970,19 +2165,22 @@ void TestQmllint::dirtyQmlSnippet_data()
                u"}\n"
                u"}\n"
                u"}"_s
-            << Result{ { { "Component is missing required property r1 from Foo"_L1, 5, 1 } } }
+            << ResultBuilder::singleExpected(
+                   "Component is missing required property r1 from Foo"_L1, 5, 1)
             << defaultOptions;
     QTest::newRow("requiredFromBaseUnsatisfiedByAlias")
             << u"component Base: Item { required property var r1; }\n"
                u"component Foo: Base {}\n"
                u"Foo { id: foo }"_s
-            << Result{ { { "Component is missing required property r1 from Base"_L1, 3, 1 } } }
+            << ResultBuilder::singleExpected(
+                   "Component is missing required property r1 from Base"_L1, 3, 1)
             << defaultOptions;
     QTest::newRow("requiredFromBaseUnsatisfiedByAlias2")
             << u"component Base: Item { required property var r1; }\n"
                u"component Foo: Base {}\n"
                u"Item{ Item{ Item{ Item {Foo { id: foo }}}}}"_s
-            << Result{ { { "Component is missing required property r1 from Base"_L1, 3, 25 } } }
+            << ResultBuilder::singleExpected(
+                   "Component is missing required property r1 from Base"_L1, 3, 25)
             << defaultOptions;
     QTest::newRow("requiredFromBaseUnsatisfiedByAlias3")
             << u"component Base: Item { required property var r1; }\n"
@@ -1994,41 +2192,48 @@ void TestQmllint::dirtyQmlSnippet_data()
                u"}\n"
                u"}\n"
                u"}"_s
-            << Result{ { { "Component is missing required property r1 from Base"_L1, 6, 1 } } }
+            << ResultBuilder::singleExpected(
+                   "Component is missing required property r1 from Base"_L1, 6, 1)
             << defaultOptions;
     QTest::newRow("requiredInComponent")
             << u"Item { Component { id: comp; required property var bla; Item {} } }"_s
-            << Result{ { { "Component objects cannot declare new properties."_L1, 1, 30 } } }
+            << ResultBuilder::singleExpected("Component objects cannot declare new properties."_L1,
+                                             1, 30)
             << defaultOptions;
     QTest::newRow("testSnippet")
             << u"property int qwer: \"Hello\""_s
-            << Result{ { { "Cannot assign literal of type string to int"_L1 } } }
+            << ResultBuilder::singleExpected("Cannot assign literal of type string to int"_L1)
             << defaultOptions;
     QTest::newRow("typeInstantiatedRecursively")
             << u"Snippet {}"_s
-            << Result{ { { "Type \"Snippet\" can't be instantiated recursively"_L1, 1, 1 } } }
+            << ResultBuilder::singleExpected(
+                   "Type \"Snippet\" can't be instantiated recursively"_L1, 1, 1)
             << defaultOptions;
     QTest::newRow("typeInstantiatedRecursivelyInlineComponent")
             << u"component MyIC: Item { MyIC {} }"_s
-            << Result{ { { "Type \"MyIC\" can't be instantiated recursively"_L1, 1, 24 } } }
+            << ResultBuilder::singleExpected("Type \"MyIC\" can't be instantiated recursively"_L1,
+                                             1, 24)
             << defaultOptions;
     QTest::newRow("typeInstantiatedRecursivelyInlineComponent2")
             << u"component MyIC: Item { Snippet {} }"_s
-            << Result{ { { "Type \"Snippet\" can't be instantiated recursively"_L1, 1, 24 } } }
+            << ResultBuilder::singleExpected(
+                   "Type \"Snippet\" can't be instantiated recursively"_L1, 1, 24)
             << defaultOptions;
     QTest::newRow("unintentionalEmptyBlock-dirty")
             << u"property var v: {}"_s
-            << Result{ { { "Unintentional empty block, use ({}) for empty object literal"_L1, 1, 17 } } }
+            << ResultBuilder::singleExpected("Unintentional empty block, use ({}) for empty object "
+                                             "literal"_L1, 1, 17)
             << defaultOptions;
     QTest::newRow("unspecializedList")
             << u"property list l"_s
-            << Result{ { { "list was not found. Did you add all imports and dependencies? list is "
-                           "not a type. It requires an element type argument (eg. list<int>)"_L1,
-                           1, 1 } } }
+            << ResultBuilder::singleExpected("list was not found. Did you add all imports and "
+                                             "dependencies? list is not a type. It requires an "
+                                             "element type argument (eg. list<int>)"_L1, 1, 1)
             << defaultOptions;
     QTest::newRow("upperCaseId")
             << u"id: Root"_s
-            << Result{ { { "Id must start with a lower case letter or an '_'"_L1, 1, 5 } } }
+            << ResultBuilder::singleExpected("Id must start with a lower case letter or an '_'"_L1,
+                                             1, 5)
             << defaultOptions;
 }
 
@@ -2221,7 +2426,7 @@ void TestQmllint::cleanQmlSnippet()
 
     const QString qmlCode =
             code.startsWith("import"_L1) ? code : "import QtQuick\nItem {%1}"_L1.arg(code);
-    const Result result = Result::clean();
+    const Result result = ResultBuilder::cleanResult();
 
     const QJsonArray warnings =
             callQmllintOnSnippet(qmlCode, options, fromResultFlags(result.flags));
@@ -2238,144 +2443,150 @@ void TestQmllint::dirtyJsSnippet_data()
 
     QTest::newRow("assignmentInCondition")
             << u"let xxx = 3; if (xxx=3) return;"_s
-            << Result{ { { "Assignment in condition: did you mean to use \"===\" or \"==\" "
-                           "instead of \"=\"?"_L1,
-                           1, 21 } } }
+            << ResultBuilder::singleExpected("Assignment in condition: did you mean to use \"===\" "
+                                             "or \"==\" instead of \"=\"?"_L1, 1, 21)
             << defaultOptions;
     QTest::newRow("assignmentWarningLocation")
             << u"console.log(a = 1)"_s
-            << Result{ { { "Unqualified access"_L1, 1, 13 } } }
+            << ResultBuilder::singleExpected("Unqualified access"_L1, 1, 13)
             << defaultOptions;
     // PatternProperty::isValidAssignmentPattern: shorthand assignments in object literal warn.
     QTest::newRow("badObjectInitializer")
             << u"let x, y; let obj = { \nx = 42, \ny = 9001 }"_s
-            << Result{ {
-                       { "Invalid shorthand property initializer"_L1, 2, 3 },
-                       { "Invalid shorthand property initializer"_L1, 3, 3 },
-               } }
+            << ResultBuilder()
+               .addExpected("Invalid shorthand property initializer"_L1, 2, 3)
+               .addExpected("Invalid shorthand property initializer"_L1, 3, 3)
+               .build()
             << defaultOptions;
     // PatternProperty::isValidAssignmentPattern: trailing comma variant.
     QTest::newRow("badObjectInitializerTrailingComma")
             << u"let a; let obj = { \na = 1, }"_s
-            << Result{ { { "Invalid shorthand property initializer"_L1, 2, 3 } } }
+            << ResultBuilder::singleExpected("Invalid shorthand property initializer"_L1, 2, 3)
             << defaultOptions;
     // ObjectPattern::isValidAssignmentPattern: nested objects — all shorthand assignments warn.
     QTest::newRow("badObjectInitializerNested")
             << u"let a, b; let obj = { \ninner: { \na = 1, \nb = 2 } }"_s
-            << Result{ {
-                       { "Invalid shorthand property initializer"_L1, 3, 3 },
-                       { "Invalid shorthand property initializer"_L1, 4, 3 },
-               } }
+            << ResultBuilder()
+               .addExpected("Invalid shorthand property initializer"_L1, 3, 3)
+               .addExpected("Invalid shorthand property initializer"_L1, 4, 3)
+               .build()
             << defaultOptions;
     // Nested object literal: shorthand assignment in inner object is invalid.
     QTest::newRow("badObjectInitializerNestedSingle")
             << u"let a; let obj = { \ninner: { \na = 1 } }"_s
-            << Result{ { { "Invalid shorthand property initializer"_L1, 3, 3 } } }
+            << ResultBuilder::singleExpected("Invalid shorthand property initializer"_L1, 3, 3)
             << defaultOptions;
     // ArrayPattern::isValidAssignmentPattern: shorthand assignment inside array literal warns.
     QTest::newRow("badObjectInitializerInArray")
             << u"let a; let arr = [{ \na = 1 }]"_s
-            << Result{ { { "Invalid shorthand property initializer"_L1, 2, 3 } } }
+            << ResultBuilder::singleExpected("Invalid shorthand property initializer"_L1, 2, 3)
             << defaultOptions;
     // PatternProperty::isValidAssignmentPattern: multiple warnings collected in same object.
     QTest::newRow("badObjectInitializerMultiple")
             << u"let a, b, c; let obj = { \na = 1, \nb = 2, \nc = 3 }"_s
-            << Result{ {
-                       { "Invalid shorthand property initializer"_L1, 2, 3 },
-                       { "Invalid shorthand property initializer"_L1, 3, 3 },
-                       { "Invalid shorthand property initializer"_L1, 4, 3 },
-               } }
+            << ResultBuilder()
+               .addExpected("Invalid shorthand property initializer"_L1, 2, 3)
+               .addExpected("Invalid shorthand property initializer"_L1, 3, 3)
+               .addExpected("Invalid shorthand property initializer"_L1, 4, 3)
+               .build()
             << defaultOptions;
     QTest::newRow("codeAfterBreak")
             << u"for (;;) { break; return 1;}"_s
-            << Result{ { { "Unreachable code"_L1, 1, 19 } } }
+            << ResultBuilder::singleExpected("Unreachable code"_L1, 1, 19)
             << defaultOptions;
     QTest::newRow("codeAfterContinue")
             << u"for (;;) { continue; return 1;}"_s
-            << Result{ { { "Unreachable code"_L1, 1, 22 } } }
+            << ResultBuilder::singleExpected("Unreachable code"_L1, 1, 22)
             << defaultOptions;
     QTest::newRow("codeAfterReturn")
             << u"return 1; return 2;"_s
-            << Result{ { { "Unreachable code"_L1, 1, 11 } } }
+            << ResultBuilder::singleExpected("Unreachable code"_L1, 1, 11)
             << defaultOptions;
     QTest::newRow("codeAfterThrow")
             << u"for (;;) { throw 1; return 1;}"_s
-            << Result{ { { "Unreachable code"_L1, 1, 21 } } }
+            << ResultBuilder::singleExpected("Unreachable code"_L1, 1, 21)
             << defaultOptions;
     QTest::newRow("comma")
             << u"return 2, 3"_s
-            << Result{ { { "Do not use comma expressions."_L1, 1, 9 } } }
+            << ResultBuilder::singleExpected("Do not use comma expressions."_L1, 1, 9)
             << defaultOptions;
     QTest::newRow("comma2")
             << u"for (;;) { return 2, 3; }"_s
-            << Result{ { { "Do not use comma expressions."_L1, 1, 20 } } }
+            << ResultBuilder::singleExpected("Do not use comma expressions."_L1, 1, 20)
             << defaultOptions;
     QTest::newRow("confusing-minuses")
             << u"let a = 0, b = 0; return a-- - b;"_s
-            << Result{ { { "Confusing minuses"_L1, 1, 27 } } } << defaultOptions;
+            << ResultBuilder::singleExpected("Confusing minuses"_L1, 1, 27) << defaultOptions;
     QTest::newRow("confusing-minuses2")
             << u"let a = 0, b = 0; return a-- - -b;"_s
-            << Result{ { { "Confusing minuses"_L1, 1, 27 } } } << defaultOptions;
+            << ResultBuilder::singleExpected("Confusing minuses"_L1, 1, 27) << defaultOptions;
     QTest::newRow("confusing-minuses3")
             << u"let a = 0, b = 0; return a-- - --b;"_s
-            << Result{ { { "Confusing minuses"_L1, 1, 27 } } } << defaultOptions;
+            << ResultBuilder::singleExpected("Confusing minuses"_L1, 1, 27) << defaultOptions;
     QTest::newRow("confusing-pluses")
             << u"let a = 0, b = 0; return a++ + b;"_s
-            << Result{ { { "Confusing pluses"_L1, 1, 27 } } } << defaultOptions;
+            << ResultBuilder::singleExpected("Confusing pluses"_L1, 1, 27) << defaultOptions;
     QTest::newRow("confusing-pluses2")
             << u"let a = 0, b = 0; return a++ + +b;"_s
-            << Result{ { { "Confusing pluses"_L1, 1, 27 } } } << defaultOptions;
+            << ResultBuilder::singleExpected("Confusing pluses"_L1, 1, 27) << defaultOptions;
     QTest::newRow("confusing-pluses3")
             << u"let a = 0, b = 0; return a++ + ++b;"_s
-            << Result{ { { "Confusing pluses"_L1, 1, 27 } } } << defaultOptions;
+            << ResultBuilder::singleExpected("Confusing pluses"_L1, 1, 27) << defaultOptions;
     QTest::newRow("constructor")
             << u"return new Boolean();"_s
-            << Result{ { { "Do not use 'Boolean' as a constructor."_L1, 1, 12 } } }
+            << ResultBuilder::singleExpected("Do not use 'Boolean' as a constructor."_L1, 1, 12)
             << defaultOptions;
     QTest::newRow("constructor2")
             << u"return new Math();"_s
-            << Result{ { { "Do not use 'Math' as a constructor."_L1, 1, 12 } } }
+            << ResultBuilder::singleExpected("Do not use 'Math' as a constructor."_L1, 1, 12)
             << defaultOptions;
     QTest::newRow("constructorArray")
             << u"return new Array(1, 2);"_s
-            << Result{ { { "Array has confusing semantics, use an array literal ([]) instead."_L1,
-                           1, 12 } },
-                       {},
-                       { { "Replace with array literal"_L1,
-                           Edits{ { "["_L1, 1, 8 }, { "]"_L1, 1, 22 } } } } }
+            << ResultBuilder()
+               .addExpected("Array has confusing semantics, use an array literal ([]) instead."_L1, 1, 12)
+               .addFix("Replace with array literal"_L1, Edits{ { "["_L1, 1, 8 }, { "]"_L1, 1, 22 } })
+               .build()
             << defaultOptions;
     QTest::newRow("doubleConst")
             << u"const x = 4; const x = 4;"_s
-            << Result{ { { "Identifier 'x' has already been declared"_L1, 1, 20 },
-                         { "Note: previous declaration of 'x' here"_L1, 1, 7 } } }
+            << ResultBuilder()
+               .addExpected("Identifier 'x' has already been declared"_L1, 1, 20)
+               .addExpected("Note: previous declaration of 'x' here"_L1, 1, 7)
+               .build()
             << defaultOptions;
     QTest::newRow("doubleLet")
             << u"let x = 4; let x = 4;"_s
-            << Result{ { { "Identifier 'x' has already been declared"_L1, 1, 16 },
-                         { "Note: previous declaration of 'x' here"_L1, 1, 5 } } }
+            << ResultBuilder()
+               .addExpected("Identifier 'x' has already been declared"_L1, 1, 16)
+               .addExpected("Note: previous declaration of 'x' here"_L1, 1, 5)
+               .build()
             << defaultOptions;
     QTest::newRow("eval")
             << u"let x = eval();"_s
-            << Result{ { { "Do not use 'eval'"_L1, 1, 9 } } }
+            << ResultBuilder::singleExpected("Do not use 'eval'"_L1, 1, 9)
             << defaultOptions;
     QTest::newRow("eval2")
             << u"let x = eval(\"1 + 1\");"_s
-            << Result{ { { "Do not use 'eval'"_L1, 1, 9 } } }
+            << ResultBuilder::singleExpected("Do not use 'eval'"_L1, 1, 9)
             << defaultOptions;
     QTest::newRow("equality-with-coercion")
             << u"let a = 0, b = \"0\"; return a == b;"_s
-            << Result{ { { "== and != may perform type coercion, use === or !== to avoid it."_L1, 1,
-                           28 } } }
+            << ResultBuilder::singleExpected(
+                   "== and != may perform type coercion, use === or !== to avoid it."_L1, 1, 28)
             << defaultOptions;
     QTest::newRow("functionAfterThrow")
             << u"throw 1; function f() {}; let x = 1; function g() {}; let y = 1;"_s
-            << Result{ { { "Unreachable code"_L1, 1, 27 },
-                         { "Unreachable code"_L1, 1, 55 } } }
+            << ResultBuilder()
+               .addExpected("Unreachable code"_L1, 1, 27)
+               .addExpected("Unreachable code"_L1, 1, 55)
+               .build()
             << defaultOptions;
     QTest::newRow("functionAfterThrow2")
             << u"throw 1; if (x) { function f() {}; } let x = 1; if (x) { function g() {};} let y = 1;"_s
-            << Result{ { { "Unreachable code"_L1, 1, 38 },
-                         { "Unreachable code"_L1, 1, 76 } } }
+            << ResultBuilder()
+               .addExpected("Unreachable code"_L1, 1, 38)
+               .addExpected("Unreachable code"_L1, 1, 76)
+               .build()
             << defaultOptions;
     {
         CallQmllintOptions options;
@@ -2383,42 +2594,52 @@ void TestQmllint::dirtyJsSnippet_data()
                                                  QQmlJS::WarningSeverity::Warning);
         QTest::newRow("functionUsedBeforeDeclaration")
                 << u"fff(); function fff() {}"_s
-                << Result{ { { "Function 'fff' is used here before its declaration"_L1, 1, 1 },
-                             { "Note: declaration of 'fff' here"_L1, 1, 17 } } }
+                << ResultBuilder()
+                   .addExpected("Function 'fff' is used here before its declaration"_L1, 1, 1)
+                   .addExpected("Note: declaration of 'fff' here"_L1, 1, 17)
+                   .build()
                 << options;
     }
     QTest::newRow("indirectEval") << u"let x = (1, eval)();"_s
-                                  << Result{ { { "Do not use 'eval'"_L1, 1, 13 } } }
+                                  << ResultBuilder::singleExpected("Do not use 'eval'"_L1, 1, 13)
                                   << defaultOptions;
     QTest::newRow("indirectEval2")
             << u"let x = (1, eval)(\"1 + 1\");"_s
-            << Result{ { { "Do not use 'eval'"_L1, 1, 13 } } }
+            << ResultBuilder::singleExpected("Do not use 'eval'"_L1, 1, 13)
             << defaultOptions;
     QTest::newRow("redundantOptionalChainingNonVoidableBase")
             << u"/a/?.flags"_s
-            << Result{ { { "Redundant optional chaining for lookup on non-voidable and "_L1
-                           "non-nullable type QRegularExpression"_L1,
-                           1, 6 } } }
+            << ResultBuilder::singleExpected(
+                   "Redundant optional chaining for lookup on non-voidable and non-nullable type "
+                   "QRegularExpression"_L1, 1, 6)
             << defaultOptions;
     QTest::newRow("math_typo")
             << u"Math.minj(1,2)"_s
-            << Result{ { {"Member \"minj\" not found on Math object", 1, 6},
-                         {"Did you mean \"min\"?", 1, 6} }}
+            << ResultBuilder()
+               .addExpected("Member \"minj\" not found on Math object", 1, 6)
+               .addExpected("Did you mean \"min\"?", 1, 6)
+               .build()
             << defaultOptions;
     QTest::newRow("shadowArgument")
             << u"function f(a) { const a = 33; }"_s
-            << Result{ { { "Identifier 'a' has already been declared"_L1, 1, 23 },
-                         { "Note: previous declaration of 'a' here"_L1, 1, 12 } } }
+            << ResultBuilder()
+               .addExpected("Identifier 'a' has already been declared"_L1, 1, 23)
+               .addExpected("Note: previous declaration of 'a' here"_L1, 1, 12)
+               .build()
             << defaultOptions;
     QTest::newRow("shadowFunction")
             << u"function f() {} const f = 33"_s
-            << Result{ { { "Identifier 'f' has already been declared"_L1, 1, 23 },
-                         { "Note: previous declaration of 'f' here"_L1, 1, 10 } } }
+            << ResultBuilder()
+               .addExpected("Identifier 'f' has already been declared"_L1, 1, 23)
+               .addExpected("Note: previous declaration of 'f' here"_L1, 1, 10)
+               .build()
             << defaultOptions;
     QTest::newRow("shadowFunction2")
             << u"const f = 33; function f() {}"_s
-            << Result{ { { "Identifier 'f' has already been declared"_L1, 1, 24 },
-                         { "Note: previous declaration of 'f' here"_L1, 1, 7 } } }
+            << ResultBuilder()
+               .addExpected("Identifier 'f' has already been declared"_L1, 1, 24)
+               .addExpected("Note: previous declaration of 'f' here"_L1, 1, 7)
+               .build()
             << defaultOptions;
     QTest::newRow("unterminatedCaseBlock")
             << uR"(
@@ -2439,37 +2660,30 @@ void TestQmllint::dirtyJsSnippet_data()
                 case 5:                 // ok: nothing to fall through to ...
                     1 + 2
                 })"_s
-            << Result{ {
-                               { "Non-empty case block potentially falls through to the next case "
-                                 "or default "
-                                 "statement. Add \"// fallthrough\" at the end of the block to "
-                                 "silence this "
-                                 "warning."_L1,
-                                 6, 17 },
-                               { "Non-empty case block potentially falls through to the next case "
-                                 "or default "
-                                 "statement. Add \"// fallthrough\" at the end of the block to "
-                                 "silence this "
-                                 "warning."_L1,
-                                 8, 17 },
-                       },
-                       { { "Non-empty case block potentially falls through to the next case or "
-                           "default"
-                           " statement. Add \"// fallthrough\" at the end of the block to silence this warning."_L1,
-                           3, 17 },
-                         { "Non-empty case block potentially falls through to the next case or "
-                           "default statement."
-                           " Add \"// fallthrough\" at the end of the block to silence this warning."_L1,
-                           4, 17 },
-                         { "Non-empty case block potentially falls through to the next case or "
-                           "default statement."
-                           " Add \"// fallthrough\" at the end of the block to silence this warning."_L1,
-                           10, 17 },
-                         { "Non-empty case block potentially falls through to the next case or "
-                           "default statement. "
-                           "Add \"// fallthrough\" at the end of the block to silence this warning."_L1,
-                           13, 17 } } }
+            << ResultBuilder()
+               .addExpected("Non-empty case block potentially falls through to the next case or "
+                            "default statement. Add \"// fallthrough\" at the end of the block to "
+                            "silence this warning."_L1, 6, 17)
+               .addExpected("Non-empty case block potentially falls through to the next case or "
+                            "default statement. Add \"// fallthrough\" at the end of the block to "
+                            "silence this warning."_L1, 8, 17)
+               .addUnexpected("Non-empty case block potentially falls through to the next case or "
+                              "default statement. Add \"// fallthrough\" at the end of the block "
+                              "to silence this warning."_L1, 3, 17)
+               .addUnexpected("Non-empty case block potentially falls through to the next case or "
+                              "default statement. Add \"// fallthrough\" at the end of the block "
+                              "to silence this warning."_L1, 4, 17)
+               .addUnexpected("Non-empty case block potentially falls through to the next case or "
+                              "default statement. Add \"// fallthrough\" at the end of the block "
+                              "to silence this warning."_L1, 10, 17)
+               .addUnexpected("Non-empty case block potentially falls through to the next case or "
+                              "default statement. Add \"// fallthrough\" at the end of the block "
+                              "to silence this warning."_L1, 13, 17)
+               .build()
             << defaultOptions;
+    constexpr QLatin1String unterminatedCaseMsg =
+            "Non-empty case block potentially falls through to the next case or default statement. "
+            "Add \"// fallthrough\" at the end of the block to silence this warning."_L1;
     QTest::newRow("unterminatedCaseBlockNested")
             << uR"(switch (0) {
                 case 0: // all cases should be KO, including this one
@@ -2487,48 +2701,18 @@ void TestQmllint::dirtyJsSnippet_data()
                     }
                 case -1: return // dummy
                 })"_s
-            << Result{ {
-                       { "Non-empty case block potentially falls through to the next case or "
-                         "default statement."
-                         " Add \"// fallthrough\" at the end of the block to silence this warning."_L1,
-                         2, 17 },
-                       { "Non-empty case block potentially falls through to the next case or "
-                         "default statement."
-                         " Add \"// fallthrough\" at the end of the block to silence this warning."_L1,
-                         4, 25 },
-                       { "Non-empty case block potentially falls through to the next case or "
-                         "default statement."
-                         " Add \"// fallthrough\" at the end of the block to silence this warning."_L1,
-                         5, 25 },
-                       { "Non-empty case block potentially falls through to the next case or "
-                         "default statement."
-                         " Add \"// fallthrough\" at the end of the block to silence this warning."_L1,
-                         6, 25 },
-                       { "Non-empty case block potentially falls through to the next case or "
-                         "default statement."
-                         " Add \"// fallthrough\" at the end of the block to silence this warning."_L1,
-                         7, 25 },
-                       { "Non-empty case block potentially falls through to the next case or "
-                         "default statement."
-                         " Add \"// fallthrough\" at the end of the block to silence this warning."_L1,
-                         8, 25 },
-                       { "Non-empty case block potentially falls through to the next case or "
-                         "default statement."
-                         " Add \"// fallthrough\" at the end of the block to silence this warning."_L1,
-                         9, 25 },
-                       { "Non-empty case block potentially falls through to the next case or "
-                         "default statement."
-                         " Add \"// fallthrough\" at the end of the block to silence this warning."_L1,
-                         10, 25 },
-                       { "Non-empty case block potentially falls through to the next case or "
-                         "default statement."
-                         " Add \"// fallthrough\" at the end of the block to silence this warning."_L1,
-                         11, 25 },
-                       { "Non-empty case block potentially falls through to the next case or "
-                         "default statement."
-                         " Add \"// fallthrough\" at the end of the block to silence this warning."_L1,
-                         12, 25 },
-               } }
+            << ResultBuilder()
+               .addExpected(unterminatedCaseMsg, 2, 17)
+               .addExpected(unterminatedCaseMsg, 4, 25)
+               .addExpected(unterminatedCaseMsg, 5, 25)
+               .addExpected(unterminatedCaseMsg, 6, 25)
+               .addExpected(unterminatedCaseMsg, 7, 25)
+               .addExpected(unterminatedCaseMsg, 8, 25)
+               .addExpected(unterminatedCaseMsg, 9, 25)
+               .addExpected(unterminatedCaseMsg, 10, 25)
+               .addExpected(unterminatedCaseMsg, 11, 25)
+               .addExpected(unterminatedCaseMsg, 12, 25)
+               .build()
             << defaultOptions;
     QTest::newRow("unterminatedCaseBlockNested2")
             << uR"(switch (0) {
@@ -2539,30 +2723,30 @@ void TestQmllint::dirtyJsSnippet_data()
                     }
                 case -1: return // dummy
                 })"_s
-            << Result{ { { "Non-empty case block potentially falls through to the next case or "
-                           "default "
-                           "statement. Add \"// fallthrough\" at the end of the block to silence this warning."_L1,
-                           2, 17 } } }
+            << ResultBuilder::singleExpected(
+                   "Non-empty case block potentially falls through to the next case or default "
+                   "statement. Add \"// fallthrough\" at the end of the block to silence this "
+                   "warning."_L1, 2, 17)
             << defaultOptions;
     {
         CallQmllintOptions options;
         options.categorySeverityOverrides.insert(qmlVoid.name().toString(), QQmlJS::WarningSeverity::Warning);
         QTest::newRow("void")
                 << u"void 1;"_s
-                << Result{ { { "Do not use void expressions"_L1, 1, 1 } } }
+                << ResultBuilder::singleExpected("Do not use void expressions"_L1, 1, 1)
                 << options;
         QTest::newRow("void2")
                 << u"void(0)"_s
-                << Result{ { { "Do not use void expressions"_L1, 1, 1 } } }
+                << ResultBuilder::singleExpected("Do not use void expressions"_L1, 1, 1)
                 << options;
     }
     QTest::newRow("uselessExpressionStatement")
             << u"x + 3;"_s
-            << Result{ { { "Expression statement has no obvious effect."_L1, 1, 1 } } }
+            << ResultBuilder::singleExpected("Expression statement has no obvious effect."_L1, 1, 1)
             << defaultOptions;
     QTest::newRow("uselessExpressionStatement2")
             << u"for (;;) { x + 3; return x; }"_s
-            << Result{ { { "Expression statement has no obvious effect."_L1, 1, 12 } } }
+            << ResultBuilder::singleExpected("Expression statement has no obvious effect."_L1, 1, 12)
             << defaultOptions;
     QTest::newRow("varVariableInBlockScope")
             << uR"(let i = 0;
@@ -2570,7 +2754,8 @@ void TestQmllint::dirtyJsSnippet_data()
             var j = 1;
         }
         i = j;)"_s
-            << Result { { { "var declaration in block scope is hoisted to function scope"_L1, 3, 17 } } }
+            << ResultBuilder::singleExpected("var declaration in block scope is hoisted to "
+                                             "function scope"_L1, 3, 17)
             << defaultOptions;
 }
 
@@ -2682,7 +2867,7 @@ void TestQmllint::cleanJsSnippet()
     QFETCH(CallQmllintOptions, options);
 
     const QString qmlCode = "import QtQuick\nItem { function f() {\n%1}}"_L1.arg(code);
-    const Result result = Result::clean();
+    const Result result = ResultBuilder::cleanResult();
 
     const QJsonArray warnings =
             callQmllintOnSnippet(qmlCode, options, fromResultFlags(result.flags));
@@ -2846,17 +3031,15 @@ void TestQmllint::contextPropertiesFromHeuristicLint()
     const QJsonArray warnings = callQmllint(filename, options, CallQmllintCheck::ShouldFail);
     checkResult(
             warnings,
-            Result{ {
-                    Message{ "Potential context property access detected. Context properties are "
+            ResultBuilder()
+                .addExpected("Potential context property access detected. Context properties are "
                              "discouraged in QML: use normal, required, or singleton properties "
                              "instead.\nNote: 'myContextProperty1' assumed to be a potential "
                              "context property because it is not declared as required "
                              "property.\nNote: candidate context property declaration "
                              "'myContextProperty1' at myPath1/myFile1.cpp:3:4"_L1,
-                             4, 21 },
-            }
-
-            },
+                             4, 21)
+                .build(),
             [] { }, [] { }, [] { });
 }
 #endif
@@ -3159,7 +3342,7 @@ void TestQmllint::cleanQmlCode()
     });
 
     const QJsonArray warnings = callQmllint(filename, options);
-    checkResult(warnings, Result::clean());
+    checkResult(warnings, ResultBuilder::cleanResult());
 }
 
 void TestQmllint::compilerWarnings_data()
@@ -3168,98 +3351,121 @@ void TestQmllint::compilerWarnings_data()
     QTest::addColumn<Result>("result");
     QTest::addColumn<bool>("enableCompilerWarnings");
 
-    QTest::newRow("listIndices") << QStringLiteral("listIndices.qml") << Result::clean() << true;
+    QTest::newRow("listIndices")
+            << QStringLiteral("listIndices.qml")
+            << ResultBuilder::cleanResult()
+            << true;
     QTest::newRow("lazyAndDirect")
-            << QStringLiteral("LazyAndDirect/Lazy.qml") << Result::clean() << true;
-    QTest::newRow("qQmlV4Function") << QStringLiteral("varargs.qml") << Result::clean() << true;
-    QTest::newRow("multiGrouped") << QStringLiteral("multiGrouped.qml") << Result::clean() << true;
+            << QStringLiteral("LazyAndDirect/Lazy.qml") << ResultBuilder::cleanResult() << true;
+    QTest::newRow("qQmlV4Function")
+            << QStringLiteral("varargs.qml")
+            << ResultBuilder::cleanResult()
+            << true;
+    QTest::newRow("multiGrouped")
+            << QStringLiteral("multiGrouped.qml")
+            << ResultBuilder::cleanResult()
+            << true;
 
     QTest::newRow("shadowable")
             << QStringLiteral("shadowable.qml")
-            << Result { { Message {QStringLiteral("with type NotSoSimple can be shadowed") } } }
+            << ResultBuilder::singleExpected("with type NotSoSimple can be shadowed"_L1)
             << true;
     QTest::newRow("tooFewParameters")
             << QStringLiteral("tooFewParams.qml")
-            << Result { { Message { QStringLiteral("Could not compile binding for a: "
-                                                   "No matching override found") } } } << true;
+            << ResultBuilder::singleExpected(
+                   "Could not compile binding for a: No matching override found"_L1)
+            << true;
     QTest::newRow("javascriptVariableArgs")
             << QStringLiteral("javascriptVariableArgs.qml")
-            << Result { { Message {
-                       QStringLiteral("Could not compile binding for onCompleted: "
-                                      "Function expects 0 arguments, but 2 were provided") } } }
+            << ResultBuilder()
+               .addExpected("Could not compile binding for onCompleted: "
+                            "Function expects 0 arguments, but 2 were provided"_L1)
+               .build()
             << true;
     QTest::newRow("unknownTypeInRegister")
             << QStringLiteral("unknownTypeInRegister.qml")
-            << Result { { Message {
-                       QStringLiteral("Could not determine signature of function foo: "
-                                      "Functions without type annotations won't be compiled") } } }
+            << ResultBuilder()
+               .addExpected("Could not determine signature of function foo: "
+                            "Functions without type annotations won't be compiled"_L1)
+               .build()
             << true;
     QTest::newRow("pragmaStrict")
             << QStringLiteral("pragmaStrict.qml")
-            << Result { { { QStringLiteral(
-                       "Could not determine signature of function add: "
-                       "Functions without type annotations won't be compiled") } } }
+            << ResultBuilder()
+               .addExpected("Could not determine signature of function add: "
+                            "Functions without type annotations won't be compiled"_L1)
+               .build()
             << true;
     QTest::newRow("generalizedGroupHint")
             << QStringLiteral("generalizedGroupHint.qml")
-            << Result { { { QStringLiteral(
-                       "Could not determine signature of binding for myColor: "
-                       "Could not find property \"myColor\". "
-                       "You may want use ID-based grouped properties here.") } } }
+            << ResultBuilder()
+               .addExpected("Could not determine signature of binding for myColor: "
+                            "Could not find property \"myColor\". "
+                            "You may want use ID-based grouped properties here."_L1)
+               .build()
             << true;
     QTest::newRow("invalidIdLookup")
             << QStringLiteral("invalidIdLookup.qml")
-            << Result { { {
-                    QStringLiteral("Could not compile binding for objectName: "
-                                   "Cannot retrieve a non-object type by ID: stateMachine")
-               } } }
+            << ResultBuilder()
+               .addExpected("Could not compile binding for objectName: "
+                            "Cannot retrieve a non-object type by ID: stateMachine"_L1)
+               .build()
             << true;
     QTest::newRow("returnTypeAnnotation-component")
             << QStringLiteral("returnTypeAnnotation_component.qml")
-            << Result{ { { "Could not compile function comp: function without return type "
-                           "annotation returns returnTypeAnnotation_component::c with type Comp. "
-                           "This may prevent proper compilation to Cpp." } } }
+            << ResultBuilder()
+               .addExpected("Could not compile function comp: function without return type "
+                            "annotation returns returnTypeAnnotation_component::c with type Comp. "
+                            "This may prevent proper compilation to Cpp."_L1)
+               .build()
             << true;
     QTest::newRow("returnTypeAnnotation-enum")
             << QStringLiteral("returnTypeAnnotation_enum.qml")
-            << Result{ { { "Could not compile function enumeration: function without return type "
-                           "annotation returns QQuickText::HAlignment::AlignRight. "
-                           "This may prevent proper compilation to Cpp." } } }
+            << ResultBuilder()
+               .addExpected("Could not compile function enumeration: function without return type "
+                            "annotation returns QQuickText::HAlignment::AlignRight. "
+                            "This may prevent proper compilation to Cpp."_L1)
+               .build()
             << true;
     QTest::newRow("returnTypeAnnotation-method")
             << QStringLiteral("returnTypeAnnotation_method.qml")
-            << Result{ { { "Could not compile function method: function without return type "
-                           "annotation returns returnTypeAnnotation_method::f(...). This may "
-                           "prevent proper compilation to Cpp." } } }
+            << ResultBuilder()
+               .addExpected("Could not compile function method: function without return type "
+                            "annotation returns returnTypeAnnotation_method::f(...). This may "
+                            "prevent proper compilation to Cpp."_L1)
+               .build()
             << true;
     QTest::newRow("returnTypeAnnotation-property")
             << QStringLiteral("returnTypeAnnotation_property.qml")
-            << Result{ { { "Could not compile function prop: function without return type "
-                           "annotation returns returnTypeAnnotation_property::i with type int. "
-                           "This may prevent "
-                           "proper compilation to Cpp." } } }
+            << ResultBuilder()
+               .addExpected("Could not compile function prop: function without return type "
+                            "annotation returns returnTypeAnnotation_property::i with type int. "
+                            "This may prevent proper compilation to Cpp."_L1)
+               .build()
             << true;
     QTest::newRow("returnTypeAnnotation-type")
             << QStringLiteral("returnTypeAnnotation_type.qml")
-            << Result{ { { "Could not compile function type: function without return type "
-                           "annotation returns double. This may prevent proper compilation to "
-                           "Cpp." } } }
+            << ResultBuilder()
+               .addExpected("Could not compile function type: function without return type "
+                            "annotation returns double. This may prevent proper compilation to "
+                            "Cpp."_L1)
+               .build()
             << true;
 
     QTest::newRow("functionAssign1")
-            << QStringLiteral("functionAssign1.qml") << Result::clean() << true;
+            << QStringLiteral("functionAssign1.qml") << ResultBuilder::cleanResult() << true;
     QTest::newRow("functionAssign2")
-            << QStringLiteral("functionAssign2.qml") << Result::clean() << true;
+            << QStringLiteral("functionAssign2.qml") << ResultBuilder::cleanResult() << true;
 
     // We want to see the warning about the missing property only once.
     QTest::newRow("unresolvedType2")
             << QStringLiteral("unresolvedType2.qml")
-            << Result { { Message { QStringLiteral(
-                           "Could not determine signature of binding for text: "
-                           "Could not find property \"text\".") } },
-                        { Message { QStringLiteral(
-                           "Cannot resolve property type  for binding on text.") }, },
-                        } << true;
+            << ResultBuilder()
+               .addExpected("Could not determine signature of binding for text: "
+                            "Could not find property \"text\"."_L1)
+               .addUnexpected("Cannot resolve property type  for binding on text."_L1)
+               .build()
+            << true;
 }
 
 void TestQmllint::compilerWarnings()
@@ -3646,7 +3852,7 @@ void TestQmllint::checkResult(const QJsonArray &warnings, const Result &result,
         searchWarnings(warnings, msg.text, msg.severity, msg.line, msg.column);
     }
 
-    for (const Message &msg : result.badMessages) {
+    for (const Message &msg : result.unexpectedMessages) {
         // !output.contains() expect fails:
         onBadMessageFailures();
 
@@ -3809,26 +4015,26 @@ void TestQmllint::searchWarnings(const QJsonArray &warnings, const QString &subs
 
 void TestQmllint::requiredProperty()
 {
-    runTest("requiredProperty.qml", Result::clean());
+    runTest("requiredProperty.qml", ResultBuilder::cleanResult());
 
     runTest("requiredMissingProperty.qml",
-            Result { { Message { QStringLiteral(
-                    "Property \"foo\" was marked as required but does not exist.") } } });
+            ResultBuilder()
+            .addExpected("Property \"foo\" was marked as required but does not exist."_L1)
+            .build());
 
-    runTest("requiredPropertyBindings.qml", Result::clean());
+    runTest("requiredPropertyBindings.qml", ResultBuilder::cleanResult());
     runTest("requiredPropertyBindingsNow.qml",
-            Result { { Message { QStringLiteral("Component is missing required property "
-                                                "required_now_string from Base") },
-                       Message { QStringLiteral("Component is missing required property "
-                                                "required_defined_here_string from Derived") } } });
+            ResultBuilder()
+            .addExpected("Component is missing required property required_now_string from Base"_L1)
+            .addExpected("Component is missing required property required_defined_here_string from Derived"_L1)
+            .build());
     runTest("requiredPropertyBindingsLater.qml",
-            Result { { Message { QStringLiteral("Component is missing required property "
-                                                "required_later_string from "
-                                                "Base") },
-                       Message { QStringLiteral("Property marked as required in Derived") },
-                       Message { QStringLiteral("Component is missing required property "
-                                                "required_even_later_string "
-                                                "from Base (marked as required by here)") } } });
+            ResultBuilder()
+            .addExpected("Component is missing required property required_later_string from Base"_L1)
+            .addExpected("Property marked as required in Derived"_L1)
+            .addExpected("Component is missing required property required_even_later_string "
+                         "from Base (marked as required by here)"_L1)
+            .build());
 }
 
 void TestQmllint::settingsFile()
@@ -3850,7 +4056,7 @@ void TestQmllint::additionalImplicitImport()
 {
     // We're polluting the resource file system here, so let's clean up afterwards.
     const auto guard = qScopeGuard([this]() {m_linter.clearCache(); });
-    runTest("additionalImplicitImport.qml", Result::clean(), {}, {},
+    runTest("additionalImplicitImport.qml", ResultBuilder::cleanResult(), {}, {},
             { testFile("implicitImportResource.qrc") });
 }
 
@@ -3861,7 +4067,7 @@ void TestQmllint::qrcUrlImport()
     options.resources.append(testFile("untitled/qrcUrlImport.qrc"));
 
     const QJsonArray warnings = callQmllint(testFile("untitled/main.qml"), options);
-    checkResult(warnings, Result::clean());
+    checkResult(warnings, ResultBuilder::cleanResult());
 }
 
 void TestQmllint::incorrectImportFromHost_data()
@@ -3871,16 +4077,17 @@ void TestQmllint::incorrectImportFromHost_data()
 
     QTest::newRow("NonexistentFile")
             << QStringLiteral("importNonexistentFile.qml")
-            << Result{ { Message{
-                       QStringLiteral("File or directory you are trying to import does not exist"),
-                       1, 1 } } };
+            << ResultBuilder()
+               .addExpected("File or directory you are trying to import does not exist"_L1, 1, 1)
+               .build();
 #ifndef Q_OS_WIN
     // there is no /dev/null device on Win
     QTest::newRow("NullDevice")
             << QStringLiteral("importNullDevice.qml")
-            << Result{ { Message{ QStringLiteral("is neither a file nor a directory. Are sure the "
-                                                 "import path is correct?"),
-                                  1, 1 } } };
+            << ResultBuilder()
+               .addExpected("is neither a file nor a directory. Are sure the import path is "
+                            "correct?"_L1, 1, 1)
+               .build();
 #endif
 }
 
@@ -3902,23 +4109,22 @@ void TestQmllint::attachedPropertyReuse()
 
     category->setSeverity(QQmlJS::WarningSeverity::Warning);
     runTest("attachedPropNotReused.qml",
-            Result { { Message { QStringLiteral("Using attached type QQuickKeyNavigationAttached "
-                                                "already initialized in a parent "
-                                                "scope") } } },
+            ResultBuilder()
+            .addExpected("Using attached type QQuickKeyNavigationAttached already initialized in a "
+                         "parent scope"_L1)
+            .build(),
             {}, {}, {}, UseDefaultImports, &categories);
 
-    runTest("attachedPropEnum.qml", Result::clean(), {}, {}, {}, UseDefaultImports, &categories);
+    runTest("attachedPropEnum.qml", ResultBuilder::cleanResult(), {}, {}, {}, UseDefaultImports, &categories);
     runTest("MyStyle/ToolBar.qml",
-            Result{ { Message{
-                            "Using attached type MyStyle already initialized in a parent scope"_L1,
-                            10, 16 } },
-                    {},
-                    { { "Reference it by id instead"_L1, Edit{ "control."_L1, 10, 16 } } },
-                    Result::AutoFixable },
+            ResultBuilder()
+            .addExpected("Using attached type MyStyle already initialized in a parent scope"_L1, 10, 16)
+            .addFix("Reference it by id instead"_L1, Edit{ "control."_L1, 10, 16 })
+            .setFlag(Result::AutoFixable)
+            .build(),
             {}, {}, {}, UseDefaultImports, &categories);
     runTest("pluginQuick_multipleAttachedPropertyReuse.qml",
-            Result{ { Message{ QStringLiteral(
-                    "Using attached type Test already initialized in a parent scope") } } },
+            ResultBuilder::singleExpected("Using attached type Test already initialized in a parent scope"_L1),
             {}, {}, {}, UseDefaultImports, &categories);
 }
 
@@ -3935,10 +4141,9 @@ void TestQmllint::missingBuiltinsNoCrash()
                                                   lintOptions, { }, { }, { }, { });
     QVERIFY2(result.status != QQmlJSLinter::LintSuccess, QJsonDocument(result.json).toJson());
 
-    checkResult(
-            result.json[u"warnings"_s].toArray(),
-            Result{ { Message{
-                    u"Failed to import QtQuick. Are your import paths set up properly?"_s } } });
+    checkResult(result.json[u"warnings"_s].toArray(),
+                ResultBuilder::singleExpected(u"Failed to import QtQuick. Are your import paths "
+                                              "set up properly?"_s));
 }
 
 void TestQmllint::absolutePath()
@@ -3972,7 +4177,7 @@ void TestQmllint::absolutePath()
 
 void TestQmllint::importMultipartUri()
 {
-    runTest("here.qml", Result::clean(), {}, { testFile("Elsewhere/qmldir") });
+    runTest("here.qml", ResultBuilder::cleanResult(), {}, { testFile("Elsewhere/qmldir") });
 }
 
 void TestQmllint::lintModule_data()
@@ -3986,18 +4191,16 @@ void TestQmllint::lintModule_data()
             << u"Things"_s
             << QStringList()
             << QStringList()
-            << Result {
-                   { Message {
-                             u"Type \"QPalette\" not found. Used in SomethingEntirelyStrange.palette"_s,
-                     },
-                     Message {
-                             u"Type \"CustomPalette\" is not fully resolved. Used in SomethingEntirelyStrange.palette2"_s } }
-               };
+            << ResultBuilder()
+               .addExpected("Type \"QPalette\" not found. Used in SomethingEntirelyStrange.palette"_L1)
+               .addExpected("Type \"CustomPalette\" is not fully resolved. Used in "
+                            "SomethingEntirelyStrange.palette2"_L1)
+               .build();
     QTest::addRow("missingQmltypes")
             << u"Fake5Compat.GraphicalEffects.private"_s
             << QStringList()
             << QStringList()
-            << Result { { Message { u"QML types file does not exist"_s } } };
+            << ResultBuilder::singleExpected("QML types file does not exist"_L1);
 
     QTest::addRow("moduleWithQrc")
             << u"moduleWithQrc"_s
@@ -4006,20 +4209,22 @@ void TestQmllint::lintModule_data()
                                testFile("hidden/qmake_moduleWithQrc.qrc"),
                                testFile("hidden/moduleWithQrc_raw_qml_0.qrc")
                            })
-            << Result::clean();
+            << ResultBuilder::cleanResult();
     QTest::newRow(("ImportFileSelector"))
             << QStringLiteral("FileSelector") << QStringList() << QStringList()
-            << Result{
-                   { { "Ambiguous type detected. ToolBar 1.0 is defined multiple times."_L1 } }
-               }.withFlags(Result::Flags(Result::UseSettings));
+            << ResultBuilder()
+               .addExpected("Ambiguous type detected. ToolBar 1.0 is defined multiple times."_L1)
+               .setFlag(Result::UseSettings)
+               .build();
     QTest::newRow(("ImportFileSelector2"))
             << QStringLiteral("FileSelector2") << QStringList() << QStringList()
-            << Result{
-                   { { "Ambiguous type detected. ToolBar 1.0 is defined multiple times."_L1 },
-                     { "Ambiguous type detected. Broken 1.0 is defined multiple times."_L1 } },
-                   { { "Type ToolBar is ambiguous due to file selector usage, ignoring %1"_L1.arg(
-                           testFile("FileSelector2/+Material/ToolBar.qml")) } }
-               }.withFlags(Result::Flags(Result::UseSettings));
+            << ResultBuilder()
+               .addExpected("Ambiguous type detected. ToolBar 1.0 is defined multiple times."_L1)
+               .addExpected("Ambiguous type detected. Broken 1.0 is defined multiple times."_L1)
+               .addUnexpected("Type ToolBar is ambiguous due to file selector usage, ignoring %1"_L1
+                              .arg(testFile("FileSelector2/+Material/ToolBar.qml")))
+               .setFlag(Result::UseSettings)
+               .build();
 }
 
 void TestQmllint::lintModule()
@@ -4076,45 +4281,29 @@ void TestQmllint::testLineEndings()
 
 void TestQmllint::valueTypesFromString()
 {
+    constexpr auto expectedMsg = "Construction from string is deprecated. Use structured value "
+                                 "type construction instead for type \"%1\""_L1;
+    constexpr auto fixMsg = "Replace string by structured value construction"_L1;
     runTest("valueTypesFromString.qml",
-            Result{ {
-                            Message{
-                                    u"Construction from string is deprecated. Use structured value type construction instead for type \"QPointF\""_s },
-                            Message{
-                                    u"Construction from string is deprecated. Use structured value type construction instead for type \"QSizeF\""_s },
-                            Message{
-                                    u"Construction from string is deprecated. Use structured value type construction instead for type \"QRectF\""_s },
-                            Message{
-                                    u"Construction from string is deprecated. Use structured value type construction instead for type \"QVector2D\""_s },
-                            Message{
-                                    u"Construction from string is deprecated. Use structured value type construction instead for type \"QVector3D\""_s },
-                            Message{
-                                    u"Construction from string is deprecated. Use structured value type construction instead for type \"QVector4D\""_s },
-                            Message{
-                                    u"Construction from string is deprecated. Use structured value type construction instead for type \"QQuaternion\""_s },
-                            Message{
-                                    u"Construction from string is deprecated. Use structured value type construction instead for type \"QMatrix4x4\""_s },
-                    },
-                    { /*bad messages */ },
-                    { { u"Replace string by structured value construction"_s,
-                        Edit{ u"({ width: 30, height: 50 })"_s } },
-                      { u"Replace string by structured value construction"_s,
-                        Edit{ u"({ x: 10, y: 20, width: 30, height: 50 })"_s } },
-                      { u"Replace string by structured value construction"_s,
-                        Edit{ u"({ x: 30, y: 50 })"_s } },
-                      { u"Replace string by structured value construction"_s,
-                        Edit{ u"({ x: 1, y: 2 })"_s } },
-                      { u"Replace string by structured value construction"_s,
-                        Edit{ u"({ x: 1, y: 2 })"_s } },
-                      { u"Replace string by structured value construction"_s,
-                        Edit{ u"({ x: 1, y: 2, z: 3 })"_s } },
-                      { u"Replace string by structured value construction"_s,
-                        Edit{ u"({ x: 1, y: 2, z: 3, w: 4 })"_s } },
-                      { u"Replace string by structured value construction"_s,
-                        Edit{ u"({ scalar: 1, x: 2, y: 3, z: 4 })"_s } },
-                      { u"Replace string by structured value construction"_s,
-                        Edit{ u"({ m11: 1, m12: 2, m13: 3, m14: 4, m21: 5, m22: 6, m23: 7, m24: 8, m31: 9, m32: 10, m33: 11, m34: 12, m41: 13, m42: 14, m43: 15, m44: 16 })"_s } },
-                    } });
+            ResultBuilder()
+            .addExpected(expectedMsg.arg("QPointF"_L1))
+            .addExpected(expectedMsg.arg("QSizeF"_L1))
+            .addExpected(expectedMsg.arg("QRectF"_L1))
+            .addExpected(expectedMsg.arg("QVector2D"_L1))
+            .addExpected(expectedMsg.arg("QVector3D"_L1))
+            .addExpected(expectedMsg.arg("QVector4D"_L1))
+            .addExpected(expectedMsg.arg("QQuaternion"_L1))
+            .addExpected(expectedMsg.arg("QMatrix4x4"_L1))
+            .addFix(fixMsg, Edit{ "({ width: 30, height: 50 })"_L1 })
+            .addFix(fixMsg, Edit{ "({ x: 10, y: 20, width: 30, height: 50 })"_L1 })
+            .addFix(fixMsg, Edit{ "({ x: 30, y: 50 })"_L1 })
+            .addFix(fixMsg, Edit{ "({ x: 1, y: 2 })"_L1 })
+            .addFix(fixMsg, Edit{ "({ x: 1, y: 2 })"_L1 })
+            .addFix(fixMsg, Edit{ "({ x: 1, y: 2, z: 3 })"_L1 })
+            .addFix(fixMsg, Edit{ "({ x: 1, y: 2, z: 3, w: 4 })"_L1 })
+            .addFix(fixMsg, Edit{ "({ scalar: 1, x: 2, y: 3, z: 4 })"_L1 })
+            .addFix(fixMsg, Edit{ "({ m11: 1, m12: 2, m13: 3, m14: 4, m21: 5, m22: 6, m23: 7, m24: 8, m31: 9, m32: 10, m33: 11, m34: 12, m41: 13, m42: 14, m43: 15, m44: 16 })"_L1 })
+            .build());
 }
 
 #if QT_CONFIG(library)
@@ -4155,108 +4344,97 @@ void TestQmllint::testPlugin_data()
 
     QTest::addRow("elementpass_pluginTest")
             << testFile(u"testPluginData/elementpass_pluginTest.qml"_s)
-            << Result{ { Message{ u"ElementTest OK"_s, 4, 5 } } };
+            << ResultBuilder::singleExpected("ElementTest OK"_L1, 4, 5);
     QTest::addRow("propertypass_pluginTest_read")
             << testFile(u"testPluginData/propertypass_pluginTest.qml"_s)
-            << Result{
-                   {
-                       // Property on any type
-                       Message{ u"Saw read on Text property x in scope Text"_s, 8, 12 },
-                       Message{ u"Saw read on Text property x in scope Item"_s, 21, 25 },
-                       // JavaScript
-                       Message{ u"Saw read on ObjectPrototype property log in scope Item"_s, 21, 17 },
-                       Message{ u"Saw read on ObjectPrototype property log in scope Item"_s, 22, 14 },
-                   },
-               };
+            << ResultBuilder()
+               // Property on any type
+               .addExpected("Saw read on Text property x in scope Text"_L1, 8, 12)
+               .addExpected("Saw read on Text property x in scope Item"_L1, 21, 25)
+               // JavaScript
+               .addExpected("Saw read on ObjectPrototype property log in scope Item"_L1, 21, 17)
+               .addExpected("Saw read on ObjectPrototype property log in scope Item"_L1, 22, 14)
+               .build();
     QTest::addRow("propertypass_pluginTest_write")
             << testFile(u"testPluginData/propertypass_pluginTest.qml"_s)
-            << Result{
-                   {
-                       Message{ u"Saw write on Text property x with value int in scope Item"_s, 23, 9 },
-                   },
-               };
+            << ResultBuilder()
+               .addExpected("Saw write on Text property x with value int in scope Item"_L1, 23, 9)
+               .build();
     QTest::addRow("propertypass_pluginTest_binding")
             << testFile(u"testPluginData/propertypass_pluginTest.qml"_s)
-            << Result{
-                   {
-                     // Specific binding for specific property
-                     Message{ u"Saw binding on Text property text with value NULL (and type 3) in scope Text"_s, 6, 15 },
-                     Message{ u"Saw binding on Text property x with value NULL (and type 2) in scope Text"_s, 7, 12 },
-                     Message{ u"Saw binding on Item property x with value NULL (and type 2) in scope Item"_s, 11, 8 },
-                     Message{ u"Saw binding on ListView property model with value ListModel (and type 8) in scope ListView"_s, 16, 16 },
-                     Message{ u"Saw binding on ListView property height with value NULL (and type 2) in scope ListView"_s, 17, 17 }
-                   },
-               };
+            << ResultBuilder()
+               // Specific binding for specific property
+               .addExpected("Saw binding on Text property text with value NULL (and type 3) in scope Text"_L1, 6, 15 )
+               .addExpected("Saw binding on Text property x with value NULL (and type 2) in scope Text"_L1, 7, 12 )
+               .addExpected("Saw binding on Item property x with value NULL (and type 2) in scope Item"_L1, 11, 8 )
+               .addExpected("Saw binding on ListView property model with value ListModel (and type 8) in scope ListView"_L1, 16, 16 )
+               .addExpected("Saw binding on ListView property height with value NULL (and type 2) in scope ListView"_L1, 17, 17)
+               .build();
 
     QTest::addRow("sourceLocations")
             << testFile(u"testPluginData/sourceLocations_pluginTest.qml"_s)
-            << Result{
-                   {
-                     // Specific binding for specific property
-                     Message{ u"Saw binding on Item property x with value QString (and type 8) in scope Item"_s, 5, 12 },
-                     Message{ u"Saw binding on Item property EnterKey.type with value Qt::EnterKeyType (and type 8) in scope QQuickEnterKeyAttached"_s, 8, 24 },
-                     Message{ u"Saw binding on Item property x with value QJSPrimitiveValue (and type 8) in scope Item"_s, 11, 12 },
-                     Message{ u"Saw binding on Item property x with value NULL (and type 2) in scope Item"_s, 14, 12 },
-                     Message{ u"Saw binding on Item property onXChanged with value function (and type 8) in scope Item"_s, 18, 21 },
-                     Message{ u"Saw read on ObjectPrototype property log in scope Item"_s, 21, 36 },
-                     Message{ u"Saw binding on Item property onXChanged with value QVariant (and type 8) in scope Item"_s, 22, 21 },
-                     Message{ u"Saw write on Item property x with value double in scope Item"_s, 30, 13 },
-                     Message{ u"Saw write on Item property x with value int in scope Item"_s, 35, 31 },
-                     Message{ u"Saw read on Item property x in scope Item"_s, 35, 46 },
-                   },
-               };
+            << ResultBuilder()
+               // Specific binding for specific property
+               .addExpected("Saw binding on Item property x with value QString (and type 8) in scope Item"_L1, 5, 12)
+               .addExpected("Saw binding on Item property EnterKey.type with value Qt::EnterKeyType (and type 8) in scope QQuickEnterKeyAttached"_L1, 8, 24)
+               .addExpected("Saw binding on Item property x with value QJSPrimitiveValue (and type 8) in scope Item"_L1, 11, 12)
+               .addExpected("Saw binding on Item property x with value NULL (and type 2) in scope Item"_L1, 14, 12)
+               .addExpected("Saw binding on Item property onXChanged with value function (and type 8) in scope Item"_L1, 18, 21)
+               .addExpected("Saw read on ObjectPrototype property log in scope Item"_L1, 21, 36)
+               .addExpected("Saw binding on Item property onXChanged with value QVariant (and type 8) in scope Item"_L1, 22, 21)
+               .addExpected("Saw write on Item property x with value double in scope Item"_L1, 30, 13)
+               .addExpected("Saw write on Item property x with value int in scope Item"_L1, 35, 31)
+               .addExpected("Saw read on Item property x in scope Item"_L1, 35, 46)
+               .build();
     QTest::addRow("propertypass_pluginTest_call")
             << testFile(u"testPluginData/propertypass_pluginTest.qml"_s)
-            << Result{
-                   {
-                        Message{ u"Saw call on ObjectPrototype property log in scope Item"_s, 21, 17 },
-                        Message{ u"Saw call on ObjectPrototype property log in scope Item"_s, 22, 14 },
-                        Message{ u"Saw call on ObjectPrototype property abs in scope Item"_s, 26, 22 },
-                        Message{ u"Saw call on Item property abs in scope Item"_s, 32, 16 },
-                        Message{ u"Saw call on  property now in scope Item"_s, 39, 22 }, // happening for Date.now()
-                   },
-               };
+            << ResultBuilder()
+               .addExpected("Saw call on ObjectPrototype property log in scope Item"_L1, 21, 17)
+               .addExpected("Saw call on ObjectPrototype property log in scope Item"_L1, 22, 14)
+               .addExpected("Saw call on ObjectPrototype property abs in scope Item"_L1, 26, 22)
+               .addExpected("Saw call on Item property abs in scope Item"_L1, 32, 16)
+               .addExpected("Saw call on  property now in scope Item"_L1, 39, 22) // happening for Date.now())
+               .build();
     QTest::addRow("propertypass_pluginTest_translations")
             << testFile(u"testPluginData/translations_pluginTest.qml"_s)
-            << Result{
-                   {
-                        // translations
-                        Message{ u"Saw call on ObjectPrototype property qsTr in scope Item"_s, 4, 34 },
-
-                        // should actually be qsTranslate, but better qsTr than nothing!
-                        // see also test "propertypass_pluginTest_qsTranslateEdgeCase" below
-                        Message{ u"Saw call on ObjectPrototype property qsTr in scope Item"_s, 5, 35 },
-
-                        Message{ u"Saw call on ObjectPrototype property qsTrId in scope Item"_s, 6, 36 },
-                        Message{ u"Saw call on ObjectPrototype property qsTr in scope Item"_s, 7, 46 },
-                        Message{ u"Saw call on ObjectPrototype property qsTranslate in scope Item"_s, 8, 47 },
-                        Message{ u"Saw call on ObjectPrototype property qsTrId in scope Item"_s, 9, 48 },
-                   },
-               };
+            << ResultBuilder()
+               // translations
+               .addExpected("Saw call on ObjectPrototype property qsTr in scope Item"_L1, 4, 34)
+               // should actually be qsTranslate, but better qsTr than nothing!
+               // see also test "propertypass_pluginTest_qsTranslateEdgeCase" below
+               .addExpected("Saw call on ObjectPrototype property qsTr in scope Item"_L1, 5, 35)
+               .addExpected("Saw call on ObjectPrototype property qsTrId in scope Item"_L1, 6, 36)
+               .addExpected("Saw call on ObjectPrototype property qsTr in scope Item"_L1, 7, 46)
+               .addExpected("Saw call on ObjectPrototype property qsTranslate in scope Item"_L1, 8, 47)
+               .addExpected("Saw call on ObjectPrototype property qsTrId in scope Item"_L1, 9, 48)
+               .build();
 
     QTest::addRow("controlsWithQuick_pluginTest")
             << testFile(u"testPluginData/controlsWithQuick_pluginTest.qml"_s)
-            << Result{ { Message{ u"QtQuick.Controls, QtQuick and QtQuick.Window present"_s } } };
+            << ResultBuilder::singleExpected("QtQuick.Controls, QtQuick and QtQuick.Window present"_L1);
     QTest::addRow("controlsWithoutQuick_pluginTest")
             << testFile(u"testPluginData/controlsWithoutQuick_pluginTest.qml"_s)
-            << Result{ { Message{ u"QtQuick.Controls and NO QtQuick present"_s } } };
+            << ResultBuilder::singleExpected("QtQuick.Controls and NO QtQuick present"_L1);
 
     // Verify that none of the passes do anything when they're not supposed to
     QTest::addRow("nothing_pluginTest")
-            << testFile(u"testPluginData/nothing_pluginTest.qml"_s) << Result::clean();
+            << testFile(u"testPluginData/nothing_pluginTest.qml"_s) << ResultBuilder::cleanResult();
     QTest::addRow("settings_pluginTest")
-            << testFile(u"settings/plugin/elementpass_pluginTest.qml"_s) << Result::cleanWithSettings();
+            << testFile(u"settings/plugin/elementpass_pluginTest.qml"_s)
+            << ResultBuilder::cleanResultWithSettings();
     QTest::addRow("old_settings_pluginTest")
-            << testFile(u"settings/pluginOld/elementpass_pluginTest.qml"_s) << Result::cleanWithSettings();
+            << testFile(u"settings/pluginOld/elementpass_pluginTest.qml"_s)
+            << ResultBuilder::cleanResultWithSettings();
     QTest::addRow("nosettings_pluginTest")
             << testFile(u"settings/plugin/elementpass_pluginTest.qml"_s)
-            << Result{ { Message{ u"ElementTest OK"_s } }, {}, {} };
+            << ResultBuilder::singleExpected("ElementTest OK"_L1);
     QTest::addRow("multipleDocumentEditsFixSuggestion")
             << testFile("testPluginData/multipleDocumentEditsFixSuggestion_pluginTest.qml")
-            << Result{ { { u"Multiple document edits"_s, 3, 1 } },
-                       { },
-                       { { "Rename and add pragma"_L1,
-                           Edits{ { "pragma Yep\n", 1, 1 }, { "NewTypeName", 3, 1 } } } } };
+            << ResultBuilder()
+               .addExpected("Multiple document edits"_L1, 3, 1)
+               .addFix("Rename and add pragma"_L1,
+                       Edits{ { "pragma Yep\n"_L1, 1, 1 }, { "NewTypeName"_L1, 3, 1 } })
+               .build();
 }
 
 void TestQmllint::testPlugin()
@@ -4315,124 +4493,93 @@ void TestQmllint::quickPlugin()
     QVERIFY(pluginFound);
 
     runTest("pluginQuick_anchors.qml",
-            Result{ { Message{
-                              u"Cannot specify left, right, and horizontalCenter anchors at the same time."_s },
-                      Message {
-                              u"Cannot specify top, bottom, and verticalCenter anchors at the same time."_s },
-                      Message{
-                              u"Baseline anchor cannot be used in conjunction with top, bottom, or verticalCenter anchors."_s },
-                      Message { u"Cannot assign literal of type null to QQuickAnchorLine"_s, 5,
-                                35 },
-                      Message { u"Cannot assign literal of type null to QQuickAnchorLine"_s, 6,
-                                33 } } });
-    runTest("pluginQuick_anchorsUndefined.qml", Result::clean());
+            ResultBuilder()
+            .addExpected("Cannot specify left, right, and horizontalCenter anchors at the same time."_L1)
+            .addExpected("Cannot specify top, bottom, and verticalCenter anchors at the same time."_L1)
+            .addExpected("Baseline anchor cannot be used in conjunction with top, bottom, or verticalCenter anchors."_L1)
+            .addExpected("Cannot assign literal of type null to QQuickAnchorLine"_L1, 5, 35)
+            .addExpected("Cannot assign literal of type null to QQuickAnchorLine"_L1, 6, 33)
+            .build());
+    runTest("pluginQuick_anchorsUndefined.qml", ResultBuilder::cleanResult());
     runTest("pluginQuick_layoutChildren.qml",
-            Result {
-                    { Message {
-                              u"Detected anchors on an item that is managed by a layout. This is undefined behavior; use Layout.alignment instead."_s },
-                      Message {
-                              u"Detected x on an item that is managed by a layout. This is undefined behavior; use Layout.leftMargin or Layout.rightMargin instead."_s },
-                      Message {
-                              u"Detected y on an item that is managed by a layout. This is undefined behavior; use Layout.topMargin or Layout.bottomMargin instead."_s },
-                      Message {
-                              u"Detected height on an item that is managed by a layout. This is undefined behavior; use implictHeight or Layout.preferredHeight instead."_s },
-                      Message {
-                              u"Detected width on an item that is managed by a layout. This is undefined behavior; use implicitWidth or Layout.preferredWidth instead."_s },
-                      Message {
-                              u"Cannot specify anchors for items inside Grid. Grid will not function."_s },
-                      Message {
-                              u"Cannot specify x for items inside Grid. Grid will not function."_s },
-                      Message {
-                              u"Cannot specify y for items inside Grid. Grid will not function."_s },
-                      Message {
-                              u"Cannot specify anchors for items inside Flow. Flow will not function."_s },
-                      Message {
-                              u"Cannot specify x for items inside Flow. Flow will not function."_s },
-                      Message {
-                              u"Cannot specify y for items inside Flow. Flow will not function."_s } } });
+            ResultBuilder()
+            .addExpected("Detected anchors on an item that is managed by a layout. This is undefined behavior; use Layout.alignment instead."_L1)
+            .addExpected("Detected x on an item that is managed by a layout. This is undefined behavior; use Layout.leftMargin or Layout.rightMargin instead."_L1)
+            .addExpected("Detected y on an item that is managed by a layout. This is undefined behavior; use Layout.topMargin or Layout.bottomMargin instead."_L1)
+            .addExpected("Detected height on an item that is managed by a layout. This is undefined behavior; use implictHeight or Layout.preferredHeight instead."_L1)
+            .addExpected("Detected width on an item that is managed by a layout. This is undefined behavior; use implicitWidth or Layout.preferredWidth instead."_L1)
+            .addExpected("Cannot specify anchors for items inside Grid. Grid will not function."_L1)
+            .addExpected("Cannot specify x for items inside Grid. Grid will not function."_L1)
+            .addExpected("Cannot specify y for items inside Grid. Grid will not function."_L1)
+            .addExpected("Cannot specify y for items inside Grid. Grid will not function."_L1)
+            .addExpected("Cannot specify y for items inside Grid. Grid will not function."_L1)
+            .addExpected("Cannot specify anchors for items inside Flow. Flow will not function."_L1)
+            .addExpected("Cannot specify anchors for items inside Flow. Flow will not function."_L1)
+            .addExpected("Cannot specify anchors for items inside Flow. Flow will not function."_L1)
+            .addExpected("Cannot specify anchors for items inside Flow. Flow will not function."_L1)
+            .addExpected("Cannot specify x for items inside Flow. Flow will not function."_L1)
+            .addExpected("Cannot specify x for items inside Flow. Flow will not function."_L1)
+            .addExpected("Cannot specify y for items inside Flow. Flow will not function."_L1)
+            .build());
     runTest("pluginQuick_attached.qml",
-            Result {
-                    { Message { u"ToolTip attached property must be attached to an object deriving from Item"_s },
-                      Message { u"SplitView attached property must be attached to an object deriving from Item"_s },
-                      Message { u"ScrollIndicator attached property must be attached to an object deriving from Flickable"_s },
-                      Message { u"ScrollBar attached property must be attached to an object deriving from Flickable or ScrollView"_s },
-                      Message { u"Accessible attached property must be attached to an object deriving from Item or Action"_s },
-                      Message { u"EnterKey attached property must be attached to an object deriving from Item"_s },
-                      Message {
-                              u"LayoutMirroring attached property must be attached to an object deriving from Item or Window"_s },
-                      Message { u"Layout attached property must be attached to an object deriving from Item"_s },
-                      Message { u"StackView attached property must be attached to an object deriving from Item"_s },
-                      Message { u"TextArea attached property must be attached to an object deriving from Flickable"_s },
-                      Message { u"StackLayout attached property must be attached to an object deriving from Item"_s },
-                      Message { u"SwipeDelegate attached property must be attached to an object deriving from Item"_s },
-                      Message { u"SwipeView attached property must be attached to an object deriving from Item"_s } } });
+            ResultBuilder()
+            .addExpected("ToolTip attached property must be attached to an object deriving from Item"_L1)
+            .addExpected("SplitView attached property must be attached to an object deriving from Item"_L1)
+            .addExpected("ScrollIndicator attached property must be attached to an object deriving from Flickable"_L1)
+            .addExpected("ScrollBar attached property must be attached to an object deriving from Flickable or ScrollView"_L1)
+            .addExpected("Accessible attached property must be attached to an object deriving from Item or Action"_L1)
+            .addExpected("EnterKey attached property must be attached to an object deriving from Item"_L1)
+            .addExpected("LayoutMirroring attached property must be attached to an object deriving from Item or Window"_L1)
+            .addExpected("Layout attached property must be attached to an object deriving from Item"_L1)
+            .addExpected("StackView attached property must be attached to an object deriving from Item"_L1)
+            .addExpected("TextArea attached property must be attached to an object deriving from Flickable"_L1)
+            .addExpected("StackLayout attached property must be attached to an object deriving from Item"_L1)
+            .addExpected("SwipeDelegate attached property must be attached to an object deriving from Item"_L1)
+            .addExpected("SwipeView attached property must be attached to an object deriving from Item"_L1)
+            .build());
 
-    {
-        const Result result{ {}, { Message{ u"Tumbler"_s }, }, };
-        runTest("pluginQuick_tumblerGood.qml", result);
-    }
+    runTest("pluginQuick_tumblerGood.qml", ResultBuilder().addUnexpected("Tembler"_L1).build());
 
     runTest("pluginQuick_swipeDelegate.qml",
-            Result { {
-                         Message {
-                             u"SwipeDelegate: Cannot use horizontal anchors with contentItem; unable to layout the item."_s,
-                             6, 43 },
-                         Message {
-                             u"SwipeDelegate: Cannot use horizontal anchors with background; unable to layout the item."_s,
-                             7, 43 },
-                         Message { u"SwipeDelegate: Cannot set both behind and left/right properties"_s,
-                                   9, 9 },
-                         Message {
-                             u"SwipeDelegate: Cannot use horizontal anchors with contentItem; unable to layout the item."_s,
-                             13, 47 },
-                         Message {
-                             u"SwipeDelegate: Cannot use horizontal anchors with background; unable to layout the item."_s,
-                             14, 42 },
-                         Message { u"SwipeDelegate: Cannot set both behind and left/right properties"_s,
-                                   16, 9 },
-                     } });
+            ResultBuilder()
+            .addExpected("SwipeDelegate: Cannot use horizontal anchors with contentItem; unable to layout the item."_L1, 6, 43)
+            .addExpected("SwipeDelegate: Cannot use horizontal anchors with background; unable to layout the item."_L1, 7, 43)
+            .addExpected("SwipeDelegate: Cannot set both behind and left/right properties"_L1, 9, 9)
+            .addExpected("SwipeDelegate: Cannot use horizontal anchors with contentItem; unable to layout the item."_L1, 13, 47)
+            .addExpected("SwipeDelegate: Cannot use horizontal anchors with background; unable to layout the item."_L1, 14, 42)
+            .addExpected("SwipeDelegate: Cannot set both behind and left/right properties"_L1, 16, 9)
+            .build());
 
     runTest("pluginQuick_varProp.qml",
-            Result {
-                    { Message {
-                              u"Unexpected type for property \"contentItem\" expected QQuickPathView, QQuickListView got QQuickItem"_s },
-                      Message {
-                              u"Unexpected type for property \"columnWidthProvider\" expected function got null"_s },
-                      Message {
-                              u"Unexpected type for property \"textFromValue\" expected function got null"_s },
-                      Message {
-                              u"Unexpected type for property \"valueFromText\" expected function got int"_s },
-                      Message {
-                              u"Unexpected type for property \"rowHeightProvider\" expected function got int"_s } } });
-    runTest("pluginQuick_varPropClean.qml", Result::clean());
-    runTest("pluginQuick_attachedClean.qml", Result::clean());
-    runTest("pluginQuick_attachedIgnore.qml", Result::clean());
-    runTest("pluginQuick_noCrashOnUneresolved.qml", Result {}); // we don't care about the specific warnings
+            ResultBuilder()
+            .addExpected("Unexpected type for property \"contentItem\" expected QQuickPathView, QQuickListView got QQuickItem"_L1)
+            .addExpected("Unexpected type for property \"columnWidthProvider\" expected function got null"_L1)
+            .addExpected("Unexpected type for property \"textFromValue\" expected function got null"_L1)
+            .addExpected("Unexpected type for property \"valueFromText\" expected function got int"_L1)
+            .addExpected("Unexpected type for property \"rowHeightProvider\" expected function got int"_L1)
+            .build());
+    runTest("pluginQuick_varPropClean.qml", ResultBuilder::cleanResult());
+    runTest("pluginQuick_attachedClean.qml", ResultBuilder::cleanResult());
+    runTest("pluginQuick_attachedIgnore.qml", ResultBuilder::cleanResult());
+    runTest("pluginQuick_noCrashOnUneresolved.qml", ResultBuilder::ignoredResult()); // we don't care about the specific warnings
 
     runTest("pluginQuick_propertyChangesParsed.qml",
-            Result { {
-                Message {
-                      u"Property \"myColor\" is custom-parsed in PropertyChanges. "
-                       "You should phrase this binding as \"foo.myColor: Qt.rgba(0.5, ...\""_s,
-                      12, 30
-                },
-                Message {
-                      u"You should remove any bindings on the \"target\" property and avoid "
-                       "custom-parsed bindings in PropertyChanges."_s,
-                      11, 29
-                },
-                Message {
-                      u"Unknown property \"notThere\" in PropertyChanges."_s,
-                      13, 31
-                }
-            } });
-    runTest("pluginQuick_propertyChangesInvalidTarget.qml", Result {}); // we don't care about the specific warnings
-    runTest("pluginQuick_stateWithLegalChildren.qml", Result::clean());
+            ResultBuilder()
+            .addExpected("Property \"myColor\" is custom-parsed in PropertyChanges. "
+                         "You should phrase this binding as \"foo.myColor: Qt.rgba(0.5, ...\""_L1, 12, 30)
+            .addExpected("You should remove any bindings on the \"target\" property and avoid "
+                         "custom-parsed bindings in PropertyChanges."_L1, 11, 29)
+            .addExpected("Unknown property \"notThere\" in PropertyChanges."_L1, 13, 31)
+            .build());
+    runTest("pluginQuick_propertyChangesInvalidTarget.qml", ResultBuilder::ignoredResult()); // we don't care about the specific warnings
+    runTest("pluginQuick_stateWithLegalChildren.qml", ResultBuilder::cleanResult());
     runTest("pluginQuick_stateWithIllegalChildren.qml",
-            Result{ { { "A State cannot have a child item of type Rectangle"_L1, 5, 9 },
-                      { "A State cannot have a child item of type Item"_L1, 6, 9 } } });
-    runTest("pluginQuick_AccessibleOnAction.qml", Result::clean());
-    runTest("pluginQuick_AccessibleOnAction2.qml", Result::clean());
+            ResultBuilder()
+            .addExpected("A State cannot have a child item of type Rectangle"_L1, 5, 9)
+            .addExpected("A State cannot have a child item of type Item"_L1, 6, 9)
+            .build());
+    runTest("pluginQuick_AccessibleOnAction.qml", ResultBuilder::cleanResult());
+    runTest("pluginQuick_AccessibleOnAction2.qml", ResultBuilder::cleanResult());
 }
 
 void TestQmllint::hasQdsPlugin()
@@ -4452,99 +4599,95 @@ void TestQmllint::qdsPlugin_data()
     QTest::addColumn<Result>("expectedResult");
 
     QTest::addRow("WhiteListedFunctions")
-            << u"qdsPlugin/WhiteListedFunctions.ui.qml"_s << Result::clean();
+            << u"qdsPlugin/WhiteListedFunctions.ui.qml"_s << ResultBuilder::cleanResult();
     QTest::addRow("WhiteListedFunctionsDate")
-            << u"qdsPlugin/WhiteListedFunctionsDate.ui.qml"_s << Result::clean();
+            << u"qdsPlugin/WhiteListedFunctionsDate.ui.qml"_s << ResultBuilder::cleanResult();
     QTest::addRow("FunctionInsideConnections")
-            << u"qdsPlugin/FunctionInsideConnections.ui.qml"_s << Result::clean();
+            << u"qdsPlugin/FunctionInsideConnections.ui.qml"_s << ResultBuilder::cleanResult();
     {
         const QString warning =
                 u"Arbitrary functions and function calls outside of a Connections object are not "
                 u"supported in a UI file (.ui.qml)"_s;
 
-        QTest::addRow("BlackListedFunctions") << u"qdsPlugin/BlackListedFunctions.ui.qml"_s
-                                              << Result{ {
-                                                         Message{ warning, 7, 9 },
-                                                         Message{ warning, 8, 14 },
-                                                         Message{ warning, 12, 38 },
-                                                         Message{ warning, 13, 35 },
-                                                 } };
+        QTest::addRow("BlackListedFunctions")
+                << u"qdsPlugin/BlackListedFunctions.ui.qml"_s
+                << ResultBuilder()
+                   .addExpected(warning, 7, 9)
+                   .addExpected(warning, 8, 14)
+                   .addExpected(warning, 12, 38)
+                   .addExpected(warning, 13, 35)
+                   .build();
     }
 
     QTest::addRow("UnsupportedBindings")
             << u"qdsPlugin/UnsupportedBindings.ui.qml"_s
-            << Result{ {
-                       Message{
-                               u"Referencing the parent of the root item is not supported in a UI file (.ui.qml)"_s,
-                               4, 25 },
-                       Message{
-                               "Imperative JavaScript assignments can break the visual tooling in Qt Design Studio."_L1,
-                               7, 24 },
-                       Message{
-                               "Imperative JavaScript assignments can break the visual tooling in Qt Design Studio."_L1,
-                               8, 24 },
-               } };
+            << ResultBuilder()
+               .addExpected("Referencing the parent of the root item is not supported in a UI file "
+                            "(.ui.qml)"_L1, 4, 25)
+               .addExpected("Imperative JavaScript assignments can break the visual tooling in "
+                            "Qt Design Studio."_L1, 7, 24)
+               .addExpected("Imperative JavaScript assignments can break the visual tooling in "
+                            "Qt Design Studio."_L1, 8, 24)
+               .build();
 
     QTest::addRow("SupportedBindings")
             << u"qdsPlugin/SupportedBindings.ui.qml"_s
-            << Result::clean();
+            << ResultBuilder::cleanResult();
 
     QTest::addRow("UnsupportedElements")
             << u"qdsPlugin/UnsupportedElements.ui.qml"_s
-            << Result{
-                   {
-                       Message{ "This type (ApplicationWindow) is not supported in a UI file (.ui.qml)"_L1, 4, 1 },
-                       Message{ "This type (ShaderEffect) is not supported in a UI file (.ui.qml)"_L1, 7, 27 },
-                       Message{ "This type (Drawer) is not supported in a UI file (.ui.qml)"_L1, 6, 9 },
-                       Message{ "This id (bool) might be ambiguous and is not supported in a UI file (.ui.qml)"_L1, 11, 13 },
-                   },
-                   {
-                       Message{ "This type (Item) is not supported in a UI file (.ui.qml)"_L1 },
-
-                   }
-               };
+            << ResultBuilder()
+               .addExpected("This type (ApplicationWindow) is not supported in a UI file (.ui.qml)"_L1, 4, 1)
+               .addExpected("This type (ShaderEffect) is not supported in a UI file (.ui.qml)"_L1, 7, 27)
+               .addExpected("This type (Drawer) is not supported in a UI file (.ui.qml)"_L1, 6, 9)
+               .addExpected("This id (bool) might be ambiguous and is not supported in a UI file (.ui.qml)"_L1, 11, 13)
+               .build();
     QTest::addRow("SupportedElements")
             << u"qdsPlugin/SupportedElements.ui.qml"_s
-            << Result::clean();
+            << ResultBuilder::cleanResult();
 
     QTest::addRow("UnsupportedRootElement")
             << u"qdsPlugin/UnsupportedRootElement.ui.qml"_s
-            << Result{ {
-                       Message{
-                               u"This type (QtObject) is not supported as a root element of a UI file (.ui.qml)."_s,
-                               3, 1 },
-               } };
+            << ResultBuilder::singleExpected("This type (QtObject) is not supported as a root "
+                                             "element of a UI file (.ui.qml)."_L1, 3, 1);
 
     QTest::addRow("UnsupportedRootElement2")
             << u"qdsPlugin/UnsupportedRootElement2.ui.qml"_s
-            << Result{ {
-                       Message{
-                               u"This type (ListModel) is not supported as a root element of a UI file (.ui.qml)."_s,
-                               4, 1 },
-               } };
+            << ResultBuilder::singleExpected("This type (ListModel) is not supported as a root "
+                                             "element of a UI file (.ui.qml)."_L1, 4, 1);
 
     {
         const QString functionError =
                 u"Arbitrary functions and function calls outside of a Connections object are not supported in a UI file (.ui.qml)"_s;
-        QTest::addRow("UnsupportedBlock") << u"qdsPlugin/UnsupportedBlock.ui.qml"_s
-                                          << Result{ {
-                                                     Message{ functionError, 5, 29 },
-                                                     Message{ functionError, 6, 30 },
-                                                     Message{ functionError, 8, 29 },
-                                                     Message{ functionError, 7, 32 },
-                                             } };
-        QTest::addRow("SupportedBlock") << u"qdsPlugin/SupportedBlock.ui.qml"_s << Result::clean();
+        QTest::addRow("UnsupportedBlock")
+                << u"qdsPlugin/UnsupportedBlock.ui.qml"_s
+                << ResultBuilder()
+                   .addExpected(functionError, 5, 29)
+                   .addExpected(functionError, 6, 30)
+                   .addExpected(functionError, 8, 29)
+                   .addExpected(functionError, 7, 32)
+                   .build();
+        QTest::addRow("SupportedBlock")
+                << u"qdsPlugin/SupportedBlock.ui.qml"_s
+                << ResultBuilder::cleanResult();
 
         QTest::addRow("UnsupportedFunction")
                 << u"qdsPlugin/UnsupportedFunction.ui.qml"_s
-                << Result{ { Message{ functionError, 4, 5 }, Message{ functionError, 13, 9 } },
-                           { Message{ functionError, 7, 9 }, Message{ functionError, 10, 9 } } };
+                << ResultBuilder()
+                   .addExpected(functionError, 4, 5)
+                   .addExpected(functionError, 13, 9)
+                   .addUnexpected(functionError, 7, 9)
+                   .addUnexpected(functionError, 10, 9)
+                   .build();
     }
     {
         const QString warning = u"Do not mix translation functions"_s;
         QTest::addRow("BadTranslationMix")
                 << u"qdsPlugin/BadMix.ui.qml"_s
-                << Result{ { Message{ warning, 5, 49 }, { warning, 6, 56 } } };
+                << ResultBuilder()
+                   .addExpected(warning, 5, 49)
+                   .addExpected(warning, 6, 56)
+                   .build();
     }
 }
 
@@ -4708,76 +4851,81 @@ void TestQmllint::shadow_data()
     QTest::newRow("duplicatedMethod")
             << u"function hello() {}"
                u"function hello() {}"_s
-            << Result{ {
-                               { "Duplicated method name \"hello\", \"hello\" is already a method."_L1,
-                                 1, 29 },
-                       },
-                       { { "Method \"hello\" already exists in base type" } } }
+            << ResultBuilder()
+               .addExpected("Duplicated method name \"hello\", \"hello\" is already a method."_L1, 1, 29)
+               .addUnexpected("Method \"hello\" already exists in base type"_L1)
+               .build()
             << defaultOptions;
     QTest::newRow("duplicatedProperty")
             << u"property int hello;"
                u"property int hello;"_s
-            << Result{ {
-                               { "Duplicated property name \"hello\", \"hello\" is already a property."_L1,
-                                 1, 33 },
-                       },
-                       { { "Property \"hello\" already exists in base type" } } }
+            << ResultBuilder()
+               .addExpected("Duplicated property name \"hello\", \"hello\" is already a property."_L1, 1, 33)
+               .addUnexpected("Property \"hello\" already exists in base type"_L1)
+               .build()
             << defaultOptions;
     QTest::newRow("duplicatedSignal")
             << u"signal hello();"
                u"signal hello();"_s
-            << Result{ {
-                               { "Duplicated signal name \"hello\", \"hello\" is already a signal."_L1,
-                                 1, 23 },
-                       },
-                       { { "Signal \"hello\" already exists in base type" } } }
+            << ResultBuilder()
+               .addExpected("Duplicated signal name \"hello\", \"hello\" is already a signal."_L1, 1, 23)
+               .addUnexpected("Signal \"hello\" already exists in base type"_L1)
+               .build()
             << defaultOptions;
 
     QTest::newRow("idShadowsMember-noUsage") // shadowing but no usage -> don't warn
             << u"id: i\n"_s
                u"property int i\n"_s
-            << Result::clean()
+            << ResultBuilder::cleanResult()
             << defaultOptions;
     QTest::newRow("idShadowsMember-property")
             << u"id: i\n"_s
                u"property int i\n"_s
                u"property var v: i\n"_s
-            << Result{ { { "Id for object Item shadows property \"i\""_L1, 3, 17 },
-                         { "Note: Id defined here"_L1, 1, 5 } } }
+            << ResultBuilder()
+               .addExpected("Id for object Item shadows property \"i\""_L1, 3, 17)
+               .addExpected("Note: Id defined here"_L1, 1, 5)
+               .build()
             << defaultOptions;
     QTest::newRow("idShadowsMember-method")
             << u"id: i\n"_s
                u"function i() {}\n"_s
                u"property var v: i\n"_s
-            << Result{ { { "Id for object Item shadows method \"i\""_L1, 3, 17 },
-                         { "Note: Id defined here"_L1, 1, 5 } } }
+            << ResultBuilder()
+               .addExpected("Id for object Item shadows method \"i\""_L1, 3, 17)
+               .addExpected("Note: Id defined here"_L1, 1, 5)
+               .build()
             << defaultOptions;
     QTest::newRow("idShadowsMember-signal")
             << u"id: a\n"_s
                u"signal a\n"_s
                u"property var v: a\n"_s
-            << Result{ { { "Id for object Item shadows signal \"a\""_L1, 3, 17 },
-                         { "Note: Id defined here"_L1, 1, 5 } } }
+            << ResultBuilder()
+               .addExpected("Id for object Item shadows signal \"a\""_L1, 3, 17)
+               .addExpected("Note: Id defined here"_L1, 1, 5)
+               .build()
             << defaultOptions;
     QTest::newRow("idShadowsMember-baseProperty")
             << u"id: i\n"_s
                u"component C : Item { property int i }\n"_s
                u"C { property var v: i }\n"_s
-            << Result{ { { "Id for object Item shadows property \"i\""_L1, 3, 21 } } }
+            << ResultBuilder::singleExpected("Id for object Item shadows property \"i\""_L1, 3, 21)
             << defaultOptions;
     QTest::newRow("idShadowsMember-baseMethod")
             << u"id: i\n"_s
                u"component C : Item { function i() {} }\n"_s
                u"C { property var v: i }\n"_s
-            << Result{ { { "Id for object Item shadows method \"i\""_L1, 3, 21 } } }
+            << ResultBuilder::singleExpected("Id for object Item shadows method \"i\""_L1, 3, 21)
             << defaultOptions;
     QTest::newRow("idShadowsMember-noDuplicateWarnings") // 1 shadowing, 2 usages -> 1 warning
             << u"id: i\n"_s
                u"property int i\n"_s
                u"property var v1: i\n"_s
                u"property var v2: i\n"_s
-            << Result{ { { "Id for object Item shadows property \"i\""_L1, 3, 18 } },
-                       { { "Id for object Item shadows property \"i\""_L1, 4, 18 } } }
+            << ResultBuilder()
+               .addExpected("Id for object Item shadows property \"i\""_L1, 3, 18)
+               .addUnexpected("Id for object Item shadows property \"i\""_L1, 4, 18)
+               .build()
             << defaultOptions;
     QTest::newRow("idShadowsMember-componentBoundaries-Bound")
             << u"pragma ComponentBehavior: Bound\n"_s
@@ -4786,8 +4934,10 @@ void TestQmllint::shadow_data()
                u"    id: i\n"_s
                u"    component C : Item { property int i; property var v: i }\n"_s
                u"}\n"_s
-            << Result{ { { "Id for object Item shadows property \"i\""_L1, 5, 58 },
-                         { "Note: Id defined here"_L1, 4, 9 } } }
+            << ResultBuilder()
+               .addExpected("Id for object Item shadows property \"i\""_L1, 5, 58)
+               .addExpected("Note: Id defined here"_L1, 4, 9)
+               .build()
             << defaultOptions;
     QTest::newRow("idShadowsMember-componentBoundaries-Unbound")
             << u"pragma ComponentBehavior: Unbound\n"_s
@@ -4796,130 +4946,133 @@ void TestQmllint::shadow_data()
                u"    id: i\n"_s
                u"    component C : Item { property int i; property var v: i }\n"_s
                u"}\n"_s
-            << Result::clean()
+            << ResultBuilder::cleanResult()
             << defaultOptions;
     QTest::newRow("idShadowsMember-disableDirective")
             << u"id: i\n"_s
                u"property int i\n"_s
                u"property var v: i // qmllint disable id-shadows-member\n"_s
-            << Result::clean()
+            << ResultBuilder::cleanResult()
             << defaultOptions;
 
     QTest::newRow("shadowMethod")
             << u"component IC: Item { function f() {} }\n"
                u"IC { function f() {} }"_s
-            << Result{ { { "Method \"f\" already exists in base type \"IC\""_L1, 2, 15  } } }
+            << ResultBuilder::singleExpected("Method \"f\" already exists in base type \"IC\""_L1, 2, 15)
             << defaultOptions;
     QTest::newRow("shadowMethod2")
             << u"component IC: Item { function f() {} }\n"
                u"IC { function f(a,b,c) {} }"_s
-            << Result{ { { "Method \"f\" already exists in base type \"IC\""_L1, 2, 15 } } }
+            << ResultBuilder::singleExpected("Method \"f\" already exists in base type \"IC\""_L1, 2, 15)
             << defaultOptions;
     QTest::newRow("shadowMethodWithProperty")
             << u"component IC: Item { function f() {} }\n"
                u"IC { property int f; }"_s
-            << Result{ { { "Method \"f\" already exists in base type \"IC\""_L1, 2, 19 } } }
+            << ResultBuilder::singleExpected("Method \"f\" already exists in base type \"IC\""_L1, 2, 19)
             << defaultOptions;
     QTest::newRow("shadowMethodWithSignal")
             << u"component IC: Item { function f() {} }\n"
                u"IC { signal f; }"_s
-            << Result{ { { "Method \"f\" already exists in base type \"IC\""_L1, 2, 13 } } }
+            << ResultBuilder::singleExpected("Method \"f\" already exists in base type \"IC\""_L1, 2, 13)
             << defaultOptions;
     QTest::newRow("shadowSignal")
             << u"component IC: Item { signal f }\n"
                u"IC { signal f }"_s
-            << Result{ { { "Signal \"f\" already exists in base type \"IC\""_L1, 2, 13 } } }
+            << ResultBuilder::singleExpected("Signal \"f\" already exists in base type \"IC\""_L1, 2, 13)
             << defaultOptions;
     QTest::newRow("shadowSignal2")
             << u"component IC: Item { signal f }\n"
                u"IC { signal f(a:int,b:string,c:string) }"_s
-            << Result{ { { "Signal \"f\" already exists in base type \"IC\""_L1, 2, 13 } } }
+            << ResultBuilder::singleExpected("Signal \"f\" already exists in base type \"IC\""_L1, 2, 13)
             << defaultOptions;
     QTest::newRow("shadowSignalWithProperty")
             << u"component IC: Item { signal f }\n"
                u"IC { property int f; }"_s
-            << Result{ { { "Signal \"f\" already exists in base type \"IC\""_L1, 2, 19 } } }
+            << ResultBuilder::singleExpected("Signal \"f\" already exists in base type \"IC\""_L1, 2, 19)
             << defaultOptions;
     QTest::newRow("shadowSignalWithMethod")
             << u"component IC: Item { signal f }\n"
                u"IC { function f() {} }"_s
-            << Result{ { { "Signal \"f\" already exists in base type \"IC\""_L1, 2, 15 } } }
+            << ResultBuilder::singleExpected("Signal \"f\" already exists in base type \"IC\""_L1, 2, 15)
             << defaultOptions;
 
     QTest::newRow("shadowProperty")
             << u"component IC: Item { property int f }\n"
                u"IC { property int f }"_s
-            << Result{ { { "Property \"f\" already exists in base type \"IC\""_L1, 2, 19 } } }
+            << ResultBuilder::singleExpected("Property \"f\" already exists in base type \"IC\""_L1, 2, 19)
             << defaultOptions;
     QTest::newRow("shadowProperty2")
             << u"component IC: Item { property int f }\n"
                u"IC { property string f }"_s
-            << Result{ { { "Property \"f\" already exists in base type \"IC\""_L1, 2, 22 } } }
+            << ResultBuilder::singleExpected("Property \"f\" already exists in base type \"IC\""_L1, 2, 22)
             << defaultOptions;
     QTest::newRow("shadowPropertyWithSignal")
             << u"component IC: Item { property int f }\n"
                u"IC { signal f; }"_s
-            << Result{ { { "Property \"f\" already exists in base type \"IC\""_L1, 2, 13 } } }
+            << ResultBuilder::singleExpected("Property \"f\" already exists in base type \"IC\""_L1, 2, 13)
             << defaultOptions;
     QTest::newRow("shadowPropertyWithMethod")
             << u"component IC: Item { property int f }\n"
                u"IC { function f() {} }"_s
-            << Result{ { { "Property \"f\" already exists in base type \"IC\""_L1, 2, 15 } } }
+            << ResultBuilder::singleExpected("Property \"f\" already exists in base type \"IC\""_L1, 2, 15)
             << defaultOptions;
 
     QTest::newRow("shadowFinalWithProperty")
             << u"component IC: Item { final property int f; }\n"
                u"IC { property var f; }"_s
-            << Result{ { { "Member \"f\" shadows final member \"f\" from base type \"IC\", use a different name."_L1,
-                           2, 19 } } }
+            << ResultBuilder::singleExpected("Member \"f\" shadows final member \"f\" from base "
+                                             "type \"IC\", use a different name."_L1, 2, 19)
             << defaultOptions;
     QTest::newRow("shadowFinalWithOverride")
             << u"component IC: Item { final property int f; }\n"
                u"IC { override property var f; }"_s
-            << Result{ { { "Member \"f\" overrides final member \"f\" from base type \"IC\", use a different name and remove the \"override\""_L1,
-                           2, 28 } } }
+            << ResultBuilder::singleExpected(
+                   "Member \"f\" overrides final member \"f\" from base type \"IC\", use a "
+                   "different name and remove the \"override\""_L1, 2, 28)
             << defaultOptions;
     QTest::newRow("shadowPropertyWithFinal")
             << u"component IC: Item { property int f; }\n"
                u"IC { final property var f; }"_s
-            << Result{ { { "Property \"f\" already exists in base type \"IC\""_L1, 2, 25 } } }
+            << ResultBuilder::singleExpected("Property \"f\" already exists in base type \"IC\""_L1, 2, 25)
             << defaultOptions;
     QTest::newRow("shadowMissingPropertyWithOverride")
             << u"Item { override property var blablabla; }"_s
-            << Result{ { { "Member \"blablabla\" does not override anything. Consider removing \"override\"."_L1,
-                           1, 30 } } }
+            << ResultBuilder::singleExpected("Member \"blablabla\" does not override anything. "
+                                             "Consider removing \"override\"."_L1, 1, 30)
             << defaultOptions;
     QTest::newRow("shadowPropertyWithOverride")
             << u"component IC: Item { property int f; }\n"
                u"IC { override property var f; }"_s
-            << Result{ { { "Member \"f\" overrides a non-virtual member from base type \"IC\", use a different name or mark the property as virtual in the base type."_L1,
-                           2, 28 } } }
+            << ResultBuilder::singleExpected(
+                   "Member \"f\" overrides a non-virtual member from base type \"IC\", use a "
+                   "different name or mark the property as virtual in the base type."_L1, 2, 28)
             << defaultOptions;
     QTest::newRow("shadowPropertyWithVirtual")
             << u"component IC: Item { property int f; }\n"
                u"IC { virtual property var f; }"_s
-            << Result{ { { "Property \"f\" already exists in base type \"IC\", use a different name."_L1,
-                           2, 27 } } }
+            << ResultBuilder::singleExpected("Property \"f\" already exists in base type \"IC\", "
+                                             "use a different name."_L1, 2, 27)
             << defaultOptions;
     QTest::newRow("shadowVirtualWithVirtual")
             << u"component IC: Item { virtual property int f; }\n"
                u"IC { virtual property var f; }"_s
-            << Result{ { { "Member \"f\" shadows member \"f\" from base type \"IC\", use a different name or add a final or override specifier."_L1,
-                           2, 27 } } }
+            << ResultBuilder::singleExpected(
+                   "Member \"f\" shadows member \"f\" from base type \"IC\", use a different name "
+                   "or add a final or override specifier."_L1, 2, 27)
             << defaultOptions;
     QTest::newRow("shadowVirtualWithOverride")
             << u"component IC: Item { virtual property int f; }\n"
                u"IC { override property var f; }"_s
-            << Result::clean() << defaultOptions;
+            << ResultBuilder::cleanResult() << defaultOptions;
     QTest::newRow("shadowVirtualWithOverride2")
             << u"component IC: Item { virtual property int f; }\n"
                u"component IC2 :IC { override property var f; }\n"
                u"component IC3 :IC2 { override property var f; }\n"
                u"IC3 { override property var f; }"_s
-            << Result::clean() << defaultOptions;
+            << ResultBuilder::cleanResult() << defaultOptions;
     QTest::newRow("shadowVirtualWithFinal") << u"component IC: Item { virtual property int f; }\n"
                                                u"IC { final property var f; }"_s
-                                            << Result::clean() << defaultOptions;
+                                            << ResultBuilder::cleanResult() << defaultOptions;
 
     {
         CallQmllintOptions options = defaultOptions;
@@ -4927,8 +5080,8 @@ void TestQmllint::shadow_data()
         QTest::newRow("shadowPropertyFromAnotherFile")
                 << u"import ModuleInImportPath\n"
                    u"A { property int myProperty }"_s
-                << Result{ { { "Property \"myProperty\" already exists in base type \"A\""_L1, 2,
-                               18 } } }
+                << ResultBuilder::singleExpected(
+                       "Property \"myProperty\" already exists in base type \"A\""_L1, 2, 18)
                 << options;
     }
 }
@@ -4950,117 +5103,117 @@ void TestQmllint::uselessExpressionStatements_data()
 
     QTest::newRow("uselessExpressionStatement")
             << u"property int i: { let x = 0; 0 + 1; return i + 3; }"_s
-            << Result{ { { "Expression statement has no obvious effect."_L1, 1, 30 } } }
+            << ResultBuilder::singleExpected("Expression statement has no obvious effect."_L1, 1, 30)
             << defaultOptions;
 
     QTest::newRow("propertyDef-last-simple")
             << u"property int i: 1"_s
-            << Result::clean()
+            << ResultBuilder::cleanResult()
             << defaultOptions;
     QTest::newRow("propertyDef-last-block")
             << u"property int i: { 1 }"_s
-            << Result::clean()
+            << ResultBuilder::cleanResult()
             << defaultOptions;
     QTest::newRow("propertyDef-last-nested")
             << u"property int i: (1)"_s
-            << Result::clean()
+            << ResultBuilder::cleanResult()
             << defaultOptions;
     QTest::newRow("propertyDef-last-blockNested")
             << u"property int i: { (1) }"_s
-            << Result::clean()
+            << ResultBuilder::cleanResult()
             << defaultOptions;
     QTest::newRow("propertyDef-last-complex")
             << u"property int i: { 1 + i < 0 ? ~i : i**i }"_s
-            << Result::clean()
+            << ResultBuilder::cleanResult()
             << defaultOptions;
 
     QTest::newRow("propertyBinding-last-simple")
             << u"x: 1"_s
-            << Result::clean()
+            << ResultBuilder::cleanResult()
             << defaultOptions;
     QTest::newRow("propertyBinding-last-block")
             << u"x: { 1 }"_s
-            << Result::clean()
+            << ResultBuilder::cleanResult()
             << defaultOptions;
     QTest::newRow("propertyBinding-last-nested")
             << u"x: (1)"_s
-            << Result::clean()
+            << ResultBuilder::cleanResult()
             << defaultOptions;
     QTest::newRow("propertyBinding-last-blockNested")
             << u"x: { (1) }"_s
-            << Result::clean()
+            << ResultBuilder::cleanResult()
             << defaultOptions;
     QTest::newRow("propertyBinding-last-complex")
             << u"x: { 1 + x < 0 ? ~x : x**x }"_s
-            << Result::clean()
+            << ResultBuilder::cleanResult()
             << defaultOptions;
 
     QTest::newRow("propertyDef-dirty1")
             << u"property int i: { 1; 1 }"_s
-            << Result{ { { warning, 1, 19 } } }
+            << ResultBuilder::singleExpected(warning, 1, 19)
             << defaultOptions;
     QTest::newRow("propertyDef-dirty2")
             << u"property int i: { if (true) 1; 1 }"_s
-            << Result{ { { warning, 1, 29 } } }
+            << ResultBuilder::singleExpected(warning, 1, 29)
             << defaultOptions;
     QTest::newRow("propertyBinding-dirty1")
             << u"x: { 1; 1 }"_s
-            << Result{ { { warning, 1, 6 } } }
+            << ResultBuilder::singleExpected(warning, 1, 6)
             << defaultOptions;
     QTest::newRow("propertyBinding-dirty2")
             << u"x: { if (true) 1; 1 }"_s
-            << Result{ { { warning, 1, 16 } } }
+            << ResultBuilder::singleExpected(warning, 1, 16)
             << defaultOptions;
 
     QTest::newRow("signalHandler1")
             << u"onXChanged: 1"_s
-            << Result{ { { warning, 1, 13 } } }
+            << ResultBuilder::singleExpected(warning, 1, 13)
             << defaultOptions;
     QTest::newRow("signalHandler2")
             << u"onXChanged: { 1 }"_s
-            << Result{ { { warning, 1, 15 } } }
+            << ResultBuilder::singleExpected(warning, 1, 15)
             << defaultOptions;
     QTest::newRow("signalHandler3")
             << u"onXChanged: 9 / 8"_s
-            << Result{ { { warning, 1, 13 } } }
+            << ResultBuilder::singleExpected(warning, 1, 13)
             << defaultOptions;
     QTest::newRow("signalHandler4")
             << u"id: item; onXChanged: item.dumpItemTree()"_s
-            << Result::clean()
+            << ResultBuilder::cleanResult()
             << defaultOptions;
     QTest::newRow("attachedSignalHandler")
             << u"Component.onCompleted: 1"_s
-            << Result{ { { warning, 1, 24 } } }
+            << ResultBuilder::singleExpected(warning, 1, 24)
             << defaultOptions;
 
     QTest::newRow("function1")
             << u"function f() { 1 }"_s
-            << Result{ { { warning, 1, 16 } } }
+            << ResultBuilder::singleExpected(warning, 1, 16)
             << defaultOptions;
     QTest::newRow("function2")
             << u"function f() { 1; return 1 }"_s
-            << Result{ { { warning, 1, 16 } } }
+            << ResultBuilder::singleExpected(warning, 1, 16)
             << defaultOptions;
     QTest::newRow("function3")
             << u"function f() { { x + 1 } }"_s
-            << Result{ { { warning, 1, 18 } } }
+            << ResultBuilder::singleExpected(warning, 1, 18)
             << defaultOptions;
 
     QTest::newRow("id")
             << u"id: a"_s
-            << Result::clean()
+            << ResultBuilder::cleanResult()
             << defaultOptions;
     QTest::newRow("groupedProperty1")
             << u"anchors { right: anchors.right }"_s
-            << Result::clean()
+            << ResultBuilder::cleanResult()
             << defaultOptions;
     QTest::newRow("groupedProperty2")
             << u"anchors.right: anchors.right"_s
-            << Result::clean()
+            << ResultBuilder::cleanResult()
             << defaultOptions;
     QTest::newRow("groupedProperty3")
             << u"Text { font.bold: { 1; true } }"_s
-            << Result{ { { warning, 1, 19 } } }
+            << ResultBuilder::singleExpected(warning, 1, 19)
             << defaultOptions;
 
     QTest::newRow("recursive")
@@ -5110,23 +5263,24 @@ void TestQmllint::uselessExpressionStatements_data()
 
                         16
                     })"_s
-            << Result{ { { warning, 4, 29 },    // block
-                         { warning, 5, 29 },    // nested
-                         { warning, 9, 29 },    // try
-                         { warning, 11, 29 },   // catch
-                         { warning, 15, 29 },   // for
-                         { warning, 17, 29 },   // for-in
-                         { warning, 19, 29 },   // for-of
-                         { warning, 22, 29 },   // while
-                         { warning, 25, 29 },   // if
-                         { warning, 27, 29 },   // else
-                         { warning, 31, 29 },   // case 0
-                         { warning, 34, 29 },   // default
-                         { warning, 37, 29 },   // case 2
-                         { warning, 41, 29 },   // with
-                         { warning, 43, 28 },   // label
-                         { warning, 45, 25 },   // bare
-                       } }
+            << ResultBuilder()
+               .addExpected(warning, 4, 29)     // block
+               .addExpected(warning, 5, 29)     // nested
+               .addExpected(warning, 9, 29)     // try
+               .addExpected(warning, 11, 29)    // catch
+               .addExpected(warning, 15, 29)    // for
+               .addExpected(warning, 17, 29)    // for-in
+               .addExpected(warning, 19, 29)    // for-of
+               .addExpected(warning, 22, 29)    // while
+               .addExpected(warning, 25, 29)    // if
+               .addExpected(warning, 27, 29)    // else
+               .addExpected(warning, 31, 29)    // case 0
+               .addExpected(warning, 34, 29)    // default
+               .addExpected(warning, 37, 29)    // case 2
+               .addExpected(warning, 41, 29)    // with
+               .addExpected(warning, 43, 28)    // label
+               .addExpected(warning, 45, 25)    // bare
+               .build()
             << defaultOptions;
 
     QTest::newRow("emptyCaseClause")
@@ -5137,7 +5291,7 @@ void TestQmllint::uselessExpressionStatements_data()
                             1;
                         }
                     })"_s
-            << Result::clean()
+            << ResultBuilder::cleanResult()
             << defaultOptions;
 
     QTest::newRow("emptyBlock")
@@ -5146,7 +5300,7 @@ void TestQmllint::uselessExpressionStatements_data()
                             1;
                         else {}
                     })"_s
-            << Result::clean()
+            << ResultBuilder::cleanResult()
             << defaultOptions;
 }
 
@@ -5176,24 +5330,28 @@ void TestQmllint::useProperFunction_data()
 
     QTest::newRow("shadowedMethod")
             << u"function foo() {}\n property bool foo: false"_s
-            << Result{ { { "Duplicated property name \"foo\", \"foo\" is already a method."_L1 } } }
+            << ResultBuilder::singleExpected("Duplicated property name \"foo\", \"foo\" is already "
+                                             "a method."_L1)
             << defaultOptions;
     QTest::newRow("shadowedSignal")
             << u"MouseArea { Component.onCompleted: pressed(); }"_s
-            << Result{ { { "Property \"pressed\" is not a method" } } } << defaultOptions;
+            << ResultBuilder::singleExpected("Property \"pressed\" is not a method")
+            << defaultOptions;
     QTest::newRow("shadowedSignalWithId")
             << u"MouseArea { id: mouseArea; Component.onCompleted: mouseArea.pressed() }"_s
-            << Result{ { { "Property \"pressed\" is not a method" } } } << defaultOptions;
+            << ResultBuilder::singleExpected("Property \"pressed\" is not a method")
+            << defaultOptions;
     QTest::newRow("shadowedSlot")
             << u"ObjectModel { property bool move: false; Component.onCompleted: move(); }"_s
-            << Result{ { { "Property \"move\" is not a method" } } } << defaultOptions;
+            << ResultBuilder::singleExpected("Property \"move\" is not a method") << defaultOptions;
     QTest::newRow("callJSValue")
             << u"import CallJSValue\n"
                u"TypeWithQJSValue {\n"
                u"     Component.onCompleted: jsValue(42);\n"
                u"}\n"_s
-            << Result{ { { "Property \"jsValue\" is a QJSValue property. It may or may not be "
-                           "a method. Use a regular Q_INVOKABLE instead."_L1 } } }
+            << ResultBuilder::singleExpected("Property \"jsValue\" is a QJSValue property. It may "
+                                             "or may not be a method. Use a regular Q_INVOKABLE "
+                                             "instead."_L1)
             << defaultOptions;
     QTest::newRow("callVarProp")
             << u"import QtQml\n"
@@ -5201,8 +5359,8 @@ void TestQmllint::useProperFunction_data()
                u"    property var foo: () => {}\n"
                u"    Component.onCompleted: foo()\n"
                u"}\n"_s
-            << Result{ { { "Property \"foo\" is a var property. It may or may not be a "
-                           "method. Use a regular function instead."_L1 } } }
+            << ResultBuilder::singleExpected("Property \"foo\" is a var property. It may or may "
+                                             "not be a method. Use a regular function instead."_L1)
             << defaultOptions;
 }
 
@@ -5356,11 +5514,10 @@ void TestQmllint::crashes()
 
     QVERIFY(warnings.size() <= 2);
 
-    checkResult(
-            warnings,
-            Result{ {
-                    Message{ u"FooBar was not found. Did you add all imports and dependencies?"_s },
-            } });
+    checkResult(warnings,
+                ResultBuilder()
+                .addExpected("FooBar was not found. Did you add all imports and dependencies?"_L1)
+                .build());
 }
 
 void TestQmllint::weakPointers()
