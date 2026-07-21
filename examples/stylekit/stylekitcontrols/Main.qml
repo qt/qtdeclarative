@@ -442,7 +442,7 @@ ApplicationWindow {
             onTapped: {
                 // Change the background color of all controls whose
                 // controlType matches fancyButton.type.
-                let fancyButtons = StyleKit.style.theme.getControl(fancyButton.type)
+                let fancyButtons = StyleKit.style.theme.getControlStyle(fancyButton.type)
                 if (fancyButtons) // Only the Haze style defines a fancyButton
                     fancyButtons.background.color = "yellowgreen"
             }

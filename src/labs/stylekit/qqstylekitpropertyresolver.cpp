@@ -195,11 +195,11 @@ void QQStyleKitPropertyResolver::addTypeVariationsToReader(
                  continue;
             }
 
-            if (variation->getControl(styleReaderType)) {
+            if (variation->getControlStyle(styleReaderType)) {
                 addVariationToReader(styleReader, styleOrTheme, variation);
             } else {
                 for (int type : styleReaderBaseType) {
-                    if (variation->getControl(type))
+                    if (variation->getControlStyle(type))
                         addVariationToReader(styleReader, styleOrTheme, variation);
                 }
             }
@@ -230,11 +230,11 @@ void QQStyleKitPropertyResolver::addInstanceVariationsToReader(
                  * a name in the attached variation list. Check if the found variation contains the
                  * type, or the subtypes, of the style reader. If not, it doesn't affect it and can
                  * therefore be skipped. */
-                if (variation->getControl(styleReaderType)) {
+                if (variation->getControlStyle(styleReaderType)) {
                     addVariationToReader(styleReader, styleOrTheme, variation);
                 } else {
                     for (int baseType : styleReaderBaseTypes) {
-                        if (variation->getControl(baseType))
+                        if (variation->getControlStyle(baseType))
                             addVariationToReader(styleReader, styleOrTheme, variation);
                     }
                 }
@@ -454,14 +454,14 @@ QVariant QQStyleKitPropertyResolver::readPropertyInRelevantControls(
         return {};
     }
 
-    if (const QQStyleKitControl *control = controls->getControl(exactType)) {
+    if (const QQStyleKitControl *control = controls->getControlStyle(exactType)) {
         const QVariant value = readPropertyInControl(ids, control);
         if (value.isValid())
             return value;
     }
 
     for (const int type : baseTypes) {
-        if (const QQStyleKitControl *control = controls->getControl(type)) {
+        if (const QQStyleKitControl *control = controls->getControlStyle(type)) {
             const QVariant value = readPropertyInControl(ids, control);
             if (value.isValid())
                 return value;
