@@ -258,14 +258,6 @@ QQStyleKitTheme *QQStyleKitStyle::theme() const
     return m_theme;
 }
 
-QList<QObject *> QQStyleKitStyle::customThemesAsList()
-{
-    QList<QObject *> list;
-    for (auto *customTheme : customThemes())
-        list.append(customTheme);
-    return list;
-}
-
 QList<QQStyleKitCustomTheme *> QQStyleKitStyle::customThemes() const
 {
     QList<QQStyleKitCustomTheme *> list;
