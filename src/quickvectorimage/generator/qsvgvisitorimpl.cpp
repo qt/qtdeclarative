@@ -605,7 +605,7 @@ namespace {
     class QSvgFontEngine : public QFontEngine
     {
     public:
-        QSvgFontEngine(const QSvgFont *font, qreal size);
+        QSvgFontEngine(const QString &family, const QSvgFont *font, qreal size);
 
         QFontEngine *cloneWithSize(qreal size) const override;
 
@@ -637,14 +637,16 @@ namespace {
 
     private:
         const QSvgFont *m_font;
+        QString m_family;
     };
 
-    QSvgFontEngine::QSvgFontEngine(const QSvgFont *font, qreal size)
+    QSvgFontEngine::QSvgFontEngine(const QString &family, const QSvgFont *font, qreal size)
         : QFontEngine(Proxy)
         , m_font(font)
+        , m_family(family)
     {
         fontDef.pixelSize = size;
-        fontDef.families = QStringList(m_font->m_familyName);
+        fontDef.families = QStringList(family);
     }
 
     QFixed QSvgFontEngine::emSquareSize() const
@@ -734,7 +736,7 @@ namespace {
 
     QFontEngine *QSvgFontEngine::cloneWithSize(qreal size) const
     {
-        QSvgFontEngine *otherEngine = new QSvgFontEngine(m_font, size);
+        QSvgFontEngine *otherEngine = new QSvgFontEngine(m_family, m_font, size);
         return otherEngine;
     }
 
@@ -800,16 +802,25 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
     const bool isTextArea = node->type() == QSvgNode::Textarea;
 
     QString text;
-    const QSvgFont *svgFont = m_styleResolver->states().svgFont;
     bool needsRichText = false;
     bool preserveWhiteSpace = node->whitespaceMode() == QSvgText::Preserve;
     const QGradient *mainGradient = m_styleResolver->currentFillGradient();
 
+
+    auto *fontStyle = static_cast<QSvgFontStyle *>(node->styleProperty(QSvgStyleProperty::Font));
+    QSvgFont *svgFont = nullptr;
+    QString svgFontFamily;
+    if (fontStyle) {
+        svgFontFamily = fontStyle->qfont().family();
+        svgFont = node->document()->svgFont(svgFontFamily);
+    }
+
     QFontEngine *fontEngine = nullptr;
     if (svgFont != nullptr) {
-        fontEngine = new QSvgFontEngine(svgFont, m_styleResolver->painter().font().pointSize());
+        fontEngine = new QSvgFontEngine(svgFontFamily, svgFont, m_styleResolver->painter().font().pointSize());
         fontEngine->ref.ref();
     }
+
 
 #if QT_CONFIG(texthtmlparser)
     bool needsPathNode = mainGradient != nullptr
@@ -976,7 +987,7 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
                 // first)
                 QFont blockFont = block.charFormat().font();
                 if (svgFont != nullptr
-                    && blockFont.family() == svgFont->m_familyName) {
+                    && blockFont.family() == svgFontFamily) {
                     QRawFont rawFont;
                     QRawFontPrivate *rawFontD = QRawFontPrivate::get(rawFont);
                     rawFontD->setFontEngine(fontEngine->cloneWithSize(blockFont.pixelSize()));
