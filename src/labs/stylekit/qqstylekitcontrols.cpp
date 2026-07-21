@@ -606,13 +606,42 @@ const QList<QObject *> QQStyleKitControls::children() const
     return m_data;
 }
 
+/*!
+    \qmlmethod ControlStyle AbstractStylableControls::getControlStyle(controlType)
+
+    Returns the \l ControlStyle for the given \a controlType, or \c null, if
+    no \l ControlStyle for the type has been defined.
+
+    \a controlType can be one of the built-in types documented by
+    \l {StyleReader::controlType}{StyleReader.controlType}, or the
+    \l {CustomControl::controlType}{controlType} of a \l CustomControl.
+
+    This function can be used to, for example, read or write a property on
+    a \l CustomControl's style at runtime:
+
+    \snippet ControlsSnippets.qml getControlStyle
+
+    \snippet ControlsSnippets.qml getControlStyle-function
+
+    If \a controlType is a built-in type (such as \c {StyleReader.Button}),
+    using for example \c {myStyle.button} or \c {myStyle.getControlStyle(StyleReader.Button)}
+    to get the \l ControlStyle is \e almost equivalent.
+    The difference is that the former will lazily create a \l ControlStyle if
+    it's not yet defined, while the latter will instead return \c null.
+    This means that for example \c {myStyle.button.padding = 10} is always
+    safe, while \c {myStyle.getControlStyle(StyleReader.Button).padding = 10} will
+    fail if \c {myStyle.button} has not been defined in the \l Style.
+
+    \sa CustomControl, StyleReader
+*/
+
 /* Lazy-create the controls that the style is actually using, when accessed
  * from the style/application (e.g from Style or Theme). We don't lazy
  * create any controls while resolving style properties, as undefined controls would
  * anyway not contain any property overrides. The properties have setters too, to
  * allow the style/application to share custom ControlStyle the classical
  * way, e.g button: ControlStyle { id: button }. */
-QQStyleKitControl* QQStyleKitControls::getControl(QQStyleKitExtendableControlType controlType) const
+QQStyleKitControl* QQStyleKitControls::getControlStyle(QQStyleKitExtendableControlType controlType) const
 {
     return m_controls.value(controlType, nullptr);
 }

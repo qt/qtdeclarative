@@ -902,7 +902,30 @@ ApplicationWindow {
             label.text.color: "white"
         }
         //! [theme]
+
     }
+
+    //! [getControlStyle]
+    Style {
+        id: myStyle
+        property int customButtonType: 0
+
+        CustomControl {
+            controlType: myStyle.customButtonType
+            background.color: "green"
+        }
+    }
+    //! [getControlStyle]
+
+    //! [getControlStyle-function]
+    function changeButtonColor() {
+        let customControlStyle = myStyle.getControlStyle(style.customButtonType)
+        customControlStyle.background.color = "yellowgreen"
+
+        // You can also access the style definition in the theme, if it has one
+        // myStyle.theme.getControlStyle(StyleReader.Button).padding = 10
+    }
+    //! [getControlStyle-function]
 
     // The rest of the file is not a part of the docs. It just implements a small
     // UI to allow testing the style from the command line using the 'qml' app.

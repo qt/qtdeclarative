@@ -42,7 +42,7 @@ QT_BEGIN_NAMESPACE
 
     \labs
 
-    \sa StyleReader, ControlStyle, Style
+    \sa StyleReader, ControlStyle, Style, AbstractStylableControls::getControlStyle()
 */
 
 /*!
@@ -54,7 +54,7 @@ QT_BEGIN_NAMESPACE
 
     Custom control types must be in the range \c 0 to \c 100000.
 
-    \sa {StyleReader::controlType}{StyleReader.controlType}
+    \sa {StyleReader::controlType}{StyleReader.controlType}, AbstractStylableControls::getControlStyle()
 */
 
 using namespace Qt::StringLiterals;

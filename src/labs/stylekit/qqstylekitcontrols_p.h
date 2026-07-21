@@ -139,7 +139,7 @@ public:
 
 #undef IMPLEMENT_ACCESSORS
 
-    Q_INVOKABLE QQStyleKitControl *getControl(QQStyleKitExtendableControlType controlType) const;
+    Q_INVOKABLE QQStyleKitControl *getControlStyle(QQStyleKitExtendableControlType controlType) const;
 
     QQmlListProperty<QObject> data();
     const QList<QObject *> children() const;
