@@ -1,6 +1,8 @@
 # Copyright (C) 2026 The Qt Company Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 
+qt_policy(SET QTP0001 NEW)
+
 qt_internal_add_executable(qmlpreviewtesthelpermodule
     OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     SOURCES
