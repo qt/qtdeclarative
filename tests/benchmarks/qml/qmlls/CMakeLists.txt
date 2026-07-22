@@ -3,7 +3,7 @@
 
 find_package(Qt COMPONENTS OPTIONAL Qt::QmlLSPrivate)
 
-if (NOT Qt6QmlLS_FOUND AND NOT TARGET Qt::QmlLS)
+if (NOT TARGET Qt::QmlLSPrivate)
     return()
 endif()
 
