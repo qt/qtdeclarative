@@ -53,8 +53,8 @@ BaseStyle {
             color: __baseWhite
             border.color: __strokeStrong
             foreground {
-                fillWidth: true
-                fillHeight: true
+                fillWidth: false
+                fillHeight: false
                 margins: 1
                 color: palette.accent
                 image.color: palette.accent
@@ -100,6 +100,8 @@ BaseStyle {
         background.visible: false
         indicator {
             foreground {
+                fillWidth: true
+                fillHeight: true
                 color: __transparent
                 visible: false
                 image.source: "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/check.png"
@@ -123,6 +125,8 @@ BaseStyle {
         indicator {
             alignment: Qt.AlignRight | Qt.AlignVCenter
             foreground {
+                fillWidth: true
+                fillHeight: true
                 visible: false
                 alignment: Qt.AlignCenter
                 color: __transparent
@@ -144,8 +148,6 @@ BaseStyle {
             border.width: 0
             alignment: Qt.AlignRight | Qt.AlignVCenter
             foreground {
-                fillWidth: false
-                fillHeight: false
                 width: 10
                 height: 10
                 alignment: Qt.AlignCenter
@@ -275,7 +277,6 @@ BaseStyle {
             color: __transparent
             border.width: 0
             foreground {
-                fillHeight: false
                 color: __transparent
                 image.color: __textDefault
                 image.fillMode: Image.PreserveAspectFit
@@ -333,8 +334,14 @@ BaseStyle {
 
     progressBar {
         background.visible: false
-        indicator.width: 150
-        indicator.foreground.delegate: ProgressDelegate {}
+        indicator {
+            width: 150
+            foreground {
+                fillWidth: true
+                fillHeight: true
+                delegate: ProgressDelegate {}
+            }
+        }
     }
 
     radioButton {
@@ -342,6 +349,8 @@ BaseStyle {
         indicator {
             radius: 255
             foreground {
+                fillWidth: true
+                fillHeight: true
                 margins: 4
                 visible: false
                 radius: 255
@@ -362,6 +371,8 @@ BaseStyle {
             alignment: Qt.AlignRight | Qt.AlignVCenter
             radius: 255
             foreground {
+                fillWidth: true
+                fillHeight: true
                 margins: 4
                 visible: false
                 radius: 255
@@ -388,8 +399,12 @@ BaseStyle {
             height: 12
             fillWidth: true
             radius: 0
-            foreground.radius: 0
-            foreground.color: __backgroundMuted
+            foreground {
+                fillWidth: true
+                fillHeight: true
+                radius: 0
+                color: __backgroundMuted
+            }
         }
         vertical {
             indicator {
@@ -415,6 +430,8 @@ BaseStyle {
             radius: 255
             border.width: 0
             foreground {
+                fillWidth: true
+                fillHeight: true
                 margins: 0
                 radius: 255
                 color: __backgroundMuted
@@ -440,8 +457,6 @@ BaseStyle {
             margins: 0
             color: __transparent
             foreground {
-                fillWidth: false
-                fillHeight: false
                 width: 10
                 height: 10
                 alignment: Qt.AlignCenter
@@ -475,8 +490,12 @@ BaseStyle {
             fillWidth: true
             height: 8
             radius: 8
-            foreground.radius: 7
-            foreground.delegate: ProgressDelegate {}
+            foreground {
+                radius: 7
+                fillWidth: true
+                fillHeight: true
+                delegate: ProgressDelegate {}
+            }
         }
         vertical {
             // Manually transpose the sizes
@@ -504,8 +523,6 @@ BaseStyle {
             foreground {
                 width: 10
                 height: 10
-                fillWidth: false
-                fillHeight: false
                 color: __transparent
                 image.color: __textDefault
                 image.fillMode: Image.PreserveAspectFit
@@ -544,6 +561,8 @@ BaseStyle {
             alignment: Qt.AlignLeft | Qt.AlignVCenter
             radius: style.indicatorSize / 2
             foreground {
+                fillWidth: true
+                fillHeight: true
                 radius: style.indicatorSize / 2
                 color: __transparent
             }
@@ -566,6 +585,8 @@ BaseStyle {
             alignment: Qt.AlignRight | Qt.AlignVCenter
             radius: style.indicatorSize / 2
             foreground {
+                fillWidth: true
+                fillHeight: true
                 radius: style.indicatorSize / 2
                 color: __transparent
             }

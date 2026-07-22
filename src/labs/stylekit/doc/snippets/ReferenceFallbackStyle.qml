@@ -52,8 +52,8 @@ BaseStyle {
             color: __baseWhite
             border.color: __strokeStrong
             foreground {
-                fillWidth: true
-                fillHeight: true
+                fillWidth: false
+                fillHeight: false
                 margins: 1
                 color: palette.accent
                 image.color: palette.accent
@@ -102,6 +102,8 @@ BaseStyle {
         background.visible: false
         indicator {
             foreground {
+                fillWidth: true
+                fillHeight: true
                 color: __transparent
                 visible: false
                 image.source: "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/check.png"
@@ -125,6 +127,8 @@ BaseStyle {
         indicator {
             alignment: Qt.AlignRight | Qt.AlignVCenter
             foreground {
+                fillWidth: true
+                fillHeight: true
                 visible: false
                 alignment: Qt.AlignCenter
                 color: __transparent
@@ -146,8 +150,6 @@ BaseStyle {
             border.width: 0
             alignment: Qt.AlignRight | Qt.AlignVCenter
             foreground {
-                fillWidth: false
-                fillHeight: false
                 width: 10
                 height: 10
                 alignment: Qt.AlignCenter
@@ -246,14 +248,13 @@ BaseStyle {
         text.alignment: Qt.AlignLeft | Qt.AlignVCenter
         background {
             width: 200
+            radius: 0
             border.width: 0
         }
         indicator {
             color: __transparent
             border.width: 0
             foreground {
-                width: 10
-                height: 10
                 color: __transparent
                 image.color: __textDefault
                 image.fillMode: Image.PreserveAspectFit
@@ -261,11 +262,19 @@ BaseStyle {
             }
             first {
                 alignment: Qt.AlignLeft
-                foreground.image.source: "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/check.png"
+                foreground {
+                    width: 20
+                    height: 20
+                    image.source: "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/check.png"
+                }
             }
             second {
                 alignment: Qt.AlignRight
-                foreground.image.source: "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/arrow-indicator.png"
+                foreground {
+                    width: 10
+                    height: 10
+                    image.source: "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/arrow-indicator.png"
+                }
             }
         }
         hovered.background.color: __backgroundSubtle
@@ -297,7 +306,14 @@ BaseStyle {
 
     progressBar {
         background.visible: false
-        indicator.width: 150
+        indicator {
+            width: 150
+            foreground {
+                fillWidth: true
+                fillHeight: true
+                delegate: ProgressDelegate {}
+            }
+        }
     }
 
     radioButton {
@@ -305,6 +321,8 @@ BaseStyle {
         indicator {
             radius: 255
             foreground {
+                fillWidth: true
+                fillHeight: true
                 margins: 4
                 visible: false
                 radius: 255
@@ -325,6 +343,8 @@ BaseStyle {
             alignment: Qt.AlignRight | Qt.AlignVCenter
             radius: 255
             foreground {
+                fillWidth: true
+                fillHeight: true
                 margins: 4
                 visible: false
                 radius: 255
@@ -347,8 +367,12 @@ BaseStyle {
         indicator {
             height: 10
             radius: 255
-            foreground.radius: 255
-            foreground.color: __backgroundDefault
+            foreground {
+                fillWidth: true
+                fillHeight: true
+                radius: 255
+                color: __backgroundDefault
+            }
         }
         vertical {
             background.width: 10
@@ -369,6 +393,8 @@ BaseStyle {
             height: 6
             radius: 255
             foreground {
+                fillWidth: true
+                fillHeight: true
                 margins: 0
                 radius: 255
                 color: __backgroundDefault
@@ -392,8 +418,6 @@ BaseStyle {
             margins: 0
             color: __transparent
             foreground {
-                fillWidth: false
-                fillHeight: false
                 width: 10
                 height: 10
                 alignment: Qt.AlignCenter
@@ -429,6 +453,8 @@ BaseStyle {
             radius: 8
             foreground {
                 radius: 7
+                fillWidth: true
+                fillHeight: true
             }
         }
     }
@@ -446,14 +472,12 @@ BaseStyle {
                 image.fillMode: Image.PreserveAspectFit
                 image.source: "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/arrow-indicator.png"
 
-                // Note: since we set a rotation, we cannot at the same time set fillWidth or fillHeight to
-                // true, since the rotation is applied after the layout has been done based on the unrotated
-                // geometry of the indicator. So we set a fixed implicit size here instead, and let the layout
-                // stretch the indicator by setting the alignment to AlignCenter. This way, the indicator will be
+                // Note: since we set a rotation here, don't set fillWidth or fillHeight to true, since
+                // the rotation is applied after the layout has been done based on the unrotated geometry
+                // of the indicator. So we use a fixed implicit size instead, and let the layout stretch the
+                // indicator by setting the alignment to AlignCenter. This way, the indicator will be
                 // stretched in both dimensions, but still maintain its aspect ratio due to the image's fillMode
                 // being PreserveAspectFit.
-                fillWidth: false
-                fillHeight: false
                 width: 10
                 height: 10
                 alignment: Qt.AlignCenter
@@ -490,6 +514,8 @@ BaseStyle {
             alignment: Qt.AlignLeft | Qt.AlignVCenter
             radius: style.indicatorSize / 2
             foreground {
+                fillWidth: true
+                fillHeight: true
                 radius: style.indicatorSize / 2
                 color: __transparent
             }
@@ -512,6 +538,8 @@ BaseStyle {
             alignment: Qt.AlignRight | Qt.AlignVCenter
             radius: style.indicatorSize / 2
             foreground {
+                fillWidth: true
+                fillHeight: true
                 radius: style.indicatorSize / 2
                 color: __transparent
             }
