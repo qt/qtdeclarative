@@ -1078,13 +1078,19 @@ Check https://doc.qt.io/qt-6/qt-cmake-policy-qtp0001.html for policy details."
         else()
             string(REPLACE "." "::" qmltc_namespace "${arg_URI}")
         endif()
+        set(qmltc_export_args "")
+        if(DEFINED arg_QMLTC_EXPORT_DIRECTIVE)
+            list(APPEND qmltc_export_args EXPORT_MACRO_NAME ${arg_QMLTC_EXPORT_DIRECTIVE})
+        endif()
+        if(DEFINED arg_QMLTC_EXPORT_FILE_NAME)
+            list(APPEND qmltc_export_args EXPORT_FILE_NAME ${arg_QMLTC_EXPORT_FILE_NAME})
+        endif()
         _qt_internal_target_enable_qmltc(${target}
             QML_FILES ${arg_QML_FILES}
             IMPORT_PATHS ${arg_IMPORT_PATH}
             NAMESPACE ${qmltc_namespace}
-            EXPORT_MACRO_NAME ${arg_QMLTC_EXPORT_DIRECTIVE}
-            EXPORT_FILE_NAME ${arg_QMLTC_EXPORT_FILE_NAME}
             MODULE ${arg_URI}
+            ${qmltc_export_args}
         )
     endif()
 
