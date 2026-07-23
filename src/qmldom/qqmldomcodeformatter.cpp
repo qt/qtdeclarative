@@ -685,6 +685,8 @@ void FormatPartialStatus::handleTokens()
         case StateType::TypeAnnotation:
             switch (kind) {
             case QQmlJSGrammar::T_IDENTIFIER:
+            case QQmlJSGrammar::T_VOID:
+            case QQmlJSGrammar::T_VAR:
             case QQmlJSGrammar::T_DOT:
                 break;
             case QQmlJSGrammar::T_LT:

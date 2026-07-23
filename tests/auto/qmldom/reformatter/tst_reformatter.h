@@ -73,6 +73,8 @@ private slots:
         LineWriterOptions defaultOptions;
         LineWriterOptions noReorderOptions;
         noReorderOptions.attributesSequence = LineWriterOptions::AttributesSequence::Preserve;
+        LineWriterOptions withMaxLineLengthOptions;
+        withMaxLineLengthOptions.maxLineLength = 80;
 
         QTest::newRow("file1") << QStringLiteral(u"file1.qml")
                                << QStringLiteral(u"file1Reformatted.qml") << defaultOptions;
@@ -162,6 +164,10 @@ private slots:
                 << "pragmaQmlFileIndents4.qml"
                 << "pragmaQmlFileIndents4.formatted.qml"
                 << defaultOptions;
+        QTest::newRow("functionSpecialIdentifierTypeAnnotation")
+                << "functionSpecialIdentifierTypeAnnotation.qml"
+                << "functionSpecialIdentifierTypeAnnotation.formatted.qml"
+                << withMaxLineLengthOptions;
     }
 
     void lineByLineReformatter()
