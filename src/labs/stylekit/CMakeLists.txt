@@ -37,6 +37,7 @@ qt_internal_add_qml_module(LabsStyleKit
         QT_NO_CAST_TO_ASCII
     QML_FILES
         ApplicationWindow.qml
+        BusyIndicator.qml
         Button.qml
         CheckBox.qml
         CheckDelegate.qml

@@ -62,6 +62,66 @@ ApplicationWindow {
         }
         //! [button]
 
+        /*
+        We cannot include two busyIndicators in this file, so we
+        prefer to compile the custom spinner snippet.
+        //! [busyIndicator]
+        busyIndicator {
+            background {
+                visible: false
+                width: 48
+                height: 48
+            }
+            indicator {
+                fillWidth: true
+                fillHeight: true
+                color: "transparent"
+                border.width: 0
+                foreground {
+                    radius: 255
+                    color: palette.accent
+                }
+            }
+        }
+        //! [busyIndicator]
+        */
+
+        //! [busyIndicator delegate]
+        busyIndicator {
+            background {
+                visible: false
+                width: 48
+                height: 48
+            }
+            indicator {
+                fillWidth: true
+                fillHeight: true
+                color: "transparent"
+                border.width: 0
+                foreground {
+                    radius: 255
+                    color: palette.accent
+                    delegate: Text {
+                        required property DelegateStyle delegateStyle
+                        required property QtObject control
+                        opacity: control.running ? 1 : 0
+                        Behavior on opacity { NumberAnimation{} }
+                        text: "↻"
+                        color: delegateStyle.color
+                        font.pixelSize: 20
+                        RotationAnimation on rotation {
+                            from: 0
+                            to: 360
+                            duration: 1000
+                            loops: Animation.Infinite
+                            running: control.running
+                        }
+                    }
+                }
+            }
+        }
+        //! [busyIndicator delegate]
+
         //! [checkBox]
         checkBox {
             // Hide the button background; show only the indicator and text

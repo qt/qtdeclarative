@@ -98,6 +98,24 @@ BaseStyle {
         background.color: __baseWhite
     }
 
+    busyIndicator {
+        background {
+            visible: false
+            width: 48
+            height: 48
+        }
+        indicator {
+            fillWidth: true
+            fillHeight: true
+            color: __transparent
+            border.width: 0
+            foreground {
+                radius: 255
+                delegate: BusyIndicatorDelegate { }
+            }
+        }
+    }
+
     checkBox {
         background.visible: false
         indicator {

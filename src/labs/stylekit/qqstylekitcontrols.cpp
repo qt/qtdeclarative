@@ -83,6 +83,23 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \qmlproperty ControlStyle AbstractStylableControls::busyIndicator
+
+    Grouped property for styling \l [QtQuickControls]{BusyIndicator}.
+
+    Unset properties fall back to \l control.
+
+    \snippet ControlsSnippets.qml busyIndicator
+
+    StyleKit doesn't provide dedicated properties to style the animation of the
+    spinning indicator. To change the shape or animation of the spinning indicator,
+    you need to implement a custom indicator foreground \l {DelegateStyle::}{delegate}
+    instead:
+
+    \snippet ControlsSnippets.qml busyIndicator delegate
+*/
+
+/*!
     \qmlproperty ControlStyle AbstractStylableControls::button
 
     Grouped property for styling \l [QtQuickControls]{Button}.
@@ -604,6 +621,7 @@ void QQStyleKitControls::set_ ## NAME(QQStyleKitControl *control) \
 IMPLEMENT_ACCESSORS(abstractButton, QQStyleKitReader::ControlType::AbstractButton)
 IMPLEMENT_ACCESSORS(applicationWindow, QQStyleKitReader::ControlType::ApplicationWindow)
 IMPLEMENT_ACCESSORS(control, QQStyleKitReader::ControlType::Control)
+IMPLEMENT_ACCESSORS(busyIndicator, QQStyleKitReader::ControlType::BusyIndicator)
 IMPLEMENT_ACCESSORS(button, QQStyleKitReader::ControlType::Button)
 IMPLEMENT_ACCESSORS(flatButton, QQStyleKitReader::ControlType::FlatButton)
 IMPLEMENT_ACCESSORS(checkBox, QQStyleKitReader::ControlType::CheckBox)
