@@ -73,6 +73,7 @@
 #include <QtGui/qpainterstateguard.h>
 #include <QtGui/qstylehints.h>
 #include <QtCore/qloggingcategory.h>
+#include <QtCore/qnumeric.h>
 #include <QtQml/private/qqmlcomponent_p.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQuick/private/qquicktransition_p.h>
@@ -454,18 +455,21 @@ static uint resolvedAlignment(uint raw, Qt::Alignment hDefault, Qt::Alignment vD
 
 static qreal resolvedWidth(const QQStyleKitDelegateProperties *element, qreal availableW)
 {
-    return element->fillWidth() ? availableW : qMax(0.0, element->width());
+    return qMax(0.0, element->fillWidth() ? availableW : element->width());
 }
 
-static qreal resolvedHeight(const QQStyleKitDelegateProperties *element, qreal avilableH)
+static qreal resolvedHeight(const QQStyleKitDelegateProperties *element, qreal availableH)
 {
-    return element->fillHeight() ? avilableH : qMax(0.0, element->height());
+    return qMax(0.0, element->fillHeight() ? availableH : element->height());
 }
 
 static QMargins elementMargins(const QQStyleKitDelegateProperties *element)
 {
-    return QMargins(element->leftMargin(), element->topMargin(),
-                    element->rightMargin(), element->bottomMargin());
+    using QtPrivate::qSaturateRound;
+    return QMargins(qSaturateRound(element->leftMargin()),
+                    qSaturateRound(element->topMargin()),
+                    qSaturateRound(element->rightMargin()),
+                    qSaturateRound(element->bottomMargin()));
 }
 
 // Copied from qstylesheetstyle.cpp
@@ -1443,58 +1447,65 @@ QRect QStyleKitStylePrivate::getAlignedRectInContainer(const QRect &container, c
 QStyleKitStylePrivate::ControlMetrics QStyleKitStylePrivate::metricsForReader(QQStyleKitReader *reader) const
 {
     Q_ASSERT(reader);
+    using QtPrivate::qSaturateRound;
     const QQStyleKitControlProperties *props = reader->global();
     ControlMetrics metrics;
     metrics.bgImplicitSize = QSize(0, 0);
     metrics.textPadding = QMargins(0, 0, 0, 0);
-    metrics.padding = QMargins(props->leftPadding(), props->topPadding(),
-                               props->rightPadding(), props->bottomPadding());
-    metrics.spacing = props->spacing();
+    metrics.padding = QMargins(qSaturateRound(props->leftPadding()),
+                               qSaturateRound(props->topPadding()),
+                               qSaturateRound(props->rightPadding()),
+                               qSaturateRound(props->bottomPadding()));
+    metrics.spacing = qSaturateRound(props->spacing());
     metrics.margins = QMargins(0, 0, 0, 0);
     metrics.indicatorImplicitSize = QSize(0, 0);
     metrics.indicatorMargins = QMargins(0, 0, 0, 0);
     metrics.foregroundImplicitSize = QSize(0, 0);
     metrics.foregroundMargins = QMargins(0, 0, 0, 0);
     const auto *background = props->background();
+
+    const auto scaledSize = [](qreal w, qreal h, qreal scale) {
+        constexpr qreal zero(.0);
+        const QSizeF size(std::max(zero, w), std::max(zero, h));
+        return (scale ? scale * size : size).toSize();
+    };
+
     if (background) {
-        auto scale = background->scale();
-        if (scale == 0)
-            scale = 1.0;
-        metrics.bgImplicitSize = QSize(static_cast<int>(background->width()), static_cast<int>(background->height())) * scale;
+        metrics.bgImplicitSize = scaledSize(background->width(), background->height(),
+                                            background->scale());
         metrics.margins = elementMargins(background);
     }
     const auto *textProps = props->text();
     if (textProps)
-        metrics.textPadding = QMargins(textProps->leftPadding(), textProps->topPadding(),textProps->rightPadding(), textProps->bottomPadding());
+        metrics.textPadding = QMargins(qSaturateRound(textProps->leftPadding()),
+                                       qSaturateRound(textProps->topPadding()),
+                                       qSaturateRound(textProps->rightPadding()),
+                                       qSaturateRound(textProps->bottomPadding()));
     const auto *indicator = props->indicator();
     if (indicator) {
-        auto scale = indicator->scale();
-        if (scale == 0)
-            scale = 1.0;
         metrics.indicatorMargins = elementMargins(indicator);
-        metrics.indicatorImplicitSize = QSize(std::max(.0, indicator->width()),
-                                             std::max(.0, indicator->height())) * scale;
+        metrics.indicatorImplicitSize = scaledSize(indicator->width(), indicator->height(),
+                                                   indicator->scale());
 
         const auto *foreground = indicator->foreground();
         if (foreground) {
-            auto scale = foreground->scale();
-            if (scale == 0)
-                scale = 1.0;
             metrics.foregroundMargins = elementMargins(foreground);
             const auto foregroundW = resolvedWidth(foreground,
-                std::max(.0, qreal(metrics.indicatorImplicitSize.width() - metrics.foregroundMargins.left() - metrics.foregroundMargins.right())));
+                std::max(.0, qreal(metrics.indicatorImplicitSize.width()
+                                    - metrics.foregroundMargins.left()
+                                    - metrics.foregroundMargins.right())));
             const auto foregroundH = resolvedHeight(foreground,
-                std::max(.0, qreal(metrics.indicatorImplicitSize.height() - metrics.foregroundMargins.top() - metrics.foregroundMargins.bottom())));
-            metrics.foregroundImplicitSize = QSize(foregroundW, foregroundH) * scale;
+                std::max(.0, qreal(metrics.indicatorImplicitSize.height()
+                                    - metrics.foregroundMargins.top()
+                                    - metrics.foregroundMargins.bottom())));
+            metrics.foregroundImplicitSize = scaledSize(foregroundW, foregroundH,
+                                                        foreground->scale());
         }
     }
     const auto *handle = props->handle();
     if (handle) {
-        auto scale = handle->scale();
-        if (scale == 0)
-            scale = 1.0;
-        metrics.handleImplicitSize = QSize(std::max(.0, handle->width()),
-                                           std::max(.0, handle->height())) * scale;
+        metrics.handleImplicitSize = scaledSize(handle->width(), handle->height(),
+                                                handle->scale());
         metrics.handleMargins = elementMargins(handle);
     }
     return metrics;
@@ -1838,10 +1849,10 @@ void QStyleKitStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt,
         if (!indicator || !indicator->visible() || indicator->opacity() == 0)
             return;
         QRect contentRect = frameRect.marginsRemoved(metrics.padding);
-        const int iw = resolvedWidth(indicator,
-            contentRect.width() - metrics.indicatorMargins.left() - metrics.indicatorMargins.right());
-        const int ih = resolvedHeight(indicator,
-            contentRect.height() - metrics.indicatorMargins.top() - metrics.indicatorMargins.bottom());
+        const int iw = QtPrivate::qSaturateRound(resolvedWidth(indicator,
+            contentRect.width() - metrics.indicatorMargins.left() - metrics.indicatorMargins.right()));
+        const int ih = QtPrivate::qSaturateRound(resolvedHeight(indicator,
+            contentRect.height() - metrics.indicatorMargins.top() - metrics.indicatorMargins.bottom()));
         const uint alignment = resolvedAlignment(indicator->alignment(), Qt::AlignHCenter, Qt::AlignVCenter);
         const QRect indicatorRect = d->getAlignedRectInContainer(
             contentRect, QSize(iw, ih), alignment, QMargins(), metrics.indicatorMargins);
@@ -2230,6 +2241,7 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
 #if QT_CONFIG(menu)
     case CE_MenuItem:
         if (const auto *menuItem = qstyleoption_cast<const QStyleOptionMenuItem *>(opt)) {
+            using QtPrivate::qSaturateRound;
             // MenuItemSeperator
             if (menuItem->menuItemType == QStyleOptionMenuItem::Separator) {
                 const auto r = d->resolve(w, QQStyleKitReader::ControlType::MenuSeparator, menuItem->state);
@@ -2239,10 +2251,10 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
                 QRect contentRect = opt->rect.marginsRemoved(metrics->margins).marginsRemoved(metrics->padding);
                 const auto *indicator = r.indicator();
                 if (indicator && indicator->visible() && indicator->opacity() > 0) {
-                    const int w = resolvedWidth(indicator,
-                        contentRect.width() - indicator->leftMargin() - indicator->rightMargin());
-                    const int h = resolvedHeight(indicator,
-                        contentRect.height() - indicator->topMargin() - indicator->bottomMargin());
+                    const int w = qSaturateRound(resolvedWidth(indicator,
+                        contentRect.width() - indicator->leftMargin() - indicator->rightMargin()));
+                    const int h = qSaturateRound(resolvedHeight(indicator,
+                        contentRect.height() - indicator->topMargin() - indicator->bottomMargin()));
                     const uint align = resolvedAlignment(indicator->alignment(), Qt::AlignHCenter, Qt::AlignVCenter);
                     const QRect indicatorRect = d->getAlignedRectInContainer(
                         contentRect, QSize(w, h), align, QMargins(), elementMargins(indicator));
@@ -2273,10 +2285,10 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
             auto placeSubIndicator = [&](const QQStyleKitIndicatorProperties *sub, QRect &drawRect) {
                 if (!sub)
                     return;
-                const QSize sz(static_cast<int>(sub->width()), static_cast<int>(sub->height()));
-                const QMargins subMargins(static_cast<int>(sub->leftMargin()), static_cast<int>(sub->topMargin()),
-                                          static_cast<int>(sub->rightMargin()), static_cast<int>(sub->bottomMargin()));
-                const int slotW = subMargins.left() + sz.width() + subMargins.right();
+                const QSize sz(qSaturateRound(sub->width()),
+                               qSaturateRound(sub->height()));
+                const QMargins subMargins = elementMargins(sub);
+                const int slotW = qSaturateRound(sub->leftMargin() + sub->width() + sub->rightMargin());
                 if (sub->alignment() & Qt::AlignRight) {
                     const QRect slot(contentRect.right() - rightOffset - slotW, contentRect.top(),
                                      slotW, contentRect.height());
@@ -2304,10 +2316,12 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
             if (!menuItem->icon.isNull()) {
                 const int iconW = menuItem->maxIconWidth;
                 const QIcon::Mode mode = (menuItem->state & State_Enabled) ? QIcon::Normal : QIcon::Disabled;
-                const QPixmap pm = menuItem->icon.pixmap(proxy()->pixelMetric(PM_SmallIconSize, opt, w),
+                const int iconExtent = proxy()->pixelMetric(PM_SmallIconSize, opt, w);
+                const QPixmap pm = menuItem->icon.pixmap(QSize(iconExtent, iconExtent),
                                                           p->device()->devicePixelRatio(), mode);
-                const int pmW = pm.width() / pm.devicePixelRatio();
-                const int pmH = pm.height() / pm.devicePixelRatio();
+                const QSize pmSize = pm.size() / pm.devicePixelRatio();
+                const int pmW = pmSize.width();
+                const int pmH = pmSize.height();
                 p->drawPixmap(visualRect(menuItem->direction, textRect,
                     QRect(textRect.left(), textRect.top() + (textRect.height() - pmH) / 2, pmW, pmH)), pm);
                 textRect.setLeft(textRect.left() + iconW + r.metrics->spacing);
@@ -2429,6 +2443,7 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
 /*! \reimp */
 QRect QStyleKitStyle::subElementRect(SubElement r, const QStyleOption *opt, const QWidget *widget) const
 {
+    using QtPrivate::qSaturateRound;
     Q_D(const QStyleKitStyle);
 
     switch (r) {
@@ -2499,12 +2514,12 @@ QRect QStyleKitStyle::subElementRect(SubElement r, const QStyleOption *opt, cons
         if (!indicator || !indicator->visible() || indicator->opacity() == 0)
             return rect;
 
-        const int w = resolvedWidth(indicator,
+        const int w = qSaturateRound(resolvedWidth(indicator,
             rect.width() - metrics.padding.left() - metrics.padding.right()
-                - metrics.indicatorMargins.left() - metrics.indicatorMargins.right());
-        const int h = resolvedHeight(indicator,
+                - metrics.indicatorMargins.left() - metrics.indicatorMargins.right()));
+        const int h = qSaturateRound(resolvedHeight(indicator,
             rect.height() - metrics.padding.top() - metrics.padding.bottom()
-                - metrics.indicatorMargins.top() - metrics.indicatorMargins.bottom());
+                - metrics.indicatorMargins.top() - metrics.indicatorMargins.bottom()));
         const uint alignment = resolvedAlignment(indicator->alignment(), Qt::AlignLeft, Qt::AlignVCenter);
         const QRect indicatorRect = d->getAlignedRectInContainer(
             rect, QSize(w, h), alignment, metrics.padding, metrics.indicatorMargins);
@@ -2521,12 +2536,12 @@ QRect QStyleKitStyle::subElementRect(SubElement r, const QStyleOption *opt, cons
         if (!indicator || !indicator->visible() || indicator->opacity() == 0)
             return rect;
 
-        const int w = resolvedWidth(indicator,
+        const int w = qSaturateRound(resolvedWidth(indicator,
             rect.width() - metrics.padding.left() - metrics.padding.right()
-                - metrics.indicatorMargins.left() - metrics.indicatorMargins.right());
-        const int h = resolvedHeight(indicator,
+                - metrics.indicatorMargins.left() - metrics.indicatorMargins.right()));
+        const int h = qSaturateRound(resolvedHeight(indicator,
             rect.height() - metrics.padding.top() - metrics.padding.bottom()
-                - metrics.indicatorMargins.top() - metrics.indicatorMargins.bottom());
+                - metrics.indicatorMargins.top() - metrics.indicatorMargins.bottom()));
         const uint alignment = resolvedAlignment(indicator->alignment(), Qt::AlignLeft, Qt::AlignVCenter);
         const QRect indicatorRect = d->getAlignedRectInContainer(
             rect, QSize(w, h), alignment, metrics.padding, metrics.indicatorMargins);
@@ -2596,12 +2611,12 @@ QRect QStyleKitStyle::subElementRect(SubElement r, const QStyleOption *opt, cons
         if (!indicator || !indicator->visible() || indicator->opacity() == 0)
             return rect;
 
-        const int w = resolvedWidth(indicator,
+        const int w = qSaturateRound(resolvedWidth(indicator,
             rect.width() - metrics.padding.left() - metrics.padding.right()
-                - metrics.indicatorMargins.left() - metrics.indicatorMargins.right());
-        const int h = resolvedHeight(indicator,
+                - metrics.indicatorMargins.left() - metrics.indicatorMargins.right()));
+        const int h = qSaturateRound(resolvedHeight(indicator,
             rect.height() - metrics.padding.top() - metrics.padding.bottom()
-                - metrics.indicatorMargins.top() - metrics.indicatorMargins.bottom());
+                - metrics.indicatorMargins.top() - metrics.indicatorMargins.bottom()));
         const uint alignment = resolvedAlignment(indicator->alignment(), Qt::AlignLeft, Qt::AlignVCenter);
         const QRect indicatorRect = d->getAlignedRectInContainer(
             rect, QSize(w, h), alignment, metrics.padding, metrics.indicatorMargins);
@@ -2617,10 +2632,10 @@ QRect QStyleKitStyle::subElementRect(SubElement r, const QStyleOption *opt, cons
                 return QRect();
 
             QRect indicatorRect = subElementRect(SE_ProgressBarGroove, opt, widget);
-            const auto foregroundW = resolvedWidth(foreground,
-                indicatorRect.width() - foreground->leftMargin() - foreground->rightMargin());
-            const auto foregroundH = resolvedHeight(foreground,
-                indicatorRect.height() - foreground->topMargin() - foreground->bottomMargin());
+            const int foregroundW = qSaturateRound(resolvedWidth(foreground,
+                indicatorRect.width() - foreground->leftMargin() - foreground->rightMargin()));
+            const int foregroundH = qSaturateRound(resolvedHeight(foreground,
+                indicatorRect.height() - foreground->topMargin() - foreground->bottomMargin()));
             const uint foregroundAlign = resolvedAlignment(foreground->alignment(), Qt::AlignLeft, Qt::AlignVCenter);
             const QMargins foregroundMargins = elementMargins(foreground);
             const QRect foregroundRect = d->getAlignedRectInContainer(
@@ -2986,6 +3001,7 @@ QStyle::SubControl QStyleKitStyle::hitTestComplexControl(ComplexControl cc, cons
 QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComplex *opt, SubControl sc,
     const QWidget *w) const
 {
+    using QtPrivate::qSaturateRound;
     Q_D(const QStyleKitStyle);
 
     switch (cc) {
@@ -3018,7 +3034,7 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
                 if (hAlign & Qt::AlignLeft) {
                     grooveRect.moveLeft(contentsRect.x() + indicator->leftMargin());
                 } else if (hAlign & Qt::AlignHCenter) {
-                    const int availableWidth = contentsRect.width()
+                    const qreal availableWidth = contentsRect.width()
                                                 - indicator->leftMargin()
                                                 - indicator->rightMargin();
                     grooveRect.moveLeft(contentsRect.x() + indicator->leftMargin()
@@ -3031,7 +3047,7 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
                 if (vAlign & Qt::AlignTop) {
                     grooveRect.moveTop(contentsRect.y() + indicator->topMargin());
                 } else if (vAlign & Qt::AlignVCenter) {
-                    const int availableHeight = contentsRect.height()
+                    const qreal availableHeight = contentsRect.height()
                                                 - indicator->topMargin()
                                                 - indicator->bottomMargin();
                     grooveRect.moveTop(contentsRect.y() + indicator->topMargin()
@@ -3047,33 +3063,29 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
                 if (!handle || !handle->visible() || handle->opacity() == 0)
                     return contentsRect;
 
-                QRect handleRect;
-                const auto handleW = resolvedWidth(handle,
+                const qreal handleW = resolvedWidth(handle,
                     contentsRect.width() - handle->leftMargin() - handle->rightMargin());
-                const auto handleH = resolvedHeight(handle,
+                const qreal handleH = resolvedHeight(handle,
                     contentsRect.height() - handle->topMargin() - handle->bottomMargin());
+                QRectF handleRect(0, 0, handleW, handleH);
                 if (horizontal) {
-                    const int range = contentsRect.width()
-                        - handle->leftMargin() - handle->rightMargin() - handleW;
+                    const int range = qSaturateRound(contentsRect.width()
+                        - handle->leftMargin() - handle->rightMargin() - handleW);
                     const int sliderPos = QStyle::sliderPositionFromValue(
                         slider->minimum, slider->maximum, slider->sliderPosition, range, false);
-                    handleRect = QRect(
-                        contentsRect.x() + handle->leftMargin() + sliderPos,
-                        contentsRect.y() + handle->topMargin() - handle->bottomMargin()
-                            + (contentsRect.height() - handleH) / 2,
-                        handleW, handleH);
+                    handleRect.moveLeft(contentsRect.x() + handle->leftMargin() + sliderPos);
+                    handleRect.moveTop(contentsRect.y() + handle->topMargin() - handle->bottomMargin()
+                        + (contentsRect.height() - handleH) / 2.0);
                 } else {
-                    const int range = contentsRect.height()
-                        - handle->topMargin() - handle->bottomMargin() - handleH;
+                    const int range = qSaturateRound(contentsRect.height()
+                        - handle->topMargin() - handle->bottomMargin() - handleH);
                     const int sliderPos = QStyle::sliderPositionFromValue(
                         slider->minimum, slider->maximum, slider->sliderPosition, range, true);
-                    handleRect = QRect(
-                        contentsRect.x() + handle->leftMargin() - handle->rightMargin()
-                            + (contentsRect.width() - handleW) / 2,
-                        contentsRect.y() + handle->topMargin() + sliderPos,
-                        handleW, handleH);
+                    handleRect.moveLeft(contentsRect.x() + handle->leftMargin() - handle->rightMargin()
+                        + (contentsRect.width() - handleW) / 2.0);
+                    handleRect.moveTop(contentsRect.y() + handle->topMargin() + sliderPos);
                 }
-                return visualRect(opt->direction, opt->rect, handleRect);
+                return visualRect(opt->direction, opt->rect, handleRect.toAlignedRect());
             }
             default:
                 break;
@@ -3113,10 +3125,10 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
                 if (!indicator || !indicator->visible() || indicator->opacity() == 0)
                     return QRect();
 
-                const int w = resolvedWidth(indicator,
-                    contentsRect.width() - indicator->leftMargin() - indicator->rightMargin());
-                const int h = resolvedHeight(indicator,
-                    contentsRect.height() - indicator->topMargin() - indicator->bottomMargin());
+                const int w = qSaturateRound(resolvedWidth(indicator,
+                    contentsRect.width() - indicator->leftMargin() - indicator->rightMargin()));
+                const int h = qSaturateRound(resolvedHeight(indicator,
+                    contentsRect.height() - indicator->topMargin() - indicator->bottomMargin()));
                 const uint indicatorAlign = resolvedAlignment(indicator->alignment(), Qt::AlignRight, Qt::AlignVCenter);
                 const QMargins indicatorMargins = elementMargins(indicator);
                 return visualRect(opt->direction, opt->rect,
@@ -3187,10 +3199,10 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
                 if (!upIndicator || !upIndicator->visible() || upIndicator->opacity() == 0)
                     return contentsRect;
 
-                const int w = resolvedWidth(upIndicator,
-                    contentsRect.width() - upIndicator->leftMargin() - upIndicator->rightMargin());
-                const int h = resolvedHeight(upIndicator,
-                    contentsRect.height() - upIndicator->topMargin() - upIndicator->bottomMargin());
+                const int w = qSaturateRound(resolvedWidth(upIndicator,
+                    contentsRect.width() - upIndicator->leftMargin() - upIndicator->rightMargin()));
+                const int h = qSaturateRound(resolvedHeight(upIndicator,
+                    contentsRect.height() - upIndicator->topMargin() - upIndicator->bottomMargin()));
                 const uint upAlign = resolvedAlignment(upIndicator->alignment(), Qt::AlignLeft, Qt::AlignVCenter);
                 const QMargins upMargins = elementMargins(upIndicator);
                 return visualRect(opt->direction, opt->rect,
@@ -3201,10 +3213,10 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
                 if (!downIndicator || !downIndicator->visible() || downIndicator->opacity() == 0)
                     return frameRect;
 
-                const int w = resolvedWidth(downIndicator,
-                    contentsRect.width() - downIndicator->leftMargin() - downIndicator->rightMargin());
-                const int h = resolvedHeight(downIndicator,
-                    contentsRect.height() - downIndicator->topMargin() - downIndicator->bottomMargin());
+                const int w = qSaturateRound(resolvedWidth(downIndicator,
+                    contentsRect.width() - downIndicator->leftMargin() - downIndicator->rightMargin()));
+                const int h = qSaturateRound(resolvedHeight(downIndicator,
+                    contentsRect.height() - downIndicator->topMargin() - downIndicator->bottomMargin()));
                 const uint downAlign = resolvedAlignment(downIndicator->alignment(), Qt::AlignLeft, Qt::AlignVCenter);
                 const QMargins downMargins = elementMargins(downIndicator);
                 return visualRect(opt->direction, opt->rect,
@@ -3356,10 +3368,10 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
                 if (!indicator || !indicator->visible() || indicator->opacity() == 0)
                     return QRect();
 
-                const int w = resolvedWidth(indicator,
-                    contentsRect.width() - indicator->leftMargin() - indicator->rightMargin());
-                const int h = resolvedHeight(indicator,
-                    contentsRect.height() - indicator->topMargin() - indicator->bottomMargin());
+                const int w = qSaturateRound(resolvedWidth(indicator,
+                    contentsRect.width() - indicator->leftMargin() - indicator->rightMargin()));
+                const int h = qSaturateRound(resolvedHeight(indicator,
+                    contentsRect.height() - indicator->topMargin() - indicator->bottomMargin()));
                 const uint indicatorAlign = resolvedAlignment(indicator->alignment(), Qt::AlignRight, Qt::AlignVCenter);
                 const QMargins indicatorMargins = elementMargins(indicator);
                 return visualRect(opt->direction, opt->rect,
@@ -3673,25 +3685,30 @@ QSize QStyleKitStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt,
             const auto *indicator = resolved.indicator();
             const auto *first = indicator ? indicator->first()  : nullptr;
             const auto *second = indicator ? indicator->second() : nullptr;
-            int indicatorWidth = 0;
-            int indicatorHeight = 0;
+            int indicatorW = 0;
+            int indicatorH = 0;
+            using QtPrivate::qSaturateRound;
             if (first && menuItem->checkType != QStyleOptionMenuItem::NotCheckable) {
-                indicatorWidth += first->leftMargin() + first->width() + first->rightMargin() + m.spacing;
-                indicatorHeight = std::max(indicatorHeight, (int)(first->topMargin() + first->height() + first->bottomMargin()));
+                indicatorW += qSaturateRound(first->leftMargin() + first->width()
+                                             + first->rightMargin()) + m.spacing;
+                indicatorH = std::max(qSaturateRound(first->topMargin() + first->bottomMargin()
+                                                     + first->height()), indicatorH);
             }
             if (second && menuItem->menuItemType == QStyleOptionMenuItem::SubMenu) {
-                indicatorWidth += second->leftMargin() + second->width() + second->rightMargin() + m.spacing;
-                indicatorHeight = std::max(indicatorHeight, (int)(second->topMargin() + second->height() + second->bottomMargin()));
+                indicatorW += qSaturateRound(second->leftMargin() + second->width()
+                                             + second->rightMargin()) + m.spacing;
+                indicatorH = std::max(qSaturateRound(second->topMargin() + second->bottomMargin()
+                                                     + second->height()), indicatorH);
             }
-            const int bgHeight = m.bgImplicitSize.height() + m.margins.top() + m.margins.bottom();
+            const int bgH = m.bgImplicitSize.height() + m.margins.top() + m.margins.bottom();
             const int iconReserved = menuItem->maxIconWidth > 0 ? menuItem->maxIconWidth + m.spacing : 0;
-            const int contentWidth = contentsSize.width() + m.padding.left() + m.padding.right()
+            const int contentW = contentsSize.width() + m.padding.left() + m.padding.right()
                                    + m.textPadding.left() + m.textPadding.right()
-                                   + indicatorWidth + iconReserved;
-            const int contentHeight = contentsSize.height() + m.padding.top() + m.padding.bottom()
+                                   + indicatorW + iconReserved;
+            const int contentH = contentsSize.height() + m.padding.top() + m.padding.bottom()
                                     + m.textPadding.top() + m.textPadding.bottom();
-            return QSize(std::max(contentWidth, minMenuW),
-                         std::max({contentHeight, indicatorHeight, bgHeight}));
+            return QSize(std::max(contentW, minMenuW),
+                         std::max({contentH, indicatorH, bgH}));
         }
         break;
     case CT_Menu: {
