@@ -7,6 +7,7 @@
 #include <QtQml/qqmlcomponent.h>
 #include <QtQuick/private/qquickpath_p.h>
 #include <QtQuick/private/qquickrectangle_p.h>
+#include <QtQuick/private/qquicksvgparser_p.h>
 
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 
@@ -22,6 +23,8 @@ private slots:
     void catmullRomCurve();
     void closedCatmullRomCurve();
     void svg();
+    void svgMalformed_data();
+    void svgMalformed();
     void line();
     void rectangle_data();
     void rectangle();
@@ -280,6 +283,47 @@ void tst_QuickPath::svg()
 {
     svg(QSizeF(1,1));
     svg(QSizeF(5,3));
+}
+
+void tst_QuickPath::svgMalformed_data()
+{
+    QTest::addColumn<QString>("svgPath");
+
+#ifdef QT_BUILD_INTERNAL
+    // Malformed path strings must not crash the parser.
+    QTest::newRow("empty") << QString();
+    QTest::newRow("single space") << QStringLiteral(" ");
+    QTest::newRow("multiple spaces") << QStringLiteral("   ");
+    QTest::newRow("tabs and newlines") << QStringLiteral("\t\n ");
+    QTest::newRow("command then trailing whitespace") << QStringLiteral("M0 0   ");
+    QTest::newRow("trailing whitespace after args") << QStringLiteral("M0 0 L10 10 \n ");
+    QTest::newRow("whitespace after command to end") << QStringLiteral("L \t");
+    QTest::newRow("whitespace between command and numbers") << QStringLiteral("M  10  20  ");
+    QTest::newRow("trailing comma to end") << QStringLiteral("M0 0,");
+    QTest::newRow("comma then whitespace to end") << QStringLiteral("M0 0, \n");
+    QTest::newRow("comma between numbers then end") << QStringLiteral("L10,10, ");
+    QTest::newRow("integer to end") << QStringLiteral("M0 0 L10 20");
+    QTest::newRow("decimal to end") << QStringLiteral("M0 0 L1.5 2.5");
+    QTest::newRow("trailing dot to end") << QStringLiteral("M0 0 L1. 2.");
+    QTest::newRow("exponent to end") << QStringLiteral("M0 0 L1e2 3e2");
+    QTest::newRow("signed exponent to end") << QStringLiteral("M0 0 L1e-2 3e-2");
+    QTest::newRow("bare exponent letter to end") << QStringLiteral("M0 0 L1e");
+    QTest::newRow("sign only token to end") << QStringLiteral("M0 0 L-");
+    QTest::newRow("dot only token to end") << QStringLiteral("M0 0 L.");
+#else
+    QSKIP("This test relies on private APIs that are only exported in developer-builds");
+#endif
+}
+
+void tst_QuickPath::svgMalformed()
+{
+#ifdef QT_BUILD_INTERNAL
+    QFETCH(QString, svgPath);
+    QPainterPath path;
+    QQuickSvgParser::parsePathDataFast(svgPath, path);
+#else
+    QSKIP("This test relies on private APIs that are only exported in developer-builds");
+#endif
 }
 
 void tst_QuickPath::line(QSizeF scale)

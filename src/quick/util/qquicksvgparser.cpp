@@ -19,7 +19,7 @@ static inline bool isDigit(ushort ch)
     return ((ch >> 4) == 3) && (magic >> (ch & 15));
 }
 
-static qreal toDouble(const QChar *&str)
+static qreal toDouble(const QChar *&str, const QChar *end)
 {
     const int maxLen = 255;//technically doubles can go til 308+ but whatever
     char temp[maxLen+1];
@@ -31,28 +31,28 @@ static qreal toDouble(const QChar *&str)
     } else if (*str == QLatin1Char('+')) {
         ++str;
     }
-    while (isDigit(str->unicode()) && pos < maxLen) {
+    while (str != end && isDigit(str->unicode()) && pos < maxLen) {
         temp[pos++] = str->toLatin1();
         ++str;
     }
-    if (*str == QLatin1Char('.') && pos < maxLen) {
+    if (str != end && *str == QLatin1Char('.') && pos < maxLen) {
         temp[pos++] = '.';
         ++str;
     }
-    while (isDigit(str->unicode()) && pos < maxLen) {
+    while (str != end && isDigit(str->unicode()) && pos < maxLen) {
         temp[pos++] = str->toLatin1();
         ++str;
     }
     bool exponent = false;
-    if ((*str == QLatin1Char('e') || *str == QLatin1Char('E')) && pos < maxLen) {
+    if (str != end && (*str == QLatin1Char('e') || *str == QLatin1Char('E')) && pos < maxLen) {
         exponent = true;
         temp[pos++] = 'e';
         ++str;
-        if ((*str == QLatin1Char('-') || *str == QLatin1Char('+')) && pos < maxLen) {
+        if (str != end && (*str == QLatin1Char('-') || *str == QLatin1Char('+')) && pos < maxLen) {
             temp[pos++] = str->toLatin1();
             ++str;
         }
-        while (isDigit(str->unicode()) && pos < maxLen) {
+        while (str != end && isDigit(str->unicode()) && pos < maxLen) {
             temp[pos++] = str->toLatin1();
             ++str;
         }
@@ -96,24 +96,28 @@ static qreal toDouble(const QChar *&str)
     return val;
 
 }
-static inline void parseNumbersArray(const QChar *&str, QVarLengthArray<qreal, 8> &points)
+static inline void parseNumbersArray(const QChar *&str, const QChar *end, QVarLengthArray<qreal, 8> &points)
 {
-    while (str->isSpace())
-        ++str;
-    while (isDigit(str->unicode()) ||
-           *str == QLatin1Char('-') || *str == QLatin1Char('+') ||
-           *str == QLatin1Char('.')) {
-
-        points.append(toDouble(str));
-
-        while (str->isSpace())
+    auto eatWhitespace = [&]{
+        while (str != end && str->isSpace())
             ++str;
+        return str != end;
+    };
+    if (!eatWhitespace())
+        return;
+    while (str != end && (isDigit(str->unicode()) ||
+           *str == QLatin1Char('-') || *str == QLatin1Char('+') ||
+           *str == QLatin1Char('.'))) {
+
+        points.append(toDouble(str, end));
+
+        if (!eatWhitespace())
+            return;
         if (*str == QLatin1Char(','))
             ++str;
 
-        //eat the rest of space
-        while (str->isSpace())
-            ++str;
+        if (!eatWhitespace())
+            return;
     }
 }
 
@@ -253,12 +257,12 @@ bool QQuickSvgParser::parsePathDataFast(const QString &dataStr, QPainterPath &pa
     const QChar *end = str + dataStr.size();
 
     while (str != end) {
-        while (str->isSpace())
-            ++str;
         QChar pathElem = *str;
         ++str;
+        if (pathElem.isSpace())
+            continue;
         QVarLengthArray<qreal, 8> arg;
-        parseNumbersArray(str, arg);
+        parseNumbersArray(str, end, arg);
         if (pathElem == QLatin1Char('z') || pathElem == QLatin1Char('Z'))
             arg.append(0);//dummy
         const qreal *num = arg.constData();

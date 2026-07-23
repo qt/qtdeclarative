@@ -56,4 +56,47 @@ CanvasTestCase {
            }
        }
    }
+
+   // The test only verifies that assigning malformed strings (esp those ending
+   // with whitespace) to ctx.path does not crash the parser.
+   function test_svgpath_malformed_data() {
+       return [
+           { tag: "empty", path: "" },
+           { tag: "single space", path: " " },
+           { tag: "multiple spaces", path: "   " },
+           { tag: "abs and newlines", path: "\t\n "},
+           { tag: "command then trailing whitespace", path: "M0 0   "},
+           { tag: "trailing whitespace after args", path: "M0 0 L10 10 \n "},
+           { tag: "whitespace after command to end", path: "L \t"},
+           { tag: "whitespace between command and numbers", path: "M  10  20  "},
+           { tag: "trailing comma to end", path: "M0 0,"},
+           { tag: "comma then whitespace to end", path: "M0 0, \n"},
+           { tag: "comma between numbers then end", path: "L10,10, "},
+           { tag: "integer to end", path: "M0 0 L10 20"},
+           { tag: "decimal to end", path: "M0 0 L1.5 2.5"},
+           { tag: "trailing dot to end", path: "M0 0 L1. 2."},
+           { tag: "exponent to end", path: "M0 0 L1e2 3e2"},
+           { tag: "signed exponent to end", path: "M0 0 L1e-2 3e-2"},
+           { tag: "bare exponent letter to end", path: "M0 0 L1e"},
+           { tag: "sign only token to end", path: "M0 0 L-"},
+           { tag: "dot only token to end", path: "M0 0 L."}
+       ]
+   }
+
+   function test_svgpath_malformed(data) {
+       var canvas = Qt.createQmlObject(`
+           import QtQuick
+           Canvas {
+               height: 100
+               width:100
+               renderTarget:Canvas.Image
+           }
+       `, testCase, "testCanvas");
+       tryVerify(function() { return canvas.available; });
+       var ctx = canvas.getContext('2d');
+       ctx.beginPath();
+       ctx.path = data.path;
+       ctx.fill();
+       verify(true); // reached here without crashing
+   }
 }
