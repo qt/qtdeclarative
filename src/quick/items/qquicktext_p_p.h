@@ -77,6 +77,7 @@ public:
         QQuickTextImageHandler *imageHandler = nullptr;
         QString activeLink;
         QString hoveredLink;
+        QString hoveredToolTip;
         int minimumPixelSize;
         int minimumPointSize;
         int maximumLineCount;
@@ -170,6 +171,7 @@ public:
     void setupCustomLineGeometry(QTextLine &line, qreal &height, int fullLayoutTextLength, int lineOffset = 0);
     bool isLinkActivatedConnected();
     bool isLinkHoveredConnected();
+    bool isHoveredToolTipChangedConnected();
     QStringList links() const;
 
     struct LinkDesc {
@@ -184,6 +186,8 @@ public:
 
     static QString anchorAt(const QTextLayout *layout, const QPointF &mousePos);
     QString anchorAt(const QPointF &pos) const;
+    static QString toolTipAt(const QTextLayout *layout, const QPointF &mousePos);
+    QString toolTipAt(const QPointF &pos) const;
 
     inline qreal lineHeight() const { return extra.isAllocated() ? extra->lineHeight : 1.0; }
     inline int maximumLineCount() const { return extra.isAllocated() ? extra->maximumLineCount : INT_MAX; }

@@ -101,6 +101,8 @@ private slots:
 
     void styledTextLinkInColumnLayout();
 
+    void hoveredToolTip();
+
     void implicitSize_data();
     void implicitSize();
     void implicitSizeChangeRewrap();
@@ -2252,6 +2254,48 @@ void tst_qquicktext::styledTextLinkInColumnLayout()
     const QPoint linkCenter = textItem->mapToScene(linkRect.center()).toPoint();
     QTest::mouseMove(&view, linkCenter);
     QTRY_COMPARE(hoveredLinkText->text(), expectedLink);
+}
+
+// Hovering a text fragment that carries a tool tip (via the anchor's "title"
+// attribute) updates the hoveredToolTip property. Here a tool tip is
+// reinvented from primitive components (Rectangle { Text {} }) that binds to
+// that property, rather than using Qt Quick Controls' ToolTip.
+void tst_qquicktext::hoveredToolTip()
+{
+    QQuickView view;
+    QVERIFY(QQuickTest::showView(view, testFileUrl("hoveredToolTip.qml")));
+
+    QQuickText *textItem = view.rootObject()->findChild<QQuickText *>("textItem");
+    QVERIFY(textItem);
+    QQuickItem *toolTip = view.rootObject()->findChild<QQuickItem *>("toolTip");
+    QVERIFY(toolTip);
+    QQuickText *toolTipLabel = view.rootObject()->findChild<QQuickText *>("toolTipLabel");
+    QVERIFY(toolTipLabel);
+
+    // Initially nothing is hovered, so the reinvented tool tip is hidden.
+    QVERIFY(!toolTip->isVisible());
+    QCOMPARE(textItem->hoveredToolTip(), QString());
+
+    const QString plainText("hover the word here");
+    const TextMetrics metrics(plainText);
+    const QSizeF bounds(textItem->width(), textItem->height());
+    const int wordCharPos = plainText.indexOf("word") + 2; // middle of "word"
+    const QRectF wordRect = metrics.characterRectangle(wordCharPos, Qt::AlignLeft, Qt::AlignTop, bounds);
+
+    // Hover the word that carries a tool tip.
+    const QPoint wordCenter = textItem->mapToScene(wordRect.center()).toPoint();
+    QTest::mouseMove(&view, wordCenter);
+    QTRY_COMPARE(textItem->hoveredToolTip(), QStringLiteral("the tool tip"));
+    QVERIFY(toolTip->isVisible());
+    QCOMPARE(toolTipLabel->text(), QStringLiteral("the tool tip"));
+
+    // Move onto text without a tool tip: hoveredToolTip clears and the tool tip hides.
+    const int hereCharPos = plainText.indexOf("here") + 2;
+    const QRectF hereRect = metrics.characterRectangle(hereCharPos, Qt::AlignLeft, Qt::AlignTop, bounds);
+    const QPoint hereCenter = textItem->mapToScene(hereRect.center()).toPoint();
+    QTest::mouseMove(&view, hereCenter);
+    QTRY_COMPARE(textItem->hoveredToolTip(), QString());
+    QVERIFY(!toolTip->isVisible());
 }
 
 void tst_qquicktext::baseUrl()

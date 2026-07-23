@@ -76,7 +76,9 @@ public:
     QRectF selectionRect() const;
 
     QString hoveredLink() const;
+    QString hoveredToolTip() const;
     QString anchorAt(const QPointF &pos) const;
+    QTextCharFormat charFormatAt(const QPointF &pos) const;
     QTextBlock blockWithMarkerAt(const QPointF &pos) const;
 
     void setCursorWidth(int width);
@@ -137,6 +139,7 @@ Q_SIGNALS:
     void linkHovered(const QString &link);
     void markerClicked();
     void markerHovered(bool marker);
+    void hoveredToolTipChanged();
 
 public:
     virtual void processEvent(QEvent *e, const QTransform &transform);

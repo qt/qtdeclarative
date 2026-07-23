@@ -2825,6 +2825,7 @@ void QQuickTextEditPrivate::init()
     QObject::connect(document->documentLayout(), &QAbstractTextDocumentLayout::updateBlock, q, &QQuickTextEdit::invalidateBlock);
     QObject::connect(control, &QQuickTextControl::linkHovered, q, &QQuickTextEdit::q_linkHovered);
     QObject::connect(control, &QQuickTextControl::markerHovered, q, &QQuickTextEdit::q_markerHovered);
+    QObject::connect(control, &QQuickTextControl::hoveredToolTipChanged, q, &QQuickTextEdit::hoveredToolTipChanged);
 
     document->setPageSize(QSizeF(0, 0));
     document->setDefaultFont(font);
@@ -3481,6 +3482,17 @@ bool QQuickTextEditPrivate::isLinkHoveredConnected()
     IS_SIGNAL_CONNECTED(q, QQuickTextEdit, linkHovered, (const QString &));
 }
 
+bool QQuickTextEditPrivate::isHoveredToolTipChangedConnected()
+{
+    Q_Q(QQuickTextEdit);
+    IS_SIGNAL_CONNECTED(q, QQuickTextEdit, hoveredToolTipChanged, ());
+}
+
+bool QQuickTextEditPrivate::isHoveredSignalConnected()
+{
+    return isLinkHoveredConnected() || isHoveredToolTipChangedConnected();
+}
+
 #if QT_CONFIG(cursor)
 void QQuickTextEditPrivate::updateMouseCursorShape()
 {
@@ -3519,6 +3531,28 @@ void QQuickTextEditPrivate::updateMouseCursorShape()
 */
 
 /*!
+    \qmlproperty string QtQuick::TextEdit::hoveredToolTip
+    \since 6.13
+
+    This property contains the tool tip string of the text fragment that the
+    user is hovering, if any; otherwise it is empty. It changes as the mouse
+    moves between fragments, and becomes empty when the mouse leaves text that
+    carries a tool tip, or leaves the item. The tool tip must be provided by
+    rich text or HTML, or by adding character formats to a \l QTextDocument
+    programmatically.
+
+    A typical use is to drive a \l ToolTip, which appears a short time after
+    hovering in one place over the link or the image:
+    \snippet qml/text/hoveredToolTip.qml textedit
+
+    Alternatively you could use a HoverHandler to make the ToolTip follow the
+    cursor, but this is a little more expensive:
+    \snippet qml/text/hoveredToolTip.qml textedit-follow
+
+    \sa hoveredLink
+*/
+
+/*!
     \qmlsignal QtQuick::TextEdit::textEdited()
     \since 6.9
 
@@ -3543,10 +3577,26 @@ QString QQuickTextEdit::hoveredLink() const
     return QString();
 }
 
+QString QQuickTextEdit::hoveredToolTip() const
+{
+    Q_D(const QQuickTextEdit);
+    if (const_cast<QQuickTextEditPrivate *>(d)->isHoveredToolTipChangedConnected()) {
+        return d->control->hoveredToolTip();
+    } else {
+#if QT_CONFIG(cursor)
+        if (QQuickWindow *wnd = window()) {
+            const QPointF pos = QCursor::pos(wnd->screen()) - wnd->position() - mapToScene(QPointF(0, 0));
+            return d->control->charFormatAt(pos).toolTip();
+        }
+#endif // cursor
+    }
+    return QString();
+}
+
 void QQuickTextEdit::hoverEnterEvent(QHoverEvent *event)
 {
     Q_D(QQuickTextEdit);
-    if (d->isLinkHoveredConnected())
+    if (d->isHoveredSignalConnected())
         d->control->processEvent(event, QPointF(-d->xoff, -d->yoff));
     event->ignore();
 }
@@ -3554,7 +3604,7 @@ void QQuickTextEdit::hoverEnterEvent(QHoverEvent *event)
 void QQuickTextEdit::hoverMoveEvent(QHoverEvent *event)
 {
     Q_D(QQuickTextEdit);
-    if (d->isLinkHoveredConnected())
+    if (d->isHoveredSignalConnected())
         d->control->processEvent(event, QPointF(-d->xoff, -d->yoff));
     event->ignore();
 }
@@ -3562,7 +3612,7 @@ void QQuickTextEdit::hoverMoveEvent(QHoverEvent *event)
 void QQuickTextEdit::hoverLeaveEvent(QHoverEvent *event)
 {
     Q_D(QQuickTextEdit);
-    if (d->isLinkHoveredConnected())
+    if (d->isHoveredSignalConnected())
         d->control->processEvent(event, QPointF(-d->xoff, -d->yoff));
     event->ignore();
 }

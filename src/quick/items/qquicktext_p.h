@@ -58,6 +58,7 @@ class Q_QUICK_EXPORT QQuickText : public QQuickImplicitSizeItem, public QQuickTe
     Q_PROPERTY(FontSizeMode fontSizeMode READ fontSizeMode WRITE setFontSizeMode NOTIFY fontSizeModeChanged)
     Q_PROPERTY(RenderType renderType READ renderType WRITE setRenderType NOTIFY renderTypeChanged)
     Q_PROPERTY(QString hoveredLink READ hoveredLink NOTIFY linkHovered REVISION(2, 2))
+    Q_PROPERTY(QString hoveredToolTip READ hoveredToolTip NOTIFY hoveredToolTipChanged REVISION(6, 13))
     Q_PROPERTY(int renderTypeQuality READ renderTypeQuality WRITE setRenderTypeQuality NOTIFY renderTypeQualityChanged REVISION(6, 0))
 
     Q_PROPERTY(qreal padding READ padding WRITE setPadding RESET resetPadding NOTIFY paddingChanged REVISION(2, 6))
@@ -216,6 +217,7 @@ public:
     void setRenderTypeQuality(int renderTypeQuality);
 
     QString hoveredLink() const;
+    QString hoveredToolTip() const;
 
     Q_REVISION(2, 3) Q_INVOKABLE QString linkAt(qreal x, qreal y) const;
 
@@ -248,6 +250,7 @@ Q_SIGNALS:
     void textChanged(const QString &text);
     void linkActivated(const QString &link);
     Q_REVISION(2, 2) void linkHovered(const QString &link);
+    Q_REVISION(6, 13) void hoveredToolTipChanged();
     void fontChanged(const QFont &font);
     void colorChanged();
     void linkColorChanged();

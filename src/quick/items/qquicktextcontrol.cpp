@@ -1538,6 +1538,13 @@ void QQuickTextControlPrivate::hoverEvent(QHoverEvent *e, const QPointF &pos)
         if (hoveredMarker)
             qCDebug(lcHoverTrace) << q << e->type() << pos << "hovered marker" << int(block.blockFormat().marker()) << block.text();
     }
+    const QString toolTip = e->type() != QEvent::HoverLeave ? q->charFormatAt(pos).toolTip()
+                                                            : QString();
+    if (toolTip != hoveredToolTip) {
+        hoveredToolTip = toolTip;
+        emit q->hoveredToolTipChanged();
+        qCDebug(lcHoverTrace) << q << e->type() << pos << "hoveredToolTip" << hoveredToolTip;
+    }
 }
 
 bool QQuickTextControl::hasImState() const
@@ -1607,10 +1614,23 @@ QString QQuickTextControl::hoveredLink() const
     return d->hoveredLink;
 }
 
+QString QQuickTextControl::hoveredToolTip() const
+{
+    Q_D(const QQuickTextControl);
+    return d->hoveredToolTip;
+}
+
 QString QQuickTextControl::anchorAt(const QPointF &pos) const
 {
     Q_D(const QQuickTextControl);
     return d->doc->documentLayout()->anchorAt(pos);
+}
+
+QTextCharFormat QQuickTextControl::charFormatAt(const QPointF &pos) const
+{
+    Q_D(const QQuickTextControl);
+    const QTextFormat fmt = d->doc->documentLayout()->formatAt(pos);
+    return fmt.toCharFormat();
 }
 
 QTextBlock QQuickTextControl::blockWithMarkerAt(const QPointF &pos) const

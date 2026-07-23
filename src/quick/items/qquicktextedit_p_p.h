@@ -124,6 +124,8 @@ public:
     qreal getImplicitWidth() const override;
     Qt::LayoutDirection textDirection(const QString &text) const;
     bool isLinkHoveredConnected();
+    bool isHoveredToolTipChangedConnected();
+    bool isHoveredSignalConnected();
 
 #if QT_CONFIG(cursor)
     void updateMouseCursorShape();

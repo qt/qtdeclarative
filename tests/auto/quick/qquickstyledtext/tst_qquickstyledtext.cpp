@@ -39,6 +39,8 @@ private slots:
     void textOutput_data();
     void anchors();
     void anchors_data();
+    void toolTips();
+    void toolTips_data();
     void longString();
 };
 
@@ -206,6 +208,60 @@ void tst_qquickstyledtext::anchors_data()
     QTest::newRow("ipv6") << "Test string with <a href=\"//user:pass@[56::56:56:56:127.0.0.1]:99\">url</a>." << "Test string with url." << (FormatList() << Format(Format::Anchor, 17, 3));
     QTest::newRow("uni") << "Test string with <a href=\"data:text/javascript,d5%20%3D%20'five\\u0027s'%3B\">url</a>." << "Test string with url." << (FormatList() << Format(Format::Anchor, 17, 3));
     QTest::newRow("utf8") << "Test string with <a href=\"http://www.räksmörgås.se/pub?a=b&a=dø&a=f#vræl\">url</a>." << "Test string with url." << (FormatList() << Format(Format::Anchor, 17, 3));
+}
+
+// A "title" attribute on <a> or <img> sets QTextCharFormat::toolTip(), which
+// drives Text/TextEdit's hoveredToolTip property. This mirrors the tool tip
+// that QTextDocument's HTML importer produces for rich text.
+void tst_qquickstyledtext::toolTips()
+{
+    QFETCH(QString, input);
+    QFETCH(QString, output);
+    QFETCH(int, start);
+    QFETCH(int, length);
+    QFETCH(QString, toolTip);
+
+    QTextLayout layout;
+    QList<QQuickStyledTextImgTag*> imgTags;
+    bool fontSizeModified = false;
+    QQuickStyledText::parse(input, layout, imgTags, QUrl(), nullptr, false, &fontSizeModified);
+
+    QCOMPARE(layout.text(), output);
+
+    const QList<QTextLayout::FormatRange> layoutFormats = layout.formats();
+    bool found = false;
+    for (const QTextLayout::FormatRange &range : layoutFormats) {
+        if (range.start == start && range.length == length) {
+            QCOMPARE(range.format.toolTip(), toolTip);
+            found = true;
+        }
+    }
+    QVERIFY(found);
+}
+
+void tst_qquickstyledtext::toolTips_data()
+{
+    QTest::addColumn<QString>("input");
+    QTest::addColumn<QString>("output");
+    QTest::addColumn<int>("start");
+    QTest::addColumn<int>("length");
+    QTest::addColumn<QString>("toolTip");
+
+    QTest::newRow("anchor title")
+        << "Text <a href=\"#\" title=\"the tip\">link</a>." << "Text link."
+        << 5 << 4 << QStringLiteral("the tip");
+    QTest::newRow("anchor title without href")
+        << "Text <a title=\"just tip\">x</a>." << "Text x."
+        << 5 << 1 << QStringLiteral("just tip");
+    QTest::newRow("anchor without title")
+        << "Text <a href=\"#\">link</a>." << "Text link."
+        << 5 << 4 << QString();
+    QTest::newRow("img title")
+        << "a<img src=\"blah.png\" title=\"pic tip\"/>b" << QString(u"a\uFFFCb")
+        << 1 << 1 << QStringLiteral("pic tip");
+    QTest::newRow("img without title")
+        << "a<img src=\"blah.png\"/>b" << QString(u"a\uFFFCb")
+        << 1 << 1 << QString();
 }
 
 void tst_qquickstyledtext::longString()

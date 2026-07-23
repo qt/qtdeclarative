@@ -105,6 +105,7 @@ public:
     QString anchorOnMousePress;
     QString linkToCopy;
     QString hoveredLink;
+    QString hoveredToolTip;
     QTextBlock blockWithMarkerUnderMousePress;
 
     QBasicTimer cursorBlinkTimer;

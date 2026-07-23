@@ -83,6 +83,7 @@ class Q_QUICK_EXPORT QQuickTextEdit : public QQuickImplicitSizeItem, public QQui
     Q_PROPERTY(RenderType renderType READ renderType WRITE setRenderType NOTIFY renderTypeChanged)
     Q_PROPERTY(QQuickTextDocument *textDocument READ textDocument CONSTANT FINAL REVISION(2, 1))
     Q_PROPERTY(QString hoveredLink READ hoveredLink NOTIFY linkHovered REVISION(2, 2))
+    Q_PROPERTY(QString hoveredToolTip READ hoveredToolTip NOTIFY hoveredToolTipChanged REVISION(6, 13))
     Q_PROPERTY(qreal padding READ padding WRITE setPadding RESET resetPadding NOTIFY paddingChanged REVISION(2, 6))
     Q_PROPERTY(qreal topPadding READ topPadding WRITE setTopPadding RESET resetTopPadding NOTIFY topPaddingChanged REVISION(2, 6))
     Q_PROPERTY(qreal leftPadding READ leftPadding WRITE setLeftPadding RESET resetLeftPadding NOTIFY leftPaddingChanged REVISION(2, 6))
@@ -264,6 +265,7 @@ public:
     QQuickTextDocument *textDocument();
 
     QString hoveredLink() const;
+    QString hoveredToolTip() const;
 
     Q_REVISION(2, 3) Q_INVOKABLE QString linkAt(qreal x, qreal y) const;
 
@@ -322,6 +324,7 @@ Q_SIGNALS:
     void mouseSelectionModeChanged(QQuickTextEdit::SelectionMode mode);
     void linkActivated(const QString &link);
     Q_REVISION(2, 2) void linkHovered(const QString &link);
+    Q_REVISION(6, 13) void hoveredToolTipChanged();
     void canPasteChanged();
     void canUndoChanged();
     void canRedoChanged();

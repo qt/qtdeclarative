@@ -47,6 +47,7 @@ public:
     static constexpr qreal HMargin = 1.0;
 
     QUrl url;
+    QString tooltip;
     QPointF pos;
     QSize size;
     int position = 0;

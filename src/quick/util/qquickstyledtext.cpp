@@ -32,10 +32,10 @@ Q_STATIC_LOGGING_CATEGORY(lcStyledText, "qt.quick.styledtext")
     <u> - underlined text
     <font color="color_name" size="1-7"></font>
     <h1> to <h6> - headers
-    <a href=""> - anchor
+    <a href="" title=""> - anchor with optional tooltip
     <ol type="">, <ul type=""> and <li> - ordered and unordered lists
     <pre></pre> - preformated
-    <img src=""> - images
+    <img src="" title=""> - images, with optional tooltip
 
     The opening and closing tags must be correctly nested.
 */
@@ -289,6 +289,8 @@ void QQuickStyledTextPrivate::parse()
             // Ensures line.height() equals the image height, not inflated by font descent.
             imgFmt.setVerticalAlignment(QTextCharFormat::AlignBaseline);
             imgFmt.setObjectIndex(i); // index into imgTags, used by image positioning in QQuickText
+            if (!image->tooltip.isEmpty())
+                imgFmt.setToolTip(image->tooltip);
             range.format = imgFmt;
             range.start = image->position;
             range.length = 1;
@@ -655,6 +657,9 @@ bool QQuickStyledTextPrivate::parseAnchorAttributes(const QChar *&ch, const QStr
             format.setAnchor(true);
             format.setFontUnderline(true);
             valid = true;
+        } else if (is_equal_ignoring_case(attr.first, QLatin1String("title"))) {
+            format.setToolTip(attr.second.toString());
+            valid = true;
         }
     } while (!ch->isNull() && !attr.first.isEmpty());
 
@@ -672,6 +677,8 @@ void QQuickStyledTextPrivate::parseImageAttributes(const QChar *&ch, const QStri
             attr = parseAttribute(ch, textIn);
             if (is_equal_ignoring_case(attr.first, QLatin1String("src"))) {
                 image->url = QUrl(attr.second.toString());
+            } else if (is_equal_ignoring_case(attr.first, QLatin1String("title"))) {
+                image->tooltip = attr.second.toString();
             } else if (is_equal_ignoring_case(attr.first, QLatin1String("width"))) {
                 bool ok;
                 int v = attr.second.toInt(&ok);

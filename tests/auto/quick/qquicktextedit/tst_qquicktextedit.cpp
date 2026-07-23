@@ -131,6 +131,7 @@ private slots:
 
     void linkHover();
     void linkInteraction();
+    void hoveredToolTip();
 
     void cursorDelegate_data();
     void cursorDelegate();
@@ -2838,6 +2839,39 @@ void tst_qquicktextedit::linkInteraction()
     QCOMPARE(hover.last()[0].toString(), QString());
     QCOMPARE(texteditObject->hoveredLink(), QString());
     QCOMPARE(texteditObject->linkAt(textPos.x(), textPos.y()), QString());
+}
+
+// Hovering a text fragment that carries a tool tip (via the anchor's "title"
+// attribute) updates the hoveredToolTip property.
+void tst_qquicktextedit::hoveredToolTip()
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("hoveredToolTip.qml")));
+
+    QQuickTextEdit *textEdit = window.rootObject()->findChild<QQuickTextEdit *>("textEdit");
+    QVERIFY(textEdit);
+    QQuickItem *toolTip = window.rootObject()->findChild<QQuickItem *>("toolTip");
+    QVERIFY(toolTip);
+    QQuickText *toolTipLabel = window.rootObject()->findChild<QQuickText *>("toolTipLabel");
+    QVERIFY(toolTipLabel);
+
+    // Initially nothing is hovered, so the reinvented tool tip is hidden.
+    QVERIFY(!toolTip->isVisible());
+    QCOMPARE(textEdit->hoveredToolTip(), QString());
+
+    const QPointF linkPos = textEdit->positionToRectangle(7).center(); // inside "link"
+    const QPointF textPos = textEdit->positionToRectangle(2).center(); // inside "Test"
+
+    // Hover the word that carries a tool tip.
+    QTest::mouseMove(&window, textEdit->mapToScene(linkPos).toPoint());
+    QTRY_COMPARE(textEdit->hoveredToolTip(), QStringLiteral("the tool tip"));
+    QVERIFY(toolTip->isVisible());
+    QCOMPARE(toolTipLabel->text(), QStringLiteral("the tool tip"));
+
+    // Move onto text without a tool tip: hoveredToolTip clears and the tool tip hides.
+    QTest::mouseMove(&window, textEdit->mapToScene(textPos).toPoint());
+    QTRY_COMPARE(textEdit->hoveredToolTip(), QString());
+    QVERIFY(!toolTip->isVisible());
 }
 
 void tst_qquicktextedit::cursorDelegate_data()

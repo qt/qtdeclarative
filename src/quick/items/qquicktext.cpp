@@ -2965,6 +2965,50 @@ QString QQuickTextPrivate::anchorAt(const QPointF &mousePos) const
     return QString();
 }
 
+QString QQuickTextPrivate::toolTipAt(const QTextLayout *layout, const QPointF &mousePos)
+{
+    for (int i = 0; i < layout->lineCount(); ++i) {
+        const QTextLine line = layout->lineAt(i);
+        if (line.naturalTextRect().contains(mousePos)) {
+            const int charPos = line.xToCursor(mousePos.x(), QTextLine::CursorOnCharacter);
+            const auto formats = layout->formats();
+            for (const QTextLayout::FormatRange &formatRange : formats) {
+                if (!formatRange.format.toolTip().isEmpty()
+                        && charPos >= formatRange.start
+                        && charPos < formatRange.start + formatRange.length) {
+                    return formatRange.format.toolTip();
+                }
+            }
+            break;
+        }
+    }
+    return QString();
+}
+
+QString QQuickTextPrivate::toolTipAt(const QPointF &mousePos) const
+{
+    Q_Q(const QQuickText);
+    QPointF translatedMousePos = mousePos;
+    translatedMousePos.rx() -= q->leftPadding();
+    translatedMousePos.ry() -= q->topPadding() +
+            QQuickTextUtil::alignedY(layedOutTextRect.height() + lineHeightOffset(),
+                                     availableHeight(), vAlign);
+    if (styledText) {
+        translatedMousePos.rx() -=
+                QQuickTextUtil::alignedX(lineWidth, availableWidth(), q->effectiveHAlign());
+        QString toolTip = toolTipAt(&layout, translatedMousePos);
+        if (toolTip.isEmpty() && elideLayout)
+            toolTip = toolTipAt(elideLayout.get(), translatedMousePos);
+        return toolTip;
+    } else if (richText && extra.isAllocated() && extra->doc) {
+        translatedMousePos.rx() -=
+                QQuickTextUtil::alignedX(layedOutTextRect.width(), availableWidth(), q->effectiveHAlign());
+        const QTextFormat fmt = extra->doc->documentLayout()->formatAt(translatedMousePos);
+        return fmt.toCharFormat().toolTip();
+    }
+    return QString();
+}
+
 bool QQuickTextPrivate::isLinkActivatedConnected()
 {
     Q_Q(QQuickText);
@@ -3017,6 +3061,12 @@ bool QQuickTextPrivate::isLinkHoveredConnected()
 {
     Q_Q(QQuickText);
     IS_SIGNAL_CONNECTED(q, QQuickText, linkHovered, (const QString &));
+}
+
+bool QQuickTextPrivate::isHoveredToolTipChangedConnected()
+{
+    Q_Q(QQuickText);
+    IS_SIGNAL_CONNECTED(q, QQuickText, hoveredToolTipChanged, ());
 }
 
 static void getLinks_helper(const QTextLayout *layout, QList<QQuickTextPrivate::LinkDesc> *links)
@@ -3091,6 +3141,40 @@ QString QQuickText::hoveredLink() const
     return QString();
 }
 
+/*!
+    \qmlproperty string QtQuick::Text::hoveredToolTip
+    \since 6.13
+
+    This property contains the tool tip string of the text fragment that the
+    user is hovering, if any; otherwise it is empty. It changes as the mouse
+    moves between fragments, and becomes empty when the mouse leaves text that
+    carries a tool tip, or leaves the item. The tool tip must be provided by
+    rich text or HTML, or by adding character formats to a \l QTextDocument
+    programmatically.
+
+    A typical use is to drive a \l ToolTip:
+    \snippet qml/text/hoveredToolTip.qml text
+
+    \sa hoveredLink
+*/
+
+QString QQuickText::hoveredToolTip() const
+{
+    Q_D(const QQuickText);
+    if (const_cast<QQuickTextPrivate *>(d)->isHoveredToolTipChangedConnected()) {
+        if (d->extra.isAllocated())
+            return d->extra->hoveredToolTip;
+    } else {
+#if QT_CONFIG(cursor)
+        if (QQuickWindow *wnd = window()) {
+            const QPointF pos = QCursor::pos(wnd->screen()) - wnd->position() - mapToScene(QPointF(0, 0));
+            return d->toolTipAt(pos);
+        }
+#endif // cursor
+    }
+    return QString();
+}
+
 void QQuickTextPrivate::processHoverEvent(QHoverEvent *event)
 {
     Q_Q(QQuickText);
@@ -3103,6 +3187,19 @@ void QQuickTextPrivate::processHoverEvent(QHoverEvent *event)
         if ((!extra.isAllocated() && !link.isEmpty()) || (extra.isAllocated() && extra->hoveredLink != link)) {
             extra.value().hoveredLink = link;
             emit q->linkHovered(extra->hoveredLink);
+        }
+    }
+
+    if (isHoveredToolTipChangedConnected()) {
+        QString toolTip;
+        if (event->type() != QEvent::HoverLeave)
+            toolTip = toolTipAt(event->position());
+
+        if ( (!extra.isAllocated() && !toolTip.isEmpty())
+             || (extra.isAllocated() && extra->hoveredToolTip != toolTip) ) {
+            extra.value().hoveredToolTip = toolTip;
+            emit q->hoveredToolTipChanged();
+            qCDebug(lcHoverTrace) << q << event->type() << event->position() << "hoveredToolTip" << toolTip;
         }
     }
     event->ignore();
