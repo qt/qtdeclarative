@@ -55,6 +55,7 @@ public:
         Control,
         AbstractButton,
         ApplicationWindow,
+        BusyIndicator,
         Button,
         CheckBox,
         CheckDelegate,

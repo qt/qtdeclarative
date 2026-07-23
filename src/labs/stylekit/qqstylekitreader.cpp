@@ -62,6 +62,7 @@ QT_BEGIN_NAMESPACE
     below, or to a \l {CustomControl::controlType}{custom control type} defined in the
     \l Style.
 
+    \value StyleReader.BusyIndicator    \l {BusyIndicator}
     \value StyleReader.Button           \l {Button}
     \value StyleReader.CheckBox         \l {CheckBox}
     \value StyleReader.CheckDelegate    \l {CheckDelegate}

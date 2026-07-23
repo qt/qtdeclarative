@@ -15,6 +15,7 @@ qt_internal_add_qml_module(LabsStyleKitImpl
     QML_FILES
         BackgroundAndIndicatorDelegate.qml
         BackgroundDelegate.qml
+        BusyIndicatorDelegate.qml
         FallbackStyle.qml
         HandleDelegate.qml
         IndicatorDelegate.qml
