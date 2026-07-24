@@ -236,6 +236,14 @@ inline QString strokeJoinStyleString(Qt::PenJoinStyle strokeJoinStyle)
     return joinStyle;
 }
 
+inline int processAnimationTime(int timeMs)
+{
+    static const qreal multiplier =
+            qEnvironmentVariable("QT_QUICKVECTORIMAGE_TIME_DILATION", QStringLiteral("1.0"))
+                    .toDouble();
+    return qRound(multiplier * timeMs);
+}
+
 template<typename T>
 inline QString listString(QList<T> list)
 {

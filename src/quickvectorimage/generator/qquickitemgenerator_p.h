@@ -17,11 +17,16 @@
 
 #include "qquickgenerator_p.h"
 #include "qquicknodeinfo_p.h"
+#include "qquickanimatedproperty_p.h"
 
+#include <QtCore/qeasingcurve.h>
 #include <QtCore/qhash.h>
+#include <QtCore/qmap.h>
 #include <QtCore/qstack.h>
 
+#include <array>
 #include <functional>
+#include <memory>
 
 QT_BEGIN_NAMESPACE
 
@@ -33,6 +38,8 @@ class QQuickShaderEffect;
 class QQuickShaderEffectSource;
 class QQuickMatrix4x4;
 class QQuickItemSpy;
+class QQuickTransform;
+class QQuickAbstractAnimation;
 
 class Q_QUICKVECTORIMAGEGENERATOR_EXPORT QQuickItemGenerator : public QQuickGenerator
 {
@@ -101,6 +108,8 @@ private:
     QHash<QString, FilterNodeInfo> m_filterDefs;
     QQuickItemSpy *m_topLevelScaleSpy = nullptr;
 
+    QMap<std::array<qreal, 4>, QEasingCurve> m_easingCache;
+
     QList<std::function<void()>> *activeRecord() const;
     QQuickShape *createShapeContainer();
     void pushItem(QQuickItem *item);
@@ -108,6 +117,22 @@ private:
     QQuickItem *currentItem() const;
 
     void bindTextureSize(QQuickShaderEffectSource *ses);
+    void bindPropertyAnimation(QObject *target, const QString &property,
+                               const QQuickAnimatedProperty::PropertyAnimation &anim,
+                               const std::function<QVariant(const QVariant &)> &extractor,
+                               int valueIndex = 0, const QVariant &resetValue = QVariant());
+    void bindAnimatedProperty(QObject *target, const QString &property,
+                              const QQuickAnimatedProperty &animatedProperty,
+                              const std::function<QVariant(const QVariant &)> &extractor,
+                              int valueIndex = 0);
+    void bindColorWithOpacity(QObject *target, const QString &colorProperty,
+                              const QQuickAnimatedProperty &color,
+                              const QQuickAnimatedProperty &opacity,
+                              std::function<void(const QColor &)> setter);
+    void generateItemAnimations(QQuickItem *item, const NodeInfo &info);
+    QQuickTransform *createAnimatedTransformGroup(QQuickItem *item, const NodeInfo &info);
+    void bindMotionPath(QQuickItem *item, const QQuickAnimatedProperty &motionPath);
+
     void generateMaskContainer(const MaskNodeInfo &info);
     void generateMask(QQuickItem *item, const NodeInfo &info);
     void generatePatternContainer(const PatternNodeInfo &info);

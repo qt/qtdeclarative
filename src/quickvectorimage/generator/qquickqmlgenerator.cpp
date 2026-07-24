@@ -21,6 +21,7 @@
 QT_BEGIN_NAMESPACE
 
 using namespace Qt::StringLiterals;
+using QQuickVectorImageGenerator::Utils::processAnimationTime;
 
 static QString sanitizeString(const QString &input)
 {
@@ -788,13 +789,6 @@ void QQuickQmlGenerator::generateEasing(const QQuickAnimatedProperty::PropertyAn
             stream(streamFlags) << "easing: " << m_topLevelIdString << "." << id;
         }
     }
-}
-
-static int processAnimationTime(int time)
-{
-    static qreal multiplier = qreal(qEnvironmentVariable("QT_QUICKVECTORIMAGE_TIME_DILATION", QStringLiteral("1.0"))
-                                        .toDouble());
-    return std::round(multiplier * time);
 }
 
 void QQuickQmlGenerator::generatePropertyAnimation(const QQuickAnimatedProperty &property,

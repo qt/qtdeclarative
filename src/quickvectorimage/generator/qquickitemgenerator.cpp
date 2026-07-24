@@ -4,6 +4,7 @@
 #include "qquickitemgenerator_p.h"
 #include "qquicknodeinfo_p.h"
 #include <QtQuickVectorImageHelpers/private/qquickitemspy_p.h>
+#include <QtQuickVectorImageHelpers/private/qquicktransformgroup_p.h>
 
 #include <private/qquickitem_p.h>
 #include <private/qquicktranslate_p.h>
@@ -15,6 +16,9 @@
 #include <private/qquickshadereffect_p.h>
 #include <private/qquickshadereffectsource_p.h>
 #include <private/qquickmultieffect_p.h>
+#include <private/qquickanimation_p.h>
+#include <private/qquickanimation_p_p.h>
+#include <private/qquickpathinterpolator_p.h>
 
 #include "utils_p.h"
 
@@ -22,13 +26,165 @@
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qloggingcategory.h>
 #include <QtGui/qfontmetrics.h>
+#include <QtGui/private/qbezier_p.h>
 #include <QtQml/qqmlcontext.h>
+#include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlengine.h>
+#include <QtQml/qqmllist.h>
 #include <QtQml/qqmlparserstatus.h>
+#include <QtCore/qpointer.h>
 
 QT_BEGIN_NAMESPACE
 
 using namespace Qt::StringLiterals;
+
+class OpacityAppliedColor : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QColor baseColor READ baseColor WRITE setBaseColor)
+    Q_PROPERTY(qreal opacity READ opacity WRITE setOpacity)
+public:
+    OpacityAppliedColor(std::function<void(const QColor &)> setter, const QColor &baseColor,
+                        qreal opacity, QObject *parent)
+        : QObject(parent), m_setter(std::move(setter)), m_baseColor(baseColor), m_opacity(opacity)
+    {
+        apply();
+    }
+
+    QColor baseColor() const { return m_baseColor; }
+    void setBaseColor(const QColor &baseColor)
+    {
+        if (m_baseColor == baseColor)
+            return;
+        m_baseColor = baseColor;
+        apply();
+    }
+
+    qreal opacity() const { return m_opacity; }
+    void setOpacity(qreal opacity)
+    {
+        if (m_opacity == opacity)
+            return;
+        m_opacity = opacity;
+        apply();
+    }
+
+private:
+    void apply()
+    {
+        QColor color = m_baseColor;
+        color.setAlphaF(m_opacity);
+        m_setter(color);
+    }
+
+    std::function<void(const QColor &)> m_setter;
+    QColor m_baseColor;
+    qreal m_opacity;
+};
+
+class AnimationRootItem : public QQuickItem
+{
+    Q_OBJECT
+    Q_PROPERTY(bool paused READ paused WRITE setPaused NOTIFY pausedChanged)
+    Q_PROPERTY(int loops READ loops WRITE setLoops NOTIFY loopsChanged)
+public:
+    explicit AnimationRootItem(QQuickItem *parent = nullptr) : QQuickItem(parent) { }
+
+    bool paused() const { return m_paused; }
+    void setPaused(bool paused)
+    {
+        if (m_paused == paused)
+            return;
+        m_paused = paused;
+        for (const QPointer<QQuickAbstractAnimation> &anim : std::as_const(m_masterAnimations)) {
+            if (anim && anim->isRunning())
+                anim->setPaused(paused);
+        }
+        emit pausedChanged();
+    }
+
+    int loops() const { return m_loops; }
+    void setLoops(int loops)
+    {
+        if (m_loops == loops)
+            return;
+        m_loops = loops;
+        for (const QPointer<QQuickAbstractAnimation> &anim : std::as_const(m_masterAnimations)) {
+            if (!anim)
+                continue;
+            anim->setLoops(loops);
+            if (anim->isRunning())
+                anim->restart();
+        }
+        emit loopsChanged();
+    }
+
+    Q_INVOKABLE void restart()
+    {
+        for (const QPointer<QQuickAbstractAnimation> &anim : std::as_const(m_masterAnimations)) {
+            if (anim)
+                anim->restart();
+        }
+    }
+
+    void addMasterAnimation(QQuickAbstractAnimation *anim)
+    {
+        if (!anim)
+            return;
+        m_masterAnimations.append(anim);
+        anim->setLoops(m_loops);
+        if (m_paused && anim->isRunning())
+            anim->setPaused(true);
+    }
+
+Q_SIGNALS:
+    void pausedChanged();
+    void loopsChanged();
+
+private:
+    bool m_paused = false;
+    int m_loops = 1;
+    QList<QPointer<QQuickAbstractAnimation>> m_masterAnimations;
+};
+
+class QQuickCallbackAnimationJob : public QAbstractAnimationJob
+{
+public:
+    explicit QQuickCallbackAnimationJob(std::function<void()> function)
+        : m_function(std::move(function))
+    {
+    }
+
+protected:
+    void updateState(State newState, State oldState) override
+    {
+        Q_UNUSED(oldState);
+        if (newState == Running && m_function)
+            m_function();
+    }
+
+private:
+    std::function<void()> m_function;
+};
+
+class QQuickFunctionAction : public QQuickAbstractAnimation
+{
+public:
+    explicit QQuickFunctionAction(std::function<void()> function, QObject *parent = nullptr)
+        : QQuickAbstractAnimation(parent), m_function(std::move(function))
+    {
+    }
+
+protected:
+    QAbstractAnimationJob *transition(QQuickStateActions &, QQmlProperties &, TransitionDirection,
+                                      QObject * = nullptr) override
+    {
+        return initInstance(new QQuickCallbackAnimationJob(m_function));
+    }
+
+private:
+    std::function<void()> m_function;
+};
 
 QQuickItemGenerator::QQuickItemGenerator(const QString &fileName,
                                          QQuickVectorImageGenerator::GeneratorFlags flags,
@@ -106,17 +262,20 @@ QString QQuickItemGenerator::generateNodeBase(const NodeInfo &info, const QStrin
     }
 
     if (info.filterId.isEmpty() && info.maskId.isEmpty()) {
-        if (!info.isDefaultOpacity)
+        if (!info.isDefaultOpacity && !info.opacity.isAnimated())
             item->setOpacity(info.opacity.defaultValue().toReal());
     }
 
-    if (!info.isDefaultTransform) {
-        QTransform xf = info.transform.defaultValue().value<QTransform>();
+    if (!info.isDefaultTransform && !info.transform.isAnimated()) {
+        QTransform transform = info.transform.defaultValue().value<QTransform>();
         auto *matrix = new QQuickMatrix4x4(item);
-        matrix->setMatrix(QMatrix4x4(xf));
-        auto xformProp = item->transform();
-        xformProp.append(&xformProp, matrix);
+        matrix->setMatrix(QMatrix4x4(transform));
+        auto transformProp = item->transform();
+        transformProp.append(&transformProp, matrix);
     }
+
+    if (info.maskId.isEmpty())
+        generateItemAnimations(item, info);
 
     return info.id;
 }
@@ -127,7 +286,7 @@ bool QQuickItemGenerator::generateRootNode(const StructureNodeInfo &info)
         return false;
 
     if (info.stage == StructureNodeStage::Start) {
-        auto *root = new QQuickItem;
+        auto *root = new AnimationRootItem;
         if (info.size.width() > 0)
             root->setImplicitWidth(info.size.width());
         if (info.size.height() > 0)
@@ -139,17 +298,17 @@ bool QQuickItemGenerator::generateRootNode(const StructureNodeInfo &info)
             return false;
 
         if (!info.viewBox.isEmpty() && info.size.width() > 0 && info.size.height() > 0) {
-            auto xformProp = root->transform();
+            auto transformProp = root->transform();
             if (!qFuzzyIsNull(info.viewBox.x()) || !qFuzzyIsNull(info.viewBox.y())) {
                 auto *translate = new QQuickTranslate(root);
                 translate->setX(-info.viewBox.x());
                 translate->setY(-info.viewBox.y());
-                xformProp.append(&xformProp, translate);
+                transformProp.append(&transformProp, translate);
             }
             auto *scale = new QQuickScale(root);
             scale->setXScale(info.size.width() / info.viewBox.width());
             scale->setYScale(info.size.height() / info.viewBox.height());
-            xformProp.append(&xformProp, scale);
+            transformProp.append(&transformProp, scale);
         }
 
         m_topLevelScaleSpy = new QQuickItemSpy(root);
@@ -158,6 +317,7 @@ bool QQuickItemGenerator::generateRootNode(const StructureNodeInfo &info)
         m_topLevelScaleSpy->setVisible(false);
 
         pushItem(root);
+
         generateNodeBase(info);
     } else {
         popItem();
@@ -180,24 +340,24 @@ bool QQuickItemGenerator::generateStructureNode(const StructureNodeInfo &info)
         return false;
 
     if (info.stage == StructureNodeStage::Start) {
-        QQuickItem *item;
+        QQuickItem *item = nullptr;
         if (!info.forceSeparatePaths && info.isPathContainer) {
             item = createShapeContainer();
         } else {
             item = new QQuickItem;
 
             if (!info.viewBox.isEmpty()) {
-                auto xformProp = item->transform();
+                auto transformProp = item->transform();
                 if (!qFuzzyIsNull(info.viewBox.x()) || !qFuzzyIsNull(info.viewBox.y())) {
                     auto *translate = new QQuickTranslate(item);
                     translate->setX(-info.viewBox.x());
                     translate->setY(-info.viewBox.y());
-                    xformProp.append(&xformProp, translate);
+                    transformProp.append(&transformProp, translate);
                 }
                 auto *scale = new QQuickScale(item);
                 scale->setXScale(info.size.width() / info.viewBox.width());
                 scale->setYScale(info.size.height() / info.viewBox.height());
-                xformProp.append(&xformProp, scale);
+                transformProp.append(&transformProp, scale);
             }
         }
 
@@ -388,6 +548,7 @@ void QQuickItemGenerator::outputShapePath(const PathNodeInfo &info, const QPaint
 
     const QString svgString = path ? QQuickVectorImageGenerator::Utils::toSvgString(*path)
                                    : QQuickVectorImageGenerator::Utils::toSvgString(*quadPath);
+
     auto *pathSvg = new QQuickPathSvg(shapePath);
     pathSvg->setPath(svgString);
     auto pathElems = shapePath->pathElements();
@@ -395,6 +556,36 @@ void QQuickItemGenerator::outputShapePath(const PathNodeInfo &info, const QPaint
 
     auto shapeData = shape->data();
     shapeData.append(&shapeData, shapePath);
+
+    const bool hasFillColorAnim = info.fillColor.isAnimated();
+    const bool hasFillOpacityAnim = info.fillOpacity.isAnimated();
+    const bool hasStrokeColorAnim = info.strokeStyle.color.isAnimated();
+    const bool hasStrokeOpacityAnim = info.strokeStyle.opacity.isAnimated();
+    const bool hasStrokeWidthAnim = info.strokeStyle.width.isAnimated();
+
+    if (!hasFillColorAnim && !hasFillOpacityAnim && !hasStrokeColorAnim && !hasStrokeOpacityAnim
+        && !hasStrokeWidthAnim) {
+        return;
+    }
+
+    auto identity = [](const QVariant &v) { return v; };
+
+    if (hasFillColorAnim || hasFillOpacityAnim) {
+        bindColorWithOpacity(shapePath, QStringLiteral("fillColor"), info.fillColor,
+                             info.fillOpacity,
+                             [shapePath](const QColor &color) { shapePath->setFillColor(color); });
+    }
+
+    if (hasStrokeColorAnim || hasStrokeOpacityAnim) {
+        bindColorWithOpacity(shapePath, QStringLiteral("strokeColor"), info.strokeStyle.color,
+                             info.strokeStyle.opacity, [shapePath](const QColor &color) {
+                                 shapePath->setStrokeColor(color);
+                             });
+    }
+
+    if (hasStrokeWidthAnim)
+        bindAnimatedProperty(shapePath, QStringLiteral("strokeWidth"), info.strokeStyle.width,
+                             identity);
 }
 
 void QQuickItemGenerator::generateImageNode(const ImageNodeInfo &info)
@@ -687,8 +878,8 @@ void QQuickItemGenerator::generateMaskContainer(const MaskNodeInfo &info)
     if (info.isMaskContentRelativeCoordinates) {
         transformer = popItem();
         transformerMatrix = new QQuickMatrix4x4(transformer);
-        auto xformProp = transformer->transform();
-        xformProp.append(&xformProp, transformerMatrix);
+        auto transformProp = transformer->transform();
+        transformProp.append(&transformProp, transformerMatrix);
     }
 
     auto *container = currentItem();
@@ -782,14 +973,16 @@ void QQuickItemGenerator::generateMask(QQuickItem *item, const NodeInfo &info)
         mat.translate(svgMaskRect.x(), svgMaskRect.y());
         auto *matrix = new QQuickMatrix4x4(shaderEffect);
         matrix->setMatrix(mat);
-        auto xformProp = shaderEffect->transform();
-        xformProp.append(&xformProp, matrix);
+        auto transformProp = shaderEffect->transform();
+        transformProp.append(&transformProp, matrix);
         shaderEffect->setX(0);
         shaderEffect->setY(0);
     } else {
         shaderEffect->setX(svgMaskRect.x());
         shaderEffect->setY(svgMaskRect.y());
     }
+
+    generateItemAnimations(shaderEffect, info);
 }
 
 void QQuickItemGenerator::generateFilterNode(const FilterNodeInfo &info)
@@ -931,8 +1124,8 @@ QQuickItem *QQuickItemGenerator::generateFilter(QQuickItem *item, const NodeInfo
         mat.translate(lastStepRect.x(), lastStepRect.y());
         auto *matrix = new QQuickMatrix4x4(lastOutput);
         matrix->setMatrix(mat);
-        auto xformProp = lastOutput->transform();
-        xformProp.append(&xformProp, matrix);
+        auto transformProp = lastOutput->transform();
+        transformProp.append(&transformProp, matrix);
     } else {
         lastOutput->setX(lastStepRect.x());
         lastOutput->setY(lastStepRect.y());
@@ -1445,4 +1638,506 @@ void QQuickItemGenerator::generateMarkers(const PathNodeInfo &info)
     }
 }
 
+static QQuickAnimatedProperty::PropertyAnimation
+transformAnimation(const QQuickAnimatedProperty::PropertyAnimation &anim,
+                   const std::function<QVariant(const QVariant &)> &extractor, int valueIndex)
+{
+    QQuickAnimatedProperty::PropertyAnimation transformed;
+    transformed.easingPerFrame = anim.easingPerFrame;
+    transformed.subtype = anim.subtype;
+    transformed.repeatCount = anim.repeatCount;
+    transformed.startOffset = anim.startOffset;
+    transformed.flags = anim.flags;
+    for (auto it = anim.frames.constBegin(); it != anim.frames.constEnd(); ++it) {
+        const QVariant &rawValue = it.value();
+        transformed.frames.insert(it.key(),
+                                  rawValue.typeId() == QMetaType::QVariantList
+                                          ? extractor(rawValue.toList().value(valueIndex))
+                                          : extractor(rawValue));
+    }
+    return transformed;
+}
+
+static QEasingCurve easingForAnimationFrame(const QQuickAnimatedProperty::PropertyAnimation &anim,
+                                            int time,
+                                            QMap<std::array<qreal, 4>, QEasingCurve> &cache)
+{
+    QEasingCurve easing;
+    auto it = anim.easingPerFrame.constFind(time);
+    if (it == anim.easingPerFrame.constEnd())
+        return easing;
+
+    const QBezier &bezier = it.value();
+    const QPointF c1 = bezier.pt2();
+    const QPointF c2 = bezier.pt3();
+    if (c1 == c1.transposed() && c2 == c2.transposed())
+        return easing; // linear
+
+    const std::array<qreal, 4> key{ c1.x(), c1.y(), c2.x(), c2.y() };
+    auto cacheIt = cache.constFind(key);
+    if (cacheIt != cache.constEnd())
+        return cacheIt.value();
+
+    easing.setType(QEasingCurve::BezierSpline);
+    easing.addCubicBezierSegment(c1, c2, QPointF(1, 1));
+    cache.insert(key, easing);
+    return easing;
+}
+
+static void completeParserStatus(QQuickAbstractAnimation *anim)
+{
+    if (auto *ps = qobject_cast<QQmlParserStatus *>(anim))
+        ps->componentComplete();
+}
+
+static QQuickPropertyAnimation *
+createSegmentAnimation(QObject *target, const QString &property, const QVariant &value,
+                       const QQuickAnimatedProperty::PropertyAnimation &anim, int frameTime,
+                       int time, QObject *parent,
+                       QMap<std::array<qreal, 4>, QEasingCurve> &easingCache)
+{
+    QQuickPropertyAnimation *segment = value.typeId() == QMetaType::QColor
+            ? static_cast<QQuickPropertyAnimation *>(new QQuickColorAnimation(parent))
+            : new QQuickPropertyAnimation(parent);
+    segment->setTargetObject(target);
+    segment->setProperty(property);
+    segment->setDuration(frameTime);
+    segment->setTo(value);
+    segment->setEasing(easingForAnimationFrame(anim, time, easingCache));
+    completeParserStatus(segment);
+    return segment;
+}
+
+static QQuickPropertyAction *createImmediateSetter(QObject *target, const QString &property,
+                                                   const QVariant &value, QObject *parent)
+{
+    auto *action = new QQuickPropertyAction(parent);
+    action->setTargetObject(target);
+    action->setProperty(property);
+    action->setValue(value);
+    completeParserStatus(action);
+    return action;
+}
+
+static QQuickAbstractAnimation *
+createAnimationForOneEntry(QObject *target, const QString &property,
+                           const QQuickAnimatedProperty::PropertyAnimation &anim,
+                           const QVariant &defaultValue, QObject *parent,
+                           QMap<std::array<qreal, 4>, QEasingCurve> &easingCache)
+{
+    auto *outer = new QQuickSequentialAnimation(parent);
+    auto outerAnims = outer->animations();
+
+    const int startOffset =
+            QQuickVectorImageGenerator::Utils::processAnimationTime(anim.startOffset);
+    if (startOffset > 0) {
+        auto *pause = new QQuickPauseAnimation(outer);
+        pause->setDuration(startOffset);
+        completeParserStatus(pause);
+        outerAnims.append(&outerAnims, pause);
+    }
+
+    auto *inner = new QQuickSequentialAnimation(outer);
+    inner->setLoops(anim.repeatCount < 0 ? QQuickAbstractAnimation::Infinite : anim.repeatCount);
+    auto innerAnims = inner->animations();
+
+    int previousTime = 0;
+    QVariant previousValue;
+    bool havePreviousValue = false;
+    for (auto it = anim.frames.constBegin(); it != anim.frames.constEnd(); ++it) {
+        const int time = it.key();
+        const int frameTime =
+                QQuickVectorImageGenerator::Utils::processAnimationTime(time - previousTime);
+        const QVariant &value = it.value();
+
+        if (havePreviousValue && previousValue == value) {
+            if (frameTime > 0) {
+                auto *pause = new QQuickPauseAnimation(inner);
+                pause->setDuration(frameTime);
+                completeParserStatus(pause);
+                innerAnims.append(&innerAnims, pause);
+            }
+        } else if (value.typeId() == QMetaType::Bool) {
+            if (frameTime > 0) {
+                auto *pause = new QQuickPauseAnimation(inner);
+                pause->setDuration(frameTime);
+                completeParserStatus(pause);
+                innerAnims.append(&innerAnims, pause);
+            }
+            innerAnims.append(&innerAnims, createImmediateSetter(target, property, value, inner));
+        } else if (frameTime > 0) {
+            innerAnims.append(&innerAnims,
+                              createSegmentAnimation(target, property, value, anim, frameTime, time,
+                                                     inner, easingCache));
+        } else {
+            innerAnims.append(&innerAnims, createImmediateSetter(target, property, value, inner));
+        }
+
+        previousTime = time;
+        previousValue = value;
+        havePreviousValue = true;
+    }
+
+    if (!(anim.flags & QQuickAnimatedProperty::PropertyAnimation::FreezeAtEnd)) {
+        innerAnims.append(&innerAnims,
+                          createImmediateSetter(target, property, defaultValue, inner));
+    }
+
+    completeParserStatus(inner);
+    outerAnims.append(&outerAnims, inner);
+    completeParserStatus(outer);
+    return outer;
+}
+
+void QQuickItemGenerator::bindPropertyAnimation(
+        QObject *target, const QString &property,
+        const QQuickAnimatedProperty::PropertyAnimation &anim,
+        const std::function<QVariant(const QVariant &)> &extractor, int valueIndex,
+        const QVariant &resetValue)
+{
+    if (!target || anim.frames.isEmpty())
+        return;
+
+    const QQuickAnimatedProperty::PropertyAnimation transformed =
+            transformAnimation(anim, extractor, valueIndex);
+    if (transformed.frames.isEmpty())
+        return;
+
+    const QVariant defaultValue =
+            resetValue.isValid() ? resetValue : target->property(property.toUtf8().constData());
+    auto *entry = createAnimationForOneEntry(target, property, transformed, defaultValue, target,
+                                             m_easingCache);
+    if (auto *root = qobject_cast<AnimationRootItem *>(m_rootItem))
+        root->addMasterAnimation(entry);
+    entry->setRunning(true);
+}
+
+void QQuickItemGenerator::bindAnimatedProperty(
+        QObject *target, const QString &property, const QQuickAnimatedProperty &animatedProperty,
+        const std::function<QVariant(const QVariant &)> &extractor, int valueIndex)
+{
+    if (!target || !animatedProperty.isAnimated())
+        return;
+
+    if (animatedProperty.animationCount() == 1) {
+        for (int i = 0; i < animatedProperty.animationCount(); ++i)
+            bindPropertyAnimation(target, property, animatedProperty.animation(i), extractor,
+                                  valueIndex);
+        return;
+    }
+
+    auto *master = new QQuickParallelAnimation(target);
+    auto masterAnims = master->animations();
+    const QVariant defaultValue = target->property(property.toUtf8().constData());
+    for (int i = 0; i < animatedProperty.animationCount(); ++i) {
+        const QQuickAnimatedProperty::PropertyAnimation transformed =
+                transformAnimation(animatedProperty.animation(i), extractor, valueIndex);
+        if (transformed.frames.isEmpty())
+            continue;
+        masterAnims.append(&masterAnims,
+                           createAnimationForOneEntry(target, property, transformed, defaultValue,
+                                                      master, m_easingCache));
+    }
+    completeParserStatus(master);
+    if (auto *root = qobject_cast<AnimationRootItem *>(m_rootItem))
+        root->addMasterAnimation(master);
+    master->setRunning(true);
+}
+
+void QQuickItemGenerator::bindColorWithOpacity(QObject *target, const QString &colorProperty,
+                                               const QQuickAnimatedProperty &color,
+                                               const QQuickAnimatedProperty &opacity,
+                                               std::function<void(const QColor &)> setter)
+{
+    auto identity = [](const QVariant &v) { return v; };
+
+    if (!opacity.isAnimated()) {
+        bindAnimatedProperty(target, colorProperty, color, identity);
+        return;
+    }
+
+    auto *appliedColor =
+            new OpacityAppliedColor(std::move(setter), color.defaultValue().value<QColor>(),
+                                    opacity.defaultValue().toReal(), target);
+    bindAnimatedProperty(appliedColor, QStringLiteral("baseColor"), color, identity);
+    bindAnimatedProperty(appliedColor, QStringLiteral("opacity"), opacity, identity);
+}
+
+QQuickTransform *QQuickItemGenerator::createAnimatedTransformGroup(QQuickItem *item,
+                                                                   const NodeInfo &info)
+{
+    if (!info.transform.isAnimated())
+        return nullptr;
+
+    auto *baseGroup = new QQuickTransformGroup(item);
+
+    for (int groupIndex = 0; groupIndex < info.transform.animationGroupCount(); ++groupIndex) {
+        int animStart = info.transform.animationGroup(groupIndex);
+        int nextAnimStart = (groupIndex + 1 < info.transform.animationGroupCount())
+                ? info.transform.animationGroup(groupIndex + 1)
+                : info.transform.animationCount();
+
+        auto *subGroup = new QQuickTransformGroup(baseGroup);
+        auto baseSeq = baseGroup->transformSequence();
+        baseSeq.append(&baseSeq, subGroup);
+
+        const QQuickAnimatedProperty::PropertyAnimation &firstAnimation =
+                info.transform.animation(animStart);
+        const bool replace = firstAnimation.flags
+                & QQuickAnimatedProperty::PropertyAnimation::ReplacePreviousAnimations;
+        const bool freeze =
+                firstAnimation.flags & QQuickAnimatedProperty::PropertyAnimation::FreezeAtEnd;
+        bool hasNonConstant = false;
+
+        for (int i = nextAnimStart - 1; i >= animStart; --i) {
+            const QQuickAnimatedProperty::PropertyAnimation &anim = info.transform.animation(i);
+            if (anim.frames.isEmpty())
+                continue;
+
+            const QVariantList &firstParams = anim.frames.first().value<QVariantList>();
+            auto subSeq = subGroup->transformSequence();
+            if (!anim.isConstant())
+                hasNonConstant = true;
+
+            switch (anim.subtype) {
+            case QTransform::TxTranslate: {
+                auto *translate = new QQuickTranslate(subGroup);
+                if (anim.isConstant()) {
+                    const QPointF point = firstParams.value(0).value<QPointF>();
+                    translate->setX(point.x());
+                    translate->setY(point.y());
+                } else {
+                    const QPointF defaultPoint = firstParams.value(0).value<QPointF>();
+                    translate->setX(defaultPoint.x());
+                    translate->setY(defaultPoint.y());
+                    auto extractX = [](const QVariant &v) { return QVariant(v.toPointF().x()); };
+                    auto extractY = [](const QVariant &v) { return QVariant(v.toPointF().y()); };
+                    bindPropertyAnimation(translate, QStringLiteral("x"), anim, extractX, 0, 0.0);
+                    bindPropertyAnimation(translate, QStringLiteral("y"), anim, extractY, 0, 0.0);
+                }
+                subSeq.append(&subSeq, translate);
+                break;
+            }
+            case QTransform::TxScale: {
+                auto *scale = new QQuickScale(subGroup);
+                if (anim.isConstant()) {
+                    const QPointF point = firstParams.value(0).value<QPointF>();
+                    scale->setXScale(point.x());
+                    scale->setYScale(point.y());
+                } else {
+                    const QPointF defaultPoint = firstParams.value(0).value<QPointF>();
+                    scale->setXScale(defaultPoint.x());
+                    scale->setYScale(defaultPoint.y());
+                    auto extractX = [](const QVariant &v) { return QVariant(v.toPointF().x()); };
+                    auto extractY = [](const QVariant &v) { return QVariant(v.toPointF().y()); };
+                    bindPropertyAnimation(scale, QStringLiteral("xScale"), anim, extractX, 0, 1.0);
+                    bindPropertyAnimation(scale, QStringLiteral("yScale"), anim, extractY, 0, 1.0);
+                }
+                subSeq.append(&subSeq, scale);
+                break;
+            }
+            case QTransform::TxRotate: {
+                auto *rotation = new QQuickRotation(subGroup);
+                bool hasCenter = false;
+                for (auto it = anim.frames.constBegin(); it != anim.frames.constEnd(); ++it) {
+                    if (!it->value<QVariantList>().value(0).value<QPointF>().isNull()) {
+                        hasCenter = true;
+                        break;
+                    }
+                }
+                if (anim.isConstant()) {
+                    const QPointF center = firstParams.value(0).value<QPointF>();
+                    const qreal angle = firstParams.value(1).toReal();
+                    rotation->setAngle(angle);
+                    rotation->setOrigin(QVector3D(center));
+                } else {
+                    const QPointF defaultCenter = firstParams.value(0).value<QPointF>();
+                    const qreal defaultAngle = firstParams.value(1).toReal();
+                    rotation->setAngle(defaultAngle);
+                    rotation->setOrigin(QVector3D(defaultCenter));
+                    if (hasCenter) {
+                        auto extractOrigin = [](const QVariant &v) {
+                            return QVariant::fromValue(QVector3D(v.toPointF()));
+                        };
+                        bindPropertyAnimation(rotation, QStringLiteral("origin"), anim,
+                                              extractOrigin, 0,
+                                              QVariant::fromValue(QVector3D(0, 0, 0)));
+                    }
+                    auto extractAngle = [](const QVariant &v) { return QVariant(v.toReal()); };
+                    bindPropertyAnimation(rotation, QStringLiteral("angle"), anim, extractAngle, 1,
+                                          0.0);
+                }
+                subSeq.append(&subSeq, rotation);
+                break;
+            }
+            case QTransform::TxShear: {
+                auto *shear = new QQuickShear(subGroup);
+                if (anim.isConstant()) {
+                    const QPointF point = firstParams.value(0).value<QPointF>();
+                    shear->setXAngle(point.x());
+                    shear->setYAngle(point.y());
+                } else {
+                    const QPointF defaultPoint = firstParams.value(0).value<QPointF>();
+                    shear->setXAngle(defaultPoint.x());
+                    shear->setYAngle(defaultPoint.y());
+                    auto extractX = [](const QVariant &v) { return QVariant(v.toPointF().x()); };
+                    auto extractY = [](const QVariant &v) { return QVariant(v.toPointF().y()); };
+                    bindPropertyAnimation(shear, QStringLiteral("xAngle"), anim, extractX, 0, 0.0);
+                    bindPropertyAnimation(shear, QStringLiteral("yAngle"), anim, extractY, 0, 0.0);
+                }
+                subSeq.append(&subSeq, shear);
+                break;
+            }
+            default:
+                break;
+            }
+        }
+
+        if (replace && hasNonConstant) {
+            const int startOffsetMs = QQuickVectorImageGenerator::Utils::processAnimationTime(
+                    firstAnimation.startOffset);
+
+            auto *activateSeq = new QQuickSequentialAnimation(item);
+            auto activateAnims = activateSeq->animations();
+            if (startOffsetMs > 0) {
+                auto *pause = new QQuickPauseAnimation(activateSeq);
+                pause->setDuration(startOffsetMs);
+                completeParserStatus(pause);
+                activateAnims.append(&activateAnims, pause);
+            }
+            auto *activateAction = new QQuickFunctionAction(
+                    [baseGroup, subGroup]() { baseGroup->activateOverride(subGroup); },
+                    activateSeq);
+            completeParserStatus(activateAction);
+            activateAnims.append(&activateAnims, activateAction);
+            completeParserStatus(activateSeq);
+            if (auto *root = qobject_cast<AnimationRootItem *>(m_rootItem))
+                root->addMasterAnimation(activateSeq);
+            activateSeq->setRunning(true);
+
+            if (firstAnimation.repeatCount >= 0) {
+                const int loopDurationMs = firstAnimation.frames.isEmpty()
+                        ? 0
+                        : QQuickVectorImageGenerator::Utils::processAnimationTime(
+                                firstAnimation.frames.lastKey());
+                const int totalDurationMs =
+                        startOffsetMs + loopDurationMs * qMax(firstAnimation.repeatCount, 1);
+
+                auto *endSeq = new QQuickSequentialAnimation(item);
+                auto endAnims = endSeq->animations();
+                if (totalDurationMs > 0) {
+                    auto *pause = new QQuickPauseAnimation(endSeq);
+                    pause->setDuration(totalDurationMs);
+                    completeParserStatus(pause);
+                    endAnims.append(&endAnims, pause);
+                }
+                auto *endAction = new QQuickFunctionAction(
+                        [baseGroup, subGroup, freeze]() {
+                            if (!freeze)
+                                baseGroup->deactivate(subGroup);
+                        },
+                        endSeq);
+                completeParserStatus(endAction);
+                endAnims.append(&endAnims, endAction);
+                completeParserStatus(endSeq);
+                if (auto *root = qobject_cast<AnimationRootItem *>(m_rootItem))
+                    root->addMasterAnimation(endSeq);
+                endSeq->setRunning(true);
+            }
+        }
+    }
+
+    if (!info.isDefaultTransform) {
+        const QTransform transform = info.transform.defaultValue().value<QTransform>();
+        auto *staticMatrix = new QQuickMatrix4x4(baseGroup);
+        staticMatrix->setMatrix(QMatrix4x4(transform));
+        auto baseSeq = baseGroup->transformSequence();
+        baseSeq.append(&baseSeq, staticMatrix);
+    }
+
+    return baseGroup;
+}
+
+void QQuickItemGenerator::bindMotionPath(QQuickItem *item, const QQuickAnimatedProperty &motionPath)
+{
+    if (!motionPath.isAnimated() || motionPath.animationCount() == 0)
+        return;
+
+    const QVariantList defaultProps = motionPath.defaultValue().value<QVariantList>();
+    const QPainterPath path = defaultProps.value(0).value<QPainterPath>();
+    const bool adaptAngle = defaultProps.value(1).toBool();
+    const qreal baseRotation = defaultProps.value(2).toReal();
+
+    const QQuickAnimatedProperty::PropertyAnimation &pathAnim = motionPath.animation(0);
+
+    auto *pathObj = new QQuickPath(item);
+    auto *pathSvg = new QQuickPathSvg(pathObj);
+    auto pathElements = pathObj->pathElements();
+    pathElements.append(&pathElements, pathSvg);
+    pathSvg->setPath(QQuickVectorImageGenerator::Utils::toSvgString(path));
+
+    auto *interpolator = new QQuickPathInterpolator(item);
+    interpolator->setPath(pathObj);
+
+    QQuickAnimatedProperty::PropertyAnimation progressAnim;
+    progressAnim.frames = pathAnim.frames;
+    progressAnim.easingPerFrame = pathAnim.easingPerFrame;
+    progressAnim.flags = QQuickAnimatedProperty::PropertyAnimation::FreezeAtEnd;
+
+    auto identity = [](const QVariant &v) { return v; };
+    bindPropertyAnimation(interpolator, QStringLiteral("progress"), progressAnim, identity);
+
+    auto *translate = new QQuickTranslate(item);
+    QObject::connect(interpolator, &QQuickPathInterpolator::xChanged, translate,
+                     [translate, interpolator]() { translate->setX(interpolator->x()); });
+    QObject::connect(interpolator, &QQuickPathInterpolator::yChanged, translate,
+                     [translate, interpolator]() { translate->setY(interpolator->y()); });
+    const qreal initialProgress = qBound(0.0, interpolator->property("progress").toDouble(), 1.0);
+    const QPointF initialPoint = path.pointAtPercent(initialProgress);
+    translate->setX(initialPoint.x());
+    translate->setY(initialPoint.y());
+
+    if (adaptAngle || !qFuzzyIsNull(baseRotation)) {
+        auto *rotation = new QQuickRotation(item);
+        if (adaptAngle) {
+            QObject::connect(interpolator, &QQuickPathInterpolator::angleChanged, rotation,
+                             [rotation, interpolator, baseRotation]() {
+                                 rotation->setAngle(interpolator->angle() + baseRotation);
+                             });
+            rotation->setAngle(interpolator->angle() + baseRotation);
+        } else {
+            rotation->setAngle(baseRotation);
+        }
+        auto transformProp = item->transform();
+        transformProp.append(&transformProp, rotation);
+    }
+    auto transformProp = item->transform();
+    transformProp.append(&transformProp, translate);
+}
+
+void QQuickItemGenerator::generateItemAnimations(QQuickItem *item, const NodeInfo &info)
+{
+    const bool hasTransformAnim = info.transform.isAnimated();
+    const bool hasOpacityAnim = info.opacity.isAnimated();
+    const bool hasMotionPathAnim = info.motionPath.isAnimated();
+
+    if (hasOpacityAnim) {
+        auto identity = [](const QVariant &v) { return v; };
+        bindAnimatedProperty(item, QStringLiteral("opacity"), info.opacity, identity);
+    }
+
+    if (hasTransformAnim) {
+        auto *baseGroup = createAnimatedTransformGroup(item, info);
+        if (baseGroup) {
+            auto transformProp = item->transform();
+            transformProp.append(&transformProp, baseGroup);
+        }
+    }
+
+    if (hasMotionPathAnim)
+        bindMotionPath(item, info.motionPath);
+}
+
 QT_END_NAMESPACE
+
+#include "qquickitemgenerator.moc"
