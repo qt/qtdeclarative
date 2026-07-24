@@ -124,6 +124,7 @@ public:
 
 MainWindow::MainWindow()
 {
+    menuBar()->setNativeMenuBar(false);
     QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
     fileMenu->addAction(QIcon::fromTheme(QIcon::ThemeIcon::ApplicationExit), tr("Quit"),
                         QKeySequence::Quit, this, &QWidget::close);
