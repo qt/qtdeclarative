@@ -65,6 +65,15 @@ Style {
         }
     }
 
+    menuItem {
+        background.border.width: 0
+    }
+
+    menuBarItem {
+        background.border.width: 0
+        hovered.background.border.width: 2
+    }
+
     slider {
         background.width: 180
         indicator {
@@ -148,6 +157,10 @@ Style {
             hovered.background.color: "#28284f"
         }
 
+        menuItem {
+            hovered.background.color: "#28284f"
+        }
+
         textInput {
             background.color: "#14142a"
             focused.background.border.color: "#ffe600"
@@ -207,6 +220,10 @@ Style {
         abstractButton {
             background.color: "#e6e0ff"
             checked.background.color: "#3a2bd6"
+            hovered.background.color: "#d0c4ff"
+        }
+
+        menuItem {
             hovered.background.color: "#d0c4ff"
         }
 
