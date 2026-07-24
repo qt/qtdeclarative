@@ -36,7 +36,11 @@ ApplicationWindow {
             Action { text: qsTr("Save") }
             Action { text: qsTr("Save As...") }
             MenuSeparator { }
-            Action { text: qsTr("Quit") }
+            Action {
+                text: qsTr("Quit")
+                onTriggered: Qt.exit(0)
+                shortcut: StandardKey.Quit
+            }
         }
 
         Menu {
