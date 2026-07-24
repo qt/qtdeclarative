@@ -51,6 +51,7 @@ T.TextArea {
         text: control.placeholderText
         font: control.font
         color: control.placeholderTextColor
+        wrapMode: control.wrapMode
         elide: Text.ElideRight
         renderType: control.renderType
         // When the TextArea is in a Flickable, the background is reparented to it

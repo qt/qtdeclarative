@@ -30,6 +30,7 @@ qt_internal_add_test(tst_qquicktextarea
         Qt::QmlPrivate
         Qt::QuickControls2
         Qt::QuickControls2Private
+        Qt::QuickControls2ImplPrivate
         Qt::QuickControlsTestUtilsPrivate
         Qt::QuickPrivate
         Qt::QuickTemplates2Private
