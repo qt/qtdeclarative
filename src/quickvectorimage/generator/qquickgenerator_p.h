@@ -20,6 +20,8 @@
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qrect.h>
 
+#include <memory>
+
 QT_BEGIN_NAMESPACE
 
 QT_DECLARE_EXPORTED_QT_LOGGING_CATEGORY(lcQuickVectorImage, Q_QUICKVECTORIMAGEGENERATOR_EXPORT)
@@ -31,6 +33,7 @@ class QQuadPath;
 class QQuickItem;
 class QQuickShape;
 class QRectF;
+class QQuickGeneratorAnimationProvider;
 
 namespace QQuickVectorImageGenerator {
 struct NodeInfo;
@@ -58,6 +61,7 @@ public:
     QQuickVectorImageGenerator::GeneratorFlags generatorFlags();
 
     virtual void addExtraImport(const QString &import) { Q_UNUSED(import) }
+    virtual void setAnimationProvider(std::unique_ptr<QQuickGeneratorAnimationProvider>);
 
     bool generate();
     QQuickVectorImageGenerator::ErrorState errorState() const { return m_errorState; }

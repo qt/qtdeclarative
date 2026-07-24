@@ -5,6 +5,8 @@
 #include "qquicknodeinfo_p.h"
 #include <QtQuickVectorImageHelpers/private/qquickitemspy_p.h>
 #include <QtQuickVectorImageHelpers/private/qquicktransformgroup_p.h>
+#include "qquicktransformsource_p.h"
+#include "qquickanimationrootitem_p.h"
 
 #include <private/qquickitem_p.h>
 #include <private/qquicktranslate_p.h>
@@ -82,69 +84,24 @@ private:
     qreal m_opacity;
 };
 
-class AnimationRootItem : public QQuickItem
+class TransformLinker : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(bool paused READ paused WRITE setPaused NOTIFY pausedChanged)
-    Q_PROPERTY(int loops READ loops WRITE setLoops NOTIFY loopsChanged)
 public:
-    explicit AnimationRootItem(QQuickItem *parent = nullptr) : QQuickItem(parent) { }
-
-    bool paused() const { return m_paused; }
-    void setPaused(bool paused)
+    TransformLinker(QQuickTransformSource *source, QQuickMatrix4x4 *target, QObject *parent)
+        : QObject(parent), m_source(source), m_target(target)
     {
-        if (m_paused == paused)
-            return;
-        m_paused = paused;
-        for (const QPointer<QQuickAbstractAnimation> &anim : std::as_const(m_masterAnimations)) {
-            if (anim && anim->isRunning())
-                anim->setPaused(paused);
-        }
-        emit pausedChanged();
+        connect(source, &QQuickTransformSource::transformMatrixChanged, this,
+                &TransformLinker::updateMatrix);
+        updateMatrix();
     }
 
-    int loops() const { return m_loops; }
-    void setLoops(int loops)
-    {
-        if (m_loops == loops)
-            return;
-        m_loops = loops;
-        for (const QPointer<QQuickAbstractAnimation> &anim : std::as_const(m_masterAnimations)) {
-            if (!anim)
-                continue;
-            anim->setLoops(loops);
-            if (anim->isRunning())
-                anim->restart();
-        }
-        emit loopsChanged();
-    }
-
-    Q_INVOKABLE void restart()
-    {
-        for (const QPointer<QQuickAbstractAnimation> &anim : std::as_const(m_masterAnimations)) {
-            if (anim)
-                anim->restart();
-        }
-    }
-
-    void addMasterAnimation(QQuickAbstractAnimation *anim)
-    {
-        if (!anim)
-            return;
-        m_masterAnimations.append(anim);
-        anim->setLoops(m_loops);
-        if (m_paused && anim->isRunning())
-            anim->setPaused(true);
-    }
-
-Q_SIGNALS:
-    void pausedChanged();
-    void loopsChanged();
+public Q_SLOTS:
+    void updateMatrix() { m_target->setMatrix(m_source->transformMatrix()); }
 
 private:
-    bool m_paused = false;
-    int m_loops = 1;
-    QList<QPointer<QQuickAbstractAnimation>> m_masterAnimations;
+    QQuickTransformSource *m_source;
+    QQuickMatrix4x4 *m_target;
 };
 
 class QQuickCallbackAnimationJob : public QAbstractAnimationJob
@@ -194,6 +151,11 @@ QQuickItemGenerator::QQuickItemGenerator(const QString &fileName,
 }
 
 QQuickItemGenerator::~QQuickItemGenerator() = default;
+
+void QQuickItemGenerator::setAnimationProvider(std::unique_ptr<QQuickGeneratorAnimationProvider> provider)
+{
+    m_animationProvider = std::move(provider);
+}
 
 QQuickItem *QQuickItemGenerator::takeRootItem()
 {
@@ -286,7 +248,7 @@ bool QQuickItemGenerator::generateRootNode(const StructureNodeInfo &info)
         return false;
 
     if (info.stage == StructureNodeStage::Start) {
-        auto *root = new AnimationRootItem;
+        auto *root = new QQuickAnimationRootItem;
         if (info.size.width() > 0)
             root->setImplicitWidth(info.size.width());
         if (info.size.height() > 0)
@@ -318,8 +280,32 @@ bool QQuickItemGenerator::generateRootNode(const StructureNodeInfo &info)
 
         pushItem(root);
 
+        bool scopePushed = false;
+        if (m_animationProvider && info.timelineInfo) {
+            if (auto *master = m_animationProvider->enterTimelineScope(root, *info.timelineInfo))
+                root->addMasterAnimation(master);
+            scopePushed = true;
+        }
+        m_scopePushed.push(scopePushed);
+
         generateNodeBase(info);
     } else {
+        for (const PendingLinkedTransform &pending : m_pendingLinkedTransforms) {
+            Q_ASSERT(pending.item);
+            auto it = m_transformSourceItems.constFind(pending.transformReferenceId);
+            if (it == m_transformSourceItems.cend()) {
+                qCWarning(lcQuickVectorImage)
+                        << "generateRootNode: transformReferenceId does not refer to a "
+                           "transform source item:"
+                        << pending.transformReferenceId;
+                continue;
+            }
+            new TransformLinker(it.value(), pending.linkedMatrix, pending.item);
+        }
+        m_pendingLinkedTransforms.clear();
+
+        if (m_scopePushed.pop() && m_animationProvider)
+            m_animationProvider->exitTimelineScope();
         popItem();
     }
 
@@ -344,7 +330,10 @@ bool QQuickItemGenerator::generateStructureNode(const StructureNodeInfo &info)
         if (!info.forceSeparatePaths && info.isPathContainer) {
             item = createShapeContainer();
         } else {
-            item = new QQuickItem;
+            if (m_animationProvider && !info.customItemType.isEmpty())
+                item = m_animationProvider->createCustomItem(info.customItemType);
+            if (!item)
+                item = new QQuickItem;
 
             if (!info.viewBox.isEmpty()) {
                 auto transformProp = item->transform();
@@ -361,9 +350,27 @@ bool QQuickItemGenerator::generateStructureNode(const StructureNodeInfo &info)
             }
         }
 
+        bool scopePushed = false;
+        if (m_animationProvider && info.timelineInfo) {
+            if (auto *master = m_animationProvider->enterTimelineScope(item, *info.timelineInfo)) {
+                if (auto *root = qobject_cast<QQuickAnimationRootItem *>(m_rootItem))
+                    root->addMasterAnimation(master);
+            }
+            scopePushed = true;
+        }
+        m_scopePushed.push(scopePushed);
+
+        if (!info.id.isEmpty()) {
+            if (auto *source = qobject_cast<QQuickTransformSource *>(item))
+                m_transformSourceItems.insert(info.id, source);
+        }
+
         pushItem(item);
         generateNodeBase(info);
     } else {
+        if (m_scopePushed.pop() && m_animationProvider)
+            m_animationProvider->exitTimelineScope();
+
         QQuickItem *item = popItem();
         QQuickItem *effectItem = item;
         if (!info.filterId.isEmpty())
@@ -1803,11 +1810,16 @@ void QQuickItemGenerator::bindPropertyAnimation(
     if (transformed.frames.isEmpty())
         return;
 
+    if (m_animationProvider) {
+        m_animationProvider->bindProperty(target, property.toUtf8(), transformed);
+        return;
+    }
+
     const QVariant defaultValue =
             resetValue.isValid() ? resetValue : target->property(property.toUtf8().constData());
     auto *entry = createAnimationForOneEntry(target, property, transformed, defaultValue, target,
                                              m_easingCache);
-    if (auto *root = qobject_cast<AnimationRootItem *>(m_rootItem))
+    if (auto *root = qobject_cast<QQuickAnimationRootItem *>(m_rootItem))
         root->addMasterAnimation(entry);
     entry->setRunning(true);
 }
@@ -1819,7 +1831,7 @@ void QQuickItemGenerator::bindAnimatedProperty(
     if (!target || !animatedProperty.isAnimated())
         return;
 
-    if (animatedProperty.animationCount() == 1) {
+    if (m_animationProvider || animatedProperty.animationCount() == 1) {
         for (int i = 0; i < animatedProperty.animationCount(); ++i)
             bindPropertyAnimation(target, property, animatedProperty.animation(i), extractor,
                                   valueIndex);
@@ -1839,7 +1851,7 @@ void QQuickItemGenerator::bindAnimatedProperty(
                                                       master, m_easingCache));
     }
     completeParserStatus(master);
-    if (auto *root = qobject_cast<AnimationRootItem *>(m_rootItem))
+    if (auto *root = qobject_cast<QQuickAnimationRootItem *>(m_rootItem))
         root->addMasterAnimation(master);
     master->setRunning(true);
 }
@@ -2011,7 +2023,7 @@ QQuickTransform *QQuickItemGenerator::createAnimatedTransformGroup(QQuickItem *i
             completeParserStatus(activateAction);
             activateAnims.append(&activateAnims, activateAction);
             completeParserStatus(activateSeq);
-            if (auto *root = qobject_cast<AnimationRootItem *>(m_rootItem))
+            if (auto *root = qobject_cast<QQuickAnimationRootItem *>(m_rootItem))
                 root->addMasterAnimation(activateSeq);
             activateSeq->setRunning(true);
 
@@ -2040,7 +2052,7 @@ QQuickTransform *QQuickItemGenerator::createAnimatedTransformGroup(QQuickItem *i
                 completeParserStatus(endAction);
                 endAnims.append(&endAnims, endAction);
                 completeParserStatus(endSeq);
-                if (auto *root = qobject_cast<AnimationRootItem *>(m_rootItem))
+                if (auto *root = qobject_cast<QQuickAnimationRootItem *>(m_rootItem))
                     root->addMasterAnimation(endSeq);
                 endSeq->setRunning(true);
             }
@@ -2120,6 +2132,7 @@ void QQuickItemGenerator::generateItemAnimations(QQuickItem *item, const NodeInf
     const bool hasTransformAnim = info.transform.isAnimated();
     const bool hasOpacityAnim = info.opacity.isAnimated();
     const bool hasMotionPathAnim = info.motionPath.isAnimated();
+    const bool hasLinkedTransform = !info.transformReferenceId.isEmpty();
 
     if (hasOpacityAnim) {
         auto identity = [](const QVariant &v) { return v; };
@@ -2136,6 +2149,13 @@ void QQuickItemGenerator::generateItemAnimations(QQuickItem *item, const NodeInf
 
     if (hasMotionPathAnim)
         bindMotionPath(item, info.motionPath);
+
+    if (hasLinkedTransform) {
+        auto *linkedMatrix = new QQuickMatrix4x4(item);
+        auto transformProp = item->transform();
+        transformProp.append(&transformProp, linkedMatrix);
+        m_pendingLinkedTransforms.append({ item, info.transformReferenceId, linkedMatrix });
+    }
 }
 
 QT_END_NAMESPACE

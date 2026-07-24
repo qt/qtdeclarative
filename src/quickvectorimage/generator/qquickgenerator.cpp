@@ -4,6 +4,7 @@
 #include <QVarLengthArray>
 
 #include "qquickgenerator_p.h"
+#include "qquickgeneratoranimationprovider_p.h"
 #include "qsvgvisitorimpl_p.h"
 #include "qquicknodeinfo_p.h"
 
@@ -26,6 +27,10 @@ QQuickGenerator::QQuickGenerator(const QString fileName, QQuickVectorImageGenera
 }
 
 QQuickGenerator::~QQuickGenerator()
+{
+}
+
+void QQuickGenerator::setAnimationProvider(std::unique_ptr<QQuickGeneratorAnimationProvider>)
 {
 }
 

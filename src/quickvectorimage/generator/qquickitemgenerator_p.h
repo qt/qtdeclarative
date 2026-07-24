@@ -18,6 +18,7 @@
 #include "qquickgenerator_p.h"
 #include "qquicknodeinfo_p.h"
 #include "qquickanimatedproperty_p.h"
+#include "qquickgeneratoranimationprovider_p.h"
 
 #include <QtCore/qeasingcurve.h>
 #include <QtCore/qhash.h>
@@ -39,6 +40,7 @@ class QQuickShaderEffectSource;
 class QQuickMatrix4x4;
 class QQuickItemSpy;
 class QQuickTransform;
+class QQuickTransformSource;
 class QQuickAbstractAnimation;
 
 class Q_QUICKVECTORIMAGEGENERATOR_EXPORT QQuickItemGenerator : public QQuickGenerator
@@ -70,6 +72,8 @@ public:
                          QQuickVectorImageGenerator::PathSelector pathSelector,
                          const QRectF &boundingRect) override;
 
+    void setAnimationProvider(std::unique_ptr<QQuickGeneratorAnimationProvider> provider) override;
+
 private:
     struct MaskDef
     {
@@ -94,6 +98,13 @@ private:
         MarkerNodeInfo info;
     };
 
+    struct PendingLinkedTransform
+    {
+        QQuickItem *item;
+        QString transformReferenceId;
+        QQuickMatrix4x4 *linkedMatrix;
+    };
+
     QQuickItem *m_rootItem = nullptr;
     QStack<QQuickItem *> m_itemStack;
     QQmlContext *m_context = nullptr;
@@ -108,6 +119,10 @@ private:
     QHash<QString, FilterNodeInfo> m_filterDefs;
     QQuickItemSpy *m_topLevelScaleSpy = nullptr;
 
+    QHash<QString, QQuickTransformSource *> m_transformSourceItems;
+    QList<PendingLinkedTransform> m_pendingLinkedTransforms;
+    std::unique_ptr<QQuickGeneratorAnimationProvider> m_animationProvider;
+    QStack<bool> m_scopePushed;
     QMap<std::array<qreal, 4>, QEasingCurve> m_easingCache;
 
     QList<std::function<void()>> *activeRecord() const;

@@ -9,6 +9,7 @@
 #include "qquickvectorimageplugin_p.h"
 #include <QtQuickVectorImageGenerator/private/qquickitemgenerator_p.h>
 #include <QtQuickVectorImageGenerator/private/qquickvectorimageglobal_p.h>
+#include <QtQuickVectorImageGenerator/private/qquickanimationrootitem_p.h>
 #include <QtCore/private/qfactoryloader_p.h>
 #include <QtCore/qloggingcategory.h>
 
@@ -331,8 +332,13 @@ void QQuickVectorImage::updateAnimationProperties()
 
     QQuickItem *childItem = d->rootItem->childItems().first();
     if (Q_LIKELY(d->animations != nullptr)) {
-        childItem->setProperty("loops", d->animations->loops());
-        childItem->setProperty("paused", d->animations->paused());
+        if (auto *root = qobject_cast<QQuickAnimationRootItem *>(childItem)) {
+            root->setLoops(d->animations->loops());
+            root->setPaused(d->animations->paused());
+        } else {
+            childItem->setProperty("loops", d->animations->loops());
+            childItem->setProperty("paused", d->animations->paused());
+        }
     }
 }
 
