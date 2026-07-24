@@ -18,6 +18,7 @@
 #include <QtQuickTemplates2/private/qquickmenu_p.h>
 #include <QtQuickTemplates2/private/qquickpopup_p_p.h>
 #include <QtQuickTemplates2/private/qquicktextarea_p.h>
+#include <QtQuickControls2Impl/private/qquickplaceholdertext_p.h>
 #include <QtQuickControlsTestUtils/private/controlstestutils_p.h>
 #include <QtQuickControlsTestUtils/private/qtest_quickcontrols_p.h>
 
@@ -39,6 +40,7 @@ private slots:
     void customContextMenuOnRelease_data();
     void customContextMenuOnRelease();
     void testCursorPositionChangedOnDeleteStartWord();
+    void placeholderWrapMode();
 
 private:
     QScopedPointer<QPointingDevice> touchDevice = QScopedPointer<QPointingDevice>(QTest::createTouchDevice());
@@ -265,6 +267,29 @@ void tst_QQuickTextArea::testCursorPositionChangedOnDeleteStartWord()
     QCOMPARE(textField->text(), expectedText);
 
     QCOMPARE(textField->cursorPosition(), 16);
+}
+
+void tst_QQuickTextArea::placeholderWrapMode()
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("placeholderWrapMode.qml")));
+
+    auto *textArea = qobject_cast<QQuickTextArea *>(window.rootObject());
+    QVERIFY(textArea);
+
+    auto *placeholder = textArea->findChild<QQuickPlaceholderText *>();
+    QVERIFY(placeholder);
+    QCOMPARE(placeholder->wrapMode(), textArea->wrapMode());
+
+    QCOMPARE(textArea->wrapMode(), QQuickTextEdit::NoWrap);
+    QTRY_COMPARE(placeholder->lineCount(), 1);
+    const qreal implicitHeightBeforeWrap = placeholder->implicitHeight();
+
+    textArea->setWrapMode(QQuickTextEdit::WordWrap);
+    QCOMPARE(placeholder->wrapMode(), textArea->wrapMode());
+
+    QTRY_VERIFY(placeholder->lineCount() > 1);
+    QVERIFY(placeholder->implicitHeight() > implicitHeightBeforeWrap);
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickTextArea)

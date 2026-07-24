@@ -49,6 +49,7 @@ T.TextArea {
         color: control.placeholderTextColor
         visible: !control.length && !control.preeditText && (!control.activeFocus || control.horizontalAlignment !== Qt.AlignHCenter)
         verticalAlignment: control.verticalAlignment
+        wrapMode: control.wrapMode
         elide: Text.ElideRight
         renderType: control.renderType
     }
