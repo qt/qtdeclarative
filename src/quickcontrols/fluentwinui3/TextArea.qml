@@ -56,6 +56,7 @@ T.TextArea {
         verticalAlignment: control.verticalAlignment
         horizontalAlignment: control.horizontalAlignment
         visible: !control.length && !control.preeditText && (!control.activeFocus || control.horizontalAlignment !== Qt.AlignHCenter)
+        wrapMode: control.wrapMode
         elide: Text.ElideRight
         renderType: control.renderType
     }
