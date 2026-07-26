@@ -27,17 +27,20 @@ Rectangle {
                 GradientStop { position: 0.7; color: "red" }
             }
 
+            // The radius is clamped to half of the rectangle's size, so only
+            // animate within that range to keep the shape moving.
+            readonly property real maxRadius: pathRectangle.width / 2
             property real animRadius
             SequentialAnimation on animRadius {
                 loops: Animation.Infinite
                 NumberAnimation {
-                    from: 0
-                    to: 200
+                    from: -myPath.maxRadius
+                    to: myPath.maxRadius
                     duration: 3000
                 }
                 NumberAnimation {
-                    from: 200
-                    to: 0
+                    from: myPath.maxRadius
+                    to: -myPath.maxRadius
                     duration: 3000
                 }
                 PauseAnimation {
@@ -46,6 +49,7 @@ Rectangle {
             }
 
             PathRectangle {
+                id: pathRectangle
                 x: myShape.width / 5
                 y: x
                 width: myShape.width - 2 * x

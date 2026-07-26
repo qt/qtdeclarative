@@ -590,6 +590,9 @@ void QQuickRectangleShape::resetDrawLeft()
     \include pathrectangle.qdocinc {radius-property}
         {QtQuick.Shapes.DesignHelpers::RectangleShape}
 
+    If radius is a positive value, the rectangle path will be defined as a rounded rectangle,
+    otherwise it will be defined as a normal rectangle.
+
     The default value is \c 10.
 */
 

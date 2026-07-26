@@ -421,7 +421,9 @@ void tst_QuickPath::rectangle()
 
 void tst_QuickPath::rectangleRadii()
 {
-    // Test that the radius logic of PathRectangle is the same as Rectangle's
+    // Test that the radius property logic (explicit, inherited and reset per-corner values)
+    // of PathRectangle is the same as Rectangle's. Note that the rendering differs: a negative
+    // radius gives inverted corners on PathRectangle, but a normal rectangle on Rectangle.
     QQmlEngine engine;
     QQmlComponent c1(&engine);
     c1.setData("import QtQuick\n"

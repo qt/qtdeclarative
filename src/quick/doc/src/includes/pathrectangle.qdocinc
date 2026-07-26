@@ -3,9 +3,6 @@
 
 This property defines the corner radius used to define a rounded rectangle.
 
-If radius is a positive value, the rectangle path will be defined as a rounded rectangle,
-otherwise it will be defined as a normal rectangle.
-
 This property may be overridden by the individual corner radius properties.
 
 \sa topLeftRadius, topRightRadius, bottomLeftRadius, bottomRightRadius

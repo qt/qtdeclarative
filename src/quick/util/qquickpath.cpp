@@ -2559,6 +2559,20 @@ void QQuickPathRectangle::setStrokeAdjustment(qreal newStrokeAdjustment)
 /*!
     \include pathrectangle.qdocinc {radius-property} {QtQuick::PathRectangle}
 
+    If radius is a positive value, the rectangle path will be defined as a rounded rectangle.
+    If radius is zero, it will be defined as a normal rectangle.
+
+    Since Qt 6.13, if radius is negative, the corners are "inverted": instead of the usual
+    convex curve, a concave, scooped-out curve of the same magnitude is used, for both the
+    \c PathRectangle.Rounded and \c PathRectangle.Squircle \l{cornerShape}{corner shapes}. This
+    has no visible effect on \c PathRectangle.Bevel corners, since a straight bevel cut looks the
+    same either way. Before Qt 6.13, a negative radius was treated like zero.
+
+    The effective radius is limited to half of the smaller of the rectangle's width and height,
+    in both the positive and the negative direction.
+
+    \note This differs from \l Rectangle, which draws a normal rectangle for a negative radius.
+
     The default value is \c 0.
 */
 
@@ -2586,6 +2600,9 @@ void QQuickPathRectangle::setRadius(qreal newRadius)
 
 /*!
     \include pathrectangle.qdocinc {radius-properties} {PathRectangle} {qml/pathrectangle/pathrectangle.qml} {shape}
+
+    Since Qt 6.13, a negative value defines that corner to be "inverted" (concave), as described
+    for \l radius.
 */
 
 qreal QQuickPathRectangle::cornerRadius(Qt::Corner corner) const
@@ -2812,12 +2829,16 @@ void QQuickPathRectangle::addToPath(QPainterPath &path, const QQuickPathData &da
         return;
     }
 
-    // Radii must not exceed half of the width or half of the height
+    // Radii must not exceed half of the width or half of the height. Negative
+    // radii are allowed (down to the same limit) and select an "inverted"
+    // (concave, scooped-out) corner instead of the usual convex one, for
+    // both the Rounded and Squircle corner shapes.
     const qreal maxDiameter = qMin(rect.width(), rect.height());
-    const qreal generalRadius = qBound(qreal(0), _extra->radius, maxDiameter * 0.5);
+    const qreal maxRadius = maxDiameter * 0.5;
+    const qreal generalRadius = qBound(-maxRadius, _extra->radius, maxRadius);
     auto effectiveRadius = [&](Qt::Corner corner) {
         qreal radius = _extra->cornerData[corner].radius;
-        return (_extra->isRadiusSet(corner)) ? qBound(qreal(0), radius, maxDiameter * 0.5)
+        return (_extra->isRadiusSet(corner)) ? qBound(-maxRadius, radius, maxRadius)
                                              : generalRadius;
     };
     const qreal rTL = effectiveRadius(Qt::TopLeftCorner);
@@ -2830,7 +2851,9 @@ void QQuickPathRectangle::addToPath(QPainterPath &path, const QQuickPathData &da
     // the outgoing edge, as fractions of the corner radius. The corner
     // curves clockwise, entering horizontally and exiting vertically (a
     // "top-right"-style corner); the other three corners are obtained by
-    // rotating these offsets by 90, 180 and 270 degrees.
+    // rotating these offsets by 90, 180 and 270 degrees. Swapping the x and
+    // y of each offset mirrors the curve across the chord it spans, which
+    // turns the usual convex curve into the concave "inverted" one.
     static constexpr QPointF cornerOffsets[9] = {
         { 0.300, 0.000 }, { 0.473, 0.000 }, { 0.619, 0.039 }, { 0.804, 0.088 }, { 0.912, 0.196 },
         { 0.961, 0.381 }, { 1.000, 0.527 }, { 1.000, 0.700 }, { 1.000, 1.000 }
@@ -2843,87 +2866,112 @@ void QQuickPathRectangle::addToPath(QPainterPath &path, const QQuickPathData &da
         return p;
     };
 
-    auto addSquircleCorner = [&](QPointF start, int steps, qreal r) {
+    auto addSquircleCorner = [&](QPointF start, int steps, qreal r, bool inverted) {
         for (int seg = 0; seg < 3; ++seg) {
-            QPointF c1 = start + rotate(cornerOffsets[seg * 3 + 0] * r, steps);
-            QPointF c2 = start + rotate(cornerOffsets[seg * 3 + 1] * r, steps);
-            QPointF end = start + rotate(cornerOffsets[seg * 3 + 2] * r, steps);
+            QPointF o1 = cornerOffsets[seg * 3 + 0];
+            QPointF o2 = cornerOffsets[seg * 3 + 1];
+            QPointF o3 = cornerOffsets[seg * 3 + 2];
+            if (inverted) {
+                o1 = QPointF(o1.y(), o1.x());
+                o2 = QPointF(o2.y(), o2.x());
+                o3 = QPointF(o3.y(), o3.x());
+            }
+            QPointF c1 = start + rotate(o1 * r, steps);
+            QPointF c2 = start + rotate(o2 * r, steps);
+            QPointF end = start + rotate(o3 * r, steps);
             path.cubicTo(c1, c2, end);
         }
     };
 
-    path.moveTo(rect.left() + rTL, rect.top());
-    if (rTR > 0) {
+    // Adds a circular corner at "corner". A convex corner is drawn as the
+    // quarter of the circle inscribed in the 2r x 2r box that extends from the
+    // corner towards the inside of the rectangle ("inward" gives the direction
+    // as unit steps), sweeping clockwise from "startAngle". An inverted corner
+    // is the quarter of the circle centered on the corner point itself, which
+    // starts 90 degrees further and sweeps counter-clockwise.
+    auto addRoundedCorner = [&](QPointF corner, QPointF inward, qreal startAngle, qreal r,
+                                bool inverted) {
+        const QRectF box(corner - QPointF(r, r), QSizeF(2 * r, 2 * r));
+        if (inverted)
+            path.arcTo(box, startAngle + 90, 90);
+        else
+            path.arcTo(box.translated(inward * r), startAngle, -90);
+    };
+
+    path.moveTo(rect.left() + qAbs(rTL), rect.top());
+    if (rTR != 0) {
+        const qreal r = qAbs(rTR);
+        const bool inverted = rTR < 0;
         switch (cornerShape(Qt::TopRightCorner)) {
         case Bevel:
-            path.lineTo(QPointF(rect.right() - rTR, rect.top()));
-            path.lineTo(QPointF(rect.right(), rect.top() + rTR));
+            path.lineTo(QPointF(rect.right() - r, rect.top()));
+            path.lineTo(QPointF(rect.right(), rect.top() + r));
             break;
         case Squircle:
-            path.lineTo(QPointF(rect.right() - rTR, rect.top()));
-            addSquircleCorner(QPointF(rect.right() - rTR, rect.top()), 0, rTR);
+            path.lineTo(QPointF(rect.right() - r, rect.top()));
+            addSquircleCorner(QPointF(rect.right() - r, rect.top()), 0, r, inverted);
             break;
         default:
-            path.arcTo(
-                    QRectF(QPointF(rect.right() - 2 * rTR, rect.top()), QSizeF(2 * rTR, 2 * rTR)),
-                    90, -90);
+            addRoundedCorner(rect.topRight(), QPointF(-1, 1), 90, r, inverted);
             break;
         }
     } else {
         path.lineTo(rect.topRight());
     }
 
-    if (rBR > 0) {
+    if (rBR != 0) {
+        const qreal r = qAbs(rBR);
+        const bool inverted = rBR < 0;
         switch (cornerShape(Qt::BottomRightCorner)) {
         case Bevel:
-            path.lineTo(QPointF(rect.right(), rect.bottom() - rBR));
-            path.lineTo(QPointF(rect.right() - rBR, rect.bottom()));
+            path.lineTo(QPointF(rect.right(), rect.bottom() - r));
+            path.lineTo(QPointF(rect.right() - r, rect.bottom()));
             break;
         case Squircle:
-            path.lineTo(QPointF(rect.right(), rect.bottom() - rBR));
-            addSquircleCorner(QPointF(rect.right(), rect.bottom() - rBR), 1, rBR);
+            path.lineTo(QPointF(rect.right(), rect.bottom() - r));
+            addSquircleCorner(QPointF(rect.right(), rect.bottom() - r), 1, r, inverted);
             break;
         default:
-            path.arcTo(QRectF(QPointF(rect.right() - 2 * rBR, rect.bottom() - 2 * rBR),
-                              QSizeF(2 * rBR, 2 * rBR)),
-                       0, -90);
+            addRoundedCorner(rect.bottomRight(), QPointF(-1, -1), 0, r, inverted);
             break;
         }
     } else {
         path.lineTo(rect.bottomRight());
     }
 
-    if (rBL > 0) {
+    if (rBL != 0) {
+        const qreal r = qAbs(rBL);
+        const bool inverted = rBL < 0;
         switch (cornerShape(Qt::BottomLeftCorner)) {
         case Bevel:
-            path.lineTo(QPointF(rect.left() + rBL, rect.bottom()));
-            path.lineTo(QPointF(rect.left(), rect.bottom() - rBL));
+            path.lineTo(QPointF(rect.left() + r, rect.bottom()));
+            path.lineTo(QPointF(rect.left(), rect.bottom() - r));
             break;
         case Squircle:
-            path.lineTo(QPointF(rect.left() + rBL, rect.bottom()));
-            addSquircleCorner(QPointF(rect.left() + rBL, rect.bottom()), 2, rBL);
+            path.lineTo(QPointF(rect.left() + r, rect.bottom()));
+            addSquircleCorner(QPointF(rect.left() + r, rect.bottom()), 2, r, inverted);
             break;
         default:
-            path.arcTo(
-                    QRectF(QPointF(rect.left(), rect.bottom() - 2 * rBL), QSizeF(2 * rBL, 2 * rBL)),
-                    270, -90);
+            addRoundedCorner(rect.bottomLeft(), QPointF(1, -1), 270, r, inverted);
             break;
         }
     } else {
         path.lineTo(rect.bottomLeft());
     }
 
-    if (rTL > 0) {
+    if (rTL != 0) {
+        const qreal r = qAbs(rTL);
+        const bool inverted = rTL < 0;
         switch (cornerShape(Qt::TopLeftCorner)) {
         case Bevel:
-            path.lineTo(QPointF(rect.left(), rect.top() + rTL));
+            path.lineTo(QPointF(rect.left(), rect.top() + r));
             break;
         case Squircle:
-            path.lineTo(QPointF(rect.left(), rect.top() + rTL));
-            addSquircleCorner(QPointF(rect.left(), rect.top() + rTL), 3, rTL);
+            path.lineTo(QPointF(rect.left(), rect.top() + r));
+            addSquircleCorner(QPointF(rect.left(), rect.top() + r), 3, r, inverted);
             break;
         default:
-            path.arcTo(QRectF(rect.topLeft(), QSizeF(2 * rTL, 2 * rTL)), 180, -90);
+            addRoundedCorner(rect.topLeft(), QPointF(1, 1), 180, r, inverted);
             break;
         }
     } else {
