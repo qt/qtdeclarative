@@ -130,6 +130,8 @@ public:
     Q_ENUM(Bla)
 };
 
+QT_WARNING_PUSH QT_WARNING_DISABLE_DEPRECATED
+
 class OldEnum : public QObject
 {
     Q_OBJECT
@@ -158,5 +160,7 @@ Q_SIGNALS:
 private:
     Foos m_foos = None;
 };
+
+QT_WARNING_POP
 
 #endif // ENUMPROBLEMS_H
