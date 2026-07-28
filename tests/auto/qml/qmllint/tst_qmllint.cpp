@@ -4075,7 +4075,7 @@ void TestQmllint::quickPlugin()
                 }
             } });
     runTest("pluginQuick_propertyChangesInvalidTarget.qml", Result {}); // we don't care about the specific warnings
-    runTest("pluginQuick_stateWithLegalChildren.qml", Result {});
+    runTest("pluginQuick_stateWithLegalChildren.qml", Result::clean());
     runTest("pluginQuick_stateWithIllegalChildren.qml",
             Result{ { { "A State cannot have a child item of type Rectangle"_L1, 5, 9 },
                       { "A State cannot have a child item of type Item"_L1, 6, 9 } } });

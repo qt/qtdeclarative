@@ -2,7 +2,7 @@ import QtQuick
 
 Item {
     State {
-        AnchorState {}
+        AnchorChanges {}
         ParentChange {}
         PropertyChanges {}
         StateChangeScript {}
