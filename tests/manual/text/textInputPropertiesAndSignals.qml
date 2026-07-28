@@ -268,6 +268,7 @@ Item {
 
                     onCursorRectangleChanged: flick.ensureVisible(cursorRectangle)
                     onEditingFinished: textEditEditedInd.blip()
+                    onTextEdited: textEditTextEditedInd.blip()
                     onTextChanged: textEditChangedInd.blip()
                     onPreeditTextChanged: preeditEditInd.blip()
                     onSelectedTextChanged: selectedTextChangedInd.blip()
@@ -280,9 +281,17 @@ Item {
             }
         }
 
-        SignalIndicator {
-            id: textEditEditedInd
-            label: "editingFinished"
+        ColumnLayout {
+                spacing: parent.rowSpacing
+                SignalIndicator {
+                    id: textEditTextEditedInd
+                    label: "textEdited"
+                }
+
+                SignalIndicator {
+                    id: textEditEditedInd
+                    label: "editingFinished"
+                }
         }
 
         // ----------------------------------------------------
@@ -386,6 +395,7 @@ Item {
                      Component.onCompleted: textAreaMouseSelCB.checked = selectByMouse
 
                      onEditingFinished: textAreaEditedInd.blip()
+                     onTextEdited: textAreaTextEditedInd.blip()
                      onTextChanged: textAreaChangedInd.blip()
                      onPreeditTextChanged: preeditAreaInd.blip()
                      onSelectedTextChanged: selectedTextChangedAreaInd.blip()
@@ -398,9 +408,17 @@ Item {
             }
         }
 
-        SignalIndicator {
-            id: textAreaEditedInd
-            label: "editingFinished"
+        ColumnLayout {
+                spacing: parent.rowSpacing
+                SignalIndicator {
+                    id: textAreaTextEditedInd
+                    label: "textEdited"
+                }
+
+                SignalIndicator {
+                    id: textAreaEditedInd
+                    label: "editingFinished"
+                }
         }
 
         // ----------------------------------------------------
