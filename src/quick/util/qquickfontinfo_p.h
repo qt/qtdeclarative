@@ -57,9 +57,6 @@ public:
     bool italic() const;
     int weight() const;
     bool bold() const;
-    bool underline() const;
-    bool overline() const;
-    bool strikeOut() const;
     bool fixedPitch() const;
     QQuickFontEnums::Style style() const;
     QList<QFontVariableAxis> variableAxes() const;
