@@ -1062,6 +1062,8 @@ private slots:
     void splitTokenQmlForeign();
     void multiWordQmlForeign();
 
+    void mergeQtConfImportPathOrder();
+
 #ifdef QT_QMLJSROOTGEN_PRESENT
     void verifyJsRoot();
 #endif

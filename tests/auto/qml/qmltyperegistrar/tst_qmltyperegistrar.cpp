@@ -9,6 +9,8 @@
 
 #include <QtTest/qtest.h>
 
+#include <QtQmlTypeRegistrar/private/qqmltyperegistrarutils_p.h>
+
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlprivate.h>
@@ -16,9 +18,11 @@
 #include <QtQml/private/qtqmlglobal_p.h>
 
 #include <QtCore/qcoreapplication.h>
+#include <QtCore/qdir.h>
 #include <QtCore/qfile.h>
 #include <QtCore/qlibraryinfo.h>
 #include <QtCore/qprocess.h>
+#include <QtCore/qtemporarydir.h>
 
 void tst_qmltyperegistrar::initTestCase()
 {
@@ -1600,6 +1604,64 @@ void tst_qmltyperegistrar::multiWordQmlForeign()
     QVERIFY(!qmltypesData.contains("unsignedlonglong"));
 }
 
+void tst_qmltyperegistrar::mergeQtConfImportPathOrder()
+{
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+
+    const auto writeFile = [](const QString &path, const QString &contents) {
+        QFile file(path);
+        if (!file.open(QFile::WriteOnly | QFile::Text))
+            return false;
+        const QByteArray utf8 = contents.toUtf8();
+        return file.write(utf8) == utf8.size();
+    };
+
+    // The QML engine resolves a module against its import paths in order, using the
+    // first match, so the order the roots are listed in has to survive the merge.
+    // Repeating a root also pins that de-duplication keeps the first occurrence.
+    const QString first = dir.filePath(QStringLiteral("first"));
+    const QString second = dir.filePath(QStringLiteral("second"));
+    const QString third = dir.filePath(QStringLiteral("third"));
+
+    const QString partsDir = dir.filePath(QStringLiteral("parts"));
+    QVERIFY(QDir().mkpath(partsDir));
+    const QString partFile = partsDir + QLatin1String("/app_qt.part.conf");
+    QVERIFY(writeFile(partFile, first + QLatin1Char('\n') + second + QLatin1Char('\n')
+                              + first + QLatin1Char('\n') + third + QLatin1Char('\n')));
+
+    const QString qtConfFile = dir.filePath(QStringLiteral("qt.conf"));
+    const QString listFile = dir.filePath(QStringLiteral("parts.txt"));
+    const QString mergedPathsFile = dir.filePath(QStringLiteral("merged.txt"));
+    QVERIFY(writeFile(listFile, partFile + QLatin1Char('\n')));
+    QVERIFY(writeFile(mergedPathsFile,
+                      partFile + QLatin1Char(';') + qtConfFile + QLatin1Char('\n')));
+
+    QCOMPARE(mergeQtConfFiles(listFile, mergedPathsFile), EXIT_SUCCESS);
+
+    QFile qtConf(qtConfFile);
+    QVERIFY(qtConf.open(QFile::ReadOnly | QFile::Text));
+    const QStringList lines =
+            QString::fromUtf8(qtConf.readAll()).split(QLatin1Char('\n'), Qt::SkipEmptyParts);
+
+    // The private marker that the install-time QML deployment uses to tell a
+    // generated qt.conf apart from one placed there by the user.
+    QVERIFY(lines.contains(QLatin1String("MergeQtConf = true")));
+
+    const QLatin1String importsPrefix("QmlImports = ");
+    QString imports;
+    bool foundImports = false;
+    for (const QString &line : lines) {
+        if (line.startsWith(importsPrefix)) {
+            imports = line.sliced(importsPrefix.size());
+            foundImports = true;
+            break;
+        }
+    }
+    QVERIFY2(foundImports, "no QmlImports entry in the generated qt.conf");
+
+    QCOMPARE(imports.split(QLatin1Char(',')), QStringList({ first, second, third }));
+}
 
 #ifdef QT_QMLJSROOTGEN_PRESENT
 void tst_qmltyperegistrar::verifyJsRoot()
