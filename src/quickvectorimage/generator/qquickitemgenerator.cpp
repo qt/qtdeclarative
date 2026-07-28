@@ -554,6 +554,12 @@ void QQuickItemGenerator::outputShapePath(const PathNodeInfo &info, const QPaint
     if (quadPath)
         shapePath->setPathHints(QQuickShapePath::PathHints(int(quadPath->pathHints())));
 
+    if (info.trim.enabled) {
+        shapePath->trim()->setStart(info.trim.start.defaultValue().toReal());
+        shapePath->trim()->setEnd(info.trim.end.defaultValue().toReal());
+        shapePath->trim()->setOffset(info.trim.offset.defaultValue().toReal());
+    }
+
     QQuickPathInterpolated *pathInterpolatedObj = nullptr;
     QQuickAnimatedProperty::PropertyAnimation pathIndexAnim;
 
@@ -606,9 +612,13 @@ void QQuickItemGenerator::outputShapePath(const PathNodeInfo &info, const QPaint
     const bool hasStrokeColorAnim = info.strokeStyle.color.isAnimated();
     const bool hasStrokeOpacityAnim = info.strokeStyle.opacity.isAnimated();
     const bool hasStrokeWidthAnim = info.strokeStyle.width.isAnimated();
+    const bool hasTrimStartAnim = info.trim.start.isAnimated();
+    const bool hasTrimEndAnim = info.trim.end.isAnimated();
+    const bool hasTrimOffsetAnim = info.trim.offset.isAnimated();
 
     if (!hasPathAnim && !hasFillColorAnim && !hasFillOpacityAnim && !hasStrokeColorAnim
-        && !hasStrokeOpacityAnim && !hasStrokeWidthAnim) {
+        && !hasStrokeOpacityAnim && !hasStrokeWidthAnim && !hasTrimStartAnim && !hasTrimEndAnim
+        && !hasTrimOffsetAnim) {
         return;
     }
 
@@ -617,6 +627,20 @@ void QQuickItemGenerator::outputShapePath(const PathNodeInfo &info, const QPaint
     if (hasPathAnim) {
         bindPropertyAnimation(pathInterpolatedObj, QStringLiteral("factor"), pathIndexAnim,
                               identity);
+    }
+
+    if (hasTrimStartAnim || hasTrimEndAnim || hasTrimOffsetAnim) {
+        auto identity = [](const QVariant &v) { return v; };
+        if (hasTrimStartAnim) {
+            bindAnimatedProperty(shapePath->trim(), QStringLiteral("start"), info.trim.start,
+                                 identity);
+        }
+        if (hasTrimEndAnim)
+            bindAnimatedProperty(shapePath->trim(), QStringLiteral("end"), info.trim.end, identity);
+        if (hasTrimOffsetAnim) {
+            bindAnimatedProperty(shapePath->trim(), QStringLiteral("offset"), info.trim.offset,
+                                 identity);
+        }
     }
 
     if (hasFillColorAnim || hasFillOpacityAnim) {
