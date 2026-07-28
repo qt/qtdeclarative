@@ -16,7 +16,7 @@ class Q_LABSSTYLEKIT_EXPORT QStyleKitStyle : public QCommonStyle
     Q_OBJECT
     Q_PROPERTY(QString stylePath READ stylePath WRITE setStylePath NOTIFY stylePathChanged FINAL)
     Q_PROPERTY(QString themeName READ themeName WRITE setThemeName NOTIFY themeNameChanged FINAL)
-    Q_PROPERTY(QStringList themeNames READ themeNames NOTIFY stylePathChanged FINAL)
+    Q_PROPERTY(QStringList availableThemeNames READ availableThemeNames NOTIFY stylePathChanged FINAL)
     Q_PROPERTY(QStringList customThemeNames READ customThemeNames NOTIFY stylePathChanged FINAL)
 
 public:
@@ -28,7 +28,7 @@ public:
     void setStylePath(const QString &filePath);
     QString themeName() const;
     void setThemeName(const QString &themeName);
-    QStringList themeNames() const;
+    QStringList availableThemeNames() const;
     QStringList customThemeNames() const;
 
     void drawPrimitive(PrimitiveElement pe, const QStyleOption *opt, QPainter *p,

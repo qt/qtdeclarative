@@ -88,7 +88,7 @@ StyleControl::StyleControl(QWidget *parent) :
 
 void StyleControl::refreshThemes()
 {
-    const QStringList names = m_style->themeNames();
+    const QStringList names = m_style->availableThemeNames();
     const QString current = m_style->themeName();
     const QSignalBlocker blocker(m_themeCombo);
     m_themeCombo->clear();

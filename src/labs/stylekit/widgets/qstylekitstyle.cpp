@@ -130,7 +130,7 @@ Q_STATIC_LOGGING_CATEGORY(lcStyleKit, "qt.labs.stylekit")
 
     A Style may define one or more named \l {Theme}{themes}. The active
     theme is selected with \l setThemeName(); the list of available
-    themes is exposed through \l themeNames. The special theme name
+    themes is exposed through \l availableThemeNames. The special theme name
     \c System makes the style follow the platform color scheme: when the
     OS color scheme changes, the active theme is recreated automatically
     and all widgets are repolished.
@@ -251,14 +251,14 @@ Q_STATIC_LOGGING_CATEGORY(lcStyleKit, "qt.labs.stylekit")
     \property QStyleKitStyle::themeName
     \brief the name of the active theme.
 
-    The value must be one of the entries in \l themeNames, or the
+    The value must be one of the entries in \l availableThemeNames, or the
     special name \c System to follow the platform color scheme.
     Setting this property updates all widgets to repaint with the
     new theme.
 */
 
 /*!
-    \property QStyleKitStyle::themeNames
+    \property QStyleKitStyle::availableThemeNames
     \brief the list of theme names exposed by the loaded \l Style.
 
     This list includes the built-in \c Light and \c Dark themes as well
@@ -269,11 +269,11 @@ Q_STATIC_LOGGING_CATEGORY(lcStyleKit, "qt.labs.stylekit")
     \property QStyleKitStyle::customThemeNames
     \brief the list of custom theme names defined by the loaded \l Style.
 
-    Unlike \l themeNames, this list excludes the built-in \c Light and
+    Unlike \l availableThemeNames, this list excludes the built-in \c Light and
     \c Dark themes and contains only the themes explicitly defined by the
     style author. Returns an empty list when no style is loaded.
 
-    \sa themeNames, themeName
+    \sa availableThemeNames, themeName
 */
 
 static QQStyleKitReader::ControlType controlTypeForWidget(const QWidget *widget)
@@ -1514,7 +1514,7 @@ void QStyleKitStyle::setStylePath(const QString &filePath)
     Returns the name of the currently active theme, or an empty string
     if no \l Style has been loaded.
 
-    \sa setThemeName(), themeNames()
+    \sa setThemeName(), availableThemeNames()
 */
 QString QStyleKitStyle::themeName() const
 {
@@ -1525,12 +1525,12 @@ QString QStyleKitStyle::themeName() const
 /*!
     Activates the theme named \a themeName.
 
-    \a themeName must be one of the entries in \l themeNames(), or the
+    \a themeName must be one of the entries in \l availableThemeNames(), or the
     special name \c System to follow the platform color scheme. If no
     \l Style has been loaded, this function emits a warning and returns
     without changing the active theme.
 
-    \sa themeName(), themeNames()
+    \sa themeName(), availableThemeNames()
 */
 void QStyleKitStyle::setThemeName(const QString &themeName)
 {
@@ -1554,7 +1554,7 @@ void QStyleKitStyle::setThemeName(const QString &themeName)
 
     \sa customThemeNames(), themeName()
 */
-QStringList QStyleKitStyle::themeNames() const
+QStringList QStyleKitStyle::availableThemeNames() const
 {
     Q_D(const QStyleKitStyle);
     return d->style ? d->style->themeNames() : QStringList();
@@ -1565,7 +1565,7 @@ QStringList QStyleKitStyle::themeNames() const
     \l Style, excluding the built-in \c Light and \c Dark themes.
     Returns an empty list when no style is loaded.
 
-    \sa themeNames()
+    \sa availableThemeNames()
 */
 QStringList QStyleKitStyle::customThemeNames() const
 {
