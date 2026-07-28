@@ -18,10 +18,11 @@
 #include <QStringList>
 #include <QPainterPath>
 #include <private/qquickpath_p.h>
+#include <QtQuickVectorImageHelpers/qtquickvectorimagehelpersexports.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickPathInterpolated : public QQuickCurve
+class Q_QUICKVECTORIMAGEHELPERS_EXPORT QQuickPathInterpolated : public QQuickCurve
 {
     Q_OBJECT
     Q_PROPERTY(qreal factor READ factor WRITE setFactor NOTIFY factorChanged)

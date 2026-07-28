@@ -5,6 +5,7 @@
 #include "qquicknodeinfo_p.h"
 #include <QtQuickVectorImageHelpers/private/qquickitemspy_p.h>
 #include <QtQuickVectorImageHelpers/private/qquicktransformgroup_p.h>
+#include <QtQuickVectorImageHelpers/private/qquickpathinterpolated_p.h>
 #include "qquicktransformsource_p.h"
 #include "qquickanimationrootitem_p.h"
 
@@ -553,29 +554,70 @@ void QQuickItemGenerator::outputShapePath(const PathNodeInfo &info, const QPaint
     if (quadPath)
         shapePath->setPathHints(QQuickShapePath::PathHints(int(quadPath->pathHints())));
 
-    const QString svgString = path ? QQuickVectorImageGenerator::Utils::toSvgString(*path)
-                                   : QQuickVectorImageGenerator::Utils::toSvgString(*quadPath);
+    QQuickPathInterpolated *pathInterpolatedObj = nullptr;
+    QQuickAnimatedProperty::PropertyAnimation pathIndexAnim;
 
-    auto *pathSvg = new QQuickPathSvg(shapePath);
-    pathSvg->setPath(svgString);
-    auto pathElems = shapePath->pathElements();
-    pathElems.append(&pathElems, pathSvg);
+    const bool pathAnimated = info.path.isAnimated() && info.path.animationCount() > 0
+            && !(info.path.animation(0).startOffset == 0 && info.path.animation(0).isConstant());
+
+    if (pathAnimated) {
+        const auto &pathAnim = info.path.animation(0);
+        QStringList svgPaths;
+        QMap<int, QVariant> indexFrames;
+        QString lastSvg;
+        int pathIdx = -1;
+        for (auto it = pathAnim.frames.constBegin(); it != pathAnim.frames.constEnd(); ++it) {
+            const QString svg =
+                    QQuickVectorImageGenerator::Utils::toSvgString(it->value<QPainterPath>());
+            if (svg != lastSvg) {
+                svgPaths.append(svg);
+                ++pathIdx;
+                lastSvg = svg;
+            }
+            indexFrames.insert(it.key(), QVariant::fromValue(qreal(pathIdx)));
+        }
+
+        if (svgPaths.size() > 1) {
+            auto *interpolated = new QQuickPathInterpolated(shapePath);
+            interpolated->setSvgPaths(svgPaths);
+            auto pathElems = shapePath->pathElements();
+            pathElems.append(&pathElems, interpolated);
+            pathIndexAnim = pathAnim;
+            pathIndexAnim.frames = indexFrames;
+            pathInterpolatedObj = interpolated;
+        }
+    }
+
+    if (!pathInterpolatedObj) {
+        const QString svgString = path ? QQuickVectorImageGenerator::Utils::toSvgString(*path)
+                                       : QQuickVectorImageGenerator::Utils::toSvgString(*quadPath);
+        auto *pathSvg = new QQuickPathSvg(shapePath);
+        pathSvg->setPath(svgString);
+        auto pathElems = shapePath->pathElements();
+        pathElems.append(&pathElems, pathSvg);
+    }
 
     auto shapeData = shape->data();
     shapeData.append(&shapeData, shapePath);
 
+    const bool hasPathAnim = pathInterpolatedObj != nullptr;
     const bool hasFillColorAnim = info.fillColor.isAnimated();
     const bool hasFillOpacityAnim = info.fillOpacity.isAnimated();
     const bool hasStrokeColorAnim = info.strokeStyle.color.isAnimated();
     const bool hasStrokeOpacityAnim = info.strokeStyle.opacity.isAnimated();
     const bool hasStrokeWidthAnim = info.strokeStyle.width.isAnimated();
 
-    if (!hasFillColorAnim && !hasFillOpacityAnim && !hasStrokeColorAnim && !hasStrokeOpacityAnim
-        && !hasStrokeWidthAnim) {
+    if (!hasPathAnim && !hasFillColorAnim && !hasFillOpacityAnim && !hasStrokeColorAnim
+        && !hasStrokeOpacityAnim && !hasStrokeWidthAnim) {
         return;
     }
 
     auto identity = [](const QVariant &v) { return v; };
+
+    if (hasPathAnim) {
+        bindPropertyAnimation(pathInterpolatedObj, QStringLiteral("factor"), pathIndexAnim,
+                              identity);
+    }
 
     if (hasFillColorAnim || hasFillOpacityAnim) {
         bindColorWithOpacity(shapePath, QStringLiteral("fillColor"), info.fillColor,
