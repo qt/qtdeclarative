@@ -116,6 +116,7 @@ class Q_QUICK_EXPORT QQuickItem : public QObject, public QQmlParserStatus
     Q_PROPERTY(qreal implicitHeight READ implicitHeight WRITE setImplicitHeight NOTIFY implicitHeightChanged VIRTUAL)
     Q_PROPERTY(QObject *containmentMask READ containmentMask WRITE setContainmentMask NOTIFY containmentMaskChanged REVISION(2, 11))
 
+    // Value clamped to 4 bit range (see MutabilityGroup enum)
     Q_PROPERTY(int mutabilityGroup READ mutabilityGroup WRITE setMutabilityGroup NOTIFY mutabilityGroupChanged REVISION(6, 12))
 
 #if QT_CONFIG(quick_shadereffect)
@@ -392,6 +393,7 @@ public:
     virtual bool isTextureProvider() const;
     virtual QSGTextureProvider *textureProvider() const;
 
+    // Value clamped to 4 bit range (see MutabilityGroup enum)
     void setMutabilityGroup(int mutabilityGroup);
     int mutabilityGroup() const;
 
