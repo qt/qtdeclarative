@@ -1136,7 +1136,7 @@ static void highlightSignalParameters(HighlightsContainer &out, const QRegularEx
             uR"re((?:([\w.<>]+)\s+(\w+))|(?:(\w+)\s*:\s*([\w.<>]+)))re"_s);
     const qsizetype paramsStart = m.capturedStart(3);
     Q_ASSERT(paramsStart >= 0);
-    auto it = paramRe.globalMatch(m.capturedView(3));
+    auto it = paramRe.globalMatchView(m.capturedView(3));
     while (it.hasNext()) {
         const auto pm = it.next();
         if (pm.capturedStart(1) >= 0) {
