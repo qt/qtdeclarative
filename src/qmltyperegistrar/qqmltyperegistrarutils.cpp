@@ -67,13 +67,19 @@ QDebug error(QAnyStringView fileName, int lineNumber)
        for each qt.parts.conf file
     In any given directory, there might be more than one qt.parts.conf file (especially on Winodws).
     We need to merge all import paths for a given folder (but want to avoid duplicate entries).
+
+    The order of the import paths is significant: the QML engine resolves a module against its
+    import paths in order and uses the first match. We therefore preserve the order in which the
+    paths are listed within each qt.parts.conf file, so that the file's author decides which of
+    two paths providing the same module wins. The order between separate qt.parts.conf files in
+    the same directory is however that of QDirIterator, and so arbitrary.
  */
 int mergeQtConfFiles(const QString &pathToList, const QString &pathToMergedQtConfsList)
 {
     QFile listFile(pathToList);
     if (!listFile.open(QFile::ReadOnly | QFile::Text))
         return EXIT_FAILURE;
-    QMultiHash<QString, QString> directoryToNecessaryImports;
+    QHash<QString, QStringList> directoryToNecessaryImports;
     while (!listFile.atEnd()) {
         QByteArray partFilePath = listFile.readLine().trimmed();
         QString directoryPath = QFileInfo(QString::fromUtf8(partFilePath)).absolutePath();
@@ -86,7 +92,7 @@ int mergeQtConfFiles(const QString &pathToList, const QString &pathToMergedQtCon
             }
             while (!partialFile.atEnd()) {
                 QByteArray import = partialFile.readLine().trimmed();
-                directoryToNecessaryImports.insert(directoryPath, QString::fromUtf8(import));
+                directoryToNecessaryImports[directoryPath].append(QString::fromUtf8(import));
             }
         }
     }
@@ -125,7 +131,7 @@ int mergeQtConfFiles(const QString &pathToList, const QString &pathToMergedQtCon
             return EXIT_FAILURE;
         }
         QTextStream out(&consolidatedQtConfFile);
-        QStringList allIncludes = directoryToNecessaryImports.values(directoryPath);
+        QStringList allIncludes = directoryToNecessaryImports.value(directoryPath);
         allIncludes.removeDuplicates();
         out << "[Config]\nMergeQtConf = true\n"
             << "[Paths]\nQmlImports = "
