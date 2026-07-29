@@ -264,7 +264,7 @@ bool QQuickPopupWindowPrivate::filterPopupSpecialCases(QEvent *event)
             // landing on a sibling/ancestor popup's own content must not close this one
             // unless the plain Outside flag (checked above) is also what's asked for here.
             if (current->closePolicy().testAnyFlags(closePolicy & outsideParentFlags)) {
-                QQuickItem *parentItem = current->parentItem();
+                const QQuickItem *parentItem = current->parentItem();
                 if (parentItem && parentItem->contains(parentItem->mapFromGlobal(globalPos)))
                     break;
             }
