@@ -13,3 +13,16 @@ qt_internal_add_test(tst_qmlpreviewtool
     LIBRARIES
         Qt::Test
 )
+
+if(TARGET Qt::qmlpreviewtesthelper)
+    add_dependencies(tst_qmlpreviewtool Qt::qmlpreviewtesthelper)
+endif()
+if(TARGET Qt::qmlpreviewtesthelpermodule)
+    add_dependencies(tst_qmlpreviewtool Qt::qmlpreviewtesthelpermodule)
+endif()
+if(TARGET Qt::qmlpreview)
+    add_dependencies(tst_qmlpreviewtool Qt::qmlpreview)
+endif()
+if(TARGET Qt::qml_tool)
+    add_dependencies(tst_qmlpreviewtool Qt::qml_tool)
+endif()
