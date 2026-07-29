@@ -69,6 +69,7 @@ set_target_properties(tst_qqmltypeloader PROPERTIES
 
 _qt_internal_qml_type_registration(tst_qqmltypeloader)
 add_subdirectory(SlowImport)
+add_dependencies(tst_qqmltypeloader Slow)
 
 # A resource compiled to a standalone .rcc that the test registers at run time, to exercise
 # the directory cache being invalidated when a resource appears after it was first probed.
