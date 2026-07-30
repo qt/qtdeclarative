@@ -84,7 +84,14 @@ class QStyleKitStylePrivate : public QCommonStylePrivate
             friend bool operator==(const Action &l, const Action &r) noexcept
             { return l.action == r.action; }
         };
-        std::variant<std::monostate, ItemViewCell, Action> id;
+        // used for tab-bar tabs
+        struct Tab
+        {
+            int index = -1;
+            friend bool operator==(const Tab &l, const Tab &r) noexcept
+            { return l.index == r.index; }
+        };
+        std::variant<std::monostate, ItemViewCell, Action, Tab> id;
 
         bool isValid() const noexcept
         { return widget != nullptr && !std::holds_alternative<std::monostate>(id); }
@@ -96,6 +103,8 @@ class QStyleKitStylePrivate : public QCommonStylePrivate
                 return qHashMulti(seed, k.widget, 1, c->model, c->internalId, c->row, c->column);
             if (auto *a = std::get_if<Action>(&k.id))
                 return qHashMulti(seed, k.widget, 2, a->action);
+            if (auto *t = std::get_if<Tab>(&k.id))
+                return qHashMulti(seed, k.widget, 3, t->index);
             return qHashMulti(seed, k.widget, 0);
         }
     };

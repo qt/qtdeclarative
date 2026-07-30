@@ -47,6 +47,9 @@
 #if QT_CONFIG(tabbar)
 #include <QtWidgets/qtabbar.h>
 #endif
+#if QT_CONFIG(tabwidget)
+#include <QtWidgets/qtabwidget.h>
+#endif
 #if QT_CONFIG(toolbar)
 #include <QtWidgets/qtoolbar.h>
 #endif
@@ -185,6 +188,9 @@ Q_STATIC_LOGGING_CATEGORY(lcStyleKit, "qt.labs.stylekit")
         \li QTabBar
         \li \l {AbstractStylableControls::tabBar}{tabBar}
     \row
+        \li QTabWidget
+        \li \l {AbstractStylableControls::page}{page}
+    \row
         \li QToolBar
         \li \l {AbstractStylableControls::toolBar}{toolBar}
     \row
@@ -210,9 +216,8 @@ Q_STATIC_LOGGING_CATEGORY(lcStyleKit, "qt.labs.stylekit")
     Conversely, control entries with no Qt Widgets equivalent —
     \l {AbstractStylableControls::switchControl}{switchControl},
     \l {AbstractStylableControls::rangeSlider}{rangeSlider},
-    \l {AbstractStylableControls::scrollIndicator}{scrollIndicator},
-    \l {AbstractStylableControls::roundButton}{roundButton}, and
-    \l {AbstractStylableControls::page}{page} — have no corresponding widget
+    \l {AbstractStylableControls::scrollIndicator}{scrollIndicator}, and
+    \l {AbstractStylableControls::roundButton}{roundButton} — have no corresponding widget
     type and are not applied.
 
     \section1 Known Limitations
@@ -328,6 +333,10 @@ static QQStyleKitReader::ControlType controlTypeForWidget(const QWidget *widget)
 #if QT_CONFIG(tabbar)
     if (qobject_cast<const QTabBar *>(widget))
         return QQStyleKitReader::TabBar;
+#endif
+#if QT_CONFIG(tabwidget)
+    if (qobject_cast<const QTabWidget *>(widget))
+        return QQStyleKitReader::Page;
 #endif
 #if QT_CONFIG(toolbar)
     if (qobject_cast<const QToolBar *>(widget))
@@ -811,6 +820,15 @@ QStyleKitStylePrivate::SubElementKey QStyleKitStylePrivate::subElementKeyForOpti
         return key;
     }
 #endif
+#if QT_CONFIG(tabbar)
+    if (const auto *tabOpt = qstyleoption_cast<const QStyleOptionTab *>(opt)) {
+        if (tabOpt->tabIndex < 0)
+            return key;
+        key.widget = widget;
+        key.id = SubElementKey::Tab{tabOpt->tabIndex};
+        return key;
+    }
+#endif
     return key;
 }
 
@@ -935,6 +953,12 @@ QQSK::State QStyleKitStylePrivate::resolvedStateFor(
     // Popup has no hover state in the Controls style
     if (type == QQStyleKitReader::ControlType::Popup)
         flags.setFlag(QQSK::StateFlag::Hovered, false);
+
+    // QTabBar sets State_Selected (not State_On) on the current tab
+    if (type == QQStyleKitReader::ControlType::TabButton) {
+        flags.setFlag(QQSK::StateFlag::Checked, state & QStyle::State_Selected);
+        flags.setFlag(QQSK::StateFlag::Highlighted, false);
+    }
 
     return flags;
 }
@@ -1735,6 +1759,22 @@ void QStyleKitStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt,
         return;
     }
 #endif // QT_CONFIG(groupbox)
+#if QT_CONFIG(tabwidget)
+    case PE_FrameTabWidget: {
+        const auto r = d->resolve(w, QQStyleKitReader::ControlType::Page, opt->state);
+        if (!r.isValid())
+            break;
+        d->drawStyledItemRect(r.background(), opt->rect, p);
+        return;
+    }
+#endif // QT_CONFIG(tabwidget)
+#if QT_CONFIG(tabbar)
+    // Not (yet) supported in StyleKit
+    case PE_IndicatorTabClose:
+    case PE_IndicatorTabTearRight:
+    case PE_IndicatorTabTearLeft:
+        return;
+#endif // QT_CONFIG(tabbar)
 #if QT_CONFIG(toolbutton)
     case PE_FrameButtonTool:
     case PE_PanelButtonTool: {
@@ -2291,6 +2331,41 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
         }
         break;
 #endif // QT_CONFIG(menubar)
+#if QT_CONFIG(tabbar)
+    case CE_TabBarTab:
+        if (const auto *tab = qstyleoption_cast<const QStyleOptionTab *>(opt)) {
+            const auto r = d->resolveSubElement(w, opt, QQStyleKitReader::ControlType::TabButton, tab->state);
+            if (!r.isValid())
+                break;
+            const auto &m = *r.metrics;
+
+            const QRect backgroundRect = opt->rect.marginsRemoved(m.margins);
+            d->drawStyledItemRect(r.background(), backgroundRect, p);
+
+            const QRect contentRect = backgroundRect.marginsRemoved(m.padding);
+            uint textFlags = Qt::TextShowMnemonic;
+            if (!styleHint(SH_UnderlineShortcut, opt, w))
+                textFlags |= Qt::TextHideMnemonic;
+
+            if (!tab->icon.isNull()) {
+                const QIcon::Mode mode = (tab->state & State_Enabled) ? QIcon::Normal : QIcon::Disabled;
+                const QIcon::State iconState = (tab->state & State_Selected) ? QIcon::On : QIcon::Off;
+                const QPixmap pm = tab->icon.pixmap(tab->iconSize, p->device()->devicePixelRatio(), mode, iconState);
+                const QSize pmSize = pm.size() / pm.devicePixelRatio();
+                const QRect pr(contentRect.x(), contentRect.y() + (contentRect.height() - pmSize.height()) / 2,
+                               pmSize.width(), pmSize.height());
+                p->drawPixmap(visualRect(tab->direction, contentRect, pr), pm);
+                QRect tr = contentRect;
+                tr.setLeft(contentRect.x() + pmSize.width() + m.spacing);
+                d->drawControlText(r.text(), r.font(), visualRect(tab->direction, contentRect, tr),
+                                   tab->text, textFlags, p, Qt::AlignCenter);
+            } else {
+                d->drawControlText(r.text(), r.font(), contentRect, tab->text, textFlags, p, Qt::AlignCenter);
+            }
+            return;
+        }
+        break;
+#endif // QT_CONFIG(tabbar)
 #if QT_CONFIG(toolbar)
     case CE_ToolBar:
         if (const auto *toolBar = qstyleoption_cast<const QStyleOptionToolBar *>(opt)) {
@@ -2569,10 +2644,42 @@ QRect QStyleKitStyle::subElementRect(SubElement r, const QStyleOption *opt, cons
         }
 #endif // textedit
         break;
+#if QT_CONFIG(tabbar)
+    case SE_TabBarTabText:
+        if (const auto *tab = qstyleoption_cast<const QStyleOptionTab *>(opt)) {
+            const auto resolved = d->resolveLayout(QQStyleKitReader::ControlType::TabButton, opt->state);
+            if (!resolved.isValid())
+                break;
+            const auto &metrics = *resolved.metrics;
+            QRect rect = tab->rect.marginsRemoved(metrics.margins + metrics.padding + metrics.textPadding);
+            if (!tab->icon.isNull())
+                rect.setLeft(rect.left() + tab->iconSize.width() + metrics.spacing);
+            return visualRect(tab->direction, tab->rect, rect);
+        }
+        break;
+    case SE_TabBarTearIndicatorRight:
+    case SE_TabBarTearIndicatorLeft:
+    case SE_TabBarScrollLeftButton:
+    case SE_TabBarScrollRightButton:
+        // Not supported
+        return QRect();
+#endif // QT_CONFIG(tabbar)
+#if QT_CONFIG(tabwidget)
+    case SE_TabWidgetTabContents:
+        if (qstyleoption_cast<const QStyleOptionTabWidgetFrame *>(opt)) {
+            // TabWidget corresponds to Page
+            const auto resolved = d->resolveLayout(QQStyleKitReader::ControlType::Page, opt->state);
+            if (!resolved.isValid())
+                break;
+            const QRect paneRect = subElementRect(SE_TabWidgetTabPane, opt, widget);
+            const QRect rect = paneRect.marginsRemoved(resolved.metrics->padding);
+            return visualRect(opt->direction, opt->rect, rect);
+        }
+        break;
+#endif // QT_CONFIG(tabwidget)
 #if QT_CONFIG(toolbar)
     case SE_ToolBarHandle:
-        // ToolBarHandle is not supported in Controls style,
-        // return an empty rect to keep consistent
+        // Not supported
         return QRect();
 #endif // QT_CONFIG(toolbar)
     default:
@@ -3425,6 +3532,33 @@ QSize QStyleKitStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt,
                      std::max({contentH, indicatorH, bgH}));
     }
 #endif // QT_CONFIG(spinbox)
+#if QT_CONFIG(tabbar)
+    case CT_TabBarTab:
+        if (qstyleoption_cast<const QStyleOptionTab *>(opt)) {
+            const auto resolved = d->resolveLayout(QQStyleKitReader::ControlType::TabButton, opt->state);
+            if (!resolved.isValid())
+                break;
+            const auto &m = *resolved.metrics;
+            const auto bgSize = m.bgImplicitSize.grownBy(m.margins);
+            const auto contentSizeWithPadding = contentsSize.grownBy(m.padding + m.textPadding);
+            return contentSizeWithPadding.expandedTo(bgSize);
+        }
+        break;
+#endif // QT_CONFIG(tabbar)
+#if QT_CONFIG(tabwidget)
+    case CT_TabWidget:
+        if (qstyleoption_cast<const QStyleOptionTabWidgetFrame *>(opt)) {
+            // TabWidget corresponds to Page
+            const auto resolved = d->resolveLayout(QQStyleKitReader::ControlType::Page, opt->state);
+            if (!resolved.isValid())
+                break;
+            const auto &m = *resolved.metrics;
+            const auto bgSize = m.bgImplicitSize.grownBy(m.margins);
+            const auto contentSizeWithPadding = contentsSize.grownBy(m.padding);
+            return contentSizeWithPadding.expandedTo(bgSize);
+        }
+        break;
+#endif // QT_CONFIG(tabwidget)
 #if QT_CONFIG(groupbox)
     case CT_GroupBox:
         if (const auto *groupBox = qstyleoption_cast<const QStyleOptionGroupBox *>(opt)) {
@@ -3627,6 +3761,15 @@ int QStyleKitStyle::pixelMetric(PixelMetric m, const QStyleOption *opt, const QW
         return qMax(0, crossImplicit + crossMargins - crossPadding);
     }
 #endif // QT_CONFIG(toolbar)
+#if QT_CONFIG(tabbar)
+    case PM_TabBarTabHSpace:
+    case PM_TabBarTabVSpace:
+    case PM_TabBarTabOverlap:
+    // Not supported in StyleKit
+    case PM_TabCloseIndicatorWidth:
+    case PM_TabCloseIndicatorHeight:
+        return 0;
+#endif // QT_CONFIG(tabbar)
     default:
         break;
     }
@@ -3641,6 +3784,7 @@ int QStyleKitStyle::styleHint(StyleHint sh, const QStyleOption *opt, const QWidg
     // keep consistent with the Controls style behavior
     case SH_SpinBox_SelectOnStep:
     case SH_ToolBar_Movable:
+    case SH_TabBar_PreferNoArrows:
         return 0;
     case SH_Menu_MouseTracking:
     case SH_MenuBar_MouseTracking:
@@ -3720,6 +3864,9 @@ void QStyleKitStyle::polish(QWidget *widget)
 #endif
 #if QT_CONFIG(tabbar)
         || qobject_cast<const QTabBar *>(widget)
+#endif
+#if QT_CONFIG(tabwidget)
+            || qobject_cast<const QTabWidget *>(widget)
 #endif
 #if QT_CONFIG(menu)
         || qobject_cast<const QMenu *>(widget)
