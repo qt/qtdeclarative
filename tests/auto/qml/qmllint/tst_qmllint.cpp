@@ -175,6 +175,8 @@ private Q_SLOTS:
     void useProperFunction_data();
     void useProperFunction();
 
+    void registerMergeTreeRecursion();
+
 #if QT_CONFIG(library)
     void hasTestPlugin();
     void testPlugin_data();
@@ -4606,6 +4608,17 @@ void TestQmllint::crashes()
             Result{ {
                     Message{ u"FooBar was not found. Did you add all imports and dependencies?"_s },
             } });
+}
+
+void TestQmllint::registerMergeTreeRecursion()
+{
+    const QString filename = testFile("deeplyMergedTypes.qml");
+
+    runQmllint(filename, [&](QProcess &process) {
+        QVERIFY(process.waitForFinished(10000));
+        QCOMPARE(process.exitStatus(), QProcess::NormalExit);
+        QCOMPARE(process.exitCode(), 0);
+    });
 }
 
 QTEST_GUILESS_MAIN(TestQmllint)
