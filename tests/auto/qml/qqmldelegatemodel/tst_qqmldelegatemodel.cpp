@@ -47,6 +47,7 @@ private slots:
     void universalModelData();
     void typedModelData();
     void requiredModelData();
+    void undefinedModelData();
     void nestedRequired();
     void overriddenModelData();
     void overriddenModelData2();
@@ -123,10 +124,44 @@ public:
     }
 };
 
+class UndefinedRoleModel : public QAbstractListModel
+{
+    Q_OBJECT
+public:
+    int rowCount(const QModelIndex &parent = QModelIndex()) const override
+    {
+        return parent.isValid() ? 0 : 2;
+    }
+
+    QVariant data(const QModelIndex &index, int role) const override
+    {
+        if (role != Qt::UserRole)
+            return QVariant();
+        if (mDefined || index.row() % 2)
+            return QStringLiteral("Bar");
+        return QVariant();
+    }
+
+    QHash<int, QByteArray> roleNames() const override
+    {
+        return { { Qt::UserRole, QByteArrayLiteral("bar") } };
+    }
+
+    Q_INVOKABLE void define()
+    {
+        mDefined = true;
+        emit dataChanged(index(0, 0), index(rowCount() - 1, 0));
+    }
+
+private:
+    bool mDefined = false;
+};
+
 tst_QQmlDelegateModel::tst_QQmlDelegateModel()
     : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
     qmlRegisterType<AbstractItemModel>("Test", 1, 0, "AbstractItemModel");
+    qmlRegisterType<UndefinedRoleModel>("Test", 1, 0, "UndefinedRoleModel");
 }
 
 class TableModel : public QAbstractTableModel
@@ -608,6 +643,35 @@ void tst_QQmlDelegateModel::requiredModelData()
         QCOMPARE(a.metaType(), QMetaType::fromType<QString>());
         QCOMPARE(a.toString(), QLatin1String("a"));
     }
+}
+// check that we complain about invalid QVariants, but that the binding keeps working
+// notably, this must not cause a coercion from undefined to string
+void tst_QQmlDelegateModel::undefinedModelData()
+{
+    QQmlEngine engine;
+    const QUrl url = testFileUrl("undefinedModelData.qml");
+    QQmlComponent c(&engine, url);
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+
+    QQmlDelegateModel *delegateModel = qobject_cast<QQmlDelegateModel *>(o.data());
+    QVERIFY(delegateModel);
+
+    QTest::ignoreMessage(
+            QtWarningMsg,
+            qPrintable(url.toString()
+                       + QLatin1String(":11:15: QML QtObject: Unable to assign [undefined] to "
+                                       "\"bar\" of type QString")));
+    QObject *undefined = delegateModel->object(0);
+    QVERIFY(undefined);
+    QCOMPARE(undefined->property("bar").toString(), QString());
+
+    QObject *defined = delegateModel->object(1);
+    QVERIFY(defined);
+    QCOMPARE(defined->property("bar").toString(), QLatin1String("Bar"));
+
+    QMetaObject::invokeMethod(o->property("undefinedRoleModel").value<QObject *>(), "define");
+    QCOMPARE(undefined->property("bar").toString(), QLatin1String("Bar"));
 }
 
 void tst_QQmlDelegateModel::nestedRequired()
