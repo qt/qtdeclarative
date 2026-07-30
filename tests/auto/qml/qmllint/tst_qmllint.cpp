@@ -264,6 +264,8 @@ private Q_SLOTS:
 
     void weakPointers();
 
+    void registerMergeTreeRecursion();
+
 #if QT_CONFIG(library)
     void hasTestPlugin();
     void testPlugin_data();
@@ -5544,6 +5546,17 @@ void TestQmllint::weakPointers()
         auto result = m_linter.lintFileInBatch(file);
         QCOMPARE(result.status, QQmlJSLinter::LintSuccess);
     }
+}
+
+void TestQmllint::registerMergeTreeRecursion()
+{
+    const QString filename = testFile("deeplyMergedTypes.qml");
+
+    runQmllint(filename, [&](QProcess &process) {
+        QVERIFY(process.waitForFinished(10000));
+        QCOMPARE(process.exitStatus(), QProcess::NormalExit);
+        QCOMPARE(process.exitCode(), 0);
+    });
 }
 
 QTEST_GUILESS_MAIN(TestQmllint)

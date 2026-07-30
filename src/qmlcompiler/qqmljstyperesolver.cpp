@@ -191,6 +191,7 @@ void QQmlJSTypeResolver::init(QQmlJSImportVisitor *visitor, QQmlJS::AST::Node *p
     m_objectsByLocation.clear();
     m_imports.clear();
     m_signalHandlers.clear();
+    m_mergeCache.clear();
 
     if (program)
         program->accept(visitor);
@@ -654,6 +655,11 @@ QQmlJSRegisterContent QQmlJSTypeResolver::merge(
 {
     Q_ASSERT(a != b);
 
+    // Both mergeScopes() calls below recurse into this function. See m_mergeCache.
+    const RegisterPair key(a, b);
+    if (const auto it = m_mergeCache.constFind(key); it != m_mergeCache.constEnd())
+        return m_pool->clone(*it);
+
     // We cannot easily provide an operator< for QQmlJSRegisterContent.
     // Therefore we use qHash and operator== here to deduplicate. That's somewhat inefficient.
     QSet<QQmlJSRegisterContent> origins;
@@ -686,12 +692,15 @@ QQmlJSRegisterContent QQmlJSTypeResolver::merge(
         return (a == b) ? a : merge(a, b);
     };
 
-    return m_pool->createConversion(
+    const QQmlJSRegisterContent merged = m_pool->createConversion(
             origins.values(),
             merge(a.containedType(), b.containedType()),
             mergeScopes(aResultScope, bResultScope),
             mergeVariants(a.variant(), b.variant()),
             mergeScopes(a.scope(), b.scope()));
+
+    m_mergeCache.insert(key, m_pool->clone(merged));
+    return merged;
 }
 
 QQmlJSScope::ConstPtr QQmlJSTypeResolver::merge(const QQmlJSScope::ConstPtr &a,

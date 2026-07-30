@@ -16,7 +16,10 @@
 // We mean it.
 
 #include <memory>
+#include <utility>
 #include <qtqmlcompilerexports.h>
+
+#include <QtCore/qhash.h>
 
 #include <private/qqmlirbuilder_p.h>
 #include <private/qqmljsast_p.h>
@@ -229,6 +232,8 @@ public:
     QQmlJSRegisterContent merge(
             QQmlJSRegisterContent a, QQmlJSRegisterContent b) const;
 
+    void clearMergeCache() const { m_mergeCache.clear(); }
+
     QQmlJSRegisterContent literalType(const QQmlJSScope::ConstPtr &type) const;
     QQmlJSRegisterContent operationType(const QQmlJSScope::ConstPtr &type) const;
     QQmlJSRegisterContent namedType(const QQmlJSScope::ConstPtr &type) const;
@@ -303,6 +308,13 @@ protected:
             const QQmlJSScope::ConstPtr &propType) const;
 
     std::unique_ptr<QQmlJSRegisterContentPool> m_pool;
+
+    // Memoizes the tree-recursive merge(). Both the entries and the results handed out are
+    // clones, and QQmlJSTypePropagator::run() clears it, because the later passes edit register
+    // contents in place.
+    using RegisterPair = std::pair<QQmlJSRegisterContent, QQmlJSRegisterContent>;
+    using RegisterMergeCache = QHash<RegisterPair, QQmlJSRegisterContent>;
+    mutable RegisterMergeCache m_mergeCache;
 
     QQmlJSScope::ConstPtr m_voidType;
     QQmlJSScope::ConstPtr m_emptyType;
