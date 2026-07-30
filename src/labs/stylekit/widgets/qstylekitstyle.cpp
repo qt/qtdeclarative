@@ -2076,30 +2076,37 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
         break;
 #endif // QT_CONFIG(itemviews)
 #ifndef QT_NO_FRAME
-    case CE_ShapedFrame:
+    case CE_ShapedFrame: {
+#if QT_CONFIG(scrollarea)
+    if (qobject_cast<const QAbstractScrollArea *>(w))
+        // ScrollView has no styling in Controls, keep consistent
+        return;
+#endif
+        auto controlType = QQStyleKitReader::ControlType::Frame;
 #if QT_CONFIG(combobox)
-        if (w && w->inherits("QComboBoxPrivateContainer")) {
-            const auto r = d->resolve(w, QQStyleKitReader::ControlType::Popup, opt->state);
-            if (!r.isValid())
-                break;
-            QRect backgroundRect = opt->rect.marginsRemoved(r.metrics->margins);
-            d->drawStyledItemRect(r.background(), backgroundRect, p);
-            return;
-        }
-#endif // QT_CONFIG(combobox)
+        if (w && w->inherits("QComboBoxPrivateContainer"))
+            controlType = QQStyleKitReader::ControlType::Popup;
+#endif
 #if QT_CONFIG(textedit)
-        if (qobject_cast<const QTextEdit *>(w)) {
-            const auto r = d->resolve(w, QQStyleKitReader::ControlType::TextArea, opt->state);
+        else if (w && qobject_cast<const QTextEdit *>(w))
+            controlType = QQStyleKitReader::ControlType::TextArea;
+#endif
+#if QT_CONFIG(label)
+        else if (w && qobject_cast<const QLabel *>(w))
+            controlType = QQStyleKitReader::ControlType::Label;
+#endif
+        // Fallback to Frame
+        if (qstyleoption_cast<const QStyleOptionFrame *>(opt)) {
+            const auto r = d->resolve(w, controlType, opt->state);
             if (!r.isValid())
                 break;
             QRect backgroundRect = opt->rect.marginsRemoved(r.metrics->margins);
             d->drawStyledItemRect(r.background(), backgroundRect, p);
             return;
         }
-#endif // QT_CONFIG(textedit)
-        // TODO: Add QLabel, QAbstractScrollArea check
-        // TODO: Fallback to Frame control type for other widgets
         break;
+    }
+#endif // QT_NO_FRAME
 #if QT_CONFIG(scrollbar)
     case CE_ScrollBarSlider: {
         const auto r = d->resolve(w, QQStyleKitReader::ControlType::ScrollBar, opt->state);
@@ -2108,8 +2115,7 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
         d->drawControlIndicator(r.indicator(), opt->rect, p);
         return;
     }
-#endif
-#endif // QT_NO_FRAME
+#endif // QT_CONFIG(scrollbar)
 #if QT_CONFIG(toolbutton)
     case CE_ToolButtonLabel:
         if (const auto *tool = qstyleoption_cast<const QStyleOptionToolButton *>(opt)) {
