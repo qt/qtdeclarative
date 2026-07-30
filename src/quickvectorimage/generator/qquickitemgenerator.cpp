@@ -736,26 +736,28 @@ void QQuickItemGenerator::generateTextNode(const TextNodeInfo &info)
     if (info.isTextArea) {
         text->setX(info.position.x());
         text->setY(info.position.y());
-        if (info.size.width() > 0)
+        if (info.size.width() > 0) {
             text->setWidth(info.size.width());
+            text->setWrapMode(QQuickText::Wrap);
+        }
         if (info.size.height() > 0)
             text->setHeight(info.size.height());
-        text->setWrapMode(QQuickText::Wrap);
         text->setClip(true);
     } else {
-        QFontMetricsF fm(info.font);
-        text->setX(info.position.x());
-        text->setY(info.position.y() - fm.ascent());
-        switch (info.alignment) {
-        case Qt::AlignHCenter:
-            text->setHAlign(QQuickText::AlignHCenter);
-            break;
-        case Qt::AlignRight:
-            text->setHAlign(QQuickText::AlignRight);
-            break;
-        default:
-            text->setHAlign(QQuickText::AlignLeft);
-            break;
+        const qreal anchorX = info.position.x();
+        const qreal anchorY = info.position.y();
+        text->setX(anchorX);
+        auto updateY = [text, anchorY]() { text->setY(anchorY - text->baselineOffset()); };
+        QObject::connect(text, &QQuickItem::baselineOffsetChanged, text, updateY);
+        updateY();
+        if (info.alignment == Qt::AlignHCenter || info.alignment == Qt::AlignRight) {
+            const Qt::Alignment alignment = info.alignment;
+            auto updateX = [text, anchorX, alignment](qreal contentWidth) {
+                text->setX(alignment == Qt::AlignHCenter ? anchorX - qRound(contentWidth / 2)
+                                                         : anchorX - contentWidth);
+            };
+            QObject::connect(text, &QQuickText::contentWidthChanged, text, updateX);
+            updateX(text->contentWidth());
         }
     }
 
@@ -763,6 +765,22 @@ void QQuickItemGenerator::generateTextNode(const TextNodeInfo &info)
     if (strokeColor != QColorConstants::Transparent || info.strokeColor.isAnimated()) {
         text->setStyleColor(strokeColor);
         text->setStyle(QQuickText::Outline);
+    }
+
+    const bool hasFillColorAnim = info.fillColor.isAnimated();
+    const bool hasFillOpacityAnim = info.fillOpacity.isAnimated();
+    const bool hasStrokeColorAnim = info.strokeColor.isAnimated();
+    const bool hasStrokeOpacityAnim = info.strokeOpacity.isAnimated();
+
+    if (hasFillColorAnim || hasFillOpacityAnim) {
+        bindColorWithOpacity(text, QStringLiteral("color"), info.fillColor, info.fillOpacity,
+                             [text](const QColor &color) { text->setColor(color); });
+    }
+
+    if (hasStrokeColorAnim || hasStrokeOpacityAnim) {
+        bindColorWithOpacity(text, QStringLiteral("styleColor"), info.strokeColor,
+                             info.strokeOpacity,
+                             [text](const QColor &color) { text->setStyleColor(color); });
     }
 
     QQuickItem *textItem = popItem();
