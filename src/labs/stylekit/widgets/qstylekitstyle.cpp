@@ -142,10 +142,13 @@ Q_STATIC_LOGGING_CATEGORY(lcStyleKit, "qt.labs.stylekit")
 
     Each Qt Widgets class is mapped to a StyleKit control type, which
     determines which control entry in the \l Style applies to it. Use the
-    corresponding control entry to configure colors, sizes, and other visual
-    properties for that widget type. Properties not set in a specific control
-    entry fall back through the control type hierarchy: for example, \c button
-    falls back to \c abstractButton, which falls back to \c control.
+    corresponding control entry to configure visual properties for that widget
+    type, including individual parts of the widget such as its background,
+    indicator, handle, etc. See \l ControlStyleProperties for the full list of
+    stylable properties.
+    Properties not set in a specific control entry fall back through the control
+    type hierarchy: for example, \c button falls back to \c abstractButton, which
+    falls back to \c control.
 
     \table
     \header
@@ -203,22 +206,56 @@ Q_STATIC_LOGGING_CATEGORY(lcStyleKit, "qt.labs.stylekit")
         \li QFrame
         \li \l {AbstractStylableControls::frame}{frame}
     \row
+        \li QLabel
+        \li \l {AbstractStylableControls::label}{label}
+    \row
+        \li QMenu
+        \li \l {AbstractStylableControls::menu}{menu}
+    \row
+        \li QMenuBar
+        \li \l {AbstractStylableControls::menuBar}{menuBar}
+    \row
         \li Everything else
         \li \l {AbstractStylableControls::control}{control}
     \endtable
 
-    Widgets not listed above fall back to the
-    \l {AbstractStylableControls::control}{control} type. Notably,
-    item view containers such as \l QListView and \l QTreeView are not yet specifically
-    mapped; only the individual items inside item views are styled via the
-    \l {AbstractStylableControls::itemDelegate}{itemDelegate} control.
-    Dedicated mappings for these widgets are planned for a future release.
-    Conversely, control entries with no Qt Widgets equivalent —
-    \l {AbstractStylableControls::switchControl}{switchControl},
-    \l {AbstractStylableControls::rangeSlider}{rangeSlider},
-    \l {AbstractStylableControls::scrollIndicator}{scrollIndicator}, and
-    \l {AbstractStylableControls::roundButton}{roundButton} — have no corresponding widget
-    type and are not applied.
+    Widgets not listed above are not yet supported by QStyleKitStyle and will be
+    painted by \l QCommonStyle. Support for remaining widgets is planned for future
+    releases. Conversely, some control entries in \l AbstractStylableControls have no
+    Qt Widgets equivalent and are not applied when styling widgets.
+
+    \section2 Sub-controls within a widget
+
+    Separate sub-controls within a widget can be styled individually, as each one maps
+    to a separate control entry in the \l Style:
+
+    \table
+    \header
+        \li Sub-element
+        \li StyleKit control
+    \row
+        \li Items in \l QListView, \l QTreeView, \l QTableView, and the
+            \l QComboBox popup list
+        \li \l {AbstractStylableControls::itemDelegate}{itemDelegate}
+    \row
+        \li Individual tabs in a \l QTabBar
+        \li \l {AbstractStylableControls::tabButton}{tabButton}
+    \row
+        \li \l QMenu items
+        \li \l {AbstractStylableControls::menuItem}{menuItem}
+    \row
+        \li Separators in a \l QMenu
+        \li \l {AbstractStylableControls::menuSeparator}{menuSeparator}
+    \row
+        \li \l QMenuBar items
+        \li \l {AbstractStylableControls::menuBarItem}{menuBarItem}
+    \row
+        \li Separators in a \l QToolBar
+        \li \l {AbstractStylableControls::toolSeparator}{toolSeparator}
+    \row
+        \li The \l QComboBox popup list container
+        \li \l {AbstractStylableControls::popup}{popup}
+    \endtable
 
     \section1 Known Limitations
 
