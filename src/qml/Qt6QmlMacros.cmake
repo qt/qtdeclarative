@@ -193,8 +193,10 @@ function(_qt_internal_write_qmldir_part target qt_cmake_export_namespace)
     # Qt6::Qml deploy finalizer (_qt_internal_generate_deploy_qml_imports_script).
     # We can't test for that target here, because this deferred call may run before
     # the finalizer, so we query the answer that was computed and cached back when
-    # qt_add_qml_module() was called.
-    _qt_internal_qml_import_scan_enabled(${target} have_import_scan)
+    # qt_add_qml_module() was called. Depending on the scan's output when no scan
+    # will be set up - for a target that never gets finalized, for example - would
+    # leave the partial with a build rule whose input nothing produces.
+    _qt_internal_qml_import_scan_will_run(${target} have_import_scan)
 
     set(emit_partial FALSE)
     if(have_import_scan)
@@ -1211,7 +1213,7 @@ Check https://doc.qt.io/qt-6/qt-cmake-policy-qtp0001.html for policy details."
         # caching the answer on the target. The finalizer that sets the scan up and
         # the deferred call that consumes its output then both query that same
         # answer, and so cannot disagree about it.
-        _qt_internal_qml_import_scan_enabled(${target} scan_enabled)
+        _qt_internal_qml_import_scan_will_run(${target} scan_will_run)
     endif()
 
     # write out extra qtconf files for executables to automatically set up import paths.
@@ -4629,14 +4631,12 @@ Possible reasons include:
     set(${out_path} "${tool_path}" PARENT_SCOPE)
 endfunction()
 
-# Whether a build-time QML import scan will be set up for this target.
+# Whether a build-time QML import scan is wanted for this target.
 #
-# Two places need to agree on this: _qt_internal_generate_deploy_qml_imports_script(),
-# which sets the scan up, and _qt_internal_write_qmldir_part(), which consumes its
-# output. The latter runs from a deferred call that is not ordered against the
-# former, so it cannot observe the scan directly. The answer is therefore computed
-# once, in the scope of the qt_add_qml_module() call, cached on the target, and only
-# queried afterwards.
+# This only says that the scan should be set up if the finalizer that sets it up
+# runs at all. Whether it does is a separate question, answered by
+# _qt_internal_qml_import_scan_will_run(), which is the one any consumer of the
+# scan's output must ask.
 function(_qt_internal_qml_import_scan_enabled target out_var)
     get_property(is_cached TARGET ${target} PROPERTY _qt_qml_import_scan_enabled SET)
     if(is_cached)
@@ -4677,6 +4677,57 @@ function(_qt_internal_qml_import_scan_enabled target out_var)
 
     set_target_properties(${target} PROPERTIES _qt_qml_import_scan_enabled ${enabled})
     set(${out_var} ${enabled} PARENT_SCOPE)
+endfunction()
+
+# Whether a build-time QML import scan will actually be set up for this target, and
+# hence whether the scan's output can be depended on.
+#
+# Two places need to agree on this: _qt_internal_generate_deploy_qml_imports_script(),
+# which sets the scan up, and _qt_internal_write_qmldir_part(), which consumes its
+# output. The latter runs from a deferred call that is not ordered against the
+# former, so it cannot observe the scan directly. The answer is therefore computed
+# once, in the scope of the qt_add_qml_module() call, cached on the target, and only
+# queried afterwards.
+#
+# The scan is set up by an executable finalizer, and finalizers only run for a target
+# created with qt_add_executable(), which sets _qt_expects_finalization whether it
+# finalizes immediately or defers, or for one already finalized manually, which
+# clears that property again and sets _qt_is_finalized. A target created with plain
+# add_executable() has neither, and so will never be finalized. The same two
+# properties are used to detect this in _qt_internal_expose_source_file_to_ide() in
+# qtbase.
+#
+# This is deliberately kept out of _qt_internal_qml_import_scan_enabled(): a plain
+# add_executable() target that is manually finalized later still has its scan set up
+# by the finalizer, and the install-time deployment needs it. Only the consumers of
+# the scan's output have to be conservative about whether it will exist.
+function(_qt_internal_qml_import_scan_will_run target out_var)
+    get_property(is_cached TARGET ${target} PROPERTY _qt_qml_import_scan_will_run SET)
+    if(is_cached)
+        get_target_property(will_run ${target} _qt_qml_import_scan_will_run)
+        set(${out_var} ${will_run} PARENT_SCOPE)
+        return()
+    endif()
+
+    _qt_internal_qml_import_scan_enabled(${target} will_run)
+    if(will_run)
+        # Internal Qt targets don't use these properties; whether they run
+        # finalizers is already accounted for by the call above.
+        get_target_property(is_internal_target ${target} _qt_is_internal_target)
+        get_target_property(expects_finalization ${target} _qt_expects_finalization)
+        get_target_property(is_finalized ${target} _qt_is_finalized)
+        if(NOT is_internal_target AND NOT expects_finalization AND NOT is_finalized)
+            set(will_run FALSE)
+            message(VERBOSE
+                "The target ${target} was not created with qt_add_executable() and has not"
+                " been finalized, so its QML imports will not be scanned. QML modules in"
+                " the build tree that it imports only from QML will not be listed in the"
+                " qt.conf generated next to the executable.")
+        endif()
+    endif()
+
+    set_target_properties(${target} PROPERTIES _qt_qml_import_scan_will_run ${will_run})
+    set(${out_var} ${will_run} PARENT_SCOPE)
 endfunction()
 
 # The file qmlimportscanner writes for a target's import scan. The infix
@@ -5002,9 +5053,10 @@ function(_qt_internal_generate_deploy_qml_imports_script target)
     endif()
 
     # Whether to set up the scan at all (shared Qt, import scanning enabled, and
-    # not a test executable unless forced). For a QML module this was settled at
-    # qt_add_qml_module() time; _qt_internal_write_qmldir_part() queries the same
-    # answer to know whether this scan will exist.
+    # not a test executable unless forced). Note that we ask this and not
+    # _qt_internal_qml_import_scan_will_run(): by the time we get here the target is
+    # being finalized, so the scan does happen, even if the consumers of its output
+    # had to assume otherwise.
     _qt_internal_qml_import_scan_enabled(${target} scan_enabled)
     if(NOT scan_enabled)
         return()
