@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 // Qt-Security score:significant
 
+#include "qqmlmetatype_p.h"
 #include "qqmlpropertytopropertybinding_p.h"
 
 #include <private/qqmlanybinding_p.h>
@@ -11,6 +12,8 @@
 #include <private/qv4alloca_p.h>
 
 #include <QtQml/qqmlinfo.h>
+
+#include <QtCore/qscopeguard.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -99,6 +102,7 @@ void QQmlPropertyToUnbindablePropertyBinding::update(QQmlPropertyData::WriteFlag
         return;
 
     setUpdatingFlag(true);
+    const auto resetUpdating = qScopeGuard([this]() { setUpdatingFlag(false); });
 
     if (canUseAccessor())
         flags.setFlag(QQmlPropertyData::BypassInterceptor);
@@ -113,6 +117,32 @@ void QQmlPropertyToUnbindablePropertyBinding::update(QQmlPropertyData::WriteFlag
 
     const QMetaType targetMetaType = vtd.isValid() ? vtd.propType() : d->propType();
     const QMetaType valueMetaType = value.metaType();
+
+    if (QV4::ExecutionEngine::isUndefinedVariant(value)) {
+        /* we want to be consistent with the logic in QQmlBinding::slowWrite:
+           undefined should reset if possible, be stored as is if possible, and
+           create a warning if not; we especially don't want to coerce to string
+           even though that is possible
+           There are a few cases where being consistent currently yields potentially
+           unexpected results: QJsonValue and QJSPrimitiveValue are unsupported
+           (there can't be QJSManagedValue properties); this will be fixed in slowWrite
+         */
+        if (vtd.isValid() ? vtd.isResettable() : d->isResettable()) {
+            QQmlPropertyPrivate::resetValueProperty(target, *d, vtd, {}, flags);
+            return;
+        }
+
+        if (!QQmlMetaType::canLosslesslyHoldUndefined(targetMetaType)) {
+            const char *typeName = targetMetaType.name();
+            qmlWarning(target)
+                    << QStringLiteral("Unable to assign [undefined] to \"%1\" of type %2")
+                               .arg(QQmlPropertyPrivate::restore(target, *d, &vtd, nullptr).name(),
+                                    typeName ? QString::fromUtf8(typeName)
+                                             : QStringLiteral("[unknown property type]"));
+            return;
+        }
+        // other cases are handled below
+    }
 
     if (valueMetaType != targetMetaType && targetMetaType != QMetaType::fromType<QVariant>()) {
         // Coerce the value to the target type using JavaScript semantics.
@@ -130,7 +160,6 @@ void QQmlPropertyToUnbindablePropertyBinding::update(QQmlPropertyData::WriteFlag
     }
 
     QQmlPropertyPrivate::writeValueProperty(target, *d, vtd, value, {}, flags);
-    setUpdatingFlag(false);
 }
 
 QQmlPropertyToUnbindablePropertyBinding::QQmlPropertyToUnbindablePropertyBinding(

@@ -180,6 +180,7 @@ public:
 
     static bool canConvert(QObject *o, QMetaType metaType);
     static bool canConvert(const QQmlPropertyCache::ConstPtr &from, QMetaType metaType);
+    static bool canLosslesslyHoldUndefined(QMetaType metaType);
 
     static void freeUnusedTypesAndCaches();
 

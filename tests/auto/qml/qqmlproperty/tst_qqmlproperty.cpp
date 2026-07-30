@@ -2830,8 +2830,7 @@ void tst_qqmlproperty::convertToWriteTargetType()
         QCOMPARE(result, targetValue);
 }
 
-// QTBUG-145016: verify that property-to-property bindings perform JavaScript coercion
-// when the source value is an invalid QVariant (representing "undefined").
+// undefined doesn't coerce, but the binding is still kept
 void tst_qqmlproperty::writeInvalidVariantToTypedProperty()
 {
     VariantSourceObject source;
@@ -2843,23 +2842,23 @@ void tst_qqmlproperty::writeInvalidVariantToTypedProperty()
     QVERIFY(sourceProp.isValid());
     QVERIFY(targetProp.isValid());
 
+    source.setValue(QVariant(QStringLiteral("Foo")));
+
     QQmlAnyBinding binding = QQmlPropertyToPropertyBinding::create(&engine, sourceProp, targetProp);
     binding.installOn(targetProp);
-
-    // Write a valid string - should propagate
-    source.setValue(QVariant(QStringLiteral("Foo")));
     QCOMPARE(target.value(), u"Foo"_s);
 
-    // Write an invalid QVariant (represents "undefined" in JS).
-    // The binding must still update the target property so that subsequent
-    // valid writes trigger the change signal.
+    QTest::ignoreMessage(
+            QtWarningMsg,
+            "<Unknown File>: QML StringTargetObject: "
+            "Unable to assign [undefined] to \"value\" of type QString");
     source.setValue(QVariant());
-    QCOMPARE(target.value(), u"undefined"_s);
-
-    // Write a valid string again - must trigger a change
-    QSignalSpy spy(&target, &StringTargetObject::valueChanged);
-    source.setValue(QVariant(QStringLiteral("Foo")));
     QCOMPARE(target.value(), u"Foo"_s);
+
+    // The binding still works.
+    QSignalSpy spy(&target, &StringTargetObject::valueChanged);
+    source.setValue(QVariant(QStringLiteral("Bar")));
+    QCOMPARE(target.value(), u"Bar"_s);
     QCOMPARE(spy.size(), 1);
 }
 

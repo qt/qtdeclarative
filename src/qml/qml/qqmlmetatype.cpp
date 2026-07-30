@@ -3,7 +3,10 @@
 // Qt-Security score:significant
 
 #include "ftw/qhashedstring_p.h"
+#include "jsapi/qjsmanagedvalue.h"
+#include "jsapi/qjsprimitivevalue.h"
 #include "qqmlmetatype_p.h"
+#include "qv4value_p.h"
 
 #include <private/qqmlextensionplugin_p.h>
 #include <private/qqmlmetatypedata_p.h>
@@ -1675,6 +1678,28 @@ bool QQmlMetaType::canConvert(const QQmlPropertyCache::ConstPtr &from, QMetaType
             return QQmlMetaObject::canConvert(fromMeta, toMeta);
         return inherits(from, data->propertyCache(toMeta, QTypeRevision()));
     });
+}
+
+// keep in sync with ExecutionEngine::isEquivalentToUndefinedData
+bool QQmlMetaType::canLosslesslyHoldUndefined(QMetaType metaType)
+{
+    switch (metaType.id()) {
+    case QMetaType::QVariant:
+        return true; // invalid QVariant
+    case QMetaType::QJsonValue:
+        return true; // QJsonValue::Undefined
+    default:
+        break;
+    }
+    if (metaType == QMetaType::fromType<QJSValue>())
+        return true; // QJSValue::UndefinedValue
+    if (metaType == QMetaType::fromType<QJSPrimitiveValue>())
+        return true; // QJSPrimitiveValue::Undefined
+    if (metaType == QMetaType::fromType<QJSManagedValue>())
+        return true; // QJSManagedValue::Undefined
+    // QV4::Value can also hold undefined, but that should not appear in properties
+    // and is therefore not considered here; same for QMetaType::Void
+    return false;
 }
 
 void QQmlMetaType::unregisterType(int typeIndex)
