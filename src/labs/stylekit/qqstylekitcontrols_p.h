@@ -65,6 +65,7 @@ class QQStyleKitControls : public QObject, public QQmlParserStatus
     Q_PROPERTY(QQStyleKitControl *popup READ popup WRITE set_popup NOTIFY popupChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *pane READ pane WRITE set_pane NOTIFY paneChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *page READ page WRITE set_page NOTIFY pageChanged FINAL)
+    Q_PROPERTY(QQStyleKitControl *pageIndicator READ pageIndicator WRITE set_pageIndicator NOTIFY pageIndicatorChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *frame READ frame WRITE set_frame NOTIFY frameChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *label READ label WRITE set_label NOTIFY labelChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *groupBox READ groupBox WRITE set_groupBox NOTIFY groupBoxChanged FINAL)
@@ -121,6 +122,7 @@ public:
     IMPLEMENT_ACCESSORS(popup)
     IMPLEMENT_ACCESSORS(pane)
     IMPLEMENT_ACCESSORS(page)
+    IMPLEMENT_ACCESSORS(pageIndicator)
     IMPLEMENT_ACCESSORS(frame)
     IMPLEMENT_ACCESSORS(label)
     IMPLEMENT_ACCESSORS(groupBox)
@@ -174,6 +176,7 @@ signals:
     void popupChanged();
     void paneChanged();
     void pageChanged();
+    void pageIndicatorChanged();
     void frameChanged();
     void labelChanged();
     void groupBoxChanged();

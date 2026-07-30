@@ -79,6 +79,7 @@ QT_BEGIN_NAMESPACE
     \value StyleReader.MenuSeparator    \l {MenuSeparator}
     \value StyleReader.Dialog           \l {Dialog}
     \value StyleReader.Page             \l {Page}
+    \value StyleReader.PageIndicator    \l {PageIndicator}
     \value StyleReader.Pane             \l {Pane}
     \value StyleReader.Popup            \l {Popup}
     \value StyleReader.ProgressBar      \l {ProgressBar}

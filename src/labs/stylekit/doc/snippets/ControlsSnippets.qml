@@ -304,6 +304,43 @@ ApplicationWindow {
         }
         //! [page]
 
+        //! [pageIndicator]
+        pageIndicator {
+            background.visible: false
+            indicator {
+                width: 5
+                height: 5
+                radius: 255
+                border.width: 0
+                color: "black"
+                opacity: 0.45
+                foreground.visible: false
+            }
+
+            hovered.indicator {
+                width: 6
+                height: 6
+                opacity: 0.7
+            }
+
+            pressed.indicator {
+                width: 4
+                height: 4
+            }
+
+            checked.indicator {
+                width: 7
+                height: 7
+            }
+
+            checked.hovered.indicator {
+                width: 8
+                height: 8
+                opacity: 0.7
+            }
+        }
+        //! [pageIndicator]
+
         //! [pane]
         pane {
             background {
