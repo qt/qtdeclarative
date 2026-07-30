@@ -287,6 +287,16 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \qmlproperty ControlStyle AbstractStylableControls::pageIndicator
+
+    Grouped property for styling \l [QtQuickControls]{PageIndicator}.
+
+    Unset properties fall back to \l control.
+
+    \snippet ControlsSnippets.qml pageIndicator
+*/
+
+/*!
     \qmlproperty ControlStyle AbstractStylableControls::pane
 
     Grouped property for styling \l [QtQuickControls]{Pane}.
@@ -625,6 +635,7 @@ IMPLEMENT_ACCESSORS(itemDelegate, QQStyleKitReader::ControlType::ItemDelegate)
 IMPLEMENT_ACCESSORS(popup, QQStyleKitReader::ControlType::Popup)
 IMPLEMENT_ACCESSORS(pane, QQStyleKitReader::ControlType::Pane)
 IMPLEMENT_ACCESSORS(page, QQStyleKitReader::ControlType::Page)
+IMPLEMENT_ACCESSORS(pageIndicator, QQStyleKitReader::ControlType::PageIndicator)
 IMPLEMENT_ACCESSORS(frame, QQStyleKitReader::ControlType::Frame)
 IMPLEMENT_ACCESSORS(label, QQStyleKitReader::ControlType::Label)
 IMPLEMENT_ACCESSORS(groupBox, QQStyleKitReader::ControlType::GroupBox)

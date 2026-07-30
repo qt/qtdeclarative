@@ -92,6 +92,7 @@ public:
         MenuSeparator,
         Pane,
         Page,
+        PageIndicator,
         Frame,
         Label,
         GroupBox

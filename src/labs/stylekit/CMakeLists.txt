@@ -50,6 +50,7 @@ qt_internal_add_qml_module(LabsStyleKit
         MenuBarItem.qml
         MenuItem.qml
         MenuSeparator.qml
+        PageIndicator.qml
         ProgressBar.qml
         RadioButton.qml
         RadioDelegate.qml
