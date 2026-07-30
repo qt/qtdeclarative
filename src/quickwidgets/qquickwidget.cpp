@@ -114,6 +114,7 @@ public:
     QQuickWidget *m_quickWidget;
 };
 
+#if QT_CONFIG(accessibility)
 QAccessibleInterface *QQuickWidgetOffscreenWindow::accessibleRoot() const
 {
     Q_D(const QQuickWidgetOffscreenWindow);
@@ -125,6 +126,7 @@ QAccessibleInterface *QQuickWidgetOffscreenWindow::accessibleRoot() const
     }
     return nullptr;
 }
+#endif // QT_CONFIG(accessibility)
 
 QQuickWidgetRenderControl::QQuickWidgetRenderControl(QQuickWidget *quickWidget)
     : QQuickRenderControl(*(new QQuickWidgetRenderControlPrivate(this, quickWidget)), nullptr)
