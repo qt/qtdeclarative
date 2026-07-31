@@ -805,8 +805,8 @@ void tst_QQMLTypeLoader::signalHandlersAreCompatible()
     // make sure that units really come from different places (the machinery
     // could in theory be smart enough to figure the qmlcachegen cached
     // version), fairly questionable check but better than nothing
-#ifdef Q_OS_ANDROID
-    QSKIP("qrc and file system is the same thing on Android");
+#if defined(Q_OS_ANDROID) || defined(Q_OS_HARMONY)
+    QSKIP("Test data is embedded as qrc resources on this platform");
 #endif
     QVERIFY(unitFromCachegen->url() != unitFromTypeCompiler->url());
 }
