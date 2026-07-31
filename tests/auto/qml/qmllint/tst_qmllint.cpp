@@ -131,6 +131,8 @@ private Q_SLOTS:
     void compilerWarnings_data();
     void compilerWarnings();
 
+    void jsFileInBatch();
+
     void testUnknownCausesFail();
 
     void directoryPassedAsQmlTypesFile();
@@ -3226,6 +3228,21 @@ void TestQmllint::compilerWarnings()
         category->setSeverity(QQmlJS::WarningSeverity::Warning);
 
     runTest(filename, result, {}, {}, {}, UseDefaultImports, &categories);
+}
+
+void TestQmllint::jsFileInBatch() {
+    QQmlJSLinter::LintOptions options = QQmlJSLinter::LintOption::GenerateJson;
+    std::array filenames {"SharedFunctions.js", "dontCheckJSTypes.qml"};
+    for (const auto& filename: filenames) {
+        m_linter.prepareFileForBatchLinting(testFile(filename), nullptr, options,
+                                            QLibraryInfo::paths(QLibraryInfo::QmlImportsPath), { },
+                                            { }, m_categories);
+    }
+
+    for (const auto& filename: filenames) {
+        QQmlJSLinter::Result result = m_linter.lintFileInBatch(testFile(filename));
+        checkResult(result.json["warnings"].toArray(), Result::clean());
+    }
 }
 
 QString TestQmllint::runQmllint(const QString &fileToLint,
