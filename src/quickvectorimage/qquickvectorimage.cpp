@@ -70,11 +70,13 @@ void QQuickVectorImagePrivate::loadFile()
     QUrl resolvedUrl = qmlContext(q)->resolvedUrl(sourceFile);
     QString localFile = QQmlFile::urlToLocalFileOrQrc(resolvedUrl);
 
+    if (rootItem) {
+        rootItem->deleteLater();
+        rootItem = nullptr;
+    }
+
     if (localFile.isEmpty())
         return;
-
-    if (rootItem)
-        rootItem->deleteLater();
 
     rootItem = new QQuickItem(q);
     rootItem->setParentItem(q);

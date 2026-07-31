@@ -10,6 +10,7 @@
 #include <QtQml/qqmlcomponent.h>
 #include <QtQuick/qquickitem.h>
 #include <QtQuickShapes/private/qquickshape_p.h>
+#include <QtQuickVectorImage/private/qquickvectorimage_p_p.h>
 
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/viewtestutils_p.h>
@@ -27,6 +28,7 @@ private slots:
     void parseBrokenFile();
     void asyncShapes_data();
     void asyncShapes();
+    void clearSource();
 };
 
 tst_QQuickVectorImage::tst_QQuickVectorImage()
@@ -118,6 +120,31 @@ void tst_QQuickVectorImage::asyncShapes()
     QVERIFY(!shapes.isEmpty());
     for (const QQuickShape *shape : shapes)
         QCOMPARE(shape->asynchronous(), isAsync);
+}
+
+void tst_QQuickVectorImage::clearSource()
+{
+    const QUrl fileName = QUrl("qrc:/svgs/gradientxform.svg");
+
+    QQmlEngine engine;
+    engine.rootContext()->setContextProperty(QStringLiteral("fileName"), fileName);
+
+    QQmlComponent c(&engine, testFileUrl("vectorimage.qml"));
+    QQuickVectorImage *item = qobject_cast<QQuickVectorImage *>(c.create());
+    auto cleanup = qScopeGuard([&item] {
+        delete item;
+        item = nullptr;
+    });
+
+    QVERIFY(item != nullptr);
+
+    QQuickVectorImagePrivate *d_ptr = QQuickVectorImagePrivate::get(item);
+    QVERIFY(d_ptr != nullptr);
+    QVERIFY(d_ptr->rootItem != nullptr);
+
+    item->setSource(QUrl{});
+
+    QVERIFY(d_ptr->rootItem == nullptr);
 }
 
 QTEST_MAIN(tst_QQuickVectorImage)
