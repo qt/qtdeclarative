@@ -179,6 +179,9 @@ private:
         Result result;
 
         QQmlJS::Engine engine; // needs to outlive the lintFileInBatch() call.
+
+        bool isESModule;
+        bool isJavaScript;
     };
 
     std::unordered_map<QString, LintInfo> m_lintInfo;

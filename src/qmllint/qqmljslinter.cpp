@@ -551,6 +551,10 @@ bool QQmlJSLinter::prepareFileForBatchLinting(const QString &dirtyFilename,
     lintInfo.qmldirFiles = qmldirFiles;
     lintInfo.categories = categories;
 
+    const QString lowerSuffix = info.suffix().toLower();
+    lintInfo.isESModule = lowerSuffix == QLatin1String("mjs");
+    lintInfo.isJavaScript = lintInfo.isESModule || lowerSuffix == QLatin1String("js");
+
     lintInfo.resourceMapper = { resourceFiles };
     m_importer.setResourceFileMapper(lintInfo.resourceMapper ? &*lintInfo.resourceMapper : nullptr);
     lintInfo.handle = m_importer.importFile(filenameFromUser);
@@ -605,7 +609,7 @@ QQmlJSLinter::Result QQmlJSLinter::lintFileInBatch(const QString &dirtyFilename)
         return { LintResult::FailedToOpen, { }, { } };
 
     auto &lintInfo = it->second;
-    if (lintInfo.result.status != FailedToOpen && lintInfo.result.status != FailedToParse)
+    if (lintInfo.result.status != FailedToOpen && lintInfo.result.status != FailedToParse && !lintInfo.isJavaScript)
         lintFileImpl(filename);
 
     // emit all (possibly pre-recorded) warnings now
@@ -674,16 +678,12 @@ void QQmlJSLinter::typeReader(const QString &filename)
 {
     QString code;
 
-    QFileInfo info(filename);
-    const QString lowerSuffix = info.suffix().toLower();
-    const bool isESModule = lowerSuffix == QLatin1String("mjs");
-    const bool isJavaScript = isESModule || lowerSuffix == QLatin1String("js");
-
     auto &lintInfo = m_lintInfo[filename];
     auto &result = lintInfo.result;
 
     result.logger = std::make_unique<QQmlJSLogger>();
     result.logger->setManualFlush(true);
+    QFileInfo info(filename);
     result.logger->setFilePath(useAbsolutePath() ? info.absoluteFilePath() : filename);
     result.logger->setSilent(lintInfo.options.testFlag(QQmlJSLinter::Silent)
                              || lintInfo.options.testFlag(QQmlJSLinter::GenerateJson));
@@ -708,11 +708,11 @@ void QQmlJSLinter::typeReader(const QString &filename)
 
     QQmlJS::Lexer lexer(&lintInfo.engine);
 
-    lexer.setCode(code, /*lineno = */ 1, /*qmlMode=*/!isJavaScript);
+    lexer.setCode(code, /*lineno = */ 1, /*qmlMode=*/!lintInfo.isJavaScript);
     QQmlJS::Parser parser(&lintInfo.engine);
 
-    const bool parseSuccess = isJavaScript
-            ? (isESModule ? parser.parseModule() : parser.parseProgram())
+    const bool parseSuccess = lintInfo.isJavaScript
+            ? (lintInfo.isESModule ? parser.parseModule() : parser.parseProgram())
             : parser.parse();
     const auto diagnosticMessages = parser.diagnosticMessages();
     for (const QQmlJS::DiagnosticMessage &m : diagnosticMessages)
@@ -731,10 +731,21 @@ void QQmlJSLinter::typeReader(const QString &filename)
     // make sure the temporary mapper iscleared from m_importer when it goes out of scope
     auto guard = qScopeGuard([this]() { m_importer.setResourceFileMapper(nullptr); });
 
-    lintInfo.visitor.emplace(
-            &m_importer, result.logger.get(),
-            QQmlJSImportVisitor::implicitImportDirectory(result.logger->filePath(), mapperPtr),
-            lintInfo.qmldirFiles, &lintInfo.engine);
+    const QString implicitImportDirectory =
+            QQmlJSImportVisitor::implicitImportDirectory(result.logger->filePath(), mapperPtr);
+    if (lintInfo.isJavaScript) {
+        m_importer.runImportVisitor(parser.rootNode(),
+                                    {
+                                            lintInfo.handle,
+                                            lintInfo.result.logger.get(),
+                                            implicitImportDirectory,
+                                    });
+        result.status = LintSuccess;
+        return;
+    }
+
+    lintInfo.visitor.emplace(&m_importer, result.logger.get(), implicitImportDirectory,
+                             lintInfo.qmldirFiles, &lintInfo.engine);
 
     parseComments(result.logger.get(), lintInfo.engine.comments());
     parser.rootNode()->accept(&*lintInfo.visitor);
@@ -745,15 +756,7 @@ void QQmlJSLinter::lintFileImpl(const QString &filename)
     Q_ASSERT(m_lintInfo.count(filename) == 1);
     LintInfo &lintInfo = m_lintInfo[filename];
 
-    QFileInfo info(filename);
-    const QString lowerSuffix = info.suffix().toLower();
-    const bool isESModule = lowerSuffix == QLatin1String("mjs");
-    const bool isJavaScript = isESModule || lowerSuffix == QLatin1String("js");
-
-    if (isJavaScript) {
-        lintInfo.result.status = LintSuccess;
-        return;
-    }
+    Q_ASSERT(!lintInfo.isJavaScript);
 
     QQmlJSTypeResolver typeResolver(&m_importer);
 
