@@ -28,6 +28,7 @@ private slots:
     void parseBrokenFile();
     void asyncShapes_data();
     void asyncShapes();
+    void clearSource();
 };
 
 tst_QQuickVectorImage::tst_QQuickVectorImage()
@@ -121,6 +122,45 @@ void tst_QQuickVectorImage::asyncShapes()
     QVERIFY(!shapes.isEmpty());
     for (const QQuickShape *shape : shapes)
         QCOMPARE(shape->asynchronous(), isAsync);
+}
+
+void tst_QQuickVectorImage::clearSource()
+{
+    const QUrl fileName = QUrl("qrc:/svgs/gradientxform.svg");
+
+    QQmlEngine engine;
+    engine.rootContext()->setContextProperty(QStringLiteral("fileName"), fileName);
+
+    QQmlComponent c(&engine, testFileUrl("vectorimage.qml"));
+    QQuickVectorImage *item = qobject_cast<QQuickVectorImage *>(c.create());
+    auto cleanup = qScopeGuard([&item] {
+        delete item;
+        item = nullptr;
+    });
+
+    QVERIFY(item != nullptr);
+    QVERIFY(item->generatedItem() != nullptr);
+    QCOMPARE(item->status(), QQuickVectorImage::Status::Ready);
+
+    {
+        QSignalSpy statusChanged(item, &QQuickVectorImage::statusChanged);
+        item->setSource(QUrl{});
+        QCOMPARE(item->generatedItem(), nullptr);
+        QCOMPARE(statusChanged.size(), 1);
+    }
+
+    item->setAsynchronous(true);
+    item->setRetainWhileLoading(true);
+
+    item->setSource(fileName);
+    QTRY_COMPARE(item->status(), QQuickVectorImage::Status::Ready);
+
+    {
+        QSignalSpy statusChanged(item, &QQuickVectorImage::statusChanged);
+        item->setSource(QUrl{});
+        QCOMPARE(item->generatedItem(), nullptr);
+        QCOMPARE(statusChanged.size(), 1);
+    }
 }
 
 QTEST_MAIN(tst_QQuickVectorImage)

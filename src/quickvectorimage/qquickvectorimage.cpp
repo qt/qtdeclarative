@@ -64,14 +64,16 @@ void QQuickVectorImagePrivate::loadFile()
     QUrl resolvedUrl = ctx->resolvedUrl(sourceFile);
     QString localFile = QQmlFile::urlToLocalFileOrQrc(resolvedUrl);
 
-    if (localFile.isEmpty())
-        return;
-
-    if (rootItem && !retainWhileLoading) {
+    if (rootItem && (!retainWhileLoading || localFile.isEmpty())) {
         rootItem->deleteLater();
         rootItem = nullptr;
         emit q->generatedItemChanged();
+        if (incubator == nullptr)
+            emit q->statusChanged();
     }
+
+    if (localFile.isEmpty())
+        return;
 
     if (incubator != nullptr) {
         // If the incubator is still alive, it means it was interrupted before we could add the
