@@ -554,8 +554,6 @@ struct GCCriticalSection {
           , m_oldState(std::exchange(engine->memoryManager->gcBlocked, MemoryManager::InCriticalSection))
           , m_toBeMarked(toBeMarked)
     {
-        // disallow nested critical sections
-        Q_ASSERT(m_oldState != MemoryManager::InCriticalSection);
     }
     ~GCCriticalSection()
     {
@@ -571,7 +569,11 @@ struct GCCriticalSection {
                 }
             }
         }
-        /* because we blocked the gc, we might be using too much memoryon the unmanaged heap
+        // if we were already in a critical section before, that one ought to take care of
+        // completing the gc run, and we don't have anything to do.
+        if (m_oldState == MemoryManager::InCriticalSection)
+            return;
+        /* Otherwise, because we blocked the gc, we might be using too much memoryon the unmanaged heap
            and did not run the normal fixup logic. So recheck again, and trigger a gc run
            if necessary. But never start one while the engine is shutting down: the final
            sweep in ~MemoryManager runs destruction handlers that may open a critical

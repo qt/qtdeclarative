@@ -19,6 +19,7 @@
  #include <QQmlEngineExtensionPlugin>
 #include <private/qqmlengine_p.h>
 #include <private/qqmltypedata_p.h>
+#include <private/qv4mm_p.h>
 #include <private/qqmlcomponentattached_p.h>
 #include <private/qmetaobjectbuilder_p.h>
 #include <QQmlAbstractUrlInterceptor>
@@ -193,6 +194,7 @@ private slots:
     void metaObjectOfScriptCU();
     void registerModule();
     void invalidModuleImport();
+    void componentCreatedDuringCollection();
 
 public slots:
     QObject *createAQObjectForOwnershipTest ()
@@ -994,6 +996,64 @@ void tst_qqmlengine::objectOwnership()
         }
         QTRY_VERIFY(spy.size());
     }
+}
+
+// Used to instantiate a component while the object it is attached to is being collected.
+class ComponentSaboteur : public QObject
+{
+    Q_OBJECT
+public:
+    QQmlEngine *engine = nullptr;
+
+    Q_INVOKABLE void spawn()
+    {
+        QQmlEngine *e = std::exchange(engine, nullptr);
+        Q_ASSERT(e);
+
+        QV4::MemoryManager *mm = e->handle()->memoryManager;
+
+        // Component.onDestruction runs from the collector's destroy-objects phase, which
+        // blocks the gc critically without opening a GCCriticalSection.
+        QCOMPARE(mm->gcBlocked, QV4::MemoryManager::InCriticalSection);
+
+        // Make the critical section opened by populate() reach the gc completion logic in
+        // its destructor. Otherwise it returns at the isAboveUnmanagedHeapLimit() check.
+        mm->unmanagedHeapSizeGCLimit = 0;
+        mm->changeUnmanagedHeapSizeUsage(1);
+
+        // A URL of its own, so that this needs a compilation unit of its own.
+        QQmlComponent component(e);
+        component.setData("import QtQml\nQtObject { property int k: 1 }",
+                          QUrl(QStringLiteral("qrc:/fresh.qml")));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        delete component.create();
+    }
+};
+
+void tst_qqmlengine::componentCreatedDuringCollection()
+{
+    QQmlEngine engine;
+
+    ComponentSaboteur saboteur;
+    saboteur.engine = &engine;
+
+    QQmlComponent doomedComponent(&engine);
+    doomedComponent.setData("import QtQml\n"
+                            "QtObject {\n"
+                            "    required property QtObject saboteur\n"
+                            "    Component.onDestruction: saboteur.spawn()\n"
+                            "}",
+                            QUrl());
+    QVERIFY2(doomedComponent.isReady(), qPrintable(doomedComponent.errorString()));
+    QPointer<QObject> doomed(doomedComponent.createWithInitialProperties(
+            { { QStringLiteral("saboteur"), QVariant::fromValue<QObject *>(&saboteur) } }));
+    QVERIFY(doomed);
+    QQmlEngine::setObjectOwnership(doomed, QQmlEngine::JavaScriptOwnership);
+
+    gc(engine);
+
+    QVERIFY(doomed.isNull());
+    QVERIFY(!saboteur.engine);
 }
 
 // QTBUG-147835: a QObject returned from an invokable inside a value wrapper whose
