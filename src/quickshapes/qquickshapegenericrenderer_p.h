@@ -45,6 +45,7 @@ public:
         DirtyFillTexture = 0x20,
         DirtyList = 0x40, // only for accDirty
         DirtyStrokeGradient = 0x80,
+        DirtyVisible = 0x100,
     };
 
     QQuickShapeGenericRenderer(QQuickItem *item)
@@ -75,6 +76,7 @@ public:
     void setFillTextureProvider(int index, QQuickItem *textureProviderItem) override;
     void setFillTransform(int index, const QSGTransform &transform) override;
     void setTriangulationScale(int index, qreal scale) override;
+    void setVisible(int index, bool visible) override;
     void endSync(bool async) override;
     void setAsyncCallback(void (*)(void *), void *) override;
     Flags flags() const override { return SupportsAsync; }
@@ -126,8 +128,10 @@ private:
         VertexContainerType strokeVertices;
         int syncDirty;
         int effectiveDirty = 0;
+        int hiddenGeomDirty = 0;
         QQuickShapeFillRunnable *pendingFill = nullptr;
         QQuickShapeStrokeRunnable *pendingStroke = nullptr;
+        bool visible = true;
     };
 
     void updateShadowDataInNode(ShapePathData *d, QQuickShapeGenericStrokeFillNode *n);

@@ -235,6 +235,7 @@ class Q_QUICKSHAPES_EXPORT QQuickShapePath : public QQuickPath
     Q_PROPERTY(QQuickShapeTrim *trim READ trim CONSTANT REVISION(6, 10) FINAL)
     Q_PROPERTY(bool cosmeticStroke READ cosmeticStroke WRITE setCosmeticStroke NOTIFY cosmeticStrokeChanged REVISION(6, 11) FINAL)
     Q_PROPERTY(QQuickShapeGradient *strokeGradient READ strokeGradient WRITE setStrokeGradient NOTIFY strokeGradientChanged RESET resetStrokeGradient REVISION(6, 12))
+    Q_PROPERTY(bool visible READ isVisible WRITE setVisible NOTIFY visibleChanged REVISION(6, 13) FINAL)
     QML_NAMED_ELEMENT(ShapePath)
     QML_ADDED_IN_VERSION(1, 0)
 
@@ -333,6 +334,9 @@ public:
     bool cosmeticStroke() const;
     void setCosmeticStroke(bool c);
 
+    bool isVisible() const;
+    void setVisible(bool visible);
+
 Q_SIGNALS:
     void shapePathChanged();
     void strokeColorChanged();
@@ -352,6 +356,7 @@ Q_SIGNALS:
     Q_REVISION(6, 8) void fillItemChanged();
     Q_REVISION(6, 11) void cosmeticStrokeChanged();
     Q_REVISION(6, 12) void strokeGradientChanged();
+    Q_REVISION(6, 13) void visibleChanged();
 
 private:
     Q_DISABLE_COPY(QQuickShapePath)

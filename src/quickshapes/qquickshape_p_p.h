@@ -66,6 +66,7 @@ public:
     virtual void setFillTextureProvider(int index, QQuickItem *textureProviderItem) = 0;
     virtual void setFillTransform(int index, const QSGTransform &transform) = 0;
     virtual void setTriangulationScale(int, qreal) { }
+    virtual void setVisible(int index, bool visible) = 0;
     virtual void handleSceneChange(QQuickWindow *window) = 0;
 
     // Render thread, with gui blocked
@@ -108,6 +109,7 @@ struct QQuickShapeStrokeFillParams
     QSGTransform fillTransform;
     QQuickItem *fillItem;
     QQuickShapeTrim *trim;
+    bool visible = true;
 };
 
 class Q_QUICKSHAPES_EXPORT QQuickShapePathPrivate : public QQuickPathPrivate
@@ -128,8 +130,9 @@ public:
         DirtyFillItem = 0x200,
         DirtyTrim = 0x400,
         DirtyStrokeGradient = 0x800,
+        DirtyVisible = 0x1000,
 
-        DirtyAll = 0xFFF
+        DirtyAll = 0x1FFF
     };
 
     QQuickShapePathPrivate();

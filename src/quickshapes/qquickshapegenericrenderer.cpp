@@ -177,6 +177,19 @@ void QQuickShapeGenericRenderer::setFillColor(int index, const QColor &color)
         d.syncDirty |= DirtyFillGeom;
 }
 
+void QQuickShapeGenericRenderer::setVisible(int index, bool visible)
+{
+    ShapePathData &d(m_sp[index]);
+    if (d.visible == visible)
+        return;
+    d.visible = visible;
+    d.syncDirty |= DirtyVisible;
+    if (visible) {
+        d.syncDirty |= d.hiddenGeomDirty;
+        d.hiddenGeomDirty = 0;
+    }
+}
+
 void QQuickShapeGenericRenderer::setFillRule(int index, QQuickShapePath::FillRule fillRule)
 {
     ShapePathData &d(m_sp[index]);
@@ -351,6 +364,13 @@ void QQuickShapeGenericRenderer::endSync(bool async)
         // happen when there was an actual change in this particular sync round.
         d.effectiveDirty |= d.syncDirty;
 
+        // While a path is hidden the triangulation below is skipped, and both
+        // dirty masks are cleared before it is shown again. Remember what was
+        // skipped so that setVisible() can redo exactly that much, instead of
+        // re-triangulating on every show.
+        if (!d.visible)
+            d.hiddenGeomDirty |= d.syncDirty & (DirtyFillGeom | DirtyStrokeGeom);
+
         if (d.path.isEmpty()) {
             d.fillVertices.clear();
             d.fillIndices.clear();
@@ -375,7 +395,7 @@ void QQuickShapeGenericRenderer::endSync(bool async)
         // Until then, we cannot assume we have support for uint32_t indices
         // but only uint16_t ones.
         const bool supportsElementIndexUint = m_rhiBackendInitialized ? m_supportsElementIndexUint : true;
-        if ((d.syncDirty & DirtyFillGeom) && d.fillColor.a) {
+        if ((d.syncDirty & DirtyFillGeom) && d.fillColor.a && d.visible) {
             d.path.setFillRule(d.fillRule);
             if (m_api == QSGRendererInterface::Unknown)
                 m_api = m_item->window()->rendererInterface()->graphicsApi();
@@ -419,7 +439,8 @@ void QQuickShapeGenericRenderer::endSync(bool async)
             }
         }
 
-        if ((d.syncDirty & DirtyStrokeGeom) && d.strokeWidth > 0.0f && (d.strokeColor.a || d.strokeGradientActive)) {
+        if ((d.syncDirty & DirtyStrokeGeom) && d.strokeWidth > 0.0f
+            && (d.strokeColor.a || d.strokeGradientActive) && d.visible) {
             if (async) {
                 QQuickShapeStrokeRunnable *r = new QQuickShapeStrokeRunnable;
                 r->setAutoDelete(false);
@@ -624,26 +645,40 @@ void QQuickShapeGenericRenderer::updateNode()
             continue;
         }
 
-        if (d.fillColor.a == 0) {
+        if (!d.visible || d.fillColor.a == 0) {
             delete node->m_fillNode;
             node->m_fillNode = nullptr;
         } else if (!node->m_fillNode) {
             node->m_fillNode = new QQuickShapeGenericStrokeFillNode(m_item->window());
             if (node->m_strokeNode)
                 node->removeChildNode(node->m_strokeNode);
-            node->appendChildNode(node->m_fillNode);
-            if (node->m_strokeNode)
-                node->appendChildNode(node->m_strokeNode);
-            d.effectiveDirty |= DirtyFillGeom;
+            // Insert before m_next (rather than merely appending) since m_next,
+            // if present, is already a child holding the rest of the path chain
+            // and must remain the last child so paint order stays correct.
+            if (node->m_next)
+                node->insertChildNodeBefore(node->m_fillNode, node->m_next);
+            else
+                node->appendChildNode(node->m_fillNode);
+            if (node->m_strokeNode) {
+                if (node->m_next)
+                    node->insertChildNodeBefore(node->m_strokeNode, node->m_next);
+                else
+                    node->appendChildNode(node->m_strokeNode);
+            }
+            d.effectiveDirty |= DirtyFillGeom | DirtyColor | DirtyFillGradient
+                              | DirtyFillTransform | DirtyFillTexture;
         }
 
-        if (d.strokeWidth <= 0.0f || d.strokeColor.a == 0) {
+        if (!d.visible || d.strokeWidth <= 0.0f || d.strokeColor.a == 0) {
             delete node->m_strokeNode;
             node->m_strokeNode = nullptr;
         } else if (!node->m_strokeNode) {
             node->m_strokeNode = new QQuickShapeGenericStrokeFillNode(m_item->window());
-            node->appendChildNode(node->m_strokeNode);
-            d.effectiveDirty |= DirtyStrokeGeom;
+            if (node->m_next)
+                node->insertChildNodeBefore(node->m_strokeNode, node->m_next);
+            else
+                node->appendChildNode(node->m_strokeNode);
+            d.effectiveDirty |= DirtyStrokeGeom | DirtyColor | DirtyStrokeGradient;
         }
 
         updateFillNode(&d, node);

@@ -371,6 +371,20 @@ void QQuickShapeCurveRenderer::setFillTextureProvider(int index, QQuickItem *tex
     pathData.m_dirty |= (pathData.isFillVisible() != wasVisible) ? FillDirty : UniformsDirty;
 }
 
+void QQuickShapeCurveRenderer::setVisible(int index, bool visible)
+{
+    auto &pathData = m_paths[index];
+    if (pathData.visible == visible)
+        return;
+    const bool wasFillVisible = pathData.isFillVisible();
+    const bool wasStrokeVisible = pathData.isStrokeVisible();
+    pathData.visible = visible;
+    if (pathData.isFillVisible() != wasFillVisible)
+        pathData.m_dirty |= FillDirty;
+    if (pathData.isStrokeVisible() != wasStrokeVisible)
+        pathData.m_dirty |= StrokeDirty;
+}
+
 void QQuickShapeCurveRenderer::handleSceneChange(QQuickWindow *window)
 {
     for (auto &pathData : m_paths) {

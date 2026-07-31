@@ -273,6 +273,42 @@ void QQuickShapePath::setCosmeticStroke(bool c)
 }
 
 /*!
+    \qmlproperty bool QtQuick.Shapes::ShapePath::visible
+    \since 6.13
+
+    This property holds whether the ShapePath is visible.
+
+    When set to \c false, neither the fill nor the stroke of this ShapePath is
+    rendered, and the ShapePath is ignored by \l {QQuickItem::contains()}{contains()}.
+    The ShapePath remains part of the \l Shape and keeps its position in the paint
+    order, so it is drawn at the same depth when made visible again, without having
+    to be re-created.
+
+    In contrast to a transparent ShapePath, a hidden ShapePath does not contribute
+    to \l {Shape::boundingRect}{Shape.boundingRect}, or to the implicit size of the
+    Shape. This means that changing the visibility of a ShapePath may cause the
+    Shape to change scale or position if a non-default fill mode or alignment is set.
+
+    The default value is \c true.
+*/
+bool QQuickShapePath::isVisible() const
+{
+    Q_D(const QQuickShapePath);
+    return d->sfp.visible;
+}
+
+void QQuickShapePath::setVisible(bool visible)
+{
+    Q_D(QQuickShapePath);
+    if (d->sfp.visible != visible) {
+        d->sfp.visible = visible;
+        d->dirty |= QQuickShapePathPrivate::DirtyVisible;
+        emit visibleChanged();
+        emit shapePathChanged();
+    }
+}
+
+/*!
     \qmlproperty color QtQuick.Shapes::ShapePath::fillColor
 
     This property holds the fill color.
@@ -1135,13 +1171,18 @@ void QQuickShape::setAsynchronous(bool async)
     \readonly
     \since 6.6
 
-    Contains the united bounding rect of all sub paths in the shape.
+    Contains the united bounding rect of all visible sub paths in the shape.
+
+    A \l ShapePath whose \l {ShapePath::visible}{visible} property is \c false
+    does not contribute.
  */
 QRectF QQuickShape::boundingRect() const
 {
     Q_D(const QQuickShape);
     QRectF brect;
     for (QQuickShapePath *path : d->sp) {
+        if (!path->isVisible())
+            continue;
         qreal pw = path->strokeColor().alpha() ? path->strokeWidth() : 0;
         qreal d = path->capStyle() == QQuickShapePath::SquareCap ? pw * M_SQRT1_2 : pw / 2;
         brect = brect.united(path->path().boundingRect().adjusted(-d, -d, d, d));
@@ -1213,8 +1254,8 @@ QQuickShape::Status QQuickShape::status() const
 
     \value Shape.FillContains
         Check whether the interior (the part that would be filled if you are
-        rendering it with fill) of any \l ShapePath that makes up this Shape
-        contains the given point. The more complex and numerous ShapePaths you
+        rendering it with fill) of any visible \l ShapePath that makes up this
+        Shape contains the given point. The more complex and numerous ShapePaths you
         add, the less efficient this is to check, which can potentially slow
         down event delivery in your application. So it should be used with care.
 
@@ -1247,7 +1288,7 @@ bool QQuickShape::contains(const QPointF &point) const
         return QQuickItem::contains(point);
     case FillContains:
         for (QQuickShapePath *path : d->sp) {
-            if (path->path().contains(point))
+            if (path->isVisible() && path->path().contains(point))
                 return true;
         }
     }
@@ -1687,6 +1728,8 @@ void QQuickShapePrivate::sync()
             renderer->setStrokeGradient(i, p->strokeGradient());
         if (dirty & QQuickShapePathPrivate::DirtyFillTransform)
             renderer->setFillTransform(i, QQuickShapePathPrivate::get(p)->sfp.fillTransform);
+        if (dirty & QQuickShapePathPrivate::DirtyVisible)
+            renderer->setVisible(i, p->isVisible());
         if (dirty & QQuickShapePathPrivate::DirtyFillItem) {
             if (p->fillItem() == nullptr) {
                 renderer->setFillTextureProvider(i, nullptr);

@@ -34,7 +34,8 @@ public:
         DirtyPen = 0x02,
         DirtyFillRule = 0x04,
         DirtyBrush = 0x08,
-        DirtyList = 0x10
+        DirtyList = 0x10,
+        DirtyVisible = 0x20
     };
 
     void beginSync(int totalCount, bool *countChanged) override;
@@ -53,6 +54,7 @@ public:
     void setFillTextureProvider(int index, QQuickItem *textureProviderItem) override;
     void setFillTransform(int index, const QSGTransform &transform) override;
     void setTriangulationScale(int index, qreal scale) override;
+    void setVisible(int index, bool visible) override;
     void endSync(bool async) override;
     void handleSceneChange(QQuickWindow *window) override;
 
@@ -72,6 +74,7 @@ private:
         QColor fillColor;
         QBrush brush;
         Qt::FillRule fillRule;
+        bool visible = true;
     };
     QList<ShapePathGuiData> m_sp;
 };
@@ -97,6 +100,7 @@ private:
         float strokeWidth;
         float triangulationScale;
         QBrush brush;
+        bool visible = true;
     };
     QList<ShapePathRenderData> m_sp;
     QRectF m_boundingRect;

@@ -61,6 +61,14 @@ void QQuickShapeSoftwareRenderer::setFillColor(int index, const QColor &color)
     m_accDirty |= DirtyBrush;
 }
 
+void QQuickShapeSoftwareRenderer::setVisible(int index, bool visible)
+{
+    ShapePathGuiData &d(m_sp[index]);
+    d.visible = visible;
+    d.dirty |= DirtyVisible;
+    m_accDirty |= DirtyVisible;
+}
+
 void QQuickShapeSoftwareRenderer::setFillRule(int index, QQuickShapePath::FillRule fillRule)
 {
     ShapePathGuiData &d(m_sp[index]);
@@ -232,7 +240,13 @@ void QQuickShapeSoftwareRenderer::updateNode()
         if (listChanged || (src.dirty & DirtyBrush))
             dst.brush = src.brush;
 
+        if (listChanged || (src.dirty & DirtyVisible))
+            dst.visible = src.visible;
+
         src.dirty = 0;
+
+        if (!dst.visible)
+            continue;
 
         QRectF br = dst.path.boundingRect();
         float sw = qMax(1.0f, dst.strokeWidth);
@@ -277,6 +291,8 @@ void QQuickShapeSoftwareRenderNode::render(const RenderState *state)
     p->setOpacity(inheritedOpacity());
 
     for (const ShapePathRenderData &d : std::as_const(m_sp)) {
+        if (!d.visible)
+            continue;
         p->setPen(d.strokeWidth > 0.0f && d.pen.color() != Qt::transparent ? d.pen : Qt::NoPen);
         p->setBrush(d.brush.color() != Qt::transparent ? d.brush : Qt::NoBrush);
         p->drawPath(d.path);

@@ -59,6 +59,7 @@ public:
     void setStrokeGradient(int index, QQuickShapeGradient *gradient) override;
     void setFillTextureProvider(int index, QQuickItem *textureProviderItem) override;
     void setFillTransform(int index, const QSGTransform &transform) override;
+    void setVisible(int index, bool visible) override;
     void endSync(bool async) override;
     void setAsyncCallback(void (*)(void *), void *) override;
     Flags flags() const override { return SupportsAsync; }
@@ -93,14 +94,15 @@ private:
 
         bool isFillVisible() const
         {
-            return gradientType != QGradient::NoGradient
-                    || fillTextureProviderItem != nullptr
-                    || fillColor.alpha() > 0;
+            return visible
+                    && (gradientType != QGradient::NoGradient
+                        || fillTextureProviderItem != nullptr
+                        || fillColor.alpha() > 0);
         }
 
         bool isStrokeVisible() const
         {
-            return validPenWidth && pen.style() != Qt::NoPen
+            return visible && validPenWidth && pen.style() != Qt::NoPen
                    && (pen.color().alpha() > 0 || strokeGradientType != QGradient::NoGradient);
         }
 
@@ -115,6 +117,7 @@ private:
         Qt::FillRule fillRule = Qt::OddEvenFill;
         QPen pen;
         bool validPenWidth = true;
+        bool visible = true;
         int m_dirty = 0;
         QQuickShapePath::PathHints pathHints;
 

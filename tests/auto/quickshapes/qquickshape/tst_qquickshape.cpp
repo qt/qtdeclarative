@@ -65,6 +65,7 @@ private slots:
     void multilineStronglyTyped();
     void fillTransform();
     void changeElementsImperatively();
+    void boundingRectSkipsHiddenPaths();
 
 private:
     QList<QPolygonF> m_lowPolyLogo;
@@ -721,6 +722,48 @@ void tst_QQuickShape::changeElementsImperatively()
     QQuickView window;
     // Shouldn't crash.
     QVERIFY(QQuickTest::showView(window, testFileUrl("changeElementsImperatively.qml")));
+}
+
+void tst_QQuickShape::boundingRectSkipsHiddenPaths()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("boundingRectHidden.qml"));
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY2(root, qPrintable(component.errorString()));
+
+    QQuickShape *shape = qobject_cast<QQuickShape *>(root.data());
+    QVERIFY(shape);
+    QQuickShapePath *small = shape->findChild<QQuickShapePath *>(QStringLiteral("small"));
+    QQuickShapePath *large = shape->findChild<QQuickShapePath *>(QStringLiteral("large"));
+    QQuickShapePath *distant = shape->findChild<QQuickShapePath *>(QStringLiteral("distant"));
+    QVERIFY(small);
+    QVERIFY(large);
+    QVERIFY(distant);
+    QVERIFY(!distant->isVisible());
+
+    // distant is hidden, so only small ∪ large.
+    QCOMPARE(shape->boundingRect(), QRectF(0, 0, 100, 80));
+    QCOMPARE(shape->implicitWidth(), 100);
+    QCOMPARE(shape->implicitHeight(), 80);
+
+    large->setVisible(false);
+    QCOMPARE(shape->boundingRect(), QRectF(0, 0, 10, 10));
+    QCOMPARE(shape->implicitWidth(), 10);
+    QCOMPARE(shape->implicitHeight(), 10);
+
+    small->setVisible(false);
+    QCOMPARE(shape->boundingRect(), QRectF());
+    QCOMPARE(shape->implicitWidth(), 0);
+    QCOMPARE(shape->implicitHeight(), 0);
+
+    // Implicit size uses the rect's right and bottom edges, not its width and height.
+    distant->setVisible(true);
+    QCOMPARE(shape->boundingRect(), QRectF(400, 300, 20, 20));
+    QCOMPARE(shape->implicitWidth(), 420);
+    QCOMPARE(shape->implicitHeight(), 320);
+
+    large->setVisible(true);
+    QCOMPARE(shape->boundingRect(), QRectF(0, 0, 420, 320));
 }
 
 QTEST_MAIN(tst_QQuickShape)
