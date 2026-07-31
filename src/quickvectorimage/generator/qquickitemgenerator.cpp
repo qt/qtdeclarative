@@ -526,6 +526,13 @@ void QQuickItemGenerator::outputShapePath(const PathNodeInfo &info, const QPaint
         shapePath->setCapStyle(QQuickShapePath::CapStyle(info.strokeStyle.lineCapStyle));
         shapePath->setJoinStyle(QQuickShapePath::JoinStyle(info.strokeStyle.lineJoinStyle));
         shapePath->setMiterLimit(info.strokeStyle.miterLimit);
+        if (info.strokeStyle.cosmetic)
+            shapePath->setCosmeticStroke(true);
+        if (!info.strokeStyle.dashArray.isEmpty()) {
+            shapePath->setStrokeStyle(QQuickShapePath::DashLine);
+            shapePath->setDashPattern(info.strokeStyle.dashArray);
+            shapePath->setDashOffset(info.strokeStyle.dashOffset.defaultValue().toReal());
+        }
     }
 
     QTransform fillTransform = info.fillTransform;
@@ -612,13 +619,14 @@ void QQuickItemGenerator::outputShapePath(const PathNodeInfo &info, const QPaint
     const bool hasStrokeColorAnim = info.strokeStyle.color.isAnimated();
     const bool hasStrokeOpacityAnim = info.strokeStyle.opacity.isAnimated();
     const bool hasStrokeWidthAnim = info.strokeStyle.width.isAnimated();
+    const bool hasDashOffsetAnim = info.strokeStyle.dashOffset.isAnimated();
     const bool hasTrimStartAnim = info.trim.start.isAnimated();
     const bool hasTrimEndAnim = info.trim.end.isAnimated();
     const bool hasTrimOffsetAnim = info.trim.offset.isAnimated();
 
     if (!hasPathAnim && !hasFillColorAnim && !hasFillOpacityAnim && !hasStrokeColorAnim
-        && !hasStrokeOpacityAnim && !hasStrokeWidthAnim && !hasTrimStartAnim && !hasTrimEndAnim
-        && !hasTrimOffsetAnim) {
+        && !hasStrokeOpacityAnim && !hasStrokeWidthAnim && !hasDashOffsetAnim && !hasTrimStartAnim
+        && !hasTrimEndAnim && !hasTrimOffsetAnim) {
         return;
     }
 
@@ -656,9 +664,15 @@ void QQuickItemGenerator::outputShapePath(const PathNodeInfo &info, const QPaint
                              });
     }
 
-    if (hasStrokeWidthAnim)
+    if (hasStrokeWidthAnim) {
         bindAnimatedProperty(shapePath, QStringLiteral("strokeWidth"), info.strokeStyle.width,
                              identity);
+    }
+
+    if (hasDashOffsetAnim) {
+        bindAnimatedProperty(shapePath, QStringLiteral("dashOffset"), info.strokeStyle.dashOffset,
+                             identity);
+    }
 }
 
 void QQuickItemGenerator::generateImageNode(const ImageNodeInfo &info)
