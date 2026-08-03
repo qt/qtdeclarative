@@ -7,6 +7,7 @@
 #include "qqmljsutils_p.h"
 
 #include <QtCore/qhash.h>
+#include <QtCore/qset.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -17,19 +18,13 @@ QQmlJSCompilePass::BlocksAndAnnotations QQmlJSOptimizations::run(const Function 
     m_function = function;
 
     populateBasicBlocks();
-    populateReaderLocationsTypeReaders();
-    populateReaderLocationsConversions();
+    populateReaderLocationsTrackedTypes();
+    populateReaderLocationsReadersAndConversions();
     removeDeadStoresUntilStable();
     adjustTypes();
 
     return { std::move(m_basicBlocks), std::move(m_annotations) };
 }
-
-struct PendingBlock
-{
-    QQmlJSOptimizations::Conversions conversions;
-    int start = -1;
-};
 
 template<typename ContainerA, typename ContainerB>
 static bool containsAny(const ContainerA &container, const ContainerB &elements)
@@ -67,11 +62,8 @@ private:
     typename OriginalFlatMap::mapped_container_type values;
 };
 
-void QQmlJSOptimizations::populateReaderLocationsTypeReaders()
+void QQmlJSOptimizations::populateReaderLocationsTrackedTypes()
 {
-    // Register every write's tracked content(s), indexed by content identity.
-    QMultiHash<QQmlJSRegisterContent, int> trackedBy;
-
     for (const auto &[offset, annotation] : m_annotations) {
         const int writtenRegister = annotation.changedRegisterIndex;
 
@@ -92,121 +84,142 @@ void QQmlJSOptimizations::populateReaderLocationsTypeReaders()
             access.trackedTypes.append(annotation.changedRegister);
             Q_ASSERT(!access.trackedTypes.last().isNull());
         }
-
-        for (const QQmlJSRegisterContent &tracked : std::as_const(access.trackedTypes))
-            trackedBy.insert(tracked, offset);
-    }
-
-    // One sweep over every read in the function, attributing it to whichever write(s)
-    // it matches (directly, or through a conversion whose origins include a tracked content).
-    for (const auto &[offset, annotation] : m_annotations) {
-        if (annotation.isRename)
-            continue;
-
-        for (auto readIt = annotation.readRegisters.constBegin(),
-             readEnd = annotation.readRegisters.constEnd(); readIt != readEnd; ++readIt) {
-            const QQmlJSRegisterContent &content = readIt->second.content;
-
-            if (content.isConversion()) {
-                Q_ASSERT(content.conversionResultType());
-                const QList<QQmlJSRegisterContent> &conversionOrigins = content.conversionOrigins();
-                for (QQmlJSRegisterContent origin : conversionOrigins) {
-                    for (auto [it, last] = trackedBy.equal_range(origin); it != last; ++it)
-                        m_readerLocations[it.value()].typeReaders[offset] = content;
-                }
-            } else {
-                for (auto [it, last] = trackedBy.equal_range(content); it != last; ++it)
-                    m_readerLocations[it.value()].typeReaders[offset] = content;
-            }
-        }
     }
 }
 
-void QQmlJSOptimizations::populateReaderLocationsConversions()
+// Every write that currently reaches this program point for this register, and the
+// type-conversion instructions crossed since each one specifically. Almost always a
+// single entry; more than one only at a genuine merge of differing reaching writes.
+using RegisterState = QHash<int, QQmlJSOptimizations::Conversions>;
+
+struct BlockState
 {
-    // For each write, find reads of its *specific register slot* while that slot is
-    // still live (registerReadersAndConversions), plus the type-conversion instructions
-    // crossed in the meantime.
-    for (auto writeIt = m_annotations.cbegin(), writeEnd = m_annotations.cend();
-         writeIt != writeEnd; ++writeIt) {
-        const int writtenRegister = writeIt->second.changedRegisterIndex;
-        if (writtenRegister == InvalidRegister)
-            continue;
+    QHash<QQmlJSRegisterContent, QSet<int>> availableContent; // content -> writers reaching here
+    QHash<int, RegisterState> registers; // register index -> reaching state
+};
 
-        RegisterAccess &access = m_readerLocations[writeIt.key()];
+static bool mergeBlockState(BlockState &to, const BlockState &from)
+{
+    bool changed = false;
 
-        const auto blockIt = QQmlJSBasicBlocks::constBasicBlockForInstruction(m_basicBlocks,
-                                                                              writeIt.key());
-        std::vector<PendingBlock> blocks = { { {}, blockIt->first } };
-        std::unordered_map<int, PendingBlock> processedBlocks;
-        bool isFirstBlock = true;
+    for (auto contentIt = from.availableContent.constBegin(),
+         contentEnd = from.availableContent.constEnd(); contentIt != contentEnd; ++contentIt) {
+        QSet<int> &target = to.availableContent[contentIt.key()];
+        const qsizetype before = target.size();
+        target.unite(contentIt.value());
+        if (target.size() > before)
+            changed = true;
+    }
 
-        while (!blocks.empty()) {
-            const PendingBlock &block = blocks.back(); // popped below
+    for (const auto &[index, registerState] : from.registers.asKeyValueRange()) {
+        RegisterState &target = to.registers[index];
+        for (const auto &[writeOffset, conversions] : registerState.asKeyValueRange()) {
+            const auto existing = target.find(writeOffset);
+            if (existing == target.end()) {
+                target.insert(writeOffset, conversions);
+                changed = true;
+                continue;
+            }
+            const qsizetype before = existing.value().size();
+            existing.value().unite(conversions);
+            if (existing.value().size() > before)
+                changed = true;
+        }
+    }
 
-            // We can re-enter the first block from the beginning.
-            // We will then find any reads before the write we're currently examining.
-            if (!isFirstBlock)
-                processedBlocks.insert_or_assign(block.start, block);
+    return changed;
+}
 
-            auto nextBlock = m_basicBlocks.find(block.start);
-            const auto currentBlock = nextBlock++;
-            bool registerActive = true;
-            Conversions conversions = block.conversions;
-            blocks.pop_back();
+void QQmlJSOptimizations::populateReaderLocationsReadersAndConversions()
+{
+    QHash<int, BlockState> entryState; // block start -> state at block entry
+    std::vector<int> pending;
+    pending.reserve(m_basicBlocks.size());
+    for (const auto &[blockStart, block] : m_basicBlocks)
+        pending.push_back(blockStart);
 
-            const auto blockEnd = (nextBlock == m_basicBlocks.end())
-                    ? m_annotations.cend()
-                    : m_annotations.find(nextBlock->first);
+    while (!pending.empty()) {
+        const int blockStart = pending.back();
+        pending.pop_back();
 
-            auto blockInstr = isFirstBlock
-                    ? (writeIt + 1)
-                    : m_annotations.find(currentBlock->first);
-            for (; registerActive && blockInstr != blockEnd; ++blockInstr) {
-                if (blockInstr->second.typeConversions.contains(writtenRegister))
-                    conversions.insert(blockInstr.key());
+        const auto blockIt = m_basicBlocks.find(blockStart);
+        auto nextBlockIt = blockIt;
+        ++nextBlockIt;
 
-                for (auto readIt = blockInstr->second.readRegisters.constBegin(),
-                     end = blockInstr->second.readRegisters.constEnd();
-                     readIt != end; ++readIt) {
-                    if (readIt->first == writtenRegister)
-                        access.registerReadersAndConversions[blockInstr.key()] = conversions;
-                }
+        BlockState state = entryState.value(blockStart);
 
-                if (blockInstr->second.changedRegisterIndex == writtenRegister) {
-                    conversions.clear();
-                    registerActive = false;
+        auto instrIt = m_annotations.find(blockStart);
+        const auto blockEnd = (nextBlockIt == m_basicBlocks.end())
+                ? m_annotations.end()
+                : m_annotations.find(nextBlockIt->first);
+
+        for (; instrIt != blockEnd; ++instrIt) {
+            const int key = instrIt.key();
+            if (!instrIt->second.isRename) {
+                for (const auto &read : instrIt->second.readRegisters.values()) {
+                    const QQmlJSRegisterContent &content = read.content;
+                    const auto recordRead = [&](const QQmlJSRegisterContent &r) {
+                        const auto found = state.availableContent.constFind(r);
+                        if (found != state.availableContent.constEnd()) {
+                            for (int writerKey : found.value())
+                                m_readerLocations[writerKey].typeReaders[key] = content;
+                        }
+                    };
+
+                    if (content.isConversion()) {
+                        Q_ASSERT(content.conversionResultType());
+                        for (QQmlJSRegisterContent origin : content.conversionOrigins())
+                            recordRead(origin);
+                    } else {
+                        recordRead(content);
+                    }
                 }
             }
 
-            if (isFirstBlock)
-                isFirstBlock = false;
-
-            // Nothing more can be discovered for this write once its register is dead: don't
-            // bother scheduling successor blocks at all in that case.
-            if (!registerActive)
-                continue;
-
-            auto scheduleBlock = [&](int blockStart) {
-                const auto processed = processedBlocks.find(blockStart);
-                if (processed == processedBlocks.end()) {
-                    blocks.push_back({ conversions, blockStart });
-                    return;
+            for (const int convRegister : instrIt->second.typeConversions.keys()) {
+                const auto tracked = state.registers.find(convRegister);
+                if (tracked != state.registers.end()) {
+                    for (auto writerIt = tracked.value().begin(), writerEnd = tracked.value().end();
+                         writerIt != writerEnd; ++writerIt) {
+                        writerIt.value().insert(key);
+                    }
                 }
-                // Propagate any newly found conversions to an already-processed block.
-                Conversions merged = processed->second.conversions;
-                merged.unite(conversions);
-                if (merged.size() > processed->second.conversions.size())
-                    blocks.push_back({ std::move(merged), blockStart });
-            };
+            }
 
-            if (!currentBlock->second.jumpIsUnconditional && nextBlock != m_basicBlocks.end())
-                scheduleBlock(nextBlock->first);
+            for (const int readRegister : instrIt->second.readRegisters.keys()) {
+                const auto tracked = state.registers.constFind(readRegister);
+                if (tracked != state.registers.constEnd()) {
+                    for (const auto &[writerKey, value] : tracked.value().asKeyValueRange())
+                        m_readerLocations[writerKey].registerReadersAndConversions[key] = value;
+                }
+            }
 
-            const int jumpTarget = currentBlock->second.jumpTarget;
-            if (jumpTarget != -1)
-                scheduleBlock(jumpTarget);
+            // Record this instruction's write, once done reading above.
+            if (instrIt->second.changedRegisterIndex != InvalidRegister) {
+                const auto access = m_readerLocations.constFind(key);
+                if (access != m_readerLocations.constEnd()) {
+                    for (const QQmlJSRegisterContent &tracked : std::as_const(access->trackedTypes))
+                        state.availableContent[tracked].insert(key);
+                }
+
+                // A write unconditionally shadows whatever reached this register before it
+                RegisterState fresh;
+                fresh.insert(key, Conversions{});
+                state.registers[instrIt->second.changedRegisterIndex] = std::move(fresh);
+            }
         }
+
+        auto scheduleSuccessor = [&](int successorStart) {
+            if (mergeBlockState(entryState[successorStart], state))
+                pending.push_back(successorStart);
+        };
+
+        if (!blockIt->second.jumpIsUnconditional && nextBlockIt != m_basicBlocks.end())
+            scheduleSuccessor(nextBlockIt->first);
+
+        const int jumpTarget = blockIt->second.jumpTarget;
+        if (jumpTarget != -1)
+            scheduleSuccessor(jumpTarget);
     }
 }
 

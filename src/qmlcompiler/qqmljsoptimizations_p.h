@@ -40,9 +40,26 @@ public:
 private:
     struct RegisterAccess
     {
+        // Content written by this instruction, or contents merged/converted into this register.
         QList<QQmlJSRegisterContent> trackedTypes;
+
+        // Instructions that genuinely consume the *value* this write produced (never renames/copies
+        // of it), keyed by instruction offset, with the exact content each one reads it as.
+        // Tracked by content identity, so this follows the value across register renames rather
+        // than being tied to one register slot.
+        // Drives the write's required output type (see QQmlJSTypeResolver::adjustTrackedType) and
+        // whether it can be moved into its single use site (see canMove).
         QHash<int, QQmlJSRegisterContent> typeReaders;
+
+        // Reads of this write's *specific register slot* while it's still the reaching definition
+        // (i.e. before any later write overwrites that register), keyed by instruction offset,
+        // together with the type-conversion instructions crossed between the write and each read.
+        // Drives which type conversions are actually needed in codegen (see liveConversions in
+        // adjustTypes) and, combined with typeReaders, whether a store is conversion-free enough to
+        // move.
         QHash<int, Conversions> registerReadersAndConversions;
+
+        // Register slot written to by this instruction.
         int trackedRegister;
     };
 
@@ -53,8 +70,8 @@ private:
     void endInstruction(QV4::Moth::Instr::Type) override { }
 
     void populateBasicBlocks();
-    void populateReaderLocationsTypeReaders();
-    void populateReaderLocationsConversions();
+    void populateReaderLocationsTrackedTypes();
+    void populateReaderLocationsReadersAndConversions();
     void adjustTypes();
     bool canMove(int instructionOffset, const RegisterAccess &access) const;
 
