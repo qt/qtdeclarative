@@ -96,6 +96,8 @@ QObjectRegistryRef::QObjectRegistryRef(QQmlEngine *engine, const QString &key, Q
     setKey(key);
 }
 
+QObjectRegistryRef::~QObjectRegistryRef() = default;
+
 QObject *QObjectRegistryRef::object() const
 {
     Q_D(const QObjectRegistryRef);

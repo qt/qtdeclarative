@@ -26,6 +26,7 @@ public:
     explicit QMultiObjectRegistryRef(QQmlEngine *engine, QObject *parent = nullptr);
     explicit QMultiObjectRegistryRef(QQmlEngine *engine, const QString &key,
                                      QObject *parent = nullptr);
+    ~QMultiObjectRegistryRef() override;
 
     QQmlListProperty<QObject> objects();
     QList<QObject *> objectsList();

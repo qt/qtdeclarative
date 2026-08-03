@@ -98,6 +98,8 @@ QMultiObjectRegistryRef::QMultiObjectRegistryRef(QQmlEngine *engine, const QStri
     setKey(key);
 }
 
+QMultiObjectRegistryRef::~QMultiObjectRegistryRef() = default;
+
 QQmlListProperty<QObject> QMultiObjectRegistryRef::objects()
 {
     return { this, nullptr,
