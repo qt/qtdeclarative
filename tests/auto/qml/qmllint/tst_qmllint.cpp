@@ -156,6 +156,26 @@ public:
         Result result;
     };
 
+    struct BatchElement
+    {
+        QString file;
+        Result result;
+    };
+    struct Batch
+    {
+        QList<BatchElement> elements;
+        Batch &addCleanFile(const QString &file)
+        {
+            elements.push_back({ file, ResultBuilder::cleanResult() });
+            return *this;
+        }
+        Batch &addDirtyFile(const QString &file, const Result &result)
+        {
+            elements.push_back({ file, result });
+            return *this;
+        }
+    };
+
     struct Environment : public QList<std::pair<QString, QString>>
     {
         using QList<std::pair<QString, QString>>::QList;
@@ -166,6 +186,9 @@ private Q_SLOTS:
 
     void testUnqualified();
     void testUnqualified_data();
+
+    void batches_data();
+    void batches();
 
     void cleanQmlCode_data();
     void cleanQmlCode();
@@ -3504,6 +3527,51 @@ void TestQmllint::compilerWarnings()
         category->setSeverity(QQmlJS::WarningSeverity::Warning);
 
     runTest(filename, result, {}, {}, {}, UseDefaultImports, &categories);
+}
+
+void TestQmllint::batches_data()
+{
+
+    QTest::addColumn<Batch>("batch");
+
+    QTest::addRow("AConstructB")
+            << Batch().addCleanFile("AConstructB/A.qml"_L1).addCleanFile("AConstructB/B.qml"_L1);
+    QTest::addRow("BConstructA")
+            << Batch().addCleanFile("BConstructA/A.qml"_L1).addCleanFile("BConstructA/B.qml"_L1);
+
+    QTest::addRow("BadRecursiveConstruction")
+            << Batch().addCleanFile("BadRecursiveConstruction/A.qml"_L1)
+                       .addDirtyFile("BadRecursiveConstruction/B.qml"_L1,
+                                     ResultBuilder()
+                                             .addExpected("Could not find property \"hello\""_L1)
+                                             .build());
+
+    QTest::addRow("RecursiveGroupedProperties")
+            << Batch().addCleanFile("RecursiveGroupedProperties/A.qml"_L1)
+                       .addCleanFile("RecursiveGroupedProperties/B.qml"_L1);
+
+    QTest::addRow("RecursiveLists") << Batch().addCleanFile("RecursiveLists/A.qml"_L1)
+                                               .addCleanFile("RecursiveLists/B.qml"_L1);
+}
+
+void TestQmllint::batches()
+{
+    QFETCH(Batch, batch);
+
+    QQmlJSLinter::LintOptions options;
+    options.setFlag(QQmlJSLinter::Silent);
+    options.setFlag(QQmlJSLinter::GenerateJson);
+
+    for (const auto &element : std::as_const(batch.elements)) {
+        QVERIFY(m_linter.prepareFileForBatchLinting(testFile("batches/" + element.file), nullptr,
+                                                    options, m_defaultImportPaths, { }, { },
+                                                    m_categories));
+    }
+
+    for (const auto &element : std::as_const(batch.elements)) {
+        QQmlJSLinter::Result result = m_linter.lintFileInBatch(testFile("batches/" + element.file));
+        checkResult(result.json["warnings"].toArray(), element.result);
+    }
 }
 
 void TestQmllint::cycles_data()

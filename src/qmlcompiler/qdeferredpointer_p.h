@@ -200,16 +200,13 @@ public:
         return m_data;
     }
 
-    [[nodiscard]] operator QDeferredSharedPointer<T>() const
-    {
-        return QDeferredSharedPointer<T>(m_data.toStrongRef(), m_factory.toStrongRef());
-    }
+    [[nodiscard]] operator QDeferredSharedPointer<T>() const { return toStrongRef(); }
 
     operator QDeferredWeakPointer<const T>() const { return {m_data, m_factory}; }
 
-    [[nodiscard]] QSharedPointer<T> toStrongRef() const
+    [[nodiscard]] QDeferredSharedPointer<T> toStrongRef() const
     {
-        return QWeakPointer<T>(*this).toStrongRef();
+        return QDeferredSharedPointer<T>(m_data.toStrongRef(), m_factory.toStrongRef());
     }
 
     bool isNull() const { return m_data.isNull(); }
