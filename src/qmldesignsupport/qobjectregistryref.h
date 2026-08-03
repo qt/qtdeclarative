@@ -25,6 +25,7 @@ public:
     explicit QObjectRegistryRef(QObject *parent = nullptr);
     explicit QObjectRegistryRef(QQmlEngine *engine, QObject *parent = nullptr);
     explicit QObjectRegistryRef(QQmlEngine *engine, const QString &key, QObject *parent = nullptr);
+    ~QObjectRegistryRef() override;
 
     QObject *object() const;
 
