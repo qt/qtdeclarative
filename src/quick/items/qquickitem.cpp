@@ -10538,6 +10538,21 @@ QPointF QQuickItem::mapFromGlobal(qreal x, qreal y) const
 //! \internal
 QQuickItemChangeListener::~QQuickItemChangeListener() = default;
 
+//! \internal
+bool QQuickItemChangeListener::baseDeleted(const QObject *caller) const
+{
+    if (auto ptr = dynamic_cast<const QObjectPrivate *>(this))
+        return ptr->q_ptr != caller && QQmlData::wasDeleted(ptr);
+    return false;
+}
+
+//! \internal
+QString QQuickItemChangeListener::debugName() const
+{
+    return QStringLiteral("QQuickItemChangeListener(0x%1)").arg(quintptr(this), 0, 16);
+}
+
+
 QT_END_NAMESPACE
 
 #include <moc_qquickitem.cpp>

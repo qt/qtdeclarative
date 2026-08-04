@@ -107,15 +107,8 @@ public:
     virtual void itemTransformChanged(QQuickItem *, QQuickItem * /* transformedItem */) {}
 
     virtual QQuickAnchorsPrivate *anchorPrivate() { return nullptr; }
-    virtual bool baseDeleted(const QObject *caller) const
-    {
-        if (auto ptr = dynamic_cast<const QObjectPrivate *>(this))
-            return ptr->q_ptr != caller && QQmlData::wasDeleted(ptr);
-        return false;
-    }
-    virtual QString debugName() const {
-        return QStringLiteral("QQuickItemChangeListener(0x%1)").arg(quintptr(this), 0, 16);
-    }
+    virtual bool baseDeleted(const QObject *caller) const;
+    virtual QString debugName() const;
     virtual void addSourceItem(QQuickItem *) {}
     virtual void removeSourceItem(QQuickItem *) {}
 };
