@@ -5132,10 +5132,7 @@ function(qt6_generate_deploy_qml_app_script)
         NO_UNSUPPORTED_PLATFORM_ERROR
         NO_TRANSLATIONS
         NO_COMPILER_RUNTIME
-        # MACOS_BUNDLE_POST_BUILD used to deploy QML modules into the build-tree
-        # bundle (via plugin symlinks) so it could run. That is now handled by the
-        # qt.conf generated next to the executable, so this option is a no-op. It
-        # is still accepted for source compatibility.
+        # Accepted for source compatibility only, and reported as a no-op below.
         MACOS_BUNDLE_POST_BUILD
         DEPLOY_USER_QML_MODULES_ON_UNSUPPORTED_PLATFORM
     )
@@ -5172,6 +5169,22 @@ function(qt6_generate_deploy_qml_app_script)
 
     if(NOT arg_OUTPUT_SCRIPT)
         message(FATAL_ERROR "OUTPUT_SCRIPT must be specified")
+    endif()
+
+    # MACOS_BUNDLE_POST_BUILD used to deploy QML modules into the build-tree bundle,
+    # by symlinking their plugins next to the qmldirs, so that the bundle could run
+    # from the build tree. The qt.conf generated next to the executable now lists
+    # those modules' import paths instead, so the option has nothing left to do. We
+    # still accept it, for source compatibility, but say so rather than ignoring it
+    # silently, so that a project relying on the bundle being populated at build
+    # time learns why it no longer is.
+    if(arg_MACOS_BUNDLE_POST_BUILD)
+        message(NOTICE
+            "MACOS_BUNDLE_POST_BUILD, passed for target '${arg_TARGET}', no longer has "
+            "any effect and can be removed. QML modules in the build tree are now found "
+            "through the qt.conf generated next to the executable, instead of being "
+            "deployed into the app bundle."
+        )
     endif()
 
     # Check that the target was defer-finalized, and not immediately finalized when using
