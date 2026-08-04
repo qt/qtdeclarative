@@ -19,7 +19,8 @@ using DisabledRegionIt = OutWriter::OffsetToDisabledRegionMap::const_iterator;
 static inline OutWriter::RegionToCommentMap extractComments(const DomItem &it)
 {
     OutWriter::RegionToCommentMap comments;
-    if (const RegionComments *cRegionsPtr = it.field(Fields::comments).as<RegionComments>()) {
+    DomItem commentsField = it.field(Fields::comments);
+    if (const RegionComments *cRegionsPtr = commentsField.as<RegionComments>()) {
         comments = cRegionsPtr->regionComments();
     }
     return comments;
