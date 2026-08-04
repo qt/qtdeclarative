@@ -235,9 +235,13 @@ Q_STATIC_LOGGING_CATEGORY(lcStyleKit, "qt.labs.stylekit")
         \li Sub-element
         \li StyleKit control
     \row
-        \li Items in \l QListView, \l QTreeView, \l QTableView, and the
-            \l QComboBox popup list
+        \li \l QStyledItemDelegate items - the default delegate for all Qt item views,
+            including the \l QComboBox popup list
         \li \l {AbstractStylableControls::itemDelegate}{itemDelegate}
+    \row
+        \li The same items, when user-checkable (i.e. showing a check indicator)
+        \li \l {AbstractStylableControls::checkDelegate}{checkDelegate};
+            falls back to \c itemDelegate for anything not set explicitly
     \row
         \li Individual tabs in a \l QTabBar
         \li \l {AbstractStylableControls::tabButton}{tabButton}
@@ -407,6 +411,16 @@ static QQStyleKitReader::ControlType controlTypeForWidget(const QWidget *widget)
 
     return QQStyleKitReader::Control;
 }
+
+#if QT_CONFIG(itemviews)
+static QQStyleKitReader::ControlType itemViewControlType(const QStyleOption *opt)
+{
+    const auto *itemViewOption = qstyleoption_cast<const QStyleOptionViewItem *>(opt);
+    return itemViewOption && (itemViewOption->features & QStyleOptionViewItem::HasCheckIndicator)
+            ? QQStyleKitReader::ControlType::CheckDelegate
+            : QQStyleKitReader::ControlType::ItemDelegate;
+}
+#endif
 
 // Returns true for widgets that draw themselves using their widget font and
 // palette directly, bypassing the style's drawControl path.
@@ -1752,7 +1766,7 @@ void QStyleKitStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt,
 #endif // QT_CONFIG(lineedit)
 #if QT_CONFIG(itemviews)
     case PE_PanelItemViewItem: {
-        const auto r = d->resolveSubElement(w, opt, QQStyleKitReader::ControlType::ItemDelegate, opt->state);
+        const auto r = d->resolveSubElement(w, opt, itemViewControlType(opt), opt->state);
         if (!r.isValid())
             break;
         d->drawStyledItemRect(r.background(), opt->rect, p);
@@ -1779,8 +1793,7 @@ void QStyleKitStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt,
     }
     case PE_IndicatorItemViewItemCheck: {
         // track = false: Checked state is synthetic
-        const auto r = d->resolveSubElement(w, opt, QQStyleKitReader::ControlType::ItemDelegate,
-                                            opt->state, false);
+        const auto r = d->resolveSubElement(w, opt, itemViewControlType(opt), opt->state, false);
         if (!r.isValid())
             break;
         d->drawControlIndicator(r.indicator(), opt->rect, p);
@@ -2068,7 +2081,7 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
 #if QT_CONFIG(itemviews)
     case CE_ItemViewItem:
         if (const auto *itemViewOption = qstyleoption_cast<const QStyleOptionViewItem *>(opt)) {
-            const auto r = d->resolveSubElement(w, opt, QQStyleKitReader::ControlType::ItemDelegate, opt->state);
+            const auto r = d->resolveSubElement(w, opt, itemViewControlType(opt), opt->state);
             if (!r.isValid())
                 break;
             QStyleOptionViewItem optBg(*itemViewOption);
@@ -2527,7 +2540,7 @@ QRect QStyleKitStyle::subElementRect(SubElement r, const QStyleOption *opt, cons
     }
 #if QT_CONFIG(itemviews)
     case SE_ItemViewItemCheckIndicator: {
-        const auto resolved = d->resolveLayout(QQStyleKitReader::ControlType::ItemDelegate, opt->state);
+        const auto resolved = d->resolveLayout(itemViewControlType(opt), opt->state);
         if (!resolved.isValid())
             break;
         const auto &metrics = *resolved.metrics;
@@ -2547,42 +2560,122 @@ QRect QStyleKitStyle::subElementRect(SubElement r, const QStyleOption *opt, cons
             rect, QSize(w, h), alignment, metrics.padding, metrics.indicatorMargins);
         return visualRect(opt->direction, rect, indicatorRect);
     }
+    case SE_ItemViewItemDecoration:
+        if (const auto *itemViewOption = qstyleoption_cast<const QStyleOptionViewItem *>(opt)) {
+            if (!(itemViewOption->features & QStyleOptionViewItem::HasDecoration))
+                return QRect();
+            const auto resolved = d->resolveLayout(itemViewControlType(opt), opt->state);
+            if (!resolved.isValid())
+                break;
+            const auto &metrics = *resolved.metrics;
+            QRect contentsRect = opt->rect.marginsRemoved(metrics.margins + metrics.padding);
+            if (itemViewOption->features & QStyleOptionViewItem::HasCheckIndicator) {
+                const QRect indicatorRect = subElementRect(
+                    SE_ItemViewItemCheckIndicator, opt, widget);
+                const auto *checkIndicator = resolved.indicator();
+                const uint checkAlign = checkIndicator
+                    ? resolvedAlignment(checkIndicator->alignment(), Qt::AlignLeft,
+                                        Qt::AlignVCenter)
+                    : uint(Qt::AlignLeft | Qt::AlignVCenter);
+                if (checkAlign & Qt::AlignLeft) {
+                    contentsRect.setLeft(indicatorRect.right()
+                        + metrics.indicatorMargins.right() + metrics.spacing);
+                } else if (checkAlign & Qt::AlignRight) {
+                    contentsRect.setRight(indicatorRect.left()
+                        - metrics.indicatorMargins.left() - metrics.spacing);
+                }
+            }
+
+            const QSize decorationSize = itemViewOption->decorationSize
+                .boundedTo(contentsRect.size());
+            QRect decorationRect;
+            switch (itemViewOption->decorationPosition) {
+            case QStyleOptionViewItem::Top:
+                decorationRect = QRect(contentsRect.left(), contentsRect.top(),
+                                       contentsRect.width(), decorationSize.height());
+                break;
+            case QStyleOptionViewItem::Bottom:
+                decorationRect = QRect(contentsRect.left(),
+                                       contentsRect.bottom() - decorationSize.height() + 1,
+                                       contentsRect.width(), decorationSize.height());
+                break;
+            case QStyleOptionViewItem::Right:
+                decorationRect = QRect(contentsRect.right() - decorationSize.width() + 1,
+                                       contentsRect.top(), decorationSize.width(),
+                                       contentsRect.height());
+                break;
+            case QStyleOptionViewItem::Left:
+            default:
+                decorationRect = QRect(contentsRect.left(), contentsRect.top(),
+                                       decorationSize.width(), contentsRect.height());
+                break;
+            }
+            const uint decorationAlign = resolvedAlignment(itemViewOption->decorationAlignment,
+                                                           Qt::AlignLeft, Qt::AlignVCenter);
+            decorationRect = d->getAlignedRectInContainer(
+                    decorationRect, decorationSize, decorationAlign, QMargins(0, 0, 0, 0),
+                    QMargins(0, 0, 0, 0));
+            return visualRect(opt->direction, opt->rect, decorationRect);
+        }
+        break;
     case SE_ItemViewItemText:
-    if (const auto *itemViewOption = qstyleoption_cast<const QStyleOptionViewItem *>(opt)) {
-        const auto resolved = d->resolveLayout(QQStyleKitReader::ControlType::ItemDelegate, opt->state);
-        if (!resolved.isValid())
-            break;
-        const auto &metrics = *resolved.metrics;
-        QRect contentsRect = opt->rect.marginsRemoved(metrics.margins + metrics.padding);
-        QRect indicatorRect;
-        if (itemViewOption->features & QStyleOptionViewItem::HasCheckIndicator)
-            indicatorRect = subElementRect(SE_ItemViewItemCheckIndicator, opt, widget);
-        const int spacing = metrics.spacing;
-        QRect textRect = contentsRect;
-        const auto *textProps = resolved.text();
-        uint textAlign;
-        if (textProps)
-            textAlign = resolvedAlignment(textProps->alignment(), Qt::AlignLeft, Qt::AlignVCenter);
-        else
-            textAlign = Qt::AlignLeft | Qt::AlignVCenter;
-        if (indicatorRect.isValid()) {
-            if (textAlign & Qt::AlignLeft) {
-                textRect.setLeft(indicatorRect.right() + spacing + metrics.textPadding.left());
-            } else if (textAlign & Qt::AlignHCenter) {
-                textRect.setLeft(indicatorRect.right() + spacing + metrics.textPadding.left());
-                textRect.setRight(indicatorRect.left() - spacing - metrics.textPadding.right());
-            } else {
-                textRect.setRight(indicatorRect.left() - spacing - metrics.textPadding.right());
+        if (const auto *itemViewOption = qstyleoption_cast<const QStyleOptionViewItem *>(opt)) {
+            const auto resolved = d->resolveLayout(itemViewControlType(opt), opt->state);
+            if (!resolved.isValid())
+                break;
+            const auto &metrics = *resolved.metrics;
+            QRect contentsRect = opt->rect.marginsRemoved(metrics.margins + metrics.padding);
+            const int spacing = metrics.spacing;
+
+            if (itemViewOption->features & QStyleOptionViewItem::HasCheckIndicator) {
+                const QRect indicatorRect = subElementRect(
+                    SE_ItemViewItemCheckIndicator, opt, widget);
+                const auto *checkIndicator = resolved.indicator();
+                const uint checkAlign = checkIndicator
+                    ? resolvedAlignment(checkIndicator->alignment(), Qt::AlignLeft,
+                                        Qt::AlignVCenter)
+                    : uint(Qt::AlignLeft | Qt::AlignVCenter);
+                if (checkAlign & Qt::AlignLeft) {
+                    contentsRect.setLeft(
+                        indicatorRect.right() + metrics.indicatorMargins.right() + spacing);
+                } else if (checkAlign & Qt::AlignRight) {
+                    contentsRect.setRight(
+                        indicatorRect.left() - metrics.indicatorMargins.left() - spacing);
+                }
             }
+
+            QRect textRect = contentsRect;
+            if (itemViewOption->features & QStyleOptionViewItem::HasDecoration) {
+                const QRect decorationRect = subElementRect(
+                    SE_ItemViewItemDecoration, opt, widget);
+                switch (itemViewOption->decorationPosition) {
+                case QStyleOptionViewItem::Top:
+                    textRect.setTop(decorationRect.bottom() + spacing);
+                    break;
+                case QStyleOptionViewItem::Bottom:
+                    textRect.setBottom(decorationRect.top() - spacing);
+                    break;
+                case QStyleOptionViewItem::Right:
+                    textRect.setRight(decorationRect.left() - spacing);
+                    break;
+                case QStyleOptionViewItem::Left:
+                default:
+                    textRect.setLeft(decorationRect.right() + spacing);
+                    break;
+                }
+            }
+
+            const auto *textProps = resolved.text();
+            const uint textAlign = textProps
+                ? resolvedAlignment(textProps->alignment(), Qt::AlignLeft, Qt::AlignVCenter)
+                : uint(Qt::AlignLeft | Qt::AlignVCenter);
+        if (textAlign & Qt::AlignLeft) {
+            textRect.setLeft(textRect.left() + metrics.textPadding.left());
+        } else if (textAlign & Qt::AlignHCenter) {
+            textRect.setLeft(textRect.left() + metrics.textPadding.left() / 2);
+            textRect.setRight(textRect.right() - metrics.textPadding.right() / 2);
         } else {
-            if (textAlign & Qt::AlignLeft) {
-                textRect.setLeft(textRect.left() + metrics.textPadding.left());
-            } else if (textAlign & Qt::AlignHCenter) {
-                textRect.setLeft(textRect.left() + metrics.textPadding.left() / 2);
-                textRect.setRight(textRect.right() - metrics.textPadding.right() / 2);
-            } else {
-                textRect.setRight(textRect.right() - metrics.textPadding.right());
-            }
+            textRect.setRight(textRect.right() - metrics.textPadding.right());
         }
         if (textAlign & Qt::AlignTop) {
             textRect.setTop(textRect.top() + metrics.textPadding.top());
@@ -3450,7 +3543,7 @@ QSize QStyleKitStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt,
 #if QT_CONFIG(itemviews)
     case CT_ItemViewItem:
         if (const auto *item = qstyleoption_cast<const QStyleOptionViewItem *>(opt)) {
-            const auto resolved = d->resolveLayout(QQStyleKitReader::ControlType::ItemDelegate, opt->state);
+            const auto resolved = d->resolveLayout(itemViewControlType(opt), opt->state);
             if (!resolved.isValid())
                 break;
             const auto &metrics = *resolved.metrics;
