@@ -1343,11 +1343,13 @@ void tst_qquickanimations::signalOrder()
     QVERIFY(root);
     QQuickAbstractAnimation *animation = root->findChild<QQuickAbstractAnimation*>(animationType);
 
-    const QList<void (QQuickAbstractAnimation::*)()> signalsToConnect = {
-        &QQuickAbstractAnimation::started,
-        &QQuickAbstractAnimation::stopped,
-        &QQuickAbstractAnimation::finished
-    };
+    QList<void (QQuickAbstractAnimation::*)()> signalsToConnect;
+    // CAVEAT: we do not initialize signalsToConnect with an initializer list: gcc-15 aggressively
+    //         optimizes pointer-to-members of dll-imported symbols.
+    //         https://gcc.gnu.org/bugzilla/show_bug.cgi?id=126628
+    signalsToConnect << &QQuickAbstractAnimation::started << &QQuickAbstractAnimation::stopped
+                     << &QQuickAbstractAnimation::finished;
+
     const QList<const char*> expectedSignalOrder = {
         "started",
         "stopped",
