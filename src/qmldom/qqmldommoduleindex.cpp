@@ -242,7 +242,8 @@ QList<DomItem> ModuleIndex::exportsWithNameAndMinorVersion(const DomItem &self, 
             DomItem exportItem = exports.index(j);
             if (!exportItem)
                 continue;
-            Version const *versionPtr = exportItem.field(Fields::version).as<Version>();
+            DomItem version = exportItem.field(Fields::version);
+            Version const *versionPtr = version.as<Version>();
             if (versionPtr == nullptr || !versionPtr->isValid()) {
                 undef.append(exportItem);
             } else {
