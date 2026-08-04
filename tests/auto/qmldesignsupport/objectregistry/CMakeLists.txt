@@ -24,6 +24,7 @@ qt_internal_add_test(tst_qobjectregistry
         Qt::QmlPrivate
         Qt::QuickTestUtilsPrivate
         Qt::QmlDesignSupport
+        Qt::QmlDesignSupportPrivate
     TESTDATA ${test_data}
 )
 

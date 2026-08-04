@@ -8,6 +8,7 @@
 #include <QtQml/qqmlengine.h>
 #include <QtQmlDesignSupport/qmultiobjectregistryref.h>
 #include <QtQmlDesignSupport/qobjectregistryref.h>
+#include <QtQmlDesignSupport/private/qobjectregistry_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtTest/qsignalspy.h>
 #include <QtTest/qtest.h>
@@ -24,20 +25,111 @@ public:
     }
 
 private slots:
+    void assignmentOrder_data();
+    void assignmentOrder();
+    void boundKey();
+    void cppRegistration();
     void dynamicObjectCreationAndDestruction();
+    void imperativeTargetAssignment();
     void keyChange();
     void multiRegistration();
     void noEngine();
     void qmlReferences();
+    void refChangedDuringNotification();
     void refDelete();
     void refInitialKeySet_data();
     void refInitialKeySet();
+    void registryOutlivesEngine();
     void sameKeyMultipleEngines();
     void sameTargetRegisteredMultipleTimes();
     void singleRegistration_data();
     void singleRegistration();
+    void staleTargetRemoval();
     void targetChange();
 };
+
+void tst_qobjectregistry::assignmentOrder_data()
+{
+    QTest::addColumn<bool>("targetFirst");
+
+    QTest::newRow("Key first") << false;
+    QTest::newRow("Target first") << true;
+}
+
+void tst_qobjectregistry::assignmentOrder()
+{
+    QFETCH(bool, targetFirst);
+
+    QQmlEngine e;
+    QObject target;
+
+    QObjectRegistry registry;
+    QQmlEngine::setContextForObject(&registry, e.rootContext());
+
+    if (targetFirst) {
+        registry.setTarget(&target);
+        registry.setKey("AssignmentOrder");
+    } else {
+        registry.setKey("AssignmentOrder");
+        registry.setTarget(&target);
+    }
+
+    QObjectRegistryRef ref(&e, "AssignmentOrder");
+    QVERIFY(ref.object() == &target);
+}
+
+void tst_qobjectregistry::boundKey()
+{
+    QQmlEngine e;
+    QQmlComponent component(&e, testFileUrl("BoundKeyRegistration.qml"));
+    QVERIFY(!component.isError());
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY(!root.isNull());
+
+    QObject *boundTarget = root->property("boundTarget").value<QObject *>();
+    QVERIFY(boundTarget);
+
+    QObjectRegistryRef ref(&e, "BoundKey");
+    QVERIFY(ref.object() == boundTarget);
+    QCOMPARE(ref.object()->property("testProp").toInt(), 33);
+
+    QSignalSpy spyObjectChanged(&ref, &QObjectRegistryRef::objectChanged);
+    root->setProperty("dynamicKey", "BoundKeyChanged");
+
+    QVERIFY(!ref.object());
+    QCOMPARE(spyObjectChanged.size(), 1);
+
+    QObjectRegistryRef changedRef(&e, "BoundKeyChanged");
+    QVERIFY(changedRef.object() == boundTarget);
+}
+
+void tst_qobjectregistry::cppRegistration()
+{
+    QQmlEngine e;
+
+    QObjectRegistryRef ref(&e, "CppRegistration");
+    QVERIFY(!ref.object());
+
+    QObject *target = new QObject;
+
+    QObjectRegistry registry;
+    QQmlEngine::setContextForObject(&registry, e.rootContext());
+    registry.setKey("CppRegistration");
+    registry.setTarget(target);
+
+    QVERIFY(ref.object() == target);
+    QVERIFY(registry.target() == target);
+
+    QSignalSpy spyObjectChanged(&ref, &QObjectRegistryRef::objectChanged);
+    QSignalSpy spyTargetChanged(&registry, &QObjectRegistry::targetChanged);
+
+    delete target;
+
+    QVERIFY(!ref.object());
+    QVERIFY(!registry.target());
+    QCOMPARE(spyObjectChanged.size(), 1);
+    QCOMPARE(spyTargetChanged.size(), 1);
+}
 
 void tst_qobjectregistry::dynamicObjectCreationAndDestruction()
 {
@@ -113,6 +205,62 @@ void tst_qobjectregistry::dynamicObjectCreationAndDestruction()
         QVERIFY(ref.objectsList().contains(obj));
 
     qDeleteAll(spyList);
+}
+
+void tst_qobjectregistry::imperativeTargetAssignment()
+{
+    QQmlEngine e;
+    QQmlComponent component(&e, testFileUrl("ImperativeRegistration.qml"));
+    QVERIFY(!component.isError());
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY(!root.isNull());
+
+    QObjectRegistryRef singleRef(&e, "ImperativeSingle");
+    QMultiObjectRegistryRef multiRef(&e, "ImperativeMulti");
+    QVERIFY(!singleRef.object());
+    QVERIFY(multiRef.objectsList().isEmpty());
+
+    QMetaObject::invokeMethod(root.get(), "registerObjects");
+
+    QObject *obj1 = root->property("obj1").value<QObject *>();
+    QObject *obj2 = root->property("obj2").value<QObject *>();
+    QVERIFY(obj1);
+    QVERIFY(obj2);
+    QVERIFY(singleRef.object() == obj1);
+    QCOMPARE(multiRef.objectsList().size(), 2);
+    QVERIFY(multiRef.objectsList().contains(obj1));
+    QVERIFY(multiRef.objectsList().contains(obj2));
+
+    QObject *singleReg = root->property("singleReg").value<QObject *>();
+    QVERIFY(singleReg);
+    QVERIFY(singleReg->property("target").value<QObject *>() == obj1);
+
+    QSignalSpy spyObjectChanged(&singleRef, &QObjectRegistryRef::objectChanged);
+    QSignalSpy spyObjectsChanged(&multiRef, &QMultiObjectRegistryRef::objectsChanged);
+    QSignalSpy spyObjectRemoved(&multiRef, &QMultiObjectRegistryRef::objectRemoved);
+    QSignalSpy spyTargetChanged(singleReg, SIGNAL(targetChanged()));
+    QSignalSpy spyDestroyed1(obj1, &QObject::destroyed);
+    QSignalSpy spyDestroyed2(obj2, &QObject::destroyed);
+
+    // QML destroy() is deferred, so wait for the destructions
+    QMetaObject::invokeMethod(root.get(), "destroyObjects");
+    QVERIFY(spyDestroyed1.size() == 1 || spyDestroyed1.wait());
+    QVERIFY(spyDestroyed2.size() == 1 || spyDestroyed2.wait());
+
+    QVERIFY(!singleRef.object());
+    QCOMPARE(spyObjectChanged.size(), 1);
+
+    QVERIFY(multiRef.objectsList().isEmpty());
+    QCOMPARE(spyObjectRemoved.size(), 2);
+    QCOMPARE(spyObjectsChanged.size(), 2);
+
+    QVERIFY(!singleReg->property("target").value<QObject *>());
+    QCOMPARE(spyTargetChanged.size(), 1);
+
+    QObjectRegistryRef newSingleRef(&e, "ImperativeSingle");
+    QMultiObjectRegistryRef newMultiRef(&e, "ImperativeMulti");
+    QVERIFY(!newSingleRef.object());
+    QVERIFY(newMultiRef.objectsList().isEmpty());
 }
 
 void tst_qobjectregistry::keyChange()
@@ -315,6 +463,42 @@ void tst_qobjectregistry::qmlReferences()
     QVERIFY(ref2.objectsList()[1] == multiObj0 || ref2.objectsList()[1] == multiObj1);
 }
 
+void tst_qobjectregistry::refChangedDuringNotification()
+{
+    QQmlEngine e;
+    QQmlComponent component(&e, testFileUrl("SingleRegistration.qml"));
+    QVERIFY(!component.isError());
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY(!root.isNull());
+
+    QMultiObjectRegistryRef ref1(&e, "SingleRegistration");
+    QMultiObjectRegistryRef ref2(&e, "SingleRegistration");
+    QCOMPARE(ref1.objectsList().size(), 1);
+    QCOMPARE(ref2.objectsList().size(), 1);
+
+    QObject *target = ref1.objectsList()[0];
+
+    QObject::connect(&ref1, &QMultiObjectRegistryRef::objectRemoved, this, [&] {
+        ref2.setKey("UnusedKey");
+    });
+    QObject::connect(&ref2, &QMultiObjectRegistryRef::objectRemoved, this, [&] {
+        ref1.setKey("UnusedKey");
+    });
+
+    QSignalSpy spyObjectRemoved1(&ref1, &QMultiObjectRegistryRef::objectRemoved);
+    QSignalSpy spyObjectRemoved2(&ref2, &QMultiObjectRegistryRef::objectRemoved);
+
+    delete target;
+
+    // Both references lose the object only once:
+    // First via the removal notification
+    // Second via the key change that the notification triggered
+    QCOMPARE(spyObjectRemoved1.size(), 1);
+    QCOMPARE(spyObjectRemoved2.size(), 1);
+    QVERIFY(ref1.objectsList().isEmpty());
+    QVERIFY(ref2.objectsList().isEmpty());
+}
+
 void tst_qobjectregistry::refDelete()
 {
     // Another ref with same name after old ref was deleted finds the same object(s)
@@ -449,6 +633,35 @@ void tst_qobjectregistry::refInitialKeySet()
         QVERIFY(o1->property("testProp1").toInt() == 1);
         QVERIFY(o2->property("testProp2").toInt() == 2);
     }
+}
+
+void tst_qobjectregistry::registryOutlivesEngine()
+{
+    QObject target;
+    QObjectRegistry registry;
+    QScopedPointer<QObjectRegistryRef> ref;
+
+    {
+        QQmlEngine e;
+        QQmlEngine::setContextForObject(&registry, e.rootContext());
+        registry.setKey("OutlivingRegistration");
+        registry.setTarget(&target);
+
+        ref.reset(new QObjectRegistryRef(&e, "OutlivingRegistration"));
+        QVERIFY(ref->object() == &target);
+    }
+
+    // The underlying singleton registry was destroyed along with the engine,
+    // so ref can no longer be resolved
+    {
+        QQmlTestMessageHandler messageHandler;
+        ref->setKey("OutlivingRegistrationChanged");
+        QCOMPARE(messageHandler.messages().size(), 1);
+        QVERIFY(messageHandler.messages()[0].contains("Object registry could not be resolved"));
+    }
+
+    // The registry object and its target are unaffected by the underlying registry going away
+    QVERIFY(registry.target() == &target);
 }
 
 void tst_qobjectregistry::sameKeyMultipleEngines()
@@ -674,6 +887,49 @@ void tst_qobjectregistry::singleRegistration()
         QObjectRegistryRef ref(&e, key);
         QVERIFY(!ref.object());
     }
+}
+
+void tst_qobjectregistry::staleTargetRemoval()
+{
+    QQmlEngine e;
+    QQmlComponent component(&e, testFileUrl("StaleTargetRegistration.qml"));
+    QVERIFY(!component.isError());
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY(!root.isNull());
+
+    QMultiObjectRegistryRef ref(&e, "StaleTarget");
+    QVERIFY(ref.objectsList().isEmpty());
+
+    QMetaObject::invokeMethod(root.get(), "registerFirst");
+
+    QObject *firstObject = root->property("firstObject").value<QObject *>();
+    QObject *firstRegistry = root->property("firstRegistry").value<QObject *>();
+    QVERIFY(firstObject);
+    QVERIFY(firstRegistry);
+    QCOMPARE(ref.objectsList().size(), 1);
+    QVERIFY(ref.objectsList()[0] == firstObject);
+
+    // QML destroy() is deferred, so wait for the destructions
+    QSignalSpy spyObjectDestroyed(firstObject, &QObject::destroyed);
+    QMetaObject::invokeMethod(root.get(), "destroyFirstObject");
+    QVERIFY(spyObjectDestroyed.size() == 1 || spyObjectDestroyed.wait());
+
+    QVERIFY(ref.objectsList().isEmpty());
+    QVERIFY(!firstRegistry->property("target").value<QObject *>());
+
+    QMetaObject::invokeMethod(root.get(), "registerSecond");
+
+    QObject *secondObject = root->property("secondObject").value<QObject *>();
+    QVERIFY(secondObject);
+    QCOMPARE(ref.objectsList().size(), 1);
+    QVERIFY(ref.objectsList()[0] == secondObject);
+
+    QSignalSpy spyRegistryDestroyed(firstRegistry, &QObject::destroyed);
+    QMetaObject::invokeMethod(root.get(), "destroyFirstRegistry");
+    QVERIFY(spyRegistryDestroyed.size() == 1 || spyRegistryDestroyed.wait());
+
+    QCOMPARE(ref.objectsList().size(), 1);
+    QVERIFY(ref.objectsList()[0] == secondObject);
 }
 
 void tst_qobjectregistry::targetChange()

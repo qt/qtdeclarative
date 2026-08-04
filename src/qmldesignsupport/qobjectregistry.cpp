@@ -5,6 +5,7 @@
 
 #include <private/qabstractobjectregistryref_p.h>
 #include <private/qobjectregistrysingleton_p.h>
+#include <private/qqmldata_p.h>
 
 #include <QtQml/qqmlengine.h>
 
@@ -47,6 +48,8 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlproperty QtObject ObjectRegistry::target
     This property specifies the target object to register.
+
+    If the target object is destroyed, this property is reset to null.
 */
 
 QObjectRegistryAttachedType::QObjectRegistryAttachedType(QObject *parent)
@@ -133,6 +136,9 @@ void QObjectRegistry::setKey(const QString &key)
         return; // Postpone actual handling until we have both key and target
     }
 
+    if (!m_registry)
+        m_registry = QObjectRegistrySingleton::registryForObject(this);
+
     if (m_registry)
         m_registry->remove(m_key, m_target);
 
@@ -146,16 +152,19 @@ void QObjectRegistry::setKey(const QString &key)
 
 QObject *QObjectRegistry::target() const
 {
-    return m_target;
+    return m_target.object();
 }
 
 void QObjectRegistry::setTarget(QObject *target)
 {
+    if (QQmlData::wasDeleted(target))
+        target = nullptr;
+
     if (m_target == target)
         return;
 
     if (m_key.isEmpty()) {
-        m_target = target;
+        m_target.setObject(target);
         emit targetChanged();
         return; // Postpone actual handling until we have both key and target
     }
@@ -166,7 +175,7 @@ void QObjectRegistry::setTarget(QObject *target)
     if (m_registry)
         m_registry->remove(m_key, m_target);
 
-    m_target = target;
+    m_target.setObject(target);
 
     if (m_registry)
         m_registry->add(m_key, m_target);

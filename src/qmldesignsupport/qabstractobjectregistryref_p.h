@@ -19,6 +19,7 @@
 
 #include <QtQml/qqml.h>
 
+#include <QtCore/qpointer.h>
 #include <QtCore/private/qobject_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -53,7 +54,7 @@ private:
 
     QString m_key;
     QList<QObject *> m_data;
-    QObjectRegistrySingleton *m_registry = nullptr;
+    QPointer<QObjectRegistrySingleton> m_registry;
 };
 
 QT_END_NAMESPACE
