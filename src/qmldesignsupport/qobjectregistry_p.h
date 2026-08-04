@@ -17,8 +17,11 @@
 
 #include <QtQmlDesignSupport/qtqmldesignsupportexports.h>
 
+#include <QtCore/qpointer.h>
+
 #include <QtQml/qqml.h>
 #include <QtQml/qqmlparserstatus.h>
+#include <QtQml/private/qqmlguard_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -51,7 +54,7 @@ Q_SIGNALS:
 private:
     QString m_key;
     bool m_qmlSetupInProgress = false;
-    QObjectRegistrySingleton *m_registry = nullptr;
+    QPointer<QObjectRegistrySingleton> m_registry;
 };
 
 class Q_QMLDESIGNSUPPORT_EXPORT QObjectRegistry : public QObject
@@ -82,9 +85,28 @@ Q_SIGNALS:
     void targetChanged();
 
 private:
+    class TargetGuard : public QQmlGuard<QObject>
+    {
+    public:
+        explicit TargetGuard(QObjectRegistry *owner)
+            : QQmlGuard<QObject>(&TargetGuard::objectDestroyedImpl, nullptr)
+            , m_owner(owner)
+        {
+        }
+
+    private:
+        static void objectDestroyedImpl(QQmlGuardImpl *guard)
+        {
+            TargetGuard *self = static_cast<TargetGuard *>(guard);
+            emit self->m_owner->targetChanged();
+        }
+
+        QObjectRegistry *m_owner = nullptr;
+    };
+
     QString m_key;
-    QObject *m_target = nullptr;
-    QObjectRegistrySingleton *m_registry = nullptr;
+    TargetGuard m_target { this };
+    QPointer<QObjectRegistrySingleton> m_registry;
 };
 
 QT_END_NAMESPACE

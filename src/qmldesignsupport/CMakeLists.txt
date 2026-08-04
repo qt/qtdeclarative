@@ -26,8 +26,10 @@ qt_internal_add_qml_module(QmlDesignSupport
         Qt::Qml
     LIBRARIES
         Qt::CorePrivate
+        Qt::QmlPrivate
     PRIVATE_MODULE_INTERFACE
         Qt::CorePrivate
+        Qt::QmlPrivate
 )
 
 qt_internal_add_docs(QmlDesignSupport
