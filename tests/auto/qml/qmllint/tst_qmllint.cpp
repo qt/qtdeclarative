@@ -3773,6 +3773,7 @@ QJsonArray TestQmllint::callQmllintImpl(const QString &fileToLint, const QString
             resourceFiles.append(qrcFile);
         }
 
+        QTest::failOnWarning();
         lintResult = m_linter.lintFile(lintedFile, content.isEmpty() ? nullptr : &content,
                                        lintOptions, resolvedImportPaths, options.qmldirFiles,
                                        resourceFiles, resolvedCategories);
@@ -4057,7 +4058,7 @@ void TestQmllint::searchFixes(const QJsonArray &warnings, const QString &substri
     };
 
     if (!contains)
-        qWarning().noquote() << toDescription(warnings, substring, line, column);
+        qDebug().noquote() << toDescription(warnings, substring, line, column);
     QVERIFY(contains);
 }
 
@@ -4106,11 +4107,11 @@ void TestQmllint::searchWarnings(const QJsonArray &warnings, const QString &subs
 
     if (shouldContain == StringContained) {
         if (!contains)
-            qWarning().noquote() << toDescription(warnings, substring, line, column);
+            qDebug().noquote() << toDescription(warnings, substring, line, column);
         QVERIFY(contains);
     } else {
         if (contains)
-            qWarning().noquote() << toDescription(warnings, substring, line, column, false);
+            qDebug().noquote() << toDescription(warnings, substring, line, column, false);
         QVERIFY(!contains);
     }
 }

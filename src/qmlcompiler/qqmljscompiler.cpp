@@ -175,7 +175,7 @@ bool qCompileQmlFile(QmlIR::Document &irDocument, const QString &inputFileName,
         // For now, only use the AOT IRBuilder when linting
         std::unique_ptr<QmlIR::IRBuilder> irBuilder = aotCompiler && aotCompiler->isLintCompiler()
                 ? std::make_unique<QQmlJSAOTIRBuilder>() : std::make_unique<QmlIR::IRBuilder>();
-        if (!irBuilder->generateFromQml(sourceCode, inputFileName, &irDocument)) {
+        if (!irBuilder->generateFromQml(sourceCode, inputFileName, &irDocument, wInterface)) {
             error->appendDiagnostics(inputFileName, irBuilder->errors);
             return false;
         }

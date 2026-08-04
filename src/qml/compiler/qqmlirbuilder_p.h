@@ -509,7 +509,9 @@ struct Q_QML_COMPILER_EXPORT IRBuilder : public QQmlJS::AST::Visitor
     Q_DECLARE_TR_FUNCTIONS(QQmlCodeGenerator)
 public:
     IRBuilder();
-    bool generateFromQml(const QString &code, const QString &url, Document *output);
+    bool generateFromQml(const QString &code, const QString &url, Document *output,
+                         QV4::Compiler::CodegenWarningInterface *wInterface =
+                                 QV4::Compiler::defaultCodegenWarningInterface());
 
     using QQmlJS::AST::Visitor::visit;
     using QQmlJS::AST::Visitor::endVisit;

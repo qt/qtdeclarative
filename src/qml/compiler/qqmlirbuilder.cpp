@@ -475,7 +475,8 @@ IRBuilder::IRBuilder()
 {
 }
 
-bool IRBuilder::generateFromQml(const QString &code, const QString &url, Document *output)
+bool IRBuilder::generateFromQml(const QString &code, const QString &url, Document *output,
+                                QV4::Compiler::CodegenWarningInterface *wInterface)
 {
     QQmlJS::AST::UiProgram *program = nullptr;
     {
@@ -490,7 +491,7 @@ bool IRBuilder::generateFromQml(const QString &code, const QString &url, Documen
             // Extract errors from the parser
             for (const QQmlJS::DiagnosticMessage &m : diagnosticMessages) {
                 if (m.isWarning()) {
-                    qWarning("%s:%d : %s", qPrintable(url), m.loc.startLine, qPrintable(m.message));
+                    wInterface->reportParserWarnings(url, m.loc, m.message);
                     continue;
                 }
 

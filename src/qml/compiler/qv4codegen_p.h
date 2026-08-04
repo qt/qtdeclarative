@@ -58,6 +58,11 @@ public:
     virtual void reportFunctionUsedBeforeDeclaration(const QString &name, const QString &fileName,
                                                      QQmlJS::SourceLocation declarationLocation,
                                                      QQmlJS::SourceLocation accessLocation);
+    virtual void reportParserWarnings(const QString &fileName, QQmlJS::SourceLocation location,
+                                      const QString &message)
+    {
+        qWarning("%s:%d : %s", qPrintable(fileName), location.startLine, qPrintable(message));
+    }
 
     virtual QQmlJS::AST::Visitor *unreachableVisitor() { return nullptr; }
     virtual ~CodegenWarningInterface() = default;

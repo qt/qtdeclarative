@@ -134,6 +134,12 @@ public:
                       qmlFunctionUsedBeforeDeclaration, declarationLocation);
     }
 
+    void reportParserWarnings(const QString &, QQmlJS::SourceLocation, const QString &) override
+    {
+        // Note: we already reported parser warnings in QQmlJSLinter::typeReader(), so we don't
+        // need to report them again here.
+    }
+
     UnreachableVisitor *unreachableVisitor() override { return &m_unreachableVisitor; }
 
 private:
