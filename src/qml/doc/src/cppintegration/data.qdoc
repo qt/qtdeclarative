@@ -373,7 +373,7 @@ Providing the \c Message class has been
 \l{qtqml-cppintegration-definetypes.html#registering-c++-types-with-the-qml-type-system}{registered} with the QML type system, its \c Status enum can be used from QML:
 
 \qml
-Message {
+ Message {
      onStatusChanged: {
          if (status == Message.Ready)
              console.log("Message is loaded!")
@@ -409,23 +409,23 @@ enums from being merged into the same name space.
 
 \code
 class Message : public QObject
-    {
-        Q_OBJECT
-        Q_CLASSINFO("RegisterEnumClassesUnscoped", "false")
-        Q_ENUM(ScopedEnum)
-        Q_ENUM(OtherValue)
+{
+    Q_OBJECT
+    Q_CLASSINFO("RegisterEnumClassesUnscoped", "false")
+    Q_ENUM(ScopedEnum)
+    Q_ENUM(OtherValue)
 
-    public:
-        enum class ScopedEnum {
-              Value1,
-              Value2,
-              OtherValue
-        };
-        enum class OtherValue {
-              Value1,
-              Value2
-        };
+public:
+    enum class ScopedEnum {
+          Value1,
+          Value2,
+          OtherValue
     };
+    enum class OtherValue {
+          Value1,
+          Value2
+    };
+};
 \endcode
 
 Enums from related types are usually registered in the scope of the relating
