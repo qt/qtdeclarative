@@ -20,7 +20,7 @@ T.TabBar {
         currentIndex: control.currentIndex
 
         spacing: control.spacing
-        orientation: ListView.Horizontal
+        orientation: control.orientation
         boundsBehavior: Flickable.StopAtBounds
         flickableDirection: Flickable.AutoFlickIfNeeded
         snapMode: ListView.SnapToItem
@@ -28,7 +28,7 @@ T.TabBar {
         highlightMoveDuration: 0
         highlightRangeMode: ListView.ApplyRange
         preferredHighlightBegin: 40
-        preferredHighlightEnd: width - 40
+        preferredHighlightEnd: (control.horizontal ? width : height) - 40
     }
 
     background: Rectangle {

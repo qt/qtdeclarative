@@ -30,6 +30,10 @@ class Q_QUICKTEMPLATES2_EXPORT QQuickTabBar : public QQuickContainer
 {
     Q_OBJECT
     Q_PROPERTY(Position position READ position WRITE setPosition NOTIFY positionChanged FINAL)
+    Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE setOrientation NOTIFY
+                       orientationChanged FINAL REVISION(6, 13))
+    Q_PROPERTY(bool horizontal READ isHorizontal NOTIFY orientationChanged FINAL REVISION(6, 13))
+    Q_PROPERTY(bool vertical READ isVertical NOTIFY orientationChanged FINAL REVISION(6, 13))
     QML_NAMED_ELEMENT(TabBar)
     QML_ATTACHED(QQuickTabBarAttached)
     QML_ADDED_IN_VERSION(2, 0)
@@ -46,10 +50,17 @@ public:
     Position position() const;
     void setPosition(Position position);
 
+    Qt::Orientation orientation() const;
+    void setOrientation(Qt::Orientation orientation);
+
+    bool isHorizontal() const;
+    bool isVertical() const;
+
     static QQuickTabBarAttached *qmlAttachedProperties(QObject *object);
 
 Q_SIGNALS:
     void positionChanged();
+    Q_REVISION(6, 13) void orientationChanged();
 
 protected:
     void updatePolish() override;

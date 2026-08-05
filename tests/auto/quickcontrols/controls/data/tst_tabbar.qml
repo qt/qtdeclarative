@@ -70,6 +70,31 @@ TestCase {
         compare(control.currentItem, null)
     }
 
+    function test_orientation() {
+        let control = createTemporaryObject(tabBar, testCase)
+        compare(control.orientation, Qt.Horizontal)
+        compare(control.horizontal, true)
+        compare(control.vertical, false)
+
+        let orientationSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "orientationChanged"})
+        verify(orientationSpy.valid)
+
+        control.orientation = Qt.Vertical
+        compare(control.orientation, Qt.Vertical)
+        compare(control.horizontal, false)
+        compare(control.vertical, true)
+        compare(orientationSpy.count, 1)
+
+        control.orientation = Qt.Vertical
+        compare(orientationSpy.count, 1)
+
+        control.orientation = Qt.Horizontal
+        compare(control.orientation, Qt.Horizontal)
+        compare(control.horizontal, true)
+        compare(control.vertical, false)
+        compare(orientationSpy.count, 2)
+    }
+
     function test_current() {
         let control = createTemporaryObject(tabBar, testCase)
 
@@ -481,15 +506,42 @@ TestCase {
     }
 
     function test_layout_data() {
-        return [
-            { tag: "spacing:0", spacing: 0 },
-            { tag: "spacing:1", spacing: 1 },
-            { tag: "spacing:10", spacing: 10 },
-        ]
+        let data = []
+        for (const orientation of [Qt.Horizontal, Qt.Vertical]) {
+            const tag = orientation === Qt.Horizontal ? "horizontal" : "vertical"
+            for (const spacing of [0, 1, 10])
+                data.push({ tag: tag + ",spacing:" + spacing, orientation: orientation, spacing: spacing })
+        }
+        return data
     }
 
+    // Sizes and positions the tabs along the tab bar's main axis (width when
+    // horizontal, height when vertical), and along its cross axis (the
+    // other one).
     function test_layout(data) {
-        let control = createTemporaryObject(tabBar, testCase, {spacing: data.spacing, width: 200})
+        const horizontal = data.orientation === Qt.Horizontal
+        const mainSize = horizontal ? "width" : "height"
+        const crossSize = horizontal ? "height" : "width"
+        const crossPos = horizontal ? "y" : "x"
+        const implicitMainSize = "implicit" + (horizontal ? "Width" : "Height")
+        const implicitCrossSize = "implicit" + (horizontal ? "Height" : "Width")
+        const implicitContentMainSize = "implicitContent" + (horizontal ? "Width" : "Height")
+        const implicitContentCrossSize = "implicitContent" + (horizontal ? "Height" : "Width")
+        const contentMainSize = "content" + (horizontal ? "Width" : "Height")
+        const contentCrossSize = "content" + (horizontal ? "Height" : "Width")
+        const implicitBackgroundMainSize = "implicitBackground" + (horizontal ? "Width" : "Height")
+
+        // sum of an item's padding/inset on the given axis (main: true, cross: false)
+        function paddingSum(item, mainAxis) {
+            return mainAxis === horizontal ? item.leftPadding + item.rightPadding : item.topPadding + item.bottomPadding
+        }
+        function insetSum(item, mainAxis) {
+            return mainAxis === horizontal ? item.leftInset + item.rightInset : item.topInset + item.bottomInset
+        }
+
+        let controlProps = { spacing: data.spacing, orientation: data.orientation }
+        controlProps[mainSize] = 200
+        let control = createTemporaryObject(tabBar, testCase, controlProps)
 
         // remove the background so that it won't affect the implicit size of the tabbar,
         // so the implicit sizes tested below are entirely based on the content size
@@ -497,77 +549,82 @@ TestCase {
 
         let tab1 = tabButton.createObject(control, {text: "First"})
         control.addItem(tab1)
-        tryCompare(tab1, "width", control.width)
-        compare(tab1.height, control.height)
-        compare(control.implicitContentWidth, tab1.implicitWidth)
-        compare(control.implicitContentHeight, tab1.implicitHeight)
-        compare(control.contentWidth, control.implicitContentWidth)
-        compare(control.contentHeight, control.implicitContentHeight)
-        compare(control.implicitWidth, control.contentWidth + control.leftPadding + control.rightPadding)
-        compare(control.implicitHeight, control.contentHeight + control.topPadding + control.bottomPadding)
+        tryCompare(tab1, mainSize, control[mainSize])
+        compare(tab1[crossSize], control[crossSize])
+        compare(control[implicitContentMainSize], tab1[implicitMainSize])
+        compare(control[implicitContentCrossSize], tab1[implicitCrossSize])
+        compare(control[contentMainSize], control[implicitContentMainSize])
+        compare(control[contentCrossSize], control[implicitContentCrossSize])
+        compare(control[implicitMainSize], control[contentMainSize] + paddingSum(control, true))
+        compare(control[implicitCrossSize], control[contentCrossSize] + paddingSum(control, false))
 
-        let tab2 = tabButton.createObject(control, {implicitHeight: tab1.implicitHeight + 10, text: "Second"})
+        let tab2Props = { text: "Second" }
+        tab2Props[implicitCrossSize] = tab1[implicitCrossSize] + 10
+        let tab2 = tabButton.createObject(control, tab2Props)
         control.addItem(tab2)
-        tryCompare(tab1, "width", (control.width - data.spacing) / 2)
-        compare(tab1.height, control.height)
-        compare(tab2.width, (control.width - data.spacing) / 2)
-        compare(tab2.height, control.height)
-        compare(control.implicitContentWidth, tab1.implicitWidth + tab2.implicitWidth + data.spacing)
-        compare(control.implicitContentHeight, tab2.implicitHeight)
-        compare(control.contentWidth, control.implicitContentWidth)
-        compare(control.contentHeight, control.implicitContentHeight)
-        compare(control.implicitWidth, control.contentWidth + control.leftPadding + control.rightPadding)
-        compare(control.implicitHeight, control.contentHeight + control.topPadding + control.bottomPadding)
+        tryCompare(tab1, mainSize, (control[mainSize] - data.spacing) / 2)
+        compare(tab1[crossSize], control[crossSize])
+        compare(tab2[mainSize], (control[mainSize] - data.spacing) / 2)
+        compare(tab2[crossSize], control[crossSize])
+        compare(control[implicitContentMainSize], tab1[implicitMainSize] + tab2[implicitMainSize] + data.spacing)
+        compare(control[implicitContentCrossSize], tab2[implicitCrossSize])
+        compare(control[contentMainSize], control[implicitContentMainSize])
+        compare(control[contentCrossSize], control[implicitContentCrossSize])
+        compare(control[implicitMainSize], control[contentMainSize] + paddingSum(control, true))
+        compare(control[implicitCrossSize], control[contentCrossSize] + paddingSum(control, false))
 
-        let tab3 = tabButton.createObject(control, {width: 50, height: tab1.implicitHeight - 10, text: "Third"})
+        let tab3Props = { text: "Third" }
+        tab3Props[mainSize] = 50
+        tab3Props[crossSize] = tab1[implicitCrossSize] - 10
+        let tab3 = tabButton.createObject(control, tab3Props)
         control.addItem(tab3)
-        tryCompare(tab1, "width", (control.width - 2 * data.spacing - 50) / 2)
-        compare(tab1.y, 0)
-        compare(tab1.height, control.height)
-        compare(tab2.y, 0)
-        compare(tab2.width, (control.width - 2 * data.spacing - 50) / 2)
-        compare(tab2.height, control.height)
-        verify(tab3.y > 0)
-        compare(tab3.y, (control.height - tab3.height) / 2)
-        compare(tab3.width, 50)
-        compare(tab3.height, tab1.implicitHeight - 10)
-        compare(control.implicitContentWidth, tab1.implicitWidth + tab2.implicitWidth + tab3.width + 2 * data.spacing)
-        compare(control.implicitContentHeight, tab2.implicitHeight)
-        compare(control.contentWidth, control.implicitContentWidth)
-        compare(control.contentHeight, control.implicitContentHeight)
-        compare(control.implicitWidth, control.contentWidth + control.leftPadding + control.rightPadding)
-        compare(control.implicitHeight, control.contentHeight + control.topPadding + control.bottomPadding)
+        tryCompare(tab1, mainSize, (control[mainSize] - 2 * data.spacing - 50) / 2)
+        compare(tab1[crossPos], 0)
+        compare(tab1[crossSize], control[crossSize])
+        compare(tab2[crossPos], 0)
+        compare(tab2[mainSize], (control[mainSize] - 2 * data.spacing - 50) / 2)
+        compare(tab2[crossSize], control[crossSize])
+        verify(tab3[crossPos] > 0)
+        compare(tab3[crossPos], (control[crossSize] - tab3[crossSize]) / 2)
+        compare(tab3[mainSize], 50)
+        compare(tab3[crossSize], tab1[implicitCrossSize] - 10)
+        compare(control[implicitContentMainSize], tab1[implicitMainSize] + tab2[implicitMainSize] + tab3[mainSize] + 2 * data.spacing)
+        compare(control[implicitContentCrossSize], tab2[implicitCrossSize])
+        compare(control[contentMainSize], control[implicitContentMainSize])
+        compare(control[contentCrossSize], control[implicitContentCrossSize])
+        compare(control[implicitMainSize], control[contentMainSize] + paddingSum(control, true))
+        compare(control[implicitCrossSize], control[contentCrossSize] + paddingSum(control, false))
 
-        let expectedWidth = Math.max(tab3.implicitBackgroundWidth + tab3.leftInset + tab3.rightInset,
-                                     tab3.implicitContentWidth + tab3.leftPadding + tab3.rightPadding)
-        tab3.width = tab3.implicitWidth
-        tab3.height = tab3.implicitHeight
-        tryCompare(tab1, "width", (control.width - 2 * data.spacing - expectedWidth) / 2)
-        compare(tab1.height, control.height)
-        compare(tab2.width, (control.width - 2 * data.spacing - expectedWidth) / 2)
-        compare(tab2.height, control.height)
-        compare(tab3.width, expectedWidth)
-        compare(tab3.height, tab3.implicitHeight)
-        compare(control.implicitContentWidth, tab1.implicitWidth + tab2.implicitWidth + tab3.implicitWidth + 2 * data.spacing)
-        compare(control.implicitContentHeight, tab2.implicitHeight)
-        compare(control.contentWidth, control.implicitContentWidth)
-        compare(control.contentHeight, control.implicitContentHeight)
-        compare(control.implicitWidth, control.contentWidth + control.leftPadding + control.rightPadding)
-        compare(control.implicitHeight, control.contentHeight + control.topPadding + control.bottomPadding)
+        let expectedMainSize = Math.max(tab3[implicitBackgroundMainSize] + insetSum(tab3, true),
+                                         tab3[implicitContentMainSize] + paddingSum(tab3, true))
+        tab3[mainSize] = tab3[implicitMainSize]
+        tab3[crossSize] = tab3[implicitCrossSize]
+        tryCompare(tab1, mainSize, (control[mainSize] - 2 * data.spacing - expectedMainSize) / 2)
+        compare(tab1[crossSize], control[crossSize])
+        compare(tab2[mainSize], (control[mainSize] - 2 * data.spacing - expectedMainSize) / 2)
+        compare(tab2[crossSize], control[crossSize])
+        compare(tab3[mainSize], expectedMainSize)
+        compare(tab3[crossSize], tab3[implicitCrossSize])
+        compare(control[implicitContentMainSize], tab1[implicitMainSize] + tab2[implicitMainSize] + tab3[implicitMainSize] + 2 * data.spacing)
+        compare(control[implicitContentCrossSize], tab2[implicitCrossSize])
+        compare(control[contentMainSize], control[implicitContentMainSize])
+        compare(control[contentCrossSize], control[implicitContentCrossSize])
+        compare(control[implicitMainSize], control[contentMainSize] + paddingSum(control, true))
+        compare(control[implicitCrossSize], control[contentCrossSize] + paddingSum(control, false))
 
-        tab3.width = undefined
-        tab3.height = undefined
-        control.width = undefined
+        tab3[mainSize] = undefined
+        tab3[crossSize] = undefined
+        control[mainSize] = undefined
 
-        control.contentWidth = 300
-        control.contentHeight = 50
-        expectedWidth = (control.contentWidth - 2 * data.spacing) / 3
-        tryCompare(tab1, "width", expectedWidth)
-        compare(tab2.width, expectedWidth)
-        compare(tab3.width, expectedWidth)
-        compare(tab1.height, control.contentHeight)
-        compare(tab2.height, control.contentHeight)
-        compare(tab3.height, control.contentHeight)
+        control[contentMainSize] = 300
+        control[contentCrossSize] = 50
+        expectedMainSize = (control[contentMainSize] - 2 * data.spacing) / 3
+        tryCompare(tab1, mainSize, expectedMainSize)
+        compare(tab2[mainSize], expectedMainSize)
+        compare(tab3[mainSize], expectedMainSize)
+        compare(tab1[crossSize], control[contentCrossSize])
+        compare(tab2[crossSize], control[contentCrossSize])
+        compare(tab3[crossSize], control[contentCrossSize])
     }
 
     Component {

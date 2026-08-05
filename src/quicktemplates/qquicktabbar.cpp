@@ -64,6 +64,13 @@ QT_BEGIN_NAMESPACE
 
     \snippet qtquickcontrols-tabbar-flickable.qml 1
 
+    \section2 Vertical Tabs
+
+    TabBar can be laid out vertically by setting \l orientation to
+    \c Qt.Vertical. In that case, the tab buttons are stacked in a vertical
+    list, and \l {Resizing Tabs}{resizing} is done based on the available
+    height instead of width.
+
     \sa TabButton, {Customizing TabBar}, {Navigation Controls}, {Container Controls},
         {Focus Management in Qt Quick Controls}
 */
@@ -88,6 +95,7 @@ public:
 
     bool updatingLayout = false;
     QQuickTabBar::Position position = QQuickTabBar::Header;
+    Qt::Orientation orientation = Qt::Horizontal;
 #if QT_CONFIG(wheelevent)
     QPoint accumulatedAngleDelta;
 #endif
@@ -131,7 +139,8 @@ void QQuickTabBarPrivate::updateLayout()
     if (count <= 0 || !contentItem)
         return;
 
-    qreal reservedWidth = 0;
+    const bool horizontal = orientation == Qt::Horizontal;
+    qreal reservedSize = 0;
     int resizableCount = 0;
 
     QList<QQuickItem *> allItems;
@@ -141,29 +150,44 @@ void QQuickTabBarPrivate::updateLayout()
         QQuickItem *item = q->itemAt(i);
         if (item) {
             QQuickItemPrivate *p = QQuickItemPrivate::get(item);
-            if (!p->widthValid())
+            const bool sizeValid = horizontal ? p->widthValid() : p->heightValid();
+            if (!sizeValid)
                 ++resizableCount;
             else
-                reservedWidth += item->width();
+                reservedSize += horizontal ? item->width() : item->height();
             allItems += item;
         }
     }
 
     const qreal totalSpacing = qMax(0, count - 1) * spacing;
-    const qreal itemWidth = (contentItem->width() - reservedWidth - totalSpacing) / qMax(1, resizableCount);
+    const qreal availableSize = horizontal ? contentItem->width() : contentItem->height();
+    const qreal itemSize = (availableSize - reservedSize - totalSpacing) / qMax(1, resizableCount);
 
     updatingLayout = true;
     for (QQuickItem *item : std::as_const(allItems)) {
         QQuickItemPrivate *p = QQuickItemPrivate::get(item);
-        if (!p->widthValid()) {
-            item->setWidth(itemWidth);
-            p->widthValidFlag = false;
-        }
-        if (!p->heightValid()) {
-            item->setHeight(contentHeight);
-            p->heightValidFlag = false;
+        if (horizontal) {
+            if (!p->widthValid()) {
+                item->setWidth(itemSize);
+                p->widthValidFlag = false;
+            }
+            if (!p->heightValid()) {
+                item->setHeight(contentHeight);
+                p->heightValidFlag = false;
+            } else {
+                item->setY((contentHeight - item->height()) / 2);
+            }
         } else {
-            item->setY((contentHeight - item->height()) / 2);
+            if (!p->heightValid()) {
+                item->setHeight(itemSize);
+                p->heightValidFlag = false;
+            }
+            if (!p->widthValid()) {
+                item->setWidth(contentWidth);
+                p->widthValidFlag = false;
+            } else {
+                item->setX((contentWidth - item->width()) / 2);
+            }
         }
     }
     updatingLayout = false;
@@ -176,6 +200,16 @@ qreal QQuickTabBarPrivate::getContentWidth() const
 
     Q_Q(const QQuickTabBar);
     const int count = contentModel->count();
+    if (orientation == Qt::Vertical) {
+        qreal maxWidth = 0;
+        for (int i = 0; i < count; ++i) {
+            QQuickItem *item = q->itemAt(i);
+            if (item)
+                maxWidth = qMax(maxWidth, item->implicitWidth());
+        }
+        return maxWidth;
+    }
+
     qreal totalWidth = qMax(0, count - 1) * spacing;
     for (int i = 0; i < count; ++i) {
         QQuickItem *item = q->itemAt(i);
@@ -197,6 +231,21 @@ qreal QQuickTabBarPrivate::getContentHeight() const
 
     Q_Q(const QQuickTabBar);
     const int count = contentModel->count();
+    if (orientation == Qt::Vertical) {
+        qreal totalHeight = qMax(0, count - 1) * spacing;
+        for (int i = 0; i < count; ++i) {
+            QQuickItem *item = q->itemAt(i);
+            if (item) {
+                QQuickItemPrivate *p = QQuickItemPrivate::get(item);
+                if (!p->heightValid())
+                    totalHeight += item->implicitHeight();
+                else
+                    totalHeight += item->height();
+            }
+        }
+        return totalHeight;
+    }
+
     qreal maxHeight = 0;
     for (int i = 0; i < count; ++i) {
         QQuickItem *item = q->itemAt(i);
@@ -269,6 +318,67 @@ void QQuickTabBar::setPosition(Position position)
 
     d->position = position;
     emit positionChanged();
+}
+
+/*!
+    \since QtQuick.Controls 6.13
+    \qmlproperty enumeration QtQuick.Controls::TabBar::orientation
+
+    This property holds the orientation of the tab bar.
+
+    Possible values:
+    \value Qt.Horizontal Horizontal (default)
+    \value Qt.Vertical Vertical
+
+    \sa horizontal, vertical
+*/
+Qt::Orientation QQuickTabBar::orientation() const
+{
+    Q_D(const QQuickTabBar);
+    return d->orientation;
+}
+
+void QQuickTabBar::setOrientation(Qt::Orientation orientation)
+{
+    Q_D(QQuickTabBar);
+    if (d->orientation == orientation)
+        return;
+
+    d->orientation = orientation;
+    d->updateImplicitContentSize();
+    if (isComponentComplete())
+        polish();
+    emit orientationChanged();
+}
+
+/*!
+    \since QtQuick.Controls 6.13
+    \qmlproperty bool QtQuick.Controls::TabBar::horizontal
+    \readonly
+
+    This property holds whether the tab bar is horizontal.
+
+    \sa orientation
+*/
+bool QQuickTabBar::isHorizontal() const
+{
+    Q_D(const QQuickTabBar);
+    return d->orientation == Qt::Horizontal;
+}
+
+/*!
+    \since QtQuick.Controls 6.13
+    \qmlproperty bool QtQuick.Controls::TabBar::vertical
+    \readonly
+
+    This property holds whether the tab bar is vertical.
+
+    \sa orientation
+*/
+bool QQuickTabBar::isVertical() const
+{
+    Q_D(const QQuickTabBar);
+    return d->orientation == Qt::Vertical;
 }
 
 /*!

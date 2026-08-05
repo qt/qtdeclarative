@@ -22,7 +22,7 @@ T.TabBar {
         currentIndex: control.currentIndex
 
         spacing: control.spacing
-        orientation: ListView.Horizontal
+        orientation: control.orientation
         boundsBehavior: Flickable.StopAtBounds
         flickableDirection: Flickable.AutoFlickIfNeeded
         snapMode: ListView.SnapToItem
@@ -32,14 +32,17 @@ T.TabBar {
         highlightFollowsCurrentItem: true
         highlightRangeMode: ListView.ApplyRange
         preferredHighlightBegin: 48
-        preferredHighlightEnd: width - 48
+        preferredHighlightEnd: (control.horizontal ? width : height) - 48
 
         highlight: Item {
             z: 2
             Rectangle {
-                height: 2
-                width: parent.width
-                y: control.position === T.TabBar.Footer ? 0 : parent.height - height
+                height: control.horizontal ? 2 : parent.height
+                width: control.horizontal ? parent.width : 2
+                y: control.horizontal
+                    ? (control.position === T.TabBar.Footer ? 0 : parent.height - height) : 0
+                x: control.vertical
+                    ? (control.position === T.TabBar.Footer ? 0 : parent.width - width) : 0
                 color: control.Material.accentColor
             }
         }

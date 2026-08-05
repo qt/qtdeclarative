@@ -28,6 +28,19 @@ Column {
             }
 
             Label {
+                text: qsTr("Orientation")
+                tooltip: qsTr("Orientation of the tabbar.")
+            }
+            SecondColumnLayout {
+                ComboBox {
+                    backendValue: backendValues.orientation
+                    model: [ "Horizontal", "Vertical" ]
+                    scope: "Qt"
+                    Layout.fillWidth: true
+                }
+            }
+
+            Label {
                 text: qsTr("Content Width")
                 tooltip: qsTr("Content height used for calculating the total implicit width.")
             }

@@ -40,6 +40,8 @@ T.TabButton {
 
     readonly property Item __focusFrameTarget: control
 
+    readonly property bool __tabBarVertical: control.TabBar.tabBar?.vertical ?? false
+
     contentItem: IconLabel {
         spacing: control.spacing
         mirrored: control.mirrored
@@ -63,11 +65,14 @@ T.TabButton {
         imageConfig: control.__config.background
         property Rectangle selector: Rectangle {
             parent: control.background
-            x: (parent.width - implicitWidth) / 2
-            y: parent.height - height
-            height: 3
-            implicitWidth: 16
-            radius: height * 0.5
+
+            x: control.__tabBarVertical ? parent.width - width : (parent.width - implicitWidth) / 2
+            y: control.__tabBarVertical ? (parent.height - implicitHeight) / 2 : parent.height - height
+            width: control.__tabBarVertical ? 3 : 0
+            height: control.__tabBarVertical ? 0 : 3
+            implicitWidth: control.__tabBarVertical ? 3 : 16
+            implicitHeight: control.__tabBarVertical ? 16 : 3
+            radius: Math.min(width, height) * 0.5
             color: control.palette.accent
             visible: control.checked
 
@@ -76,7 +81,8 @@ T.TabButton {
                 when: control.checked
                 PropertyChanges {
                     target: control.background.selector
-                    width: 16
+                    width: control.__tabBarVertical ? 3 : 16
+                    height: control.__tabBarVertical ? 16 : 3
                 }
             }
 

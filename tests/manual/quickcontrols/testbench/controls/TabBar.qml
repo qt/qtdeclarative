@@ -9,19 +9,22 @@ QtObject {
     property string customControlName: qsTr("TabBar & TabButton")
 
     property var supportedStates: [
-        ["header"],
-        ["header", "disabled"],
-        ["footer"],
-        ["footer", "disabled"]
+        ["header", "horizontal"],
+        ["header", "horizontal", "disabled"],
+        ["footer", "horizontal"],
+        ["footer", "horizontal", "disabled"],
+        ["header", "vertical"],
+        ["header", "vertical", "disabled"],
+        ["footer", "vertical"],
+        ["footer", "vertical", "disabled"]
     ]
 
     property Component component: TabBar {
-        implicitHeight: tabButton1.implicitHeight
         enabled: !is("disabled")
         position: is("header") ? TabBar.Header : TabBar.Footer
+        orientation: is("vertical") ? Qt.Vertical : Qt.Horizontal
 
         TabButton {
-            id: tabButton1
             text: qsTr("TabButton 1")
         }
         TabButton {

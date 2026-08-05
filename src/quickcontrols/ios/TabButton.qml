@@ -38,6 +38,7 @@ T.TabButton {
     }
 
     background: Item {
-        implicitHeight: 49
+        implicitWidth: (control.TabBar.tabBar?.vertical ?? false) ? 49 : 0
+        implicitHeight: (control.TabBar.tabBar?.vertical ?? false) ? 0 : 49
     }
 }

@@ -20,7 +20,7 @@ T.TabBar {
         currentIndex: control.currentIndex
 
         spacing: control.spacing
-        orientation: ListView.Horizontal
+        orientation: control.orientation
         boundsBehavior: Flickable.StopAtBounds
         flickableDirection: Flickable.AutoFlickIfNeeded
         snapMode: ListView.SnapToItem
@@ -28,17 +28,21 @@ T.TabBar {
         highlightMoveDuration: 0
         highlightRangeMode: ListView.ApplyRange
         preferredHighlightBegin: 40
-        preferredHighlightEnd: width - 40
+        preferredHighlightEnd: (control.horizontal ? width : height) - 40
     }
 
     background: Rectangle {
-        implicitHeight: 49
+        implicitWidth: control.horizontal ? 0 : 49
+        implicitHeight: control.horizontal ? 49 : 0
         color: Application.styleHints.colorScheme === Qt.Dark ? control.palette.light : control.palette.base
         Rectangle {
-            height: 1
-            width: parent.width
+            height: control.horizontal ? 1 : parent.height
+            width: control.horizontal ? parent.width : 1
             color: control.palette.mid
-            y: control.position === T.TabBar.Footer ? 0 : parent.height - 1
+            y: control.horizontal
+                ? (control.position === T.TabBar.Footer ? 0 : parent.height - 1) : 0
+            x: control.vertical
+                ? (control.position === T.TabBar.Footer ? 0 : parent.width - 1) : 0
         }
     }
 }
