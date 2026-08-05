@@ -7,6 +7,8 @@
 #include <QtQuick/qquickitem.h>
 #include <QtQuickTemplates2/private/qquickdeferredexecute_p_p.h>
 #include <QQmlIncubator>
+#include <QtQml/private/qqmlengine_p.h>
+#include <QQmlParserStatus>
 
 class DeferredPropertyTester : public QObject
 {
@@ -42,6 +44,55 @@ private:
     QQuickDeferredPointer<QQuickItem> m_object = nullptr;
 };
 
+// Mirrors how QQuickControl handles its deferred contentItem.
+class ReentrantDeferredTester : public QObject, public QQmlParserStatus
+{
+    Q_OBJECT
+    Q_INTERFACES(QQmlParserStatus)
+    Q_PROPERTY(QQuickItem *objectProperty READ objectProperty WRITE setObjectProperty NOTIFY objectChanged)
+    Q_CLASSINFO("DeferredPropertyNames", "objectProperty")
+
+public:
+    void classBegin() override { m_object = new QQuickItem; } // the default a style would set
+    void componentComplete() override { execute(true); }
+
+    QQuickItem *objectProperty()
+    {
+        execute(false);
+        return m_object;
+    }
+
+    void setObjectProperty(QQuickItem *obj)
+    {
+        if (m_object == obj)
+            return;
+        m_object = obj;
+
+        // Stands in for setContentItem_helper(), where writing the property updates the implicit
+        // size, which notifies observers, and a binding among them reads the property back.
+        if (m_object.isExecuting())
+            objectProperty();
+        else
+            emit objectChanged();
+    }
+
+signals:
+    void objectChanged();
+
+private:
+    void execute(bool complete)
+    {
+        if (m_object.wasExecuted())
+            return;
+        if (!m_object || complete)
+            quickBeginDeferred(this, "objectProperty", m_object);
+        if (complete)
+            quickCompleteDeferred(this, "objectProperty", m_object);
+    }
+
+    QQuickDeferredPointer<QQuickItem> m_object = nullptr;
+};
+
 class tst_qquickdeferred : public QQmlDataTest
 {
     Q_OBJECT
@@ -50,6 +101,7 @@ public:
 private slots:
     void noSpuriousBinding();
     void abortedIncubation();
+    void reentrantExecution();
 };
 
 
@@ -82,6 +134,20 @@ void tst_qquickdeferred::abortedIncubation()
         controller.incubateFor(1);
         incubator.clear(); // abort incubation (and dont crash)
     }
+}
+
+// Reading the property back while it is being populated must not start a second deferred
+// creation: the outer one would be orphaned and never completed.
+void tst_qquickdeferred::reentrantExecution()
+{
+    qmlRegisterType<ReentrantDeferredTester>("test", 1, 0, "ReentrantDeferredTester");
+
+    QQmlEngine engine;
+    QQmlComponent comp(&engine, testFileUrl("reentrantExecution.qml"));
+    std::unique_ptr<QObject> root(comp.create());
+    QVERIFY2(root, qPrintable(comp.errorString()));
+
+    QCOMPARE(QQmlEnginePrivate::get(&engine)->inProgressCreations, 0);
 }
 
 QTEST_MAIN(tst_qquickdeferred)
