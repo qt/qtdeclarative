@@ -15,3 +15,4 @@ endif()
 qt_internal_add_RunCMake_test(export_namespace_in_root ${config_flags})
 
 qt_internal_add_RunCMake_test(generate_qmlls_ini ${config_flags})
+qt_internal_add_RunCMake_test(qmllint_targets ${config_flags})
