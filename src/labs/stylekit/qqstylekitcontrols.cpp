@@ -151,7 +151,7 @@ QT_BEGIN_NAMESPACE
     \snippet ControlsSnippets.qml dialog
 */
 
-/*
+/*!
     \qmlproperty ControlStyle AbstractStylableControls::dialogButtonBox
 
     Grouped property for styling \l [QtQuickControls]{DialogButtonBox}.
@@ -228,7 +228,7 @@ QT_BEGIN_NAMESPACE
     \snippet ControlsSnippets.qml menu
 */
 
-/*
+/*!
     \qmlproperty ControlStyle AbstractStylableControls::menuItem
 
     Grouped property for styling \l [QtQuickControls]{MenuItem}.
@@ -260,7 +260,7 @@ QT_BEGIN_NAMESPACE
     \snippet ControlsSnippets.qml menuBar
 */
 
-/*
+/*!
     \qmlproperty ControlStyle AbstractStylableControls::menuBarItem
 
     Grouped property for styling menu items in a \l [QtQuickControls]{MenuBar}.
@@ -276,7 +276,7 @@ QT_BEGIN_NAMESPACE
     \snippet ControlsSnippets.qml menuBarItem
 */
 
-/*
+/*!
     \qmlproperty ControlStyle AbstractStylableControls::menuSeparator
 
     Grouped property for styling \l [QtQuickControls]{MenuSeparator}.
@@ -420,14 +420,15 @@ QT_BEGIN_NAMESPACE
     \snippet ControlsSnippets.qml scrollView
 */
 
-/*
+/*!
     \qmlproperty ControlStyle AbstractStylableControls::searchField
 
     Grouped property for styling \l [QtQuickControls]{SearchField}.
 
     Unset properties fall back to \l control.
 
-    \snippet ControlsSnippets.qml searchfield
+    \snippet ControlsSnippets.qml searchField
+
 */
 
 /*!
