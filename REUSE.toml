@@ -35,7 +35,7 @@ SPDX-License-Identifier = "LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-
 
 [[annotations]]
 path = ["**.prf", "**Info.plist", "**cmake.in", "src/**.in", "**/ci_config_linux.json", "**CMakeLists.txt", "**.cmake",
-        ".cmake.conf", "**.yaml", "src/quick/items/syncexcludes",
+        ".cmake.conf", "**.yaml", "src/quick/items/syncexcludes", "src/qml/Qt6*.json",
         "**.cfg", "**.pro", "**.conf", ".tag"]
 comment = "build system"
 precedence = "closest"
