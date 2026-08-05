@@ -41,6 +41,11 @@ void quickBeginDeferred(QObject *object, const QString &property, QQuickDeferred
     if (!QQmlVME::componentCompleteEnabled())
         return;
 
+    // Populating can re-enter this: writing the property notifies observers, and a binding among
+    // them may read it back. Beginning again would orphan the outer DeferredState.
+    if (delegate.isExecuting())
+        return;
+
     QtQuickPrivate::beginDeferred(object, property, &delegate, delegate.setExecuting(true));
     delegate.setExecuting(false);
 }
