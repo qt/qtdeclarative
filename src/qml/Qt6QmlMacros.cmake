@@ -1749,7 +1749,8 @@ function(_qt_internal_target_enable_qmllint target)
     )
     _qt_internal_assign_to_qmllint_targets_folder(${lint_target})
 
-    list(APPEND qmllint_args "--json" "${CMAKE_BINARY_DIR}/${lint_target}.json")
+    set(json_output "${CMAKE_BINARY_DIR}/${lint_target}.json")
+    list(APPEND qmllint_args "--json" "${json_output}")
 
     set(qmllint_rsp_path ${qmllint_dir}/${target}_json.rsp)
 
@@ -1764,8 +1765,13 @@ function(_qt_internal_target_enable_qmllint target)
         @${qmllint_rsp_path}
     )
 
+    set(cmd_dummy
+        ${CMAKE_COMMAND} -E copy
+            "${__qt_qml_macros_module_base_dir}/Qt6QmllintEmptyJsonTemplate.json"
+            "${json_output}"
+    )
     add_custom_target(${lint_target_json}
-        COMMAND "$<${have_qmllint_files}:${cmd}>"
+        COMMAND "$<IF:${have_qmllint_files},${cmd},${cmd_dummy}>"
         COMMAND_EXPAND_LISTS
         DEPENDS
             ${QT_CMAKE_EXPORT_NAMESPACE}::qmllint
