@@ -61,6 +61,7 @@ public:
         CheckDelegate,
         ComboBox,
         DelayButton,
+        Dial,
         Dialog,
         DialogButtonBox,
         FlatButton,

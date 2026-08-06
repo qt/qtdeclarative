@@ -40,6 +40,7 @@ class QQStyleKitControls : public QObject, public QQmlParserStatus
     Q_PROPERTY(QQStyleKitControl *checkDelegate READ checkDelegate WRITE set_checkDelegate NOTIFY checkDelegateChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *comboBox READ comboBox WRITE set_comboBox NOTIFY comboBoxChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *delayButton READ delayButton WRITE set_delayButton NOTIFY delayButtonChanged FINAL)
+    Q_PROPERTY(QQStyleKitControl *dial READ dial WRITE set_dial NOTIFY dialChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *dialog READ dialog WRITE set_dialog NOTIFY dialogChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *dialogButtonBox READ dialogButtonBox WRITE set_dialogButtonBox NOTIFY dialogButtonBoxChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *flatButton READ flatButton WRITE set_flatButton NOTIFY flatButtonChanged FINAL)
@@ -99,6 +100,7 @@ public:
     IMPLEMENT_ACCESSORS(checkDelegate)
     IMPLEMENT_ACCESSORS(comboBox)
     IMPLEMENT_ACCESSORS(delayButton)
+    IMPLEMENT_ACCESSORS(dial)
     IMPLEMENT_ACCESSORS(dialog)
     IMPLEMENT_ACCESSORS(dialogButtonBox)
     IMPLEMENT_ACCESSORS(flatButton)
@@ -155,6 +157,7 @@ signals:
     void checkDelegateChanged();
     void comboBoxChanged();
     void delayButtonChanged();
+    void dialChanged();
     void dialogChanged();
     void dialogButtonBoxChanged();
     void flatButtonChanged();
