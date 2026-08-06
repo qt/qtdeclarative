@@ -4,6 +4,7 @@
 #include <QtQml/QQmlComponent>
 #include <QtCore/QScopedPointer>
 #include <QtQml/private/qqmlanybinding_p.h>
+#include <QtQml/private/qqmlcontextdata_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtCore/private/qobject_p.h>
 #include "withbindable.h"
@@ -20,6 +21,9 @@ private slots:
     void basicActions();
     void unboundQQmlPropertyBindingDoesNotCrash();
     void ofDynamicMetaObject();
+    void installOnAliasOfBindable();
+    void installOnAliasOfInterceptedBindable();
+    void installOnBindableInterceptedInBaseType();
 };
 
 tst_qqmlanybinding::tst_qqmlanybinding()
@@ -168,6 +172,111 @@ void tst_qqmlanybinding::ofDynamicMetaObject()
 
     QCOMPARE(QPropertyBindingPrivate::get(b.asUntypedPropertyBinding()),
              QPropertyBindingPrivate::get(binding));
+}
+
+void tst_qqmlanybinding::installOnAliasOfBindable()
+{
+    QQmlEngine engine;
+    QQmlComponent comp(&engine, testFileUrl("aliasOfBindable.qml"));
+    QScopedPointer<QObject> root(comp.create());
+    QVERIFY2(root, qPrintable(comp.errorString()));
+
+    QQmlProperty aliasProp(root.get(), "aliasProp");
+    QVERIFY(aliasProp.isValid());
+    QVERIFY(aliasProp.isBindable());
+
+    QQmlAnyBinding binding = QQmlAnyBinding::createFromCodeString(
+            aliasProp, QStringLiteral("trigger + 1"), root.get(),
+            QQmlContextData::get(qmlContext(root.get())), QString(), 0);
+    QVERIFY(binding.isUntypedPropertyBinding());
+
+    binding.installOn(aliasProp);
+    QCOMPARE(aliasProp.read().toInt(), 2);
+
+    QQmlProperty trigger(root.get(), "trigger");
+    trigger.write(41);
+    QCOMPARE(aliasProp.read().toInt(), 42);
+}
+
+void tst_qqmlanybinding::installOnAliasOfInterceptedBindable()
+{
+    QQmlEngine engine;
+    QQmlComponent comp(&engine, testFileUrl("aliasOfInterceptedBindable.qml"));
+    QScopedPointer<QObject> root(comp.create());
+    QVERIFY2(root, qPrintable(comp.errorString()));
+
+    QObject *inner = qvariant_cast<QObject *>(root->property("inner"));
+    QVERIFY(inner);
+    auto *interceptor = inner->findChild<BindableInterceptor *>();
+    QVERIFY(interceptor);
+
+    QQmlProperty aliasProp(root.get(), "aliasProp");
+    QVERIFY(aliasProp.isBindable());
+
+    QQmlAnyBinding binding = QQmlAnyBinding::createFromCodeString(
+            aliasProp, QStringLiteral("trigger + 1"), root.get(),
+            QQmlContextData::get(qmlContext(root.get())), QString(), 0);
+    QVERIFY(binding.isUntypedPropertyBinding());
+
+    binding.installOn(aliasProp);
+    QCOMPARE(interceptor->bindableCount, 0);
+    QCOMPARE(aliasProp.read().toInt(), 2);
+
+    QQmlProperty trigger(root.get(), "trigger");
+    trigger.write(41);
+    QCOMPARE(aliasProp.read().toInt(), 42);
+
+    // RespectInterceptors still routes through the interceptor.
+    QQmlAnyBinding intercepted = QQmlAnyBinding::createFromCodeString(
+            aliasProp, QStringLiteral("trigger + 2"), root.get(),
+            QQmlContextData::get(qmlContext(root.get())), QString(), 0);
+    intercepted.installOn(aliasProp, QQmlAnyBinding::RespectInterceptors);
+    QCOMPARE(interceptor->bindableCount, 1);
+}
+
+void tst_qqmlanybinding::installOnBindableInterceptedInBaseType()
+{
+    QQmlEngine engine;
+    QQmlComponent comp(&engine, testFileUrl("derivedOfInterceptedBindable.qml"));
+    QScopedPointer<QObject> root(comp.create());
+    QVERIFY2(root, qPrintable(comp.errorString()));
+
+    auto *interceptor = root->findChild<BindableInterceptor *>();
+    QVERIFY(interceptor);
+
+    QQmlProperty prop(root.get(), "prop");
+    QVERIFY(prop.isBindable());
+
+    QQmlAnyBinding binding = QQmlAnyBinding::createFromCodeString(
+            prop, QStringLiteral("trigger + 1"), root.get(),
+            QQmlContextData::get(qmlContext(root.get())), QString(), 0);
+    QVERIFY(binding.isUntypedPropertyBinding());
+
+    binding.installOn(prop);
+    QCOMPARE(interceptor->bindableCount, 0);
+    QCOMPARE(prop.read().toInt(), 2);
+
+    // Same, but reached through an alias, so that the alias resolution and the
+    // parent chain walk have to cooperate.
+    QQmlProperty aliasProp(root.get(), "aliasProp");
+    QVERIFY(aliasProp.isBindable());
+    QQmlAnyBinding aliasBinding = QQmlAnyBinding::createFromCodeString(
+            aliasProp, QStringLiteral("trigger + 2"), root.get(),
+            QQmlContextData::get(qmlContext(root.get())), QString(), 0);
+    aliasBinding.installOn(aliasProp);
+    QCOMPARE(interceptor->bindableCount, 0);
+    QCOMPARE(prop.read().toInt(), 3);
+
+    QQmlProperty trigger(root.get(), "trigger");
+    trigger.write(41);
+    QCOMPARE(prop.read().toInt(), 43);
+
+    // RespectInterceptors still routes through the interceptor.
+    QQmlAnyBinding intercepted = QQmlAnyBinding::createFromCodeString(
+            prop, QStringLiteral("trigger + 3"), root.get(),
+            QQmlContextData::get(qmlContext(root.get())), QString(), 0);
+    intercepted.installOn(prop, QQmlAnyBinding::RespectInterceptors);
+    QCOMPARE(interceptor->bindableCount, 1);
 }
 
 QTEST_MAIN(tst_qqmlanybinding)

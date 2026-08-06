@@ -48,7 +48,7 @@ QQmlVMEResolvedList::QQmlVMEResolvedList(QQmlListProperty<QObject> *prop)
                               ->property(m_metaObject->propOffset() + m_id)
                               .typeName(),
                       "QQmlListProperty"));
-    Q_ASSERT(m_metaObject->object == prop->object);
+    Q_ASSERT(m_metaObject->object.data() == prop->object);
 
     // readPropertyAsList() with checks transformed into Q_ASSERT
     // and without allocation.
@@ -109,7 +109,7 @@ QQmlVMEResolvedList::~QQmlVMEResolvedList() = default;
 
 void QQmlVMEResolvedList::activateSignal() const
 {
-    m_metaObject->activate(m_metaObject->object, int(m_id), nullptr);
+    m_metaObject->activate(m_metaObject->object.data(), int(m_id), nullptr);
 }
 
 void QQmlVMEMetaObject::list_append(QQmlListProperty<QObject> *prop, QObject *o)
@@ -188,7 +188,7 @@ QQmlVMEVariantQObjectPtr::QQmlVMEVariantQObjectPtr()
 void QQmlVMEVariantQObjectPtr::objectDestroyedImpl(QQmlGuardImpl *guard)
 {
     auto This = static_cast<QQmlVMEVariantQObjectPtr *>(guard);
-    if (!This->m_target || QQmlData::wasDeleted(This->m_target->object))
+    if (!This->m_target || QQmlData::wasDeleted(This->m_target->object.data()))
         return;
 
     if (This->m_index >= 0) {
@@ -202,7 +202,7 @@ void QQmlVMEVariantQObjectPtr::objectDestroyedImpl(QQmlGuardImpl *guard)
             }
         }
 
-        This->m_target->activate(This->m_target->object, This->m_index, nullptr);
+        This->m_target->activate(This->m_target->object.data(), This->m_index, nullptr);
     }
 }
 
@@ -246,7 +246,7 @@ void QQmlVMEMetaObjectEndpoint::tryConnect()
         // This is actually notify. Aliases are after regular properties in the MetaObject.
         // So add propCount() to get the signal index.
         int sigIdx = aliasId + metaObject->propCount();
-        metaObject->activate(metaObject->object, sigIdx, nullptr);
+        metaObject->activate(metaObject->object.data(), sigIdx, nullptr);
     } else if (metaObject->findCompiledObject()) {
         const QQmlPropertyData *aliasProperty
                 = metaObject->cache->property(metaObject->aliasOffset() + aliasId);
@@ -337,7 +337,7 @@ void QQmlInterceptorMetaObject::registerInterceptor(QQmlPropertyIndex index, QQm
 
 int QQmlInterceptorMetaObject::metaCall(QObject *o, QMetaObject::Call c, int id, void **a)
 {
-    Q_ASSERT(o == object);
+    Q_ASSERT(o == object.data());
     Q_UNUSED(o);
 
     if (intercept(c, id, a))
@@ -352,7 +352,7 @@ bool QQmlInterceptorMetaObject::doIntercept(QMetaObject::Call c, int id, void **
             continue;
 
         const int valueIndex = vi->m_propertyIndex.valueTypeIndex();
-        const QQmlData *data = QQmlData::get(object);
+        const QQmlData *data = QQmlData::get(object.data());
         const QMetaType metaType = data->propertyCache->property(id)->propType();
 
         if (metaType.isValid()) {
@@ -406,7 +406,7 @@ bool QQmlInterceptorMetaObject::doIntercept(QMetaObject::Call c, int id, void **
                     QMetaProperty valueProp = valueType->property(valueIndex);
                     QVariant newValue(metaType, a[0]);
 
-                    valueType->read(object, id);
+                    valueType->read(object.data(), id);
                     QVariant prevComponentValue = valueType->readOnGadget(valueProp);
 
                     valueType->setValue(newValue);
@@ -419,7 +419,7 @@ bool QQmlInterceptorMetaObject::doIntercept(QMetaObject::Call c, int id, void **
                     // So, we cannot return here if prevComponentValue == newComponentValue.
                     valueType->writeOnGadget(valueProp, std::move(prevComponentValue));
                     valueType->write(
-                        object, id,
+                        object.data(), id,
                         QQmlPropertyData::DontRemoveBinding | QQmlPropertyData::BypassInterceptor,
                         QV4::ReferenceObject::AllProperties);
 
@@ -515,7 +515,7 @@ QQmlVMEMetaObject::QQmlVMEMetaObject(QV4::ExecutionEngine *engine,
 
 QQmlVMEMetaObject::~QQmlVMEMetaObject()
 {
-    if (parent.isT1()) parent.asT1()->objectDestroyed(object);
+    if (parent.isT1()) parent.asT1()->objectDestroyed(object.data());
     delete [] aliasEndpoints;
 
     qDeleteAll(varObjectGuards);
@@ -780,7 +780,7 @@ QRectF QQmlVMEMetaObject::readPropertyAsRectF(int id) const
 
 int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void **a)
 {
-    Q_ASSERT(o == object);
+    Q_ASSERT(o == object.data());
     Q_UNUSED(o);
 
     int id = _id;
@@ -828,7 +828,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                                 break;
                             }
                         } else {
-                            qmlWarning(object) << "Cannot find member data";
+                            qmlWarning(object.data()) << "Cannot find member data";
                         }
                     } else {
                         const QV4::CompiledData::CommonType t
@@ -910,7 +910,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                                     propType.construct(a[0], data);
                                 }
                             } else {
-                                qmlWarning(object) << "Cannot find member data";
+                                qmlWarning(object.data()) << "Cannot find member data";
                             }
                         }
                     }
@@ -980,7 +980,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                                 }
                                 md->set(engine, id, sequence);
                                 if (sequence->isUndefined()) {
-                                    qmlWarning(object)
+                                    qmlWarning(object.data())
                                             << "Could not create a QML sequence object for "
                                             << propType.name();
                                 }
@@ -989,7 +989,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                             break;
                             }
                         } else {
-                            qmlWarning(object) << "Cannot find member data";
+                            qmlWarning(object.data()) << "Cannot find member data";
                         }
                     } else {
                         const QV4::CompiledData::CommonType t
@@ -1088,13 +1088,13 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                                     }
                                 }
                             } else {
-                                qmlWarning(object) << "Cannot find member data";
+                                qmlWarning(object.data()) << "Cannot find member data";
                             }
                         }
                     }
 
                     if (needActivate)
-                        activate(object, id, nullptr);
+                        activate(object.data(), id, nullptr);
                 }
 
                 return -1;
@@ -1203,7 +1203,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
 
             id -= signalOffset();
             if (id < signalCount()) {
-                activate(object, id, a);
+                activate(object.data(), id, a);
                 return -1;
             }
 
@@ -1240,11 +1240,11 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                 if (arguments && arguments->names) {
                     const quint32 parameterCount = arguments->names->size();
                     Q_ASSERT(parameterCount == function->formalParameterCount());
-                    function->call(object, a, arguments->types, parameterCount);
+                    function->call(object.data(), a, arguments->types, parameterCount);
                 } else {
                     Q_ASSERT(function->formalParameterCount() == 0);
                     const QMetaType returnType = methodData->propType();
-                    function->call(object, a, &returnType, 0);
+                    function->call(object.data(), a, &returnType, 0);
                 }
 
                 if (scope.hasException()) {
@@ -1261,7 +1261,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
     }
 
     if (parent.isT1())
-        return parent.asT1()->metaCall(object, c, _id, a);
+        return parent.asT1()->metaCall(object.data(), c, _id, a);
     else
         return object->qt_metacall(c, _id, a);
 }
@@ -1277,7 +1277,7 @@ bool QQmlVMEMetaObject::getListProperty(int id, QQmlListProperty<QObject> *targe
     // and the second half storing the property id
 
     auto mo = static_cast<QQmlVMEMetaObject *>(
-            QObjectPrivate::get(object)->metaObject);
+            QObjectPrivate::get(object.data())->metaObject);
     quintptr inheritanceDepth = 0u;
     while (mo && mo != this) {
         mo = mo->parentVMEMetaObject();
@@ -1285,20 +1285,20 @@ bool QQmlVMEMetaObject::getListProperty(int id, QQmlListProperty<QObject> *targe
     }
     constexpr quintptr idBits = sizeof(quintptr) * CHAR_BIT / 2u;
     if (Q_UNLIKELY(inheritanceDepth >= (quintptr(1) << idBits))) {
-        qmlWarning(object) << "Too many objects in inheritance hierarchy "
-                              "for list property";
+        qmlWarning(object.data()) << "Too many objects in inheritance hierarchy "
+                                     "for list property";
         return false;
     }
     if (Q_UNLIKELY(quintptr(id) >= (quintptr(1) << idBits))) {
-        qmlWarning(object) << "Too many properties in object "
-                              "for list property";
+        qmlWarning(object.data()) << "Too many properties in object "
+                                      "for list property";
         return false;
     }
     quintptr encodedIndex = (inheritanceDepth << idBits) + id;
 
     initPropertyAsList(id);
     *target = QQmlListProperty<QObject>(
-                    object, reinterpret_cast<void *>(quintptr(encodedIndex)),
+                    object.data(), reinterpret_cast<void *>(quintptr(encodedIndex)),
                     list_append, list_count, list_at,
                     list_clear, list_replace, list_removeLast);
     return true;
@@ -1399,7 +1399,7 @@ void QQmlVMEMetaObject::writeVarProperty(int id, const QV4::Value &value)
         guard->setGuardedValue(valueObject, this, id);
 
     // Emit change signal as appropriate.
-    activate(object, id, nullptr);
+    activate(object.data(), id, nullptr);
 }
 
 void QQmlVMEMetaObject::writeKnownVarProperty(int id, const QVariant &value)
@@ -1430,7 +1430,7 @@ void QQmlVMEMetaObject::writeKnownVarProperty(int id, const QVariant &value)
     QVariant currentValue = readPropertyAsVariant(id);
     md->set(engine, id, newv);
     if ((currentValue.userType() != value.userType() || currentValue != value))
-        activate(object, id, nullptr);
+        activate(object.data(), id, nullptr);
 }
 
 QV4::ReturnedValue QQmlVMEMetaObject::vmeMethod(int index) const
@@ -1483,7 +1483,7 @@ void QQmlVMEMetaObject::setVMEProperty(int index, const QV4::Value &v)
 void QQmlVMEMetaObject::ensureQObjectWrapper()
 {
     Q_ASSERT(cache);
-    QV4::QObjectWrapper::ensureWrapper(engine, object);
+    QV4::QObjectWrapper::ensureWrapper(engine, object.data());
 }
 
 void QQmlVMEMetaObject::mark(QV4::MarkStack *markStack)
