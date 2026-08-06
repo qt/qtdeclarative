@@ -2091,6 +2091,12 @@ void TestQmllint::dirtyQmlSnippet_data()
                .addUnexpected("Enum declared outside the root element. It won't be accessible."_L1, 1, 40)
                .build()
             << defaultOptions;
+    QTest::newRow("pragmaFunctionSignatureBehavior")
+            << u"pragma FunctionSignatureBehavior: Ignored\n"_s
+               u"import QtQuick\n"_s
+               u"Item { function f() { return unqualified(); } }"_s
+            << ResultBuilder::singleExpected("Unqualified", 3, 30)
+            << defaultOptions;
     QTest::newRow("preferNonVarProperties")
             << u"readonly property var i: 1     \n"_s
                u"readonly property var r: 1.0   \n"_s
@@ -2314,6 +2320,11 @@ void TestQmllint::cleanQmlSnippet_data()
                                            }
                                          })"_s
                                       << defaultOptions;
+    QTest::newRow("pragmaFunctionSignatureBehavior")
+            << u"pragma FunctionSignatureBehavior: Ignored\n"_s
+               u"import QtQuick\n"_s
+               u"Item { property rect rect: ({ x: 12, y: 13 }); }"_s
+            << defaultOptions;
     QTest::newRow("preferNonVarProperties_nonReadOnly")
             << u"property var i: 1     \n"_s
                u"property var r: 1.0   \n"_s
@@ -2428,8 +2439,8 @@ void TestQmllint::cleanQmlSnippet()
     QFETCH(QString, code);
     QFETCH(CallQmllintOptions, options);
 
-    const QString qmlCode =
-            code.startsWith("import"_L1) ? code : "import QtQuick\nItem {%1}"_L1.arg(code);
+    const QString qmlCode = code.startsWith("import"_L1) || code.startsWith("pragma"_L1)
+            ? code : "import QtQuick\nItem {%1}"_L1.arg(code);
     const Result result = ResultBuilder::cleanResult();
 
     const QJsonArray warnings =

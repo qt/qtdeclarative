@@ -63,12 +63,6 @@ void QQmlJSFunctionInitializer::populateSignature(
         function->isFullyTyped = false;
     };
 
-    if (!m_typeResolver->canCallJSFunctions()) {
-        signatureError(u"Ignoring type annotations as requested "
-                       "by pragma FunctionSignatureBehavior"_s);
-        return;
-    }
-
     QQmlJS::AST::BoundNames arguments;
     if (ast->formals)
         arguments = ast->formals->formals();
@@ -76,7 +70,8 @@ void QQmlJSFunctionInitializer::populateSignature(
     // If the function has no arguments and no return type annotation we assume it's untyped.
     // You can annotate it to return void to make it typed.
     // Otherwise we first assume it's typed and reset the flag if we detect a problem.
-    function->isFullyTyped = !arguments.isEmpty() || ast->typeAnnotation;
+    function->isFullyTyped = m_typeResolver->canCallJSFunctions()
+            && (!arguments.isEmpty() || ast->typeAnnotation);
 
     if (function->argumentTypes.isEmpty()) {
         bool alreadyWarnedAboutMissingAnnotations = false;
