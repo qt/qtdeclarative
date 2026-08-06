@@ -20,7 +20,6 @@ qt_internal_add_module(QmlLintPrivate
 
     PUBLIC_LIBRARIES
         Qt::CorePrivate
-        Qt::QmlDomPrivate
         Qt::QmlCompilerPrivate
         Qt::QmlToolingSettingsPrivate
 )
