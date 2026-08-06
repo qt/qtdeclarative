@@ -17,6 +17,7 @@
 // We mean it.
 //
 
+#include "qqmldata_p.h"
 #include <private/qbipointer_p.h>
 #include <private/qqmlguard_p.h>
 #include <private/qqmlguardedcontextdata_p.h>
@@ -140,7 +141,11 @@ public:
 
     void invalidate() { metaObject.setTag(MetaObjectInvalid); }
 
-    QObject *object = nullptr;
+    // only used for Bindable so far; Write instead passes a flag via the metacall
+    enum InterceptionBehavior { Intercept, SkipInterception };
+    static void setInterceptionMode(QObject *object, InterceptionBehavior behavior);
+
+    QTaggedPointer<QObject> object = nullptr;
     QQmlPropertyCache::ConstPtr cache;
 
 protected:
@@ -156,6 +161,9 @@ protected:
                 return false;
             break;
         case QMetaObject::BindableProperty:
+            if (object.tag() == SkipInterception) {
+                return false;
+            }
             break;
         default:
             return false;
@@ -184,6 +192,17 @@ inline QQmlInterceptorMetaObject *QQmlInterceptorMetaObject::get(QObject *obj)
     }
 
     return nullptr;
+}
+
+inline void QQmlInterceptorMetaObject::setInterceptionMode(
+        QObject *object, QQmlInterceptorMetaObject::InterceptionBehavior behavior)
+{
+    QQmlInterceptorMetaObject *interceptorMetaObject = get(object);
+    while (interceptorMetaObject) {
+        interceptorMetaObject->object.setTag(behavior);
+        auto parent = interceptorMetaObject->parent;
+        interceptorMetaObject = ((parent.isT1() && parent.flag()) ? static_cast<QQmlInterceptorMetaObject *>(parent.asT1()) : nullptr);
+    }
 }
 
 class QQmlVMEMetaObjectEndpoint;
