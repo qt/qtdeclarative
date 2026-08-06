@@ -29,7 +29,7 @@ Q_GLOBAL_STATIC_WITH_ARGS(QFactoryLoader, itemGenPluginLoader,
 bool QQuickVectorImagePrivate::useQmlGenerator()
 {
     Q_Q(QQuickVectorImage);
-    static const bool val = !qEnvironmentVariableIsSet("QT_QUICKVECTORIMAGE_USE_ITEM_GENERATOR");
+    static const bool val = qEnvironmentVariableIsSet("QT_QUICKVECTORIMAGE_USE_QML_GENERATOR");
     const bool useNonDefaultGenerator = q->property("_qt_usenondefaultgenerator").toBool();
     return useNonDefaultGenerator ? !val : val;
 }
