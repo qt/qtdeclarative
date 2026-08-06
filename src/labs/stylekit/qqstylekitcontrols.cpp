@@ -156,6 +156,16 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \qmlproperty ControlStyle AbstractStylableControls::dial
+
+    Grouped property for styling \l [QtQuickControls]{Dial}.
+
+    Unset properties fall back to \l control.
+
+    \snippet ControlsSnippets.qml dial
+*/
+
+/*!
     \qmlproperty ControlStyle AbstractStylableControls::dialog
 
     Grouped property for styling \l [QtQuickControls]{Dialog}.
@@ -672,6 +682,7 @@ IMPLEMENT_ACCESSORS(checkBox, QQStyleKitReader::ControlType::CheckBox)
 IMPLEMENT_ACCESSORS(checkDelegate, QQStyleKitReader::ControlType::CheckDelegate)
 IMPLEMENT_ACCESSORS(comboBox, QQStyleKitReader::ControlType::ComboBox)
 IMPLEMENT_ACCESSORS(delayButton, QQStyleKitReader::ControlType::DelayButton)
+IMPLEMENT_ACCESSORS(dial, QQStyleKitReader::ControlType::Dial)
 IMPLEMENT_ACCESSORS(dialog, QQStyleKitReader::ControlType::Dialog)
 IMPLEMENT_ACCESSORS(dialogButtonBox, QQStyleKitReader::ControlType::DialogButtonBox)
 IMPLEMENT_ACCESSORS(progressBar, QQStyleKitReader::ControlType::ProgressBar)

@@ -196,6 +196,25 @@ BaseStyle {
         }
     }
 
+    dial {
+        spacing: 0
+        handle.width: 15
+        handle.height: 15
+        background.visible: false
+        indicator {
+            width: 60
+            height: 60
+            radius: 255
+            foreground {
+                fillWidth: true
+                fillHeight: true
+                width: 6
+                height: 6
+                delegate: DialDelegate {}
+            }
+        }
+    }
+
     dialog {
         text {
             padding: 12

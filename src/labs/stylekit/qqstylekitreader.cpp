@@ -68,6 +68,7 @@ QT_BEGIN_NAMESPACE
     \value StyleReader.CheckDelegate    \l {CheckDelegate}
     \value StyleReader.ComboBox         \l {ComboBox}
     \value StyleReader.DelayButton      \l {DelayButton}
+    \value StyleReader.Dial             \l {Dial}
     \value StyleReader.Dialog           \l {Dialog}
     \value StyleReader.DialogButtonBox  \l {DialogButtonBox}
     \value StyleReader.Frame            \l {Frame}
@@ -79,7 +80,6 @@ QT_BEGIN_NAMESPACE
     \value StyleReader.MenuBarItem      \l {MenuBarItem}
     \value StyleReader.MenuItem         \l {MenuItem}
     \value StyleReader.MenuSeparator    \l {MenuSeparator}
-    \value StyleReader.Dialog           \l {Dialog}
     \value StyleReader.Page             \l {Page}
     \value StyleReader.PageIndicator    \l {PageIndicator}
     \value StyleReader.Pane             \l {Pane}
