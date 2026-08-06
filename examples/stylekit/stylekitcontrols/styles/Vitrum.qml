@@ -215,6 +215,18 @@ Style {
         }
     }
 
+    dial {
+        indicator {
+            width: 184
+            height: 184
+            radius: 255
+            foreground {
+                width: 8
+                height: 8
+            }
+        }
+    }
+
     radioButton {
         indicator {
             width: 35

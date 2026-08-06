@@ -226,6 +226,55 @@ ApplicationWindow {
             }
 
             GroupBox {
+                title: "Dials"
+                RowLayout {
+                    spacing: app.spacing * 2
+
+                    ColumnLayout {
+                        Dial {
+                            id: dialCircular
+                            from: 0
+                            to: 10
+                            value: 5
+                            inputMode: Dial.Circular
+                        }
+                        Label {
+                            text: "Circular"
+                            Layout.alignment: Qt.AlignHCenter
+                        }
+                    }
+
+                    ColumnLayout {
+                        Dial {
+                            id: dialHorizontal
+                            from: 0
+                            to: 10
+                            value: 5
+                            inputMode: Dial.Horizontal
+                        }
+                        Label {
+                            text: "Horizontal"
+                            Layout.alignment: Qt.AlignHCenter
+                        }
+                    }
+
+                    ColumnLayout {
+                        Dial {
+                            id: dialVertical
+                            from: 0
+                            to: 10
+                            value: 5
+                            inputMode: Dial.Vertical
+                        }
+                        Label {
+                            text: "Vertical"
+                            Layout.alignment: Qt.AlignHCenter
+                        }
+                    }
+                }
+            }
+
+            GroupBox {
                 title: "Popups"
                 RowLayout {
                     spacing: app.spacing

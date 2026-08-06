@@ -133,6 +133,12 @@ Style {
         pressed.background.scale: 1.0
     }
 
+    dial {
+        handle.width: 15
+        handle.height: 15
+        indicator.foreground.margins: 0
+    }
+
     pane {
         // 'pane' is the fallback for all pane based controls, such as 'frame' and 'groupBox'.
         //  Any properties not set here will fall back to those defined in 'control'.
@@ -764,6 +770,16 @@ Style {
                     foreground.margins: 0
                 }
                 checked.text.color: "white"
+            }
+
+            dial {
+                handle.width: 15
+                handle.height: 15
+                indicator {
+                    width: 60
+                    height: 60
+                    foreground.margins: 0
+                }
             }
 
             textInput {
