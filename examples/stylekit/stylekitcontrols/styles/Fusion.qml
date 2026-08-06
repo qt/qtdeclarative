@@ -133,6 +133,16 @@ Style {
         padding: 0
     }
 
+    dial {
+        background.visible: false
+        indicator {
+            width: 100
+            height: 100
+            radius: 255
+        }
+        handle.radius: 255
+    }
+
     menu {
         background.width: 200
     }
