@@ -43,6 +43,7 @@ warning levels.
  - essentiality marks essential categories that are required for the proper function of qmllint and can't be disabled by the user
  */
 
+// clang-format off
 // don't forget to forward-declare your logging category ID in qqmljsloggingutils.h!
 #define QMLLINT_BUILTIN_CATEGORIES                                                                 \
     X(qmlAccessSingleton, "access-singleton-via-object", "AccessSingletonViaObject",               \
@@ -182,6 +183,8 @@ warning levels.
     X(qmlWith, "with", "WithStatement",                                                            \
       "Warn about with statements as they can cause NonEssential "                                 \
       "positives when checking for unqualified access",  Warning, NonEssential)                    \
+
+// clang-format on
 
 #define X(category, name, setting, description, severity, essential) \
     const QQmlSA::LoggerWarningId category{ name };
