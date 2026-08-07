@@ -1866,6 +1866,8 @@ void QQuickTableViewPrivate::setSelectionStartPos(const QPointF &pos)
 
     const QRect prevSelection = selection();
 
+    QScopedValueRollback callbackGuard(inSelectionModelUpdate, true);
+
     QPoint clampedCell;
     if (pos.x() == -1) {
         // Special case: use current cell as start cell
@@ -1897,7 +1899,6 @@ void QQuickTableViewPrivate::setSelectionStartPos(const QPointF &pos)
         return;
 
     // Update selection model
-    QScopedValueRollback callbackGuard(inSelectionModelUpdate, true);
     updateSelection(prevSelection, selection());
 }
 
@@ -1927,6 +1928,8 @@ void QQuickTableViewPrivate::setSelectionEndPos(const QPointF &pos)
             return;
     }
 
+    QScopedValueRollback callbackGuard(inSelectionModelUpdate, true);
+
     setCurrentIndex(clampedCell);
 
     switch (selectionBehavior) {
@@ -1947,7 +1950,6 @@ void QQuickTableViewPrivate::setSelectionEndPos(const QPointF &pos)
         return;
 
     // Update selection model
-    QScopedValueRollback callbackGuard(inSelectionModelUpdate, true);
     updateSelection(prevSelection, selection());
 }
 

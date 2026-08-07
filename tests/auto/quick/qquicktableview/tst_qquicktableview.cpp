@@ -241,6 +241,7 @@ private slots:
     void testSelectableStartPosEndPosOutsideView();
     void testSelectableScrollTowardsPos();
     void setCurrentIndexFromSelectionModel();
+    void selectionTrackingSurvivesReentrantCurrentChanged();
     void clearSelectionOnTap_data();
     void clearSelectionOnTap();
     void moveCurrentIndexUsingArrowKeys();
@@ -5372,6 +5373,66 @@ void tst_QQuickTableView::setCurrentIndexFromSelectionModel()
     WAIT_UNTIL_POLISHED;
     QVERIFY(tableView->itemAtCell(cellAtEnd));
     QVERIFY(tableView->itemAtCell(cellAtEnd)->property(kCurrent).toBool());
+}
+
+void tst_QQuickTableView::selectionTrackingSurvivesReentrantCurrentChanged()
+{
+    // TableView keeps its own bookkeeping (selectionStartCell/selectionEndCell/
+    // selectionFlag) while a drag- or keyboard-driven selection is in progress,
+    // and uses setCurrentIndex() to move the current index as the selection
+    // grows. If the assigned ItemSelectionModel reacts to currentChanged() by
+    // synchronously calling select() on itself (a common and documented
+    // pattern for keeping the current index part of the selection), TableView
+    // used to mistake the resulting, self-triggered selectionChanged() for an
+    // external change, and call cancelSelectionTracking(). That reset
+    // selectionFlag to NoUpdate while the selection was still being tracked,
+    // and the very next call to setSelectionEndPos() would then hit
+    // Q_ASSERT(selectionFlag != QItemSelectionModel::NoUpdate). Check that
+    // extending a selection like this no longer asserts/crashes, and that the
+    // resulting selection is correct.
+    LOAD_TABLEVIEW("tableviewwithselected1.qml");
+
+    TestModel model(10, 10);
+    QItemSelectionModel selectionModel(&model);
+    connect(&selectionModel, &QItemSelectionModel::currentChanged, &selectionModel,
+            [&selectionModel](const QModelIndex &current, const QModelIndex &) {
+        if (current.isValid())
+            selectionModel.select(current, QItemSelectionModel::Select);
+    });
+
+    tableView->setModel(QVariant::fromValue(&model));
+    tableView->setSelectionModel(&selectionModel);
+
+    WAIT_UNTIL_POLISHED;
+
+    const QPoint startCell(2, 2);
+    const QPoint endCell(4, 4);
+    const QQuickItem *startItem = tableView->itemAtCell(startCell);
+    const QQuickItem *endItem = tableView->itemAtCell(endCell);
+    QVERIFY(startItem);
+    QVERIFY(endItem);
+
+    const QPointF startPos(startItem->x() + startItem->width() / 2,
+                           startItem->y() + startItem->height() / 2);
+    const QPointF endPos(endItem->x() + endItem->width() / 2, endItem->y() + endItem->height() / 2);
+
+    // This sequence mirrors what SelectionRectangle does on a pointer drag.
+    // Before the fix, setSelectionEndPos() below would assert.
+    QVERIFY(tableViewPrivate->startSelection(startPos, Qt::NoModifier));
+    tableViewPrivate->setSelectionStartPos(startPos);
+    tableViewPrivate->setSelectionEndPos(endPos);
+
+    for (int y = startCell.y(); y <= endCell.y(); ++y) {
+        for (int x = startCell.x(); x <= endCell.x(); ++x) {
+            const auto failureContext = qScopeGuard([&] {
+                if (QTest::currentTestFailed()) {
+                    qDebug().nospace() << "Failure for expected selected item at position ("
+                                       << x << ", " << y << ")";
+                }
+            });
+            QVERIFY(selectionModel.isSelected(tableView->modelIndex(QPoint(x, y))));
+        }
+    }
 }
 
 void tst_QQuickTableView::clearSelectionOnTap_data()
