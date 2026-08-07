@@ -136,11 +136,16 @@ QQuickWindowContainer::QQuickWindowContainer(QQuickItem *parent, ContainerMode c
 
 QQuickWindowContainer::~QQuickWindowContainer()
 {
-    Q_D(const QQuickWindowContainer);
+    Q_D(QQuickWindowContainer);
     qCDebug(lcWindowContainer) << "Destructing window container" << this;
 
-    disconnect(this);
+    disconnect(this, &QQuickItem::windowChanged,
+               this, &QQuickWindowContainer::parentWindowChanged);
+
     if (d->window) {
+        d->window->disconnect(this);
+        d->window->removeEventFilter(this);
+
         auto ownership = QJSEngine::objectOwnership(d->window);
         qCDebug(lcWindowContainer) << "Contained window" << d->window
             << "has" << (ownership == QQmlEngine::JavaScriptOwnership ?
@@ -151,6 +156,8 @@ QQuickWindowContainer::~QQuickWindowContainer()
             d->window->destroy();
             d->window->setParent(nullptr);
         }
+
+        d->window = nullptr;
     }
 }
 
