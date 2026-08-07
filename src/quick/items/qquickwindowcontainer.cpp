@@ -120,6 +120,13 @@ QQuickWindowContainer::QQuickWindowContainer(QQuickItem *parent, ContainerMode c
     setFlag(QQuickItem::ItemObservesViewport); // For clipping
     setFocusPolicy(Qt::TabFocus);
 
+#if QT_CONFIG(accessibility)
+    // The accessibility hierarchy of the contained window hangs off of the
+    // container, so the container needs to have accessibility enabled to
+    // be able to reflect the contained window as a child.
+    d->setAccessible();
+#endif
+
     connect(this, &QQuickItem::windowChanged,
             this, &QQuickWindowContainer::parentWindowChanged);
 

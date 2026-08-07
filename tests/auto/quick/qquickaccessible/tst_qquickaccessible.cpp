@@ -76,6 +76,7 @@ private slots:
     void checkableTest();
     void expandableTest();
     void ignoredTest();
+    void windowContainer();
     void passwordTest();
     void announceTest();
     void eventTest();
@@ -887,6 +888,51 @@ void tst_QQuickAccessible::ignoredTest()
         QAccessibleInterface *child = rectangleA->child(i);
         QCOMPARE(child->text(QAccessible::Name), QString(QLatin1Char(expected[i])));
     }
+    QTestAccessibility::clearEvents();
+}
+
+void tst_QQuickAccessible::windowContainer()
+{
+    QQuickView view;
+    view.setSource(testFileUrl("windowcontainer.qml"));
+    view.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+
+    QQuickItem *container = view.rootObject()->findChild<QQuickItem *>("container");
+    QVERIFY(container);
+    QAccessibleInterface *containerIface = QAccessible::queryAccessibleInterface(container);
+    QVERIFY(containerIface);
+
+    // The container is a node in its own right, and is not skipped when the
+    // scene collects the accessible children of the non-accessible root item
+    QAccessibleInterface *viewIface = QAccessible::queryAccessibleInterface(&view);
+    QVERIFY(viewIface);
+    QCOMPARE(viewIface->childCount(), 2);
+    QCOMPARE(viewIface->child(0), containerIface);
+
+    // And it reflects the accessibility hierarchy of the window it hosts
+    QWindow *hostedWindow = container->property("window").value<QWindow *>();
+    QVERIFY(hostedWindow);
+    QCOMPARE(containerIface->childCount(), 1);
+    QAccessibleInterface *hostedIface = containerIface->child(0);
+    QVERIFY(hostedIface);
+    QCOMPARE(hostedIface, hostedWindow->accessibleRoot());
+    QCOMPARE(containerIface->indexOfChild(hostedIface), 0);
+
+    QAccessibleInterface *hostedChild = hostedIface->child(0);
+    QVERIFY(hostedChild);
+    QCOMPARE(hostedChild->role(), QAccessible::Button);
+    QCOMPARE(hostedChild->text(QAccessible::Name), QLatin1String("hosted"));
+
+    // A container without a window has nothing to reflect
+    QQuickItem *emptyContainer = view.rootObject()->findChild<QQuickItem *>("emptyContainer");
+    QVERIFY(emptyContainer);
+    QAccessibleInterface *emptyIface = QAccessible::queryAccessibleInterface(emptyContainer);
+    QVERIFY(emptyIface);
+    QCOMPARE(emptyIface->childCount(), 0);
+    QCOMPARE(emptyIface->child(0), nullptr);
+    QCOMPARE(emptyIface->indexOfChild(containerIface), -1);
+
     QTestAccessibility::clearEvents();
 }
 
