@@ -3245,6 +3245,8 @@ void tst_QQuickPopup::popupWindowChangingParent()
     QQuickItem *item3 = window->property("rectangle3").value<QQuickItem *>();
     QVERIFY(item3);
 
+    QTRY_COMPARE_NE(window->position(), QPoint(0, 0));
+
     popup->open();
     QTRY_VERIFY(popup->isOpened());
 
