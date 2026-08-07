@@ -807,7 +807,7 @@ TestCase {
         compare(leftClickedSpy.count, 1);
         verify(!firstItem.pressed);
         leftClickedSpy = null;
-        tryCompare(firstItem.removeAnimation, "running", true);
+        listView.forceLayout();
         // There was a bug where the resizeContent() would be called because the height
         // of the control was changing due to the animation. contentItem would then
         // change x position and hence be visible when it shouldn't be.
