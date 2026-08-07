@@ -422,6 +422,18 @@ static QQStyleKitReader::ControlType itemViewControlType(const QStyleOption *opt
 }
 #endif
 
+// Some widgets (like QAbstractScrollArea) paint on a child widget (the viewport)
+// instead of on themselves. This function returns the widget that is actually painted on,
+// which is the one that should be updated when the style values change.
+static QWidget *paintTarget(const QWidget *widget)
+{
+#if QT_CONFIG(scrollarea)
+    if (const auto *area = qobject_cast<const QAbstractScrollArea *>(widget))
+        return area->viewport();
+#endif
+    return const_cast<QWidget *>(widget);
+}
+
 // Returns true for widgets that draw themselves using their widget font and
 // palette directly, bypassing the style's drawControl path.
 static bool isSelfPaintingWidget(const QWidget *widget)
@@ -817,7 +829,7 @@ QQStyleKitReader *QStyleKitStylePrivate::readerForWidget(const QWidget *widget) 
 
     auto *widgetReader = new QQStyleKitReader(const_cast<QStyleKitStyle *>(q));
     widgetReader->setExplicitStyle(effective);
-    widgetReader->setTarget(const_cast<QWidget *>(widget));
+    widgetReader->setTarget(paintTarget(widget));
     widgetReader->setCompleted(true);
     widgetReaders.insert(widget, widgetReader);
     QObjectPrivate::connect(widget, &QObject::destroyed, this,
@@ -918,14 +930,14 @@ QQStyleKitReader *QStyleKitStylePrivate::startSubElementTransition(
     if (subElementAnimationReaders.size() >= kMaxSubElementAnimationReaders) {
         const auto it = subElementAnimationReaders.begin();
         if (const QWidget *widget = it.key().widget)
-            const_cast<QWidget *>(widget)->update(); // snap to end state
+            paintTarget(widget)->update(); // snap to end state
         it.value()->deleteLater();
         subElementAnimationReaders.erase(it);
     }
 
     auto *reader = new QQStyleKitReader(const_cast<QStyleKitStyle *>(q));
     reader->setExplicitStyle(effective);
-    reader->setTarget(const_cast<QWidget *>(key.widget));
+    reader->setTarget(paintTarget(key.widget));
     // just stores the fromState, doesn't start the animation yet
     reader->setControlTypeAndState(type, fromState);
     reader->setCompleted(true);
