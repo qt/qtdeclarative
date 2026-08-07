@@ -429,11 +429,9 @@ static bool isTextRole(QAccessible::Role role)
 
 QAccessible::State QAccessibleQuickItem::state() const
 {
-    QQuickAccessibleAttached *attached = QQuickAccessibleAttached::attachedProperties(item());
-    if (!attached)
-        return QAccessible::State();
-
-    QAccessible::State state = attached->state();
+    QAccessible::State state;
+    if (QQuickAccessibleAttached *attached = QQuickAccessibleAttached::attachedProperties(item()))
+        state = attached->state();
 
     QRect viewRect_ = viewRect();
     QRect itemRect = rect();
