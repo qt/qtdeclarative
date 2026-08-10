@@ -72,9 +72,7 @@ void QmlCompletionSupport::setupCapabilities(
 
 void QmlCompletionSupport::process(RequestPointerArgument req)
 {
-    QmlLsp::OpenDocumentSnapshot doc =
-            m_codeModelManager->snapshotByUrl(req->m_parameters.textDocument.uri);
-    req->sendCompletions(req->completions(doc, m_completionEngine));
+    req->sendCompletions(req->completions(m_codeModelManager, m_completionEngine));
 }
 
 QString CompletionRequest::urlAndPos() const
@@ -112,13 +110,17 @@ The created DomItem is not in the qqmlcodemodel which mean it cannot be seen and
 other modules: it would be bad to have the linting module complain about code that was modified
 here, but cannot be seen by the user.
 */
-DomItem CompletionRequest::patchInvalidFileForParser(const DomItem &file, qsizetype position) const
+DomItem
+CompletionRequest::patchInvalidFileForParser(const DomItem &file, qsizetype position,
+                                             QmlLsp::QQmlCodeModelManager *codeModelManager) const
 {
+    const QByteArray &uri = m_parameters.textDocument.uri;
+
     // automatic semicolon insertion after dots, if there is nothing behind the dot!
     if (position > 0 && code[position - 1] == u'.' && positionIsFollowedBySpaces(position, code)) {
         qCWarning(QQmlLSCompletionLog)
                 << "Patching invalid document: adding a semicolon after '.' for "
-                << QString::fromUtf8(m_parameters.textDocument.uri);
+                << QString::fromUtf8(uri);
 
         const QString patchedCode =
                 code.first(position).append(u"_dummyIdentifier;").append(code.sliced(position));
@@ -130,6 +132,8 @@ DomItem CompletionRequest::patchInvalidFileForParser(const DomItem &file, qsizet
 
         DomItem result;
         auto newCurrentPtr = newCurrent.ownerAs<DomEnvironment>();
+        newCurrentPtr->setLoadPaths(codeModelManager->importPathsForUrl(uri));
+        newCurrentPtr->setResourceFiles(codeModelManager->resourceFilesForFileUrl(uri));
         newCurrentPtr->loadFile(
                 FileToLoad::fromMemory(newCurrentPtr, file.canonicalFilePath(), patchedCode),
                 [&result](Path, const DomItem &, const DomItem &newValue) {
@@ -139,18 +143,19 @@ DomItem CompletionRequest::patchInvalidFileForParser(const DomItem &file, qsizet
         return result;
     }
 
-    qCWarning(QQmlLSCompletionLog) << "No valid document for completions for "
-                                   << QString::fromUtf8(m_parameters.textDocument.uri);
+    qCWarning(QQmlLSCompletionLog)
+            << "No valid document for completions for " << QString::fromUtf8(uri);
 
     return file;
 }
 
-QList<CompletionItem> CompletionRequest::completions(QmlLsp::OpenDocumentSnapshot &doc,
+QList<CompletionItem> CompletionRequest::completions(QmlLsp::QQmlCodeModelManager *codeModelManager,
                                                      const QQmlLSCompletion &completionEngine) const
 {
     QList<CompletionItem> res;
 
-
+    QmlLsp::OpenDocumentSnapshot doc =
+            codeModelManager->snapshotByUrl(m_parameters.textDocument.uri);
     const qsizetype pos = QQmlLSUtils::textOffsetFrom(code, m_parameters.position.line,
                                                       m_parameters.position.character);
 
@@ -159,7 +164,8 @@ QList<CompletionItem> CompletionRequest::completions(QmlLsp::OpenDocumentSnapsho
 
     const DomItem file = useValidDoc
             ? doc.validDoc.fileObject(QQmlJS::Dom::GoTo::MostLikely)
-            : patchInvalidFileForParser(doc.doc.fileObject(QQmlJS::Dom::GoTo::MostLikely), pos);
+            : patchInvalidFileForParser(doc.doc.fileObject(QQmlJS::Dom::GoTo::MostLikely), pos,
+                                        codeModelManager);
 
     // clear reference cache to resolve latest versions (use a local env instead?)
     if (std::shared_ptr<DomEnvironment> envPtr = file.environment().ownerAs<DomEnvironment>())
