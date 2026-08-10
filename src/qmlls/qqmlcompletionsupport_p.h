@@ -33,9 +33,11 @@ struct CompletionRequest : BaseRequest<QLspSpecification::CompletionParams,
     void sendCompletions(const QList<QLspSpecification::CompletionItem> &completions);
     QString urlAndPos() const;
     QList<QLspSpecification::CompletionItem>
-    completions(QmlLsp::OpenDocumentSnapshot &doc, const QQmlLSCompletion &completionEngine) const;
-    QQmlJS::Dom::DomItem patchInvalidFileForParser(const QQmlJS::Dom::DomItem &file,
-                                                   qsizetype position) const;
+    completions(QmlLsp::QQmlCodeModelManager *codeModelManager,
+                const QQmlLSCompletion &completionEngine) const;
+    QQmlJS::Dom::DomItem
+    patchInvalidFileForParser(const QQmlJS::Dom::DomItem &file, qsizetype position,
+                              QmlLsp::QQmlCodeModelManager *codeModelManager) const;
 };
 
 class QmlCompletionSupport : public QQmlBaseModule<CompletionRequest>
