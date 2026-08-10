@@ -44,6 +44,9 @@ public:
 protected:
     void setVisible(bool visible) override;
 
+public:
+    bool transientParentIsGoingAway() const;
+
 private:
     bool filterPopupSpecialCases(QEvent *event);
 };
@@ -91,6 +94,9 @@ void QQuickPopupWindow::hideEvent(QHideEvent *e)
     QQuickWindow::hideEvent(e);
     // Avoid potential infinite recursion, between QWindowPrivate::setVisible(false) and this function.
     QScopedValueRollback<bool>inHideEventRollback(d->m_inHideEvent, true);
+    if (d->transientParentIsGoingAway())
+        return;
+
     if (QQuickPopup *popup = d->m_popup) {
 #if QT_CONFIG(quicktemplates2_container)
         QQuickDialog *dialog = qobject_cast<QQuickDialog *>(popup);
@@ -139,12 +145,30 @@ void QQuickPopupWindow::resizeEvent(QResizeEvent *e)
     popupPrivate->y = oldY;
 }
 
+bool QQuickPopupWindowPrivate::transientParentIsGoingAway() const
+{
+    Q_Q(const QQuickPopupWindow);
+    QWindow *transientParent = q->transientParent();
+    if (!transientParent)
+        return true;
+
+    auto *quickWindow = qobject_cast<QQuickWindow *>(transientParent);
+    return quickWindow && QQuickWindowPrivate::get(quickWindow)->inDestructor;
+}
+
 void QQuickPopupWindowPrivate::setVisible(bool visible)
 {
-    Q_Q(QQuickPopupWindow);
-    const bool isTransientParentDestroyed = !q->transientParent() ? true :
-          QQuickWindowPrivate::get(qobject_cast<QQuickWindow *>(q->transientParent()))->inDestructor;
-    if (m_inHideEvent || isTransientParentDestroyed)
+    if (m_inHideEvent)
+        return;
+
+    // Showing is pointless once the transient parent is going away, but hiding
+    // must never be skipped: it is the base implementation that updates the
+    // visible state and sends the hide event, and the hide event is what makes
+    // QSGThreadedRenderLoop stop rendering into this window. Skipping it leaves
+    // the render thread believing the window is still exposed, so it re-creates
+    // a swapchain for a window that is about to lose its platform window, and
+    // that swapchain is then leaked. (QTBUG-149041)
+    if (visible && transientParentIsGoingAway())
         return;
 
     const bool visibleChanged = QWindowPrivate::visible != visible;
@@ -159,6 +183,7 @@ void QQuickPopupWindowPrivate::setVisible(bool visible)
     }
 
 #if QT_CONFIG(wayland)
+    Q_Q(QQuickPopupWindow);
     // The parent control geoemtry is used by the wayland compositor when flipping menus and comboboxes.
     if (auto waylandWindow = dynamic_cast<QNativeInterface::Private::QWaylandWindow *>(platformWindow); waylandWindow && visible)
         waylandWindow->setParentControlGeometry(q->parentControlGeometry());

@@ -135,6 +135,7 @@ private slots:
     void collapsibleSeparators();
     void collapsibleSeparatorsUserHidden();
     void collapsibleSeparatorsWithBinding();
+    void destroyWindowWithOpenPopupWindow();
 
 private:
     bool nativeMenuSupported = false;
@@ -3883,6 +3884,45 @@ void tst_QQuickMenu::collapsibleSeparatorsWithBinding()
     QVERIFY(!separator3->isVisible());    // consecutive after bound — collapsed
     menu->close();
     QTRY_VERIFY(!menu->isVisible());
+}
+
+void tst_QQuickMenu::destroyWindowWithOpenPopupWindow()
+{
+    if (!arePopupWindowsSupported())
+        QSKIP("The platform doesn't support popup windows. Skipping test.");
+
+    SKIP_IF_NO_WINDOW_ACTIVATION;
+
+    QQuickControlsApplicationHelper helper(this, QLatin1String("applicationwindow.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickMenu *menu = window->property("menu").value<QQuickMenu *>();
+    QVERIFY(menu);
+    menu->setPopupType(QQuickPopup::Window);
+    menu->open();
+    TRY_VERIFY_POPUP_OPENED(menu);
+
+    auto *menuPrivate = QQuickMenuPrivate::get(menu);
+    QQuickPopupWindow *popupWindow = menuPrivate->popupWindow;
+    QVERIFY(popupWindow);
+    QVERIFY(popupWindow->isVisible());
+    QSignalSpy popupWindowVisibleSpy(popupWindow, &QWindow::visibleChanged);
+    QVERIFY(popupWindowVisibleSpy.isValid());
+
+    // Destroy the ApplicationWindow while the menu is still open. The popup
+    // window must be properly hidden, not just dropped: QQuickPopupWindow used
+    // to skip QWindowPrivate::setVisible() when the transient parent was going
+    // away, which meant no hide event was sent, and so the render loop kept
+    // believing the window was still exposed. QTBUG-149041.
+    helper.cleanup.reset();
+
+    QCOMPARE(popupWindowVisibleSpy.size(), 1);
+    QCOMPARE(popupWindowVisibleSpy.constLast().constFirst().toBool(), false);
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickMenu)
