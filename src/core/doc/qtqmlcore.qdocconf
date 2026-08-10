@@ -22,7 +22,7 @@ qhp.QtQmlCore.subprojects.qmltypes.indexTitle = Qt Qml Core QML Types
 qhp.QtQmlCore.subprojects.qmltypes.selectors = qmlclass
 qhp.QtQmlCore.subprojects.qmltypes.sortPages = true
 
-depends = qtcore qtdoc qtqml qtquickcontrols
+depends = qtcore qtdoc qtqml qtquickcontrols qtquick
 
 # This module has no documented C++ types, clear the module header
 moduleheader =
