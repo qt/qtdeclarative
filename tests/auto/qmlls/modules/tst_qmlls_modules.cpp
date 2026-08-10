@@ -69,6 +69,34 @@ addDidChangeWorkspaceFoldersFromMap(const QMap<QString, QStringList> &importPath
     return params;
 }
 
+static QTemporaryDir setImportPathsViaTemporaryBuildDir(const QString &filePath,
+                                                        const QStringList &importPaths,
+                                                        QLanguageServerProtocol *protocol)
+{
+    if (importPaths.empty())
+        return { };
+
+    QTemporaryDir tempDir;
+    [&tempDir]() { QVERIFY(tempDir.isValid()); }();
+    if (QTest::currentTestFailed())
+        return { };
+
+    createQmllsBuildIni(
+            tempDir.path(),
+            { ModuleSetting{
+                    filePath,
+                    QStringList(importPaths) << QLibraryInfo::path(QLibraryInfo::QmlImportsPath),
+                    { },
+            } });
+
+    Notifications::AddBuildDirsParams bDirs;
+    UriToBuildDirs ub;
+    ub.buildDirs.append(tempDir.path().toUtf8());
+    bDirs.buildDirsToSet.append(ub);
+    protocol->typedRpc()->sendNotification(QByteArray(Notifications::AddBuildDirsMethod), bDirs);
+    return tempDir;
+}
+
 tst_qmlls_modules::tst_qmlls_modules() : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
     m_qmllsPath =
@@ -508,10 +536,16 @@ void tst_qmlls_modules::automaticSemicolonInsertionForCompletions_data()
     QTest::addColumn<QString>("filePath");
     QTest::addColumn<int>("row");
     QTest::addColumn<int>("column");
+    QTest::addColumn<QStringList>("extraImportPaths");
 
-    QTest::addRow("bindingAfterDot") << u"completions/bindingAfterDot.qml"_s << 11 << 32;
+    QTest::addRow("bindingAfterDot")
+            << u"completions/bindingAfterDot.qml"_s << 11 << 32 << QStringList{ };
     QTest::addRow("defaultBindingAfterDot")
-            << u"completions/defaultBindingAfterDot.qml"_s << 11 << 32;
+            << u"completions/defaultBindingAfterDot.qml"_s << 11 << 32 << QStringList{ };
+
+    QTest::addRow("completeFromOtherModuleAfterDot")
+            << u"completions/completeFromOtherModuleAfterDot.qml"_s << 13 << 32
+            << QStringList{ testFile("completions/extraImportPath") };
 }
 
 void tst_qmlls_modules::automaticSemicolonInsertionForCompletions()
@@ -520,8 +554,15 @@ void tst_qmlls_modules::automaticSemicolonInsertionForCompletions()
     QFETCH(QString, filePath);
     QFETCH(int, row);
     QFETCH(int, column);
+    QFETCH(QStringList, extraImportPaths);
     row--;
     column--;
+
+    ignoreWorkspaceSemanticTokensRefreshRequestHandler();
+
+    auto tempDir = setImportPathsViaTemporaryBuildDir(QDir::cleanPath(testFile(filePath) + "/.."),
+                                                      extraImportPaths, m_protocol.get());
+
     const auto uri = openFile(filePath);
     QVERIFY(uri);
 
@@ -1764,19 +1805,8 @@ void tst_qmlls_modules::qmldirImports()
 
     std::optional<QTemporaryDir> tempDir;
     if (addBuildDirectory == AddBuildDir) {
-        tempDir.emplace();
-        QVERIFY(tempDir->isValid());
-        createQmllsBuildIni(tempDir->path(),
-                            { ModuleSetting{ QDir::cleanPath(testFile(filePath) + "/.."_L1),
-                                             { testFile("buildDir"_L1),
-                                               QLibraryInfo::path(QLibraryInfo::QmlImportsPath) },
-                                             {} } });
-
-        Notifications::AddBuildDirsParams bDirs;
-        UriToBuildDirs ub;
-        ub.buildDirs.append(tempDir->path().toUtf8());
-        bDirs.buildDirsToSet.append(ub);
-        m_protocol->typedRpc()->sendNotification(QByteArray(Notifications::AddBuildDirsMethod), bDirs);
+        tempDir = setImportPathsViaTemporaryBuildDir(QDir::cleanPath(testFile(filePath) + "/.."_L1),
+                                                     { testFile("buildDir"_L1) }, m_protocol.get());
     }
 
     const auto uri = openFile(filePath);
