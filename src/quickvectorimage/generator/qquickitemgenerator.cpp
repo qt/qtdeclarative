@@ -144,10 +144,10 @@ private:
     std::function<void()> m_function;
 };
 
-QQuickItemGenerator::QQuickItemGenerator(const QString &fileName,
+QQuickItemGenerator::QQuickItemGenerator(const QQuickVectorImageSource &source,
                                          QQuickVectorImageGenerator::GeneratorFlags flags,
                                          QQmlContext *context)
-    : QQuickGenerator(fileName, flags), m_context(context)
+    : QQuickGenerator(source, flags), m_context(context)
 {
 }
 
@@ -725,7 +725,7 @@ void QQuickItemGenerator::generateImageNode(const ImageNodeInfo &info)
         if (!info.image.save(filePath))
             qCWarning(lcQuickVectorImage) << "Unable to save image resource" << filePath;
     } else if (QDir::isRelativePath(filePath)) {
-        filePath = QFileInfo(fileName()).dir().absoluteFilePath(filePath);
+        filePath = QFileInfo(source().fileName()).dir().absoluteFilePath(filePath);
     }
 
     auto *image = new QQuickImage;

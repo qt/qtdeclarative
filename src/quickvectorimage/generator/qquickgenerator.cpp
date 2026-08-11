@@ -20,9 +20,10 @@ QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(lcQuickVectorImage, "qt.quick.vectorimage", QtWarningMsg)
 
-QQuickGenerator::QQuickGenerator(const QString fileName, QQuickVectorImageGenerator::GeneratorFlags flags)
+QQuickGenerator::QQuickGenerator(const QQuickVectorImageSource &source,
+                                 QQuickVectorImageGenerator::GeneratorFlags flags)
     : m_flags(flags)
-    , m_fileName(fileName)
+    , m_source(source)
 {
 }
 
@@ -47,7 +48,7 @@ QQuickVectorImageGenerator::GeneratorFlags QQuickGenerator::generatorFlags()
 bool QQuickGenerator::generate()
 {
     m_errorState = QQuickVectorImageGenerator::NoError;
-    QSvgVisitorImpl loader(m_fileName, this, m_flags.testFlag(QQuickVectorImageGenerator::AssumeTrustedSource));
+    QSvgVisitorImpl loader(m_source, this, m_flags.testFlag(QQuickVectorImageGenerator::AssumeTrustedSource));
     return loader.doTraversal();
 }
 
@@ -90,7 +91,7 @@ bool QQuickGenerator::isNodeVisible(const NodeInfo &info)
 
 void QQuickGenerator::checkSanityLimit_helper(quint64 limit, QLatin1StringView limitObject)
 {
-    qCWarning(lcQuickVectorImage) << "QML generation of untrusted source" << m_fileName
+    qCWarning(lcQuickVectorImage) << "QML generation of untrusted source" << m_source
                                   << "failed: exceeded sanity limit of" << limit << limitObject;
     m_errorState = QQuickVectorImageGenerator::SanityLimitsExceeded;
 }

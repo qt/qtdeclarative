@@ -18,6 +18,7 @@
 #include <QtSvg/private/qsvgvisitor_p.h>
 #include "qquickgenerator_p.h"
 #include "qquickanimatedproperty_p.h"
+#include <QtQuickVectorImageGenerator/private/qquickvectorimagesource_p.h>
 
 #include <QtCore/qhash.h>
 #include <QtCore/qset.h>
@@ -34,7 +35,8 @@ class QSvgStyleResolver;
 class QSvgVisitorImpl : public QSvgVisitor
 {
 public:
-    QSvgVisitorImpl(const QString svgFileName, QQuickGenerator *generator, bool assumeTrustedSource);
+    QSvgVisitorImpl(const QQuickVectorImageSource &source, QQuickGenerator *generator,
+                    bool assumeTrustedSource);
     ~QSvgVisitorImpl() override;
     bool doTraversal();
 
@@ -112,7 +114,7 @@ private:
     void pregenerateReferencedNodes(const QSvgNode *doc);
 
 private:
-    QString m_svgFileName;
+    QQuickVectorImageSource m_source;
     QQuickGenerator *m_generator;
     bool m_assumeTrustedSource;
     mutable int m_nodeIdCounter = 0;

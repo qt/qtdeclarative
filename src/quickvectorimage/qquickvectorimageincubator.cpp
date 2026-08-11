@@ -22,7 +22,7 @@ void QQuickVectorImageWorker::process()
     // If we assume trusted source, we try plugins first
     bool generatedWithPlugin = false;
     for (const auto &pluginGenerator : std::as_const(m_pluginGenerators)) {
-        if ((generatedWithPlugin = pluginGenerator->generate(m_generator->fileName(), m_generator.get())))
+        if ((generatedWithPlugin = pluginGenerator->generate(m_generator.get())))
             break;
     }
 
@@ -57,7 +57,7 @@ QQmlIncubator::Status QQuickVectorImageIncubator::status() const
     return d->status;
 }
 
-void QQuickVectorImageIncubator::start(const QString &fileName,
+void QQuickVectorImageIncubator::start(const QQuickVectorImageSource &source,
                                        QQuickVectorImageGenerator::GeneratorFlags flags)
 {
     Q_D(QQuickVectorImageIncubator);
@@ -72,7 +72,7 @@ void QQuickVectorImageIncubator::start(const QString &fileName,
         d->workerThread.reset(new QThread);
 
     d->generatorWorker.reset(new QQuickVectorImageWorker);
-    d->generatorWorker->createGenerator(fileName, flags);
+    d->generatorWorker->createGenerator(source, flags);
     connect(d->generatorWorker.get(), &QQuickVectorImageWorker::finished,
             this, &QQuickVectorImageIncubator::generatorFinished);
 
@@ -83,7 +83,7 @@ void QQuickVectorImageIncubator::start(const QString &fileName,
         for (qsizetype i = 0; i < count; ++i) {
             QQuickVectorImagePlugin *plugin = qobject_cast<QQuickVectorImagePlugin *>(loader->instance(i));
             if (plugin != nullptr) {
-                QQuickVectorImagePluginGenerator *pluginGenerator = plugin->createGenerator(fileName);
+                QQuickVectorImagePluginGenerator *pluginGenerator = plugin->createGenerator(source);
                 if (pluginGenerator != nullptr)
                     d->generatorWorker->addPluginGenerator(pluginGenerator);
             }

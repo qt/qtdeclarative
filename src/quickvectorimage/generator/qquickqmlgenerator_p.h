@@ -30,7 +30,9 @@ QT_BEGIN_NAMESPACE
 class Q_QUICKVECTORIMAGEGENERATOR_EXPORT QQuickQmlGenerator : public QQuickGenerator
 {
 public:
-    QQuickQmlGenerator(const QString fileName, QQuickVectorImageGenerator::GeneratorFlags flags, const QString &outFileName);
+    QQuickQmlGenerator(const QQuickVectorImageSource &source,
+                       QQuickVectorImageGenerator::GeneratorFlags flags,
+                       const QString &outFileName);
     ~QQuickQmlGenerator();
 
     bool save();

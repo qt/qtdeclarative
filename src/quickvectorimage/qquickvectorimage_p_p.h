@@ -18,19 +18,21 @@
 #include <QQuickPaintedItem>
 #include <QSvgRenderer>
 #include <private/qquickitem_p.h>
+#include <QtQuickVectorImageGenerator/private/qquickvectorimagesource_p.h>
 #include "qquickvectorimage_p.h"
 
 QT_BEGIN_NAMESPACE
 
 class QQuickVectorImageIncubator;
 
-class QQuickVectorImagePrivate : public QQuickItemPrivate
+class Q_QUICKVECTORIMAGE_EXPORT QQuickVectorImagePrivate : public QQuickItemPrivate
 {
     Q_DECLARE_PUBLIC(QQuickVectorImage)
 public:
     QQuickVectorImagePrivate() = default;
 
     void setSource(const QUrl &source);
+    void setSourceData(const QByteArray &data);
     void loadFile();
 
     static QQuickVectorImagePrivate *get(QQuickVectorImage *q)
@@ -38,7 +40,7 @@ public:
         return q->d_func();
     }
 
-    QUrl sourceFile;
+    QQuickVectorImageSource imageSource;
     QQuickItem *rootItem = nullptr;
     QQuickVectorImage::FillMode fillMode = QQuickVectorImage::Stretch;
     QQuickVectorImage::RendererType preferredRendererType = QQuickVectorImage::GeometryRenderer;

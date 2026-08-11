@@ -30,6 +30,7 @@
 #include "utils_p.h"
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qscopedvaluerollback.h>
+#include <QtCore/qxmlstream.h>
 
 #include <QtSvg/private/qsvgstyle_p.h>
 #include <QtSvg/private/qsvgfilter_p.h>
@@ -298,10 +299,10 @@ static QString scrub(const QString &raw)
     return res;
 }
 
-QSvgVisitorImpl::QSvgVisitorImpl(const QString svgFileName,
+QSvgVisitorImpl::QSvgVisitorImpl(const QQuickVectorImageSource &source,
                                  QQuickGenerator *generator,
                                  bool assumeTrustedSource)
-    : m_svgFileName(svgFileName)
+    : m_source(source)
     , m_generator(generator)
     , m_assumeTrustedSource(assumeTrustedSource)
 {
@@ -428,10 +429,13 @@ bool QSvgVisitorImpl::doTraversal()
     if (m_assumeTrustedSource)
         options.setFlag(QtSvg::AssumeTrustedSource);
 
-    const auto doc = QSvgDocument::load(m_svgFileName, options);
+    const auto doc = m_source.isFile()
+        ? QSvgDocument::load(m_source.fileName(), options)
+        : QSvgDocument::load(m_source.data(), options);
+
     QScopedValueRollback docResetter(m_doc, doc.get());
     if (!doc) {
-        qCDebug(lcQuickVectorImage) << "Not a valid Svg File : " << m_svgFileName;
+        qCDebug(lcQuickVectorImage) << "Not a valid Svg source:" << m_source;
         return false;
     }
 

@@ -46,7 +46,8 @@ class QQuickAbstractAnimation;
 class Q_QUICKVECTORIMAGEGENERATOR_EXPORT QQuickItemGenerator : public QQuickGenerator
 {
 public:
-    QQuickItemGenerator(const QString &fileName, QQuickVectorImageGenerator::GeneratorFlags flags,
+    QQuickItemGenerator(const QQuickVectorImageSource &source,
+                        QQuickVectorImageGenerator::GeneratorFlags flags,
                         QQmlContext *context = nullptr);
     ~QQuickItemGenerator() override;
 

@@ -59,12 +59,18 @@ static bool useQmlGenerator()
 void QQuickVectorImagePrivate::setSource(const QUrl &source)
 {
     Q_Q(QQuickVectorImage);
-    if (sourceFile == source)
+    if (imageSource.source() == source)
         return;
 
-    sourceFile = source;
+    imageSource.setSource(source);
     loadFile();
     emit q->sourceChanged();
+}
+
+void QQuickVectorImagePrivate::setSourceData(const QByteArray &data)
+{
+    imageSource.setData(data);
+    loadFile();
 }
 
 void QQuickVectorImagePrivate::loadFile()
@@ -75,10 +81,9 @@ void QQuickVectorImagePrivate::loadFile()
         return;
 
     QQmlContext *ctx = qmlContext(q);
-    QUrl resolvedUrl = ctx->resolvedUrl(sourceFile);
-    QString localFile = QQmlFile::urlToLocalFileOrQrc(resolvedUrl);
+    imageSource.resolveLocalFileName(ctx);
 
-    if (rootItem && (!retainWhileLoading || localFile.isEmpty())) {
+    if (rootItem && (!retainWhileLoading || imageSource.isEmpty())) {
         rootItem->deleteLater();
         rootItem = nullptr;
         emit q->generatedItemChanged();
@@ -86,7 +91,7 @@ void QQuickVectorImagePrivate::loadFile()
             emit q->statusChanged();
     }
 
-    if (localFile.isEmpty())
+    if (imageSource.isEmpty())
         return;
 
     if (incubator != nullptr) {
@@ -124,9 +129,9 @@ void QQuickVectorImagePrivate::loadFile()
         incubator = new QQuickVectorImageIncubator(mode, context.get(), q);
         QObject::connect(incubator, &QQuickVectorImageIncubator::statusUpdated, q,
                          &QQuickVectorImage::updateItem);
-        incubator->start(localFile, flags);
+        incubator->start(imageSource, flags);
     } else {
-        QQuickItemGenerator gen(localFile, flags, qmlContext(q));
+        QQuickItemGenerator gen(imageSource, flags, qmlContext(q));
 
         bool generatedWithPlugin = false;
         if (flags.testFlag(QQuickVectorImageGenerator::AssumeTrustedSource)) {
@@ -137,9 +142,9 @@ void QQuickVectorImagePrivate::loadFile()
                         qobject_cast<QQuickVectorImagePlugin *>(loader->instance(i));
                 if (plugin != nullptr) {
                     std::unique_ptr<QQuickVectorImagePluginGenerator> pluginGen(
-                            plugin->createGenerator(localFile));
+                            plugin->createGenerator(imageSource));
                     if (pluginGen != nullptr)
-                        generatedWithPlugin = pluginGen->generate(localFile, &gen);
+                        generatedWithPlugin = pluginGen->generate(&gen);
                 }
             }
         }
@@ -150,7 +155,7 @@ void QQuickVectorImagePrivate::loadFile()
         if (gen.errorState() == QQuickVectorImageGenerator::NoError) {
             pendingRootItem = gen.takeRootItem();
         } else {
-            qCWarning(lcQuickVectorImage) << "QQuickItemGenerator: failed to generate" << localFile
+            qCWarning(lcQuickVectorImage) << "QQuickItemGenerator: failed to generate" << imageSource
                                           << "(errorState:" << gen.errorState() << ")";
         }
         q->updateItem();
@@ -284,7 +289,7 @@ QQuickVectorImage::~QQuickVectorImage()
 QUrl QQuickVectorImage::source() const
 {
     Q_D(const QQuickVectorImage);
-    return d->sourceFile;
+    return d->imageSource.source();
 }
 
 void QQuickVectorImage::setSource(const QUrl &source)
