@@ -1,6 +1,5 @@
-import QtQuick 2.0
-import QtTest 1.1
-import QtQuick.Window 2.1
+import QtQuick
+import QtTest
 
 TestCase {
   id:testCase
@@ -39,7 +38,11 @@ TestCase {
 
   function comparePixel(ctx,x,y,r,g,b,a, d)
   {
-    var c = ctx.getImageData(x,y,1,1).data;
+    const canvasWindow = ctx.canvas.Window.window;
+    verify(canvasWindow);
+    const dpr = canvasWindow.devicePixelRatio;
+    var c = ctx.getImageData(Math.floor((x + 0.5) * dpr),
+                             Math.floor((y + 0.5) * dpr), 1, 1).data;
     if (d === undefined)
       d = 0;
     r = Math.round(r);
