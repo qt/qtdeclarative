@@ -104,6 +104,12 @@ Since Qt 6.7, you can use \c{DEPLOY_TOOL_OPTIONS} to pass additional options to
 the underlying deployment tool. This only has an effect if the underlying
 deployment tool is either macdeployqt or windeployqt.
 
+\note A value that contains whitespace, like a code signing identity, only reaches
+the deployment tool unchanged if \l {QTP0007} is set to \c NEW. With the \c OLD
+behavior, such a value is written to the generated script unquoted and gets split
+at whitespace, which projects used to work around by adding another level of
+quoting. Remove that extra quoting when setting the policy to \c NEW.
+
 The options \c{PRE_INCLUDE_REGEXES}, \c{PRE_EXCLUDE_REGEXES},
 \c{POST_INCLUDE_REGEXES}, \c{POST_EXCLUDE_REGEXES}, \c{POST_INCLUDE_FILES}, and
 \c{POST_EXCLUDE_FILES} can be specified to control the deployment of runtime
@@ -125,7 +131,8 @@ and \l qt_generate_deploy_app_script() for the
 same target.
 
 \sa qt_standard_project_setup(),
-    qt_generate_deploy_app_script()
+    qt_generate_deploy_app_script(),
+    {QTP0007}
 
 \section1 Example
 
@@ -163,9 +170,15 @@ The following example shows how to pass additional options to the underlying
 deployment tool.
 
 \badcode
+# Pass the values on to the deploy tool unchanged, see \l {QTP0007}.
+qt_policy(SET QTP0007 NEW)
+
 set(deploy_tool_options_arg "")
 if(APPLE)
-    set(deploy_tool_options_arg --hardened-runtime)
+    set(deploy_tool_options_arg
+        --hardened-runtime
+        "-codesign=Developer ID Application: Joe Developer (1234567890)"
+    )
 elseif(WIN32)
     set(deploy_tool_options_arg --no-compiler-runtime)
 endif()
