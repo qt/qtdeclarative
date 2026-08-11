@@ -42,7 +42,7 @@ ApplicationWindow {
 
     ComboBox {
         // Let the user select a different theme at run-time
-        model: StyleKit.style.themeNames
+        model: StyleKit.style.availableThemeNames
         onCurrentTextChanged: StyleKit.style.themeName = currentText
     }
     //! [themeName]

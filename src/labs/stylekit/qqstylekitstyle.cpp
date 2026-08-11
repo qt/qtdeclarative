@@ -60,9 +60,9 @@ QT_BEGIN_NAMESPACE
     \readonly
 
     The names of all the \l {CustomTheme}{custom themes} defined in the style. This does not
-    include the \l{themeNames}{built-in themes.}
+    include the \l{availableThemeNames}{built-in themes.}
 
-    \sa themeNames, themeName, CustomTheme
+    \sa availableThemeNames, themeName, CustomTheme
 */
 
 /*!
@@ -163,11 +163,11 @@ QT_BEGIN_NAMESPACE
     effect, the style it belongs to must also be the \l{StyleKit::style}{current style}
     in the application.
 
-    \sa themeNames, theme
+    \sa availableThemeNames, theme
 */
 
 /*!
-    \qmlproperty list<string> Style::themeNames
+    \qmlproperty list<string> Style::availableThemeNames
     \readonly
 
     The names of all available themes, including \c "System", \c "Light",
@@ -270,22 +270,22 @@ QList<QQStyleKitCustomTheme *> QQStyleKitStyle::customThemes() const
 
 void QQStyleKitStyle::parseThemes()
 {
-    m_themeNames = QStringList({kSystem});
+    m_availableThemeNames = QStringList({kSystem});
 
     if (m_light)
-        m_themeNames << kLight;
+        m_availableThemeNames << kLight;
     if (m_dark)
-        m_themeNames << kDark;
+        m_availableThemeNames << kDark;
 
     for (auto *customTheme : customThemes()) {
         const QString name = customTheme->name();
         if (name.isEmpty())
             continue;
-        m_themeNames << name;
+        m_availableThemeNames << name;
         m_customThemeNames << name;
     }
 
-    emit themeNamesChanged();
+    emit availableThemeNamesChanged();
     emit customThemeNamesChanged();
 }
 
@@ -294,9 +294,9 @@ QString QQStyleKitStyle::themeName() const
     return m_themeName;
 }
 
-QStringList QQStyleKitStyle::themeNames() const
+QStringList QQStyleKitStyle::availableThemeNames() const
 {
-    return m_themeNames;
+    return m_availableThemeNames;
 }
 
 QStringList QQStyleKitStyle::customThemeNames() const

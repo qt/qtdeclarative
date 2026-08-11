@@ -335,11 +335,11 @@ ApplicationWindow {
                     onCurrentTextChanged: {
                         StyleKit.style = model[currentIndex].value;
                         themeSelector.currentValue = StyleKit.style.themeName
-                        themeSelector.model = StyleKit.style.themeNames
+                        themeSelector.model = StyleKit.style.availableThemeNames
                     }
                     Component.onCompleted: {
                         themeSelector.currentValue = StyleKit.style.themeName
-                        themeSelector.model = StyleKit.style.themeNames
+                        themeSelector.model = StyleKit.style.availableThemeNames
                     }
                 }
 
