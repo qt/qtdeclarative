@@ -16,6 +16,7 @@
 //
 
 #include <private/qquickvectorimageglobal_p.h>
+#include <private/qquickvectorimagesource_p.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qrect.h>
@@ -51,7 +52,8 @@ using namespace QQuickVectorImageGenerator;
 class Q_QUICKVECTORIMAGEGENERATOR_EXPORT QQuickGenerator
 {
 public:
-    QQuickGenerator(const QString fileName, QQuickVectorImageGenerator::GeneratorFlags flags);
+    QQuickGenerator(const QQuickVectorImageSource &source,
+                    QQuickVectorImageGenerator::GeneratorFlags flags);
     virtual ~QQuickGenerator();
 
     void setGeneratorFlags(QQuickVectorImageGenerator::GeneratorFlags flags);
@@ -78,9 +80,9 @@ public:
     void optimizePaths(const PathNodeInfo &info, const QRectF &overrideBoundingRect);
     bool isNodeVisible(const NodeInfo &info);
 
-    QString fileName() const
+    QQuickVectorImageSource source() const
     {
-        return m_fileName;
+        return m_source;
     }
 
 protected:
@@ -100,7 +102,7 @@ protected:
 
 
 private:
-    QString m_fileName;
+    QQuickVectorImageSource m_source;
 };
 
 QT_END_NAMESPACE

@@ -3,6 +3,7 @@
 
 #include <QtTest/QTest>
 #include <QtTest/QSignalSpy>
+#include <QtCore/qfile.h>
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qdir.h>
 #include <QtQml/qqmlcontext.h>
@@ -11,6 +12,7 @@
 #include <QtQuick/qquickitem.h>
 #include <QtQuickShapes/private/qquickshape_p.h>
 #include <QtQuickVectorImage/private/qquickvectorimage_p.h>
+#include <QtQuickVectorImage/private/qquickvectorimage_p_p.h>
 
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/viewtestutils_p.h>
@@ -31,6 +33,7 @@ private slots:
     void clearSource();
     void renderFiles_data();
     void renderFiles();
+    void sourceData();
 };
 
 tst_QQuickVectorImage::tst_QQuickVectorImage()
@@ -192,6 +195,39 @@ void tst_QQuickVectorImage::renderFiles()
 
     image->setParentItem(window.contentItem());
     window.grabWindow();
+}
+
+void tst_QQuickVectorImage::sourceData()
+{
+    QFile file(QStringLiteral(":/svgs/gradientxform.svg"));
+    QVERIFY(file.open(QIODevice::ReadOnly));
+    const QByteArray svgData = file.readAll();
+
+    QQmlEngine engine;
+    engine.rootContext()->setContextProperty(QStringLiteral("fileName"), testFileUrl("svg/broken.svg"));
+
+    QQmlComponent c(&engine, testFileUrl("vectorimage.qml"));
+    QQuickVectorImage *item = qobject_cast<QQuickVectorImage *>(c.create());
+    auto cleanup = qScopeGuard([&item] {
+        delete item;
+        item = nullptr;
+    });
+
+    QVERIFY(item != nullptr);
+    QCOMPARE(item->status(), QQuickVectorImage::Status::Error);
+
+    QQuickVectorImagePrivate *d_ptr = QQuickVectorImagePrivate::get(item);
+    QVERIFY(d_ptr != nullptr);
+
+    // A non-empty sourceData takes precedence over the broken source file
+    d_ptr->setSourceData(svgData);
+    QVERIFY(!item->childItems().isEmpty());
+    QVERIFY(!item->childItems().first()->size().isNull());
+    QCOMPARE(item->status(), QQuickVectorImage::Status::Ready);
+
+    // Clearing sourceData falls back to loading from source again
+    d_ptr->setSourceData(QByteArray());
+    QCOMPARE(item->status(), QQuickVectorImage::Status::Error);
 }
 
 QTEST_MAIN(tst_QQuickVectorImage)

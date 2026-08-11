@@ -21,9 +21,9 @@
 
 QT_BEGIN_NAMESPACE
 
-QQuickItemGenerator::QQuickItemGenerator(const QString fileName,
+QQuickItemGenerator::QQuickItemGenerator(const QQuickVectorImageSource &source,
                                          QQuickVectorImageGenerator::GeneratorFlags flags)
-    : QQuickQmlGenerator(fileName, flags, QString{})
+    : QQuickQmlGenerator(source, flags, QString{})
 {
     setRetainFilePaths(true);
 

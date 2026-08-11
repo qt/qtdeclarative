@@ -26,6 +26,8 @@ qt_internal_add_test(tst_qquickvectorimage
         Qt::QuickShapesPrivate
         Qt::QuickTestUtilsPrivate
         Qt::QuickVectorImagePrivate
+        Qt::QuickVectorImageGeneratorPrivate
+        Qt::Svg
     TESTDATA
         ${test_data}
     DEFINES

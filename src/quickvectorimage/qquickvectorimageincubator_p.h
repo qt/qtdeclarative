@@ -35,10 +35,10 @@ class QQuickVectorImageWorker : public QObject
 public:
     QQuickVectorImageWorker() = default;
 
-    void createGenerator(const QString &fileName,
+    void createGenerator(const QQuickVectorImageSource &source,
                          QQuickVectorImageGenerator::GeneratorFlags flags)
     {
-        m_generator.reset(new QQuickItemGenerator(fileName, flags));
+        m_generator.reset(new QQuickItemGenerator(source, flags));
     }
 
     QQuickItemGenerator *generator() const
@@ -71,7 +71,7 @@ public:
                                QObject *parent = nullptr);
     ~QQuickVectorImageIncubator();
 
-    void start(const QString &fileName,
+    void start(const QQuickVectorImageSource &source,
                QQuickVectorImageGenerator::GeneratorFlags flags);
 
     QQmlIncubator::Status status() const;

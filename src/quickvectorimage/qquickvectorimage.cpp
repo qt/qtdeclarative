@@ -46,12 +46,18 @@ QT_BEGIN_NAMESPACE
 void QQuickVectorImagePrivate::setSource(const QUrl &source)
 {
     Q_Q(QQuickVectorImage);
-    if (sourceFile == source)
+    if (imageSource.source() == source)
         return;
 
-    sourceFile = source;
+    imageSource.setSource(source);
     loadFile();
     emit q->sourceChanged();
+}
+
+void QQuickVectorImagePrivate::setSourceData(const QByteArray &data)
+{
+    imageSource.setData(data);
+    loadFile();
 }
 
 void QQuickVectorImagePrivate::loadFile()
@@ -62,10 +68,9 @@ void QQuickVectorImagePrivate::loadFile()
         return;
 
     QQmlContext *ctx = qmlContext(q);
-    QUrl resolvedUrl = ctx->resolvedUrl(sourceFile);
-    QString localFile = QQmlFile::urlToLocalFileOrQrc(resolvedUrl);
+    imageSource.resolveLocalFileName(ctx);
 
-    if (rootItem && (!retainWhileLoading || localFile.isEmpty())) {
+    if (rootItem && (!retainWhileLoading || imageSource.isEmpty())) {
         rootItem->deleteLater();
         rootItem = nullptr;
         emit q->generatedItemChanged();
@@ -73,7 +78,7 @@ void QQuickVectorImagePrivate::loadFile()
             emit q->statusChanged();
     }
 
-    if (localFile.isEmpty())
+    if (imageSource.isEmpty())
         return;
 
     if (incubator != nullptr) {
@@ -106,7 +111,7 @@ void QQuickVectorImagePrivate::loadFile()
     if (asynchronous)
         flags.setFlag(QQuickVectorImageGenerator::AsynchronousLoading);
 
-    incubator->start(localFile, flags);
+    incubator->start(imageSource, flags);
 }
 
 void QQuickVectorImage::updateItem()
@@ -230,7 +235,7 @@ QQuickVectorImage::~QQuickVectorImage()
 QUrl QQuickVectorImage::source() const
 {
     Q_D(const QQuickVectorImage);
-    return d->sourceFile;
+    return d->imageSource.source();
 }
 
 void QQuickVectorImage::setSource(const QUrl &source)

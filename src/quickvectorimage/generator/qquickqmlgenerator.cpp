@@ -52,8 +52,10 @@ QQuickAnimatedProperty::PropertyAnimation QQuickAnimatedProperty::PropertyAnimat
     return res;
 }
 
-QQuickQmlGenerator::QQuickQmlGenerator(const QString fileName, QQuickVectorImageGenerator::GeneratorFlags flags, const QString &outFileName)
-    : QQuickGenerator(fileName, flags)
+QQuickQmlGenerator::QQuickQmlGenerator(const QQuickVectorImageSource &source,
+                                       QQuickVectorImageGenerator::GeneratorFlags flags,
+                                       const QString &outFileName)
+    : QQuickGenerator(source, flags)
     , outputFileName(outFileName)
 {
     m_result.open(QIODevice::ReadWrite);

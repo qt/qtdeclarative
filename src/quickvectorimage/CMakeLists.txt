@@ -12,6 +12,7 @@ qt_internal_add_module(QuickVectorImageGeneratorPrivate
         generator/qquickgenerator_p.h generator/qquickgenerator.cpp
         generator/qquickitemgenerator_p.h generator/qquickitemgenerator.cpp
         generator/qquickqmlgenerator_p.h generator/qquickqmlgenerator.cpp
+        generator/qquickvectorimagesource_p.h generator/qquickvectorimagesource.cpp
         generator/qquickanimatedproperty_p.h
         generator/qquicknodeinfo_p.h
         generator/utils_p.h

@@ -130,7 +130,7 @@ int main(int argc, char *argv[])
         flags |= (QQuickVectorImageGenerator::GeneratorFlag::OutlineStrokeMode
                   | QQuickVectorImageGenerator::GeneratorFlag::OptimizePaths);
 
-    QQuickQmlGenerator generator(inFileName, flags, outFileName);
+    QQuickQmlGenerator generator(QQuickVectorImageSource(inFileName), flags, outFileName);
     generator.setShapeTypeName(typeName);
     generator.setCommentString(commentString);
     generator.setAssetFileDirectory(assetOutputDirectory);
@@ -151,7 +151,7 @@ int main(int argc, char *argv[])
                 QQuickVectorImageIncubator incubator(QQmlIncubator::Synchronous,
                                                      engine.rootContext());
 
-                incubator.start(inFileName, flags);
+                incubator.start(QQuickVectorImageSource(inFileName), flags);
                 QObject *obj = incubator.object();
                 QQuickItem *item = qobject_cast<QQuickItem *>(obj);
                 if (item != nullptr) {

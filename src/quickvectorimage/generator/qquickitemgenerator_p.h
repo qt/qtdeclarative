@@ -30,7 +30,7 @@ class QQmlIncubator;
 class Q_QUICKVECTORIMAGEGENERATOR_EXPORT QQuickItemGenerator : public QQuickQmlGenerator
 {
 public:
-    QQuickItemGenerator(const QString fileName,
+    QQuickItemGenerator(const QQuickVectorImageSource &source,
                         QQuickVectorImageGenerator::GeneratorFlags flags);
     ~QQuickItemGenerator();
 };
