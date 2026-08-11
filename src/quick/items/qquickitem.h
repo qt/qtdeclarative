@@ -162,7 +162,7 @@ public:
     };
     Q_ENUM(ItemChange)
 
-    enum MutabilityGroup : quint8 {
+    enum MutabilityGroup : int {
         AutoMutabilityGroup     = 0x0,
         StaticMutabilityGroup   = 0x1,
         ModerateMutabilityGroup = 0x8,
