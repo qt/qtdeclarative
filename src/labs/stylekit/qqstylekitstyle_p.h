@@ -39,7 +39,7 @@ class Q_LABSSTYLEKIT_EXPORT QQStyleKitStyle : public QQStyleKitStyleAndThemeBase
     Q_PROPERTY(QQmlComponent *light READ light WRITE setLight NOTIFY lightChanged FINAL)
     Q_PROPERTY(QQmlComponent *dark READ dark WRITE setDark NOTIFY darkChanged FINAL)
     Q_PROPERTY(QString themeName READ themeName WRITE setThemeName NOTIFY themeNameChanged FINAL)
-    Q_PROPERTY(QStringList themeNames READ themeNames NOTIFY themeNamesChanged FINAL)
+    Q_PROPERTY(QStringList availableThemeNames READ availableThemeNames NOTIFY availableThemeNamesChanged FINAL)
     Q_PROPERTY(QStringList customThemeNames READ customThemeNames NOTIFY customThemeNamesChanged FINAL)
     Q_PROPERTY(QQStyleKitTheme *theme READ theme NOTIFY themeChanged FINAL)
 
@@ -62,7 +62,7 @@ public:
     void setDark(QQmlComponent *darkTheme);
 
     QList<QQStyleKitCustomTheme *> customThemes() const;
-    QStringList themeNames() const;
+    QStringList availableThemeNames() const;
     QStringList customThemeNames() const;
 
     void setThemeName(const QString &themeName);
@@ -84,7 +84,7 @@ signals:
     void darkChanged();
     void themeChanged();
     void themeNameChanged();
-    void themeNamesChanged();
+    void availableThemeNamesChanged();
     void customThemeNamesChanged();
 
 protected:
@@ -113,7 +113,7 @@ private:
     QPointer<QQuickPalette> m_palette;
     QString m_themeName;
     QString m_effectiveThemeName;
-    QStringList m_themeNames;
+    QStringList m_availableThemeNames;
     QStringList m_customThemeNames;
 
     friend class QQStyleKitAttached;

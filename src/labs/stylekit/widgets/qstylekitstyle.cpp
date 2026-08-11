@@ -1618,7 +1618,7 @@ void QStyleKitStyle::setThemeName(const QString &themeName)
 QStringList QStyleKitStyle::availableThemeNames() const
 {
     Q_D(const QStyleKitStyle);
-    return d->style ? d->style->themeNames() : QStringList();
+    return d->style ? d->style->availableThemeNames() : QStringList();
 }
 
 /*!

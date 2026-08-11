@@ -914,7 +914,7 @@ ApplicationWindow {
 
             ComboBox {
                 // The user can choose which theme to use
-                model: StyleKit.style.themeNames
+                model: StyleKit.style.availableThemeNames
                 onCurrentTextChanged: StyleKit.style.themeName = currentText
             }
 

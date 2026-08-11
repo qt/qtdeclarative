@@ -31,7 +31,7 @@ QT_BEGIN_NAMESPACE
     \snippet CustomThemeSnippets.qml custom theme at start-up
 
     The custom themes defined in a Style can be queried at runtime
-    from \l {Style::customThemeNames} or \l {Style::themeNames}.
+    from \l {Style::customThemeNames} or \l {Style::availableThemeNames}.
 
     \labs
 
