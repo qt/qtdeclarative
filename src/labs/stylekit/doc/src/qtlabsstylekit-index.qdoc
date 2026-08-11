@@ -14,7 +14,7 @@
     StyleKit handles the underlying template implementation automatically, letting you focus
     purely on visual aspects such as
     \l {DelegateStyle::color}{colors},
-    \l {DelegateStyle::implicitWidth}{dimensions},
+    \l {DelegateStyle::width}{dimensions},
     \l {DelegateStyle::border}{borders}, and
     \l {DelegateStyle::shadow}{shadows}.
 

@@ -190,7 +190,7 @@
     \section2 Custom Data
 
     Custom delegates sometimes need additional styling properties that go beyond the
-    \l {DelegateProperties}{built-in ones} — for example to style child items
+    \l {DelegateStyle}{built-in ones} — for example to style child items
     that \c StyleKit knows nothing about. The \l {DelegateStyle::data}{data}
     property makes this possible. It can hold any \l QtObject, so it can carry
     whatever information your delegate needs.

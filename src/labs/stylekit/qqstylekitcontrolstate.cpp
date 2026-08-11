@@ -58,7 +58,7 @@ QT_BEGIN_NAMESPACE
     \labs
 
     \sa ControlStyle, DelegateStyle, {StyleKit Property Resolution},
-        {qtlabsstylekit-fallbackstyle.html}{FallbackStyle Reference}
+        {Reference Fallback Style}
 */
 
 /*!
@@ -119,7 +119,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlproperty ControlStateStyle ControlStateStyle::disabled
 
-    Style overrides applied when the control is \l {StyleReader::}{disabled}.
+    Style overrides applied when the control is not \l {StyleReader::}{enabled}.
 
     A disabled control cannot be interacted with, so \l pressed,
     \l hovered, \l highlighted, and \l focused will not be applied

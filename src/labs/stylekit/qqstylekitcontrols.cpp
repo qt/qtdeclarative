@@ -269,7 +269,7 @@ QT_BEGIN_NAMESPACE
     and \l [QtQuickControls]{MenuSeparator} normally only affects non-native
     menu bars. When a MenuBar is implemented as a native menu bar, its delegates
     are not used for rendering, so StyleKit style properties may have no visual
-    effect. See \l {MenuBar QML Type} {Native Menu Bars} for details.
+    effect. See \l [QtLabsPlatform]{MenuBar} {Native Menu Bars} for details.
 
     \snippet ControlsSnippets.qml menuBar
 */

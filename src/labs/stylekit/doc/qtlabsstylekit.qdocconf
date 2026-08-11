@@ -33,7 +33,7 @@ qhp.QtLabsStyleKit.subprojects.classes.indexTitle = Qt Labs StyleKit C++ Classes
 qhp.QtLabsStyleKit.subprojects.classes.selectors = class
 qhp.QtLabsStyleKit.subprojects.classes.sortPages = true
 
-depends = qtcore qtgui qtwidgets qtdoc qtqml qtqmlcore qtquick qtquickcontrols
+depends = qtcore qtgui qtwidgets qtdoc qtqml qtqmlcore qtquick qtquickcontrols qtlabsplatform
 
 examplesinstallpath = stylekit
 exampledirs += snippets \
