@@ -5219,6 +5219,7 @@ function(qt6_generate_deploy_qml_app_script)
     )
     set(qt_deploy_runtime_dependencies_options
         # These options are forwarded as is to qt_deploy_runtime_dependencies.
+        DEPLOY_TOOL_OPTIONS
         EXCLUDE_PLUGINS
         EXCLUDE_PLUGIN_TYPES
         INCLUDE_PLUGINS
@@ -5229,7 +5230,6 @@ function(qt6_generate_deploy_qml_app_script)
         POST_EXCLUDE_REGEXES
         POST_INCLUDE_FILES
         POST_EXCLUDE_FILES
-        DEPLOY_TOOL_OPTIONS
     )
     set(multi_value_options
         ${qt_deploy_runtime_dependencies_options}
@@ -5323,11 +5323,45 @@ function(qt6_generate_deploy_qml_app_script)
     endif()
 
     # Forward the arguments that are exactly the same for qt_deploy_runtime_dependencies.
+    # Only check QTP0007 if a value would actually be affected by it, so that projects that
+    # aren't affected don't get warned.
+    set(options_need_quoting_and_escaping FALSE)
     foreach(var IN LISTS qt_deploy_runtime_dependencies_options)
-        if(NOT "${arg_${var}}" STREQUAL "")
-            list(APPEND common_deploy_args ${var} ${arg_${var}})
+        foreach(value IN LISTS arg_${var})
+            if(value MATCHES "[ \t]" OR value MATCHES "\"" OR value MATCHES "\\\\")
+                set(options_need_quoting_and_escaping TRUE)
+                break()
+            endif()
+        endforeach()
+        if(options_need_quoting_and_escaping)
+            break()
         endif()
     endforeach()
+
+    if(options_need_quoting_and_escaping)
+        string(CONCAT policy_explanation
+            "A value passed to qt_generate_deploy_qml_app_script() contains whitespace, a "
+            "backslash or a double quote. Such values are written to the generated deploy script "
+            "unquoted, so cmake splits or unescapes them when the script runs, which can cause "
+            "issues. Set qt_policy(SET QTP0007 NEW) to write them as quoted and escaped "
+            "arguments instead. Check https://doc.qt.io/qt-6/qt-cmake-policy-qtp0007.html for "
+            "policy details."
+        )
+        __qt_internal_setup_policy(QTP0007 "6.12.0" "${policy_explanation}")
+    endif()
+    qt6_policy(GET QTP0007 qtp0007_value)
+
+    if(qtp0007_value STREQUAL "NEW")
+        _qt_internal_format_deploy_script_arguments(forwarded_deploy_args arg
+            KEYWORDS ${qt_deploy_runtime_dependencies_options})
+        string(APPEND common_deploy_args "${forwarded_deploy_args}")
+    else()
+        foreach(var IN LISTS qt_deploy_runtime_dependencies_options)
+            if(NOT "${arg_${var}}" STREQUAL "")
+                list(APPEND common_deploy_args ${var} ${arg_${var}})
+            endif()
+        endforeach()
+    endif()
 
     _qt_internal_should_skip_deployment_api(skip_deployment skip_reason)
 
