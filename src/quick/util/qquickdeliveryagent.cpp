@@ -133,7 +133,7 @@ void QQuickDeliveryAgentPrivate::resetIfDoubleTapPrevented(const QEventPoint &pr
 }
 
 /*! \internal
-    \deprecated events are handled by methods in which the event is an argument
+    \deprecated events are handled by methods in which the event is an argument.
 
     Accessor for use by legacy methods such as QQuickItem::grabMouse(),
     QQuickItem::ungrabMouse(), and QQuickItem::grabTouchPoints() which
