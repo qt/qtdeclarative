@@ -84,6 +84,58 @@ void QQuickDragAttachedPrivate::itemParentChanged(QQuickItem *, QQuickItem *)
         updatePosition();
 }
 
+/*!
+    \internal
+    Called while the item this is attached to is being destroyed. If that happens during
+    a native drag, everything after QDrag::exec() in startDrag() is unreachable: we are a
+    QObject child of that item, so ~QObject is about to delete us. ~QQuickItem notifies
+    its change listeners before deleting its children, though, so this is the last point
+    at which the drag can still be wound down properly.
+*/
+void QQuickDragAttachedPrivate::itemDestroyed(QQuickItem *item)
+{
+    Q_Q(QQuickDragAttached);
+
+    listenForAttachedItemDestruction(false);
+    if (!executingNativeDrag)
+        return;
+
+    Q_ASSERT(item == attachedItem);
+    Q_UNUSED(item);
+
+    // Stop the platform delivering drag events to a scene that no longer has anything to
+    // drag, and unwind exec()'s nested event loop. This is also what delivers the drag
+    // leave that the drop target is waiting for. ~QDrag would end up cancelling too,
+    // since the QDrag is a child of the same item, but the order in which the item
+    // deletes its children is not ours to rely on. executingNativeDrag stays set for the
+    // duration, so that a handler reacting to the leave cannot re-enter setActive().
+    if (QPlatformDrag *platformDrag = QGuiApplicationPrivate::platformIntegration()->drag())
+        platformDrag->cancelDrag();
+
+    executingNativeDrag = false;
+    deliverLeaveEvent();
+    if (target) {
+        target = nullptr;
+        emit q->targetChanged();
+    }
+    emit q->dragFinished(Qt::IgnoreAction);
+    active = false;
+    emit q->activeChanged();
+}
+
+void QQuickDragAttachedPrivate::listenForAttachedItemDestruction(bool listen)
+{
+    if (listen == listeningForDestruction || !attachedItem)
+        return;
+
+    auto *itemPrivate = QQuickItemPrivate::get(attachedItem);
+    if (listen)
+        itemPrivate->addItemChangeListener(this, QQuickItemPrivate::Destroyed);
+    else
+        itemPrivate->removeItemChangeListener(this, QQuickItemPrivate::Destroyed);
+    listeningForDestruction = listen;
+}
+
 void QQuickDragAttachedPrivate::updatePosition()
 {
     Q_Q(QQuickDragAttached);
@@ -881,14 +933,32 @@ Qt::DropAction QQuickDragAttachedPrivate::startDrag(Qt::DropActions supportedAct
         drag->setPixmap(QPixmap::fromImage(pixmapLoader.image()));
 
     drag->setHotSpot(hotSpot.toPoint());
+
+    // exec() below blocks in a nested event loop, during which the item we are attached
+    // to can be destroyed -- a view recycling the delegate that is being dragged is
+    // enough (QTBUG-124663). Both this attached object and the QDrag are QObject
+    // children of that item, so they would go with it, leaving nothing to run the code
+    // after exec(). Listen for it, so that itemDestroyed() can wind the drag down while
+    // we are still alive, and guard what we touch afterwards.
+    listenForAttachedItemDestruction(true);
+    QPointer<QQuickDragAttached> self(q);
+    QPointer<QDrag> dragGuard(drag);
+
     emit q->dragStarted();
 
     executingNativeDrag = true;
     Qt::DropAction dropAction = drag->exec(supportedActions);
+    if (!self) {
+        // itemDestroyed() has already delivered the leave event and reset the state.
+        return Qt::IgnoreAction;
+    }
     executingNativeDrag = false;
+    listenForAttachedItemDestruction(false);
 
-    if (!QGuiApplicationPrivate::platformIntegration()->drag()->ownsDragObject())
-        drag->deleteLater();
+    if (dragGuard
+        && !QGuiApplicationPrivate::platformIntegration()->drag()->ownsDragObject()) {
+        dragGuard->deleteLater();
+    }
 
     deliverLeaveEvent();
 
