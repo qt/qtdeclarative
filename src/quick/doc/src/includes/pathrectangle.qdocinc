@@ -49,6 +49,7 @@ This property may be overridden by the individual bevel properties.
 \snippet \2 \3
 
 \image pathrectangle-bevel.png
+       {Rectangle with the beveled top-left and bottom-right corners}
 
 \sa topLeftBevel, topRightBevel, bottomLeftBevel, bottomRightBevel
 //! [bevel-property]
