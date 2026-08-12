@@ -3730,7 +3730,7 @@ void AOTCompiledContext::setObjectImplicitDestructible(QObject *object) const
    as any other item.
 
    \note \a cppObject must outlive the QML engine in which it is used.
-   Moreover, \cppObject must have the same thread affinity as the engine. If
+   Moreover, \a cppObject must have the same thread affinity as the engine. If
    you want separate singleton instances for multiple engines, you need to use
    \l {qmlRegisterSingletonType}.  See \l{Threads and QObjects} for more
    information about thread safety.
