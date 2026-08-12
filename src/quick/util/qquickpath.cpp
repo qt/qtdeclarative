@@ -4,7 +4,6 @@
 
 #include "qquickpath_p.h"
 #include "qquickpath_p_p.h"
-#include "qquicksvgparser_p.h"
 
 #include <QSet>
 #include <QTime>
@@ -12,6 +11,7 @@
 #include <private/qbezier_p.h>
 #include <QtCore/qmath.h>
 #include <QtCore/private/qnumeric_p.h>
+#include <QtGui/private/qguisvg_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -2168,7 +2168,7 @@ void QQuickPathArc::addToPath(QPainterPath &path, const QQuickPathData &data)
 {
     const QPointF &startPoint = path.currentPosition();
     const QPointF &endPoint = positionForCurve(data, startPoint);
-    QQuickSvgParser::pathArc(path,
+    QGuiSvg::pathArc(path,
             _radiusX,
             _radiusY,
             _xAxisRotation,
@@ -2404,7 +2404,13 @@ void QQuickPathSvg::setPath(const QString &path)
 
 void QQuickPathSvg::addToPath(QPainterPath &path, const QQuickPathData &)
 {
-    QQuickSvgParser::parsePathDataFast(_path, path);
+    std::optional<QPainterPath> qpath = QGuiSvg::parsePath(_path);
+    if (qpath) {
+        if (path.isEmpty())
+            path = qpath.value();
+        else
+            path.addPath(qpath.value());
+    }
 }
 
 /****************************************************************************/

@@ -215,7 +215,6 @@ qt_internal_add_qml_module(Quick
         util/qquickstatechangescript.cpp util/qquickstatechangescript_p.h
         util/qquickstategroup.cpp util/qquickstategroup_p.h
         util/qquickstyledtext.cpp util/qquickstyledtext_p.h
-        util/qquicksvgparser.cpp util/qquicksvgparser_p.h
         util/qquicksystempalette.cpp util/qquicksystempalette_p.h
         util/qquicktextmetrics.cpp util/qquicktextmetrics_p.h
         util/qquicktextselection.cpp util/qquicktextselection_p.h

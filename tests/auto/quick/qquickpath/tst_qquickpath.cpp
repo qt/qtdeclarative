@@ -7,7 +7,7 @@
 #include <QtQml/qqmlcomponent.h>
 #include <QtQuick/private/qquickpath_p.h>
 #include <QtQuick/private/qquickrectangle_p.h>
-#include <QtQuick/private/qquicksvgparser_p.h>
+#include <QtGui/private/qguisvg_p.h>
 
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 
@@ -314,8 +314,7 @@ void tst_QuickPath::svgMalformed_data()
 void tst_QuickPath::svgMalformed()
 {
     QFETCH(QString, svgPath);
-    QPainterPath path;
-    QQuickSvgParser::parsePathDataFast(svgPath, path);
+    std::optional<QPainterPath> path = QGuiSvg::parsePath(svgPath);
 }
 
 void tst_QuickPath::line(QSizeF scale)

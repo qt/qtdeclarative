@@ -14,7 +14,7 @@
 #include <qsgrendererinterface.h>
 
 #include <QtQuick/private/qsgcontext_p.h>
-#include <private/qquicksvgparser_p.h>
+#include <QtGui/private/qguisvg_p.h>
 #if QT_CONFIG(quick_path)
 #include <private/qquickpath_p.h>
 #endif
@@ -2293,7 +2293,9 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_path(const QV4::FunctionObject 
             r->d()->context()->m_path = path->path();
     } else {
         QString path =value->toQStringNoThrow();
-        QQuickSvgParser::parsePathDataFast(path, r->d()->context()->m_path);
+        std::optional<QPainterPath> qpath = QGuiSvg::parsePath(path);
+        if (qpath)
+            r->d()->context()->m_path = qpath.value();
     }
     r->d()->context()->m_v4path.set(scope.engine, value);
     RETURN_UNDEFINED();

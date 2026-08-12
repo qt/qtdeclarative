@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "qquickpathinterpolated_p.h"
-#include <private/qquicksvgparser_p.h>
+#include <QtGui/private/qguisvg_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -83,7 +83,10 @@ void QQuickPathInterpolated::addToPath(QPainterPath &path, const QQuickPathData 
         m_paths.clear();
         m_paths.resize(pathCount);
         for (qsizetype i = 0; i < pathCount; i++) {
-            if (!QQuickSvgParser::parsePathDataFast(m_svgPaths.at(i), m_paths[i]))
+            std::optional<QPainterPath> qpath = QGuiSvg::parsePath(m_svgPaths.at(i));
+            if (qpath)
+                m_paths[i] = qpath.value();
+            else
                 qCDebug(lcPath) << "Syntax error in svg path no." << i;
         }
         m_dirty = false;
