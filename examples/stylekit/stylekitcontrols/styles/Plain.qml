@@ -77,6 +77,18 @@ Style {
         hovered.background.color: palette.accent
     }
 
+    delayButton {
+        padding: 0
+        indicator {
+            radius: 4
+            foreground {
+                radius: 4
+                color: palette.accent.lighter(1.2)
+            }
+        }
+        checked.indicator.foreground.color: palette.accent.darker(1.2)
+    }
+
     itemDelegate {
         // We don't want the menu items in a ComboBox to fade, so we override and unset
         // the transition previously set for all controls in the 'control' section.
