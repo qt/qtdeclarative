@@ -600,7 +600,7 @@ you should explicitly provide these methods.
         RemoveLastFunction removeLast)
 
 Construct a QQmlListProperty from a set of operation functions \a append,
-\a count, \a at, \a clear, \a replace, and \removeLast. An opaque \a data handle
+\a count, \a at, \a clear, \a replace, and \a removeLast. An opaque \a data handle
 may be passed which can be accessed from within the operation functions. The
 list property remains valid while the \a object owning the list property
 exists.
