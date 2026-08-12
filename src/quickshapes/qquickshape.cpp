@@ -9,7 +9,6 @@
 #include "qquickshapecurverenderer_p.h"
 #include <private/qsgcurvestrokenode_p.h>
 #include <private/qsgplaintexture_p.h>
-#include <private/qquicksvgparser_p.h>
 #include <QtGui/private/qdrawhelper_p.h>
 #include <QOpenGLFunctions>
 #include <QLoggingCategory>
