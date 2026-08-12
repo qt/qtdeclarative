@@ -129,6 +129,10 @@ Style {
         }
     }
 
+    delayButton {
+        padding: 0
+    }
+
     menu {
         background.width: 200
     }
@@ -294,6 +298,10 @@ Style {
             }
         }
 
+        delayButton {
+            indicator.color: "transparent"
+        }
+
         flatButton {
             hovered.background.visible: true
             checked.background.visible: true
@@ -432,6 +440,10 @@ Style {
                 }
                 text.color: "#666666"
             }
+        }
+
+        delayButton {
+            indicator.color: "transparent"
         }
 
         flatButton {

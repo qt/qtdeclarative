@@ -70,30 +70,39 @@ ApplicationWindow {
 
             GroupBox {
                 title: "Buttons"
-                RowLayout {
-                    spacing: app.spacing
-                    Button {
-                        text: "Normal"
+                ColumnLayout {
+                    RowLayout {
+                        spacing: app.spacing
+                        Button {
+                            text: "Normal"
+                        }
+
+                        Button {
+                            text: "Checkable"
+                            checkable: true
+                        }
+
+                        Button {
+                            text: "Disabled"
+                            enabled: false
+                        }
                     }
 
-                    Button {
-                        text: "Checkable"
-                        checkable: true
-                    }
+                    RowLayout {
+                        spacing: app.spacing
+                        Button {
+                            text: "Flat"
+                            flat: true
+                            checkable: true
+                        }
 
-                    Button {
-                        text: "Disabled"
-                        enabled: false
-                    }
+                        RoundButton {
+                            text: "Round"
+                        }
 
-                    Button {
-                        text: "Flat"
-                        flat: true
-                        checkable: true
-                    }
-
-                    RoundButton {
-                        text: "Round"
+                        DelayButton {
+                            text: qsTr("DelayButton")
+                        }
                     }
                 }
             }

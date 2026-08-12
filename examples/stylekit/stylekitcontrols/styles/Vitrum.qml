@@ -166,6 +166,14 @@ Style {
         }
     }
 
+    delayButton {
+        padding: 0
+        indicator {
+            color: "transparent"
+            border.width: 0
+        }
+    }
+
     pane {
         padding: 20
         background.delegate: null

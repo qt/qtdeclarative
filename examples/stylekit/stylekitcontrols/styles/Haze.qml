@@ -95,6 +95,17 @@ Style {
         }
     }
 
+    delayButton {
+        padding: 0
+        indicator {
+            radius: 8
+            foreground {
+                margins: 0
+                radius: 8
+            }
+        }
+    }
+
     flatButton {
         background.gradient: null
     }
@@ -427,6 +438,10 @@ Style {
             }
         }
 
+        delayButton {
+            indicator.color: "transparent"
+        }
+
         comboBox {
             hovered.background {
                 color: palette.accent
@@ -588,6 +603,10 @@ Style {
             }
         }
 
+        delayButton {
+            indicator.color: "transparent"
+        }
+
         comboBox {
             hovered {
                 background {
@@ -737,6 +756,14 @@ Style {
 
             abstractButton {
                 background.color: "ghostwhite"
+            }
+
+            delayButton {
+                indicator {
+                    color: "transparent"
+                    foreground.margins: 0
+                }
+                checked.text.color: "white"
             }
 
             textInput {
@@ -941,6 +968,10 @@ Style {
                 indicator.color: "transparent"
                 indicator.foreground.color: "transparent"
                 indicator.foreground.image.color: "white"
+            }
+
+            delayButton {
+                indicator.color: "transparent"
             }
 
             pane {
