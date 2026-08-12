@@ -408,6 +408,19 @@ void QQuickQmlGenerator::generateShaderUse(const NodeInfo &info)
         stream() << "visible: false";
         stream() << "hideSource: true";
 
+        if (m_contentRelativeMasks.contains(info.maskId)) {
+            stream() << "Binding { target: " << info.maskId
+                     << "; property: \"contentX\"; value: " << info.id << ".originalBounds.x }";
+            stream() << "Binding { target: " << info.maskId
+                     << "; property: \"contentY\"; value: " << info.id << ".originalBounds.y }";
+            stream() << "Binding { target: " << info.maskId
+                     << "; property: \"contentWidth\"; value: " << info.id
+                     << ".originalBounds.width }";
+            stream() << "Binding { target: " << info.maskId
+                     << "; property: \"contentHeight\"; value: " << info.id
+                     << ".originalBounds.height }";
+        }
+
         stream() << "ItemSpy {";
         m_indentLevel++;
         stream() << "id: " << maskId << "_itemspy";
@@ -1802,7 +1815,32 @@ bool QQuickQmlGenerator::generateMaskNode(const MaskNodeInfo &info)
         return false;
 
     // Generate an invisible item subtree which can be used in ShaderEffectSource
+    if (info.stage == StructureNodeStage::Start) {
+        if (info.isMaskContentRelativeCoordinates) {
+            m_contentRelativeMasks.insert(info.id);
+            stream() << "Item {";
+            m_indentLevel++;
+            stream() << "transform: Matrix4x4 {";
+            m_indentLevel++;
+            stream() << "matrix: Qt.matrix4x4(";
+            m_indentLevel++;
+            stream() << info.id << ".contentWidth, 0, 0, " << info.id << ".contentX,";
+            stream() << "0, " << info.id << ".contentHeight, 0, " << info.id << ".contentY,";
+            stream() << "0, 0, 1, 0,";
+            stream() << "0, 0, 0, 1)";
+            m_indentLevel--;
+            m_indentLevel--;
+            stream() << "}";
+        }
+        return true;
+    }
+
     if (info.stage == StructureNodeStage::End) {
+        if (info.isMaskContentRelativeCoordinates) {
+            m_indentLevel--;
+            stream() << "}";
+        }
+
         // Generate code to add after defs block
         startDefsSuffixBlock();
         stream() << "Loader {";
@@ -1819,6 +1857,13 @@ bool QQuickQmlGenerator::generateMaskNode(const MaskNodeInfo &info)
             stream() << "property real maskY: " << info.maskRect.top();
             stream() << "property real maskWidth: " << info.maskRect.width();
             stream() << "property real maskHeight: " << info.maskRect.height();
+        }
+
+        if (info.isMaskContentRelativeCoordinates) {
+            stream() << "property real contentX: 0";
+            stream() << "property real contentY: 0";
+            stream() << "property real contentWidth: 1";
+            stream() << "property real contentHeight: 1";
         }
 
         stream() << "function maskRect(otherX, otherY, otherWidth, otherHeight) {";

@@ -197,6 +197,7 @@ private:
     quint32 m_nodeCounter = 0;
     QString m_defsSuffix;
     QString m_indentString;
+    QSet<QString> m_contentRelativeMasks;
 };
 
 QT_END_NAMESPACE
