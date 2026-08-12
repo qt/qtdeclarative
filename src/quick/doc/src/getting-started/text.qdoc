@@ -5,7 +5,7 @@
 \meta {keywords} {qmltopic}
 \title Displaying text
 \keyword Use Case - Displaying Text In QML
-\brief Example of how to display text in QML
+\brief Example of how to display text in QML.
 
 To display text the Text type is provided by the \l {Qt Quick} module. For
 related uses, the \l{TextInput} and \l{TextEdit} types provide editable text

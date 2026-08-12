@@ -4,7 +4,7 @@
 /*!
 \page qtquick-visualcanvas-coordinates.html
 \title Concepts - Visual Coordinates in Qt Quick
-\brief Description of the concept of visual coordinates in Qt Quick
+\brief Description of the concept of visual coordinates in Qt Quick.
 
 \section1 Item Coordinates
 The default system of visual coordinates used in Qt Quick is item coordinates. This is a cartesian coordinate system

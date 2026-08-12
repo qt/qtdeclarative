@@ -4,7 +4,7 @@
 \page qtqml-documents-scope.html
 \meta {keywords} {qmltopic}
 \title Scope and Naming Resolution
-\brief overview of scope and naming resolution
+\brief overview of scope and naming resolution.
 \ingroup explanations-programminglanguages
 
 QML property bindings, inline functions, and imported JavaScript files all

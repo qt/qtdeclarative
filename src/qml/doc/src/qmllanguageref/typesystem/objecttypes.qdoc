@@ -4,7 +4,7 @@
 \page qtqml-typesystem-objecttypes.html
 \meta {keywords} {qmltopic}
 \title QML Object Types
-\brief describes QML object types and how to create them
+\brief describes QML object types and how to create them.
 
 
 A QML object type is a type from which a QML object can be instantiated.

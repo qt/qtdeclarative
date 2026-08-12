@@ -4,7 +4,7 @@
 \page qtqml-typesystem-basictypes.html
 \title QML Basic Types
 \keyword QML Basic Types
-\brief QML Value Types used to be called "Basic Types"
+\brief QML Value Types used to be called "Basic Types".
 
 See \l{qtqml-typesystem-valuetypes.html} for the documentation of QML value types.
 */

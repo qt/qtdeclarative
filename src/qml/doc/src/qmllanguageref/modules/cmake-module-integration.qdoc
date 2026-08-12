@@ -4,7 +4,7 @@
 /*!
 \page qtqml-modules-cmake-integration.html
 \title Tying it all together with CMake
-\brief Building QML modules with CMake
+\brief Building QML modules with CMake.
 
 The \l{qt_add_qml_module} CMake command is the recommended way to define QML
 modules. It automates type registration, resource embedding, plugin creation,

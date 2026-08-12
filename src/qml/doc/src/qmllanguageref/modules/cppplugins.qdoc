@@ -4,7 +4,7 @@
 /*!
 \page qtqml-modules-cppplugins.html
 \title Creating C++ Plugins for QML
-\brief Description of how to write C++ plugins for QML
+\brief Description of how to write C++ plugins for QML.
 
 \section1 Creating a Plugin
 

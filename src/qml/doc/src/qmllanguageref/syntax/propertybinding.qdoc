@@ -5,7 +5,7 @@
 \page qtqml-syntax-propertybinding.html
 \meta {keywords} {qmltopic}
 \title Property Binding
-\brief binding object properties
+\brief binding object properties.
 
 An object's property can be assigned a static value which stays constant until it
 is explicitly assigned a new value. However, to make the fullest use of QML and its

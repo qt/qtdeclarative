@@ -4,7 +4,7 @@
 \page qtqml-documents-definetypes.html
 \meta {keywords} {qmltopic}
 \title Defining Object Types through QML Documents
-\brief Description of how a QML document is a reusable type definition
+\brief Description of how a QML document is a reusable type definition.
 
 One of the core features of QML is that it enables QML object types to be
 easily defined in a lightweight manner through QML documents to suit the needs

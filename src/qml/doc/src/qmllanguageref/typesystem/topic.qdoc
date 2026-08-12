@@ -4,7 +4,7 @@
 \page qtqml-typesystem-topic.html
 \meta {keywords} {qmltopic}
 \title The QML Type System
-\brief Description of the QML type system
+\brief Description of the QML type system.
 
 The types which may be used in the definition of an object hierarchy in a QML
 document can come from various sources.  They may be:

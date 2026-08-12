@@ -4,7 +4,7 @@
 /*!
     \page qtlabsstylekit-index.html
     \title Qt Labs StyleKit
-    \brief A high-level styling API for Qt Quick Controls
+    \brief A high-level styling API for Qt Quick Controls.
 
     StyleKit is a declarative styling system for \l {Qt Quick Controls}, built on top of
     \l {Qt Quick Templates 2}{Qt Quick Templates}. It lets you define a complete visual style

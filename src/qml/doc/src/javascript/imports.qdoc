@@ -4,7 +4,7 @@
 \page qtqml-javascript-imports.html
 \meta {keywords} {qmltopic}
 \title Importing JavaScript Resources in QML
-\brief Description of how to import and use JavaScript resources in QML documents
+\brief Description of how to import and use JavaScript resources in QML documents.
 
 \l{qtqml-javascript-resources.html}{JavaScript resources} may be imported by
 QML documents and other JavaScript resources.  JavaScript resources may be

@@ -5,7 +5,7 @@
 \meta {keywords} {qmltopic}
 \title Animations
 \keyword Use case - Animations In QML
-\brief Example of how to include animations in QML applications
+\brief Example of how to include animations in QML applications.
 
 \l {Qt Quick} provides the ability to animate properties. Animating properties
 allows property values to move through intermediate values instead of

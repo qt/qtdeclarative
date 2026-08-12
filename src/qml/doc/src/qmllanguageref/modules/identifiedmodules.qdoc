@@ -4,7 +4,7 @@
 \page qtqml-modules-identifiedmodules.html
 \meta {keywords} {qmltopic}
 \title Identified Modules
-\brief Creating and importing identified modules
+\brief Creating and importing identified modules.
 
 Identified modules are modules that are installed and identifiable to the QML
 engine by a URI in the form of a dotted identifier string, which should be

@@ -5,7 +5,7 @@
 \page qtquick-index.html
 \meta {keywords} {qmltopic}
 \title Qt Quick
-\brief The Qt Quick module implements the "standard library" for QML
+\brief The Qt Quick module implements the "standard library" for QML.
 
 The Qt Quick module is the standard library for writing QML applications.
 While the \l{Qt Qml} module provides the QML engine and

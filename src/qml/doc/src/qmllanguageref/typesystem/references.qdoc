@@ -3,7 +3,7 @@
 /*!
 \page qtqml-typesystem-references.html
 \title QML Value Type and Sequence References
-\brief Description of QML value type and sequence references
+\brief Description of QML value type and sequence references.
 
 \l{QML Value Types} and \l{QML Sequence Types} are necessarily passed by value.
 In contrast to \l{QML Object Types} they have no identity of themselves, but can

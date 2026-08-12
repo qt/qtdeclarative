@@ -4,7 +4,7 @@
 /*!
 \page qtqml-prototyping-debugging-profiling.html
 \title Prototyping, Debugging and Profiling QML Applications
-\brief Tools and techniques for developing and debugging QML applications
+\brief Tools and techniques for developing and debugging QML applications.
 
 Qt provides a comprehensive set of tools for prototyping, debugging, and profiling QML applications
 throughout the development lifecycle.

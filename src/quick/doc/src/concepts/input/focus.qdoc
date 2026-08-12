@@ -4,7 +4,7 @@
 /*!
 \page qtquick-input-focus.html
 \title Keyboard Focus in Qt Quick
-\brief handling keyboard focus
+\brief handling keyboard focus.
 
 When a key is pressed or released, a key event is generated and delivered to the
 focused Qt Quick \l Item. To facilitate the construction of reusable components

@@ -5,7 +5,7 @@
     \page qtquickcontrols-focus.html
     \keyword Focus Management in Qt Quick Controls 2
     \title Focus Management in Qt Quick Controls
-    \brief Overview of focus handling with Qt Quick Controls
+    \brief Overview of focus handling with Qt Quick Controls.
 
     Qt Quick Controls follows the standard
     \l {Keyboard Focus in Qt Quick}{Qt Quick focus system}, while also

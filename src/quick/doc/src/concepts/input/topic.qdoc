@@ -4,7 +4,7 @@
 /*!
 \page qtquick-input-topic.html
 \title Important Concepts In Qt Quick - User Input
-\brief Overview of user input concepts
+\brief Overview of user input concepts.
 
 Being able to respond to user-input is a fundamental part of user-interface
 design.  Depending on the use-case that an application solves, and the

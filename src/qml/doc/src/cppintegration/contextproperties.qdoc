@@ -3,7 +3,7 @@
 /*!
 \page qtqml-cppintegration-contextproperties.html
 \title Embedding C++ Objects into QML with Context Properties
-\brief Description of how to embed C++ data into QML using context properties
+\brief Description of how to embed C++ data into QML using context properties.
 
 \warning By using context properties in your QML code, you create a dependency from your QML code
          to the specific context you have in mind when writing it. This limits re-usability of your

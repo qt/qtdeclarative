@@ -6,7 +6,7 @@
     \qmlmodule QtQuick.Particles
     \title Qt Quick Particles QML Types
     \ingroup qmlmodules
-    \brief Provides QML types for particle effects
+    \brief Provides QML types for particle effects.
 
   This QML module contains a particle system for Qt Quick. To use these types, import the module with the following line:
 

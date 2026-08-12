@@ -4,7 +4,7 @@
 /*!
 \page qtquick-modelviewsdata-sqlmodels.html
 \title Using SQL databases with Qt Quick Views
-\brief using Qt Quick views with SQL databases
+\brief using Qt Quick views with SQL databases.
 
 \section1 SQL Models
 

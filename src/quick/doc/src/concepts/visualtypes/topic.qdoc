@@ -4,7 +4,7 @@
 /*!
 \page qtquick-visualtypes-topic.html
 \title Important Concepts In Qt Quick - Visual Types
-\brief Overview of visual type concepts
+\brief Overview of visual type concepts.
 
 Most user-interfaces include some visual aspect.  While multimodal interfaces
 are extremely interesting and can be very engaging and interactive (using,

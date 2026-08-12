@@ -4,7 +4,7 @@
 \page qtqml-typesystem-sequencetypes.html
 \meta {keywords} {qmltopic}
 \title QML Sequence Types
-\brief Description of QML sequence types
+\brief Description of QML sequence types.
 
 For every \l{qtqml-typesystem-objecttypes.html}{object type} and
 \l{qtqml-typesystem-valuetypes.html}{value type} a sequence type for storing

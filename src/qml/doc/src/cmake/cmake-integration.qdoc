@@ -4,7 +4,7 @@
 /*!
 \page qtqml-cmake-integration.html
 \title CMake Integration for QML
-\brief CMake commands, properties, and policies for QML module development
+\brief CMake commands, properties, and policies for QML module development.
 
 Qt provides extensive CMake integration for building QML modules and applications.
 

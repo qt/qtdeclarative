@@ -3,7 +3,7 @@
 /*!
 \group qtqml-tooling
 \title Qt Qml Tooling
-\brief List of Qt Qml Tools and Utilities
+\brief List of Qt Qml Tools and Utilities.
 
 The Qt Qml module provides a range of tools and utilities that enhance
 the developer and designer experience and includes some internal tools

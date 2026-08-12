@@ -5,7 +5,7 @@
 \page qtqml-qtquick-compiler-tech.html
 \ingroup overviews
 \title Qt Quick Compiler
-\brief Overview of Qt Quick Compiler components
+\brief Overview of Qt Quick Compiler components.
 
 Qt Quick Compiler lets you process QML and JavaScript code at compile
 time, rather than at run time. This allows for:
