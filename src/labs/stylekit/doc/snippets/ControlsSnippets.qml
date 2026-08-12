@@ -190,6 +190,20 @@ ApplicationWindow {
         }
         //! [comboBox]
 
+        //! [delayButton]
+        delayButton {
+            padding: 0
+            indicator {
+                fillWidth: true
+                fillHeight: true
+                color: "transparent"
+                border.width: 0
+                foreground.color: palette.accent
+            }
+            checked.indicator.foreground.color: palette.accent.darker(1.2)
+        }
+        //! [delayButton]
+
         //! [dialog]
         dialog {
             text {
