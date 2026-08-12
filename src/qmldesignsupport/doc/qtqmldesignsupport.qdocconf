@@ -27,7 +27,7 @@ qhp.QtQmlDesignSupport.subprojects.classes.sortPages = true
 headerdirs  += ..
 sourcedirs  += ..
 exampledirs += snippets
-imagedirs   += images
+# imagedirs   += images
 
 depends += qtcore qtdoc qtgui qtqml qtquick qtcmake
 

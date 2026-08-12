@@ -30,7 +30,7 @@ moduleheader =
 headerdirs += ../
 sourcedirs += ../
 
-imagedirs += images
+# imagedirs += images
 
 navigation.landingpage = "Qt Qml Core"
 navigation.qmltypespage = "Qt Qml Core QML Types"

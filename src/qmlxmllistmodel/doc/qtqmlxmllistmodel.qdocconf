@@ -28,10 +28,10 @@ depends += qtcore qtqml qtdoc
 {headerdirs,sourcedirs} += \
     ..
 
-exampledirs += .. \
-               snippets
+# exampledirs += .. \
+#               snippets
 
-imagedirs += images
+# imagedirs += images
 
 navigation.qmltypespage = "Qt Qml XmlListModel QML Types"
 
