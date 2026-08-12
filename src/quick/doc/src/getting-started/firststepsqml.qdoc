@@ -339,7 +339,7 @@ That type may now be re-used multiple times in the application, as follows:
 \table
 \row
 \li \snippet qmlapp/qml-extending-types/components/application.qml 0
-\li \borderedimage qmlapp/qml-extending-types.gif
+\li \image qmlapp/qml-extending-types.gif
                    {MessageLabel components showing debug, warning, and critical messages}
 \endtable
 
