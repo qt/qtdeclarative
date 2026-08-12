@@ -5,7 +5,7 @@ plugins {
 
 QtBuild {
     // Relative for Qt (Installer or MaintenanceTool) installations.
-    qtPath = file('../../../../../../../6.11.2')
+    qtPath = file('../../../../../../../6.11.3')
     projectPath = file('../../qtabstractitemmodel')
 }
 
