@@ -40,6 +40,15 @@ QT_BEGIN_NAMESPACE
     }
     \endqml
 
+    \warning Both parameters of the \c compare method must carry an explicit
+    type annotation, as \c lhsData and \c rhsData do in the example above, and
+    both annotations must resolve to the same type. The \c compare method written
+    the ordinary JavaScript way, without parameter type annotations, e.g.
+    \c{function compare(lhsData, rhsData) : int { ... }}, compiles without
+    any warning but fails with comparision. \l FunctionSorter relies on the annotated
+    type to know what kind of role-data object to instantiate and populate for
+    \c lhsData and \c rhsData; without it, there is nothing to instantiate.
+
     \note \deprecated [6.12] The \c sort method is deprecated. Rename it to \c compare.
 
     \note The user needs to explicitly invoke
