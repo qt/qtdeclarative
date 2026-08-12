@@ -4,7 +4,7 @@
 /*!
 \page qtquick-visualcanvas-topic.html
 \title Important Concepts In Qt Quick - The Visual Canvas
-\brief Overview of visual canvas concepts
+\brief Overview of visual canvas concepts.
 
 The visual canvas provided by the Qt Quick is a two dimensional canvas with
 z-ordering.

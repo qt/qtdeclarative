@@ -3,7 +3,7 @@
 /*!
 \page qtqml-cppintegration-exposecppstate.html
 \title Exposing State from C++ to QML
-\brief Description of how to expose global state from C++ to QML
+\brief Description of how to expose global state from C++ to QML.
 
 It is often desirable to expose some properties from C++ to all QML elements in a
 particular component, all QML elements in a module, or even all QML elements

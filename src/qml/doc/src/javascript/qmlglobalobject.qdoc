@@ -4,7 +4,7 @@
 \page qtqml-javascript-qmlglobalobject.html
 \meta {keywords} {qmltopic}
 \title QML Global Object
-\brief Description of the Qml Global Object
+\brief Description of the Qml Global Object.
 
 
 The QML JavaScript host environment implements the following host objects and functions.

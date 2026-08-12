@@ -5,7 +5,7 @@
 \page qtqml-modules-legacymodules.html
 \meta {keywords} {qmltopic}
 \title Legacy Modules
-\brief Description of legacy QML modules
+\brief Description of legacy QML modules.
 
 Legacy modules are modules whose specification \c qmldir file does not contain
 a module identifier directive.  A legacy module may be either installed into

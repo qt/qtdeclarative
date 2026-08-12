@@ -4,7 +4,7 @@
 \page qtqml-typesystem-valuetypes.html
 \meta {keywords} {qmltopic}
 \title QML Value Types
-\brief Description of QML value types
+\brief Description of QML value types.
 
 QML supports built-in and custom value types.
 

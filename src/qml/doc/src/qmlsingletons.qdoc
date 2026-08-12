@@ -4,7 +4,7 @@
 /*!
 \page qml-singleton.html
 \title Singletons in QML
-\brief A guide for using singletons in QML
+\brief A guide for using singletons in QML.
 
 In QML, a singleton is an object which is created at most once per
 \l{QQmlEngine}{engine}. In this guide, we'll

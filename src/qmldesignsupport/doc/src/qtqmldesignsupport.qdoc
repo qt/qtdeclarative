@@ -4,7 +4,7 @@
 /*!
     \title \QDesSup
     \page qtqmldesignsupport-index.html
-    \brief Provides a set of types to allow registering and referencing objects in QML
+    \brief Provides a set of types to allow registering and referencing objects in QML.
 
     The \QDesSup module provides support for design tooling with a set of types for
     registering and referencing objects in QML. Objects are identified with a key string at
@@ -62,7 +62,7 @@
     \qmlmodule QtQml.DesignSupport
     \title \QDesSup QML Module
     \ingroup qmlmodules
-    \brief QML types for \QDesSup API
+    \brief QML types for \QDesSup API.
     \since 6.12
 
     The \QDesSup functionality can be accessed via these QML types.

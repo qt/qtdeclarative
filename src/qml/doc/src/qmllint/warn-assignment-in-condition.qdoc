@@ -6,7 +6,7 @@
 \ingroup qmllint-warnings-and-errors
 
 \title Warn about using assignment in conditions
-\brief [assignment-in-condition] An assignment statement is used inside a condition
+\brief [assignment-in-condition] An assignment statement is used inside a condition.
 
 \qmllintwarningcategory assignment-in-condition
 

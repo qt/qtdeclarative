@@ -4,7 +4,7 @@
 \page qtqml-syntax-basics.html
 \meta {keywords} {qmltopic}
 \title QML Syntax Basics
-\brief Description of the basics of QML syntax
+\brief Description of the basics of QML syntax.
 
 QML is a multi-paradigm language that enables objects to be defined in terms of their attributes
 and how they relate and respond to changes in other objects. In contrast to purely imperative code,

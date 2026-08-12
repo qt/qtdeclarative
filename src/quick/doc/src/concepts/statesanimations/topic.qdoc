@@ -4,7 +4,7 @@
 /*!
 \page qtquick-statesanimations-topic.html
 \title Important Concepts in Qt Quick - States, Transitions and Animations
-\brief Description of the concepts of states, transitions and animations in Qt Quick
+\brief Description of the concepts of states, transitions and animations in Qt Quick.
 
 In any modern user-interface, transitioning between states and animating
 the user-interface is highly beneficial.  These are first-class concepts in

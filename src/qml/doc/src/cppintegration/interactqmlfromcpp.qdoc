@@ -3,7 +3,7 @@
 /*!
 \page qtqml-cppintegration-interactqmlfromcpp.html
 \title Interacting with QML Objects from C++
-\brief Description of how to load and access QML objects from C++ code
+\brief Description of how to load and access QML objects from C++ code.
 
 All QML object types are QObject-derived types, whether they are internally
 implemented by the engine or \l

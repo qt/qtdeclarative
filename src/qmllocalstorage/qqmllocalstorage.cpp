@@ -496,7 +496,7 @@ through the data.
     \title Qt Quick Local Storage QML Types
     \ingroup qmlmodules
     \brief Provides a JavaScript object singleton type for accessing a local
-    SQLite database
+    SQLite database.
 
     This is a singleton type for reading and writing to SQLite databases.
 

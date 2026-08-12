@@ -6,7 +6,7 @@
 \meta {keywords} {qmltopic}
 
 \title Signal and Handler Event System
-\brief the event system in QML
+\brief the event system in QML.
 
 Application and user interface components need to communicate with each other. For
 example, a button needs to know that the user has clicked on it.

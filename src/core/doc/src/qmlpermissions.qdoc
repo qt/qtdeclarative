@@ -4,7 +4,7 @@
 /*!
     \page qml-application-permissions.html
     \title QML Application Permissions
-    \brief Managing application permissions via QML
+    \brief Managing application permissions via QML.
 
     Many features of today's devices and operating systems can have
     significant privacy, security, and performance implications if

@@ -5,7 +5,7 @@
 \page qtqml-modules-topic.html
 \meta {keywords} {qmltopic}
 \title QML Modules
-\brief Description of how to write modules for QML
+\brief Description of how to write modules for QML.
 
 A QML module provides versioned types and JavaScript resources in a type
 namespace which may be used by clients who import the module.  The types which

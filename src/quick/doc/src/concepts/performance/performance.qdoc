@@ -6,7 +6,7 @@
 \meta {keywords} {qmltopic}
 \title Performance considerations and suggestions
 \keyword QML Performance Considerations And Suggestions
-\brief Discussion of performance-related trade-offs and best-practices
+\brief Discussion of performance-related trade-offs and best-practices.
 
 \section1 Timing Considerations
 

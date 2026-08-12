@@ -4,7 +4,7 @@
 /*!
     \page qtlabsstylekit-fallbackstyle.html
     \title Reference Fallback Style
-    \brief A reference fallback style
+    \brief A reference fallback style.
 
     The following listing shows a fallback style similar to the one that
     StyleKit uses when a \l {Style::}{fallbackStyle} is not explicitly set.

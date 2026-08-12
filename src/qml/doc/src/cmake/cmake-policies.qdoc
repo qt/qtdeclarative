@@ -4,7 +4,7 @@
 /*!
 \page cmake-policies-qml.html
 \title CMake Policies for QML
-\brief Overview of CMake policies affecting QML module behavior
+\brief Overview of CMake policies affecting QML module behavior.
 
 Qt Qml provides several CMake policies to control backward compatibility and behavior
 of QML-related CMake commands.

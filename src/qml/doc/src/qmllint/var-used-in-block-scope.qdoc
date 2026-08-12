@@ -6,7 +6,7 @@
 \ingroup qmllint-warnings-and-errors
 
 \title Block scope var declaration
-\brief [var-used-in-block-scope] A variable has been declared with var inside a block scope
+\brief [var-used-in-block-scope] A variable has been declared with var inside a block scope.
 
 \qmllintwarningcategory block-scope-var-declaration
 

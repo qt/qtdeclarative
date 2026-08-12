@@ -6,7 +6,7 @@
 \ingroup qmllint-warnings-and-errors
 
 \title Redundant Optional Chaining
-\brief [redundant-optional-chaining] Some optional chaining lookups could be non-optional
+\brief [redundant-optional-chaining] Some optional chaining lookups could be non-optional.
 
 \qmllintwarningcategory redundant-optional-chaining
 

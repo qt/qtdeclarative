@@ -4,7 +4,7 @@
 \page qtqml-javascript-expressions.html
 \meta {keywords} {qmltopic}
 \title JavaScript Expressions in QML Documents
-\brief Description of where JavaScript expressions are valid in QML documents
+\brief Description of where JavaScript expressions are valid in QML documents.
 
 
 The \l{JavaScript Host Environment} provided by QML can run valid standard

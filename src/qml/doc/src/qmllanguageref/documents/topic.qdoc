@@ -4,7 +4,7 @@
 \page qtqml-documents-topic.html
 \meta {keywords} {qmltopic}
 \title QML Documents
-\brief Description of QML documents
+\brief Description of QML documents.
 
 A QML document is a string which conforms to QML document syntax.  A document
 defines a QML object type.  A document is generally loaded from a \c ".qml"

@@ -5,7 +5,7 @@
 \page qmlapplications.html
 \title Getting started with Qt Quick applications
 \keyword QML Applications
-\brief Essential documentation for Qt Quick application developers
+\brief Essential documentation for Qt Quick application developers.
 \ingroup explanations-programminglanguages
 
 QML is a declarative language that allows user interfaces to be described in
