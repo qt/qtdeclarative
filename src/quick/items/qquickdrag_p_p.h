@@ -54,12 +54,15 @@ public:
         , itemMoved(false)
         , eventQueued(false)
         , overrideActions(false)
+        , listeningForDestruction(false)
         , dragType(QQuickDrag::Internal)
     {
     }
 
     void itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &) override;
     void itemParentChanged(QQuickItem *, QQuickItem *parent) override;
+    void itemDestroyed(QQuickItem *item) override;
+    void listenForAttachedItemDestruction(bool listen);
     void updatePosition();
     void restartDrag();
     void deliverEnterEvent();
@@ -89,6 +92,9 @@ public:
     bool itemMoved : 1;
     bool eventQueued : 1;
     bool overrideActions : 1;
+    // Whether we are registered as a Destroyed change listener on attachedItem, which
+    // we only are for the duration of a native drag.
+    bool listeningForDestruction : 1;
     QPointF hotSpot;
     QUrl imageSource;
     QSize imageSourceSize;
