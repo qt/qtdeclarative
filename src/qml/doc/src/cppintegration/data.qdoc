@@ -3,7 +3,7 @@
 /*!
 \page qtqml-cppintegration-data.html
 \title Data Type Conversion Between QML and C++
-\brief Description of how data types are exchanged between QML and C++
+\brief Description of how data types are exchanged between QML and C++.
 
 When data values are exchanged between QML and C++, they are converted by the
 QML engine to have the correct data types as appropriate for use in QML or

@@ -5,7 +5,7 @@
 \meta {keywords} {qmltopic}
 \title Handling user input
 \keyword Use Case - Responding To User Input in QML
-\brief Example of how to accept user input and respond to it in a QML application
+\brief Example of how to accept user input and respond to it in a QML application.
 
 \section1 Supported types of user input
 

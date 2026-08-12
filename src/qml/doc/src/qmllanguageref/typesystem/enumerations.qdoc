@@ -3,7 +3,7 @@
 /*!
 \page qtqml-typesystem-enumerations.html
 \title QML Enumerations
-\brief Description of QML Enumerations
+\brief Description of QML Enumerations.
 
 Enumerations used in QML can be defined either in QML or in C++.
 

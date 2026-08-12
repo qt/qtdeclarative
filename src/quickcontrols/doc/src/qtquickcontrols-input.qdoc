@@ -5,7 +5,7 @@
     \page qtquickcontrols-input.html
     \title Input Controls
     \ingroup qtquickcontrols-guidelines
-    \brief Guidelines for input controls
+    \brief Guidelines for input controls.
 
     Qt Quick Controls offers a variety of input controls for both numeric
     and textual input.

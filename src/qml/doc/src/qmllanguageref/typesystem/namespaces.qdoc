@@ -4,7 +4,7 @@
 \page qtqml-typesystem-namespaces.html
 \meta {keywords} {qmltopic}
 \title QML Namespaces
-\brief Description of QML Namespaces
+\brief Description of QML Namespaces.
 
 A QML Namespace is a special kind of type that only exposes enumerations and cannot
 be instantiated. A namespace can only be declared in C++, using the \l QML_ELEMENT or

@@ -3,7 +3,7 @@
 /*!
 \page qtqml-syntax-directoryimports.html
 \title Importing QML Document Directories
-\brief Description of directory import statements in QML
+\brief Description of directory import statements in QML.
 
 A local directory of QML files can be imported without any additional setup or
 configuration.  A remote directory of QML files can also be imported, but

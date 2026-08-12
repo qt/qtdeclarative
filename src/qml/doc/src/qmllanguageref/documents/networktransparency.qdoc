@@ -4,7 +4,7 @@
 \page qtqml-documents-networktransparency.html
 \meta {keywords} {qmltopic}
 \title Resource Loading and Network Transparency
-\brief about loading files and resources across a network
+\brief about loading files and resources across a network.
 
 QML supports network transparency by using URLs (rather than file names) for all
 references from a QML document to other content. This means that anywhere a URL source is expected,

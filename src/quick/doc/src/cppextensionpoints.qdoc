@@ -4,7 +4,7 @@
 /*!
 \page qtquick-cppextensionpoints.html
 \title C++ Extension Points Provided By Qt Quick
-\brief Description of the C++ extension points provided by the Qt Quick module
+\brief Description of the C++ extension points provided by the Qt Quick module.
 
 All QML applications can be extended from C++ in order to use additional
 functionality implemented in C++ code or to provide a C++ based QML plugin.

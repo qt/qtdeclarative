@@ -5,7 +5,7 @@
     \qmlmodule Qt.labs.animation
     \title Qt Quick experimental animation types
     \ingroup qmlmodules
-    \brief Provides QML experimental types for animation
+    \brief Provides QML experimental types for animation.
     \since 5.14
 
     This QML module contains experimental QML types related to animation.

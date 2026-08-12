@@ -4,7 +4,7 @@
 /*!
 \page qtquick-convenience-topic.html
 \title Important Concepts In Qt Quick - Convenience Types
-\brief Overview of the convenience types for QML core features
+\brief Overview of the convenience types for QML core features.
 
 In a highly dynamic user interface, the application developer will often wish
 to react to events and trigger various response logic.  QML has built-in

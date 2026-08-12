@@ -4,7 +4,7 @@
 /*!
 \page qtqml-typesystem-attachedtypes.html
 \title QML Attached Types
-\brief Using attached properties and signals in QML
+\brief Using attached properties and signals in QML.
 
 Attached properties and signals are a mechanism for objects to be annotated with extra
 properties or signals that are not part of their base type. Attached properties are

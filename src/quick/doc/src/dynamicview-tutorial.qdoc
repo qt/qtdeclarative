@@ -4,7 +4,7 @@
 /*!
 \page qml-dynamicview-tutorial.html tutorial
 \title QML Dynamic View Ordering Tutorial
-\brief A tutorial describing how to re-arrange items in a QML ListView
+\brief A tutorial describing how to re-arrange items in a QML ListView.
 \nextpage QML Dynamic View Ordering Tutorial 1 - A Simple ListView and Delegate
 
 This tutorial shows how items in a ListView can be re-ordered without modifying the source model.

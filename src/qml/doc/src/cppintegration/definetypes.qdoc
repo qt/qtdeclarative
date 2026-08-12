@@ -3,7 +3,7 @@
 /*!
 \page qtqml-cppintegration-definetypes.html
 \title Defining QML Types from C++
-\brief Description of ways to define QML object types from C++ code
+\brief Description of ways to define QML object types from C++ code.
 
 When extending QML with C++ code, a C++ class can be registered with the QML
 type system to enable the class to be used as a data type within QML code.

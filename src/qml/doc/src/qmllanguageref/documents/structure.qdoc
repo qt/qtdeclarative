@@ -4,7 +4,7 @@
 \page qtqml-documents-structure.html
 \meta {keywords} {qmltopic}
 \title Structure of a QML Document
-\brief Description of the structure of QML documents
+\brief Description of the structure of QML documents.
 
 
 A QML document is a self contained piece of QML source code that consists of three parts:

@@ -4,7 +4,7 @@
 \page qtqml-javascript-resources.html
 \meta {keywords} {qmltopic}
 \title Defining JavaScript Resources in QML
-\brief Description of how JavaScript files may be defined for use in QML
+\brief Description of how JavaScript files may be defined for use in QML.
 
 The program logic for a QML application may be defined in JavaScript.  The
 JavaScript code may either be defined in-line in QML documents, or separated

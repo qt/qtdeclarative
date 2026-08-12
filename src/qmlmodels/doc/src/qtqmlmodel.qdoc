@@ -4,7 +4,7 @@
 /*!
     \page qtqmlmodels-index.html
     \title Qt Qml Models
-    \brief Provides QML types for data models
+    \brief Provides QML types for data models.
 
     This QML module contains types for defining data models in QML.
 
@@ -43,7 +43,7 @@
     \qmlmodule QtQml.Models
     \title Qt Qml Models QML Types
     \ingroup qmlmodules
-    \brief Provides QML types for data models
+    \brief Provides QML types for data models.
     \since 5.1
 
     This QML module contains types for defining data models in QML.

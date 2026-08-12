@@ -5,7 +5,7 @@
     \page qtquickcontrols-containers.html
     \title Container Controls
     \ingroup qtquickcontrols-guidelines
-    \brief Guidelines for container controls
+    \brief Guidelines for container controls.
 
     Qt Quick Controls offers a selection of container-like controls.
 

@@ -4,7 +4,7 @@
 \page qtqml-javascript-topic.html
 \meta {keywords} {qmltopic}
 \title Integrating QML and JavaScript
-\brief Description of how to use JavaScript in QML applications
+\brief Description of how to use JavaScript in QML applications.
 
 The QML language uses a JSON-like syntax and allows various expressions and
 methods to be defined as JavaScript functions.  It also allows users to import

@@ -4,7 +4,7 @@
 /*!
 \page qqmlsa-tutorial.html
 \title QML Static Analysis Tutorial
-\brief An introduction on writing your own qmllint checks
+\brief An introduction on writing your own qmllint checks.
 \nextpage QML Static Analysis 1 - Basic Setup
 
 This tutorial gives an introduction to QQmlSA, the API to statically analyze QML code.

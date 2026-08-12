@@ -4,7 +4,7 @@
 /*!
 \page qtqml-language-topic.html
 \title The QML Language
-\brief Overview of the QML language fundamentals
+\brief Overview of the QML language fundamentals.
 
 The QML language provides the foundation for building dynamic and declarative user interfaces.
 This section covers the core language features and syntax.

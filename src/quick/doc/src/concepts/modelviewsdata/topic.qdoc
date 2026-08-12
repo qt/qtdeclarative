@@ -4,7 +4,7 @@
 /*!
 \page qtquick-modelviewsdata-topic.html
 \title Important Concepts In Qt Quick - Data - Models, Views, and Data Storage
-\brief Overview of the data, model and view concepts
+\brief Overview of the data, model and view concepts.
 
 Most applications will have data that needs to be displayed to the user.  That
 data might come from a variety of sources: network sources, local files, and

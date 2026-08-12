@@ -3,7 +3,7 @@
 /*!
 \page qtqml-cppintegration-exposecppattributes.html
 \title Exposing Attributes of C++ Types to QML
-\brief Description of how to expose the attributes of a C++ type to QML
+\brief Description of how to expose the attributes of a C++ type to QML.
 
 QML can easily be extended with functionality defined in C++ code. Due to the
 tight integration of the QML engine with the \l{The Meta-Object System}{Qt

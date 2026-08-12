@@ -5,7 +5,7 @@
     \page qtquickcontrols-delegates.html
     \title Delegate Controls
     \ingroup qtquickcontrols-guidelines
-    \brief Guidelines for delegate controls
+    \brief Guidelines for delegate controls.
 
     Qt Quick Controls offers a selection of controls that are used as
     delegates in views.

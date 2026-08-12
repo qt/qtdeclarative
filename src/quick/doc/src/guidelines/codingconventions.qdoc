@@ -5,7 +5,7 @@
 \page qml-codingconventions.html
 \meta {keywords} {qmltopic}
 \title QML Coding Conventions
-\brief code style convention
+\brief code style convention.
 
 This document contains the QML coding conventions that we follow in our
 documentation and examples and recommend that others follow.

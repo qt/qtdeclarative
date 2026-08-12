@@ -4,7 +4,8 @@
 /*!
 \page qtquick-positioning-righttoleft.html
 \title Right-to-left User Interfaces
-\brief switching text flow and layout
+\brief switching text flow and layout.
+
 \section1 Overview
 
 This chapter discusses different approaches and options available for implementing right-to-left

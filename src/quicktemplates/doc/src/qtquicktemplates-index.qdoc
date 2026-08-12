@@ -4,7 +4,7 @@
 /*!
     \page qtquicktemplates2-index.html
     \title Qt Quick Templates 2
-    \brief A set of templates to create user interface controls in Qt Quick
+    \brief A set of templates to create user interface controls in Qt Quick.
 
     Qt Quick Templates are the foundations of \l {Qt Quick Controls}. Templates
     are non-visual implementations of controls' logic and behavior. They offer

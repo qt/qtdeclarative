@@ -5,7 +5,7 @@
 \meta {keywords} {qmltopic}
 \title Visual types
 \keyword Use Case - Visual Elements In QML
-\brief Example of how to display visual item types in a QML application
+\brief Example of how to display visual item types in a QML application.
 
 \section1 The Rectangle type
 

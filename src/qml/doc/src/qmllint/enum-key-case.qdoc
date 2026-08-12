@@ -6,7 +6,7 @@
 \ingroup qmllint-warnings-and-errors
 
 \title Enum key case
-\brief [enum-key-case] Enum key starts with a lowercase letter
+\brief [enum-key-case] Enum key starts with a lowercase letter.
 
 \qmllintwarningcategory enum-key-case
 

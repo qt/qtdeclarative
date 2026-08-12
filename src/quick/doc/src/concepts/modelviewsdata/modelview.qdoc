@@ -4,7 +4,7 @@
 /*!
 \page qtquick-modelviewsdata-modelview.html
 \title Models and Views in Qt Quick
-\brief how to display and format data in Qt Quick
+\brief how to display and format data in Qt Quick.
 
 Most applications need to format data and display the data. Qt Quick has the
 notion of \e models, \e views, and \e delegates to display data. They modularize

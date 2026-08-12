@@ -4,7 +4,7 @@
 \page qtqml-javascript-hostenvironment.html
 \meta {keywords} {qmltopic}
 \title JavaScript Host Environment
-\brief Description of the JavaScript host environment provided by the QML engine
+\brief Description of the JavaScript host environment provided by the QML engine.
 
 
 QML provides a JavaScript host environment tailored to writing QML applications.
