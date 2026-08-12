@@ -116,6 +116,8 @@ private slots:
     void indexAt_itemAt();
     void indexAt_itemAt_data();
     void cacheItemCount();
+    void fullyCachedModelSynchronous();
+    void fullyCachedModelSynchronous_data();
     void changePathDuringRefill();
     void nestedinFlickable();
     void ungrabNestedinFlickable();
@@ -2232,6 +2234,54 @@ void tst_QQuickPathView::cacheItemCount()
     {
         std::atomic<bool> b = true;
         controller.incubateWhile(&b);
+    }
+}
+
+void tst_QQuickPathView::fullyCachedModelSynchronous_data()
+{
+    QTest::addColumn<int>("modelCount");
+
+    // fullycached.qml sets pathItemCount to 3 and the test passes
+    // cacheItemCount as modelCount - 3, so every item of the model has to be
+    // created. The append and the prepend range meet at the index at
+    // modelCount / 2, independently of pathItemCount, which makes every even
+    // model count a candidate for losing that item to rounding. With IEEE-754
+    // doubles only a modelCount of 14 actually loses it (index 7); the
+    // remaining rows are cheap coverage of the neighbouring counts. The lowest
+    // row is 4, the smallest modelCount that still leaves a cache item, and
+    // the highest is 24, which keeps five even counts on either side of 14.
+    for (int i = 4; i <= 24; ++i)
+        QTest::addRow("%d", i) << i;
+}
+
+void tst_QQuickPathView::fullyCachedModelSynchronous()
+{
+    QFETCH(int, modelCount);
+
+    // A plain QQmlEngine has no incubation controller, so QQmlEnginePrivate::incubate()
+    // downgrades PathView's asynchronous cache item requests to synchronous ones. All
+    // delegates therefore exist by the time create() returns.
+    QQmlEngine engine;
+    Q_ASSERT(!engine.incubationController());
+    QQmlComponent component(&engine, testFileUrl("fullycached.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+
+    QScopedPointer<QObject> root(component.createWithInitialProperties(
+            { { QStringLiteral("model"), modelCount },
+              { QStringLiteral("cacheItemCount"), modelCount - 3 } }));
+    QVERIFY2(root, qPrintable(component.errorString()));
+
+    QQuickPathView *pathview = qobject_cast<QQuickPathView *>(root.get());
+    QVERIFY(pathview);
+    // Both initial properties have to have arrived, otherwise a broken setup would
+    // be reported as a missing delegate.
+    QCOMPARE(pathview->count(), modelCount);
+    QCOMPARE(pathview->pathItemCount() + pathview->cacheItemCount(), modelCount);
+
+    for (int i = 0; i < modelCount; ++i) {
+        QVERIFY2(findItem<QQuickItem>(pathview, "wrapper", i),
+                 qPrintable(QStringLiteral("delegate %1 of %2 was not created")
+                            .arg(i).arg(modelCount)));
     }
 }
 
