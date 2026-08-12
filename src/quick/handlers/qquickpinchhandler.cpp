@@ -72,7 +72,7 @@ QQuickPinchHandler::QQuickPinchHandler(QQuickItem *parent)
 #if QT_DEPRECATED_SINCE(6, 5)
 /*!
     \qmlproperty real QtQuick::PinchHandler::minimumScale
-    \deprecated [6.5] Use scaleAxis.minimum
+    \deprecated [6.5] Use scaleAxis.minimum.
 
     The minimum acceptable \l {Item::scale}{scale} to be applied
     to the \l target.
@@ -88,7 +88,7 @@ void QQuickPinchHandler::setMinimumScale(qreal minimumScale)
 
 /*!
     \qmlproperty real QtQuick::PinchHandler::maximumScale
-    \deprecated [6.5] Use scaleAxis.maximum
+    \deprecated [6.5] Use scaleAxis.maximum.
 
     The maximum acceptable \l {Item::scale}{scale} to be applied
     to the \l target.
@@ -145,7 +145,7 @@ void QQuickPinchHandler::setActiveScale(qreal scale)
 /*!
     \readonly
     \qmlproperty vector2d QtQuick::PinchHandler::scale
-    \deprecated [6.5] Use persistentScale
+    \deprecated [6.5] Use persistentScale.
 */
 
 /*!
@@ -175,7 +175,7 @@ void QQuickPinchHandler::setPersistentScale(qreal scale)
 #if QT_DEPRECATED_SINCE(6, 5)
 /*!
     \qmlproperty real QtQuick::PinchHandler::minimumRotation
-    \deprecated [6.5] Use rotationAxis.minimum
+    \deprecated [6.5] Use rotationAxis.minimum.
 
     The minimum acceptable \l {Item::rotation}{rotation} to be applied
     to the \l target.
@@ -191,7 +191,7 @@ void QQuickPinchHandler::setMinimumRotation(qreal minimumRotation)
 
 /*!
     \qmlproperty real QtQuick::PinchHandler::maximumRotation
-    \deprecated [6.5] Use rotationAxis.maximum
+    \deprecated [6.5] Use rotationAxis.maximum.
 
     The maximum acceptable \l {Item::rotation}{rotation} to be applied
     to the \l target.
@@ -224,7 +224,7 @@ void QQuickPinchHandler::setMaximumRotation(qreal maximumRotation)
 /*!
     \readonly
     \qmlproperty vector2d QtQuick::PinchHandler::rotation
-    \deprecated [6.5] Use activeRotation
+    \deprecated [6.5] Use activeRotation.
 */
 
 /*!
@@ -290,7 +290,7 @@ void QQuickPinchHandler::setPersistentRotation(qreal rot)
 /*!
     \readonly
     \qmlproperty vector2d QtQuick::PinchHandler::translation
-    \deprecated [6.5] Use activeTranslation
+    \deprecated [6.5] Use activeTranslation.
 */
 /*!
     \readonly
