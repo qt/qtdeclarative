@@ -615,7 +615,7 @@ QQmlComponent::QQmlComponent(QQmlEngine *engine, QObject *parent)
     Create a QQmlComponent from the given \a url and give it the
     specified \a parent and \a engine.
 
-    \include qqmlcomponent.qdoc url-note
+    \include qqmlcomponent.qdocinc url-note
 
     \sa loadUrl()
 */
@@ -629,7 +629,7 @@ QQmlComponent::QQmlComponent(QQmlEngine *engine, const QUrl &url, QObject *paren
     specified \a parent and \a engine. If \a mode is \l Asynchronous,
     the component will be loaded and compiled asynchronously.
 
-    \include qqmlcomponent.qdoc url-note
+    \include qqmlcomponent.qdocinc url-note
 
     \sa loadUrl()
 */
@@ -779,7 +779,7 @@ QQmlEngine *QQmlComponent::engine() const
 /*!
     Load the QQmlComponent from the provided \a url.
 
-    \include qqmlcomponent.qdoc url-note
+    \include qqmlcomponent.qdocinc url-note
 */
 void QQmlComponent::loadUrl(const QUrl &url)
 {
@@ -791,7 +791,7 @@ void QQmlComponent::loadUrl(const QUrl &url)
     Load the QQmlComponent from the provided \a url.
     If \a mode is \l Asynchronous, the component will be loaded and compiled asynchronously.
 
-    \include qqmlcomponent.qdoc url-note
+    \include qqmlcomponent.qdocinc url-note
 */
 void QQmlComponent::loadUrl(const QUrl &url, QQmlComponent::CompilationMode mode)
 {
