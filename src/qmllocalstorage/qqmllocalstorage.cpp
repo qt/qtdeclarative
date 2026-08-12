@@ -681,6 +681,20 @@ Opens or creates a local storage sql database by the given parameters.
 
 Returns the created database object.
 
+\section1 Security Considerations
+
+Locally persisted storage pointed by QQmlEngine::offlineStoragePath() is considered to be a trusted source.
+This means that a user, another QML application or process, compromised application component, or attacker
+with appropriate filesystem access may be able to modify its contents.
+If your application makes security-sensitive decisions based on data that it reads from that storage,
+validate or authenticate the data independently (for example, use integrity protection or signatures where appropriate).
+
+You are responsible for ensuring that untrusted or unfiltered input is not concatenated directly
+into SQL statements. Use parameter binding (\c{?} or named parameters) instead of string concatenation in
+\c executeSql to prevent SQL injection.
+
+Refer to \l {Handling Untrusted Data} for additional information about risks and mitigation.
+For other security topics, see \l {Qt Shared Security Model}.
 */
 
 void QQmlLocalStorage::openDatabaseSync(QQmlV4FunctionPtr args)
