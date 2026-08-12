@@ -678,6 +678,7 @@ void QQmlLocaleValueType::toString(QQmlV4FunctionPtr args) const
     This product includes software developed by the University of
     California, Berkeley and its contributors.
 
+    \endlegalese
     \sa {The Date JavaScript Object}, {The Number JavaScript Object}
 */
 

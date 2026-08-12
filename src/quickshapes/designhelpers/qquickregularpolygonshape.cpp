@@ -202,8 +202,8 @@ void QQuickRegularPolygonShapePrivate::updatePath()
     property. If both a color and a gradient are specified, the gradient is
     used.
 
-    To create a polygon with a stroke, set the \sideCount property between 3 to
-    100 and the \l strokeWidth property greater than 0. The \l strokeWidth
+    To create a polygon with a stroke, set the \l sideCount property between 3
+    to 100 and the \l strokeWidth property greater than 0. The \l strokeWidth
     property specifies the width of the polygon stroke. The default \l sideCount
     value is 6 and the default \l strokeWidth value is 4. Setting the
     \l strokeWidth value to a negetive value hides the border.

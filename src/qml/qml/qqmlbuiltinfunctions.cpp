@@ -1008,7 +1008,7 @@ default locale. Otherwise, \a format should be either:
 \li A \c locale object.
 \endlist
 
-If \a format specifies a locale object, \dateTime is formatted
+If \a format specifies a locale object, \a dateTime is formatted
 with \l{QLocale::toString}. In this case, \a localeFormatOption can hold a value
 of type \l {QLocale::FormatType} to further tune the formatting. If none is
 provided, \l {QLocale::FormatType}{Locale.ShortFormat} is used.
