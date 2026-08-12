@@ -277,6 +277,19 @@ void tst_qmlls_highlighting::highlights_data()
                 << fileItem
                 << HighlightToken(QQmlJS::SourceLocation(172, 2, 9, 14),
                          QmlHighlightKind::QmlKeyword, QmlHighlightModifier::None);
+        QTest::addRow("id-binding")
+                << fileItem
+                << HighlightToken(QQmlJS::SourceLocation(213, 6, 12, 16),
+                                  QmlHighlightKind::QmlLocalId, QmlHighlightModifier::None);
+    }
+    { // id binding
+        const auto filePath = m_highlightingDataDir + "/tst_underscore.qml";
+        const auto fileItem = fileObject(filePath);
+
+        QTest::addRow("underscore-id")
+                << fileItem
+                << HighlightToken(QQmlJS::SourceLocation(39, 6, 4, 17),
+                                  QmlHighlightKind::QmlLocalId, QmlHighlightModifier::None);
     }
     { // Pragmas
         const auto filePath = m_highlightingDataDir + "/pragmas.qml";

@@ -9,4 +9,5 @@ Item {
     Behavior on width {}
 
     x: width
+    Item { id: _probe }
 }
