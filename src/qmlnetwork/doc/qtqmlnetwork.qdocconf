@@ -26,7 +26,7 @@ moduleheader =
 headerdirs += ../
 sourcedirs += ../
 
-imagedirs += images
+# imagedirs += images
 
 navigation.landingpage = "Qt QML Network"
 navigation.qmltypespage = "Qt QML Network QML Types"
