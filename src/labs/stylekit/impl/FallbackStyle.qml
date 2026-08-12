@@ -179,6 +179,21 @@ BaseStyle {
         }
     }
 
+    delayButton {
+        padding: 0
+        indicator {
+            fillWidth: true
+            fillHeight: true
+            color: __transparent
+            border.width: 0
+            foreground {
+                fillWidth: true
+                fillHeight: true
+                delegate: ProgressDelegate {}
+            }
+        }
+    }
+
     dialog {
         text {
             padding: 12

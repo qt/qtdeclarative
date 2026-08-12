@@ -142,6 +142,20 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \qmlproperty ControlStyle AbstractStylableControls::delayButton
+
+    Grouped property for styling \l [QtQuickControls]{DelayButton}.
+
+    For a delay button, the progress is styled through the indicator. By
+    default, the indicator itself is transparent and without a border,
+    so only the indicator's foreground is visible as it fills up.
+
+    Unset properties fall back to \l abstractButton.
+
+    \snippet ControlsSnippets.qml delayButton
+*/
+
+/*!
     \qmlproperty ControlStyle AbstractStylableControls::dialog
 
     Grouped property for styling \l [QtQuickControls]{Dialog}.
@@ -628,6 +642,7 @@ IMPLEMENT_ACCESSORS(flatButton, QQStyleKitReader::ControlType::FlatButton)
 IMPLEMENT_ACCESSORS(checkBox, QQStyleKitReader::ControlType::CheckBox)
 IMPLEMENT_ACCESSORS(checkDelegate, QQStyleKitReader::ControlType::CheckDelegate)
 IMPLEMENT_ACCESSORS(comboBox, QQStyleKitReader::ControlType::ComboBox)
+IMPLEMENT_ACCESSORS(delayButton, QQStyleKitReader::ControlType::DelayButton)
 IMPLEMENT_ACCESSORS(dialog, QQStyleKitReader::ControlType::Dialog)
 IMPLEMENT_ACCESSORS(dialogButtonBox, QQStyleKitReader::ControlType::DialogButtonBox)
 IMPLEMENT_ACCESSORS(progressBar, QQStyleKitReader::ControlType::ProgressBar)

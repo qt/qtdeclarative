@@ -52,6 +52,7 @@ static QQuickTheme::Scope scopeForType(QQStyleKitExtendableControlType type)
     switch (type) {
     case QQStyleKitReader::ControlType::AbstractButton:
     case QQStyleKitReader::ControlType::Button:
+    case QQStyleKitReader::ControlType::DelayButton:
     case QQStyleKitReader::ControlType::FlatButton:
     case QQStyleKitReader::ControlType::RoundButton:
         return QQuickTheme::Button;

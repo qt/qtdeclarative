@@ -42,6 +42,7 @@ qt_internal_add_qml_module(LabsStyleKit
         CheckBox.qml
         CheckDelegate.qml
         ComboBox.qml
+        DelayButton.qml
         Dialog.qml
         DialogButtonBox.qml
         Frame.qml

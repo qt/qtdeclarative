@@ -51,6 +51,7 @@ const QList<QQStyleKitExtendableControlType> QQStyleKitPropertyResolver::baseTyp
             { QQStyleKitReader::ApplicationWindow };
         return t; }
     case QQStyleKitReader::Button:
+    case QQStyleKitReader::DelayButton:
     case QQStyleKitReader::FlatButton:
     case QQStyleKitReader::ToolButton:
     case QQStyleKitReader::TabButton:
