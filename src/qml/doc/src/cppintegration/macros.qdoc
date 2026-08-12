@@ -363,7 +363,7 @@
 /*!
   \macro QML_ADDED_IN_MINOR_VERSION(VERSION)
   \relates <qqmlintegration.h>
-  \deprecated [6.7] Use QML_ADDED_IN_VERSION and specify the full version
+  \deprecated [6.7] Use QML_ADDED_IN_VERSION and specify the full version.
 
   Declares that the enclosing type or namespace was added in the specified minor
   \a VERSION, relative to the module major version. The minor version is assumed
@@ -403,7 +403,7 @@
 /*!
   \macro QML_REMOVED_IN_MINOR_VERSION(VERSION)
   \relates <qqmlintegration.h>
-  \deprecated [6.7] Use QML_REMOVED_IN_VERSION and specify the full version
+  \deprecated [6.7] Use QML_REMOVED_IN_VERSION and specify the full version.
 
   Declares that the enclosing type or namespace was removed in the specified
   minor \a VERSION, relative to the module major version. This is primarily
