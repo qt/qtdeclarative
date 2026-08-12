@@ -57,7 +57,7 @@ QT_BEGIN_NAMESPACE
 
     \labs
 
-    \sa ControlStyle, DelegateStyle, {StyleKit Property Resolution}
+    \sa ControlStyle, DelegateStyle, {StyleKit Property Resolution},
         {qtlabsstylekit-fallbackstyle.html}{FallbackStyle Reference}
 */
 
