@@ -2061,7 +2061,6 @@ void QQuickPathView::refill()
                 }
                 d->items.append(item);
                 d->updateItem(item, nextPos);
-                endIdx = idx;
                 endPos = nextPos;
                 ++idx;
                 if (idx >= d->modelCount)
@@ -2109,7 +2108,9 @@ void QQuickPathView::refill()
                 qCDebug(lcItemViewDelegateLifecycle) << "Checking for pathview middle inserts, items count was" << d->items.size();
                 idx = startIdx;
                 QQuickItem *lastItem = d->items.at(0);
-                while (idx != endIdx) {
+                // Walk every index once instead of stopping at endIdx, because a hole can
+                // also sit just outside the populated span. Leave as soon as the view is full.
+                for (int i = 0; i < d->modelCount && d->items.size() < count+d->cacheSize; ++i) {
                     nextPos = d->positionOfIndex(idx);
                     if (d->isInBound(nextPos, d->mappedRange - d->mappedCache, 1 + d->mappedCache)) {
                         //This gets the reference from the delegate model, and will not re-create
