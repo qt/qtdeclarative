@@ -101,7 +101,7 @@ QT_BEGIN_NAMESPACE
     The name identifies this variation when used as an
     \l {Instance Variations}{instance variation}.
 
-    \sa {StyleVariation::variations}{variations} {Instance Variations}
+    \sa {StyleVariation::variations}{variations}, {Instance Variations}
 */
 
 /*!
