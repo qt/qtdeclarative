@@ -791,7 +791,7 @@ target_sources(Qml
         doc/src/advanced-topics.qdoc
         doc/src/qtqml.qdoc
         doc/src/qmldiskcache.qdoc
-        doc/src/includes/qqmlcomponent.qdoc
+        doc/src/includes/qqmlcomponent.qdocinc
         doc/src/qmltypereference.qdoc
         doc/src/qtqml-qtquick-compiler-tech.qdoc
         doc/src/cppintegration/integrating-with-js-values-from-cpp.qdoc
