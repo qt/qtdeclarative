@@ -95,14 +95,21 @@ void QQmlFunctionSorter::componentComplete()
         return;
     }
 
-    const QMetaType parameterType = d->m_method.parameterMetaType(0);
-    if (parameterType != d->m_method.parameterMetaType(1)) {
+    const QMetaType lhsParameterType = d->m_method.parameterMetaType(0);
+    const QMetaType rhsParameterType = d->m_method.parameterMetaType(1);
+
+    if (!lhsParameterType.isValid() || !rhsParameterType.isValid()) {
+        qmlWarning(this) << d->m_method.name() << " parameters need to be a QML-registered type.";
+        return;
+    }
+
+    if (lhsParameterType != rhsParameterType) {
         qmlWarning(this) << d->m_method.name() << " parameters need to have matching types.";
         return;
     }
 
-    auto cu = QQmlMetaType::obtainCompilationUnit(parameterType);
-    const QQmlType parameterQmlType = QQmlMetaType::qmlType(parameterType);
+    auto cu = QQmlMetaType::obtainCompilationUnit(lhsParameterType);
+    const QQmlType parameterQmlType = QQmlMetaType::qmlType(lhsParameterType);
 
     QQmlRefPointer<QQmlContextData> context = data->outerContext;
     QQmlEngine *engine = context->engine();
@@ -117,7 +124,7 @@ void QQmlFunctionSorter::componentComplete()
     // (QQmlMetaType::obtainCompilationUnit). Pass it through the QML engine to
     // make it executable. Further, use the executable compilation unit to run
     // an object creator and produce an instance.
-    if (parameterType.flags() & QMetaType::PointerToQObject) {
+    if (lhsParameterType.flags() & QMetaType::PointerToQObject) {
         QObject *created0 = nullptr;
         QObject *created1 = nullptr;
         if (parameterQmlType.isInlineComponent()) {
@@ -144,8 +151,8 @@ void QQmlFunctionSorter::componentComplete()
         d->m_lhsParameterData = QVariant::fromValue(created0);
         d->m_rhsParameterData = QVariant::fromValue(created1);
     } else {
-        d->m_lhsParameterData = QVariant(parameterType);
-        d->m_rhsParameterData = QVariant(parameterType);
+        d->m_lhsParameterData = QVariant(lhsParameterType);
+        d->m_rhsParameterData = QVariant(rhsParameterType);
     }
 }
 
