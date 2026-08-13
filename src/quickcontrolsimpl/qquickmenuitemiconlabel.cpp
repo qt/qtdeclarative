@@ -17,17 +17,23 @@ QQuickMenuItemIconLabelPrivate::~QQuickMenuItemIconLabelPrivate() = default;
 
 bool QQuickMenuItemIconLabelPrivate::hasShortcut() const
 {
+#if QT_CONFIG(shortcut)
     // See comment in layout() for why we don't support TextUnderIcon for shortcuts.
     return (display == QQuickIconLabel::TextOnly || display == QQuickIconLabel::TextBesideIcon)
         // Don't store this statically because we want to be able to auto-test it.
         && !QCoreApplication::testAttribute(Qt::AA_DontShowShortcutsInContextMenus)
         && !shortcut().isEmpty();
+#else
+    return false;
+#endif
 }
 
+#if QT_CONFIG(shortcut)
 QKeySequence QQuickMenuItemIconLabelPrivate::shortcut() const
 {
     return menuItem && menuItem->action() ? menuItem->action()->shortcut() : QKeySequence();
 }
+#endif
 
 bool QQuickMenuItemIconLabelPrivate::createShortcutLabel()
 {
@@ -44,7 +50,9 @@ bool QQuickMenuItemIconLabelPrivate::createShortcutLabel()
     // We don't set elide because it shouldn't.
     shortcutLabel->setVAlign(QQuickText::AlignVCenter);
     shortcutLabel->setHAlign(QQuickText::AlignHCenter);
+#if QT_CONFIG(shortcut)
     shortcutLabel->setText(shortcut().toString(QKeySequence::NativeText));
+#endif
     if (componentComplete)
         completeComponent(shortcutLabel);
     return true;
@@ -80,7 +88,11 @@ void QQuickMenuItemIconLabelPrivate::updateImplicitSize()
     Q_Q(QQuickMenuItemIconLabel);
     const bool showIcon = image && hasIcon();
     const bool showText = label && hasText();
+#if QT_CONFIG(shortcut)
     const bool showShortcutText = shortcutLabel && !shortcut().isEmpty();
+#else
+    const bool showShortcutText = false;
+#endif
     const qreal horizontalPadding = leftPadding + rightPadding;
     const qreal verticalPadding = topPadding + bottomPadding;
     const qreal iconImplicitWidth = showIcon ? image->implicitWidth() : 0;
@@ -250,7 +262,9 @@ void QQuickMenuItemIconLabelPrivate::syncShortcutLabel()
     if (!shortcutLabel)
         return;
 
+#if QT_CONFIG(shortcut)
     shortcutLabel->setText(shortcut().toString(QKeySequence::NativeText));
+#endif
 }
 
 QQuickMenuItemIconLabel::~QQuickMenuItemIconLabel()

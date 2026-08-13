@@ -8,9 +8,11 @@
 
 #if QT_CONFIG(shortcut)
 #include <QtQuickTemplates2/private/qquickshortcutcontext_p_p.h>
+#endif
 
 QT_BEGIN_NAMESPACE
 
+#if QT_CONFIG(shortcut)
 // qtdeclarative/src/quick/util/qquickshortcut.cpp
 typedef bool (*ShortcutContextMatcher)(QObject *, Qt::ShortcutContext);
 extern ShortcutContextMatcher qt_quick_shortcut_context_matcher();
