@@ -283,13 +283,15 @@ void QQuickShapeFillRunnable::run()
 {
     QQuickShapeGenericRenderer::triangulateFill(path, fillColor, &fillVertices, &fillIndices, &indexType,
                                                 supportsElementIndexUint, triangulationScale);
-    emit done(this);
+    // Emit done signal on main thread, since connected to lambda there
+    QMetaObject::invokeMethod(qApp, [this]() { emit done(this); }, Qt::QueuedConnection);
 }
 
 void QQuickShapeStrokeRunnable::run()
 {
     QQuickShapeGenericRenderer::triangulateStroke(path, pen, strokeColor, &strokeVertices, clipSize, triangulationScale);
-    emit done(this);
+    // Emit done signal on main thread, since connected to lambda there
+    QMetaObject::invokeMethod(qApp, [this]() { emit done(this); }, Qt::QueuedConnection);
 }
 
 void QQuickShapeGenericRenderer::setAsyncCallback(void (*callback)(void *), void *data)
