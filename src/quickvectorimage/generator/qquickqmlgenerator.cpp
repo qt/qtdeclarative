@@ -1284,11 +1284,12 @@ void QQuickQmlGenerator::generateTextNode(const TextNodeInfo &info)
     if (info.isTextArea) {
         stream() << "x: " << info.position.x();
         stream() << "y: " << info.position.y();
-        if (info.size.width() > 0)
+        if (info.size.width() > 0) {
             stream() << "width: " << info.size.width();
+            stream() << "wrapMode: Text.Wrap"; // ### WordWrap? verify with SVG standard
+        }
         if (info.size.height() > 0)
             stream() << "height: " << info.size.height();
-        stream() << "wrapMode: Text.Wrap"; // ### WordWrap? verify with SVG standard
         stream() << "clip: true"; //### Not exactly correct: should clip on the text level, not the pixel level
     } else {
         QString hAlign = QStringLiteral("left");
