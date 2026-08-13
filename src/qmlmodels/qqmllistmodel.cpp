@@ -2550,6 +2550,15 @@ void QQmlListModel::insert(QQmlV4FunctionPtr args)
     }
 }
 
+bool QQmlListModel::canMove(int from, int to, int n) const
+{
+    if (from < 0 || to < 0 || n < 0 || n > count())
+        return false;
+
+    const int maxIndex = count() - n;
+    return from <= maxIndex && to <= maxIndex;
+}
+
 /*!
     \qmlmethod void ListModel::move(int from, int to, int n)
 

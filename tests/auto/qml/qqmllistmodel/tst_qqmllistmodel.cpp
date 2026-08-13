@@ -136,6 +136,7 @@ private slots:
     void functionInNested();
     void properWorkerAgentLifecycle();
     void emptyListRoleSurvivesCachegen();
+    void crashCanMoveIntegerOverflow();
 };
 
 bool tst_qqmllistmodel::compareVariantList(const QVariantList &testList, QVariant object)
@@ -971,6 +972,15 @@ void tst_qqmllistmodel::crash_model_with_multiple_roles()
 
     // used to cause a crash
     model->setProperty(0, "black", true);
+}
+
+void tst_qqmllistmodel::crashCanMoveIntegerOverflow()
+{
+    QQmlEngine eng;
+    QQmlComponent component(&eng, testFileUrl("qtbug149028.qml"));
+    std::unique_ptr<QObject> rootItem{ component.create() };
+    QVERIFY(component.errorString().isEmpty());
+    QVERIFY(rootItem);
 }
 
 void tst_qqmllistmodel::crash_model_with_unknown_roles()
