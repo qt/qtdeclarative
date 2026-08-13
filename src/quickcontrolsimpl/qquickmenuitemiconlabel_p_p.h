@@ -18,6 +18,9 @@
 
 #include <QtQuickControls2Impl/private/qquickiconlabel_p_p.h>
 #include <QtQuickControls2Impl/private/qquickmenuitemiconlabel_p.h>
+#if QT_CONFIG(shortcut)
+#  include <QtGui/qkeysequence.h>
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -32,7 +35,9 @@ public:
     ~QQuickMenuItemIconLabelPrivate() override;
 
     bool hasShortcut() const;
+#if QT_CONFIG(shortcut)
     QKeySequence shortcut() const;
+#endif
     bool createShortcutLabel();
     bool updateShortcutLabel();
     void syncShortcutLabel();
