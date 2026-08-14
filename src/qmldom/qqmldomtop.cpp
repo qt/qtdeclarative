@@ -1861,15 +1861,21 @@ DomEnvironment::SemanticAnalysis DomEnvironment::semanticAnalysis()
     return semanticAnalysisUnlocked();
 }
 
+DomEnvironment::SemanticAnalysis DomEnvironment::prepareSemanticAnalysisForFileLoading()
+{
+    QMutexLocker guard(mutex());
+    auto result = semanticAnalysisUnlocked();
+    result.updateLoadPaths(m_loadPaths);
+    result.setResourceFiles(m_resourcePaths);
+    return result;
+}
+
 DomEnvironment::SemanticAnalysis DomEnvironment::semanticAnalysisUnlocked()
 {
     // QTBUG-124799: do not create a SemanticAnalysis in a temporary DomEnvironment, and use the one
     // from the base environment instead.
-    if (m_base) {
-        auto result = m_base->semanticAnalysis();
-        result.updateLoadPaths(m_loadPaths);
-        return result;
-    }
+    if (m_base)
+        return m_base->semanticAnalysis();
 
     if (m_semanticAnalysis)
         return *m_semanticAnalysis;
@@ -1907,6 +1913,9 @@ void DomEnvironment::SemanticAnalysis::updateLoadPaths(const QStringList &loadPa
 
 void DomEnvironment::SemanticAnalysis::setResourceFiles(const QStringList &qrcFiles)
 {
+    if (qrcFiles == m_resourceFiles)
+        return;
+    m_resourceFiles = qrcFiles;
     *m_mapper = QQmlJSResourceFileMapper(qrcFiles);
 }
 
@@ -2204,19 +2213,13 @@ void DomEnvironment::setLoadPaths(const QStringList &v)
 {
     QMutexLocker l(mutex());
     m_loadPaths = v;
-
-    if (m_semanticAnalysis)
-        m_semanticAnalysis->updateLoadPaths(v);
 }
 
 void DomEnvironment::setResourceFiles(const QStringList &v)
 {
     QMutexLocker l(mutex());
-
-    if (m_semanticAnalysis)
-        m_semanticAnalysis->setResourceFiles(v);
+    m_resourcePaths = v;
 }
-
 
 QStringList DomEnvironment::loadPaths() const
 {
@@ -2288,7 +2291,7 @@ void DomEnvironment::populateFromQmlFile(MutableDomItem &&qmlFile)
         };
 
         if (m_domCreationOption == DomCreationOption::Extended) {
-            SemanticAnalysis analysis = semanticAnalysis();
+            SemanticAnalysis analysis = prepareSemanticAnalysisForFileLoading();
             auto v = std::make_unique<QQmlDomAstCreatorWithQQmlJSScope>(qmlFile, logger.get(),
                                                                         analysis.m_importer.get());
             v->enableLoadFileLazily(true);
