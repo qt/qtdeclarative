@@ -4654,7 +4654,14 @@ private slots:
         auto semanticAnalysis = envPtr->semanticAnalysis();
         QVERIFY(semanticAnalysis.m_mapper->isEmpty());
         envPtr->setResourceFiles({ baseDir + u"/buildFolderWithQrc/.qt/rcc/someQrc.qrc"_s });
-        QVERIFY(!semanticAnalysis.m_mapper->isEmpty());
+        QVERIFY(semanticAnalysis.m_mapper->isEmpty()); // should be set only when loading a QML file
+        envPtr->loadFile(FileToLoad::fromMemory(envPtr, baseDir + "Snippet.qml"_L1,
+                                                "import QtQuick\nItem{}"_L1),
+                         [](const Path &, const DomItem &, const DomItem &it) {
+                             QVERIFY(it.fileObject().as<QmlFile>()->handleForPopulation().data());
+                         });
+        envPtr->loadPendingDependencies();
+        QVERIFY(!semanticAnalysis.m_mapper->isEmpty()); // should be set now
         QVERIFY(semanticAnalysis.m_mapper->isFile(u"/qt/qml/MyModule/qml/HelloWorld.qml"_s));
     }
 

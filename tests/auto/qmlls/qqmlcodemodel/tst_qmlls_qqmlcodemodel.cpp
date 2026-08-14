@@ -1195,5 +1195,35 @@ void tst_qmlls_qqmlcodemodel::onBuildFinished()
     manager.onBuildFinished(testFile("").toUtf8());
     QCOMPARE(spy.count(), 2);
 }
+void tst_qmlls_qqmlcodemodel::setImportPathsWhileLoadingFile()
+{
+    QmlLsp::QQmlCodeModel model;
+    model.setImportPaths(QLibraryInfo::paths(QLibraryInfo::QmlImportsPath));
+
+    const QByteArray fileAUrl = testFileUrl(u"FileA.qml"_s).toEncoded();
+    const QString fileAPath = testFile(u"FileA.qml"_s);
+
+    std::atomic_bool shutDown = false;
+    // try to trigger the datarace between newOpenFile loading the file and setImportPaths
+    // clearing the QQmlJSImporter by constantly calling setImportPaths on new arguments
+    auto constantlyChangingImportPathsThread =
+            std::unique_ptr<QThread>(QThread::create([&model, this, &shutDown] {
+                int counter = 0;
+                while (!shutDown) {
+                    model.setImportPaths(QStringList{ testFile("SomeImportPath%1"_L1.arg(
+                                                 QString::number(counter++))) }
+                                         << QLibraryInfo::paths(QLibraryInfo::QmlImportsPath));
+                    QThread::yieldCurrentThread();
+                }
+            }));
+    constantlyChangingImportPathsThread->start();
+    QTRY_VERIFY(constantlyChangingImportPathsThread->isRunning());
+
+    model.newOpenFile(fileAUrl, 0, readFile(u"FileA.qml"_s));
+    QTRY_VERIFY_WITH_TIMEOUT(model.validEnv().field(Fields::qmlFileWithPath).key(fileAPath), 3000);
+
+    shutDown = true;
+    constantlyChangingImportPathsThread->wait();
+}
 
 QTEST_MAIN(tst_qmlls_qqmlcodemodel)

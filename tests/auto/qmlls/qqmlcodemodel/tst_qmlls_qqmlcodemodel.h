@@ -65,6 +65,7 @@ private slots:
     void reloadQmllsBuildIniV2AfterBuild();
     void brokenQmllsBuildIniV2();
     void onBuildFinished();
+    void setImportPathsWhileLoadingFile();
 };
 
 #endif // TST_QMLLS_QQMLCODEMODEL_H
