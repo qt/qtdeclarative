@@ -59,6 +59,7 @@ private slots:
     void multipleQProcessScheduler_data();
     void multipleQProcessScheduler();
     void reloadQmllsBuildIniAfterBuild();
+    void setImportPathsWhileLoadingFile();
 };
 
 #endif // TST_QMLLS_QQMLCODEMODEL_H
