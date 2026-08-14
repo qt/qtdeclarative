@@ -771,7 +771,7 @@ void Codegen::destructureElementList(const Codegen::Reference &array, PatternEle
     RegisterScope scope(this);
 
     Reference iterator = Reference::fromStackSlot(this);
-    QVarLengthArray<Reference> iteratorValues;
+    QVarLengthArray<Reference, 32> iteratorValues;
     Reference ignored;
 
     array.loadInAccumulator();
