@@ -47,8 +47,8 @@ qt_add_qml_module(
     [NO_GENERATE_QMLTYPES]
     [NO_GENERATE_QMLDIR]
     [NO_GENERATE_EXTRA_QMLDIRS]
-    [NO_GENERATE_QTCONF]
-    [NO_GENERATE_AOT_VALIDATION]
+    [NO_GENERATE_QTCONF]                          # since Qt 6.12
+    [NO_GENERATE_AOT_VALIDATION]                  # since Qt 6.12
     [NO_LINT]
     [NO_CACHEGEN]
     [NO_RESOURCE_TARGET_PATH]
@@ -911,7 +911,8 @@ none of these options are needed.
 \row
     \li \c NO_GENERATE_AOT_VALIDATION
     \li Generation of code to \l{Validation of ahead of time generated native code}{validate native code}
-        generated ahead of time by the \l{Qt Quick Compiler}
+        generated ahead of time by the \l{Qt Quick Compiler}.
+        This option was introduced in Qt 6.12.
 \endtable
 
 Type registration is automatically performed for the backing target's C++
