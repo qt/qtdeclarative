@@ -10,6 +10,7 @@
 #include <QtQml/qqmlcontext.h>
 #include <QtQuick/qquickview.h>
 #include <QtQuick/qquickitem.h>
+#include <QtQuick/qquickrendercontrol.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickmousearea_p.h>
 #include <QtQuick/private/qquicktaphandler_p.h>
@@ -159,9 +160,11 @@ private slots:
     void focusOnClickInProxyWidget();
 #endif
     void focusPreserved();
+    void renderWindowUnderNativeParent();
 #if QT_CONFIG(accessibility)
     void accessibilityHandlesViewChange();
     void accessibleParentOfQuickItems();
+    void accessibleWindowUnderNativeParent();
 #endif
     void cleanupRhi();
     void dontRecreateRootElementOnWindowChange();
@@ -1265,6 +1268,84 @@ void tst_qquickwidget::focusPreserved()
     QTRY_VERIFY_ACTIVE_FOCUS(content2.get());
 }
 
+/*
+    Builds a top level T, a native child widget C below it, and a QQuickWidget
+    below C, and returns C. The QQuickWidget is offset inside C, and C inside T,
+    so a window and an offset that belong to different widgets never match.
+
+    Returns nullptr, having failed or skipped the test, if the hierarchy did not
+    come out as described. Callers must return immediately in that case.
+*/
+static QWidget *createNativeParentWithQuickWidget(QWidget *topLevel, QQuickWidget *quickWidget,
+                                                  const QUrl &source)
+{
+    topLevel->setObjectName("topLevel");
+    topLevel->resize(300, 300);
+
+    QWidget *nativeParent = new QWidget(topLevel);
+    nativeParent->setObjectName("nativeParent");
+    nativeParent->setGeometry(50, 60, 200, 200);
+    nativeParent->setAttribute(Qt::WA_NativeWindow);
+
+    quickWidget->setObjectName("quickWidget");
+    quickWidget->setParent(nativeParent);
+    quickWidget->setGeometry(10, 20, 100, 100);
+    quickWidget->setSource(source);
+
+    topLevel->show();
+    if (!QTest::qWaitForWindowExposed(topLevel)) {
+        QTest::qFail("Window was never exposed", __FILE__, __LINE__);
+        return nullptr;
+    }
+
+    if (!nativeParent->windowHandle()
+        || nativeParent->windowHandle() == topLevel->windowHandle()) {
+        QTest::qSkip("This platform does not give native child widgets their own window",
+                     __FILE__, __LINE__);
+        return nullptr;
+    }
+
+    // The QQuickWidget renders to a texture that the repaint manager flushes
+    // against the closest ancestor with a window, which is nativeParent here,
+    // not the top level
+    if (quickWidget->nativeParentWidget() != nativeParent) {
+        QTest::qFail("The QQuickWidget's native parent is not the native child widget",
+                     __FILE__, __LINE__);
+        return nullptr;
+    }
+
+    return nativeParent;
+}
+
+/*
+    QQuickWidgetRenderControl::renderWindow() must name the window that the
+    content is composited into. For a QQuickWidget below a native child widget
+    that is the native child's own window, since QWidgetRepaintManager::flush()
+    and QCALayerBackingStore::flushSubWindow() put the pixels there.
+*/
+void tst_qquickwidget::renderWindowUnderNativeParent()
+{
+    QWidget topLevel;
+    QQuickWidget quickWidget;
+
+    QWidget *nativeParent = createNativeParentWithQuickWidget(&topLevel, &quickWidget,
+                                                              testFileUrl("rectangle.qml"));
+    if (!nativeParent)
+        return;
+
+    QPoint offset;
+    QWindow *renderWindow = QQuickRenderControl::renderWindowFor(quickWidget.quickWindow(), &offset);
+    QVERIFY(renderWindow);
+
+    // Callers add the offset to a position in the returned window, so the two
+    // have to describe the same widget, whichever widget that turns out to be
+    QWidget *renderWidget = QWidget::find(renderWindow->winId());
+    QVERIFY(renderWidget);
+    QCOMPARE(offset, quickWidget.mapTo(renderWidget, QPoint()));
+
+    QCOMPARE(renderWindow, nativeParent->windowHandle());
+}
+
 #if QT_CONFIG(accessibility)
 /*
     Reparenting the QQuickWidget recreates the offscreen QQuickWindow.
@@ -1347,6 +1428,41 @@ void tst_qquickwidget::accessibleParentOfQuickItems()
     QVERIFY(iface_popup);
     QVERIFY(iface_popup->parent());
     QCOMPARE(iface_popup->parent(), iface_quickWidget);
+}
+
+/*
+    QAccessibleWidget::window() answers with the closest native window, while
+    QAccessibleQuickItem::window() goes through renderWindow(). The two must
+    agree, or a platform bridge that asks which native view vends an element
+    gets one answer for the QQuickWidget and another for the items inside it.
+*/
+void tst_qquickwidget::accessibleWindowUnderNativeParent()
+{
+    if (!initAccessibility())
+        QSKIP("This platform does not support accessibility");
+    if (QGuiApplication::platformName() == "offscreen")
+        QSKIP("Doesn't test anything on offscreen platform.");
+
+    QWidget topLevel;
+    QQuickWidget quickWidget;
+
+    QWidget *nativeParent = createNativeParentWithQuickWidget(&topLevel, &quickWidget,
+                                                              testFileUrl("accessibleRectangle.qml"));
+    if (!nativeParent)
+        return;
+
+    QAccessibleInterface *quickWidgetIface = QAccessible::queryAccessibleInterface(&quickWidget);
+    QVERIFY(quickWidgetIface);
+    QCOMPARE(quickWidgetIface->window(), nativeParent->windowHandle());
+
+    QQuickItem *rect = quickWidget.rootObject()->findChild<QQuickItem *>("rect");
+    QVERIFY(rect);
+    QAccessibleInterface *rectIface = QAccessible::queryAccessibleInterface(rect);
+    QVERIFY(rectIface);
+
+    // The item is inside the QQuickWidget, so the window that presents the one
+    // presents the other
+    QCOMPARE(rectIface->window(), quickWidgetIface->window());
 }
 #endif
 

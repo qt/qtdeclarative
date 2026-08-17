@@ -558,6 +558,30 @@ bool QQuickRenderControlPrivate::isRenderWindowFor(QQuickWindow *quickWin, const
     return false;
 }
 
+/*
+    Returns \c true if \a focusWindow is the window that holds focus on behalf of
+    \a quickWindow, which is the case when it's the window \a quickWindow renders
+    into, or an ancestor of it.
+*/
+bool QQuickRenderControlPrivate::isFocusWindowFor(QQuickWindow *quickWindow, const QWindow *focusWindow)
+{
+    if (!quickWindow || !focusWindow)
+        return false;
+
+    if (isRenderWindowFor(quickWindow, focusWindow))
+        return true;
+
+    // Qt Widgets manages focus via the top level QWindow, so the check
+    // above is not sufficient when the render window is a child QWindow.
+    // To match Qt Widgets expectations, we also check if the render window
+    // is a non-transient descendant of the focus window. Note: We still
+    // need the isRenderWindowFor check above, to handle the case of graphics
+    // view proxy widgets, where a single QQuickWidget may be proxied into
+    // multiple graphics views in different windows.
+    QWindow *renderWindow = QQuickRenderControl::renderWindowFor(quickWindow);
+    return renderWindow && focusWindow->isAncestorOf(renderWindow, QWindow::ExcludeTransients);
+}
+
 bool QQuickRenderControlPrivate::isRenderWindow(const QWindow *w)
 {
     Q_Q(QQuickRenderControl);
