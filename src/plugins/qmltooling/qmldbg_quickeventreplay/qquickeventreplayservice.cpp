@@ -106,7 +106,6 @@ void QQuickEventReplayServiceImpl::start()
             &m_schedule, &QTimer::timeout,
             this, &QQuickEventReplayServiceImpl::sendNextEvent);
     QObject::connect(this, &QQuickEventReplayServiceImpl::dataAvailable, this, [this]() {
-        Q_ASSERT(this); // avoids some confusion in clang-sa believing that this might be null
         QMutexLocker lock(&m_dataMutex);
         scheduleNextEvent(m_data.head());
     });
