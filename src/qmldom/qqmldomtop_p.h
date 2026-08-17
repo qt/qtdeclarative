@@ -1100,6 +1100,24 @@ private:
     ModuleLookupResult moduleIndexWithUriHelper(const DomItem &self, const QString &uri, int majorVersion,
                                                     EnvLookup lookup = EnvLookup::Normal) const;
 
+    struct SemanticAnalysis
+    {
+        SemanticAnalysis(const QStringList &loadPaths);
+        void updateLoadPaths(const QStringList &loadPaths);
+        void setResourceFiles(const QStringList &qrcFiles);
+
+        std::shared_ptr<QQmlJSResourceFileMapper> m_mapper;
+        std::shared_ptr<QQmlJSImporter> m_importer;
+        QStringList m_resourceFiles;
+    };
+
+public:
+    SemanticAnalysis semanticAnalysis();
+
+private:
+    SemanticAnalysis semanticAnalysisUnlocked();
+    SemanticAnalysis prepareSemanticAnalysisForFileLoading();
+
     const Options m_options;
     const std::shared_ptr<DomEnvironment> m_base;
     std::shared_ptr<DomEnvironment> m_lastValidBase;
@@ -1122,23 +1140,7 @@ private:
     QHash<Path, RefCacheEntry> m_referenceCache;
     DomCreationOption m_domCreationOption;
 
-    struct SemanticAnalysis
-    {
-        SemanticAnalysis(const QStringList &loadPaths);
-        void updateLoadPaths(const QStringList &loadPaths);
-        void setResourceFiles(const QStringList &qrcFiles);
-
-        std::shared_ptr<QQmlJSResourceFileMapper> m_mapper;
-        std::shared_ptr<QQmlJSImporter> m_importer;
-        QStringList m_resourceFiles;
-    };
     std::optional<SemanticAnalysis> m_semanticAnalysis;
-public:
-    SemanticAnalysis semanticAnalysis();
-
-private:
-    SemanticAnalysis semanticAnalysisUnlocked();
-    SemanticAnalysis prepareSemanticAnalysisForFileLoading();
 };
 Q_DECLARE_OPERATORS_FOR_FLAGS(DomEnvironment::Options)
 
