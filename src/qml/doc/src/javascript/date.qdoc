@@ -93,13 +93,13 @@
 
     The following example shows the current date and time formatted
     for the German locale:
-    \code
+    \qml
     import QtQuick 2.0
 
     Text {
         text: "The date is: " + new Date().toLocaleString(Qt.locale("de_DE"))
     }
-    \endcode
+    \endqml
 
     \section1 string Date::toLocaleDateString(locale, format)
 
@@ -113,13 +113,13 @@
 
     The following example shows the current date formatted
     for the German locale:
-    \code
+    \qml
     import QtQuick 2.0
 
     Text {
         text: "The date is: " + new Date().toLocaleDateString(Qt.locale("de_DE"))
     }
-    \endcode
+    \endqml
 
     \section1 string Date::toLocaleTimeString(locale, format)
 
@@ -133,13 +133,13 @@
 
     The following example shows the current time formatted
     for the German locale:
-    \code
+    \qml
     import QtQuick 2.0
 
     Text {
         text: "The date is: " + new Date().toLocaleTimeString(Qt.locale("de_DE"))
     }
-    \endcode
+    \endqml
 
     \section1 string Date::fromLocaleString(locale, dateTimeString, format)
 
@@ -153,7 +153,7 @@
 
     The following example shows a datetime being parsed from a datetime string
     in a certain format using the default locale:
-    \code
+    \qml
     import QtQml 2.0
 
     QtObject {
@@ -164,7 +164,7 @@
             print(Date.fromLocaleString(locale, dateTimeString, "ddd yyyy-MM-dd hh:mm:ss"));
         }
     }
-    \endcode
+    \endqml
 
     \section1 string Date::fromLocaleDateString(locale, dateString, format)
 
@@ -179,7 +179,7 @@
     The following example shows the current date first being formatted as a date
     string using the default locale and format, then parsed back again in the
     same manner:
-    \code
+    \qml
     import QtQml 2.0
 
     QtObject {
@@ -192,7 +192,7 @@
             print(Date.fromLocaleDateString(dateString));
         }
     }
-    \endcode
+    \endqml
 
     \section1 string Date::fromLocaleTimeString(locale, timeString, format)
 
@@ -207,7 +207,7 @@
     The following example shows the current time first being formatted as a time
     string using the default locale and a short format, then parsed back again
     in the same manner:
-    \code
+    \qml
     import QtQml 2.2
 
     QtObject {
@@ -220,7 +220,7 @@
             print(Date.fromLocaleTimeString(locale, timeString, Locale.ShortFormat));
         }
     }
-    \endcode
+    \endqml
 
     \section1 string Date::timeZoneUpdated()
 
@@ -237,12 +237,12 @@
     For example, an application that changes the timezone would call timeZoneUpdated() after
     setting the new time zone:
 
-    \code
+    \qml
         property string selectedTimeZone
 
         onSelectedTimeZoneChanged: {
             MyFunctions.setSystemTimeZone(selectedTimeZone)
             Date.timeZoneUpdated()
         }
-    \endcode
+    \endqml
 */

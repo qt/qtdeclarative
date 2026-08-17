@@ -136,7 +136,7 @@ has at least one root component, but can also have other inline sub-components.
 The component scope is the union of the object ids within the component and the
 component's root object's properties.
 
-\code
+\qml
 Item {
     property string title
 
@@ -153,7 +153,7 @@ Item {
         anchors.bottom: parent.bottom
     }
 }
-\endcode
+\endqml
 
 The example above shows a simple QML component that displays a rich text title
 string at the top, and a smaller copy of the same text at the bottom.  The first
@@ -272,7 +272,7 @@ Avoid accessing the \c id of a root object from outside the QML file where
 it is defined. \c id values are only valid within the same document, and relying
 on them from other components breaks encapsulation and component boundaries.
 
-\code
+\qml
 // Main.qml
 import QtQuick
 
@@ -289,7 +289,7 @@ Rectangle {
     height: root.height / 2
     color: "red"
 }
-\endcode
+\endqml
 
 In the above example, \c root is not declared in \c CustomItem.qml. The code still works
 because \c CustomItem is instantiated in a context where \c root exists, which is
@@ -305,7 +305,7 @@ explicit properties, property aliases, or signals. Avoid relying on outer-scope
 
 The following example replaces dynamic scoping with an explicit component API.
 
-\code
+\qml
 // Main.qml
 import QtQuick
 import QtQuick.Window
@@ -337,11 +337,11 @@ Item {
         color: "red"
     }
 }
-\endcode
+\endqml
 
 Apply the same rule to all internal objects declared with an \c id inside a component.
 
-\code
+\qml
 // MyItem.qml
 import QtQuick
 
@@ -360,7 +360,7 @@ MyItem {
         console.log(internalCounter.count);
     }
 }
-\endcode
+\endqml
 
 In the above example, accessing the \c id \c internalCounter from another QML file causes a
 \c ReferenceError because an \c id is document-local and cannot be accessed outside the
@@ -372,7 +372,7 @@ property aliases, or signals.
 The following example exposes the internal state through an explicit component API instead of
 relying on direct access to a document-local \c id.
 
-\code
+\qml
 // MyItem.qml
 import QtQuick
 
@@ -392,7 +392,7 @@ MyItem {
         console.log(internalCount);
     }
 }
-\endcode
+\endqml
 
 This helps maintain clear component boundaries and supports better scalability
 and testability.
