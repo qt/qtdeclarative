@@ -9,6 +9,11 @@
 
 cmake_minimum_required(VERSION 3.16...3.21)
 
+# _qt_internal_parse_qml_imports_entry() is shared with Qt6QmlMacros.cmake, which
+# is not available in script mode. The helpers file sits next to this file in the
+# installed package, so include it directly.
+include("${CMAKE_CURRENT_LIST_DIR}/Qt6QmlPublicCMakeHelpers.cmake")
+
 function(qt6_deploy_qml_imports)
     set(no_value_options
         NO_QT_IMPORTS
@@ -102,15 +107,6 @@ function(_qt_internal_deploy_qml_imports_for_target)
     endforeach()
 
     include("${arg_IMPORTS_FILE}")
-
-    macro(_qt_internal_parse_qml_imports_entry prefix index)
-        cmake_parse_arguments("${prefix}"
-            ""
-            "CLASSNAME;NAME;PATH;PLUGIN;RELATIVEPATH;TYPE;VERSION;LINKTARGET"
-            ""
-            ${qml_import_scanner_import_${index}}
-        )
-    endmacro()
 
     get_filename_component(install_prefix_abs "${QT_DEPLOY_PREFIX}" ABSOLUTE)
     set(plugins_found "")
