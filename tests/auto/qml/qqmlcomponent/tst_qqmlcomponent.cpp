@@ -2015,7 +2015,11 @@ void tst_qqmlcomponent::setDataAsynchronous()
 
     QSignalSpy progressSpy(&component, &QQmlComponent::progressChanged);
 
-    component.setDataAsynchronous(code, QUrl{});
+    {
+        QQmlComponentPrivate *d = QQmlComponentPrivate::get(&component);
+        d->setData(code, QUrl{}, QQmlComponent::Asynchronous);
+        emit component.statusChanged(component.status());
+    }
     QTRY_VERIFY(!progressSpy.isEmpty());
     QTRY_COMPARE(progressSpy.last().at(0).toDouble(), 1.0);
 
