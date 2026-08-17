@@ -379,7 +379,9 @@ void QQuickDeliveryAgentPrivate::translateTouchEvent(QTouchEvent *touchEvent)
 static inline bool windowHasFocus(QQuickWindow *win)
 {
     const QWindow *focusWindow = QGuiApplication::focusWindow();
-    return win == focusWindow || QQuickRenderControlPrivate::isRenderWindowFor(win, focusWindow) || !focusWindow;
+    if (!focusWindow || win == focusWindow)
+        return true;
+    return QQuickRenderControlPrivate::isFocusWindowFor(win, focusWindow);
 }
 
 static QQuickItem *findFurthestFocusScopeAncestor(QQuickItem *item)
