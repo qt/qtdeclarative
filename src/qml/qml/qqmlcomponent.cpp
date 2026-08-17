@@ -758,33 +758,11 @@ void QQmlComponentPrivate::setData(const QByteArray &data, const QUrl &url, QQml
 
     \warning The new component will shadow any existing component of
     the same URL. You should not pass a URL of an existing component.
-
-    \sa setDataAsynchronous
 */
 void QQmlComponent::setData(const QByteArray &data, const QUrl &url)
 {
     Q_D(QQmlComponent);
     d->setData(data, url, PreferSynchronous);
-    emit statusChanged(status());
-}
-
-/*!
-    \since 6.12
-
-    Sets the QQmlComponent to use the given QML \a data. If \a baseUrl
-    is provided, it is used to set the component name and to provide
-    a base path for items resolved by this component. The component
-    will be loaded and compiled asynchronously.
-
-    \warning The new component will shadow any existing component of
-    the same URL. You should not pass a URL of an existing component.
-
-    \sa setData
-*/
-void QQmlComponent::setDataAsynchronous(const QByteArray &data, const QUrl &baseUrl)
-{
-    Q_D(QQmlComponent);
-    d->setData(data, baseUrl, Asynchronous);
     emit statusChanged(status());
 }
 

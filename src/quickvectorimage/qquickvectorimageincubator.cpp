@@ -4,6 +4,7 @@
 #include "qquickvectorimageincubator_p.h"
 #include <QtCore/private/qfactoryloader_p.h>
 #include <QtQml/qqmlcontext.h>
+#include <QtQml/private/qqmlcomponent_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -123,10 +124,13 @@ void QQuickVectorImageIncubator::generatorFinished()
         m_component.reset(new QQmlComponent(engine));
         connect(m_component.get(), &QQmlComponent::statusChanged,
                 this, &QQuickVectorImageIncubator::componentUpdated);
-        if (asynchronous)
-            m_component->setDataAsynchronous(result, QUrl{});
-        else
+        if (asynchronous) {
+            QQmlComponentPrivate *d = QQmlComponentPrivate::get(m_component.get());
+            d->setData(result, QUrl{}, QQmlComponent::Asynchronous);
+            emit m_component->statusChanged(m_component->status());
+        } else {
             m_component->setData(result, QUrl{});
+        }
     } else {
         m_status = Error;
         emit statusUpdated();
