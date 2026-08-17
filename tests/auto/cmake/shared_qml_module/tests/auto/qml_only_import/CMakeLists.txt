@@ -37,3 +37,11 @@ target_link_libraries(tst_qml_only_import
         Qt::Quick
         Qt::Test
 )
+
+# The Qt-prefixed directories the test expects QLibraryInfo::path() to report for
+# Qt's own binaries and helper tools. Passed in from CMake because the test has no
+# other way to tell a Qt-prefixed path from an app-prefixed one.
+target_compile_definitions(tst_qml_only_import PRIVATE
+    EXPECTED_QT_BINARIES_PATH="${QT6_INSTALL_PREFIX}/${QT6_INSTALL_BINS}"
+    EXPECTED_QT_LIBRARY_EXECUTABLES_PATH="${QT6_INSTALL_PREFIX}/${QT6_INSTALL_LIBEXECS}"
+)

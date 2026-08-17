@@ -18,6 +18,8 @@ class tst_non_bundle : public QObject
 private slots:
     void qtConfNextToBinary();
     void qtconf();
+    void qtToolPaths_data();
+    void qtToolPaths();
     void launch();
 };
 
@@ -40,6 +42,45 @@ void tst_non_bundle::qtconf()
     const bool found = std::any_of(importPaths.cbegin(), importPaths.cend(),
         [](const QString &path) { return QDir(path).exists("Scheduler"); });
     QVERIFY2(found, "The Scheduler import root was not found in qt.conf");
+}
+
+/*
+    Resolves symlinks so that two spellings of the same directory compare equal,
+    while leaving a path that doesn't exist untouched, so it still shows up in
+    the failure message.
+*/
+static QString canonical(const QString &path)
+{
+    const QString resolved = QFileInfo(path).canonicalFilePath();
+    return resolved.isEmpty() ? path : resolved;
+}
+
+void tst_non_bundle::qtToolPaths_data()
+{
+    QTest::addColumn<int>("location");
+    QTest::addColumn<QString>("expectedPath");
+
+    QTest::newRow("Binaries")
+        << int(QLibraryInfo::BinariesPath)
+        << QStringLiteral(EXPECTED_QT_BINARIES_PATH);
+    QTest::newRow("LibraryExecutables")
+        << int(QLibraryInfo::LibraryExecutablesPath)
+        << QStringLiteral(EXPECTED_QT_LIBRARY_EXECUTABLES_PATH);
+}
+
+void tst_non_bundle::qtToolPaths()
+{
+    QFETCH(const int, location);
+    QFETCH(const QString, expectedPath);
+
+    const auto libraryPath = QLibraryInfo::LibraryPath(location);
+    qDebug() << "Paths:" << QLibraryInfo::paths(libraryPath);
+
+    // The generated qt.conf only lists QmlImports, but its mere presence makes
+    // QLibraryInfo report app-prefixed paths for every other location as well,
+    // ahead of the Qt-prefixed ones. Code that asks for a single path, to find
+    // Qt's own binaries or helper tools, then no longer finds them.
+    QCOMPARE(canonical(QLibraryInfo::path(libraryPath)), canonical(expectedPath));
 }
 
 void tst_non_bundle::launch()
