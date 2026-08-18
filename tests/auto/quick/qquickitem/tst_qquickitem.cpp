@@ -2747,6 +2747,8 @@ void tst_qquickitem::testUpdateOfInvisibleItem()
     // One update for hiding the Image
     view.rootObject()->setProperty("itemVisible", false);
     QTRY_COMPARE(spy.count(), 1);
+    // macOS may schedule an additional render pass after hiding the item.
+    spy.wait(1000);
     spy.clear();
 
     // Make sure we don't get an update when the invisible Item changes
