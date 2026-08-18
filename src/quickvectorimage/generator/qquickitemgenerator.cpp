@@ -327,6 +327,14 @@ bool QQuickItemGenerator::generateStructureNode(const StructureNodeInfo &info)
         return false;
 
     if (info.stage == StructureNodeStage::Start) {
+        if (!info.clipBox.isEmpty()) {
+            auto *clipItem = new QQuickItem;
+            clipItem->setWidth(info.clipBox.width());
+            clipItem->setHeight(info.clipBox.height());
+            clipItem->setClip(true);
+            pushItem(clipItem);
+        }
+
         QQuickItem *item = nullptr;
         if (!info.forceSeparatePaths && info.isPathContainer) {
             item = createShapeContainer();
@@ -378,6 +386,9 @@ bool QQuickItemGenerator::generateStructureNode(const StructureNodeInfo &info)
             effectItem = generateFilter(item, info);
         if (!info.maskId.isEmpty())
             generateMask(effectItem ? effectItem : item, info);
+
+        if (!info.clipBox.isEmpty())
+            popItem();
     }
 
     return true;
