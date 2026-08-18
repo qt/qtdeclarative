@@ -58,6 +58,7 @@ private slots:
     void badSignalHandlerName();
 
     void invalidContext();
+    void gcCollectedOwner();
 private:
     QQmlEngine engine;
     void prefixes();
@@ -486,6 +487,22 @@ void tst_qqmlconnections::invalidContext()
     std::unique_ptr<QObject> object(component.create());
     QVERIFY(object);
     QTRY_COMPARE(object->property("choice"), QVariant::fromValue<int>(4));
+}
+
+void tst_qqmlconnections::gcCollectedOwner()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("gcCollectedOwner.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    std::unique_ptr<QObject> object(component.create());
+    QVERIFY(object);
+
+    QMetaObject::invokeMethod(object.get(), "createAndForget");
+
+    engine.collectGarbage();
+    // explicitly not spinning the event loop, we don't want deferred
+    // delete events to be delivered
+    object->setProperty("flip", true); // re-evaluation must not trigger a crash
 }
 
 QTEST_MAIN(tst_qqmlconnections)

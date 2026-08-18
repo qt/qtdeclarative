@@ -52,14 +52,24 @@ public:
     QV4::Heap::Object *list() const { return m_list; }
     quintptr id() const { return m_id; }
 
+    // if m_propertyAndMethodStorage of the object is gone,
+    // the list is unusable
+    bool isValid() const { return m_list; }
+
     void append(QObject *o) const;
     void replace(qsizetype i, QObject *o) const;
     QObject *at(qsizetype i) const;
 
-    qsizetype size() const { return m_list->arrayData->length(); }
+    qsizetype size() const
+    {
+        Q_ASSERT(isValid());
+        return m_list->arrayData->length();
+    }
 
     void clear() const
     {
+        Q_ASSERT(isValid());
+
         QV4::Scope scope(m_list->internalClass->engine);
         QV4::ScopedObject object(scope, m_list);
         m_list->arrayData->vtable()->truncate(object, 0);
@@ -67,6 +77,8 @@ public:
 
     void removeLast() const
     {
+        Q_ASSERT(isValid());
+
         const uint length = m_list->arrayData->length();
         if (length == 0)
             return;
