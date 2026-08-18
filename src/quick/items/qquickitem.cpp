@@ -2362,7 +2362,7 @@ bool QQuickItemPrivate::setLastFocusChangeReason(Qt::FocusReason reason)
 */
 
 /*!
-    \fn void QQuickItem::mutabilityGroupChanged()
+    \fn void QQuickItem::mutabilityGroupChanged(int)
     \internal
 */
 
@@ -9372,7 +9372,7 @@ void QQuickItem::setMutabilityGroup(int mutabilityGroup)
     d->extra.value().mutabilityGroup = clampedGroup;
     d->extra.value().mutabilityGroupSet = true;
     d->dirty(QQuickItemPrivate::Content); // Trigger updating paint node
-    emit mutabilityGroupChanged();
+    emit mutabilityGroupChanged(clampedGroup);
 }
 
 /*!

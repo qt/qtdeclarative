@@ -435,7 +435,7 @@ Q_SIGNALS:
     Q_REVISION(6, 0) void paletteChanged();
     Q_REVISION(6, 0) void paletteCreated();
 
-    Q_REVISION(6, 12) void mutabilityGroupChanged();
+    Q_REVISION(6, 12) void mutabilityGroupChanged(int group);
 
 protected:
     bool event(QEvent *) override;
