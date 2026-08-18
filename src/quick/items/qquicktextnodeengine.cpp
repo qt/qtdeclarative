@@ -169,17 +169,13 @@ int QQuickTextNodeEngine::addText(const QTextBlock &block,
     return textPos;
 }
 
-void QQuickTextNodeEngine::addTextDecorations(const QVarLengthArray<TextDecoration> &textDecorations,
+void QQuickTextNodeEngine::addTextDecorations(QSpan<const TextDecoration> textDecorations,
                                               qreal offset, qreal thickness)
 {
-    for (int i=0; i<textDecorations.size(); ++i) {
-        TextDecoration textDecoration = textDecorations.at(i);
-
-        {
-            QRectF &rect = textDecoration.rect;
-            rect.setY(qRound(rect.y() + m_currentLine.ascent() + offset));
-            rect.setHeight(thickness);
-        }
+    for (auto textDecoration : textDecorations) {
+        QRectF &rect = textDecoration.rect;
+        rect.setY(qRound(rect.y() + m_currentLine.ascent() + offset));
+        rect.setHeight(thickness);
 
         m_lines.append(textDecoration);
     }
@@ -221,9 +217,9 @@ void QQuickTextNodeEngine::processCurrentLine()
     QColor lastBackgroundColor;
     QColor lastDecorationColor;
 
-    QVarLengthArray<TextDecoration> pendingUnderlines;
-    QVarLengthArray<TextDecoration> pendingOverlines;
-    QVarLengthArray<TextDecoration> pendingStrikeOuts;
+    QVarLengthArray<TextDecoration, 16> pendingUnderlines;
+    QVarLengthArray<TextDecoration, 16> pendingOverlines;
+    QVarLengthArray<TextDecoration, 16> pendingStrikeOuts;
     if (!sortedIndexes.isEmpty()) {
         QQuickDefaultClipNode *currentClipNode = m_hasSelection ? new QQuickDefaultClipNode(QRectF()) : nullptr;
         bool currentClipNodeUsed = false;

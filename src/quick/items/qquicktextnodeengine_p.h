@@ -12,6 +12,8 @@
 #include "qquickclipnode_p.h"
 #include "qsginternaltextnode_p.h"
 
+#include <QtCore/qspan.h>
+
 #ifndef QQUICKTEXTNODEENGINE_P_H
 #define QQUICKTEXTNODEENGINE_P_H
 
@@ -214,7 +216,7 @@ private:
     };
 
     void processCurrentLine();
-    void addTextDecorations(const QVarLengthArray<TextDecoration> &textDecorations, qreal offset, qreal thickness);
+    void addTextDecorations(QSpan<const TextDecoration> textDecorations, qreal offset, qreal thickness);
     void mergeFormats(QTextLayout *textLayout, QVarLengthArray<QTextLayout::FormatRange> *mergedFormats);
 
     QColor m_selectionColor;
