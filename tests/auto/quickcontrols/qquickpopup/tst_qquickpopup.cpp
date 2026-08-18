@@ -83,6 +83,7 @@ private slots:
     void closePolicy_grabberInside();
     void closeOnRightClickOutside_data();
     void closeOnRightClickOutside();
+    void touchPadPressOutsideDoesNotClosePopupWindow();
     void activeFocusOnClose1();
     void activeFocusOnClose2();
     void activeFocusOnClose3();
@@ -836,6 +837,48 @@ void tst_QQuickPopup::closeOnRightClickOutside()
     QTest::mouseClick(window, Qt::RightButton, Qt::NoModifier,
                       QPoint(window->width() - 10, window->height() - 10));
     QTRY_VERIFY(!popup->isVisible());
+}
+
+void tst_QQuickPopup::touchPadPressOutsideDoesNotClosePopupWindow()
+{
+    // QTBUG-147855: moving the mouse cursor with a touch pad (e.g. on macOS) can
+    // generate a QTouchEvent whose isBeginEvent() is true, if the item underneath
+    // has Qt::WA_AcceptTouchEvents set. Such an event must not be treated as a
+    // "press outside", and therefore must not dismiss the popup, even though it's
+    // a begin-event outside the popup and CloseOnPressOutside is in effect.
+    if (!arePopupWindowsSupported())
+        QSKIP("The platform doesn't support popup windows. Skipping test.");
+
+    QScopedPointer<QPointingDevice> touchPadDevice = QScopedPointer<QPointingDevice>(
+            QTest::createTouchDevice(QInputDevice::DeviceType::TouchPad));
+
+    QQuickControlsApplicationHelper helper(this, QStringLiteral("simplepopup.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickWindow *window = helper.window;
+    window->show();
+
+    auto *popup = window->findChild<QQuickPopup *>();
+    QVERIFY(popup);
+    popup->setPopupType(QQuickPopup::Window);
+    // The default closePolicy() includes CloseOnPressOutside.
+
+    popup->open();
+    TRY_VERIFY_POPUP_OPENED(popup);
+    if (popup->popupType() != QQuickPopup::Window)
+        QSKIP("The popup did not resolve to a popup window on this platform. Skipping test.");
+
+    const QPoint outsidePoint(window->width() - 10, window->height() - 10);
+
+    // A touch press coming from a touch pad device must be ignored...
+    QTest::touchEvent(window, touchPadDevice.data()).press(0, outsidePoint);
+    QTest::touchEvent(window, touchPadDevice.data()).release(0, outsidePoint);
+    QVERIFY(popup->isOpened());
+
+    // ...whereas the same press coming from an actual touch screen should still
+    // close the popup, proving that the exception is specific to touch pad devices.
+    QTest::touchEvent(window, touchScreen.data()).press(0, outsidePoint);
+    QTest::touchEvent(window, touchScreen.data()).release(0, outsidePoint);
+    QTRY_VERIFY(!popup->isOpened());
 }
 
 void tst_QQuickPopup::activeFocusOnClose1()

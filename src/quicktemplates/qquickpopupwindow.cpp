@@ -322,7 +322,11 @@ bool QQuickPopupWindowPrivate::filterPopupSpecialCases(QEvent *event)
             // of the shadow, targetMenu will still be nullptr.
             // On WASM in particular, it's possible for dialogs to receive the event, when clicking in the non-client area. Don't close in those cases.
             if (event->type() != QEvent::NonClientAreaMouseButtonPress && event->type() != QEvent::NonClientAreaMouseButtonDblClick) {
-                closePopups(QQuickPopup::CloseOnPressOutside | QQuickPopup::CloseOnPressOutsideParent);
+                const bool isTouchEventFromTouchPad = event->type() == QEvent::TouchBegin
+                    && pe->deviceType() == QInputDevice::DeviceType::TouchPad;
+                if (!isTouchEventFromTouchPad)
+                    closePopups(QQuickPopup::CloseOnPressOutside | QQuickPopup::CloseOnPressOutsideParent);
+
                 // A modal popup must consume the press event so that forwardToPopup() sees the event as handled
                 // so that it doesn't propagate to items behind the popup window (QTBUG-131786 etc.)
                 // A QTabletEvent in particular is not accepted by default
