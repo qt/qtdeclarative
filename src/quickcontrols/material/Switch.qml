@@ -6,6 +6,7 @@ import QtQuick
 import QtQuick.Controls.Material
 import QtQuick.Controls.Material.impl
 import QtQuick.Templates as T
+import QtQuick.Controls.impl
 
 T.Switch {
     id: control
@@ -43,7 +44,7 @@ T.Switch {
         }
     }
 
-    contentItem: Text {
+    contentItem: CheckLabel {
         leftPadding: control.indicator && !control.mirrored ? control.indicator.width + control.spacing : 0
         rightPadding: control.indicator && control.mirrored ? control.indicator.width + control.spacing : 0
 

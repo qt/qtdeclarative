@@ -7,7 +7,7 @@
 QT_BEGIN_NAMESPACE
 
 QQuickCheckLabel::QQuickCheckLabel(QQuickItem *parent) :
-    QQuickText(parent)
+    QQuickMnemonicLabel(parent)
 {
     setHAlign(AlignLeft);
     setVAlign(AlignVCenter);

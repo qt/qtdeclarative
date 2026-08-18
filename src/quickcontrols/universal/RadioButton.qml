@@ -4,6 +4,7 @@
 
 import QtQuick
 import QtQuick.Templates as T
+import QtQuick.Controls.impl
 import QtQuick.Controls.Universal
 import QtQuick.Controls.Universal.impl
 
@@ -27,7 +28,7 @@ T.RadioButton {
         control: control
     }
 
-    contentItem: Text {
+    contentItem: CheckLabel {
         leftPadding: control.indicator && !control.mirrored ? control.indicator.width + control.spacing : 0
         rightPadding: control.indicator && control.mirrored ? control.indicator.width + control.spacing : 0
 

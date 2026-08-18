@@ -23,7 +23,7 @@ QtObject {
 
     property Component component: Component {
         RadioButton {
-            text: "RadioButton"
+            text: index === 0 ? "&RadioButton" : "RadioButton"
             enabled: !is("disabled")
             checked: is("checked")
             // Only set it if it's pressed, or the non-pressed examples will have no press effects

@@ -18,10 +18,11 @@
 
 #include <QtQuick/private/qquicktext_p.h>
 #include <QtQuickControls2Impl/private/qtquickcontrols2implglobal_p.h>
+#include <QtQuickControls2Impl/private/qquickmnemoniclabel_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICKCONTROLS2IMPL_EXPORT QQuickCheckLabel : public QQuickText
+class Q_QUICKCONTROLS2IMPL_EXPORT QQuickCheckLabel : public QQuickMnemonicLabel
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(CheckLabel)

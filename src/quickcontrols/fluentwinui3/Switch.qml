@@ -48,7 +48,7 @@ T.Switch {
         control: control
     }
 
-    contentItem: Text {
+    contentItem: CheckLabel {
         leftPadding: control.indicator && !control.__mirroredIndicator ? control.indicator.width + control.spacing : 0
         rightPadding: control.indicator && control.__mirroredIndicator ? control.indicator.width + control.spacing : 0
 

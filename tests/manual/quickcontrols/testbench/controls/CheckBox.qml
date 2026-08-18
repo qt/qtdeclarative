@@ -18,7 +18,7 @@ QtObject {
     ]
 
     property Component component: CheckBox {
-        text: "CheckBox"
+        text: index === 0 ? "&CheckBox" : "CheckBox"
         enabled: !is("disabled")
         checkState: is("checked") ? Qt.Checked : is("partially-checked") ? Qt.PartiallyChecked : Qt.Unchecked
         // Only set it if it's pressed, or the non-pressed examples will have no press effects

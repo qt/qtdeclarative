@@ -95,10 +95,11 @@ void tst_QQuickAbstractButton::mnemonics_data()
     // The data tag is used as the QML type to instantiate; see mnemonics().
     QTest::newRow("Button") << platformSupportsMnemonics;
     QTest::newRow("CheckBox") << platformSupportsMnemonics;
-    QTest::newRow("Switch") << platformSupportsMnemonics;
-    QTest::newRow("ToolButton") << platformSupportsMnemonics;
     QTest::newRow("MenuItem") << platformSupportsMnemonics;
     QTest::newRow("MenuBarItem") << platformSupportsMnemonics;
+    QTest::newRow("RadioButton") << platformSupportsMnemonics;
+    QTest::newRow("Switch") << platformSupportsMnemonics;
+    QTest::newRow("ToolButton") << platformSupportsMnemonics;
     // These types explicitly disable mnemonics regardless of platform.
     QTest::newRow("ItemDelegate") << false;
     QTest::newRow("CheckDelegate") << false;
@@ -145,9 +146,6 @@ void tst_QQuickAbstractButton::mnemonics()
     auto *textItemPrivate = QQuickTextPrivate::get(textItem);
 
     // First, check the defaults.
-    // Controls like CheckBox and Switch don't use a MnemonicLabel for their label (just a plain
-    // Text/CheckLabel), so they never strip the "&", regardless of whether mnemonics are
-    // otherwise supported: QTBUG-147943.
     const bool usesMnemonicLabel = qobject_cast<QQuickMnemonicLabel *>(textItem);
     const bool mnemonicStripped = usesMnemonicLabel && expectedEnabledByDefault;
     // Whether the mnemonic character is actually underlined additionally depends on
