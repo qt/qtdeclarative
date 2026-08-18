@@ -1251,7 +1251,8 @@ static bool createRhiRenderTargetWithRenderBuffer(QRhiRenderBuffer *renderBuffer
     dst->implicitBuffers.reset(rhi);
 
     if (!depthStencil) {
-        depthStencil.reset(rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, pixelSize, sampleCount));
+        depthStencil.reset(rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, pixelSize, sampleCount,
+                                                QSGRhiSupport::depthStencilBufferFlags()));
         depthStencil->setName(QByteArrayLiteral("Depth-stencil buffer for QQuickRenderTarget"));
         if (!depthStencil->create()) {
             qWarning("Failed to build depth-stencil buffer for QQuickRenderTarget");
@@ -1328,7 +1329,8 @@ static bool createRhiRenderTarget(QRhiTexture *texture,
     dst->implicitBuffers.reset(rhi);
 
     if (!depthStencil) {
-        depthStencil.reset(rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, pixelSize, sampleCount));
+        depthStencil.reset(rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, pixelSize, sampleCount,
+                                                QSGRhiSupport::depthStencilBufferFlags()));
         depthStencil->setName(QByteArrayLiteral("Depth-stencil buffer for QQuickRenderTarget"));
         if (!depthStencil->create()) {
             qWarning("Failed to build depth-stencil buffer for QQuickRenderTarget");

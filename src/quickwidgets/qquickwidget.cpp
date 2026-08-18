@@ -1269,7 +1269,8 @@ void QQuickWidget::createFramebufferObject()
         }
     }
     if (!d->depthStencil) {
-        d->depthStencil = d->rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, fboSize, samples);
+        d->depthStencil = d->rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, fboSize, samples,
+                                                  QSGRhiSupport::depthStencilBufferFlags());
         if (!d->depthStencil->create()) {
             qWarning("QQuickWidget: failed to create depth/stencil buffer of size %dx%d and sample count %d",
                      fboSize.width(), fboSize.height(), samples);

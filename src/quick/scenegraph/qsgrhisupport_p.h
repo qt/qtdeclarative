@@ -44,6 +44,7 @@ public:
     static int chooseSampleCountForWindowWithRhi(QWindow *window, QRhi *rhi);
     static QImage grabAndBlockInCurrentFrame(QRhi *rhi, QRhiCommandBuffer *cb, QRhiTexture *src = nullptr);
     static void checkEnvQSgInfo();
+    static QRhiRenderBuffer::Flags depthStencilBufferFlags();
 
 #if QT_CONFIG(opengl)
     static QRhiTexture::Format toRhiTextureFormatFromGL(uint format, QRhiTexture::Flags *flags);

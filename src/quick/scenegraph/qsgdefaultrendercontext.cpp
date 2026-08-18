@@ -12,6 +12,7 @@
 #include <QtQuick/private/qsgrhiatlastexture_p.h>
 #include <QtQuick/private/qsgrhidistancefieldglyphcache_p.h>
 #include <QtQuick/private/qsgmaterialshader_p.h>
+#include <QtQuick/private/qsgrhisupport_p.h>
 
 #include <QtQuick/private/qsgcompressedtexture_p.h>
 
@@ -419,7 +420,8 @@ QSharedPointer<QSGDepthStencilBuffer> QSGDefaultRenderContext::getDepthStencilBu
             return it.value().toStrongRef();
     }
 
-    QRhiRenderBuffer *ds = m_rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, size, sampleCount);
+    QRhiRenderBuffer *ds = m_rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, size, sampleCount,
+                                                  QSGRhiSupport::depthStencilBufferFlags());
     if (!ds->create()) {
         qWarning("Failed to build depth-stencil buffer for layer");
         delete ds;

@@ -150,6 +150,12 @@ void QSGRhiSupport::checkEnvQSgInfo()
         const_cast<QLoggingCategory &>(QSG_LOG_INFO()).setEnabled(QtDebugMsg, true);
 }
 
+QRhiRenderBuffer::Flags QSGRhiSupport::depthStencilBufferFlags()
+{
+    static const bool noTransientDepthBuffer = qEnvironmentVariableIntValue("QSG_NO_TRANSIENT_DEPTH_BUFFER");
+    return noTransientDepthBuffer ? QRhiRenderBuffer::NoTransientBacking : QRhiRenderBuffer::Flags();
+}
+
 
 #if QT_CONFIG(opengl)
 #ifndef GL_BGRA
@@ -1376,7 +1382,8 @@ QImage QSGRhiSupport::grabOffscreen(QQuickWindow *window)
         qWarning("Failed to build texture for offscreen readback");
         return QImage();
     }
-    QScopedPointer<QRhiRenderBuffer> depthStencil(rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, pixelSize, 1));
+    QScopedPointer<QRhiRenderBuffer> depthStencil(rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, pixelSize, 1,
+                                                                       depthStencilBufferFlags()));
     if (!depthStencil->create()) {
         qWarning("Failed to create depth/stencil buffer for offscreen readback");
         return QImage();
@@ -1473,7 +1480,8 @@ QImage QSGRhiSupport::grabOffscreenForProtectedContent(QQuickWindow *window)
         qWarning("Failed to build texture for offscreen readback");
         return QImage();
     }
-    QScopedPointer<QRhiRenderBuffer> depthStencil(rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, pixelSize, 1));
+    QScopedPointer<QRhiRenderBuffer> depthStencil(rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, pixelSize, 1,
+                                                                       depthStencilBufferFlags()));
     if (!depthStencil->create()) {
         qWarning("Failed to create depth/stencil buffer for offscreen readback");
         return QImage();

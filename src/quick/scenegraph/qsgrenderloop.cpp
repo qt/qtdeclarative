@@ -540,7 +540,8 @@ bool QSGGuiThreadRenderLoop::ensureRhi(QQuickWindow *window, WindowData &data)
             cd->depthStencilForSwapchain = data.rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil,
                                                                      QSize(),
                                                                      data.sampleCount,
-                                                                     QRhiRenderBuffer::UsedWithSwapChainOnly);
+                                                                     QRhiRenderBuffer::UsedWithSwapChainOnly
+                                                                     | QSGRhiSupport::depthStencilBufferFlags());
             cd->swapchain->setDepthStencil(cd->depthStencilForSwapchain);
         }
         cd->swapchain->setWindow(window);

@@ -1318,6 +1318,20 @@ with multiple windows.
    enumerating adapters (for example, Direct3D or Vulkan), and is ignored
    otherwise.
 
+  \row
+   \li \c QSG_NO_TRANSIENT_DEPTH_BUFFER
+   \li \c 1
+   \li Requests that the depth-stencil buffers Qt Quick creates implicitly are
+   not backed by transient memory. This covers the depth-stencil buffer of the
+   window, of layers and of QQuickWidget, the one created for a
+   \l QQuickRenderTarget when redirecting the scene into a texture, and the one
+   provided to a \l QQuickRhiItem subclass. Only relevant with backends that
+   would otherwise choose such storage, which in practice means Metal on Apple
+   GPUs. Set this when the depth contents have to survive a render pass that a
+   backend interrupts internally, which the Metal backend does for indirect
+   draws with a high draw count. It costs actual memory and bandwidth for the
+   depth-stencil buffers, so do not set it when not needed.
+
   \endtable
 
   Applications wishing to always run with a single given graphics API, can

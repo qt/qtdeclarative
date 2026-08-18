@@ -937,7 +937,8 @@ void QSGRenderThread::ensureRhi()
             cd->depthStencilForSwapchain = rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil,
                                                                 QSize(),
                                                                 rhiSampleCount,
-                                                                QRhiRenderBuffer::UsedWithSwapChainOnly);
+                                                                QRhiRenderBuffer::UsedWithSwapChainOnly
+                                                                | QSGRhiSupport::depthStencilBufferFlags());
             cd->swapchain->setDepthStencil(cd->depthStencilForSwapchain);
         }
         cd->swapchain->setWindow(window);

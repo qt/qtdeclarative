@@ -3,6 +3,7 @@
 // Qt-Security score:significant reason:default
 
 #include "qquickrhiitem_p.h"
+#include <QtQuick/private/qsgrhisupport_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -320,7 +321,8 @@ void QQuickRhiItemNode::sync()
         const QSize pixelSize = m_colorTexture ? m_colorTexture->pixelSize()
                                                : m_msaaColorBuffer->pixelSize();
         if (!m_depthStencilBuffer) {
-            m_depthStencilBuffer.reset(m_rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, pixelSize, itemD->samples));
+            m_depthStencilBuffer.reset(m_rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, pixelSize, itemD->samples,
+                                                              QSGRhiSupport::depthStencilBufferFlags()));
             if (!m_depthStencilBuffer->create()) {
                 qWarning("Failed to create depth-stencil buffer for QQuickRhiItem");
                 resetRenderTargetObjects();
