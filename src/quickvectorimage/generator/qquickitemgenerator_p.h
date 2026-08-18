@@ -132,6 +132,7 @@ private:
     QQuickItem *currentItem() const;
 
     void bindTextureSize(QQuickShaderEffectSource *ses);
+    void bindPatternTextureSize(QQuickShaderEffectSource *ses);
     void bindPropertyAnimation(QObject *target, const QString &property,
                                const QQuickAnimatedProperty::PropertyAnimation &anim,
                                const std::function<QVariant(const QVariant &)> &extractor,

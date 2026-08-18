@@ -960,6 +960,23 @@ static QQuickShaderEffectSource *makeEffectSES(QQuickShaderEffect *effect, const
 
 void QQuickItemGenerator::bindTextureSize(QQuickShaderEffectSource *ses)
 {
+    auto *spy = new QQuickItemSpy(ses);
+    spy->setVisible(false);
+
+    auto updateTextureSize = [ses, spy]() {
+        spy->setWidth(ses->width());
+        spy->setHeight(ses->height());
+        const QSizeF textureSize = spy->requiredTextureSize();
+        ses->setTextureSize(QSize(qRound(textureSize.width()), qRound(textureSize.height())));
+    };
+    QObject::connect(spy, &QQuickItemSpy::requiredTextureSizeChanged, ses, updateTextureSize);
+    QObject::connect(ses, &QQuickItem::widthChanged, ses, updateTextureSize);
+    QObject::connect(ses, &QQuickItem::heightChanged, ses, updateTextureSize);
+    updateTextureSize();
+}
+
+void QQuickItemGenerator::bindPatternTextureSize(QQuickShaderEffectSource *ses)
+{
     if (!m_topLevelScaleSpy)
         return;
 
@@ -1045,6 +1062,7 @@ void QQuickItemGenerator::generateMask(QQuickItem *item, const NodeInfo &info)
 
     auto *itemSES = makeSES(item, svgMaskRect, m_rootItem);
     itemSES->setHideSource(true);
+    itemSES->setSmooth(false);
     if (qobject_cast<QQuickShaderEffectSource *>(item))
         itemSES->setSourceRect(QRectF(0, 0, item->width(), item->height()));
     else
@@ -1565,8 +1583,10 @@ void QQuickItemGenerator::generatePattern(QQuickShapePath *shapePath, const Path
     ses->setWrapMode(QQuickShaderEffectSource::Repeat);
     ses->setSourceRect(QRectF(0, 0, tileW, tileH));
     shapePath->setFillItem(ses);
-    bindTextureSize(ses);
+    bindPatternTextureSize(ses);
 
+    // Fill transform has to include the inverse of the scene scale, since the texture size
+    // is scaled by this amount
     if (m_topLevelScaleSpy) {
         const QTransform baseTransform = fillTransform;
         auto *scaleSpy = m_topLevelScaleSpy;
