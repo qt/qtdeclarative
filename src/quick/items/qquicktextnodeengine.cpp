@@ -205,7 +205,7 @@ int QQuickTextNodeEngine::addText(const QTextBlock &block,
     return textPos;
 }
 
-void QQuickTextNodeEngine::addTextDecorations(const QVarLengthArray<TextDecoration> &textDecorations,
+void QQuickTextNodeEngine::addTextDecorations(QSpan<const TextDecoration> textDecorations,
                                               qreal offset, qreal thickness)
 {
     for (auto textDecoration : textDecorations) {
@@ -254,9 +254,9 @@ void QQuickTextNodeEngine::processCurrentLine()
     QColor lastDecorationColor;
     QTextCharFormat::UnderlineStyle lastUnderlineStyle = QTextCharFormat::NoUnderline;
 
-    QVarLengthArray<TextDecoration> pendingUnderlines;
-    QVarLengthArray<TextDecoration> pendingOverlines;
-    QVarLengthArray<TextDecoration> pendingStrikeOuts;
+    QVarLengthArray<TextDecoration, 16> pendingUnderlines;
+    QVarLengthArray<TextDecoration, 16> pendingOverlines;
+    QVarLengthArray<TextDecoration, 16> pendingStrikeOuts;
     if (!sortedIndexes.isEmpty()) {
         QQuickDefaultClipNode *currentClipNode = m_hasSelection ? new QQuickDefaultClipNode(QRectF()) : nullptr;
         bool currentClipNodeUsed = false;
