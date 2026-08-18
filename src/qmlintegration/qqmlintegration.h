@@ -39,6 +39,19 @@ QT_END_NAMESPACE
 #define QML_PRIVATE_NAMESPACE \
     QT_PREPEND_NAMESPACE(QQmlPrivate)
 
+#if QT_DEPRECATED_SINCE(6, 12)
+QT_BEGIN_NAMESPACE
+template <typename... Args>
+QT_DEPRECATED_VERSION_X_6_12("You don't need this.")
+void qmlDeprecatedRegisterTypesAndRevisions(const char *uri, int versionMajor,
+                                            QList<int> *qmlTypeIds = nullptr)
+{
+    qmlRegisterTypesAndRevisions(uri, versionMajor, qmlTypeIds);
+}
+QT_END_NAMESPACE
+#  define QML_REGISTER_TYPES_AND_REVISIONS \
+      QT_PREPEND_NAMESPACE(qmlDeprecatedRegisterTypesAndRevisions)
+#endif
 
 #define QML_ELEMENT \
     Q_CLASSINFO("QML.Element", "auto")
