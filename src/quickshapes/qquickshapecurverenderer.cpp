@@ -564,7 +564,7 @@ void QQuickShapeCurveRenderer::updateNode()
                 pathData.strokeNodes = newData.strokeNodes;
             }
             if (newData.m_dirty & UniformsDirty)
-                updateUniforms(newData);
+                updateUniforms(pathData);
 
             // Ownership of new nodes have been transferred to root node
             newData.fillNodes.clear();
