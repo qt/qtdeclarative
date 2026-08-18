@@ -13,7 +13,6 @@
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <QtQuick/qquickview.h>
 #include <QtQml/qqmlcontext.h>
-#include <QtQuickTestUtils/private/geometrytestutils_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/viewtestutils_p.h>
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
@@ -220,7 +219,7 @@ void tst_QQuickPinchArea::scale()
         QQuickTouchUtils::flush(window);
 
         QCOMPARE(root->property("scale").toReal(), 1.5);
-        VERIFY_POINT_NEAR("center", root->property("center").toPointF(), QPointF(40, 40)); // blackrect is at 50,50
+        QCOMPARE(root->property("center").toPointF(), QPointF(40, 40)); // blackrect is at 50,50
         QCOMPARE(blackRect->scale(), 1.5);
     }
 
@@ -295,7 +294,7 @@ void tst_QQuickPinchArea::pan()
         // scene coordinates: (80, 80) + (dragThreshold, 0), (100, 100) + (dragThreshold, 0)
         //                    = ((180+dT)/2, 180/2) = (90+dT, 90)
         // item  coordinates: (scene) - (50, 50) = (40+dT, 40)
-        VERIFY_POINT_NEAR("center", root->property("center").toPointF(), QPointF(40 + dragThreshold, 40));
+        QCOMPARE(root->property("center").toPointF(), QPointF(40 + dragThreshold, 40));
         // pan started, but no actual movement registered yet:
         // blackrect starts at 50,50
         QCOMPARE(blackRect->x(), 50.0);
@@ -305,7 +304,7 @@ void tst_QQuickPinchArea::pan()
         p2 += QPoint(10, 0);
         pinchSequence.move(0, p1, window).move(1, p2, window).commit();
         QQuickTouchUtils::flush(window);
-        VERIFY_POINT_NEAR("center", root->property("center").toPointF(), QPointF(40 + 10 + dragThreshold, 40));
+        QCOMPARE(root->property("center").toPointF(), QPointF(40 + 10 + dragThreshold, 40));
         QCOMPARE(blackRect->x(), 60.0);
         QCOMPARE(blackRect->y(), 50.0);
 
@@ -315,7 +314,7 @@ void tst_QQuickPinchArea::pan()
         QQuickTouchUtils::flush(window);
         // next big surprise: the center is in item local coordinates and the item was just
         // moved 10 to the right... which offsets the center point 10 to the left
-        VERIFY_POINT_NEAR("center", root->property("center").toPointF(), QPointF(40 + 10 - 10 + dragThreshold, 40 + 10));
+        QCOMPARE(root->property("center").toPointF(), QPointF(40 + 10 - 10 + dragThreshold, 40 + 10));
         QCOMPARE(blackRect->x(), 60.0);
         QCOMPARE(blackRect->y(), 60.0);
 
@@ -324,7 +323,7 @@ void tst_QQuickPinchArea::pan()
         pinchSequence.move(0, p1, window).move(1, p2, window).commit();
         QQuickTouchUtils::flush(window);
         // now the item moved again, thus the center point of the touch is moved in total by (10, 10)
-        VERIFY_POINT_NEAR("center", root->property("center").toPointF(), QPointF(50 + dragThreshold, 50));
+        QCOMPARE(root->property("center").toPointF(), QPointF(50 + dragThreshold, 50));
         QCOMPARE(blackRect->x(), 70.0);
         QCOMPARE(blackRect->y(), 70.0);
     }
@@ -395,7 +394,7 @@ void tst_QQuickPinchArea::retouch()
         QCOMPARE(startedSpy.size(), 1);
 
         QCOMPARE(root->property("scale").toReal(), 1.5);
-        VERIFY_POINT_NEAR("center", root->property("center").toPointF(), QPointF(40, 40)); // blackrect is at 50,50
+        QCOMPARE(root->property("center").toPointF(), QPointF(40, 40)); // blackrect is at 50,50
         QCOMPARE(blackRect->scale(), 1.5);
 
         QCOMPARE(window->rootObject()->property("pointCount").toInt(), 2);
@@ -484,7 +483,7 @@ void tst_QQuickPinchArea::cancel()
         QQuickTouchUtils::flush(window);
 
         QCOMPARE(root->property("scale").toReal(), 1.5);
-        VERIFY_POINT_NEAR("center", root->property("center").toPointF(), QPointF(40, 40)); // blackrect is at 50,50
+        QCOMPARE(root->property("center").toPointF(), QPointF(40, 40)); // blackrect is at 50,50
         QCOMPARE(blackRect->scale(), 1.5);
 
         QTouchEvent cancelEvent(QEvent::TouchCancel, touchscreen.get());
@@ -492,7 +491,7 @@ void tst_QQuickPinchArea::cancel()
         QQuickTouchUtils::flush(window);
 
         QCOMPARE(root->property("scale").toReal(), 1.0);
-        VERIFY_POINT_NEAR("center", root->property("center").toPointF(), QPointF(40, 40)); // blackrect is at 50,50
+        QCOMPARE(root->property("center").toPointF(), QPointF(40, 40)); // blackrect is at 50,50
         QCOMPARE(blackRect->scale(), 1.0);
         QVERIFY(!root->property("pinchActive").toBool());
     }
