@@ -4055,6 +4055,31 @@ private slots:
         QCOMPARE(lambda.internalKind(), DomType::ScriptFunctionExpression);
     }
 
+    void doNotCrashOnNestedFunctionInPropertyBinding()
+    {
+        using namespace Qt::StringLiterals;
+        const QString testFile = baseDir + u"/lambdas.qml"_s;
+        const DomItem fileObject = rootQmlObjectFromFile(testFile, qmltypeDirs).fileObject();
+        const DomItem mainObject = fileObject.field(Fields::components)
+                                           .key(QString())
+                                           .index(0)
+                                           .field(Fields::objects)
+                                           .index(0);
+        const DomItem nested = mainObject.field(Fields::bindings)
+                                       .key(u"propertyWithFunction"_s)
+                                       .index(0)
+                                       .field(Fields::value)
+                                       .field(Fields::scriptElement)
+                                       .field(Fields::statements)
+                                       .index(0);
+        QVERIFY(nested);
+        QCOMPARE(nested.internalKind(), DomType::ScriptFunctionExpression);
+        QCOMPARE(nested.field(Fields::name).value().toString(), u"funcInProperty"_s);
+
+        // the nested function must not have leaked into the QmlObject's methods
+        QVERIFY(!mainObject.field(Fields::methods).key(u"funcInProperty"_s).index(0));
+    }
+
     void regexpLiteral()
     {
         using namespace Qt::StringLiterals;

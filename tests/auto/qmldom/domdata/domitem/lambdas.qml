@@ -42,4 +42,21 @@ Item {
     Component.onCompleted: {
         function a() { return 45;}
     }
+
+    property var propertyWithFunction: {
+        function funcInProperty() { return 45; }
+        return funcInProperty();
+    }
+
+    // QTBUG-149244 — declaration directly inside a binding body
+    property var c: { function test() {} }
+
+    // QTBUG-149244 — declaration nested in a block inside a binding body
+    property var d: {
+        if (true) {
+            function test() {}
+            return test()
+        }
+        return 0
+    }
 }
