@@ -589,6 +589,7 @@ bool QQmlDomAstCreatorBase::visit(AST::UiPublicMember *el)
                                      el->readonlyToken());
         }
         if (el->statement) {
+            ++m_nestedFunctionDepth;
             BindingType bType = BindingType::Normal;
             SourceLocation loc = combineLocations(el->statement);
             QStringView code = qmlFilePtr->code();
@@ -617,6 +618,7 @@ bool QQmlDomAstCreatorBase::visit(AST::UiPublicMember *el)
 void QQmlDomAstCreatorBase::endVisit(AST::UiPublicMember *el)
 {
     if (auto &lastEl = currentNode(); lastEl.kind == DomType::Binding) {
+        --m_nestedFunctionDepth;
         Binding &b = std::get<Binding>(lastEl.value);
         if (m_enableScriptExpressions
             && (scriptNodeStack.size() != 1 || scriptNodeStack.last().isList())) {
