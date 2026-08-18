@@ -423,7 +423,7 @@ void QQmlConnections::connectSignalsToMethods()
                 QV4::Scoped<QV4::JavaScriptFunctionObject> method(
                         scope, vmeMetaObject->vmeMethod(handler->coreIndex()));
 
-                QQmlBoundSignalExpression *expression = ctxtdata
+                QQmlBoundSignalExpression *expression = (ctxtdata && method)
                         ? new QQmlBoundSignalExpression(
                                 target, signalIndex, ctxtdata, this, method->function())
                         : nullptr;

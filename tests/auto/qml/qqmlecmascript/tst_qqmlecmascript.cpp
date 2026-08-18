@@ -318,6 +318,7 @@ private slots:
     void signalEmitted();
     void threadSignal();
     void qqmldataDestroyed();
+    void gcCollectedListPropertyOwner();
     void secondAlias();
     void varAlias();
     void overrideDataAssert();
@@ -8377,6 +8378,25 @@ void tst_qqmlecmascript::qqmldataDestroyed()
         object.reset();
         // shouldn't have crashed.
     }
+}
+
+void tst_qqmlecmascript::gcCollectedListPropertyOwner()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("gcCollectedListOwner.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY(root);
+
+    QMetaObject::invokeMethod(root.data(), "createAndForget");
+
+    // runs gc, but we don't let the event loop run, which would delete
+    // the object created from the component in QML (by createAndForget)
+    // and then delete its child (via QObject ownership)
+    engine.collectGarbage();
+
+    // re-evaluate list property binding
+    root->setProperty("flip", true); // must not crash
 }
 
 void tst_qqmlecmascript::secondAlias()

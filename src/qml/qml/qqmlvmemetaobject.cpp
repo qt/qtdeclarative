@@ -68,6 +68,8 @@ QQmlVMEResolvedList::QQmlVMEResolvedList(QQmlListProperty<QObject> *prop)
 
 void QQmlVMEResolvedList::append(QObject *o) const
 {
+    Q_ASSERT(isValid());
+
     QV4::Scope scope(m_list->internalClass->engine);
     QV4::Heap::ArrayData *arrayData = m_list->arrayData;
 
@@ -86,6 +88,8 @@ void QQmlVMEResolvedList::append(QObject *o) const
 
 QObject *QQmlVMEResolvedList::at(qsizetype i) const
 {
+    Q_ASSERT(isValid());
+
     QV4::Scope scope(m_list->internalClass->engine);
     QV4::Scoped<QV4::QObjectWrapper> result(scope, m_list->arrayData->get(i));
     return result ? result->object() : nullptr;
@@ -93,6 +97,8 @@ QObject *QQmlVMEResolvedList::at(qsizetype i) const
 
 void QQmlVMEResolvedList::replace(qsizetype i, QObject *o) const
 {
+    Q_ASSERT(isValid());
+
     QV4::Scope scope(m_list->internalClass->engine);
     QV4::ScopedObject object(scope, m_list);
     QV4::ScopedValue wrappedObject(scope, QV4::QObjectWrapper::wrap(scope.engine, o));
@@ -109,40 +115,58 @@ void QQmlVMEResolvedList::activateSignal() const
 void QQmlVMEMetaObject::list_append(QQmlListProperty<QObject> *prop, QObject *o)
 {
     const QQmlVMEResolvedList resolved(prop);
+    if (!resolved.isValid())
+        return;
     resolved.append(o);
     resolved.activateSignal();
 }
 
 void QQmlVMEMetaObject::list_append_nosignal(QQmlListProperty<QObject> *prop, QObject *o)
 {
-    QQmlVMEResolvedList(prop).append(o);
+    const QQmlVMEResolvedList resolved(prop);
+    if (!resolved.isValid())
+        return;
+    resolved.append(o);
 }
 
 static qsizetype list_count(QQmlListProperty<QObject> *prop)
 {
-    return QQmlVMEResolvedList(prop).size();
+    const QQmlVMEResolvedList resolved(prop);
+    if (!resolved.isValid())
+        return 0;
+    return resolved.size();
 }
 
 static QObject *list_at(QQmlListProperty<QObject> *prop, qsizetype index)
 {
-    return QQmlVMEResolvedList(prop).at(index);
+    const QQmlVMEResolvedList resolved(prop);
+    if (!resolved.isValid())
+        return nullptr;
+    return resolved.at(index);
 }
 
 void QQmlVMEMetaObject::list_clear(QQmlListProperty<QObject> *prop)
 {
     const QQmlVMEResolvedList resolved(prop);
+    if (!resolved.isValid())
+        return;
     resolved.clear();
     resolved.activateSignal();
 }
 
 void QQmlVMEMetaObject::list_clear_nosignal(QQmlListProperty<QObject> *prop)
 {
-    QQmlVMEResolvedList(prop).clear();
+    const QQmlVMEResolvedList resolved(prop);
+    if (!resolved.isValid())
+        return;
+    resolved.clear();
 }
 
 static void list_replace(QQmlListProperty<QObject> *prop, qsizetype index, QObject *o)
 {
     const QQmlVMEResolvedList resolved(prop);
+    if (!resolved.isValid())
+        return;
     resolved.replace(index, o);
     resolved.activateSignal();
 }
@@ -150,6 +174,8 @@ static void list_replace(QQmlListProperty<QObject> *prop, qsizetype index, QObje
 static void list_removeLast(QQmlListProperty<QObject> *prop)
 {
     const QQmlVMEResolvedList resolved(prop);
+    if (!resolved.isValid())
+        return;
     resolved.removeLast();
     resolved.activateSignal();
 }
