@@ -52,14 +52,14 @@
 
     Items in a StackLayout support these attached properties:
     \list
-        \li \l{Layout::minimumWidth}{Layout.minimumWidth}
-        \li \l{Layout::minimumHeight}{Layout.minimumHeight}
-        \li \l{Layout::preferredWidth}{Layout.preferredWidth}
-        \li \l{Layout::preferredHeight}{Layout.preferredHeight}
-        \li \l{Layout::maximumWidth}{Layout.maximumWidth}
-        \li \l{Layout::maximumHeight}{Layout.maximumHeight}
-        \li \l{Layout::fillWidth}{Layout.fillWidth}
-        \li \l{Layout::fillHeight}{Layout.fillHeight}
+        \li \l{Layout.minimumWidth}
+        \li \l{Layout.minimumHeight}
+        \li \l{Layout.preferredWidth}
+        \li \l{Layout.preferredHeight}
+        \li \l{Layout.maximumWidth}
+        \li \l{Layout.maximumHeight}
+        \li \l{Layout.fillWidth}
+        \li \l{Layout.fillHeight}
     \endlist
 
     Read more about attached properties \l{QML Object Attributes}{here}.

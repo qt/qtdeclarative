@@ -49,8 +49,7 @@
     The width and height properties are used by the layout engine to store the current
     size of items as calculated from the minimum/preferred/maximum attached properties,
     and can be ovewritten each time the items are laid out. Use
-    \l {Layout::preferredWidth}{Layout.preferredWidth} and
-    \l {Layout::preferredHeight}{Layout.preferredHeight}, or \l {Item::}{implicitWidth}
+    \l {Layout.preferredWidth} and \l {Layout.preferredHeight}, or \l {Item::}{implicitWidth}
     and \l {Item::}{implicitHeight} to specify the preferred size of items.
 
     \sa GridLayout

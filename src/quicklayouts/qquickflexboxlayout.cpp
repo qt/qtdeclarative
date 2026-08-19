@@ -34,25 +34,25 @@
     The items within the FlexboxLayout can be configured with preferred,
     minimum and maximum sizes through the existing layout attached properties.
     For instance, if the item within the FlexboxLayout need to be stretched,
-    the layout attached property \l{Layout::fillWidth}{Layout.fillWidth} or
-    \l{Layout::fillHeight}{Layout.fillHeight} can be set.
+    the layout attached property \l{Layout.fillWidth} or \l{Layout.fillHeight}
+    can be set.
 
     Items in a FlexboxLayout support these attached properties:
     \list
-        \li \l{FlexboxLayout::alignSelf}{FlexboxLayout.alignSelf}
-        \li \l{Layout::minimumWidth}{Layout.minimumWidth}
-        \li \l{Layout::minimumHeight}{Layout.minimumHeight}
-        \li \l{Layout::preferredWidth}{Layout.preferredWidth}
-        \li \l{Layout::preferredHeight}{Layout.preferredHeight}
-        \li \l{Layout::maximumWidth}{Layout.maximumWidth}
-        \li \l{Layout::maximumHeight}{Layout.maximumHeight}
-        \li \l{Layout::fillWidth}{Layout.fillWidth}
-        \li \l{Layout::fillHeight}{Layout.fillHeight}
-        \li \l{Layout::margins}{Layout.margins}
-        \li \l{Layout::leftMargin}{Layout.leftMargin}
-        \li \l{Layout::rightMargin}{Layout.rightMargin}
-        \li \l{Layout::topMargin}{Layout.topMargin}
-        \li \l{Layout::bottomMargin}{Layout.bottomMargin}
+        \li \l{FlexboxLayout.alignSelf}
+        \li \l{Layout.minimumWidth}
+        \li \l{Layout.minimumHeight}
+        \li \l{Layout.preferredWidth}
+        \li \l{Layout.preferredHeight}
+        \li \l{Layout.maximumWidth}
+        \li \l{Layout.maximumHeight}
+        \li \l{Layout.fillWidth}
+        \li \l{Layout.fillHeight}
+        \li \l{Layout.margins}
+        \li \l{Layout.leftMargin}
+        \li \l{Layout.rightMargin}
+        \li \l{Layout.topMargin}
+        \li \l{Layout.bottomMargin}
     \endlist
 
     Read more about attached properties \l{QML Object Attributes}{here}.
@@ -208,7 +208,7 @@ void QQuickFlexboxLayout::setWrap(QQuickFlexboxLayout::FlexboxWrap wrapMode)
     (which is orthogonal to the main-axis, as defined by the property
     \l {direction}). This property can be overridden by the
     items within the flex box layout through the attached property
-    \l {FlexboxLayout::alignSelf}{FlexboxLayout.alignSelf}.
+    \l {FlexboxLayout.alignSelf}.
 
     Possible values:
 

@@ -173,17 +173,17 @@
     rows property is only used when \l flow is \c GridLayout.TopToBottom.
 
     You can specify which cell you want an item to occupy by setting the
-    \l{Layout::row}{Layout.row} and \l{Layout::column}{Layout.column} properties. You can also
-    specify the row span or column span by setting the \l{Layout::rowSpan}{Layout.rowSpan} or
-    \l{Layout::columnSpan}{Layout.columnSpan} properties.
+    \l{Layout.row} and \l{Layout.column} properties. You can also
+    specify the row span or column span by setting the \l{Layout.rowSpan} or
+    \l{Layout.columnSpan} properties.
 
 
     Items in a GridLayout support these attached properties:
     \list
-        \li \l{Layout::row}{Layout.row}
-        \li \l{Layout::column}{Layout.column}
-        \li \l{Layout::rowSpan}{Layout.rowSpan}
-        \li \l{Layout::columnSpan}{Layout.columnSpan}
+        \li \l{Layout.row}
+        \li \l{Layout.column}
+        \li \l{Layout.rowSpan}
+        \li \l{Layout.columnSpan}
         \input layout.qdocinc attached-properties
     \endlist
 
@@ -628,9 +628,9 @@ void QQuickGridLayout::setFlow(QQuickGridLayout::Flow flow)
 
     If this property is set to \c true, the layout will force all cells to have
     a uniform width. The layout aims to respect
-    \l{Layout::minimumWidth}{Layout.minimumWidth},
-    \l{Layout::preferredWidth}{Layout.preferredWidth} and
-    \l{Layout::maximumWidth}{Layout.maximumWidth} in this mode but might make
+    \l{Layout.minimumWidth},
+    \l{Layout.preferredWidth} and
+    \l{Layout.maximumWidth} in this mode but might make
     compromisses to fullfill the requirements of all items.
 
     Default value is \c false.
@@ -659,10 +659,9 @@ void QQuickGridLayout::setUniformCellWidths(bool uniformCellWidths)
 
     If this property is set to \c true, the layout will force all cells to have an
     uniform Height. The layout aims to respect
-    \l{Layout::minimumHeight}{Layout.minimumHeight},
-    \l{Layout::preferredHeight}{Layout.preferredHeight} and
-    \l{Layout::maximumHeight}{Layout.maximumHeight} in this mode but might make
-    compromisses to fullfill the requirements of all items.
+    \l{Layout.minimumHeight}, \l{Layout.preferredHeight} and
+    \l{Layout.maximumHeight} in this mode but might make
+    compromises to fullfill the requirements of all items.
 
     Default value is \c false.
 
