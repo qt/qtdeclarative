@@ -51,11 +51,6 @@ extern Q_AUTOTEST_EXPORT int qt_quicktooltipattachedprivate_delay;
 QT_END_NAMESPACE
 #endif
 
-static bool isPlatformWayland()
-{
-    return QGuiApplication::platformName().startsWith(QStringLiteral("wayland"));
-}
-
 static bool isPlatformUbuntu()
 {
     return qEnvironmentVariable("XDG_SESSION_DESKTOP") == QStringLiteral("ubuntu");
