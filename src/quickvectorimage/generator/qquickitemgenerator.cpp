@@ -1111,6 +1111,14 @@ void QQuickItemGenerator::generateMask(QQuickItem *item, const NodeInfo &info)
         transformProp.append(&transformProp, matrix);
         shaderEffect->setX(0);
         shaderEffect->setY(0);
+    } else if (info.transform.isAnimated()) {
+        auto *translate = new QQuickTranslate(shaderEffect);
+        translate->setX(svgMaskRect.x());
+        translate->setY(svgMaskRect.y());
+        auto transformProp = shaderEffect->transform();
+        transformProp.append(&transformProp, translate);
+        shaderEffect->setX(0);
+        shaderEffect->setY(0);
     } else {
         shaderEffect->setX(svgMaskRect.x());
         shaderEffect->setY(svgMaskRect.y());
