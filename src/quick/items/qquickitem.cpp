@@ -870,14 +870,14 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 */
 
 /*!
-    \qmlproperty bool QtQuick::Keys::enabled
+    \qmlattachedproperty bool QtQuick::Keys::enabled
 
     This flags enables key handling if true (default); otherwise
     no key handlers will be called.
 */
 
 /*!
-    \qmlproperty enumeration QtQuick::Keys::priority
+    \qmlattachedproperty enumeration QtQuick::Keys::priority
 
     This property determines whether the keys are processed before
     or after the attached item's own key handling.
@@ -892,7 +892,7 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 */
 
 /*!
-    \qmlproperty list<Item> QtQuick::Keys::forwardTo
+    \qmlattachedproperty list<Item> QtQuick::Keys::forwardTo
 
     This property provides a way to forward key presses, key releases, and keyboard input
     coming from input methods to other items. This can be useful when you want
@@ -922,21 +922,21 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::pressed(KeyEvent event)
+    \qmlattachedsignal QtQuick::Keys::pressed(KeyEvent event)
 
     This signal is emitted when a key has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::released(KeyEvent event)
+    \qmlattachedsignal QtQuick::Keys::released(KeyEvent event)
 
     This signal is emitted when a key has been released. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::shortcutOverride(KeyEvent event)
+    \qmlattachedsignal QtQuick::Keys::shortcutOverride(KeyEvent event)
     \since 5.9
 
     This signal is emitted when a key has been pressed that could potentially
@@ -974,259 +974,259 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::digit0Pressed(KeyEvent event)
+    \qmlattachedsignal QtQuick::Keys::digit0Pressed(KeyEvent event)
 
     This signal is emitted when the digit '0' has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::digit1Pressed(KeyEvent event)
+    \qmlattachedsignal QtQuick::Keys::digit1Pressed(KeyEvent event)
 
     This signal is emitted when the digit '1' has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::digit2Pressed(KeyEvent event)
+    \qmlattachedsignal QtQuick::Keys::digit2Pressed(KeyEvent event)
 
     This signal is emitted when the digit '2' has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::digit3Pressed(KeyEvent event)
+    \qmlattachedsignal QtQuick::Keys::digit3Pressed(KeyEvent event)
 
     This signal is emitted when the digit '3' has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::digit4Pressed(KeyEvent event)
+    \qmlattachedsignal QtQuick::Keys::digit4Pressed(KeyEvent event)
 
     This signal is emitted when the digit '4' has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::digit5Pressed(KeyEvent event)
+    \qmlattachedsignal QtQuick::Keys::digit5Pressed(KeyEvent event)
 
     This signal is emitted when the digit '5' has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::digit6Pressed(KeyEvent event)
+    \qmlattachedsignal QtQuick::Keys::digit6Pressed(KeyEvent event)
 
     This signal is emitted when the digit '6' has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::digit7Pressed(KeyEvent event)
+    \qmlattachedsignal QtQuick::Keys::digit7Pressed(KeyEvent event)
 
     This signal is emitted when the digit '7' has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::digit8Pressed(KeyEvent event)
+    \qmlattachedsignal QtQuick::Keys::digit8Pressed(KeyEvent event)
 
     This signal is emitted when the digit '8' has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::digit9Pressed(KeyEvent event)
+    \qmlattachedsignal QtQuick::Keys::digit9Pressed(KeyEvent event)
 
     This signal is emitted when the digit '9' has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::leftPressed(KeyEvent event)
+    \qmlattachedsignal QtQuick::Keys::leftPressed(KeyEvent event)
 
     This signal is emitted when the Left arrow has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::rightPressed(KeyEvent event)
+    \qmlattachedsignal QtQuick::Keys::rightPressed(KeyEvent event)
 
     This signal is emitted when the Right arrow has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::upPressed(KeyEvent event)
+    \qmlattachedsignal QtQuick::Keys::upPressed(KeyEvent event)
 
     This signal is emitted when the Up arrow has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::downPressed(KeyEvent event)
+    \qmlattachedsignal QtQuick::Keys::downPressed(KeyEvent event)
 
     This signal is emitted when the Down arrow has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::tabPressed(KeyEvent event)
+    \qmlattachedsignal QtQuick::Keys::tabPressed(KeyEvent event)
 
     This signal is emitted when the Tab key has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::backtabPressed(KeyEvent event)
+    \qmlattachedsignal QtQuick::Keys::backtabPressed(KeyEvent event)
 
     This signal is emitted when the Shift+Tab key combination (Backtab) has
     been pressed. The \a event parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::asteriskPressed(KeyEvent event)
+    \qmlattachedsignal QtQuick::Keys::asteriskPressed(KeyEvent event)
 
     This signal is emitted when the Asterisk '*' has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::escapePressed(KeyEvent event)
+    \qmlattachedsignal QtQuick::Keys::escapePressed(KeyEvent event)
 
     This signal is emitted when the Escape key has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::returnPressed(KeyEvent event)
+    \qmlattachedsignal QtQuick::Keys::returnPressed(KeyEvent event)
 
     This signal is emitted when the Return key has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::enterPressed(KeyEvent event)
+    \qmlattachedsignal QtQuick::Keys::enterPressed(KeyEvent event)
 
     This signal is emitted when the Enter key has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::deletePressed(KeyEvent event)
+    \qmlattachedsignal QtQuick::Keys::deletePressed(KeyEvent event)
 
     This signal is emitted when the Delete key has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::spacePressed(KeyEvent event)
+    \qmlattachedsignal QtQuick::Keys::spacePressed(KeyEvent event)
 
     This signal is emitted when the Space key has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::backPressed(KeyEvent event)
+    \qmlattachedsignal QtQuick::Keys::backPressed(KeyEvent event)
 
     This signal is emitted when the Back key has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::cancelPressed(KeyEvent event)
+    \qmlattachedsignal QtQuick::Keys::cancelPressed(KeyEvent event)
 
     This signal is emitted when the Cancel key has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::selectPressed(KeyEvent event)
+    \qmlattachedsignal QtQuick::Keys::selectPressed(KeyEvent event)
 
     This signal is emitted when the Select key has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::yesPressed(KeyEvent event)
+    \qmlattachedsignal QtQuick::Keys::yesPressed(KeyEvent event)
 
     This signal is emitted when the Yes key has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::noPressed(KeyEvent event)
+    \qmlattachedsignal QtQuick::Keys::noPressed(KeyEvent event)
 
     This signal is emitted when the No key has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::context1Pressed(KeyEvent event)
+    \qmlattachedsignal QtQuick::Keys::context1Pressed(KeyEvent event)
 
     This signal is emitted when the Context1 key has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::context2Pressed(KeyEvent event)
+    \qmlattachedsignal QtQuick::Keys::context2Pressed(KeyEvent event)
 
     This signal is emitted when the Context2 key has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::context3Pressed(KeyEvent event)
+    \qmlattachedsignal QtQuick::Keys::context3Pressed(KeyEvent event)
 
     This signal is emitted when the Context3 key has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::context4Pressed(KeyEvent event)
+    \qmlattachedsignal QtQuick::Keys::context4Pressed(KeyEvent event)
 
     This signal is emitted when the Context4 key has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::callPressed(KeyEvent event)
+    \qmlattachedsignal QtQuick::Keys::callPressed(KeyEvent event)
 
     This signal is emitted when the Call key has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::hangupPressed(KeyEvent event)
+    \qmlattachedsignal QtQuick::Keys::hangupPressed(KeyEvent event)
 
     This signal is emitted when the Hangup key has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::flipPressed(KeyEvent event)
+    \qmlattachedsignal QtQuick::Keys::flipPressed(KeyEvent event)
 
     This signal is emitted when the Flip key has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::menuPressed(KeyEvent event)
+    \qmlattachedsignal QtQuick::Keys::menuPressed(KeyEvent event)
 
     This signal is emitted when the Menu key has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::volumeUpPressed(KeyEvent event)
+    \qmlattachedsignal QtQuick::Keys::volumeUpPressed(KeyEvent event)
 
     This signal is emitted when the VolumeUp key has been pressed. The \a event
     parameter provides information about the event.
 */
 
 /*!
-    \qmlsignal QtQuick::Keys::volumeDownPressed(KeyEvent event)
+    \qmlattachedsignal QtQuick::Keys::volumeDownPressed(KeyEvent event)
 
     This signal is emitted when the VolumeDown key has been pressed. The \a event
     parameter provides information about the event.
