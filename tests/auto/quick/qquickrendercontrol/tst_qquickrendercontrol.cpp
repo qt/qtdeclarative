@@ -15,6 +15,7 @@
 #include <QQmlComponent>
 
 #include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuick/private/qquickwindow_p.h>
 
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qpa/qplatformintegration.h>
@@ -81,7 +82,7 @@ void tst_RenderControl::initTestCase()
     QQmlDataTest::initTestCase();
 
 #if QT_CONFIG(vulkan)
-    vulkanInstance.setLayers({ "VK_LAYER_LUNARG_standard_validation" });
+    vulkanInstance.setLayers({ "VK_LAYER_KHRONOS_validation" });
     vulkanInstance.setExtensions(QQuickGraphicsConfiguration::preferredInstanceExtensions());
     vulkanInstance.create(); // may fail, that's sometimes ok, we'll check for it later
 #endif
@@ -752,12 +753,19 @@ void tst_RenderControl::renderAndReadBackWithVulkanAndCustomDepthTexture()
     // what we get in Qt Quick 3D with OpenXR, where rendering happens into a
     // XrSwapchain-provided color and depth texture. (granted, here we only
     // exercise the non-multiview, non-MSAA case).
+    //
+    // Note that tex and depthTex are here only to own the VkImages. Once
+    // donated, they must not be used in any QRhi operation: Qt Quick creates
+    // its own QRhiTexture to wrap the VkImage, and two QRhiTextures over one
+    // VkImage would each track the image layout on their own, generating
+    // incorrect layout transitions. Pass VK_IMAGE_LAYOUT_UNDEFINED as the
+    // initial layout, like the OpenXR backend in Qt Quick 3D does.
 
     QScopedPointer<QRhiTexture> depthTex(rhi->newTexture(QRhiTexture::D24S8, size, 1, QRhiTexture::RenderTarget));
     QVERIFY(depthTex->create());
 
     QQuickRenderTarget rt = QQuickRenderTarget::fromVulkanImage(VkImage(tex->nativeTexture().object),
-                                                                        VkImageLayout(tex->nativeTexture().layout),
+                                                                        VK_IMAGE_LAYOUT_UNDEFINED,
                                                                         VK_FORMAT_R8G8B8A8_UNORM,
                                                                         VK_FORMAT_R8G8B8A8_UNORM,
                                                                         size,
@@ -795,8 +803,16 @@ void tst_RenderControl::renderAndReadBackWithVulkanAndCustomDepthTexture()
             else
                 result = wrapperImage.copy();
         };
+        // Read back via the QRhiTexture Qt Quick made to wrap our VkImage.
+        // (reading back tex instead would alias the image; see above)
+        QRhiRenderTarget *activeRt = QQuickWindowPrivate::get(quickWindow.data())->activeCustomRhiRenderTarget();
+        QVERIFY(activeRt);
+        QCOMPARE(activeRt->resourceType(), QRhiResource::TextureRenderTarget);
+        QRhiTexture *colorTex = static_cast<QRhiTextureRenderTarget *>(activeRt)->description().colorAttachmentAt(0)->texture();
+        QVERIFY(colorTex);
+
         QRhiResourceUpdateBatch *readbackBatch = rhi->nextResourceUpdateBatch();
-        readbackBatch->readBackTexture(tex.data(), &readResult);
+        readbackBatch->readBackTexture(colorTex, &readResult);
         renderControl->commandBuffer()->resourceUpdate(readbackBatch);
 
         renderControl->endFrame();
