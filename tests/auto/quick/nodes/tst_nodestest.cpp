@@ -111,7 +111,7 @@ void NodesTest::initTestCase()
 #endif
 
 #ifdef TST_VK
-    vulkanInstance.setLayers({ QByteArrayLiteral("VK_LAYER_LUNARG_standard_validation") });
+    vulkanInstance.setLayers({ QByteArrayLiteral("VK_LAYER_KHRONOS_validation") });
     vulkanInstance.setExtensions({ QByteArrayLiteral("VK_KHR_get_physical_device_properties2") });
     vulkanInstance.create();
     initParams.vk.inst = &vulkanInstance;
