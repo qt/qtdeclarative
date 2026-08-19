@@ -263,7 +263,7 @@ one of which allows you to move a block of code into a separate file
  (\c {Alt + Enter > Move Component into Separate File}).
 
 Another thing to consider when using ListView is whether to refer to it by
-\c id, or use the attached \l {ListView::view}{ListView.view}
+\c id, or use the attached \l {ListView.view}
 property. The best approach depends on a few different factors. Giving the
 view an id will result in shorter and more efficient binding expressions, as
 the attached property has a very small amount of overhead. However, if you plan
@@ -380,14 +380,13 @@ around its border.
 
 Items that are direct children of a layout have various
 \l {Layout}{attached properties} available to them. We use
-\l {Layout::fillWidth}{Layout.fillWidth} and
-\l {Layout::fillHeight}{Layout.fillHeight} on the ListView to ensure
+\l {Layout.fillWidth} and \l {Layout.fillHeight} on the ListView to ensure
 that it takes as much space within the ColumnLayout as it can. The
 same is done for the Pane. As ColumnLayout is a vertical layout, there
 aren't any items to the left or right of each child, so this will result in
 each item consuming the entire width of the layout.
 
-On the other hand, the \l {Layout::fillHeight}{Layout.fillHeight} statement in
+On the other hand, the \l {Layout.fillHeight} statement in
 the ListView will enable it to occupy the remaining space that is left after
 accommodating the Pane.
 

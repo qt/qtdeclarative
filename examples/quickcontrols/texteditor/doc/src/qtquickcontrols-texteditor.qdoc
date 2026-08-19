@@ -102,7 +102,7 @@
     enabled via \l {TextEdit::}{wrapMode}, we don't need a horizontal
     ScrollBar.
 
-    The \l {TextArea::flickable}{TextArea.flickable} attached property is used
+    The \l {TextArea.flickable} attached property is used
     so that when the text cursor is moved out of the viewport (for example via
     arrow keys, or by typing a lot of text), \l TextArea scrolls the
     \l Flickable to keep the cursor visible.
