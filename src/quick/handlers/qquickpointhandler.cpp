@@ -141,7 +141,7 @@ QVector2D QQuickPointHandler::translation() const
 
     The mouse buttons that can activate this PointHandler.
 
-    By default, this property is set to \l {QtQuick::MouseEvent::button} {Qt.LeftButton}.
+    By default, this property is set to \l {QtQuick.MouseEvent.button} {Qt.LeftButton}.
     It can be set to an OR combination of mouse buttons, and will ignore events
     in which other buttons are pressed or held. If it is set to \c Qt.NoButton,
     it means it does not care about buttons at all, and ignores synthetic

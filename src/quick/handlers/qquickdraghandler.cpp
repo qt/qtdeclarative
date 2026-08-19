@@ -333,12 +333,12 @@ void QQuickDragHandler::setActiveTranslation(const QVector2D &trans)
 
     \c xAxis controls the constraints for horizontal dragging.
 
-    \c minimum is the minimum acceptable value of \l {Item::x}{x} to be
+    \c minimum is the minimum acceptable value of \l {Item::}{x} to be
     applied to the \l {PointerHandler::target} {target}.
-    \c maximum is the maximum acceptable value of \l {Item::x}{x} to be
+    \c maximum is the maximum acceptable value of \l {Item::}{x} to be
     applied to the \l {PointerHandler::target} {target}.
     If \c enabled is true, horizontal dragging is allowed.
-    \c activeValue is the same as \l {QtQuick::DragHandler::activeTranslation}{activeTranslation.x}.
+    \c activeValue is the same as \l {QtQuick.DragHandler.activeTranslation}{activeTranslation.x}.
 
     The \c activeValueChanged signal is emitted when \c activeValue changes, to
     provide the increment by which it changed.
@@ -400,7 +400,7 @@ void QQuickDragHandler::setActiveTranslation(const QVector2D &trans)
     The mouse buttons that can activate this DragHandler.
 
     By default, this property is set to
-    \l {QtQuick::MouseEvent::button} {Qt.LeftButton}.
+    \l {QtQuick.MouseEvent.button} {Qt.LeftButton}.
     It can be set to an OR combination of mouse buttons, and will ignore events
     from other buttons.
 
