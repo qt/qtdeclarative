@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <QtTest/qtest.h>
+#include <QtTest/private/qtesthelpers_p.h>
 #include <QtTest/qsignalspy.h>
 #include <QtQuickTest/quicktest.h>
 
@@ -2862,6 +2863,7 @@ void tst_QQuickPopup::popupWindowPositioning()
     QQuickWindow *window = helper.window;
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
+    QVERIFY(QTestPrivate::ensurePositionTopLeft(window->handle()->window()));
 
     auto *popup = window->contentItem()->findChild<QQuickPopup *>();
     QVERIFY(popup);
