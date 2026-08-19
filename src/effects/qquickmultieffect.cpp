@@ -243,7 +243,7 @@ QQuickMultiEffect::~QQuickMultiEffect()
     \note It is not supported to let the effect include itself, for instance
     by setting source to the effect's parent.
 
-    \note If the source item has \l {QtQuick::Item::layer.enabled} {layer.enabled} set to true,
+    \note If the source item has \l {QtQuick::Item::} {layer.enabled} set to true,
     it will be used directly. This is good for the performance and often desired, when the source
     is hidden. But if the source remains visible and the effect adds padding (autoPaddingEnabled,
     paddingRect), that padding can affect the appearance of the source item.
@@ -715,7 +715,7 @@ void QQuickMultiEffect::setMaskEnabled(bool enabled)
     \qmlproperty Item QtQuick.Effects::MultiEffect::maskSource
 
     Source item for the mask effect. Should point to ShaderEffectSource,
-    item with \l {QtQuick::Item::layer.enabled} {layer.enabled} set to \c true,
+    item with \l {QtQuick::Item::} {layer.enabled} set to \c true,
     or to an item that can be directly used as a texture source (for example,
     \l [QML] Image). The alpha channel of the source item is used for masking.
 
@@ -895,7 +895,7 @@ QString QQuickMultiEffect::vertexShader() const
     Returns true when the MultiEffect internally creates \l ShaderEffectSource
     for the \l source item and false when \l source item is used as-is.
     For example when source is \l Image element or \l Item with
-    \l {QtQuick::Item::layer.enabled} {layer.enabled} set to \c true,
+    \l {QtQuick::Item::} {layer.enabled} set to \c true,
     this additional proxy source is not needed.
 */
 bool QQuickMultiEffect::hasProxySource() const

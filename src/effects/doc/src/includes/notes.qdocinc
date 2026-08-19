@@ -17,10 +17,10 @@ You can combine the \l ShaderEffectSource and the \l MultiEffect:
 \list
     \li To use the same source item in multiple effects and to keep it unchanged.
     \li To use a part of the source item, by using
-        \l {QtQuick::ShaderEffectSource::sourceRect}{ShaderEffectSource.sourceRect}.
+        \l {QtQuick::}{ShaderEffectSource.sourceRect}.
     \li To decrease the resolution of the source item, for example, for better
         performance, by using the
-        \l {QtQuick::ShaderEffectSource::textureSize}{ShaderEffectSource.textureSize} property.
+        \l {QtQuick::}{ShaderEffectSource.textureSize} property.
 \endlist
 //! [shadereffectsource and multieffect]
 */
