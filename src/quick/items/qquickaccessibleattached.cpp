@@ -59,7 +59,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty string QtQuick::Accessible::name
+    \qmlattachedproperty string QtQuick::Accessible::name
 
     This property sets an accessible name.
     For a button for example, this should have a binding to its text.
@@ -69,7 +69,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty string QtQuick::Accessible::description
+    \qmlattachedproperty string QtQuick::Accessible::description
 
     This property sets an accessible description.
     Similar to the name it describes the item. The description
@@ -78,7 +78,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty enumeration QtQuick::Accessible::role
+    \qmlattachedproperty enumeration QtQuick::Accessible::role
 
     This flags sets the semantic type of the widget.
     A button for example would have "Button" as type.
@@ -122,7 +122,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty string QtQuick::Accessible::id
+    \qmlattachedproperty string QtQuick::Accessible::id
 
     This property sets an identifier for the object.
     It can be used to provide stable identifiers to UI tests.
@@ -130,7 +130,7 @@ QT_BEGIN_NAMESPACE
     If the ID is not set the default of \l QAccessible::Identifier is used.
 */
 
-/*! \qmlproperty bool QtQuick::Accessible::focusable
+/*! \qmlattachedproperty bool QtQuick::Accessible::focusable
     \brief This property holds whether this item is focusable.
 
     By default, this property is \c false except for items where the role is one of
@@ -138,51 +138,51 @@ QT_BEGIN_NAMESPACE
     \c EditableText, \c SpinBox, \c ComboBox, \c Terminal or \c ScrollBar.
     \sa focused
 */
-/*! \qmlproperty bool QtQuick::Accessible::focused
+/*! \qmlattachedproperty bool QtQuick::Accessible::focused
     \brief This property holds whether this item currently has the active focus.
 
     By default, this property is \c false, but it will return \c true for items that
     have \l QQuickItem::hasActiveFocus() returning \c true.
     \sa focusable
 */
-/*! \qmlproperty bool QtQuick::Accessible::checkable
+/*! \qmlattachedproperty bool QtQuick::Accessible::checkable
     \brief This property holds whether this item is checkable (like a check box or some buttons).
 
     By default this property is \c false.
     \sa checked
 */
-/*! \qmlproperty bool QtQuick::Accessible::checked
+/*! \qmlattachedproperty bool QtQuick::Accessible::checked
     \brief This property holds whether this item is currently checked.
 
     By default this property is \c false.
     \sa checkable
 */
-/*! \qmlproperty bool QtQuick::Accessible::expandable
+/*! \qmlattachedproperty bool QtQuick::Accessible::expandable
     \brief This property holds whether this item is expandable.
 
     \since 6.12
     By default this property is \c false.
     \sa expanded
 */
-/*! \qmlproperty bool QtQuick::Accessible::expanded
+/*! \qmlattachedproperty bool QtQuick::Accessible::expanded
     \brief This property holds whether this item is currently expanded.
 
     \since 6.12
     By default this property is \c false.
     \sa expandable
 */
-/*! \qmlproperty bool QtQuick::Accessible::editable
+/*! \qmlattachedproperty bool QtQuick::Accessible::editable
     \brief This property holds whether this item has editable text.
 
     By default this property is \c false.
 */
-/*! \qmlproperty bool QtQuick::Accessible::searchEdit
+/*! \qmlattachedproperty bool QtQuick::Accessible::searchEdit
     \brief This property holds whether this item is input for a search query.
     This property will only affect editable text.
 
     By default this property is \c false.
 */
-/*! \qmlproperty bool QtQuick::Accessible::ignored
+/*! \qmlattachedproperty bool QtQuick::Accessible::ignored
     \brief This property holds whether this item should be ignored by the accessibility framework.
 
     Sometimes an item is part of a group of items that should be treated as one. For example two labels might be
@@ -209,56 +209,56 @@ QT_BEGIN_NAMESPACE
     \since 5.4
     By default this property is \c false.
 */
-/*! \qmlproperty bool QtQuick::Accessible::multiLine
+/*! \qmlattachedproperty bool QtQuick::Accessible::multiLine
     \brief This property holds whether this item has multiple text lines.
 
     By default this property is \c false.
 */
-/*! \qmlproperty bool QtQuick::Accessible::readOnly
+/*! \qmlattachedproperty bool QtQuick::Accessible::readOnly
     \brief This property indicates that a text field is read only.
 
     It is relevant when the role is \l QAccessible::EditableText and set to be read-only.
     By default this property is \c false.
 */
-/*! \qmlproperty bool QtQuick::Accessible::selected
+/*! \qmlattachedproperty bool QtQuick::Accessible::selected
     \brief This property holds whether this item is selected.
 
     By default this property is \c false.
     \sa selectable
 */
-/*! \qmlproperty bool QtQuick::Accessible::selectable
+/*! \qmlattachedproperty bool QtQuick::Accessible::selectable
     \brief This property holds whether this item can be selected.
 
     By default this property is \c false.
     \sa selected
 */
-/*! \qmlproperty bool QtQuick::Accessible::pressed
+/*! \qmlattachedproperty bool QtQuick::Accessible::pressed
     \brief This property holds whether this item is pressed (for example a button during a mouse click).
 
     By default this property is \c false.
 */
-/*! \qmlproperty bool QtQuick::Accessible::checkStateMixed
+/*! \qmlattachedproperty bool QtQuick::Accessible::checkStateMixed
     \brief This property holds whether this item is in the partially checked state.
 
     By default this property is \c false.
     \sa checked, checkable
 */
-/*! \qmlproperty bool QtQuick::Accessible::defaultButton
+/*! \qmlattachedproperty bool QtQuick::Accessible::defaultButton
     \brief This property holds whether this item is the default button of a dialog.
 
     By default this property is \c false.
 */
-/*! \qmlproperty bool QtQuick::Accessible::passwordEdit
+/*! \qmlattachedproperty bool QtQuick::Accessible::passwordEdit
     \brief This property holds whether this item is a password text edit.
 
     By default this property is \c false.
 */
-/*! \qmlproperty bool QtQuick::Accessible::selectableText
+/*! \qmlattachedproperty bool QtQuick::Accessible::selectableText
     \brief This property holds whether this item contains selectable text.
 
     By default this property is \c false.
 */
-/*! \qmlproperty Item QtQuick::Accessible::labelledBy
+/*! \qmlattachedproperty Item QtQuick::Accessible::labelledBy
     \brief This property holds the item that is used as a label for this item.
 
     Setting this property automatically sets up the labelFor relation of the other object.
@@ -267,7 +267,7 @@ QT_BEGIN_NAMESPACE
 
     \since 6.10
  */
-/*! \qmlproperty Item QtQuick::Accessible::labelFor
+/*! \qmlattachedproperty Item QtQuick::Accessible::labelFor
     \brief This property holds the item that this item is a label for.
 
     Setting this property automatically sets up the labelledBy relation of the other object.
@@ -278,58 +278,58 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
-    \qmlsignal QtQuick::Accessible::pressAction()
+    \qmlattachedsignal QtQuick::Accessible::pressAction()
 
     This signal is emitted when a press action is received from an assistive tool such as a screen-reader.
 */
 /*!
-    \qmlsignal QtQuick::Accessible::toggleAction()
+    \qmlattachedsignal QtQuick::Accessible::toggleAction()
 
     This signal is emitted when a toggle action is received from an assistive tool such as a screen-reader.
 */
 /*!
-    \qmlsignal QtQuick::Accessible::increaseAction()
+    \qmlattachedsignal QtQuick::Accessible::increaseAction()
 
     This signal is emitted when a increase action is received from an assistive tool such as a screen-reader.
 */
 /*!
-    \qmlsignal QtQuick::Accessible::decreaseAction()
+    \qmlattachedsignal QtQuick::Accessible::decreaseAction()
 
     This signal is emitted when a decrease action is received from an assistive tool such as a screen-reader.
 */
 /*!
-    \qmlsignal QtQuick::Accessible::showOnScreenAction()
+    \qmlattachedsignal QtQuick::Accessible::showOnScreenAction()
 
     This signal is emitted when an assistive tool such as a screen-reader detects a partially visible element
     and requests it to be fully visible.
 */
 /*!
-    \qmlsignal QtQuick::Accessible::scrollUpAction()
+    \qmlattachedsignal QtQuick::Accessible::scrollUpAction()
 
     This signal is emitted when a scroll up action is received from an assistive tool such as a screen-reader.
 */
 /*!
-    \qmlsignal QtQuick::Accessible::scrollDownAction()
+    \qmlattachedsignal QtQuick::Accessible::scrollDownAction()
 
     This signal is emitted when a scroll down action is received from an assistive tool such as a screen-reader.
 */
 /*!
-    \qmlsignal QtQuick::Accessible::scrollLeftAction()
+    \qmlattachedsignal QtQuick::Accessible::scrollLeftAction()
 
     This signal is emitted when a scroll left action is received from an assistive tool such as a screen-reader.
 */
 /*!
-    \qmlsignal QtQuick::Accessible::scrollRightAction()
+    \qmlattachedsignal QtQuick::Accessible::scrollRightAction()
 
     This signal is emitted when a scroll right action is received from an assistive tool such as a screen-reader.
 */
 /*!
-    \qmlsignal QtQuick::Accessible::previousPageAction()
+    \qmlattachedsignal QtQuick::Accessible::previousPageAction()
 
     This signal is emitted when a previous page action is received from an assistive tool such as a screen-reader.
 */
 /*!
-    \qmlsignal QtQuick::Accessible::nextPageAction()
+    \qmlattachedsignal QtQuick::Accessible::nextPageAction()
 
     This signal is emitted when a next page action is received from an assistive tool such as a screen-reader.
 */
@@ -633,7 +633,7 @@ void QQuickAccessibleAttached::setProxying(QQuickAccessibleAttached *proxying)
 }
 
 /*!
- * \qmlmethod void QtQuick::Accessible::announce(string message, AnnouncementPoliteness politeness)
+ * \qmlattachedmethod void QtQuick::Accessible::announce(string message, AnnouncementPoliteness politeness)
  *
  * \since 6.8
  * Issues an announcement event with a \a message with politeness \a politeness.
