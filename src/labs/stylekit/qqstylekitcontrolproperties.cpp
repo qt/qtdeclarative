@@ -41,7 +41,7 @@ QT_BEGIN_NAMESPACE
     \l {DelegateStyle::gradient}{gradients},
     and \l {DelegateStyle::image}{images}.
 
-    \note The default \l {Style::fallbackStyle}{fallback style} sets \c {background.visible}
+    \note The default \l {Style.fallbackStyle}{fallback style} sets \c {background.visible}
     to \c false for controls that typically should not draw a background,
     such as \l [QtQuickControls]{CheckBox}, \l [QtQuickControls]{RadioButton},
     and \l [QtQuickControls]{Slider}. To show their background, set
@@ -65,7 +65,7 @@ QT_BEGIN_NAMESPACE
     The handle is used by controls such as \l [QtQuickControls]{Switch},
     \l [QtQuickControls]{Slider}, and \l [QtQuickControls]{RangeSlider}.
     For a RangeSlider, the two handles can be styled individually through
-    \l {HandleStyle::first}{handle.first} and \l {HandleStyle::second}{handle.second}.
+    \l {HandleStyle.first}{handle.first} and \l {HandleStyle.second}{handle.second}.
 
     \sa HandleStyle, DelegateStyle
 */
@@ -153,7 +153,7 @@ QT_BEGIN_NAMESPACE
     \snippet DelegateStyle_transitions.qml transition
 
     \note For color properties that participate in a transition, prefer
-    \l {Qt::alpha}{Qt.alpha} over \c "transparent"
+    \l {Qt.alpha} over \c "transparent"
     (e.g. \c {menuBarItem.background.color: Qt.alpha(palette.accent, 0)}).
     \c "transparent" is \c {Qt.rgba(0, 0, 0, 0)}, which can pull interpolated
     colors toward black during the transition.
