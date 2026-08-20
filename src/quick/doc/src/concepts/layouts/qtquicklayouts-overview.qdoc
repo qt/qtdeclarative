@@ -15,36 +15,36 @@
     Some of the key features of Qt Quick Layouts are:
 
     \list
-        \li \l{Layout::alignment}{Align} items with the
-            \l{Layout::alignment}{Layout.alignment} property.
-        \li Specify \l{Layout::fillWidth}{resizable items} with the
-            \l{Layout::fillWidth}{Layout.fillWidth} and
-            \l{Layout::fillHeight}{Layout.fillHeight} properties.
+        \li \l{Layout.alignment}{Align} items with the
+            \l{Layout.alignment} property.
+        \li Specify \l{Layout.fillWidth}{resizable items} with the
+            \l{Layout.fillWidth} and
+            \l{Layout.fillHeight} properties.
         \li Set \l{Size constraints}{size constraints} with the
-            \l{Layout::minimumWidth}{Layout.minimumWidth},
-            \l{Layout::preferredWidth}{Layout.preferredWidth}, and
-            \l{Layout::maximumWidth}{Layout.maximumWidth} properties -- "Width"
+            \l{Layout.minimumWidth},
+            \l{Layout.preferredWidth}, and
+            \l{Layout.maximumWidth} properties -- "Width"
             can be replaced with "Height" for specifying similar constraints to
             the height.
-        \li You can specify \l {RowLayout::spacing}{spacing} with
-            \l{RowLayout::spacing}{spacing},
-            \l{GridLayout::rowSpacing}{rowSpacing},
-            or \l{GridLayout::columnSpacing}{columnSpacing}.
+        \li You can specify \l {RowLayout::}{spacing} with
+            \l{RowLayout::}{spacing},
+            \l{GridLayout::}{rowSpacing},
+            or \l{GridLayout::}{columnSpacing}.
         \li Stretch items both horizontally and vertically with
-            \l{Layout::horizontalStretchFactor}{stretch factors}.
+            \l{Layout.horizontalStretchFactor}{stretch factors}.
     \endlist
 
     In addition, GridLayout adds these features:
     \list
-        \li \l{Layout::row}{Grid coordinates}, controlled by the
-            \l{Layout::row}{Layout.row} and \l{Layout::column}{Layout.column}
+        \li \l{Layout.row}{Grid coordinates}, controlled by the
+            \l{Layout.row} and \l{Layout.column}
             properties.
-        \li \l{GridLayout::flow}{Automatic grid coordinates} used together with
-            the \l{GridLayout::flow}{flow}, \l{GridLayout::rows}{rows}, and
-            \l{GridLayout::columns}{columns} properties.
-        \li \l{Layout::columnSpan}{Spans} across rows or columns, that you can
-            specify with the \l{Layout::rowSpan}{Layout.rowSpan} and
-            \l{Layout::columnSpan}{Layout.columnSpan} properties.
+        \li \l{GridLayout.flow}{Automatic grid coordinates} used together with
+            the \l{GridLayout::}{flow}, \l{GridLayout::}{rows}, and
+            \l{GridLayout::}{columns} properties.
+        \li \l{Layout.columnSpan}{Spans} across rows or columns, that you can
+            specify with the \l{Layout.rowSpan} and
+            \l{Layout.columnSpan} properties.
     \endlist
 
     \section1 Getting started
@@ -65,8 +65,8 @@
     layout changes size. This means the application must ensure that the layout
     gets resized. In the following snippet, the \e RowLayout ensures that by
     specifying \c{anchors.fill: parent}. However, you can also achieve this by
-    other means, such as specifying the \l{Item::width}{width} and
-    \l{Item::height}{height} properties. In the same snippet, the \e {orange
+    other means, such as specifying the \l{Item::}{width} and
+    \l{Item::}{height} properties. In the same snippet, the \e {orange
     Rectangle} has a fixed size of \e 100 by \e 150 pixels, and the \e {plum
     Rectangle} will expand to occupy all the space it gets allocated.
 
@@ -74,9 +74,9 @@
     \target simple-layout-snippet
 
     Layouts are responsible for their children's geometry.
-    This includes properties such as \l{Item::width}{width},
-    \l{Item::height}{height}, \l{Item::x}{x}, \l{Item::y}{y},
-    \l{Item::anchors}{anchors}), etc.
+    This includes properties such as \l{Item::}{width},
+    \l{Item::}{height}, \l{Item::}{x}, \l{Item::}{y},
+    \l{Item::}{anchors}), etc.
 
     \important Don't specify properties that influence the geometry of child
     items in your application. Setting these properties on a child item causes
@@ -125,43 +125,38 @@
         \li Candidate properties
         \li Description
     \row
-        \li \l{Layout::preferredWidth}{Layout.preferredWidth} or
-            \l{Layout::preferredHeight}{Layout.preferredHeight}
+        \li \l{Layout.preferredWidth} or \l{Layout.preferredHeight}
         \li These properties are supposed to be modified by the application if
             the default implicit size does not give the optimal arrangement.
     \row
-        \li \l{Item::implicitWidth}{implicitWidth} or
-            \l{Item::implicitHeight}{implicitHeight}.
+        \li \l{Item::}{implicitWidth} or \l{Item::}{implicitHeight}.
         \li These properties are supposed to be supplied by each item to give a
             meaningful ideal size. For example, the size needed to display all
             the contents of a \l Text type. An implicit width or height of \c 0
             is interpreted as invalid.
     \endtable
 
-    An item can specify \l{Layout::preferredWidth}{Layout.preferredWidth}
-    without having to specify
-    \l{Layout::preferredHeight}{Layout.preferredHeight}. In such cases, the
-    effective preferred height is determined from the
-    \l{Item::implicitHeight}{implicitHeight}.
+    An item can specify \l{Layout.preferredWidth} without having to specify
+    \l{Layout.preferredHeight}. In such cases, the effective preferred height
+    is determined from the \l{Item::}{implicitHeight}.
 
     \note If you don't specify neither preferredWidth nor implicitWidth, the
     Layout will query \l {Item::}{width} as an ultimate value for the effective
     preferred width. However, you shouldn't rely on \l {Item::}{width} as a
     source for the effective preferred width, as that may cause unexpected
     behavior. For instance, changing the \l{Item::}{width} or
-    \l{Item::height}{height} properties won't trigger a layout rearrangement,
+    \l{Item::}{height} properties won't trigger a layout rearrangement,
     or the layout might use the actual width and height -- not the width and
     height specified in your QML file -- when forced to do a full rebuild.
 
     \section2 Size constraints
 
     Since an item can be resized by its layout, the layout needs to know the
-    \l{Layout::minimumWidth}{minimum}, \l{Layout::preferredWidth}{preferred},
-    and \l{Layout::maximumWidth}{maximum} sizes of all items where
-    \l{Layout::fillWidth}{Layout.fillWidth} or
-    \l{Layout::fillHeight}{Layout.fillHeight} is set to \e true.
+    \l{Layout.minimumWidth}{minimum}, \l{Layout::preferredWidth}{preferred},
+    and \l{Layout.maximumWidth}{maximum} sizes of all items where
+    \l{Layout.fillWidth} or \l{Layout.fillHeight} is set to \e true.
 
-    The \l{Layout::preferredWidth}{preferred} width and height is the \e actual
+    The \l{Layout.preferredWidth}{preferred} width and height is the \e actual
     width and height of an item, if the layout is not bound to a specific size
     itself. If the layout is set to a specific size, it distributes additional
     space based on the ratio of preferred sizes of its items, while taking
@@ -231,7 +226,7 @@
 
     \section1 Spanning and stretching Items
 
-    Use \l {Layout::columnSpan}{spans} in a GridLayout to make child items
+    Use \l {Layout.columnSpan}{spans} in a GridLayout to make child items
     occupy more than one cell. For example, you may have a GridLayout with six
     cells across two rows. The top row contains the \e {Item}s item1, item2,
     and item3. The bottom row contains the \e Item item4, which specifies
@@ -246,7 +241,7 @@
     height of the row it's in. This means GridLayout doesn't have uniform
     distribution. Because of this, you can't use a span to stretch a layout.
     To manipulate the stretch of an item or layout, use
-    \l {Layout::horizontalStretchFactor}{stretchFactor}s and/or size hints
+    \l {Layout.horizontalStretchFactor}{stretchFactor}s and/or size hints
     instead.
 
     \note When setting implicit or preferred sizes, don't bind the respective
