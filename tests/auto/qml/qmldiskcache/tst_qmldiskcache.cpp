@@ -116,6 +116,7 @@ private slots:
     void cppRegisteredSingletonDependency();
     void cacheModuleScripts();
     void reuseStaticMappings();
+    void noCacheFileForStaticData();
     void invalidateSaveLoadCache();
     void duplicateIdsInInlineComponents();
 
@@ -1293,6 +1294,32 @@ static QString writeTempFile(
     f.write(contents);
     return f.fileName();
 };
+
+void tst_qmldiskcache::noCacheFileForStaticData()
+{
+    QQmlEngine engine;
+
+    TestCompiler testCompiler(&engine);
+    QVERIFY(testCompiler.tempDir.isValid());
+
+    const QByteArray contents = "import QtQml; QtObject { objectName: 'foobar' }";
+
+    // Control: compiling a file from disk does produce a cache file.
+    QVERIFY2(testCompiler.compile(contents), qPrintable(testCompiler.lastErrorString));
+    QVERIFY(QFile::exists(testCompiler.cacheFilePath));
+
+    // The same source passed as static data must not. We would never read such a cache file
+    // back, and the mapping we'd install for it is never released.
+    const QString staticFilePath = testCompiler.tempDir.path() + QStringLiteral("/static.qml");
+    const QString staticCacheFilePath = QV4::CompiledData::CompilationUnit::localCacheFilePath(
+            QUrl::fromLocalFile(staticFilePath));
+    Q_ASSERT(!QFile::exists(staticCacheFilePath));
+
+    QQmlComponent component(&engine);
+    component.setData(contents, QUrl::fromLocalFile(staticFilePath));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QVERIFY(!QFile::exists(staticCacheFilePath));
+}
 
 void tst_qmldiskcache::invalidateSaveLoadCache()
 {
