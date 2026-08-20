@@ -25,8 +25,8 @@ endif()
 
 qt_standard_project_setup()
 
-# Disable the modern Android bundle, as this test doesn't support it.
-set(QT_USE_ANDROID_MODERN_BUNDLE OFF)
+# Disable the gradle multi-module layout, as this test doesn't support it.
+set(QT_ANDROID_GRADLE_MULTI_MODULE OFF)
 
 # Dummy test - just so this can be detected by ctest.
 # Actual test implementation is under ${CMAKE_CURRENT_SOURCE_DIR}/android/qml/
