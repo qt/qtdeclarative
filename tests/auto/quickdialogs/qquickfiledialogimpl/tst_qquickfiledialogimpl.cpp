@@ -1049,10 +1049,12 @@ void tst_QQuickFileDialogImpl::changeNameFilters()
     QQuickPopup *comboBoxPopup = comboBox->popup();
     QVERIFY(comboBoxPopup);
 
-    const QPoint comboBoxCenterGlobalPos = comboBox->mapToGlobal(comboBox->boundingRect().center()).toPoint();
-    const QPoint comboBoxCenterPos = dialogHelper.popupWindow()->mapFromGlobal(comboBoxCenterGlobalPos);
+    const auto comboBoxCenterPos = [&] {
+        const QPoint globalPos = comboBox->mapToGlobal(comboBox->boundingRect().center()).toPoint();
+        return dialogHelper.popupWindow()->mapFromGlobal(globalPos);
+    };
 
-    QTest::mouseClick(dialogHelper.popupWindow(), Qt::LeftButton, Qt::NoModifier, comboBoxCenterPos);
+    QTest::mouseClick(dialogHelper.popupWindow(), Qt::LeftButton, Qt::NoModifier, comboBoxCenterPos());
     QTRY_VERIFY(comboBoxPopup->isOpened());
 
     // Select the .html delegate and close the combobox popup. The only visible entry should be the sub-dir.
@@ -1072,7 +1074,7 @@ void tst_QQuickFileDialogImpl::changeNameFilters()
     QTRY_VERIFY2(verifyFileDialogDelegates(dialogHelper.fileDialogListView,
         { tempSubDirCanonicalPath }, failureMessage), qPrintable(failureMessage));
     // Open the popup again.
-    QTest::mouseClick(dialogHelper.popupWindow(), Qt::LeftButton, Qt::NoModifier, comboBoxCenterPos);
+    QTest::mouseClick(dialogHelper.popupWindow(), Qt::LeftButton, Qt::NoModifier, comboBoxCenterPos());
     QTRY_VERIFY(comboBoxPopup->isOpened());
     // Select .txt and close the combobox popup. The original entries should be visible.
     {
