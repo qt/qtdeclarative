@@ -100,7 +100,6 @@ void QQmlContextData::invalidate()
     }
 
     m_importedScripts.clear();
-
     m_engine = nullptr;
     clearParent();
 }
@@ -111,6 +110,8 @@ void QQmlContextData::clearContextRecursively()
 
     for (auto ctxIt = m_childContexts; ctxIt; ctxIt = ctxIt->m_nextChild)
         ctxIt->clearContextRecursively();
+
+    m_engine = nullptr;
 }
 
 void QQmlContextData::clearContext()
@@ -137,8 +138,7 @@ QQmlContextData::~QQmlContextData()
 
     // avoid recursion
     addref();
-    if (m_engine)
-        invalidate();
+    invalidate();
     m_linkedContext.reset();
 
     Q_ASSERT(refCount() == 1);

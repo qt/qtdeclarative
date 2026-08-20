@@ -36,6 +36,7 @@ private slots:
     void altNavigation();
     void addRemove();
     void checkHighlightWhenMenuDismissed();
+    void clearMenus();
 
 private:
     QScopedPointer<QPointingDevice> touchScreen = QScopedPointer<QPointingDevice>(QTest::createTouchDevice());
@@ -769,6 +770,16 @@ void tst_qquickmenubar::checkHighlightWhenMenuDismissed()
     QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier,
         menuItem->mapToScene(QPointF(menuItem->width() / 2, menuItem->height() / 2)).toPoint());
     QVERIFY(!dynamicMenuBarItem->isHighlighted());
+}
+
+void tst_qquickmenubar::clearMenus()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("clearMenus.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QTRY_COMPARE(o->property("v").toInt(), 2);
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_qquickmenubar)

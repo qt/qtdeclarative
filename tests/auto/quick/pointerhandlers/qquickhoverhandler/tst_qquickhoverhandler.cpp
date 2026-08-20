@@ -394,14 +394,25 @@ void tst_HoverHandler::movingItemWithHoverHandler()
     QTRY_COMPARE(paddleHH->isHovered(), true);
     // TODO check the cursor shape after fixing QTBUG-53987
 
+    const auto &deliveryTargets =
+            QQuickPointerHandlerPrivate::deviceDeliveryTargets(QPointingDevice::primaryPointingDevice());
+    const auto targetsCount = deliveryTargets.size();
+    qCDebug(lcPointerTests) << "deviceDeliveryTargets before paddle movement" << deliveryTargets;
     paddle->setX(100);
     QTRY_COMPARE(paddleHH->isHovered(), false);
+    // QQuickDeliveryAgentPrivate::deliverHoverEvent() clears the deviceDeliveryTargets list,
+    // and then each HoverHandler's QQuickPointerHandler::handlePointerEvent() adds itself again.
+    // As long as we visit the same handlers each time, the list should not grow. (QTBUG-135975)
+    qCDebug(lcPointerTests) << "deviceDeliveryTargets after paddle movement" << deliveryTargets;
+    QCOMPARE(deliveryTargets.size(), targetsCount);
 
     paddle->setX(p.x() - paddle->width() / 2);
     QTRY_COMPARE(paddleHH->isHovered(), true);
+    QCOMPARE(deliveryTargets.size(), targetsCount);
 
     paddle->setX(540);
     QTRY_COMPARE(paddleHH->isHovered(), false);
+    QCOMPARE(deliveryTargets.size(), targetsCount);
 }
 
 void tst_HoverHandler::margin() // QTBUG-85303

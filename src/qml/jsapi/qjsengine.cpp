@@ -928,7 +928,8 @@ bool QJSEngine::convertV2(const QJSValue &value, QMetaType metaType, void *ptr)
         return convertString(*string, metaType, ptr);
 
     // Does not need scoping since QJSValue still holds on to the value.
-    return QV4::ExecutionEngine::metaTypeFromJS(QJSValuePrivate::asReturnedValue(&value), metaType, ptr);
+    return QV4::ExecutionEngine::metaTypeFromJS(QV4::Value::fromReturnedValue(QJSValuePrivate::asReturnedValue(&value)),
+                                                metaType, ptr);
 }
 
 bool QJSEngine::convertVariant(const QVariant &value, QMetaType metaType, void *ptr)
@@ -1155,7 +1156,8 @@ void QJSEngine::throwError(QJSValue::ErrorType errorType, const QString &message
 */
 void QJSEngine::throwError(const QJSValue &error)
 {
-    m_v4Engine->throwError(QJSValuePrivate::asReturnedValue(&error));
+    // safe, QJSValue holds a persistent reference
+    m_v4Engine->throwError(QV4::Value::fromReturnedValue(QJSValuePrivate::asReturnedValue(&error)));
 }
 
 /*!

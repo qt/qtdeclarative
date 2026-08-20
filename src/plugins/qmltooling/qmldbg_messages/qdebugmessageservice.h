@@ -28,6 +28,7 @@ class QDebugMessageServiceImpl : public QDebugMessageService
     Q_OBJECT
 public:
     QDebugMessageServiceImpl(QObject *parent = nullptr);
+    ~QDebugMessageServiceImpl();
 
     void sendDebugMessage(QtMsgType type, const QMessageLogContext &ctxt, const QString &buf);
     void synchronizeTime(const QElapsedTimer &otherTimer) override;
@@ -36,6 +37,8 @@ protected:
     void stateChanged(State) override;
 
 private:
+    void restoreOldMessageHandler();
+
     friend class QQmlDebuggerServiceFactory;
 
     QtMessageHandler oldMsgHandler;

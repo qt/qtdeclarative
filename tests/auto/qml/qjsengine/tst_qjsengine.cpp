@@ -282,6 +282,7 @@ private slots:
     void jsonStringifyHugeArray();
 
     void tostringRecursionCheck();
+    void arrayJoinRecursionCheck();
     void arrayIncludesWithLargeArray();
     void printCircularArray();
     void typedArraySet();
@@ -320,6 +321,8 @@ private slots:
     void consoleLogSequence();
 
     void multiMatchingRegularExpression();
+
+    void evalInGlobalContext();
 
 public:
     Q_INVOKABLE QJSValue throwingCppMethod1();
@@ -5133,11 +5136,11 @@ void tst_QJSEngine::mathMinMax()
 
     QJSValue result = engine.evaluate("var a = .5; Math.min(1, 2, 3.5 + a, '5')");
     QCOMPARE(result.toNumber(), 1.0);
-    QVERIFY(QV4::Value(QJSValuePrivate::asReturnedValue(&result)).isInteger());
+    QVERIFY(QV4::Value::fromReturnedValue(QJSValuePrivate::asReturnedValue(&result)).isInteger());
 
     result = engine.evaluate("var a = .5; Math.max('0', 1, 2, 3.5 + a)");
     QCOMPARE(result.toNumber(), 4.0);
-    QVERIFY(QV4::Value(QJSValuePrivate::asReturnedValue(&result)).isInteger());
+    QVERIFY(QV4::Value::fromReturnedValue(QJSValuePrivate::asReturnedValue(&result)).isInteger());
 }
 
 void tst_QJSEngine::mathNegativeZero()
@@ -5523,6 +5526,20 @@ void tst_QJSEngine::tostringRecursionCheck()
     }
     main();
     )js");
+
+    QVERIFY(value.isError());
+    QCOMPARE(value.toString(), QLatin1String("RangeError: Maximum call stack size exceeded."));
+}
+
+void tst_QJSEngine::arrayJoinRecursionCheck()
+{
+    QJSEngine engine;
+    auto value = engine.evaluate(R"js(
+    a=[0,1];
+    a[0]=a;
+    a+0
+    )js");
+
     QVERIFY(value.isError());
     QCOMPARE(value.toString(), QLatin1String("RangeError: Maximum call stack size exceeded."));
 }
@@ -6433,6 +6450,14 @@ void tst_QJSEngine::multiMatchingRegularExpression()
 
     QVERIFY(result2.isString());
     QCOMPARE(result2.toString(), "4F15 9D7A D402 55D9 4A5B 7EB9 AAAC D740 8C79 245D "_L1);
+}
+
+void tst_QJSEngine::evalInGlobalContext()
+{
+    QJSEngine myEngine;
+    const QJSValue fun = myEngine.globalObject().property(QLatin1String("eval"));
+    const QJSValue ret = fun.call({ QLatin1String("99") });
+    QCOMPARE(ret.toString(), QLatin1String("99"));
 }
 
 QTEST_MAIN(tst_QJSEngine)

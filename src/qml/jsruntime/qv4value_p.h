@@ -38,9 +38,6 @@ struct Q_QML_PRIVATE_EXPORT Value : public StaticValue
 {
     using ManagedPtr = Managed *;
 
-    Value() = default;
-    constexpr Value(quint64 val) : StaticValue(val) {}
-
     static constexpr Value fromStaticValue(StaticValue staticValue)
     {
         return {staticValue._val};

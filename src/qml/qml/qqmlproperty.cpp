@@ -1169,10 +1169,22 @@ QVariant QQmlPropertyPrivate::readValueProperty()
         }
         return QVariant();
     } else if (core.isQList()) {
+        auto coreMetaType = core.propType();
 
-        QQmlListProperty<QObject> prop;
-        core.readProperty(object, &prop);
-        return QVariant::fromValue(QQmlListReferencePrivate::init(prop, core.propType()));
+        // IsQmlList is set for QQmlListPropery and list<ObjectType>
+        if (coreMetaType.flags() & QMetaType::IsQmlList) {
+            QQmlListProperty<QObject> prop;
+            core.readProperty(object, &prop);
+            return QVariant::fromValue(QQmlListReferencePrivate::init(prop, coreMetaType));
+        } else {
+            // but not for lists of value types
+            QVariant result(coreMetaType);
+            // TODO: ideally, we would not default construct and copy assign,
+            // but do a single copy-construct; we don't have API for that, though
+            coreMetaType.construct(result.data());
+            core.readProperty(object, result.data());
+            return result;
+        }
 
     } else if (core.isQObject()) {
 
@@ -1504,7 +1516,8 @@ static bool tryAssignBinding(
     if (!f || !f->isBinding())
         return false;
 
-    QV4::QObjectWrapper::setProperty(f->engine(), object, &property, f->asReturnedValue());
+    // fromReturnedValue is safe! f is stored in the QJSValue, so htere's already a persistent reference to it
+    QV4::QObjectWrapper::setProperty(f->engine(), object, &property, QV4::Value::fromReturnedValue(f->asReturnedValue()));
     return true;
 }
 

@@ -62,6 +62,7 @@ private slots:
     void multilineDataTypes_data();
     void multilineDataTypes();
     void multilineStronglyTyped();
+    void changeElementsImperatively();
 
 private:
     QVector<QPolygonF> m_lowPolyLogo;
@@ -672,6 +673,13 @@ void tst_QQuickShape::multilineStronglyTyped()
         }
         ++i;
     }
+}
+
+void tst_QQuickShape::changeElementsImperatively()
+{
+    QQuickView window;
+    // Shouldn't crash.
+    QVERIFY(QQuickTest::showView(window, testFileUrl("changeElementsImperatively.qml")));
 }
 
 QTEST_MAIN(tst_QQuickShape)

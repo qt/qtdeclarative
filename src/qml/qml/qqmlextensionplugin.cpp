@@ -35,7 +35,7 @@ QT_BEGIN_NAMESPACE
     The \l {Writing QML Extensions with C++} tutorial also contains a chapter
     on creating QML plugins.
 
-    \sa QQmlEngine::importPlugin(), {How to Create Qt Plugins}
+    \sa {How to Create Qt Plugins}
 */
 
 /*!

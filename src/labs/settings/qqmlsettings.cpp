@@ -30,7 +30,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype Settings
-//!    \instantiates QQmlSettings
+//!    \instantiates QQmlSettingsLabs
     \inqmlmodule Qt.labs.settings
     \ingroup settings
     \deprecated [6.5] Use \l [QML] {QtCore::}{Settings} from Qt QML Core instead.
@@ -205,12 +205,12 @@ Q_LOGGING_CATEGORY(lcSettings, "qt.labs.settings")
 
 static const int settingsWriteDelay = 500;
 
-class QQmlSettingsPrivate
+class QQmlSettingsLabsPrivate
 {
-    Q_DECLARE_PUBLIC(QQmlSettings)
+    Q_DECLARE_PUBLIC(QQmlSettingsLabs)
 
 public:
-    QQmlSettingsPrivate();
+    QQmlSettingsLabsPrivate();
 
     QSettings *instance() const;
 
@@ -223,7 +223,7 @@ public:
     void _q_propertyChanged();
     QVariant readProperty(const QMetaProperty &property) const;
 
-    QQmlSettings *q_ptr = nullptr;
+    QQmlSettingsLabs *q_ptr = nullptr;
     int timerId = 0;
     bool initialized = false;
     QString category;
@@ -232,12 +232,12 @@ public:
     QHash<const char *, QVariant> changedProperties;
 };
 
-QQmlSettingsPrivate::QQmlSettingsPrivate() {}
+QQmlSettingsLabsPrivate::QQmlSettingsLabsPrivate() {}
 
-QSettings *QQmlSettingsPrivate::instance() const
+QSettings *QQmlSettingsLabsPrivate::instance() const
 {
     if (!settings) {
-        QQmlSettings *q = const_cast<QQmlSettings*>(q_func());
+        QQmlSettingsLabs *q = const_cast<QQmlSettingsLabs*>(q_func());
         settings = fileName.isEmpty() ? new QSettings(q) : new QSettings(fileName, QSettings::IniFormat, q);
         if (settings->status() != QSettings::NoError) {
             // TODO: can't print out the enum due to the following error:
@@ -267,25 +267,25 @@ QSettings *QQmlSettingsPrivate::instance() const
     return settings;
 }
 
-void QQmlSettingsPrivate::init()
+void QQmlSettingsLabsPrivate::init()
 {
     if (!initialized) {
-        qCDebug(lcSettings) << "QQmlSettings: stored at" << instance()->fileName();
+        qCDebug(lcSettings) << "QQmlSettingsLabs: stored at" << instance()->fileName();
         load();
         initialized = true;
     }
 }
 
-void QQmlSettingsPrivate::reset()
+void QQmlSettingsLabsPrivate::reset()
 {
     if (initialized && settings && !changedProperties.isEmpty())
         store();
     delete settings;
 }
 
-void QQmlSettingsPrivate::load()
+void QQmlSettingsLabsPrivate::load()
 {
-    Q_Q(QQmlSettings);
+    Q_Q(QQmlSettingsLabs);
     const QMetaObject *mo = q->metaObject();
     const int offset = mo->propertyOffset();
     const int count = mo->propertyCount();
@@ -306,7 +306,7 @@ void QQmlSettingsPrivate::load()
                 || (currentValue.canConvert(previousValue.metaType())
                     && previousValue != currentValue))) {
             property.write(q, currentValue);
-            qCDebug(lcSettings) << "QQmlSettings: load" << property.name() << "setting:" << currentValue << "default:" << previousValue;
+            qCDebug(lcSettings) << "QQmlSettingsLabs: load" << property.name() << "setting:" << currentValue << "default:" << previousValue;
         }
 
         // ensure that a non-existent setting gets written
@@ -322,20 +322,20 @@ void QQmlSettingsPrivate::load()
     }
 }
 
-void QQmlSettingsPrivate::store()
+void QQmlSettingsLabsPrivate::store()
 {
     QHash<const char *, QVariant>::const_iterator it = changedProperties.constBegin();
     while (it != changedProperties.constEnd()) {
         instance()->setValue(QString::fromUtf8(it.key()), it.value());
-        qCDebug(lcSettings) << "QQmlSettings: store" << it.key() << ":" << it.value();
+        qCDebug(lcSettings) << "QQmlSettingsLabs: store" << it.key() << ":" << it.value();
         ++it;
     }
     changedProperties.clear();
 }
 
-void QQmlSettingsPrivate::_q_propertyChanged()
+void QQmlSettingsLabsPrivate::_q_propertyChanged()
 {
-    Q_Q(QQmlSettings);
+    Q_Q(QQmlSettingsLabs);
     const QMetaObject *mo = q->metaObject();
     const int offset = mo->propertyOffset();
     const int count = mo->propertyCount();
@@ -343,32 +343,32 @@ void QQmlSettingsPrivate::_q_propertyChanged()
         const QMetaProperty &property = mo->property(i);
         const QVariant value = readProperty(property);
         changedProperties.insert(property.name(), value);
-        qCDebug(lcSettings) << "QQmlSettings: cache" << property.name() << ":" << value;
+        qCDebug(lcSettings) << "QQmlSettingsLabs: cache" << property.name() << ":" << value;
     }
     if (timerId != 0)
         q->killTimer(timerId);
     timerId = q->startTimer(settingsWriteDelay);
 }
 
-QVariant QQmlSettingsPrivate::readProperty(const QMetaProperty &property) const
+QVariant QQmlSettingsLabsPrivate::readProperty(const QMetaProperty &property) const
 {
-    Q_Q(const QQmlSettings);
+    Q_Q(const QQmlSettingsLabs);
     QVariant var = property.read(q);
     if (var.metaType() == QMetaType::fromType<QJSValue>())
         var = var.value<QJSValue>().toVariant();
     return var;
 }
 
-QQmlSettings::QQmlSettings(QObject *parent)
-    : QObject(parent), d_ptr(new QQmlSettingsPrivate)
+QQmlSettingsLabs::QQmlSettingsLabs(QObject *parent)
+    : QObject(parent), d_ptr(new QQmlSettingsLabsPrivate)
 {
-    Q_D(QQmlSettings);
+    Q_D(QQmlSettingsLabs);
     d->q_ptr = this;
 }
 
-QQmlSettings::~QQmlSettings()
+QQmlSettingsLabs::~QQmlSettingsLabs()
 {
-    Q_D(QQmlSettings);
+    Q_D(QQmlSettingsLabs);
     d->reset(); // flush pending changes
 }
 
@@ -379,15 +379,15 @@ QQmlSettings::~QQmlSettings()
 
     Categories can be used to group related settings together.
 */
-QString QQmlSettings::category() const
+QString QQmlSettingsLabs::category() const
 {
-    Q_D(const QQmlSettings);
+    Q_D(const QQmlSettingsLabs);
     return d->category;
 }
 
-void QQmlSettings::setCategory(const QString &category)
+void QQmlSettingsLabs::setCategory(const QString &category)
 {
-    Q_D(QQmlSettings);
+    Q_D(QQmlSettingsLabs);
     if (d->category != category) {
         d->reset();
         d->category = category;
@@ -406,15 +406,15 @@ void QQmlSettings::setCategory(const QString &category)
 
     \sa QSettings::fileName, QSettings::IniFormat
 */
-QString QQmlSettings::fileName() const
+QString QQmlSettingsLabs::fileName() const
 {
-    Q_D(const QQmlSettings);
+    Q_D(const QQmlSettingsLabs);
     return d->fileName;
 }
 
-void QQmlSettings::setFileName(const QString &fileName)
+void QQmlSettingsLabs::setFileName(const QString &fileName)
 {
-    Q_D(QQmlSettings);
+    Q_D(QQmlSettingsLabs);
     if (d->fileName != fileName) {
         d->reset();
         d->fileName = fileName;
@@ -433,9 +433,9 @@ void QQmlSettings::setFileName(const QString &fileName)
 
    \sa QSettings::value
 */
-QVariant QQmlSettings::value(const QString &key, const QVariant &defaultValue) const
+QVariant QQmlSettingsLabs::value(const QString &key, const QVariant &defaultValue) const
 {
-    Q_D(const QQmlSettings);
+    Q_D(const QQmlSettingsLabs);
     return d->instance()->value(key, defaultValue);
 }
 
@@ -449,11 +449,11 @@ QVariant QQmlSettings::value(const QString &key, const QVariant &defaultValue) c
 
    \sa QSettings::setValue
 */
-void QQmlSettings::setValue(const QString &key, const QVariant &value)
+void QQmlSettingsLabs::setValue(const QString &key, const QVariant &value)
 {
-    Q_D(const QQmlSettings);
+    Q_D(const QQmlSettingsLabs);
     d->instance()->setValue(key, value);
-    qCDebug(lcSettings) << "QQmlSettings: setValue" << key << ":" << value;
+    qCDebug(lcSettings) << "QQmlSettingsLabs: setValue" << key << ":" << value;
 }
 
 /*!
@@ -469,28 +469,28 @@ void QQmlSettings::setValue(const QString &key, const QVariant &value)
 
    \sa QSettings::sync
 */
-void QQmlSettings::sync()
+void QQmlSettingsLabs::sync()
 {
-    Q_D(QQmlSettings);
+    Q_D(QQmlSettingsLabs);
     d->instance()->sync();
 }
 
-void QQmlSettings::classBegin()
+void QQmlSettingsLabs::classBegin()
 {
 }
 
-void QQmlSettings::componentComplete()
+void QQmlSettingsLabs::componentComplete()
 {
-    Q_D(QQmlSettings);
+    Q_D(QQmlSettingsLabs);
     d->init();
     qmlWarning(this) << "The Settings type from Qt.labs.settings is deprecated"
                         " and will be removed in a future release. Please use "
                         "the one from QtCore instead.";
 }
 
-void QQmlSettings::timerEvent(QTimerEvent *event)
+void QQmlSettingsLabs::timerEvent(QTimerEvent *event)
 {
-    Q_D(QQmlSettings);
+    Q_D(QQmlSettingsLabs);
     if (event->timerId() == d->timerId) {
         killTimer(d->timerId);
         d->timerId = 0;

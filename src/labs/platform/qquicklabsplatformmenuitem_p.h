@@ -117,7 +117,7 @@ Q_SIGNALS:
     void textChanged();
     void shortcutChanged();
     void fontChanged();
-    Q_REVISION(2, 1) void iconChanged();
+    Q_REVISION(1, 1) void iconChanged();
 
 protected:
     void classBegin() override;
