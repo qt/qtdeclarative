@@ -58,6 +58,7 @@ class Q_QUICK_EXPORT QQuickAccessibleAttached : public QObject
     Q_PROPERTY(QString description READ description WRITE setDescription NOTIFY descriptionChanged FINAL)
     Q_PROPERTY(QString id READ id WRITE setId NOTIFY idChanged FINAL)
     Q_PROPERTY(bool ignored READ ignored WRITE setIgnored NOTIFY ignoredChanged FINAL)
+    Q_PROPERTY(int levelAttribute READ levelAttribute WRITE setLevelAttribute NOTIFY levelAttributeChanged FINAL)
     Q_PROPERTY(QQuickItem *labelledBy READ labelledBy WRITE setLabelledBy NOTIFY labelledByChanged FINAL)
     Q_PROPERTY(QQuickItem *labelFor READ labelFor WRITE setLabelFor NOTIFY labelForChanged FINAL)
 
@@ -190,6 +191,17 @@ public:
         Q_EMIT labelForChanged();
     }
 
+    int levelAttribute() const { return m_levelAttribute; }
+    void setLevelAttribute(int levelAttribute)
+    {
+        if (m_levelAttribute != levelAttribute) {
+            m_levelAttribute = levelAttribute;
+            Q_EMIT levelAttributeChanged();
+            QAccessibleEvent ev(parent(), QAccessible::AttributeChanged);
+            QAccessible::updateAccessibility(&ev);
+        }
+    }
+
     // Factory function
     static QQuickAccessibleAttached *qmlAttachedProperties(QObject *obj);
 
@@ -263,6 +275,7 @@ Q_SIGNALS:
     void descriptionChanged();
     void idChanged();
     void ignoredChanged();
+    void levelAttributeChanged();
     void labelledByChanged();
     void labelForChanged();
     void pressAction();
@@ -290,6 +303,7 @@ private:
     QQuickAccessibleAttached* m_proxying = nullptr;
     QString m_id;
     QList<std::pair<QQuickItem *, QAccessible::Relation>> m_relations;
+    int m_levelAttribute = 0;
 
     static QMetaMethod sigPress;
     static QMetaMethod sigToggle;

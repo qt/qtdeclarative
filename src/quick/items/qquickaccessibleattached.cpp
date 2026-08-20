@@ -182,6 +182,15 @@ QT_BEGIN_NAMESPACE
 
     By default this property is \c false.
 */
+/*! \qmlattachedproperty int QtQuick::Accessible::levelAttribute
+    \brief This property holds the level of this item within a hierarchical structure.
+    This property is used to populate QAccessible::Attribute::Level of the \l QAccessibleAttributesInterface.
+
+    It is relevant when the role is \l QAccessible::Heading and its needed to distinguish between different levels of headings.
+    \since 6.13
+    By default this property is \c 0.
+    \sa QAccessible::Attribute
+*/
 /*! \qmlattachedproperty bool QtQuick::Accessible::ignored
     \brief This property holds whether this item should be ignored by the accessibility framework.
 

@@ -948,10 +948,15 @@ void QAccessibleQuickItem::setSelection(int /* selectionIndex */, int /* startOf
 
 QList<QAccessible::Attribute> QAccessibleQuickItem::attributeKeys() const
 {
-    if (attributeValue(QAccessible::Attribute::Locale).isValid())
-        return { QAccessible::Attribute::Locale };
+    QList<QAccessible::Attribute> attributes;
 
-    return {};
+    if (attributeValue(QAccessible::Attribute::Locale).isValid())
+        attributes << QAccessible::Attribute::Locale;
+
+    if (attributeValue(QAccessible::Attribute::Level).isValid())
+        attributes << QAccessible::Attribute::Level;
+
+    return attributes;
 }
 
 QVariant QAccessibleQuickItem::attributeValue(QAccessible::Attribute key) const
@@ -962,6 +967,12 @@ QVariant QAccessibleQuickItem::attributeValue(QAccessible::Attribute key) const
             return QVariant();
 
         return windowIface->attributesInterface()->attributeValue(QAccessible::Attribute::Locale);
+    }
+
+    if (key == QAccessible::Attribute::Level) {
+        const auto levelAttribute = QQuickAccessibleAttached::property(object(), "levelAttribute");
+        if (!levelAttribute.isNull())
+            return levelAttribute;
     }
 
     return QVariant();
