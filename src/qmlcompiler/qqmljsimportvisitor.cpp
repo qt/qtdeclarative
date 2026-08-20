@@ -309,8 +309,16 @@ bool QQmlJSImportVisitor::resolveAliasProperty(const QQmlJSScope::Ptr &object,
             }
 
             const auto target = type->property(name);
-            if (!target.type() && target.isAlias())
-                doRequeue = true;
+            if (!target.type()) {
+                if (target.isAlias()) {
+                    doRequeue = true;
+                } else {
+                    // We already warned about the missing type in the property definition if
+                    // the type is defined in this QML file.
+                    hasWarnedAlready = QQmlJSScope::ownerOfProperty(type, name).scope->filePath()
+                            == m_exportedRootScope->filePath();
+                }
+            }
             typeScope = type;
             type = target.type();
             targetProperty = target;

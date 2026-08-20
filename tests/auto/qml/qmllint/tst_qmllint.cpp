@@ -4325,6 +4325,20 @@ Item {
                                       .addUnexpected("Cannot resolve alias \"myAlias\""_L1)
                                       .build()
                            << defaultOptions;
+
+    QTest::newRow("alias2") << uR"(import MissingRegistration
+import QtQuick
+Item {
+    id: root
+    property MyObject myObj
+    property alias myAlias2: root.myObj.someProperty
+})"_s
+                            << ResultBuilder()
+                                       .addExpected("Failed to import MissingRegistration"_L1)
+                                       .addExpected("MyObject was not found"_L1, 5, 5)
+                                       .addUnexpected("Cannot deduce type of alias \"myAlias2\""_L1)
+                                       .build()
+                            << defaultOptions;
 }
 
 void TestQmllint::missingRegistration()
