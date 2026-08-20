@@ -281,6 +281,7 @@ bool QQmlJSImportVisitor::resolveAliasProperty(const QQmlJSScope::Ptr &object,
     QQmlJSMetaProperty targetProperty;
 
     bool foundProperty = false;
+    bool hasWarnedAlready = false;
 
     // The first component has to be an ID. Find the object it refers to.
     QQmlJSScope::ConstPtr type = m_scopesById.scope(components.takeFirst(), object);
@@ -295,6 +296,11 @@ bool QQmlJSImportVisitor::resolveAliasProperty(const QQmlJSScope::Ptr &object,
         // and try again later.
         while (type && !components.isEmpty()) {
             const QString name = components.takeFirst();
+
+            if (!checkTypeResolved(type)) {
+                hasWarnedAlready = true;
+                break;
+            }
 
             if (!type->hasProperty(name)) {
                 foundProperty = false;
@@ -314,14 +320,16 @@ bool QQmlJSImportVisitor::resolveAliasProperty(const QQmlJSScope::Ptr &object,
     if (type.isNull()) {
         if (doRequeue)
             return doRequeue;
-        if (foundProperty) {
-            m_logger->log(QStringLiteral("Cannot deduce type of alias \"%1\"")
-                                  .arg(property.propertyName()),
-                          qmlMissingType, property.sourceLocation());
-        } else {
-            m_logger->log(
-                    QStringLiteral("Cannot resolve alias \"%1\"").arg(property.propertyName()),
-                    qmlUnresolvedAlias, property.sourceLocation());
+        if (!hasWarnedAlready) {
+            if (foundProperty) {
+                m_logger->log(QStringLiteral("Cannot deduce type of alias \"%1\"")
+                                      .arg(property.propertyName()),
+                              qmlMissingType, property.sourceLocation());
+            } else {
+                m_logger->log(
+                        QStringLiteral("Cannot resolve alias \"%1\"").arg(property.propertyName()),
+                        qmlUnresolvedAlias, property.sourceLocation());
+            }
         }
 
         Q_ASSERT(property.index() >= 0); // this property is already in object

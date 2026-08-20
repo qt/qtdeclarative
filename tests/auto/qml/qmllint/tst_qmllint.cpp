@@ -257,6 +257,10 @@ private Q_SLOTS:
 
     void missingBuiltinsNoCrash();
     void stubQtQuickNoCrash();
+
+    void missingRegistration_data();
+    void missingRegistration();
+
     void absolutePath();
 
     void importMultipartUri();
@@ -4298,6 +4302,34 @@ void TestQmllint::stubQtQuickNoCrash()
 
     // The type information is unusable, so warnings are expected.
     QVERIFY(process.readAllStandardError().contains("Item was not found"));
+}
+
+void TestQmllint::missingRegistration_data()
+{
+    QTest::addColumn<QString>("code");
+    QTest::addColumn<Result>("result");
+    QTest::addColumn<CallQmllintOptions>("options");
+
+    CallQmllintOptions defaultOptions;
+
+    QTest::newRow("alias") << uR"(import MissingRegistration
+import QtQuick
+Item {
+    MyObject { id: obj }
+    property alias myAlias: obj.asdf
+})"_s
+                           << ResultBuilder()
+                                      .addExpected("Failed to import MissingRegistration"_L1)
+                                      .addExpected("MyObject was not found"_L1)
+                                      .addFix("Did you mean \"QtObject\"?"_L1)
+                                      .addUnexpected("Cannot resolve alias \"myAlias\""_L1)
+                                      .build()
+                           << defaultOptions;
+}
+
+void TestQmllint::missingRegistration()
+{
+    dirtyQmlSnippet();
 }
 
 void TestQmllint::absolutePath()
