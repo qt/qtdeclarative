@@ -30,17 +30,17 @@ void QQmlScriptBlob::dataReceived(const SourceCodeData &data)
 {
     assertTypeLoaderThread();
 
-    if (data.isCacheable()) {
-        if (m_typeLoader->readCacheFile()) {
-            auto unit = QQml::makeRefPointer<QV4::CompiledData::CompilationUnit>();
-            QString error;
-            if (unit->loadFromDisk(url(), data.sourceTimeStamp(), &error)) {
-                initializeFromCompilationUnit(std::move(unit));
-                return;
-            } else {
-                qCDebug(DBG_DISK_CACHE()) << "Error loading" << urlString()
-                                          << "from disk cache:" << error;
-            }
+    const bool isCacheable = data.isCacheable();
+
+    if (isCacheable && m_typeLoader->readCacheFile()) {
+        auto unit = QQml::makeRefPointer<QV4::CompiledData::CompilationUnit>();
+        QString error;
+        if (unit->loadFromDisk(url(), data.sourceTimeStamp(), &error)) {
+            initializeFromCompilationUnit(std::move(unit));
+            return;
+        } else {
+            qCDebug(DBG_DISK_CACHE())
+                    << "Error loading" << urlString() << "from disk cache:" << error;
         }
     }
 
@@ -101,7 +101,7 @@ void QQmlScriptBlob::dataReceived(const SourceCodeData &data)
         unit = std::move(irUnit.javaScriptCompilationUnit);
     }
 
-    if (m_typeLoader->writeCacheFile()) {
+    if (isCacheable && m_typeLoader->writeCacheFile()) {
         QString errorString;
         if (unit->saveToDisk(url(), &errorString)) {
             QString error;

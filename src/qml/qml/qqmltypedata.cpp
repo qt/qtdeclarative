@@ -939,7 +939,9 @@ void QQmlTypeData::compile(const QQmlRefPointer<QQmlTypeNameCache> &typeNameCach
         return;
     }
 
-    const bool trySaveToDisk = m_typeLoader->writeCacheFile() && !typeRecompilation;
+    const bool trySaveToDisk = m_backupSourceCode.isCacheable()
+            && m_typeLoader->writeCacheFile()
+            && !typeRecompilation;
     if (trySaveToDisk) {
         QString errorString;
         if (compilationUnit->saveToDisk(url(), &errorString)) {
