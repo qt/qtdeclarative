@@ -51,6 +51,10 @@ QT_BEGIN_NAMESPACE
 
     \note \deprecated [6.12] The \c sort method is deprecated. Rename it to \c compare.
 
+    \note The \c compare function must have exactly two explicitly type-annotated
+    parameters of matching types and an explicit \c{: int} return type. If these
+    requirements are not met, the sorter emits a warning and returns early.
+
     \note The user needs to explicitly invoke
     \l{SortFilterProxyModel::invalidateSorter} whenever any external qml
     property used within the designated 'compare' method changes. This behaviour
@@ -114,6 +118,17 @@ void QQmlFunctionSorter::componentComplete()
 
     if (lhsParameterType != rhsParameterType) {
         qmlWarning(this) << d->m_method.name() << " parameters need to have matching types.";
+        return;
+    }
+
+    if (lhsParameterType == QMetaType::fromType<QVariant>()) {
+        qmlWarning(this) << d->m_method.name() << " parameters must be type annotated.";
+        return;
+    }
+
+    const QMetaType returnType = d->m_method.returnMetaType();
+    if (returnType != QMetaType::fromType<int>()) {
+        qmlWarning(this) << d->m_method.name() << " must return int data type.";
         return;
     }
 

@@ -86,6 +86,9 @@ private slots:
     void rangeFilterDateTime();
     void rangeFilterString();
     void rangeFilterQmlBounds();
+
+    void crashUntypedCompare_data();
+    void crashUntypedCompare();
 };
 
 class CustomTableModel : public QAbstractTableModel
@@ -2209,6 +2212,35 @@ void tst_QQmlSortFilterProxyModel::rangeFilterQmlBounds()
     QVERIFY(bothExclusiveModel);
     QCOMPARE(bothExclusiveModel->rowCount(), 1);
     QCOMPARE(bothExclusiveModel->data(bothExclusiveModel->index(0, 0), priceRole).toInt(), 30);
+}
+
+void tst_QQmlSortFilterProxyModel::crashUntypedCompare_data()
+{
+    QTest::addColumn<QString>("qmlFile");
+    QTest::addColumn<QString>("errorMessage");
+    QTest::newRow("qtbug-149043_valid") << "qtbug-149043_valid.qml" << QString();
+    QTest::newRow("qtbug-149043_reject1") << "qtbug-149043_rejectNonTypeReturn.qml"
+                                          << QStringLiteral("must return int data type");
+    QTest::newRow("qtbug-149043_reject2") << "qtbug-149043_rejectNonTypeParameter.qml"
+                                          << QStringLiteral("parameters must be type annotated");
+}
+
+void tst_QQmlSortFilterProxyModel::crashUntypedCompare()
+{
+    QFETCH(QString, qmlFile);
+    QFETCH(QString, errorMessage);
+    QQmlEngine engine;
+    QList<QQmlError> warnings;
+    QObject::connect(&engine, &QQmlEngine::warnings, this, [&warnings](auto w) { warnings = w; });
+
+    QQmlComponent component(&engine, testFileUrl(qmlFile));
+    QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    if (!errorMessage.isEmpty()) {
+        QVERIFY(warnings.first().description().contains(errorMessage));
+    }
 }
 
 QTEST_MAIN(tst_QQmlSortFilterProxyModel)
