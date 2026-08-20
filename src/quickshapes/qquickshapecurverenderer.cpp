@@ -381,6 +381,9 @@ void QQuickShapeCurveRenderer::handleSceneChange(QQuickWindow *window)
                 QQuickItemPrivate::get(pathData.fillTextureProviderItem)->refWindow(window);
         }
     }
+
+    if (!window)
+        clearNodeReferences(); // Nodes are owned by the window, drop our pointers to them
 }
 
 void QQuickShapeCurveRenderer::setAsyncCallback(void (*callback)(void *), void *data)
