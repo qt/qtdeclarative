@@ -223,6 +223,11 @@ public:
     {
         return !(a == b);
     }
+    template <typename X>
+    bool owner_equal(const QDeferredWeakPointer<X> &other) const noexcept
+    {
+        return m_data.owner_equal(other.m_data);
+    }
     size_t owner_hash() const noexcept { return m_data.owner_hash(); }
 
 private:

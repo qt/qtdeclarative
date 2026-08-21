@@ -145,7 +145,7 @@ public:
 
     QQmlJSMetaParameter(QString name = QString(), QString typeName = QString(),
                         Constness typeQualifier = NonConst,
-                        QWeakPointer<const QQmlJSScope> type = {})
+                        QDeferredWeakPointer<const QQmlJSScope> type = { })
         : m_name(std::move(name)),
           m_typeName(std::move(typeName)),
           m_type(type),
@@ -157,8 +157,8 @@ public:
     void setName(const QString &name) { m_name = name; }
     QString typeName() const { return m_typeName; }
     void setTypeName(const QString &typeName) { m_typeName = typeName; }
-    QSharedPointer<const QQmlJSScope> type() const { return m_type.toStrongRef(); }
-    void setType(QWeakPointer<const QQmlJSScope> type) { m_type = type; }
+    QDeferredSharedPointer<const QQmlJSScope> type() const { return m_type.toStrongRef(); }
+    void setType(QDeferredWeakPointer<const QQmlJSScope> type) { m_type = type; }
     Constness typeQualifier() const { return m_typeQualifier; }
     void setTypeQualifier(Constness typeQualifier) { m_typeQualifier = typeQualifier; }
     bool isPointer() const { return m_isPointer; }
@@ -187,7 +187,7 @@ public:
 private:
     QString m_name;
     QString m_typeName;
-    QWeakPointer<const QQmlJSScope> m_type;
+    QDeferredWeakPointer<const QQmlJSScope> m_type;
     Constness m_typeQualifier = NonConst;
     bool m_isPointer = false;
     bool m_isList = false;
@@ -235,8 +235,8 @@ public:
     void setReturnValue(const QQmlJSMetaReturnType returnValue) { m_returnType = returnValue; }
     QString returnTypeName() const { return m_returnType.typeName(); }
     void setReturnTypeName(const QString &typeName) { m_returnType.setTypeName(typeName); }
-    QSharedPointer<const QQmlJSScope> returnType() const { return m_returnType.type(); }
-    void setReturnType(QWeakPointer<const QQmlJSScope> type) { m_returnType.setType(type); }
+    QDeferredSharedPointer<const QQmlJSScope> returnType() const { return m_returnType.type(); }
+    void setReturnType(QDeferredWeakPointer<const QQmlJSScope> type) { m_returnType.setType(type); }
 
     QList<QQmlJSMetaParameter> parameters() const { return m_parameters; }
     std::pair<QList<QQmlJSMetaParameter>::iterator, QList<QQmlJSMetaParameter>::iterator>
