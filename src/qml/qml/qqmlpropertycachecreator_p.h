@@ -85,7 +85,7 @@ public:
         case QV4::CompiledData::CommonType::Var:      return QMetaType::fromType<QVariant>();
         case QV4::CompiledData::CommonType::Int:      return QMetaType::fromType<int>();
         case QV4::CompiledData::CommonType::Bool:     return QMetaType::fromType<bool>();
-        case QV4::CompiledData::CommonType::Real:     return QMetaType::fromType<qreal>();
+        case QV4::CompiledData::CommonType::Real:     return QMetaType::fromType<double>();
         case QV4::CompiledData::CommonType::String:   return QMetaType::fromType<QString>();
         case QV4::CompiledData::CommonType::Url:      return QMetaType::fromType<QUrl>();
         case QV4::CompiledData::CommonType::Time:     return QMetaType::fromType<QTime>();
@@ -111,7 +111,7 @@ public:
         case QV4::CompiledData::CommonType::Var:      return QMetaType::fromType<QList<QVariant>>();
         case QV4::CompiledData::CommonType::Int:      return QMetaType::fromType<QList<int>>();
         case QV4::CompiledData::CommonType::Bool:     return QMetaType::fromType<QList<bool>>();
-        case QV4::CompiledData::CommonType::Real:     return QMetaType::fromType<QList<qreal>>();
+        case QV4::CompiledData::CommonType::Real:     return QMetaType::fromType<QList<double>>();
         case QV4::CompiledData::CommonType::String:   return QMetaType::fromType<QList<QString>>();
         case QV4::CompiledData::CommonType::Url:      return QMetaType::fromType<QList<QUrl>>();
         case QV4::CompiledData::CommonType::Time:     return QMetaType::fromType<QList<QTime>>();
@@ -141,7 +141,7 @@ public:
             return QV4::CompiledData::CommonType::Int;
         case QMetaType::Bool:
             return QV4::CompiledData::CommonType::Bool;
-        case QMetaType::QReal:
+        case QMetaType::Double:
             return QV4::CompiledData::CommonType::Real;
         case QMetaType::QString:
             return QV4::CompiledData::CommonType::String;

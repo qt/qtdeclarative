@@ -605,7 +605,8 @@ QQmlError QQmlPropertyValidator::validateLiteralBinding(
         return warnOrError(tr("Invalid property assignment: regular expression expected; use /pattern/ syntax"));
     default: {
         // generate single literal value assignment to a list property if required
-        if (property->propType() == QMetaType::fromType<QList<qreal> >()) {
+        if (property->propType() == QMetaType::fromType<QList<double>>()
+                || property->propType() == QMetaType::fromType<QList<float>>()) {
             if (bindingType != QV4::CompiledData::Binding::Type_Number) {
                 return warnOrError(tr("Invalid property assignment: number or array of numbers expected"));
             }
