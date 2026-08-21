@@ -971,7 +971,13 @@ void QQmlJSImportVisitor::processPropertyBindingObjects()
 
         if (property.type().isNull()) {
             assignToUnknownProperty();
-            handleUnresolvedProperty(property.type());
+            if (checkTypeResolved(objectBinding.scope)
+                && QQmlJSScope::ownerOfProperty(objectBinding.scope, propertyName).scope->filePath()
+                        != m_exportedRootScope->filePath()) {
+                // If this property was defined in the same QML document then we already warned about it
+                // somewhere.
+                handleUnresolvedProperty(property.type());
+            }
             continue;
         }
 

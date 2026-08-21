@@ -4339,6 +4339,19 @@ Item {
                                        .addUnexpected("Cannot deduce type of alias \"myAlias2\""_L1)
                                        .build()
                             << defaultOptions;
+
+    QTest::newRow("objectBindings")
+            << uR"(import MissingRegistration
+import QtQuick
+Item {
+    property MyObject1 myObj: MyObject2{}
+})"_s
+            << ResultBuilder()
+                       .addExpected("MyObject1 was not found"_L1, 4, 5)
+                       .addExpected("MyObject2 was not found"_L1, 4, 31)
+                       .addUnexpected("Property \"myObj\" has incomplete type \"MyObject1\""_L1)
+                       .build()
+            << defaultOptions;
 }
 
 void TestQmllint::missingRegistration()
