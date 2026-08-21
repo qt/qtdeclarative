@@ -5471,9 +5471,15 @@ _qt_internal_show_skip_qml_runtime_deploy_message()
 endfunction()
 
 if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
-    macro(qt_generate_deploy_qml_app_script)
-        qt6_generate_deploy_qml_app_script(${ARGV})
-    endmacro()
+    function(qt_generate_deploy_qml_app_script)
+        _qt_internal_resolve_deploy_script_args(forwarded_args
+            qt_generate_deploy_qml_app_script ${ARGV})
+        qt6_generate_deploy_qml_app_script(${forwarded_args})
+        cmake_parse_arguments(PARSE_ARGV 0 arg "" "OUTPUT_SCRIPT" "")
+        if(arg_OUTPUT_SCRIPT)
+            set(${arg_OUTPUT_SCRIPT} "${${arg_OUTPUT_SCRIPT}}" PARENT_SCOPE)
+        endif()
+    endfunction()
 endif()
 
 function(qt6_query_qml_module target)
