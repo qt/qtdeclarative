@@ -844,6 +844,7 @@ target_sources(Qml
         doc/src/qmllint/prefixed-import-type.qdoc
         doc/src/qmllint/incompatible-type.qdoc
         doc/src/qmllint/unqualified.qdoc
+        doc/src/qmllint/signal-handler-name-clash.qdoc
         doc/src/qmllint/signal-handler-parameters.qdoc
         doc/src/qmllint/void.qdoc
         doc/src/qmllint/duplicate-inline-components.qdoc
