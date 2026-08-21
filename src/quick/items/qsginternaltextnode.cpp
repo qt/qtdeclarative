@@ -80,7 +80,10 @@ QSGGlyphNode *QSGInternalTextNode::addGlyphs(const QPointF &position,
     if (preferredRenderType == NativeRendering)
         m_containsUnscalableGlyphs = true;
 
-    QSGGlyphNode *node = findOrCreateGlyphNode(preferredRenderType, recycleBin);
+    if (parentNode == nullptr)
+        parentNode = this;
+
+    QSGGlyphNode *node = findOrCreateGlyphNode(preferredRenderType, recycleBin, parentNode);
     node->setRenderTypeQuality(m_renderTypeQuality);
     node->setGlyphs(position + QPointF(0, glyphs.rawFont().ascent()), glyphs);
     node->setStyle(style);
@@ -97,14 +100,11 @@ QSGGlyphNode *QSGInternalTextNode::addGlyphs(const QPointF &position,
     node->geometry()->setIndexDataPattern(QSGGeometry::StaticPattern);
     node->geometry()->setVertexDataPattern(QSGGeometry::StaticPattern);
 
-    if (parentNode == nullptr)
-        parentNode = this;
-
     if (node->parent() == nullptr)
         parentNode->appendChildNode(node);
 
     if (style == QQuickText::Outline && color.alpha() > 0 && styleColor != color) {
-        QSGGlyphNode *fillNode = findOrCreateGlyphNode(preferredRenderType, recycleBin);
+        QSGGlyphNode *fillNode = findOrCreateGlyphNode(preferredRenderType, recycleBin, parentNode);
         fillNode->setRenderTypeQuality(m_renderTypeQuality);
         fillNode->setGlyphs(position + QPointF(0, glyphs.rawFont().ascent()), glyphs);
         fillNode->setStyle(QQuickText::Normal);
@@ -295,10 +295,12 @@ void QSGInternalTextNode::doAddTextLayout(QPointF position,
 
 namespace {
 
+    using RecycleBin = QSGInternalTextNode::RecycleBin;
+
     class ChildNodeCollector : public QSGNodeVisitorEx
     {
     public:
-        ChildNodeCollector(QSGInternalTextNode::RecycleBin &recycleBin,
+        ChildNodeCollector(RecycleBin &recycleBin,
                            std::vector<QSGNode *> &untrackedNodes)
             : m_recycleBin(recycleBin)
             , m_untrackedNodes(untrackedNodes)
@@ -352,7 +354,7 @@ namespace {
 
         bool visit(QSGInternalImageNode *node) override
         {
-            m_recycleBin.unusedImageNodes.append(node);
+            m_recycleBin.unusedNodes.append({ node, RecycleBin::ImageNode });
             return false;
         }
 
@@ -373,7 +375,7 @@ namespace {
 
         bool visit(QSGInternalRectangleNode *node) override
         {
-            m_recycleBin.unusedRectangleNodes.append(node);
+            m_recycleBin.unusedNodes.append({ node, RecycleBin::RectangleNode });
             return false;
         }
 
@@ -390,7 +392,7 @@ namespace {
             if (node->childCount() > 0)
                 m_untrackedNodes.push_back(node);
             else
-                m_recycleBin.unusedGlyphNodes.append(node);
+                m_recycleBin.unusedNodes.append({ node, RecycleBin::GlyphNode });
 
             return false;
         }
@@ -434,24 +436,42 @@ namespace {
         }
 
     private:
-        QSGInternalTextNode::RecycleBin &m_recycleBin;
+        RecycleBin &m_recycleBin;
         std::vector<QSGNode *> &m_untrackedNodes;
     };
+}
+
+QSGGlyphNode *QSGInternalTextNode::RecycleBin::takeNextReusableGlyphNode(
+        QSGTextNode::RenderType renderType)
+{
+    const UnusedNode *next = peekNextReusableNode(GlyphNode);
+    if (next == nullptr)
+        return nullptr;
+
+    QSGGlyphNode *glyphNode = static_cast<QSGGlyphNode *>(next->node);
+    if (glyphNode->renderType() != renderType) {
+        qCDebug(lcTextRecycle) << "    Unsuitable node found:" << glyphNode->renderType();
+        stopReusing();
+        return nullptr;
+    }
+
+    ++reusedNodes;
+    return glyphNode;
 }
 
 QSGInternalRectangleNode *QSGInternalTextNode::findOrCreateRectangleNode(RecycleBin *recycleBin)
 {
     qCDebug(lcTextRecycle) << "Searching for rectangle node";
 
-    if (recycleBin == nullptr || recycleBin->unusedRectangleNodes.isEmpty()) {
-        qCDebug(lcTextRecycle) << "    Creating new rectangle node, no suitable node found";
-        return m_renderContext->sceneGraphContext()->createInternalRectangleNode();
+    if (recycleBin != nullptr) {
+        if (QSGVisitableNode *node = recycleBin->takeNextReusableNode(RecycleBin::RectangleNode)) {
+            qCDebug(lcTextRecycle) << "    Found node, recycling";
+            return static_cast<QSGInternalRectangleNode *>(node);
+        }
     }
 
-    qCDebug(lcTextRecycle) << "    Found node, recycling";
-    auto *node = recycleBin->unusedRectangleNodes.last();
-    recycleBin->unusedRectangleNodes.removeLast();
-    return node;
+    qCDebug(lcTextRecycle) << "    Creating new rectangle node, no suitable node found";
+    return m_renderContext->sceneGraphContext()->createInternalRectangleNode();
 }
 
 
@@ -459,33 +479,30 @@ QSGInternalImageNode *QSGInternalTextNode::findOrCreateImageNode(RecycleBin *rec
 {
     qCDebug(lcTextRecycle) << "Searching for image node";
 
-    if (recycleBin == nullptr || recycleBin->unusedImageNodes.isEmpty()) {
-        qCDebug(lcTextRecycle) << "    Creating new image node, no suitable node found";
-        return m_renderContext->sceneGraphContext()->createInternalImageNode(m_renderContext);
+    if (recycleBin != nullptr) {
+        if (QSGVisitableNode *node = recycleBin->takeNextReusableNode(RecycleBin::ImageNode)) {
+            qCDebug(lcTextRecycle) << "    Found node, recycling";
+            return static_cast<QSGInternalImageNode *>(node);
+        }
     }
 
-    qCDebug(lcTextRecycle) << "    Found node, recycling";
-    auto *node = recycleBin->unusedImageNodes.last();
-    recycleBin->unusedImageNodes.removeLast();
-    return node;
+    qCDebug(lcTextRecycle) << "    Creating new image node, no suitable node found";
+    return m_renderContext->sceneGraphContext()->createInternalImageNode(m_renderContext);
 }
 
 QSGGlyphNode *QSGInternalTextNode::findOrCreateGlyphNode(RenderType renderType,
-                                                         RecycleBin *recycleBin)
+                                                         RecycleBin *recycleBin,
+                                                         QSGNode *parentNode)
 {
     qCDebug(lcTextRecycle) << "Searching for glyph node with renderType" << renderType;
     renderType = m_renderContext->sceneGraphContext()->processTextRenderType(renderType);
 
     if (recycleBin != nullptr) {
-        for (int i = recycleBin->unusedGlyphNodes.size() - 1; i >= 0; --i) {
-            QSGGlyphNode *n = recycleBin->unusedGlyphNodes.at(i);
-            if (n->renderType() == renderType) {
-                qCDebug(lcTextRecycle) << "    Found node, recycling";
-                recycleBin->unusedGlyphNodes.removeAt(i);
-                return n;
-            } else {
-                qCDebug(lcTextRecycle) << "    Unsuitable node found:" << n->renderType();
-            }
+        if (parentNode != this) {
+            recycleBin->stopReusing();
+        } else if (QSGGlyphNode *node = recycleBin->takeNextReusableGlyphNode(renderType)) {
+            qCDebug(lcTextRecycle) << "    Found node, recycling";
+            return node;
         }
     }
 
@@ -506,11 +523,9 @@ void QSGInternalTextNode::clear()
 void QSGInternalTextNode::recycle(RecycleBin *recycleBin)
 {
     Q_ASSERT(recycleBin != nullptr);
-    Q_ASSERT(recycleBin->unusedGlyphNodes.isEmpty());
-    Q_ASSERT(recycleBin->unusedImageNodes.isEmpty());
-    Q_ASSERT(recycleBin->unusedRectangleNodes.isEmpty());
+    Q_ASSERT(recycleBin->unusedNodes.isEmpty());
 
-    recycleBin->unusedGlyphNodes.reserve(childCount());
+    recycleBin->unusedNodes.reserve(childCount());
 
     std::vector<QSGNode *> untrackedNodes;
     ChildNodeCollector collector(*recycleBin, untrackedNodes);
@@ -534,20 +549,17 @@ void QSGInternalTextNode::recycle(RecycleBin *recycleBin)
         node = node->nextSibling();
     }
 
-    for (QSGGlyphNode *glyphNode : recycleBin->unusedGlyphNodes)
-        glyphNode->recycle();
+    for (const RecycleBin::UnusedNode &unusedNode : recycleBin->unusedNodes) {
+        if (unusedNode.type == RecycleBin::GlyphNode)
+            static_cast<QSGGlyphNode *>(unusedNode.node)->recycle();
+    }
 
     qDeleteAll(untrackedNodes);
 
 #if defined(QSGINTERNALTEXTNODE_NO_RECYCLE)
-    qDeleteAll(recycleBin->unusedGlyphNodes);
-    recycleBin->unusedGlyphNodes = {};
-
-    qDeleteAll(recycleBin->unusedImageNodes);
-    recycleBin->unusedImageNodes = {};
-
-    qDeleteAll(recycleBin->unusedRectangleNodes);
-    recycleBin->unusedRectangleNodes = {};
+    for (const RecycleBin::UnusedNode &unusedNode : recycleBin->unusedNodes)
+        delete unusedNode.node;
+    recycleBin->unusedNodes = {};
 
     qDeleteAll(m_textures);
 #else
@@ -555,32 +567,25 @@ void QSGInternalTextNode::recycle(RecycleBin *recycleBin)
 #endif
 
     qCDebug(lcTextRecycle) << "Recycle: "
-                           << recycleBin->unusedGlyphNodes.size() << "glyph nodes"
-                           << recycleBin->unusedImageNodes.size() << "image nodes"
-                           << recycleBin->unusedRectangleNodes.size() << "rectangle nodes"
+                           << recycleBin->unusedNodes.size() << "nodes"
                            << recycleBin->unusedTextures.size() << "textures";
 
     m_textures.clear();
     m_cursorNode = nullptr;
-    recycleBin->unusedGlyphNodes.squeeze();
+    recycleBin->unusedNodes.squeeze();
 }
 
 void QSGInternalTextNode::discardUnusedNodes(RecycleBin *recycleBin)
 {
     qCDebug(lcTextRecycle) << "Discard: "
-                           << recycleBin->unusedGlyphNodes.size() << "glyph nodes"
-                           << recycleBin->unusedImageNodes.size() << "image nodes"
-                           << recycleBin->unusedRectangleNodes.size() << "rectangle nodes"
+                           << recycleBin->unusedNodes.size() - recycleBin->reusedNodes << "nodes"
                            << recycleBin->unusedTextures.size() << "textures";
 
-    qDeleteAll(recycleBin->unusedGlyphNodes);
-    recycleBin->unusedGlyphNodes = {};
-
-    qDeleteAll(recycleBin->unusedImageNodes);
-    recycleBin->unusedImageNodes = {};
-
-    qDeleteAll(recycleBin->unusedRectangleNodes);
-    recycleBin->unusedRectangleNodes = {};
+    for (qsizetype i = recycleBin->reusedNodes; i < recycleBin->unusedNodes.size(); ++i)
+        delete recycleBin->unusedNodes.at(i).node;
+    recycleBin->unusedNodes = {};
+    recycleBin->reusedNodes = 0;
+    recycleBin->reuseStopped = false;
 
     qDeleteAll(recycleBin->unusedTextures);
     recycleBin->unusedTextures = {};

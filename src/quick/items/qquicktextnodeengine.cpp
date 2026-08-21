@@ -862,7 +862,6 @@ void QQuickTextNodeEngine::addToSceneGraph(QSGInternalTextNode *parentNode,
             parentNode->addImage(node->boundingRect, node->image, recycleBin);
     }
 
-    // Then, prepend all selection rectangles to the tree
     for (int i = 0; i < m_selectionRects.size(); ++i) {
         const QRectF &rect = m_selectionRects.at(i);
         if (m_selectionColor.alpha() != 0)

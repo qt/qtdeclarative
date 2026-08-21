@@ -70,6 +70,7 @@ private slots:
     void color();
     void wrap();
     void selection();
+    void selectedTextStaysOnTopWhenSelectionChanges();
     void persistentSelection();
     void overwriteMode();
     void isRightToLeft_data();
@@ -717,6 +718,37 @@ void tst_qquicktextinput::selection()
     QCOMPARE(textinputObject->selectionEnd(), 17);
 
     delete textinputObject;
+}
+
+static int countSelectedTextPixels(const QImage &image)
+{
+    int count = 0;
+    for (int y = 0; y < image.height(); ++y) {
+        for (int x = 0; x < image.width(); ++x) {
+            const QColor color = image.pixelColor(x, y);
+            if (color.red() > 200 && color.green() > 200 && color.blue() > 200)
+                ++count;
+        }
+    }
+    return count;
+}
+
+void tst_qquicktextinput::selectedTextStaysOnTopWhenSelectionChanges()
+{
+    SKIP_IF_NO_WINDOW_GRAB;
+
+    QQuickView window(testFileUrl("selectedTextRendering.qml"));
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+    QQuickTextInput *input = window.rootObject()->findChild<QQuickTextInput *>();
+    QVERIFY(input);
+
+    input->select(0, 2);
+    QCOMPARE_GT(countSelectedTextPixels(window.grabWindow()), 0);
+
+    input->selectAll();
+    QCOMPARE_GT(countSelectedTextPixels(window.grabWindow()), 0);
 }
 
 void tst_qquicktextinput::persistentSelection()
