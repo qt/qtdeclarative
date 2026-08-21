@@ -15,3 +15,7 @@ set(RunCMake_TEST_BINARY_DIR "${RunCMake_BINARY_DIR}/deploy-tool-options-policy-
 set(RunCMake_TEST_NOT_EXPECT_stdout "QTP0007")
 run_cmake_with_options(deploy-tool-options-policy-set ${config_flags})
 unset(RunCMake_TEST_NOT_EXPECT_stdout)
+
+# The version-less command has to behave like the 'qt6_'-prefixed one.
+set(RunCMake_TEST_BINARY_DIR "${RunCMake_BINARY_DIR}/versionless-deploy-tool-options-build")
+run_cmake_with_options(versionless-deploy-tool-options ${config_flags})
