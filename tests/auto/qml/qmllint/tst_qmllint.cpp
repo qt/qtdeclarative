@@ -367,6 +367,7 @@ private:
         QHash<QString, QQmlJS::WarningSeverity> categorySeverityOverrides = {};
         QStringList rootUrls = {};
         QHash<QString, QString> qrcToFilePaths = {};
+        QStringList plugins;
     };
 
     QJsonArray callQmllintImpl(const QString &fileToLint, const QString &fileCpntent,
@@ -405,6 +406,8 @@ private:
                  QStringList qmltypesFiles = {}, QStringList resources = {},
                  DefaultImportOption defaultImports = UseDefaultImports,
                  QList<QQmlJS::LoggerCategory> *categories = nullptr);
+
+    void runTest(const QString &testFile, const Result &result, CallQmllintOptions options);
 
     QString m_qmllintPath;
 
@@ -1786,37 +1789,39 @@ void TestQmllint::dirtyQmlSnippet_data()
                .addUnexpected("Unqualified access"_L1, 1, 66)
                .build()
             << defaultOptions;
+    CallQmllintOptions withQuickPlugin;
+    withQuickPlugin.plugins << "Quick"_L1;
     QTest::newRow("color-hex")
             << u"property color myColor: \"#12345\""_s
             << ResultBuilder::singleExpected("Invalid color"_L1, 1, 25)
-            << defaultOptions;
+            << withQuickPlugin;
     QTest::newRow("color-hex2")
             << u"property color myColor: \"#123456789\""_s
             << ResultBuilder::singleExpected("Invalid color"_L1, 1, 25)
-            << defaultOptions;
+            << withQuickPlugin;
     QTest::newRow("color-hex3")
             << u"property color myColor: \"##123456\""_s
             << ResultBuilder::singleExpected("Invalid color"_L1, 1, 25)
-            << defaultOptions;
+            << withQuickPlugin;
     QTest::newRow("color-hex4")
             << u"property color myColor: \"#123456#\""_s
             << ResultBuilder::singleExpected("Invalid color"_L1, 1, 25)
-            << defaultOptions;
+            << withQuickPlugin;
     QTest::newRow("color-hex5")
             << u"property color myColor: \"#HELLOL\""_s
             << ResultBuilder::singleExpected("Invalid color"_L1, 1, 25)
-            << defaultOptions;
+            << withQuickPlugin;
     QTest::newRow("color-hex6")
             << u"property color myColor: \"#1234567\""_s
             << ResultBuilder::singleExpected("Invalid color"_L1, 1, 25)
-            << defaultOptions;
+            << withQuickPlugin;
     QTest::newRow("color-name")
             << u"property color myColor: \"lbue\""_s
             << ResultBuilder()
                .addExpected("Invalid color \"lbue\""_L1, 1, 25)
                .addFix("Did you mean \"blue\"?", Edit{ "blue"_L1, 1, 25 })
                .build()
-            << defaultOptions;
+            << withQuickPlugin;
     QTest::newRow("componentExactlyOneChild1")
             << u"Component { Item {} Item {} }"_s
             << ResultBuilder::singleExpected("Components must have exactly one child"_L1, 1, 1)
@@ -3743,6 +3748,12 @@ QJsonArray TestQmllint::callQmllintImpl(const QString &fileToLint, const QString
     lintOptions.setFlag(QQmlJSLinter::Silent);
     lintOptions.setFlag(QQmlJSLinter::GenerateJson);
 
+    auto &plugins = m_linter.plugins();
+
+    for (auto &plugin : plugins)
+        plugin.setEnabled(options.plugins.contains(plugin.name()));
+
+
     const QStringList resolvedImportPaths = options.defaultImports == UseDefaultImports
             ? m_defaultImportPaths + options.importPaths
             : options.importPaths;
@@ -3885,6 +3896,14 @@ void TestQmllint::runTest(const QString &testFile, const Result &result, QString
     options.resources = resources;
     options.defaultImports = defaultImports;
     options.categories = categories;
+    options.readSettings = result.flags.testFlag(Result::Flag::UseSettings);
+
+    const QJsonArray warnings = callQmllint(testFile, options, fromResultFlags(result.flags));
+    checkResult(warnings, result);
+}
+
+void TestQmllint::runTest(const QString &testFile, const Result &result, CallQmllintOptions options)
+{
     options.readSettings = result.flags.testFlag(Result::Flag::UseSettings);
 
     const QJsonArray warnings = callQmllint(testFile, options, fromResultFlags(result.flags));
@@ -4211,13 +4230,15 @@ void TestQmllint::attachedPropertyReuse()
     });
     Q_ASSERT(category != categories.end());
 
-    category->setSeverity(QQmlJS::WarningSeverity::Warning);
+    CallQmllintOptions options;
+    options.categorySeverityOverrides[qmlAttachedPropertyReuse.name().toString()] = QQmlSA::WarningSeverity::Warning;
+    options.plugins << "Quick"_L1;
+
     runTest("attachedPropNotReused.qml",
             ResultBuilder()
             .addExpected("Using attached type QQuickKeyNavigationAttached already initialized in a "
                          "parent scope"_L1)
-            .build(),
-            {}, {}, {}, UseDefaultImports, &categories);
+            .build(), options);
 
     runTest("attachedPropEnum.qml", ResultBuilder::cleanResult(), {}, {}, {}, UseDefaultImports, &categories);
     runTest("MyStyle/ToolBar.qml",
@@ -4225,11 +4246,11 @@ void TestQmllint::attachedPropertyReuse()
             .addExpected("Using attached type MyStyle already initialized in a parent scope"_L1, 10, 16)
             .addFix("Reference it by id instead"_L1, Edit{ "control."_L1, 10, 16 })
             .setFlag(Result::AutoFixable)
-            .build(),
-            {}, {}, {}, UseDefaultImports, &categories);
+            .build(), options);
     runTest("pluginQuick_multipleAttachedPropertyReuse.qml",
-            ResultBuilder::singleExpected("Using attached type Test already initialized in a parent scope"_L1),
-            {}, {}, {}, UseDefaultImports, &categories);
+            ResultBuilder::singleExpected(
+                "Using attached type Test already initialized in a parent scope"_L1),
+            options);
 }
 
 void TestQmllint::missingBuiltinsNoCrash()
@@ -4417,6 +4438,8 @@ void TestQmllint::valueTypesFromString()
     constexpr auto expectedMsg = "Construction from string is deprecated. Use structured value "
                                  "type construction instead for type \"%1\""_L1;
     constexpr auto fixMsg = "Replace string by structured value construction"_L1;
+    CallQmllintOptions options;
+    options.plugins << "Quick"_L1;
     runTest("valueTypesFromString.qml",
             ResultBuilder()
             .addExpected(expectedMsg.arg("QPointF"_L1))
@@ -4436,7 +4459,7 @@ void TestQmllint::valueTypesFromString()
             .addFix(fixMsg, Edit{ "({ x: 1, y: 2, z: 3, w: 4 })"_L1 })
             .addFix(fixMsg, Edit{ "({ scalar: 1, x: 2, y: 3, z: 4 })"_L1 })
             .addFix(fixMsg, Edit{ "({ m11: 1, m12: 2, m13: 3, m14: 4, m21: 5, m22: 6, m23: 7, m24: 8, m31: 9, m32: 10, m33: 11, m34: 12, m41: 13, m42: 14, m43: 15, m44: 16 })"_L1 })
-            .build());
+            .build(), options);
 }
 
 #if QT_CONFIG(library)
@@ -4575,7 +4598,9 @@ void TestQmllint::testPlugin()
     QFETCH(QString, fileName);
     QFETCH(Result, expectedErrors);
 
-    runTest(fileName, expectedErrors);
+    CallQmllintOptions options;
+    options.plugins << "testPlugin"_L1;
+    runTest(fileName, expectedErrors, options);
 }
 
 void TestQmllint::testPluginHelpCommandLine()
@@ -4625,6 +4650,9 @@ void TestQmllint::quickPlugin()
             != plugins.cend();
     QVERIFY(pluginFound);
 
+    CallQmllintOptions withQuickPlugin;
+    withQuickPlugin.plugins << "Quick"_L1;
+
     runTest("pluginQuick_anchors.qml",
             ResultBuilder()
             .addExpected("Cannot specify left, right, and horizontalCenter anchors at the same time."_L1)
@@ -4632,8 +4660,8 @@ void TestQmllint::quickPlugin()
             .addExpected("Baseline anchor cannot be used in conjunction with top, bottom, or verticalCenter anchors."_L1)
             .addExpected("Cannot assign literal of type null to QQuickAnchorLine"_L1, 5, 35)
             .addExpected("Cannot assign literal of type null to QQuickAnchorLine"_L1, 6, 33)
-            .build());
-    runTest("pluginQuick_anchorsUndefined.qml", ResultBuilder::cleanResult());
+            .build(), withQuickPlugin);
+    runTest("pluginQuick_anchorsUndefined.qml", ResultBuilder::cleanResult(), withQuickPlugin);
     runTest("pluginQuick_layoutChildren.qml",
             ResultBuilder()
             .addExpected("Detected anchors on an item that is managed by a layout. This is undefined behavior; use Layout.alignment instead."_L1)
@@ -4653,7 +4681,7 @@ void TestQmllint::quickPlugin()
             .addExpected("Cannot specify x for items inside Flow. Flow will not function."_L1)
             .addExpected("Cannot specify x for items inside Flow. Flow will not function."_L1)
             .addExpected("Cannot specify y for items inside Flow. Flow will not function."_L1)
-            .build());
+            .build(), withQuickPlugin);
     runTest("pluginQuick_attached.qml",
             ResultBuilder()
             .addExpected("ToolTip attached property must be attached to an object deriving from Item"_L1)
@@ -4669,9 +4697,9 @@ void TestQmllint::quickPlugin()
             .addExpected("StackLayout attached property must be attached to an object deriving from Item"_L1)
             .addExpected("SwipeDelegate attached property must be attached to an object deriving from Item"_L1)
             .addExpected("SwipeView attached property must be attached to an object deriving from Item"_L1)
-            .build());
+            .build(), withQuickPlugin);
 
-    runTest("pluginQuick_tumblerGood.qml", ResultBuilder().addUnexpected("Tembler"_L1).build());
+    runTest("pluginQuick_tumblerGood.qml", ResultBuilder().addUnexpected("Tembler"_L1).build(), withQuickPlugin);
 
     runTest("pluginQuick_swipeDelegate.qml",
             ResultBuilder()
@@ -4681,7 +4709,7 @@ void TestQmllint::quickPlugin()
             .addExpected("SwipeDelegate: Cannot use horizontal anchors with contentItem; unable to layout the item."_L1, 13, 47)
             .addExpected("SwipeDelegate: Cannot use horizontal anchors with background; unable to layout the item."_L1, 14, 42)
             .addExpected("SwipeDelegate: Cannot set both behind and left/right properties"_L1, 16, 9)
-            .build());
+            .build(), withQuickPlugin);
 
     runTest("pluginQuick_varProp.qml",
             ResultBuilder()
@@ -4690,11 +4718,11 @@ void TestQmllint::quickPlugin()
             .addExpected("Unexpected type for property \"textFromValue\" expected function got null"_L1)
             .addExpected("Unexpected type for property \"valueFromText\" expected function got int"_L1)
             .addExpected("Unexpected type for property \"rowHeightProvider\" expected function got int"_L1)
-            .build());
-    runTest("pluginQuick_varPropClean.qml", ResultBuilder::cleanResult());
-    runTest("pluginQuick_attachedClean.qml", ResultBuilder::cleanResult());
-    runTest("pluginQuick_attachedIgnore.qml", ResultBuilder::cleanResult());
-    runTest("pluginQuick_noCrashOnUneresolved.qml", ResultBuilder::ignoredResult()); // we don't care about the specific warnings
+            .build(), withQuickPlugin);
+    runTest("pluginQuick_varPropClean.qml", ResultBuilder::cleanResult(), withQuickPlugin);
+    runTest("pluginQuick_attachedClean.qml", ResultBuilder::cleanResult(), withQuickPlugin);
+    runTest("pluginQuick_attachedIgnore.qml", ResultBuilder::cleanResult(), withQuickPlugin);
+    runTest("pluginQuick_noCrashOnUneresolved.qml", ResultBuilder::ignoredResult(), withQuickPlugin); // we don't care about the specific warnings
 
     runTest("pluginQuick_propertyChangesParsed.qml",
             ResultBuilder()
@@ -4703,16 +4731,16 @@ void TestQmllint::quickPlugin()
             .addExpected("You should remove any bindings on the \"target\" property and avoid "
                          "custom-parsed bindings in PropertyChanges."_L1, 11, 29)
             .addExpected("Unknown property \"notThere\" in PropertyChanges."_L1, 13, 31)
-            .build());
-    runTest("pluginQuick_propertyChangesInvalidTarget.qml", ResultBuilder::ignoredResult()); // we don't care about the specific warnings
-    runTest("pluginQuick_stateWithLegalChildren.qml", ResultBuilder::cleanResult());
+            .build(), withQuickPlugin);
+    runTest("pluginQuick_propertyChangesInvalidTarget.qml", ResultBuilder::ignoredResult(), withQuickPlugin); // we don't care about the specific warnings
+    runTest("pluginQuick_stateWithLegalChildren.qml", ResultBuilder::cleanResult(), withQuickPlugin);
     runTest("pluginQuick_stateWithIllegalChildren.qml",
             ResultBuilder()
             .addExpected("A State cannot have a child item of type Rectangle"_L1, 5, 9)
             .addExpected("A State cannot have a child item of type Item"_L1, 6, 9)
-            .build());
-    runTest("pluginQuick_AccessibleOnAction.qml", ResultBuilder::cleanResult());
-    runTest("pluginQuick_AccessibleOnAction2.qml", ResultBuilder::cleanResult());
+            .build(), withQuickPlugin);
+    runTest("pluginQuick_AccessibleOnAction.qml", ResultBuilder::cleanResult(), withQuickPlugin);
+    runTest("pluginQuick_AccessibleOnAction2.qml", ResultBuilder::cleanResult(), withQuickPlugin);
 }
 
 void TestQmllint::hasQdsPlugin()
@@ -4829,7 +4857,10 @@ void TestQmllint::qdsPlugin()
     QFETCH(QString, fileName);
     QFETCH(Result, expectedResult);
 
-    runTest(fileName, expectedResult);
+    CallQmllintOptions withQdsPlugin;
+    withQdsPlugin.plugins << "QtDesignStudio"_L1;
+
+    runTest(fileName, expectedResult, withQdsPlugin);
 }
 
 #endif // QT_CONFIG(library)
