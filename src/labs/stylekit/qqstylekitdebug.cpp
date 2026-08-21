@@ -20,7 +20,7 @@ QT_BEGIN_NAMESPACE
     particular appearance, especially in complex styles that involve multiple
     \l {Theme}{themes} or \l {StyleVariation}{style variations}.
 
-    It is accessed through \l {StyleKit::debug}{StyleKit.debug}.
+    It is accessed through \l {StyleKit.debug}.
 
     \note This tool is experimental. Enabling it will severely degrade performance and should only
     be used for debugging. The output format may change in future versions.
@@ -71,10 +71,10 @@ QT_BEGIN_NAMESPACE
     \endcode
 
     To trace all background colors, including properties
-    such as \l {DelegateStyle::color}{background.color},
-    \l {BorderStyle::color}{background.border.color},
-    \l {ImageStyle::color}{background.image.color},
-    and \l {ShadowStyle::color}{background.shadow.color},
+    such as \l {DelegateStyle.color}{background.color},
+    \l {BorderStyle.color}{background.border.color},
+    \l {ImageStyle.color}{background.image.color},
+    and \l {ShadowStyle.color}{background.shadow.color},
     use a regular expression:
 
     \code
