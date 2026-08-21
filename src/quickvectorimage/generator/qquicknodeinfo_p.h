@@ -236,6 +236,7 @@ struct MaskNodeInfo : NodeInfo
 
     bool isMaskRectRelativeCoordinates = false;
     bool isMaskContentRelativeCoordinates = false;
+    bool keepMaskVisible = false;
     QRectF maskRect;
 };
 
