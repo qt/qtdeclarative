@@ -223,6 +223,7 @@ public:
     {
         return !(a == b);
     }
+    size_t owner_hash() const noexcept { return m_data.owner_hash(); }
 
 private:
     void lazyLoad() const

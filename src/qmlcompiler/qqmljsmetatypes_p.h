@@ -534,7 +534,7 @@ public:
     friend size_t qHash(const QQmlJSMetaProperty &prop, size_t seed = 0)
     {
         return qHashMulti(seed, prop.m_propertyName, prop.m_typeName, prop.m_bindable,
-                          prop.m_type.toStrongRef().data(), prop.m_isList, prop.m_isWritable,
+                          prop.m_type.owner_hash(), prop.m_isList, prop.m_isWritable,
                           prop.m_isPointer, prop.m_aliasExpr, prop.m_revision, prop.m_isFinal,
                           prop.m_index);
     }
