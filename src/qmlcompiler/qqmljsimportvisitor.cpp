@@ -1613,7 +1613,9 @@ void QQmlJSImportVisitor::checkGroupedAndAttachedScopes(QQmlJSScope::ConstPtr sc
         switch (type) {
         case QQmlSA::ScopeType::GroupedPropertyScope:
         case QQmlSA::ScopeType::AttachedPropertyScope:
-            if (!childScope->baseType()) {
+            if (!childScope->baseType() && !m_unresolvedTypes.hasSeen(childScope)) {
+                // note: if we already warn about the unknown property scope then we don't have to
+                // warn again about it being unresolved later
                 m_logger->log(QStringLiteral("unknown %1 property scope %2.")
                                       .arg(type == QQmlSA::ScopeType::GroupedPropertyScope
                                                    ? QStringLiteral("grouped")

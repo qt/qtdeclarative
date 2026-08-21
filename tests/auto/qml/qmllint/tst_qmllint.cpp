@@ -4340,6 +4340,18 @@ Item {
                                        .build()
                             << defaultOptions;
 
+    QTest::newRow("attachedType")
+            << uR"(import MissingRegistration
+import QtQuick
+Item {
+    MyObject.onHelloWorld: function() {}
+})"_s
+            << ResultBuilder()
+                       .addExpected("unknown attached property scope MyObject"_L1)
+                       .addUnexpected("Type MyObject is used but it is not resolved"_L1)
+                       .build()
+            << defaultOptions;
+
     QTest::newRow("objectBindings")
             << uR"(import MissingRegistration
 import QtQuick
