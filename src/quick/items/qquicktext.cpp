@@ -2362,7 +2362,8 @@ void QQuickText::setTextFormat(TextFormat format)
     Set this property to elide parts of the text fit to the Text item's width.
     The text will only elide if an explicit width has been set.
 
-    This property cannot be used with rich text.
+    This property works with \c Text.PlainText and \c Text.StyledText formats,
+    but cannot be used with \c Text.RichText or \c Text.MarkdownText formats.
 
     Eliding can be:
 
