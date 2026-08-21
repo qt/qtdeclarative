@@ -598,10 +598,16 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
     }
     default: {
         // generate single literal value assignment to a list property if required
-        if (propertyType == QMetaType::fromType<QList<qreal>>()) {
+        if (propertyType == QMetaType::fromType<QList<double>>()) {
             assertType(QV4::CompiledData::Binding::Type_Number);
-            QList<qreal> value;
+            QList<double> value;
             value.append(compilationUnit->bindingValueAsNumber(binding));
+            property->writeProperty(_qobject, &value, propertyWriteFlags);
+            break;
+        } else if (propertyType == QMetaType::fromType<QList<float>>()) {
+            assertType(QV4::CompiledData::Binding::Type_Number);
+            QList<float> value;
+            value.append(float(compilationUnit->bindingValueAsNumber(binding)));
             property->writeProperty(_qobject, &value, propertyWriteFlags);
             break;
         } else if (propertyType == QMetaType::fromType<QList<int>>()) {
