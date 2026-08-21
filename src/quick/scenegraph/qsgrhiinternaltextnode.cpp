@@ -125,9 +125,11 @@ void QSGRhiInternalTextNode::addDecorationNode(const QRectF &rect,
                                                QTextCharFormat::UnderlineStyle style,
                                                RecycleBin *recycleBin)
 {
-    Q_UNUSED(recycleBin);
     if (rect.width() <= 0)
         return;
+
+    if (recycleBin != nullptr)
+        recycleBin->stopReusing();
 
     const qreal penWidth = rect.height();
     const QPointF c = rect.center();

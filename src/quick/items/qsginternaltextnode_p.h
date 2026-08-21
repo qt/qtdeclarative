@@ -35,6 +35,7 @@ class QSGContext;
 class QRawFont;
 class QSGInternalImageNode;
 class QSGInternalRectangleNode;
+class QSGVisitableNode;
 class QSGClipNode;
 class QSGTexture;
 class QSGRenderContext;
@@ -45,21 +46,57 @@ class Q_QUICK_EXPORT QSGInternalTextNode : public QSGTextNode
 {
 public:
     struct RecycleBin {
+        enum NodeType : quint8 { GlyphNode, RectangleNode, ImageNode };
+
+        struct UnusedNode {
+            QSGVisitableNode *node;
+            NodeType type;
+        };
+
         RecycleBin() = default;
         ~RecycleBin()
         {
-            Q_ASSERT(unusedGlyphNodes.isEmpty());
-            Q_ASSERT(unusedRectangleNodes.isEmpty());
-            Q_ASSERT(unusedImageNodes.isEmpty());
+            Q_ASSERT(unusedNodes.isEmpty());
             Q_ASSERT(unusedTextures.isEmpty());
         }
 
-        QVarLengthArray<QSGGlyphNode *, 8> unusedGlyphNodes;
-        QVarLengthArray<QSGInternalRectangleNode *, 8> unusedRectangleNodes;
-        QVarLengthArray<QSGInternalImageNode *, 8> unusedImageNodes;
+        // Reusing a node leaves it where it already is in the child list, and the child list is
+        // the draw order, so nodes can only be handed out in the order they were collected and
+        // only as children of the text node itself. Once the requests diverge from that, the
+        // rest of the bin has to be discarded instead of reused.
+        QSGVisitableNode *takeNextReusableNode(NodeType type)
+        {
+            const UnusedNode *next = peekNextReusableNode(type);
+            if (next == nullptr)
+                return nullptr;
+
+            ++reusedNodes;
+            return next->node;
+        }
+
+        QSGGlyphNode *takeNextReusableGlyphNode(QSGTextNode::RenderType renderType);
+
+        void stopReusing() { reuseStopped = true; }
+
+        QVarLengthArray<UnusedNode, 8> unusedNodes;
+        qsizetype reusedNodes = 0;
+        bool reuseStopped = false;
         QList<QSGTexture *> unusedTextures;
 
     private:
+        const UnusedNode *peekNextReusableNode(NodeType type)
+        {
+            if (!reuseStopped) {
+                if (reusedNodes < unusedNodes.size()) {
+                    const UnusedNode &next = unusedNodes.at(reusedNodes);
+                    if (next.type == type)
+                        return &next;
+                }
+                stopReusing();
+            }
+            return nullptr;
+        }
+
         Q_DISABLE_COPY(RecycleBin)
     };
 
@@ -255,7 +292,9 @@ protected:
 
 private:
     QSGInternalImageNode *findOrCreateImageNode(RecycleBin *recycleBin);
-    QSGGlyphNode *findOrCreateGlyphNode(RenderType renderType, RecycleBin *recycleBin);
+    QSGGlyphNode *findOrCreateGlyphNode(RenderType renderType,
+                                        RecycleBin *recycleBin,
+                                        QSGNode *parentNode);
     QSGInternalRectangleNode *findOrCreateRectangleNode(RecycleBin *recycleBin);
 
     QSGInternalRectangleNode *m_cursorNode = nullptr;
