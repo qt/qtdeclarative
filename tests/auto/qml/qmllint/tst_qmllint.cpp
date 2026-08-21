@@ -2256,6 +2256,41 @@ void TestQmllint::dirtyQmlSnippet_data()
             << ResultBuilder::singleExpected("Component objects cannot declare new properties."_L1,
                                              1, 30)
             << defaultOptions;
+    QTest::newRow("signalHandlerNameClashOwnProperty")
+            << u"property int primary: 1\nproperty int onPrimary: 2"_s
+            << ResultBuilder::singleExpected(
+                       "Property \"onPrimary\" is interpreted as a signal handler for property "
+                       "\"primary\", use a different name."_L1,
+                       2, 14)
+            << defaultOptions;
+    QTest::newRow("signalHandlerNameClashOwnPropertyDeclaredLater")
+            << u"property int onPrimary: 2\nproperty int primary: 1"_s
+            << ResultBuilder::singleExpected(
+                       "Property \"onPrimary\" is interpreted as a signal handler for property "
+                       "\"primary\", use a different name."_L1,
+                       1, 14)
+            << defaultOptions;
+    QTest::newRow("signalHandlerNameClashOwnSignal")
+            << u"signal accepted()\nproperty bool onAccepted: false"_s
+            << ResultBuilder::singleExpected(
+                       "Property \"onAccepted\" is interpreted as a signal handler for signal "
+                       "\"accepted\", use a different name."_L1,
+                       2, 15)
+            << defaultOptions;
+    QTest::newRow("signalHandlerNameClashInheritedSignal")
+            << u"import QtQuick\nMouseArea { property bool onClicked: false }"_s
+            << ResultBuilder::singleExpected(
+                       "Property \"onClicked\" is interpreted as a signal handler for signal "
+                       "\"clicked\", use a different name."_L1,
+                       2, 27)
+            << defaultOptions;
+    QTest::newRow("signalHandlerNameClashChangeSignal")
+            << u"property int onWidthChanged: 2"_s
+            << ResultBuilder::singleExpected(
+                       "Property \"onWidthChanged\" is interpreted as a signal handler for "
+                       "signal \"widthChanged\", use a different name."_L1,
+                       1, 14)
+            << defaultOptions;
     QTest::newRow("testSnippet")
             << u"property int qwer: \"Hello\""_s
             << ResultBuilder::singleExpected("Cannot assign literal of type string to int"_L1)
@@ -2323,6 +2358,12 @@ void TestQmllint::cleanQmlSnippet_data()
             << u"Rectangle { id: foo; property var bar; } function f() { foo.bar.foo.bar = 42; }"_s
             << defaultOptions;
     QTest::newRow("color-hex") << u"property color myColor: \"#123456\""_s << defaultOptions;
+    QTest::newRow("onPrefixedPropertyWithoutClash")
+            << u"property int onPrimary: 2"_s << defaultOptions;
+    QTest::newRow("onPrefixedPropertyMatchingInheritedProperty")
+            << u"property int onWidth: 2"_s << defaultOptions;
+    QTest::newRow("onPrefixedPropertyMatchingMethod")
+            << u"function primary() {}\nproperty int onPrimary: 2"_s << defaultOptions;
     QTest::newRow("color-hex2") << u"property color myColor: \"#FFFFFFFF\""_s << defaultOptions;
     QTest::newRow("color-hex3") << u"property color myColor: \"#A0AAff1f\""_s << defaultOptions;
     QTest::newRow("color-hex4") << u"property color myColor: \"#A0A\""_s << defaultOptions;

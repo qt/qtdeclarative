@@ -127,6 +127,16 @@ private:
     // A set of all types that have been used during type resolution
     QSet<QString> m_usedTypes;
 
+    struct HandlerLikeProperty
+    {
+        QQmlJSScope::ConstPtr scope;
+        QString name;
+        QQmlJS::SourceLocation location;
+    };
+    // Properties whose names could be mistaken for signal handler names. Checked once the
+    // document is fully parsed, since the clashing member may be declared further down.
+    QList<HandlerLikeProperty> m_handlerLikeProperties;
+
     void handleDuplicateEnums(QQmlJS::AST::UiEnumMemberList *members, QStringView key,
                               const QQmlJS::SourceLocation &location);
     void warnCaseNoFlowControl(QQmlJS::SourceLocation caseToken) const;
@@ -145,6 +155,7 @@ private:
     void checkUnusedImports();
     void checkGroupedAndAttachedScope(const QQmlJSScope::ConstPtr &scope);
     void checkGroupedAndAttachedScopes() override;
+    void checkSignalHandlerNameClashes();
 
     bool m_rootIsSingleton = false;
 };

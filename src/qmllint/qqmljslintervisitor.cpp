@@ -6,6 +6,8 @@
 
 #include <private/qqmljsutils_p.h>
 
+#include <QtQml/private/qqmlsignalnames_p.h>
+
 QT_BEGIN_NAMESPACE
 
 using namespace Qt::StringLiterals;
@@ -787,6 +789,7 @@ void LinterVisitor::endVisit(UiProgram *ast)
     QQmlJSImportVisitor::endVisit(ast);
     checkFileSelections();
     checkUnusedImports();
+    checkSignalHandlerNameClashes();
 }
 
 static constexpr QLatin1String s_method = "method"_L1;
@@ -888,6 +891,54 @@ static void warnForDuplicates(const QQmlJSScope::ConstPtr &scope, const QString 
     warnForPropertyShadowingInBase(base, name, location, overrideFlags, logger);
 }
 
+static bool hasSignal(const QQmlJSScope::ConstPtr &scope, const QString &name)
+{
+    const auto methods = scope->methods(name);
+    return std::any_of(methods.cbegin(), methods.cend(), [](const QQmlJSMetaMethod &method) {
+        return method.methodType() == QQmlSA::MethodType::Signal;
+    });
+}
+
+/*!
+\internal
+Warns about properties whose names are also signal handler names for another member of the same
+object. The QML engine gives the signal handler interpretation precedence, so such properties can
+never be bound: a literal initializer is an error and an expression initializer is run as a signal
+handler instead. This mirrors SignalHandlerResolver, which accepts signals no matter which type
+declares them, but plain properties only from the object the binding appears in.
+*/
+void LinterVisitor::checkSignalHandlerNameClashes()
+{
+    static constexpr QLatin1String clashMessage =
+            "Property \"%1\" is interpreted as a signal handler for %2 \"%3\", "
+            "use a different name."_L1;
+
+    for (const auto &[scope, name, location] : std::as_const(m_handlerLikeProperties)) {
+        QString changedPropertyName;
+        QString signalName;
+        if (const auto propertyName = QQmlSignalNames::changedHandlerNameToPropertyName(name)) {
+            changedPropertyName = *propertyName;
+            signalName = *QQmlSignalNames::changedHandlerNameToSignalName(name);
+        } else {
+            signalName = QQmlSignalNames::handlerNameToSignalName(name).value_or(QString());
+        }
+
+        if (signalName.isEmpty())
+            continue;
+
+        if (hasSignal(scope, signalName)) {
+            m_logger->log(clashMessage.arg(name, s_signal, signalName), qmlSignalHandlerNameClash,
+                          location);
+        } else if (!changedPropertyName.isEmpty() && scope->hasProperty(changedPropertyName)) {
+            m_logger->log(clashMessage.arg(name, s_property, changedPropertyName),
+                          qmlSignalHandlerNameClash, location);
+        } else if (scope->hasOwnProperty(signalName)) {
+            m_logger->log(clashMessage.arg(name, s_property, signalName), qmlSignalHandlerNameClash,
+                          location);
+        }
+    }
+}
+
 void LinterVisitor::handleRenamedType(UiQualifiedId *qualifiedId)
 {
     m_renamedComponents.handleRenamedType(
@@ -983,6 +1034,10 @@ bool LinterVisitor::visit(UiPublicMember *publicMember)
         flags.setFlag(WithFinal, publicMember->isFinal());
         warnForDuplicates(m_currentScope, propertyName, s_property, publicMember->identifierToken,
                           flags, m_logger);
+        if (QQmlSignalNames::isHandlerName(propertyName)) {
+            m_handlerLikeProperties.append(
+                    { m_currentScope, propertyName, publicMember->identifierToken });
+        }
         handleRenamedType(publicMember->memberType);
 
         const QString typeName = publicMember->memberType->toString();

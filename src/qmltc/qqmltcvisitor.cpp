@@ -81,6 +81,7 @@ QSpan<const QmltcLoggingCategoryOverride> categoryOverrides()
         QmltcLoggingCategoryOverride{ qmlRenamedType, std::nullopt },
         QmltcLoggingCategoryOverride{ qmlRequired, Error },
         QmltcLoggingCategoryOverride{ qmlShadow, std::nullopt },
+        QmltcLoggingCategoryOverride{ qmlSignalHandlerNameClash, Error },
         QmltcLoggingCategoryOverride{ qmlSignalParameters, Error },
         QmltcLoggingCategoryOverride{ qmlStalePropertyRead, std::nullopt },
         QmltcLoggingCategoryOverride{ qmlSyntax, std::nullopt },

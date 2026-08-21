@@ -1,0 +1,53 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qmllint-warnings-and-errors-signal-handler-name-clash.html
+\ingroup qmllint-warnings-and-errors
+
+\title Signal handler name clash
+\brief [signal-handler-name-clash] A property name is also a signal handler name.
+
+\qmllintwarningcategory signal-handler-name-clash
+
+\section1 Property is interpreted as a signal handler
+
+\section2 What happened?
+You declared a property whose name follows the \c{on<Signal>} pattern QML uses for signal
+handlers, and the object also has a member the handler could belong to: either a signal
+\c{<signal>} from the type itself or one of its base types, or a property \c{<signal>}
+declared in the same object.
+
+\section2 Why is this bad?
+The signal handler interpretation wins. Any binding to such a property, including the
+property's own initializer, is compiled as a signal handler rather than as a property
+binding. A literal initializer makes the component fail to load with
+\c{Cannot assign a value to a signal (expecting a script to be run)}, and an expression
+initializer is silently run as a signal handler, leaving the property at its default value.
+
+\section2 Example
+\qml
+import QtQuick
+
+Item {
+    property color primary: "green"
+    property color onPrimary: "white" // not ok: read as a handler for "primary"
+
+    signal accepted()
+    property bool onAccepted: false   // not ok: read as a handler for the "accepted" signal
+}
+\endqml
+To fix this warning, rename the properties so that they do not start with \c on followed by an
+upper-case letter:
+\qml
+import QtQuick
+
+Item {
+    property color primary: "green"
+    property color textOnPrimary: "white"
+
+    signal accepted()
+    property bool acceptedState: false
+}
+\endqml
+*/

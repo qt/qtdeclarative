@@ -148,6 +148,8 @@ warning levels.
       NonEssential)                                                                                \
     X(qmlShadow, "shadow", "Shadow", "Warn about shadowing attributes from a base class", Disable, \
       NonEssential)                                                                                \
+    X(qmlSignalHandlerNameClash, "signal-handler-name-clash", "SignalHandlerNameClash",            \
+      "Warn about property names that clash with signal handler names", Warning, NonEssential)     \
     X(qmlSignalParameters, "signal-handler-parameters", "BadSignalHandlerParameters",              \
       "Warn about bad signal handler parameters", Warning, NonEssential)                           \
     X(qmlStalePropertyRead, "stale-property-read", "StalePropertyRead",                            \
