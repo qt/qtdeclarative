@@ -10,8 +10,11 @@
 #include <qopenglframebufferobject.h>
 #include <qopenglfunctions.h>
 
+#include <QtCore/qscopeguard.h>
+#include <QtGui/qscreen.h>
 #include <qpa/qplatformintegration.h>
 #include <private/qguiapplication_p.h>
+#include <private/qhighdpiscaling_p.h>
 
 #include <QtQuick/QQuickFramebufferObject>
 
@@ -130,6 +133,7 @@ private slots:
     void testThatStuffWorks();
 
     void testInvalidate();
+    void fboIsItemSizeInDevicePixels();
 };
 
 tst_QQuickFramebufferObject::tst_QQuickFramebufferObject()
@@ -245,6 +249,50 @@ void tst_QQuickFramebufferObject::testInvalidate()
 
     QTRY_COMPARE(frameInfo.createFBOCount, 1);
     QTRY_COMPARE(frameInfo.fboSize, QSize(300, 300));
+}
+
+void tst_QQuickFramebufferObject::fboIsItemSizeInDevicePixels()
+{
+#if !QT_CONFIG(highdpiscaling)
+    QSKIP("This test requires high-DPI scaling support");
+#endif
+
+    constexpr qreal dpr = 1.5;
+    constexpr QSize pixelSize(595, 511);
+
+    QScreen *screen = QGuiApplication::primaryScreen();
+    QHighDpiScaling::setGlobalFactor(dpr / screen->devicePixelRatio());
+    QGuiApplicationPrivate::resetCachedDevicePixelRatio();
+    const auto restoreScaling = qScopeGuard([]{
+        QHighDpiScaling::setGlobalFactor(1);
+        QGuiApplicationPrivate::resetCachedDevicePixelRatio();
+    });
+    QCOMPARE(screen->devicePixelRatio(), dpr);
+
+    qmlRegisterType<FBOItem>("FBOItem", 1, 0, "FBOItem");
+
+    frameInfo.fboSize = QSize();
+
+    QQuickView view;
+    view.setSource(testFileUrl("testStuff.qml"));
+
+    FBOItem *item = view.rootObject()->findChild<FBOItem *>("fbo");
+    QVERIFY(item);
+    item->setColor(QColor(Qt::red));
+    item->setMsaa(false);
+    item->setSize(QSizeF(pixelSize.width() / dpr, pixelSize.height() / dpr));
+
+    view.show();
+    QVERIFY(QTest::qWaitForWindowActive(&view));
+
+    if (QGuiApplication::platformName() == "offscreen" &&
+            view.rendererInterface()->graphicsApi() == QSGRendererInterface::Software)
+        QSKIP("offscreen software rendering doesn't work with FBOs");
+
+    view.grabWindow();
+
+    QCOMPARE(view.effectiveDevicePixelRatio(), dpr);
+    QCOMPARE(frameInfo.fboSize, pixelSize);
 }
 
 QTEST_MAIN(tst_QQuickFramebufferObject)

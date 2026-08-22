@@ -8,6 +8,10 @@
 #include <QtQml/qqmlcontext.h>
 #include <QtQuick/qquickitemgrabresult.h>
 #include <QtQuick/qquickview.h>
+#include <QtCore/qscopeguard.h>
+#include <QtGui/qscreen.h>
+#include <QtGui/private/qguiapplication_p.h>
+#include <QtGui/private/qhighdpiscaling_p.h>
 #include <QtGui/private/qinputmethod_p.h>
 #include <QtQuick/private/qquickloader_p.h>
 #include <QtQuick/private/qquickpalette_p.h>
@@ -128,6 +132,9 @@ private slots:
     void isAncestorOf();
 
     void grab();
+    void grabIsItemSizeInDevicePixels();
+    void grabFromQmlIsItemSizeInDevicePixels();
+    void grabMapsItemUnitsToDevicePixels();
 
     void colorGroup();
     void paletteAllocated();
@@ -3959,6 +3966,148 @@ void tst_QQuickItem::grab()
         QTRY_VERIFY(!capturedImage.isNull());
         QVERIFY(!capturedUrl.isEmpty());
     }
+}
+
+void tst_QQuickItem::grabIsItemSizeInDevicePixels()
+{
+#if !QT_CONFIG(highdpiscaling)
+    QSKIP("This test requires high-DPI scaling support");
+#endif
+
+    if (QGuiApplication::platformName() == QLatin1String("minimal")
+        || QGuiApplication::platformName() == QLatin1String("offscreen")) {
+        QSKIP("Skipping due to grabToImage not functional on minimal/offscreen platforms");
+    }
+
+    constexpr qreal dpr = 1.5;
+    constexpr int pixelWidth = 595;
+    constexpr int pixelHeight = 511;
+
+    QScreen *screen = QGuiApplication::primaryScreen();
+    QHighDpiScaling::setGlobalFactor(dpr / screen->devicePixelRatio());
+    QGuiApplicationPrivate::resetCachedDevicePixelRatio();
+    const auto restoreScaling = qScopeGuard([]{
+        QHighDpiScaling::setGlobalFactor(1);
+        QGuiApplicationPrivate::resetCachedDevicePixelRatio();
+    });
+    QCOMPARE(screen->devicePixelRatio(), dpr);
+
+    QQuickView view;
+    view.setInitialProperties({{ "dpr", dpr },
+                               { "pixelWidth", pixelWidth },
+                               { "pixelHeight", pixelHeight }});
+    view.setSource(testFileUrl("devicePixelStripes.qml"));
+    view.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+    QCOMPARE(view.effectiveDevicePixelRatio(), dpr);
+
+    QQuickItem *target = view.rootObject()->findChild<QQuickItem *>("target");
+    QVERIFY(target);
+
+    QSharedPointer<QQuickItemGrabResult> result = target->grabToImage();
+    QVERIFY(!result.isNull());
+    QSignalSpy spy(result.data(), SIGNAL(ready()));
+    QTRY_VERIFY(spy.size() > 0);
+
+    QCOMPARE(result->image().size(), QSize(pixelWidth, pixelHeight));
+}
+
+void tst_QQuickItem::grabFromQmlIsItemSizeInDevicePixels()
+{
+#if !QT_CONFIG(highdpiscaling)
+    QSKIP("This test requires high-DPI scaling support");
+#endif
+
+    if (QGuiApplication::platformName() == QLatin1String("minimal")
+        || QGuiApplication::platformName() == QLatin1String("offscreen")) {
+        QSKIP("Skipping due to grabToImage not functional on minimal/offscreen platforms");
+    }
+
+    constexpr qreal dpr = 1.5;
+    constexpr int pixelWidth = 595;
+    constexpr int pixelHeight = 511;
+
+    QScreen *screen = QGuiApplication::primaryScreen();
+    QHighDpiScaling::setGlobalFactor(dpr / screen->devicePixelRatio());
+    QGuiApplicationPrivate::resetCachedDevicePixelRatio();
+    const auto restoreScaling = qScopeGuard([]{
+        QHighDpiScaling::setGlobalFactor(1);
+        QGuiApplicationPrivate::resetCachedDevicePixelRatio();
+    });
+    QCOMPARE(screen->devicePixelRatio(), dpr);
+
+    QQuickView view;
+    view.setInitialProperties({{ "dpr", dpr },
+                               { "pixelWidth", pixelWidth },
+                               { "pixelHeight", pixelHeight }});
+    view.setSource(testFileUrl("devicePixelStripes.qml"));
+    view.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+    QCOMPARE(view.effectiveDevicePixelRatio(), dpr);
+
+    QVERIFY(QMetaObject::invokeMethod(view.rootObject(), "grabTargetFromQml"));
+
+    QTRY_VERIFY(view.rootObject()->property("grabResult").value<QObject *>());
+
+    auto *grabbed = qobject_cast<QQuickItemGrabResult *>(
+            view.rootObject()->property("grabResult").value<QObject *>());
+    QVERIFY(grabbed);
+    QCOMPARE(grabbed->image().size(), QSize(pixelWidth, pixelHeight));
+}
+
+void tst_QQuickItem::grabMapsItemUnitsToDevicePixels()
+{
+#if !QT_CONFIG(highdpiscaling)
+    QSKIP("This test requires high-DPI scaling support");
+#endif
+
+    if (QGuiApplication::platformName() == QLatin1String("minimal")
+        || QGuiApplication::platformName() == QLatin1String("offscreen")) {
+        QSKIP("Skipping due to grabToImage not functional on minimal/offscreen platforms");
+    }
+
+    constexpr qreal dpr = 1.5;
+    constexpr int pixelWidth = 595;
+    constexpr int pixelHeight = 511;
+
+    QScreen *screen = QGuiApplication::primaryScreen();
+    QHighDpiScaling::setGlobalFactor(dpr / screen->devicePixelRatio());
+    QGuiApplicationPrivate::resetCachedDevicePixelRatio();
+    const auto restoreScaling = qScopeGuard([]{
+        QHighDpiScaling::setGlobalFactor(1);
+        QGuiApplicationPrivate::resetCachedDevicePixelRatio();
+    });
+    QCOMPARE(screen->devicePixelRatio(), dpr);
+
+    QQuickView view;
+    view.setInitialProperties({{ "dpr", dpr },
+                               { "pixelWidth", pixelWidth },
+                               { "pixelHeight", pixelHeight }});
+    view.setSource(testFileUrl("devicePixelStripes.qml"));
+    view.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+
+    if (view.rendererInterface()->graphicsApi() == QSGRendererInterface::Software)
+        QSKIP("The software backend rasterises with its own rounding");
+
+    QQuickItem *target = view.rootObject()->findChild<QQuickItem *>("target");
+    QVERIFY(target);
+
+    QSharedPointer<QQuickItemGrabResult> result = target->grabToImage();
+    QVERIFY(!result.isNull());
+    QSignalSpy spy(result.data(), SIGNAL(ready()));
+    QTRY_VERIFY(spy.size() > 0);
+
+    const QImage image = result->image();
+    QCOMPARE(image.size(), QSize(pixelWidth, pixelHeight));
+
+    const int row = pixelHeight / 2;
+    int transitions = 0;
+    for (int x = 1; x < pixelWidth; ++x) {
+        if (image.pixel(x, row) != image.pixel(x - 1, row))
+            ++transitions;
+    }
+    QCOMPARE(transitions, pixelWidth - 1);
 }
 
 void tst_QQuickItem::isAncestorOf()

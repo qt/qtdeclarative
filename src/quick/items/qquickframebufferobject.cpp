@@ -284,12 +284,12 @@ QSGNode *QQuickFramebufferObject::updatePaintNode(QSGNode *node, UpdatePaintNode
 
     n->renderer->synchronize(this);
 
-    QSize minFboSize = d->sceneGraphContext()->minimumFBOSize();
-    QSize desiredFboSize(qMax<int>(minFboSize.width(), width()),
-                         qMax<int>(minFboSize.height(), height()));
-
     n->devicePixelRatio = d->effectiveDevicePixelRatio();
-    desiredFboSize *= n->devicePixelRatio;
+
+    const QSize minFboSize = d->sceneGraphContext()->minimumFBOSize();
+    const QSize itemPixelSize = (QSizeF(width(), height()) * n->devicePixelRatio).toSize();
+    const QSize desiredFboSize(qMax(minFboSize.width(), itemPixelSize.width()),
+                               qMax(minFboSize.height(), itemPixelSize.height()));
 
     if (n->fbo && ((d->followsItemSize && n->fbo->size() != desiredFboSize) || n->invalidatePending)) {
         delete n->texture();
