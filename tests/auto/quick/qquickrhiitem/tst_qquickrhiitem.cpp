@@ -5,6 +5,10 @@
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QQuickView>
 #include <QSGRendererInterface>
+#include <QtCore/qscopeguard.h>
+#include <QtGui/qscreen.h>
+#include <QtGui/private/qguiapplication_p.h>
+#include <QtGui/private/qhighdpiscaling_p.h>
 #include <private/qsgrhisupport_p.h>
 #include <private/qquickrhiitem_p.h>
 #include "testrhiitem.h"
@@ -21,6 +25,7 @@ private slots:
     void cleanupTestCase();
     void rhiItem();
     void properties();
+    void colorBufferIsItemSizeInDevicePixels();
 };
 
 tst_QQuickRhiItem::tst_QQuickRhiItem()
@@ -143,6 +148,49 @@ void tst_QQuickRhiItem::properties()
     QVERIFY(qAbs(qRed(a) - qRed(b)) <= tolerance
             && qAbs(qGreen(a) - qGreen(b)) <= tolerance
             && qAbs(qBlue(a) - qBlue(b)) <= tolerance);
+}
+
+void tst_QQuickRhiItem::colorBufferIsItemSizeInDevicePixels()
+{
+#if !QT_CONFIG(highdpiscaling)
+    QSKIP("This test requires high-DPI scaling support");
+#endif
+
+    if (QGuiApplication::platformName() == QLatin1String("offscreen")
+        || QGuiApplication::platformName() == QLatin1String("minimal"))
+    {
+        QSKIP("Skipping on offscreen/minimal");
+    }
+
+    constexpr qreal dpr = 1.5;
+    constexpr QSize pixelSize(595, 511);
+
+    QScreen *screen = QGuiApplication::primaryScreen();
+    QHighDpiScaling::setGlobalFactor(dpr / screen->devicePixelRatio());
+    QGuiApplicationPrivate::resetCachedDevicePixelRatio();
+    const auto restoreScaling = qScopeGuard([]{
+        QHighDpiScaling::setGlobalFactor(1);
+        QGuiApplicationPrivate::resetCachedDevicePixelRatio();
+    });
+    QCOMPARE(screen->devicePixelRatio(), dpr);
+
+    QQuickView view;
+    view.setSource(testFileUrl(QLatin1String("test.qml")));
+    view.setResizeMode(QQuickView::SizeViewToRootObject);
+    view.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+    QCOMPARE(view.effectiveDevicePixelRatio(), dpr);
+
+    if (!QSGRendererInterface::isApiRhiBased(view.rendererInterface()->graphicsApi()))
+        QSKIP("Scenegraph does not use QRhi, test is pointless");
+
+    QQuickRhiItem *item = view.rootObject()->findChild<QQuickRhiItem *>("rhiitem");
+    QVERIFY(item);
+    item->setSize(QSizeF(pixelSize.width() / dpr, pixelSize.height() / dpr));
+
+    view.grabWindow();
+
+    QCOMPARE(item->effectiveColorBufferSize(), pixelSize);
 }
 
 #include "tst_qquickrhiitem.moc"

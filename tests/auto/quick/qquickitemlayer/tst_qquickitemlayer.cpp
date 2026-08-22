@@ -13,6 +13,9 @@
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/viewtestutils_p.h>
 
+#include <QtQuick/qsgtexture.h>
+#include <QtQuick/qsgtextureprovider.h>
+
 #include <QtCore/qscopeguard.h>
 #include <QtGui/qscreen.h>
 #include <QtGui/private/qguiapplication_p.h>
@@ -67,6 +70,7 @@ private slots:
 
     void effectSourceResizeToItem();
 
+    void layerIsItemSizeInDevicePixels();
     void layerBlitsTextureOneToOne_data();
     void layerBlitsTextureOneToOne();
 
@@ -479,6 +483,61 @@ void tst_QQuickItemLayer::effectSourceResizeToItem() // QTBUG-104442
     window.resize(200, 200); // shrink it a bit
     QTRY_COMPARE(image->size().toSize(), QSize(200, 200)); // wait for the window system
     QCOMPARE(effectSource->size(), image->size());
+}
+
+void tst_QQuickItemLayer::layerIsItemSizeInDevicePixels()
+{
+#if !QT_CONFIG(highdpiscaling)
+    QSKIP("This test requires high-DPI scaling support");
+#endif
+
+    if (isOffscreen())
+        QSKIP(skipOffscreenMsg);
+
+    constexpr qreal dpr = 1.5;
+    constexpr int pixelWidth = 595;
+    constexpr int pixelHeight = 511;
+
+    QVERIFY2(QGuiApplication::allWindows().isEmpty(),
+             "setGlobalFactor() only takes effect while no window exists");
+
+    QScreen *screen = QGuiApplication::primaryScreen();
+    QHighDpiScaling::setGlobalFactor(dpr / screen->devicePixelRatio());
+    QGuiApplicationPrivate::resetCachedDevicePixelRatio();
+    const auto restoreScaling = qScopeGuard([]{
+        QHighDpiScaling::setGlobalFactor(1);
+        QGuiApplicationPrivate::resetCachedDevicePixelRatio();
+    });
+    QCOMPARE(screen->devicePixelRatio(), dpr);
+
+    QSize textureSize;
+
+    QQuickView view;
+    view.setInitialProperties({{ "dpr", dpr },
+                               { "pixelWidth", pixelWidth },
+                               { "pixelHeight", pixelHeight }});
+    view.setSource(testFileUrl("DevicePixelStripes.qml"));
+    view.showNormal();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+    QCOMPARE(view.effectiveDevicePixelRatio(), dpr);
+
+    QQuickItem *target = view.rootObject()->findChild<QQuickItem *>("target");
+    QVERIFY(target);
+    QQuickItemLayer *layer = QQuickItemPrivate::get(target)->layer();
+    QVERIFY(layer);
+    QQuickShaderEffectSource *effectSource = layer->effectSource();
+    QVERIFY(effectSource);
+
+    connect(&view, &QQuickWindow::afterRendering, &view, [&]{
+        if (QSGTextureProvider *provider = effectSource->textureProvider()) {
+            if (QSGTexture *texture = provider->texture())
+                textureSize = texture->textureSize();
+        }
+    }, Qt::DirectConnection);
+
+    view.grabWindow();
+
+    QCOMPARE(textureSize, QSize(pixelWidth, pixelHeight));
 }
 
 void tst_QQuickItemLayer::layerBlitsTextureOneToOne_data()

@@ -213,7 +213,7 @@ void QQuickRhiItemNode::sync()
     QQuickRhiItemPrivate *itemD = m_item->d_func();
     QSize newSize = QSize(itemD->fixedTextureWidth, itemD->fixedTextureHeight);
     if (newSize.isEmpty())
-        newSize = QSize(int(m_item->width()), int(m_item->height())) * m_dpr;
+        newSize = (QSizeF(m_item->width(), m_item->height()) * m_dpr).toSize();
 
     newSize.setWidth(qMin(maxTexSize, qMax(minTexSize, newSize.width())));
     newSize.setHeight(qMin(maxTexSize, qMax(minTexSize, newSize.height())));
@@ -481,7 +481,7 @@ QSGNode *QQuickRhiItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
                                           : QSGSimpleTextureNode::NoTransform);
     }
     n->setFiltering(d->smooth ? QSGTexture::Linear : QSGTexture::Nearest);
-    n->setRect(0, 0, qMax<int>(0, width()), qMax<int>(0, height()));
+    n->setRect(0, 0, qMax(qreal(0), width()), qMax(qreal(0), height()));
 
     n->scheduleUpdate();
 
