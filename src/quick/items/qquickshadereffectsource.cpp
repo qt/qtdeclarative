@@ -673,11 +673,11 @@ QSGNode *QQuickShaderEffectSource::updatePaintNode(QSGNode *oldNode, UpdatePaint
                       : m_sourceRect;
     m_texture->setRect(sourceRect);
     QQuickItemPrivate *d = static_cast<QQuickItemPrivate *>(QObjectPrivate::get(this));
-    const float dpr = d->effectiveDevicePixelRatio();
+    const qreal dpr = d->effectiveDevicePixelRatio();
     QSize textureSize = m_textureSize.isEmpty()
-            ? QSize(qCeil(qAbs(sourceRect.width()) * dpr), qCeil(qAbs(sourceRect.height()) * dpr))
+            ? (QSizeF(qAbs(sourceRect.width()), qAbs(sourceRect.height())) * dpr)
+                      .toSize().expandedTo(QSize(1, 1))
             : m_textureSize;
-    Q_ASSERT(!textureSize.isEmpty());
 
     const QSize minTextureSize = d->sceneGraphContext()->minimumFBOSize();
     // Keep power-of-two by doubling the size.
@@ -738,10 +738,11 @@ QSGNode *QQuickShaderEffectSource::updatePaintNode(QSGNode *oldNode, UpdatePaint
     node->setHorizontalWrapMode(hWrap);
     node->setVerticalWrapMode(vWrap);
 
-    qreal dummy;
-    qreal fx = std::modf(x(), &dummy);
-    qreal fy = std::modf(y(), &dummy);
-    QRectF targetRect(0, 0, qCeil(fx) + qCeil(width()), qCeil(fy) + qCeil(height()));
+    const qreal dx = x() * dpr;
+    const qreal dy = y() * dpr;
+    const QSizeF devicePixelSize(qCeil(dx - std::floor(dx)) + qMax(1, qRound(width() * dpr)),
+                                 qCeil(dy - std::floor(dy)) + qMax(1, qRound(height() * dpr)));
+    const QRectF targetRect(QPointF(0, 0), devicePixelSize / dpr);
     node->setTargetRect(targetRect);
     node->setInnerTargetRect(targetRect);
 

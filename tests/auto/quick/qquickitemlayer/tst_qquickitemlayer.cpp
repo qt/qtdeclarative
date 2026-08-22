@@ -13,7 +13,10 @@
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/viewtestutils_p.h>
 
+#include <QtCore/qscopeguard.h>
+#include <QtGui/qscreen.h>
 #include <QtGui/private/qguiapplication_p.h>
+#include <QtGui/private/qhighdpiscaling_p.h>
 #include <QtGui/qpa/qplatformintegration.h>
 
 class tst_QQuickItemLayer: public QQmlDataTest
@@ -63,6 +66,9 @@ private slots:
     void textureMirroring();
 
     void effectSourceResizeToItem();
+
+    void layerBlitsTextureOneToOne_data();
+    void layerBlitsTextureOneToOne();
 
 private:
     void mirroringCheck(int mirroring, int x, bool shouldMirror, const QImage &fb);
@@ -473,6 +479,79 @@ void tst_QQuickItemLayer::effectSourceResizeToItem() // QTBUG-104442
     window.resize(200, 200); // shrink it a bit
     QTRY_COMPARE(image->size().toSize(), QSize(200, 200)); // wait for the window system
     QCOMPARE(effectSource->size(), image->size());
+}
+
+void tst_QQuickItemLayer::layerBlitsTextureOneToOne_data()
+{
+    QTest::addColumn<qreal>("position");
+
+    QTest::newRow("aligned") << 0.0;
+    QTest::newRow("one device pixel right") << 0.5;
+    QTest::newRow("one device pixel left") << -0.5;
+}
+
+void tst_QQuickItemLayer::layerBlitsTextureOneToOne()
+{
+    QFETCH(qreal, position);
+
+#if !QT_CONFIG(highdpiscaling)
+    QSKIP("This test requires high-DPI scaling support");
+#endif
+
+    if (isOffscreen())
+        QSKIP(skipOffscreenMsg);
+
+    constexpr qreal dpr = 2.0;
+    constexpr int pixelWidth = 201;
+    constexpr int pixelHeight = 101;
+
+    QVERIFY2(QGuiApplication::allWindows().isEmpty(),
+             "setGlobalFactor() only takes effect while no window exists");
+
+    QScreen *screen = QGuiApplication::primaryScreen();
+    QHighDpiScaling::setGlobalFactor(dpr / screen->devicePixelRatio());
+    QGuiApplicationPrivate::resetCachedDevicePixelRatio();
+    const auto restoreScaling = qScopeGuard([]{
+        QHighDpiScaling::setGlobalFactor(1);
+        QGuiApplicationPrivate::resetCachedDevicePixelRatio();
+    });
+    QCOMPARE(screen->devicePixelRatio(), dpr);
+
+    QQuickView view;
+    view.setInitialProperties({{ "dpr", dpr },
+                               { "pixelWidth", pixelWidth },
+                               { "pixelHeight", pixelHeight },
+                               { "position", position }});
+    view.setSource(testFileUrl("DevicePixelStripes.qml"));
+    view.showNormal();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+    QCOMPARE(view.effectiveDevicePixelRatio(), dpr);
+
+    if (view.rendererInterface()->graphicsApi() == QSGRendererInterface::Software)
+        QSKIP("The software backend maps the target rect through a different path");
+
+    const QImage fb = view.grabWindow();
+    if (fb.width() < pixelWidth || fb.height() < pixelHeight)
+        QSKIP("Window is smaller than the item under test");
+
+    const int offset = qRound(position * dpr);
+    const int firstColumn = qMax(0, offset);
+    const int lastColumn = qMin(fb.width(), offset + pixelWidth);
+    const int row = pixelHeight / 2;
+    int misplaced = 0;
+    int firstMisplaced = -1;
+    for (int x = firstColumn; x < lastColumn; ++x) {
+        const QRgb expected = ((x - offset) % 2) ? qRgb(0xff, 0xff, 0xff) : qRgb(0, 0, 0);
+        if (fb.pixel(x, row) != expected) {
+            ++misplaced;
+            if (firstMisplaced < 0)
+                firstMisplaced = x;
+        }
+    }
+    QVERIFY2(misplaced == 0,
+             qPrintable(QStringLiteral("%1 of %2 pixels differ, first at x=%3")
+                                .arg(misplaced).arg(lastColumn - firstColumn)
+                                .arg(firstMisplaced)));
 }
 
 void tst_QQuickItemLayer::mirroringCheck(int mirroring, int x, bool shouldMirror, const QImage &fb)
