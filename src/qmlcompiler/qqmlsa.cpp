@@ -1372,7 +1372,12 @@ Element GenericPass::resolveBuiltinType(QAnyStringView typeName) const
 Element GenericPass::resolveAttached(QAnyStringView moduleName, QAnyStringView typeName)
 {
     const auto &resolvedType = resolveType(moduleName, typeName);
-    return QQmlJSScope::createQQmlSAElement(QQmlJSScope::scope(resolvedType)->attachedType());
+    const auto scope = QQmlJSScope::scope(resolvedType);
+
+    if (scope.isNull())
+        return QQmlJSScope::createQQmlSAElement(QQmlJSScope::ConstPtr(nullptr));
+
+    return QQmlJSScope::createQQmlSAElement(scope->attachedType());
 }
 
 /*!

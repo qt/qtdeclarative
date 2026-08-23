@@ -1039,7 +1039,7 @@ StateNoItemChildrenValidator::StateNoItemChildrenValidator(QQmlSA::PassManager *
 
 bool StateNoItemChildrenValidator::shouldRun(const QQmlSA::Element &element)
 {
-    return element.inherits(m_state);
+    return !m_state.isNull() && element.inherits(m_state);
 }
 
 void StateNoItemChildrenValidator::run(const QQmlSA::Element &element)
