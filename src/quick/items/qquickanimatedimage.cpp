@@ -236,6 +236,7 @@ void QQuickAnimatedImage::setPlaying(bool play)
             return;
         d->currentLoop = 0;
         d->lastFrameNumber = 0;
+        d->movie->jumpToFrame(0);
         d->movie->start();
     } else {
         d->movie->stop();
@@ -590,6 +591,7 @@ void QQuickAnimatedImage::onMovieFinished()
     // Ignore single-frame images — restarting them would loop forever.
     if (d->movie->frameCount() <= 1)
         return;
+    d->currentLoop++;
     if (d->loops == Infinite || d->currentLoop < d->loops) {
         // Avoid false wrap-around detection on restart.
         d->lastFrameNumber = 0;

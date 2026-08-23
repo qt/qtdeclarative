@@ -57,6 +57,12 @@ private:
         QTest::newRow("infinite-gif") << "colors.gif";
         // colors_once.gif: NETSCAPE loop=1 (finite internal looping)
         QTest::newRow("finite-gif") << "colors_once.gif";
+        // colors_noloop.gif: no NETSCAPE extension (loopCount=0, single pass)
+        QTest::newRow("noloop-gif") << "colors_noloop.gif";
+        // colors.svg: animated SVG with repeatCount="indefinite"
+        QTest::newRow("infinite-svg") << "colors.svg";
+        // colors_once.svg: animated SVG with repeatCount="1" (single pass)
+        QTest::newRow("finite-svg") << "colors_once.svg";
     }
 
 private slots:
