@@ -1373,8 +1373,13 @@ QQuickItemGenerator::generateFilterOffset(const FilterNodeInfo::FilterStep &step
             ? offset.y() * stepRect.height()
             : offset.y();
 
-    auto *ses = makeSES(input, stepRect, m_rootItem);
-    ses->setSourceRect(QRectF(-offsetX, -offsetY, stepRect.width(), stepRect.height()));
+    const QRectF offsetRect(0, 0, input->width() + offsetX, input->height() + offsetY);
+    auto *offsetSES = makeSES(input, offsetRect, m_rootItem);
+    offsetSES->setSourceRect(QRectF(-offsetX, -offsetY, offsetRect.width(), offsetRect.height()));
+    bindTextureSize(offsetSES);
+
+    auto *ses = makeSES(offsetSES, stepRect, m_rootItem);
+    ses->setSourceRect(QRectF(0, 0, stepRect.width(), stepRect.height()));
     return ses;
 }
 
@@ -1484,7 +1489,7 @@ QQuickItemGenerator::generateFilterGaussianBlur(const FilterNodeInfo::FilterStep
     constexpr qreal maxDeviation = 12.0;
     const qreal deviation = step.filterParameter.toReal();
     const qreal blurValue = step.csFilterParameter == FilterNodeInfo::CoordinateSystem::Relative
-            ? std::min(1.0, deviation * stepRect.width() / maxDeviation)
+            ? std::min(1.0, deviation * filterRect.width() / maxDeviation)
             : std::min(1.0, deviation / maxDeviation);
 
     auto *effect = new QQuickMultiEffect;
