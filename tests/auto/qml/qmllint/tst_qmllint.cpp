@@ -256,6 +256,7 @@ private Q_SLOTS:
     void attachedPropertyReuse();
 
     void missingBuiltinsNoCrash();
+    void stubQtQuickNoCrash();
     void absolutePath();
 
     void importMultipartUri();
@@ -4247,6 +4248,35 @@ void TestQmllint::missingBuiltinsNoCrash()
     checkResult(result.json[u"warnings"_s].toArray(),
                 ResultBuilder::singleExpected(u"Failed to import QtQuick. Are your import paths "
                                               "set up properly?"_s));
+}
+
+void TestQmllint::stubQtQuickNoCrash()
+{
+    // QTBUG-149360: A module that resolves without usable type information, such
+    // as a stub that only contains "module QtQuick", used to crash the Quick lint
+    // plugin on two independent paths:
+    // * when StateNoItemChildrenValidator::shouldRun dereferenced a null Element.
+    // * when GenericPass::resolveAttached dereferenced a null scope (obtained
+    //   from a null Element).
+    // qmllint has to exit normally instead of segfaulting.
+    QProcess process;
+    process.setWorkingDirectory(testFile("stubQuick"));
+    process.start(m_qmllintPath,
+                  warningsShouldFailArgs()
+                          << QStringLiteral("--bare")
+                          << QStringLiteral("-I")
+                          << QFileInfo(testFile("stubQuick")).absoluteFilePath()
+                          << QStringLiteral("test.qml"));
+
+    QVERIFY(process.waitForFinished());
+
+    // The point of this test is that qmllint terminates normally instead of
+    // segfaulting.
+    QCOMPARE(process.exitStatus(), QProcess::NormalExit);
+    QVERIFY(process.exitCode() != 0);
+
+    // The type information is unusable, so warnings are expected.
+    QVERIFY(process.readAllStandardError().contains("Item was not found"));
 }
 
 void TestQmllint::absolutePath()
