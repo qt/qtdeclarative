@@ -44,7 +44,11 @@ DEFINE_MANAGED_VTABLE(RegExp);
 
 uint RegExp::match(const QString &string, int start, uint *matchOffsets)
 {
-    if (!isValid())
+    // Note that we rely on the side-effect of checkStackLimits updating
+    // cppStackLimit (which might be necessary after a thread move):
+    // hasCppStackOverflow's recheck will trigger after a move (if it
+    // didn't, we'd had overlapping stack regions, which can't be).
+    if (!isValid() || internalClass()->engine->checkStackLimits())
         return JSC::Yarr::offsetNoMatch;
 
 #if ENABLE(YARR_JIT)
@@ -217,6 +221,9 @@ void Heap::RegExp::init(ExecutionEngine *engine, const QString &pattern, uint fl
     this->flags = flags;
 
     JSC::Yarr::ErrorCode error = JSC::Yarr::ErrorCode::NoError;
+    // compare the comment in RegExp::match
+    if (engine->checkStackLimits())
+        return;
     const void* stackLimit = internalClass->engine->cppStackLimit;
     JSC::Yarr::YarrPattern yarrPattern(WTF::String(pattern), jscFlags(flags), error, const_cast<void *>(stackLimit));
     if (error != JSC::Yarr::ErrorCode::NoError)

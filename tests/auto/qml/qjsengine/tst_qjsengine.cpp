@@ -285,6 +285,7 @@ private slots:
     void sortSparseArray();
     void compileBrokenRegexp();
     void deeplyNestedRegexpDoesNotCrash();
+    void regexpAfterMoveToThread();
     void sortNonStringArray();
     void iterateInvalidProxy();
     void applyOnHugeArray();
@@ -5589,6 +5590,26 @@ void tst_QJSEngine::deeplyNestedRegexpDoesNotCrash()
 
     QVERIFY(!isError);
     QCOMPARE(result, QLatin1String("SyntaxError"));
+}
+
+void tst_QJSEngine::regexpAfterMoveToThread()
+{
+    // Check that we use the correct stack limit after a thread move
+    QJSEngine *engine = new QJSEngine();
+    QThread worker;
+    engine->moveToThread(&worker);
+
+    QString result;
+    QObject::connect(&worker, &QThread::started, engine, [&]() {
+        result = engine->evaluate("\"abc\".replace(/b/, \"_\")").toString();
+        engine->deleteLater();
+        worker.quit();
+    });
+
+    worker.start();
+    QVERIFY(worker.wait());
+
+    QCOMPARE(result, u"a_c"_s);
 }
 
 void tst_QJSEngine::tostringRecursionCheck()
