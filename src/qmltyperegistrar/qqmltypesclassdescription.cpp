@@ -571,6 +571,8 @@ void ResolvedTypeAlias::handlePointer()
     if (type.back() == '*'_L1) {
         isPointer = true;
         type = type.chopped(1);
+        while (type.back().isSpace())
+            type.chop(1);
     }
 }
 
