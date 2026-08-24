@@ -4352,6 +4352,26 @@ Item {
                        .build()
             << defaultOptions;
 
+    QTest::newRow("defaultProperty")
+            << uR"(import MissingRegistration
+import QtQuick
+Item {
+    component IC: Item { default property MyObject myp }
+    IC {
+        MyObject{}
+    }
+})"_s
+            << ResultBuilder()
+                       .addExpected(
+                               "MyObject was not found. Did you add all imports and dependencies?"_L1,
+                               4, 26)
+                       .addExpected(
+                               "MyObject was not found. Did you add all imports and dependencies?"_L1,
+                               6, 9)
+                       .addUnexpected("incomplete"_L1)
+                       .build()
+            << defaultOptions;
+
     QTest::newRow("objectBindings")
             << uR"(import MissingRegistration
 import QtQuick

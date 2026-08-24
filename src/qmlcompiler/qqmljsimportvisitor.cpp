@@ -768,7 +768,11 @@ void QQmlJSImportVisitor::processDefaultProperties()
         };
 
         if (propType.isNull()) {
-            handleUnresolvedDefaultProperty(propType);
+            if (checkTypeResolved(parentScope)
+                && QQmlJSScope::ownerOfProperty(parentScope, defaultPropertyName).scope->filePath()
+                        != m_exportedRootScope->filePath()) {
+                handleUnresolvedDefaultProperty(propType);
+            }
             assignToUnknownProperty();
             continue;
         }
