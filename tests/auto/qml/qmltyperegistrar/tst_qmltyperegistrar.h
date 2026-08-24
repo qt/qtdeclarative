@@ -945,6 +945,20 @@ private:
     QString m_foreignProperty;
 };
 
+struct QBarSet : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+};
+
+struct CppQListBarSet
+{
+    Q_GADGET
+    QML_ANONYMOUS
+    QML_FOREIGN(QList<QBarSet *>)
+    QML_SEQUENTIAL_CONTAINER(QBarSet *)
+};
+
 class tst_qmltyperegistrar : public QObject
 {
     Q_OBJECT
@@ -997,6 +1011,7 @@ private slots:
     void clonedSignal();
     void baseVersionInQmltypes();
     void unconstructibleValueType();
+    void valueTypeList();
     void constructibleValueType();
     void structuredValueType();
     void anonymousAndUncreatable();

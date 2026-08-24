@@ -61,9 +61,11 @@ void QmlTypesCreator::writeClassProperties(const QmlTypesClassDescription &colle
         m_qml.writeStringBinding(S_PROTOTYPE, collector.superClass);
 
     if (!collector.sequenceValueType.isEmpty()) {
-        const QAnyStringView name = collector.sequenceValueType.back() == '*'_L1
+        QAnyStringView name = collector.sequenceValueType.back() == '*'_L1
                 ? collector.sequenceValueType.chopped(1)
                 : collector.sequenceValueType;
+        while (name.back().isSpace())
+            name.chop(1);
         m_qml.writeStringBinding(S_VALUE_TYPE, name);
     }
 

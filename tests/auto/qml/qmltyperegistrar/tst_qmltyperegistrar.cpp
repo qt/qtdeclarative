@@ -825,6 +825,18 @@ void tst_qmltyperegistrar::unconstructibleValueType()
     })"));
 }
 
+void tst_qmltyperegistrar::valueTypeList()
+{
+    QVERIFY(qmltypesData.contains(R"(Component {
+        file: "tst_qmltyperegistrar.h"
+        lineNumber: 954
+        name: "QList<QBarSet *>"
+        accessSemantics: "sequence"
+        valueType: "QBarSet"
+    }
+    )"));
+}
+
 void tst_qmltyperegistrar::constructibleValueType()
 {
     QVERIFY(qmltypesData.contains(
