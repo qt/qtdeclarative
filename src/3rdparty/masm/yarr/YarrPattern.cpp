@@ -36,6 +36,8 @@
 #include <wtf/Vector.h>
 #include <wtf/text/WTFString.h>
 
+#include <private/qv4stacklimits_p.h>
+
 namespace JSC { namespace Yarr {
 
 #include "RegExpJitTables.h"
@@ -1090,9 +1092,15 @@ private:
     {
         if (!m_stackLimit)
             return true;
-        int8_t* curr = reinterpret_cast<int8_t*>(&curr);
-        int8_t* limit = reinterpret_cast<int8_t*>(m_stackLimit);
-        return curr >= limit;
+        // Do not take the address of a local here. Sanitizers may move such variables off the
+        // real stack, which would make the comparison below meaningless.
+        const int8_t* curr = reinterpret_cast<const int8_t*>(QV4::currentStackPointer());
+        const int8_t* limit = reinterpret_cast<const int8_t*>(m_stackLimit);
+#if Q_STACK_GROWTH_DIRECTION > 0
+        return curr < limit;
+#else
+        return curr > limit;
+#endif
     }
 
     YarrPattern& m_pattern;
