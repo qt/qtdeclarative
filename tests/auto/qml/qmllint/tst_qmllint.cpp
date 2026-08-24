@@ -4352,6 +4352,24 @@ Item {
                        .build()
             << defaultOptions;
 
+    QTest::newRow("attachedType2")
+            << uR"(import MissingRegistration
+import QtQuick
+MyItem {
+    Component.onCompleted: function() {}
+    Component.thisPropertyDoesNotExist: function() {}
+})"_s
+            << ResultBuilder()
+                       .addExpected("MyItem was not found"_L1, 3, 1)
+                       .addExpected("Could not find property \"thisPropertyDoesNotExist\""_L1, 5,
+                                    15)
+                       .addUnexpected("unknown attached property scope Component"_L1)
+                       .addUnexpected("Type MyItem is used but it is not resolved"_L1)
+                       .addUnexpected("Component"_L1)
+                       .addUnexpected("onCompleted"_L1)
+                       .build()
+            << defaultOptions;
+
     QTest::newRow("defaultProperty")
             << uR"(import MissingRegistration
 import QtQuick
@@ -4371,6 +4389,18 @@ Item {
                        .addUnexpected("incomplete"_L1)
                        .build()
             << defaultOptions;
+
+    QTest::newRow("groupedProperty") << uR"(import MissingRegistration
+MyObject {
+    foo.bar: "hello"
+    foo.bar.foo.bar: 1234
+})"_s
+                                     << ResultBuilder()
+                                                .addExpected("MyObject was not found"_L1, 2, 1)
+                                                .addUnexpected("foo"_L1)
+                                                .addUnexpected("bar"_L1)
+                                                .build()
+                                     << defaultOptions;
 
     QTest::newRow("objectBindings")
             << uR"(import MissingRegistration

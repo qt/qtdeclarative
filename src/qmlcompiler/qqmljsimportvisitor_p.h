@@ -260,6 +260,13 @@ protected:
         if (type->isFullyResolved() || checkCustomParser(type))
             return true;
 
+        // Warn on unresolved parent of grouped properties instead of the grouped property itself,
+        // as we can't resolve grouped properties on unresolved types.
+        if (type->scopeType() == QQmlSA::ScopeType::GroupedPropertyScope && type->parentScope()
+            && !checkTypeResolved(type->parentScope(), handle)) {
+            return false;
+        }
+
         // Note: ignore duplicates, but only after we are certain that the type
         // is still unresolved
         if (!m_unresolvedTypes.hasSeen(type))

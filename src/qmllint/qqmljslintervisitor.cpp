@@ -1140,6 +1140,9 @@ void LinterVisitor::checkGroupedAndAttachedScope(const QQmlJSScope::ConstPtr &sc
     if (checkCustomParser(scope))
         return;
 
+    if (!checkTypeResolved(scope))
+        return;
+
     auto children = scope->childScopes();
     while (!children.isEmpty()) {
         auto childScope = children.takeFirst();
