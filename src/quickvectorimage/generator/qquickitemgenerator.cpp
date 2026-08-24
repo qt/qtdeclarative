@@ -911,6 +911,15 @@ bool QQuickItemGenerator::generateMaskNode(const MaskNodeInfo &info)
     }
 
     if (info.stage == StructureNodeStage::Start) {
+        if (!info.isDefaultTransform) {
+            auto *xfItem = new QQuickItem;
+            xfItem->setTransformOrigin(QQuickItem::TopLeft);
+            auto *matrix = new QQuickMatrix4x4(xfItem);
+            matrix->setMatrix(QMatrix4x4(info.transform.defaultValue().value<QTransform>()));
+            auto transformProp = xfItem->transform();
+            transformProp.append(&transformProp, matrix);
+            pushItem(xfItem);
+        }
         if (info.isMaskContentRelativeCoordinates) {
             auto *transformerItem = new QQuickItem;
             pushItem(transformerItem);
@@ -1014,6 +1023,9 @@ void QQuickItemGenerator::generateMaskContainer(const MaskNodeInfo &info)
         auto transformProp = transformer->transform();
         transformProp.append(&transformProp, transformerMatrix);
     }
+
+    if (!info.isDefaultTransform)
+        popItem();
 
     auto *container = currentItem();
     m_maskDefs[info.id] = { container,
