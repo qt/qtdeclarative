@@ -150,12 +150,12 @@ private:
     void bindMotionPath(QQuickItem *item, const QQuickAnimatedProperty &motionPath);
 
     void generateMaskContainer(const MaskNodeInfo &info);
-    void generateMask(QQuickItem *item, const NodeInfo &info);
+    void generateMask(QQuickItem *item, const NodeInfo &info, const QPointF &sourceOrigin);
     void generatePatternContainer(const PatternNodeInfo &info);
     void generatePattern(QQuickShapePath *shapePath, const PathNodeInfo &info,
                          const QRectF &boundingRect, QTransform &fillTransform);
     void generateMarkers(const PathNodeInfo &info);
-    QQuickItem *generateFilter(QQuickItem *item, const NodeInfo &info);
+    QQuickItem *generateFilter(QQuickItem *item, const NodeInfo &info, QPointF *outputOrigin);
     QQuickShaderEffectSource *generateFilterStep(const FilterNodeInfo::FilterStep &step,
                                                  QQuickShaderEffectSource *input1,
                                                  QQuickShaderEffectSource *input2,

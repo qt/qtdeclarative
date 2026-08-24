@@ -382,10 +382,11 @@ bool QQuickItemGenerator::generateStructureNode(const StructureNodeInfo &info)
 
         QQuickItem *item = popItem();
         QQuickItem *effectItem = item;
+        QPointF sourceOrigin;
         if (!info.filterId.isEmpty())
-            effectItem = generateFilter(item, info);
+            effectItem = generateFilter(item, info, &sourceOrigin);
         if (!info.maskId.isEmpty())
-            generateMask(effectItem ? effectItem : item, info);
+            generateMask(effectItem ? effectItem : item, info, sourceOrigin);
 
         if (!info.clipBox.isEmpty())
             popItem();
@@ -422,10 +423,11 @@ void QQuickItemGenerator::generatePath(const PathNodeInfo &info, const QRectF &o
             generateMarkers(info);
         }
         QQuickItem *effectItem = item;
+        QPointF sourceOrigin;
         if (!info.filterId.isEmpty())
-            effectItem = generateFilter(item, info);
+            effectItem = generateFilter(item, info, &sourceOrigin);
         if (!info.maskId.isEmpty())
-            generateMask(effectItem ? effectItem : item, info);
+            generateMask(effectItem ? effectItem : item, info, sourceOrigin);
     }
 }
 
@@ -725,10 +727,11 @@ void QQuickItemGenerator::generateImageNode(const ImageNodeInfo &info)
     QQuickItem *item = popItem();
     {
         QQuickItem *effectItem = item;
+        QPointF sourceOrigin;
         if (!info.filterId.isEmpty())
-            effectItem = generateFilter(item, info);
+            effectItem = generateFilter(item, info, &sourceOrigin);
         if (!info.maskId.isEmpty())
-            generateMask(effectItem ? effectItem : item, info);
+            generateMask(effectItem ? effectItem : item, info, sourceOrigin);
     }
 }
 
@@ -811,10 +814,11 @@ void QQuickItemGenerator::generateTextNode(const TextNodeInfo &info)
     QQuickItem *textItem = popItem();
     {
         QQuickItem *effectItem = textItem;
+        QPointF sourceOrigin;
         if (!info.filterId.isEmpty())
-            effectItem = generateFilter(textItem, info);
+            effectItem = generateFilter(textItem, info, &sourceOrigin);
         if (!info.maskId.isEmpty())
-            generateMask(effectItem ? effectItem : textItem, info);
+            generateMask(effectItem ? effectItem : textItem, info, sourceOrigin);
     }
 }
 
@@ -848,10 +852,11 @@ void QQuickItemGenerator::generateUseNode(const UseNodeInfo &info)
     } else {
         QQuickItem *item = popItem();
         QQuickItem *effectItem = item;
+        QPointF sourceOrigin;
         if (!info.filterId.isEmpty())
-            effectItem = generateFilter(item, info);
+            effectItem = generateFilter(item, info, &sourceOrigin);
         if (!info.maskId.isEmpty())
-            generateMask(effectItem ? effectItem : item, info);
+            generateMask(effectItem ? effectItem : item, info, sourceOrigin);
     }
 }
 
@@ -1036,7 +1041,8 @@ void QQuickItemGenerator::generateMaskContainer(const MaskNodeInfo &info)
                             transformerMatrix };
 }
 
-void QQuickItemGenerator::generateMask(QQuickItem *item, const NodeInfo &info)
+void QQuickItemGenerator::generateMask(QQuickItem *item, const NodeInfo &info,
+                                       const QPointF &sourceOrigin)
 {
     auto it = m_maskDefs.find(info.maskId);
     if (it == m_maskDefs.end()) {
@@ -1086,10 +1092,7 @@ void QQuickItemGenerator::generateMask(QQuickItem *item, const NodeInfo &info)
     auto *itemSES = makeSES(item, svgMaskRect, m_rootItem);
     itemSES->setHideSource(true);
     itemSES->setSmooth(false);
-    if (qobject_cast<QQuickShaderEffectSource *>(item))
-        itemSES->setSourceRect(QRectF(0, 0, item->width(), item->height()));
-    else
-        itemSES->setSourceRect(svgMaskRect);
+    itemSES->setSourceRect(svgMaskRect.translated(-sourceOrigin));
     bindTextureSize(itemSES);
 
     auto *shaderEffect = new QQuickShaderEffect;
@@ -1158,7 +1161,8 @@ static QRectF resolveRect(const QRectF &rect, FilterNodeInfo::CoordinateSystem c
     return rect;
 }
 
-QQuickItem *QQuickItemGenerator::generateFilter(QQuickItem *item, const NodeInfo &info)
+QQuickItem *QQuickItemGenerator::generateFilter(QQuickItem *item, const NodeInfo &info,
+                                                QPointF *outputOrigin)
 {
     auto it = m_filterDefs.find(info.filterId);
     if (it == m_filterDefs.end()) {
@@ -1284,6 +1288,9 @@ QQuickItem *QQuickItemGenerator::generateFilter(QQuickItem *item, const NodeInfo
         lastOutput->setX(lastStepRect.x());
         lastOutput->setY(lastStepRect.y());
     }
+
+    if (outputOrigin)
+        *outputOrigin = lastStepRect.topLeft();
 
     return lastOutput;
 }
