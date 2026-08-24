@@ -2533,6 +2533,79 @@ function(_qt_internal_qml_get_types_keep_reference register_types_function_name 
     set(${out_var} "${content}" PARENT_SCOPE)
 endfunction()
 
+# Computes the path of the .cpp file that qmlcachegen generates for SOURCE_QML_FILE_PATH
+# when that file is added to TARGET via qt6_target_qml_sources(), and stores it in
+# OUT_VAR_GENERATED_CPP_FILE_PATH.
+#
+# SOURCE_QML_FILE_PATH must be an absolute path.
+#
+# The generated path is derived from the location of SOURCE_QML_FILE_PATH relative to the
+# current source or binary directory, whichever of the two is shorter, so this has to be
+# called from the same directory scope as the qt6_target_qml_sources() call that adds the
+# file.
+# Caller can use the path to attach source file properties to the generated file.
+function(_qt_internal_qml_get_cachegen_compiled_file)
+    set(opt_args "")
+    set(single_args
+        TARGET
+        SOURCE_QML_FILE_PATH
+        OUT_VAR_GENERATED_CPP_FILE_PATH
+    )
+    set(multi_args "")
+    cmake_parse_arguments(PARSE_ARGV 0 arg "${opt_args}" "${single_args}" "${multi_args}")
+    _qt_internal_validate_all_args_are_parsed(arg)
+
+    foreach(required_arg IN LISTS single_args)
+        if(NOT arg_${required_arg})
+            message(FATAL_ERROR
+                "_qt_internal_qml_get_cachegen_compiled_file: ${required_arg} must be provided")
+        endif()
+    endforeach()
+
+    if(NOT TARGET "${arg_TARGET}")
+        message(FATAL_ERROR
+            "_qt_internal_qml_get_cachegen_compiled_file: TARGET must be an existing target,"
+            " but got: ${arg_TARGET}")
+    endif()
+
+    if(NOT IS_ABSOLUTE "${arg_SOURCE_QML_FILE_PATH}")
+        message(FATAL_ERROR
+            "_qt_internal_qml_get_cachegen_compiled_file: SOURCE_QML_FILE_PATH must be an"
+            " absolute path, but got: ${arg_SOURCE_QML_FILE_PATH}")
+    endif()
+
+    # Check what base path should be used for computing the relative path.
+    # Prefer the shortest relative path.
+    file(RELATIVE_PATH file_relative_to_source_dir
+        "${CMAKE_CURRENT_SOURCE_DIR}" "${arg_SOURCE_QML_FILE_PATH}")
+    string(LENGTH "${file_relative_to_source_dir}" relative_to_source_dir_length)
+
+    file(RELATIVE_PATH file_relative_to_binary_dir
+        "${CMAKE_CURRENT_BINARY_DIR}" "${arg_SOURCE_QML_FILE_PATH}")
+    string(LENGTH "${file_relative_to_binary_dir}" relative_to_binary_dir_length)
+
+    if(relative_to_source_dir_length LESS relative_to_binary_dir_length)
+        set(file_relative "${file_relative_to_source_dir}")
+    else()
+        set(file_relative "${file_relative_to_binary_dir}")
+    endif()
+
+    # Replace '..'s with underscores to avoid issues with paths especially on Windows.
+    string(REGEX REPLACE "\\.\\.[/\\\\]" "_" compiled_file "${file_relative}")
+
+    # Replace the dot in front of extensions with an underscore.
+    string(REGEX REPLACE "\\.(js|mjs|qml)$" "_\\1" compiled_file "${compiled_file}")
+
+    # Replace other problematic characters in paths.
+    string(REGEX REPLACE "[$#?/ ]+" "_" compiled_file "${compiled_file}")
+
+    # The file name needs to be unique to work around an Integrity compiler issue.
+    # Search for INTEGRITY_SYMBOL_UNIQUENESS in this file for details.
+    set(${arg_OUT_VAR_GENERATED_CPP_FILE_PATH}
+        "${CMAKE_CURRENT_BINARY_DIR}/.rcc/qmlcache/${arg_TARGET}_${compiled_file}.cpp"
+        PARENT_SCOPE)
+endfunction()
+
 # Get extern declaration for cachegen resource.
 function(_qt_internal_qml_get_cachegen_extern_resource_declaration target out_var)
     set(with_ending_semicolon FALSE)
@@ -3885,35 +3958,11 @@ function(qt6_target_qml_sources target)
                 QT_QML_MODULE_RESOURCE_PATHS ${file_resource_path}
             )
 
-            # Check what base path should be used for computing the relative path.
-            # Prefer the shortest relative path.
-            file(RELATIVE_PATH file_relative_to_source_dir
-                "${CMAKE_CURRENT_SOURCE_DIR}" "${file_absolute}")
-            string(LENGTH "${file_relative_to_source_dir}" relative_to_source_dir_length)
-
-            file(RELATIVE_PATH file_relative_to_binary_dir
-                "${CMAKE_CURRENT_BINARY_DIR}" "${file_absolute}")
-            string(LENGTH "${file_relative_to_binary_dir}" relative_to_binary_dir_length)
-
-            if(relative_to_source_dir_length LESS relative_to_binary_dir_length)
-                set(file_relative "${file_relative_to_source_dir}")
-            else()
-                set(file_relative "${file_relative_to_binary_dir}")
-            endif()
-
-            # Replace '..'s with underscores to avoid issues with paths especially on Windows.
-            string(REGEX REPLACE "\\.\\.[/\\\\]" "_" compiled_file "${file_relative}")
-
-            # Replace the dot in front of extensions with an underscore.
-            string(REGEX REPLACE "\\.(js|mjs|qml)$" "_\\1" compiled_file "${compiled_file}")
-
-            # Replace other problematic characters in paths.
-            string(REGEX REPLACE "[$#?/ ]+" "_" compiled_file "${compiled_file}")
-
-            # The file name needs to be unique to work around an Integrity compiler issue.
-            # Search for INTEGRITY_SYMBOL_UNIQUENESS in this file for details.
-            set(compiled_file
-                "${CMAKE_CURRENT_BINARY_DIR}/.rcc/qmlcache/${target}_${compiled_file}.cpp")
+            _qt_internal_qml_get_cachegen_compiled_file(
+                TARGET "${target}"
+                SOURCE_QML_FILE_PATH "${file_absolute}"
+                OUT_VAR_GENERATED_CPP_FILE_PATH compiled_file
+            )
             get_filename_component(out_dir "${compiled_file}" DIRECTORY)
 
             if(CMAKE_GENERATOR STREQUAL "Ninja Multi-Config" AND CMAKE_VERSION VERSION_GREATER_EQUAL "3.20")
