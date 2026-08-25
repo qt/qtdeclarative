@@ -50,6 +50,40 @@ Item {
 
 \sa {QML Coding Conventions#unqualified-access}{QML Coding Conventions - Unqualified Access}
 
+\section1 Type was not found
+
+\section2 What happened?
+
+You accessed a type or context property that can't be found.
+
+\section2 Why is this bad?
+
+The QML tooling will not work on your types.
+
+\section2 Example
+
+\qml
+import QtQuick
+
+Item {
+    Component.onCompleted: { console.log(MyItem.someProperty); } // MyItem was not found
+}
+\endqml
+To fix this warning,
+\list
+    \li Ensure that the QML Module of MyItem is built.
+    \li Ensure that the QML Module of MyItem is imported.
+    \li Ensure that MyItem is correctly spelled.
+    \li Ensure that MyItem is registered via \l{Registering C++ Types with the QML Type System} as
+        \list
+            \li A singleton type.
+            \li An attached type.
+            \li A namespace type with enums.
+        \endlist
+    \li Ensure that MyItem is not a context property, see \l{Context properties} on how to replace
+        context properties.
+\endlist
+
 \section1 Unknown attached/grouped property scope
 
 \section2 What happened?

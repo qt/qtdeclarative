@@ -364,8 +364,18 @@ void QQmlJSLinterTypePropagator::handleUnqualifiedAccess(const QString &name, bo
         }
     }
 
-    m_logger->log(QLatin1String("Unqualified access"), qmlUnqualified, location, true, true,
-                  suggestion);
+    if (name.front().isUpper()) {
+        Q_ASSERT(name.front() != u'_'); // QML runtime forbids accessing types starting with an '_'
+        // \a{name} starts with an uppercase iff:
+        // * a context property name
+        // * a (missing) module qualifier (from `import QtQuick as <qualifier>`)
+        // * an attached, singleton, or normal type without registration or module import
+        // * a namespace containing enums without registration or module import
+        m_logger->log("%1 was not found."_L1.arg(name), qmlUnqualified, location, true, true,
+                      suggestion);
+    } else {
+        m_logger->log("Unqualified access"_L1, qmlUnqualified, location, true, true, suggestion);
+    }
 }
 
 static bool shouldMentionRequiredProperties(const QQmlJSScope::ConstPtr &qmlScope)

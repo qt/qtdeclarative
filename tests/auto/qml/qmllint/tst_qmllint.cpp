@@ -542,7 +542,7 @@ void TestQmllint::testUnqualified_data()
 
     QTest::newRow("crashConnections")
             << QStringLiteral("crashConnections.qml")
-            << ResultBuilder().addExpected("Unqualified access"_L1, 4, 13).build();
+            << ResultBuilder().addExpected("FirstRunDialog was not found"_L1, 4, 13).build();
 
     QTest::newRow("delegateContextProperties")
             << QStringLiteral("delegateContextProperties.qml")
@@ -4401,6 +4401,13 @@ MyObject {
                                                 .addUnexpected("bar"_L1)
                                                 .build()
                                      << defaultOptions;
+
+    QTest::newRow("missingType") << u"function f() {return MySingleton.someProperty; }"_s
+                                 << ResultBuilder()
+                                    .addExpected("MySingleton was not found"_L1, 1, 22)
+                                    .addUnexpected("someProperty"_L1)
+                                    .build()
+                                 << defaultOptions;
 
     QTest::newRow("objectBindings")
             << uR"(import MissingRegistration
