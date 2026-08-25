@@ -1084,12 +1084,12 @@ void QQuickItemGenerator::generateMask(QQuickItem *item, const NodeInfo &info,
     static const QUrl maskShaderUrl(
             u"qrc:/qt-project.org/quickvectorimage/helpers/shaders_ng/genericmask.frag.qsb"_s);
 
-    auto *maskSES = makeSES(maskDef.container, svgMaskRect, m_rootItem);
+    auto *maskSES = makeSES(maskDef.container, svgMaskRect, parentItem);
     maskSES->setHideSource(true);
     maskSES->setSourceRect(svgMaskRect);
     bindTextureSize(maskSES);
 
-    auto *itemSES = makeSES(item, svgMaskRect, m_rootItem);
+    auto *itemSES = makeSES(item, svgMaskRect, parentItem);
     itemSES->setHideSource(true);
     itemSES->setSmooth(false);
     itemSES->setSourceRect(svgMaskRect.translated(-sourceOrigin));
