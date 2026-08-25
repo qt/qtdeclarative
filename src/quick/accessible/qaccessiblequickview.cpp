@@ -69,10 +69,16 @@ QAccessible::Role QAccessibleQuickWindow::role() const
 QAccessible::State QAccessibleQuickWindow::state() const
 {
     QAccessible::State st;
-    if (window() == QGuiApplication::focusWindow())
-        st.active = true;
-    if (!window() || !window()->isVisible())
-        st.invisible = true;
+
+    if (!window()) {
+        st.invalid = true;
+        return st;
+    }
+
+    st.invisible = !window()->isVisible();
+    st.focused = window() == QGuiApplication::focusWindow();
+    st.active = window()->isActive();
+
     return st;
 }
 
