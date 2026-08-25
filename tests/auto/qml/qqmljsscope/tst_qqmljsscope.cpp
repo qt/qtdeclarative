@@ -128,6 +128,7 @@ private Q_SLOTS:
     void javaScriptBuiltinFlag();
     void isRoot();
     void idLocation();
+    void inherits();
     void lineNumber();
     void ownerOfEnum();
     void ensureModuleName();
@@ -1209,6 +1210,18 @@ void tst_qqmljsscope::idLocation()
     QCOMPARE(actual.startLine, 7);
     QCOMPARE(actual.startColumn, 25);
     QCOMPARE(actual.length, 10);
+}
+
+void tst_qqmljsscope::inherits()
+{
+    const auto jsscope = run(u"UseTypeWithProperties.qml"_s, false);
+    const auto baseFromCpp = jsscope->baseType();
+
+    QVERIFY(jsscope->inherits(baseFromCpp));
+    QVERIFY(!jsscope->inherits({ }));
+
+    auto empty = QQmlJSScope::create();
+    QVERIFY(!empty->inherits({ }));
 }
 
 void tst_qqmljsscope::lineNumber()
