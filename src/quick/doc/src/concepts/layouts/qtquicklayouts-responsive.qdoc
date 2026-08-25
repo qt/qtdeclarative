@@ -28,7 +28,7 @@
     and \l {Layout} attached properties with small expressions. You can for
     instance use ternary operators in order to modify the layout depending
     on its width.
-    \l {Item} properties, such as \l {Item::visible}{Item.visible},
+    \l {Item} properties, such as \l {Item.visible},
     hiding or showing various parts of the interface, can be modified the same
     way.
 
@@ -46,8 +46,8 @@
                  side-by-side layout}
     \enddiv
 
-    Various levels of layouts and items can be nested but \l {Item}{Items} can only be moved within a their \l{Item::parent}{Item.parent}.
-
+    Various levels of layouts and items can be nested, but each \l Item
+    can only be moved within its \l{Item.parent}{parent}.
     \section2 States
 
     The same result can be achieved with \l {Qt Quick States}. The upside of
@@ -76,7 +76,9 @@
     the hierarchy. A small stand-alone button in a small layout might be
     combined with other buttons and put into a box of a larger layout. An item
     that is fully visible in one layout, might require a \l {Flickable} in
-    another, smaller layout. In this scenario, it is best to rely on the \l {LayoutItemProxy}. The \l {LayoutItemProxy} allows to move \l{Item}{Items} across various hierarchy levels and between different \l{Item::parent}{Item.parent}.
+    another, smaller layout. In this scenario, it is best to rely on the
+    \l {LayoutItemProxy}, which allows moving \l{Item}{Items} across various
+    hierarchy levels and between different \l{Item.parent}{parent} items.
 
     The \l {Qt Quick Layouts - Responsive Layout Example} shows a case where an
     item is moved between different hierarchy levels, put into a \l {Flickable}
