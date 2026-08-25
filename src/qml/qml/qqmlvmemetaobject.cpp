@@ -221,16 +221,14 @@ void QQmlVMEMetaObjectEndpoint::tryConnect()
         // So add propCount() to get the signal index.
         int sigIdx = aliasId + metaObject->propCount();
         metaObject->activate(metaObject->object, sigIdx, nullptr);
-    } else if (const QV4::CompiledData::Object *compiledObject = metaObject->findCompiledObject()) {
+    } else if (metaObject->findCompiledObject()) {
         const QQmlPropertyData *aliasProperty
                 = metaObject->cache->property(metaObject->aliasOffset() + aliasId);
         const int targetPropertyIndex = aliasProperty ? aliasProperty->aliasTarget() : -1;
 
         if (targetPropertyIndex != -1) {
-            const QV4::CompiledData::Alias *aliasData = &compiledObject->aliasTable()[aliasId];
-
             QQmlRefPointer<QQmlContextData> ctxt = metaObject->ctxt;
-            QObject *target = ctxt->idValue(aliasData->targetObjectId());
+            QObject *target = ctxt->idValue(aliasProperty->aliasTargetObjectId());
             if (!target)
                 return;
 
@@ -1083,26 +1081,21 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                 if (!compiledObject)
                     return -1;
 
-                const QV4::CompiledData::Alias *aliasData = &compiledObject->aliasTable()[id];
+                const QQmlPropertyData *aliasProperty = cache->property(aliasOffset() + id);
 
-                if (aliasData->hasFlag(QV4::CompiledData::Alias::AliasPointsToPointerObject)
-                        && c == QMetaObject::ReadProperty){
+                if (c == QMetaObject::ReadProperty && aliasProperty && aliasProperty->isQObject())
                     *reinterpret_cast<void **>(a[0]) = nullptr;
-                }
 
                 if (ctxt.isNull())
                     return -1;
 
-                while (aliasData->isAliasToLocalAlias())
-                    aliasData = &compiledObject->aliasTable()[aliasData->localAliasIndex];
-
-                QObject *target = ctxt->idValue(aliasData->targetObjectId());
+                QObject *target = ctxt->idValue(
+                        aliasProperty ? aliasProperty->aliasTargetObjectId() : -1);
                 if (!target)
                     return -1;
 
                 connectAlias(compiledObject, id);
 
-                const QQmlPropertyData *aliasProperty = cache->property(aliasOffset() + id);
                 const int targetPropertyIndex = aliasProperty ? aliasProperty->aliasTarget() : -1;
 
                 if (targetPropertyIndex == -1) {
@@ -1494,14 +1487,11 @@ bool QQmlVMEMetaObject::aliasTarget(int index, QObject **target, int *coreIndex,
     const int aliasId = index - propOffset() - compiledObject->nProperties;
     Q_ASSERT(index >= propOffset() + int(compiledObject->nProperties));
 
-    const QV4::CompiledData::Alias *aliasData = &compiledObject->aliasTable()[aliasId];
-    while (aliasData->isAliasToLocalAlias())
-        aliasData = &compiledObject->aliasTable()[aliasData->localAliasIndex];
-    *target = ctxt->idValue(aliasData->targetObjectId());
+    const QQmlPropertyData *aliasProperty = cache->property(aliasOffset() + aliasId);
+    *target = ctxt->idValue(aliasProperty ? aliasProperty->aliasTargetObjectId() : -1);
     if (!*target)
         return false;
 
-    const QQmlPropertyData *aliasProperty = cache->property(aliasOffset() + aliasId);
     const int targetPropertyIndex = aliasProperty ? aliasProperty->aliasTarget() : -1;
 
     if (targetPropertyIndex != -1) {
@@ -1518,8 +1508,6 @@ void QQmlVMEMetaObject::connectAlias(const QV4::CompiledData::Object *compiledOb
     if (!aliasEndpoints)
         aliasEndpoints = new QQmlVMEMetaObjectEndpoint[compiledObject->nAliases];
 
-    const QV4::CompiledData::Alias *aliasData = &compiledObject->aliasTable()[aliasId];
-
     QQmlVMEMetaObjectEndpoint *endpoint = aliasEndpoints + aliasId;
     if (endpoint->metaObject.data()) {
         // already connected
@@ -1527,8 +1515,10 @@ void QQmlVMEMetaObject::connectAlias(const QV4::CompiledData::Object *compiledOb
         return;
     }
 
+    const QQmlPropertyData *aliasProperty = cache->property(aliasOffset() + aliasId);
     endpoint->metaObject = this;
-    endpoint->connect(ctxt->idValueBindings(aliasData->targetObjectId()));
+    endpoint->connect(ctxt->idValueBindings(
+            aliasProperty ? aliasProperty->aliasTargetObjectId() : -1));
     endpoint->tryConnect();
 }
 

@@ -971,7 +971,7 @@ private:
     QQmlError propertyDataForAlias(
             const CompiledObject &component, const QV4::CompiledData::Alias &alias, QMetaType *type,
             QTypeRevision *version, QQmlPropertyData::Flags *propertyFlags,
-            int targetPropertyIndex);
+            int targetPropertyIndex, int *resolvedTargetObjectId);
 
     QQmlPropertyCacheVector *propertyCaches;
     const ObjectContainer *objectContainer;
@@ -988,7 +988,8 @@ inline QQmlPropertyCacheAliasCreator<ObjectContainer>::QQmlPropertyCacheAliasCre
 template <typename ObjectContainer>
 inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataForAlias(
         const CompiledObject &component, const QV4::CompiledData::Alias &alias, QMetaType *type,
-        QTypeRevision *version, QQmlPropertyData::Flags *propertyFlags, int targetPropertyIndex)
+        QTypeRevision *version, QQmlPropertyData::Flags *propertyFlags, int targetPropertyIndex,
+        int *resolvedTargetObjectId)
 {
     *type = QMetaType();
     bool writable = false;
@@ -1023,8 +1024,11 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataFor
         } while (lastAlias->isAliasToLocalAlias());
 
         return propertyDataForAlias(
-                component, *lastAlias, type, version, propertyFlags, targetPropertyIndex);
+                component, *lastAlias, type, version, propertyFlags, targetPropertyIndex,
+                resolvedTargetObjectId);
     }
+
+    *resolvedTargetObjectId = alias.targetObjectId();
 
     const int targetObjectIndex = objectForId(objectContainer, component, alias.targetObjectId());
     Q_ASSERT(targetObjectIndex >= 0);
@@ -1141,8 +1145,10 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAliasToPr
     QMetaType type;
     QTypeRevision version = QTypeRevision::zero();
     QQmlPropertyData::Flags propertyFlags;
+    int resolvedTargetObjectId = -1;
     QQmlError error = propertyDataForAlias(
-            component, alias, &type, &version, &propertyFlags, encodedMetaPropertyIndex);
+            component, alias, &type, &version, &propertyFlags, encodedMetaPropertyIndex,
+            &resolvedTargetObjectId);
     if (error.isValid())
         return error;
 
@@ -1161,7 +1167,8 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAliasToPr
 
     const auto &appendResult =
             propertyCache->appendAlias(propertyName, propertyFlags, effectivePropertyIndex, type,
-                                       version, effectiveSignalIndex, encodedMetaPropertyIndex);
+                                       version, effectiveSignalIndex, encodedMetaPropertyIndex,
+                                       resolvedTargetObjectId);
     if (!appendResult) {
         return qQmlCompileError(alias.location,
                                 QQmlPropertyCacheCreatorBase::explain(appendResult.error()));

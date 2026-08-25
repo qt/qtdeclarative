@@ -1875,22 +1875,17 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
         // if the signal handlers are defined and connected in C++ code rather
         // than being declared in QML.
         _vmeMetaObject->connectAlias(_compiledObject, aliasIndex);
-        const QV4::CompiledData::Alias* alias = _compiledObject->aliasesBegin() + aliasIndex;
-        const auto originalAlias = alias;
-        while (alias->isAliasToLocalAlias())
-            alias = _compiledObject->aliasesBegin() + alias->localAliasIndex;
         if (!context->isIdValueSet(0)) // TODO: Do we really want 0 here?
             continue;
-        QObject *target = context->idValue(alias->targetObjectId());
+        const QQmlPropertyData *aliasProperty =
+                _propertyCache->property(_vmeMetaObject->aliasOffset() + aliasIndex);
+        if (!aliasProperty)
+            continue;
+        QObject *target = context->idValue(aliasProperty->aliasTargetObjectId());
         if (!target)
             continue;
         QQmlData *targetDData = QQmlData::get(target, /*create*/false);
         if (targetDData == nullptr || targetDData->propertyCache.isNull())
-            continue;
-
-        const QQmlPropertyData *aliasProperty =
-                _propertyCache->property(_vmeMetaObject->aliasOffset() + aliasIndex);
-        if (!aliasProperty)
             continue;
         const int targetPropertyIndex = aliasProperty->aliasTarget();
         int coreIndex = QQmlPropertyIndex::fromEncoded(targetPropertyIndex).coreIndex();
@@ -1899,12 +1894,14 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
         if (!targetProperty)
             continue;
         auto it = sharedState->requiredProperties.find({target, targetProperty});
-        if (it != sharedState->requiredProperties.end())
+        if (it != sharedState->requiredProperties.end()) {
+            const QV4::CompiledData::Alias *alias = _compiledObject->aliasesBegin() + aliasIndex;
             it->aliasesToRequired.push_back(
                     AliasToRequiredInfo {
-                            compilationUnit->stringAt(originalAlias->nameIndex()),
+                            compilationUnit->stringAt(alias->nameIndex()),
                             compilationUnit->finalUrl()
                     });
+        }
     }
 
     qSwap(_vmeMetaObject, vmeMetaObject);

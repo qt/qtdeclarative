@@ -328,7 +328,7 @@ private:
     AppendResult appendPropertyAttr(const QString &name, QQmlPropertyData &&data);
     AppendResult appendAlias(const QString &, QQmlPropertyData::Flags flags, int coreIndex,
                              QMetaType propType, QTypeRevision version, int notifyIndex,
-                             int encodedTargetIndex);
+                             int encodedTargetIndex, int targetObjectId);
     void appendSignal(const QString &, QQmlPropertyData::Flags, int coreIndex,
                       const QMetaType *types = nullptr,
                       const QList<QByteArray> &names = QList<QByteArray>());
@@ -540,6 +540,10 @@ QQmlPropertyCache::overrideData(const QQmlPropertyData *data) const
 
 bool QQmlPropertyCache::isAllowedInRevision(const QQmlPropertyData *data) const
 {
+    // Aliases can't be revisioned.
+    if (data->isAlias())
+        return true;
+
     const QTypeRevision requested = data->revision();
     const int offset = data->metaObjectOffset();
     if (offset == -1 && requested == QTypeRevision::zero())

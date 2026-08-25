@@ -337,7 +337,7 @@ QQmlPropertyCache::Ptr QQmlPropertyCache::copyAndReserve(
 QQmlPropertyCache::AppendResult
 QQmlPropertyCache::appendAlias(const QString &name, QQmlPropertyData::Flags flags, int coreIndex,
                                QMetaType propType, QTypeRevision version, int notifyIndex,
-                               int encodedTargetIndex)
+                               int encodedTargetIndex, int targetObjectId)
 {
     QQmlPropertyData data;
     data.setPropType(propType);
@@ -346,6 +346,7 @@ QQmlPropertyCache::appendAlias(const QString &name, QQmlPropertyData::Flags flag
     flags.setIsAlias(true);
     data.setFlags(flags);
     data.setAliasTarget(encodedTargetIndex);
+    data.setAliasTargetObjectId(targetObjectId);
     data.setTypeVersion(version);
 
     return appendPropertyAttr(name, std::move(data));
