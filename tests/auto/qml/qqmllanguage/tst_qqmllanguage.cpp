@@ -535,6 +535,7 @@ private slots:
     void aliasToGroupedProperty();
     void aliasesAndDefaultProperty();
     void removeBindingFromAliasToObject();
+    void aliasToLocalAliasOrdering();
     void propertyCycle();
 
     void urlWithFragment();
@@ -10194,6 +10195,20 @@ void tst_qqmllanguage::removeBindingFromAliasToObject()
     QVERIFY(o);
 
     QCOMPARE(o->objectName(), "boom"_L1);
+}
+
+void tst_qqmllanguage::aliasToLocalAliasOrdering()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("aliasToLocalAliasOrdering.qml"));
+
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QObject *nav = qvariant_cast<QObject *>(o->property("navigation"));
+    QVERIFY(nav);
+    QCOMPARE(nav->objectName(), "theNav"_L1);
 }
 
 void tst_qqmllanguage::urlWithFragment()
