@@ -60,7 +60,10 @@ QAccessibleInterface *QAccessibleQuickWindow::focusChild() const
 
 QAccessible::Role QAccessibleQuickWindow::role() const
 {
-    return QAccessible::Window;
+    if (window() && window()->isTopLevel())
+        return QAccessible::Window;
+
+    return QAccessible::Client;
 }
 
 QAccessible::State QAccessibleQuickWindow::state() const
@@ -77,7 +80,7 @@ QRect QAccessibleQuickWindow::rect() const
 {
     if (!window())
         return {};
-    return QRect(window()->x(), window()->y(), window()->width(), window()->height());
+    return QRect(window()->mapToGlobal(QPoint(0, 0)), window()->size());
 }
 
 QString QAccessibleQuickWindow::text(QAccessible::Text text) const
@@ -89,7 +92,7 @@ QString QAccessibleQuickWindow::text(QAccessible::Text text) const
         return QString::fromLatin1(object()->metaObject()->className()) ;
     }
 #endif
-    if (text == QAccessible::Name)
+    if (text == QAccessible::Name && window()->isTopLevel())
         return window()->title();
     else
         return {};
