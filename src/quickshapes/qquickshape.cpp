@@ -56,11 +56,11 @@ Q_STATIC_LOGGING_CATEGORY(lcShapeSync, "qt.quick.shapes.shape.sync")
 
     \note By default, Qt Quick Shapes relies on multi-sampling for anti-aliasing. This can be
     enabled for the entire application or window using the corresponding settings in QSurfaceFormat.
-    It can also be enabled for only the shape, by setting its \l{Item::layer.enabled}{layer.enabled}
-    property to true and then adjusting the \l{Item::layer.samples}{layer.samples} property. In the
+    It can also be enabled for only the shape, by setting its \l{Item::}{layer.enabled}
+    property to true and then adjusting the \l{Item::}{layer.samples} property. In the
     latter case, multi-sampling will not be applied to the entire scene, but the shape will be
     rendered via an intermediate off-screen buffer. Alternatively, the
-    \l{QtQuick.Shapes::Shape::preferredRendererType}{preferredRendererType} property can be set
+    \l{QtQuick.Shapes.Shape::}{preferredRendererType} property can be set
     to \c{Shape.CurveRenderer}. This has anti-aliasing built in and generally renders the shapes
     at a higher quality, but at some additional performance cost.
 
