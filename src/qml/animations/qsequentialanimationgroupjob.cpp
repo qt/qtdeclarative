@@ -6,7 +6,27 @@
 #include "private/qpauseanimationjob_p.h"
 #include "private/qanimationjobutil_p.h"
 
+#include <QtCore/qnumeric.h>
+
+#include <limits>
+
 QT_BEGIN_NAMESPACE
+
+namespace {
+
+/*!
+    \internal
+    Returns INT_MAX in case of overflow
+*/
+int addSaturating(int a, int b)
+{
+    int r;
+    if (qAddOverflow(a, b, &r))
+        return std::numeric_limits<int>::max();
+    return r;
+}
+
+} // namespace
 
 QSequentialAnimationGroupJob::QSequentialAnimationGroupJob()
     : QAnimationGroupJob()
@@ -63,8 +83,9 @@ QSequentialAnimationGroupJob::AnimationIndex QSequentialAnimationGroupJob::index
         // 2. it ends after msecs
         // 3. it is the last animation (this can happen in case there is at least 1 uncontrolled animation)
         // 4. it ends exactly in msecs and the direction is backwards
-        if (duration == -1 || m_currentTime < (ret.timeOffset + duration)
-            || (m_currentTime == (ret.timeOffset + duration) && m_direction == QAbstractAnimationJob::Backward)) {
+        const int offsetPlusDuration = addSaturating(ret.timeOffset, duration);
+        if (duration == -1 || m_currentTime < offsetPlusDuration
+            || (m_currentTime == offsetPlusDuration && m_direction == QAbstractAnimationJob::Backward)) {
             ret.animation = anim;
             return ret;
         }
@@ -74,7 +95,7 @@ QSequentialAnimationGroupJob::AnimationIndex QSequentialAnimationGroupJob::index
         }
 
         // 'animation' has a non-null defined duration and is not the one at time 'msecs'.
-        ret.timeOffset += duration;
+        ret.timeOffset = offsetPlusDuration;
     }
 
     // this can only happen when one of those conditions is true:
@@ -166,7 +187,8 @@ int QSequentialAnimationGroupJob::duration() const
         if (currentDuration == -1)
             return -1; // Undetermined length
 
-        ret += currentDuration;
+        if (qAddOverflow(ret, currentDuration, &ret))
+            return std::numeric_limits<int>::max();
     }
 
     return ret;
@@ -208,7 +230,8 @@ void QSequentialAnimationGroupJob::updateCurrentTime(int currentTime)
         RETURN_IF_DELETED(m_currentAnimation->setCurrentTime(newCurrentTime));
         if (atEnd()) {
             //we make sure that we don't exceed the duration here
-            m_currentTime += m_currentAnimation->currentTime() - newCurrentTime;
+            const int diff = m_currentAnimation->currentTime() - newCurrentTime;
+            m_currentTime = addSaturating(m_currentTime, diff);
             RETURN_IF_DELETED(stop());
         }
     } else {
@@ -384,18 +407,18 @@ void QSequentialAnimationGroupJob::animationRemoved(QAbstractAnimationJob *anim,
     for (QAbstractAnimationJob *job : m_children) {
         if (job == m_currentAnimation)
             break;
-        m_currentTime += animationActualTotalDuration(job);
+        m_currentTime = addSaturating(m_currentTime, animationActualTotalDuration(job));
 
     }
 
     if (!removingCurrent) {
         //the current animation is not the one being removed
         //so we add its current time to the current time of this group
-        m_currentTime += m_currentAnimation->currentTime();
+        m_currentTime = addSaturating(m_currentTime, m_currentAnimation->currentTime());
     }
 
     //let's also update the total current time
-    m_totalCurrentTime = m_currentTime + m_loopCount * duration();
+    m_totalCurrentTime = addSaturating(m_currentTime, totalDuration());
 }
 
 void QSequentialAnimationGroupJob::debugAnimation(QDebug d) const
