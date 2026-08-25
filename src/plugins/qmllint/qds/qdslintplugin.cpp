@@ -54,10 +54,7 @@ private:
 class QdsBindingValidator : public PropertyPass
 {
 public:
-    QdsBindingValidator(PassManager *manager, const Element &)
-        : PropertyPass(manager), m_statesType(resolveType("QtQuick", "State"))
-    {
-    }
+    QdsBindingValidator(PassManager *manager, const Element &) : PropertyPass(manager) { }
 
     void onRead(const QQmlSA::Element &element, const QString &propertyName,
                 const QQmlSA::Element &readScope, QQmlSA::SourceLocation location) override;
@@ -65,9 +62,6 @@ public:
     void onWrite(const QQmlSA::Element &element, const QString &propertyName,
                  const QQmlSA::Element &value, const QQmlSA::Element &writeScope,
                  QQmlSA::SourceLocation location) override;
-
-private:
-    Element m_statesType;
 };
 
 class QdsElementValidator : public ElementPass
