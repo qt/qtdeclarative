@@ -6,6 +6,7 @@
 #include <QtQml/private/qparallelanimationgroupjob_p.h>
 #include <QtQml/private/qpauseanimationjob_p.h>
 
+#include <limits>
 #include <memory>
 
 Q_DECLARE_METATYPE(QAbstractAnimationJob::State)
@@ -46,6 +47,7 @@ private slots:
     void clear();
     void pauseResume();
     void deleteFromListener();
+    void noIntegerOverflow();
 };
 
 void tst_QSequentialAnimationGroupJob::initTestCase()
@@ -64,6 +66,7 @@ class TestAnimation : public QAbstractAnimationJob
 public:
     TestAnimation(int duration = 250) : m_duration(duration) {}
     int duration() const override { return m_duration; }
+    void setDuration(int duration) { m_duration = duration; }
 
 private:
     int m_duration;
@@ -1666,6 +1669,56 @@ void tst_QSequentialAnimationGroupJob::deleteFromListener()
 
     QTRY_VERIFY(listener.groupDeleted);
     // It's dead, Jim.
+}
+
+void tst_QSequentialAnimationGroupJob::noIntegerOverflow()
+{
+    const int Max = std::numeric_limits<int>::max();
+
+    // summed child durations saturate to INT_MAX instead of wrapping
+    {
+        QSequentialAnimationGroupJob group;
+        group.appendAnimation(new TestAnimation(Max / 2 + 1));
+        group.appendAnimation(new TestAnimation(Max / 2 + 1));
+        QCOMPARE(group.duration(), Max);
+    }
+
+    // the right child and its local time are still found past INT_MAX
+    {
+        QSequentialAnimationGroupJob group;
+        auto *a1 = new TestAnimation(Max - 100); // [0, Max - 100)
+        auto *a2 = new TestAnimation(200);        // timeOffset + 200 should not wrap
+        group.appendAnimation(a1);
+        group.appendAnimation(a2);
+        QCOMPARE(group.duration(), Max);
+
+        group.setCurrentTime(Max - 50); // 50 ms into a2
+        QCOMPARE(group.currentAnimation(), a2);
+        QCOMPARE(a2->currentLoopTime(), 50);
+
+        a1->setDuration(Max);
+        group.setCurrentTime(Max - 25);
+        QCOMPARE(group.currentAnimation(), a1);
+        QCOMPARE(a1->currentLoopTime(), Max - 25);
+    }
+
+    // removeAnimation() recomputes the times without overflow
+    {
+        QSequentialAnimationGroupJob group;
+        group.setLoopCount(2);
+        auto *a1 = new TestAnimation(Max / 2 + 1);
+        auto *a2 = new TestAnimation(Max / 2 + 1);
+        group.appendAnimation(a1);
+        group.appendAnimation(a2);
+        QCOMPARE(group.totalDuration(), Max);
+
+        group.setCurrentTime(50); // 50 ms into a1
+        QCOMPARE(group.currentAnimation(), a1);
+
+        std::unique_ptr<QAbstractAnimationJob> a2Guard(a2);
+        group.removeAnimation(a2);
+        QCOMPARE(group.currentTime(), Max);
+    }
 }
 
 QTEST_MAIN(tst_QSequentialAnimationGroupJob)
