@@ -1485,6 +1485,8 @@ bool QQmlJSScope::isSameType(const ConstPtr &otherScope) const
 
 bool QQmlJSScope::inherits(const ConstPtr &base) const
 {
+    if (!base)
+        return false;
     for (const QQmlJSScope *scope = this; scope; scope = scope->baseType().get()) {
         if (scope->isSameType(base))
             return true;
