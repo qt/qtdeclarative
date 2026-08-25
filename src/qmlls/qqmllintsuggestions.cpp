@@ -160,7 +160,7 @@ static Diagnostic messageToDiagnostic_helper(AdvanceFunc advancePositionPastLoca
     }
 
     if (message.fixSuggestion && !message.fixSuggestion->description().isEmpty()) {
-        diagnostic.message = u"%1: %2 [%3]"_s.arg(message.message, message.fixSuggestion->description(), message.id.toString())
+        diagnostic.message = u"%1%2 [%3]"_s.arg(message.message, message.fixSuggestion->description(), message.id.toString())
                                      .simplified()
                                      .toUtf8();
     } else {

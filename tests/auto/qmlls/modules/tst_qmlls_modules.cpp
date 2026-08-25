@@ -1425,7 +1425,7 @@ void tst_qmlls_modules::warnings_data()
                    { "Warnings occurred while importing module \"MyModule\": [import]"_L1,
                      "Failed to import MyModule. Are your import paths set up properly? Did you "
                      "build your project? [import]"_L1,
-                     "MyComponent was not found. Did you add all imports and dependencies?: Did "
+                     "MyComponent was not found. Did "
                      "you mean \"Component\"? [import]"_L1 }
                };
     {
@@ -1488,7 +1488,7 @@ void tst_qmlls_modules::warnings_data()
                 "Failed to import MyModule. Are your import paths set up properly? Did you build "
                 "your project? [import]"_L1);
         missingWorkspaceB.warnings.append(
-                "MyItem was not found. Did you add all imports and dependencies?: Did you mean \"Item\"? [import]"_L1);
+                "MyItem was not found. Did you mean \"Item\"? [import]"_L1);
 
         QTest::addRow("MissingWorkspaceB")
                 << u"workspaces/twoWorkspaces/WorkspaceB/UseImportPathB.qml"_s << missingWorkspaceB;
@@ -1517,7 +1517,7 @@ void tst_qmlls_modules::warnings_data()
                 "Failed to import MyModule. Are your import paths set up properly? Did you build "
                 "your project? [import]"_L1);
         nestedWorkspaces.warnings.append(
-                "MyItem was not found. Did you add all imports and dependencies?: Did you mean \"Item\"? [import]"_L1);
+                "MyItem was not found. Did you mean \"Item\"? [import]"_L1);
 
         // use import paths from twoWorkspaces and not from WorkspaceA, expect warnings
         QTest::addRow("NestedWorkspaces2")

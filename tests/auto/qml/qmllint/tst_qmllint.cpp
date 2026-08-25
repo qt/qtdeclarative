@@ -566,12 +566,12 @@ void TestQmllint::testUnknownCausesFail()
 {
     runTest("unknownElement.qml",
             ResultBuilder()
-            .addExpected("Unknown was not found. Did you add all imports and dependencies?"_L1,
+            .addExpected("Unknown was not found."_L1,
                          4, 5, QtWarningMsg)
             .build());
     runTest("TypeWithUnknownPropertyType.qml",
             ResultBuilder()
-            .addExpected("Something was not found. Did you add all imports and dependencies?",
+            .addExpected("Something was not found.",
                          4, 5, QtWarningMsg)
             .build());
 }
@@ -593,7 +593,7 @@ void TestQmllint::oldQmltypes()
             .addExpected("Found deprecated dependency specifications"_L1)
             .addExpected("Meta object revision and export version differ."_L1)
             .addExpected("Revision 0 corresponds to version 0.0; it should be 1.0."_L1)
-            .addUnexpected("QQuickItem was not found. Did you add all imports and dependencies?"_L1)
+            .addUnexpected("QQuickItem was not found."_L1)
             .build());
 
     runTest("oldUnusedQmlTypes.qml",
@@ -832,7 +832,7 @@ void TestQmllint::dirtyQmlCode_data()
             << defaultOptions;
     QTest::newRow("DefaultPropertyLookupInUnknownType")
             << QStringLiteral("unknownParentDefaultPropertyCheck.qml")
-            << ResultBuilder::singleExpected("Alien was not found. Did you add all imports and dependencies?"_L1)
+            << ResultBuilder::singleExpected("Alien was not found."_L1)
             << defaultOptions;
     QTest::newRow("DefaultPropertyWithWrongType(string)")
             << QStringLiteral("defaultPropertyWithWrongType.qml")
@@ -1103,8 +1103,7 @@ void TestQmllint::dirtyQmlCode_data()
             << defaultOptions;
     QTest::newRow("assignNonExistingTypeToVarProp")
             << QStringLiteral("assignNonExistingTypeToVarProp.qml")
-            << ResultBuilder::singleExpected("NonExistingType was not found. Did you add all "
-                                             "imports and dependencies?"_L1)
+            << ResultBuilder::singleExpected("NonExistingType was not found."_L1)
             << defaultOptions;
     // should succeed, but it does not:
     QTest::newRow("attachedPropertyAccess") << QStringLiteral("goodAttachedPropertyAccess.qml")
@@ -1201,9 +1200,7 @@ void TestQmllint::dirtyQmlCode_data()
             << defaultOptions;
     QTest::newRow("badQmldirImportAndDepend")
             << QStringLiteral("qmldirImportAndDepend/bad.qml")
-            << ResultBuilder::singleExpected("Item was not found. Did you add all imports and "
-                                             "dependencies?"_L1, 3, 1)
-            << defaultOptions;
+            << ResultBuilder::singleExpected("Item was not found."_L1, 3, 1) << defaultOptions;
     QTest::newRow("badScript")
             << QStringLiteral("badScript.qml")
             << ResultBuilder::singleExpected("Member \"stuff\" not found on type \"Empty\""_L1, 5, 21)
@@ -1280,7 +1277,7 @@ void TestQmllint::dirtyQmlCode_data()
     QTest::newRow("didYouMean(component)")
             << QStringLiteral("didYouMeanComponent.qml")
             << ResultBuilder()
-               .addExpected("Itym was not found. Did you add all imports and dependencies?"_L1)
+               .addExpected("Itym was not found."_L1)
                .addFix("Item"_L1)
                .build()
             << defaultOptions;
@@ -1400,7 +1397,7 @@ void TestQmllint::dirtyQmlCode_data()
     QTest::newRow("inlineComponentSearchInfiniteLoop")
             << QStringLiteral("InlineComponentSearchInfiniteLoop_Main.qml")
             << ResultBuilder::singleExpected("InlineComponentSearchInfiniteLoop_Other.a was not "
-                                             "found. Did you add all imports and dependencies?"_L1,
+                                             "found."_L1,
                                              5, 5)
             << defaultOptions;
     QTest::newRow("invalidAliasTarget1")
@@ -1667,7 +1664,7 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)"_L1,
     QTest::newRow("unresolvedType")
             << QStringLiteral("unresolvedType.qml")
             << ResultBuilder()
-               .addExpected("UnresolvedType was not found. Did you add all imports and dependencies"_L1)
+               .addExpected("UnresolvedType was not found."_L1)
                .addUnexpected("incompatible type"_L1)
                .build()
             << defaultOptions;
@@ -1675,7 +1672,7 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)"_L1,
     QTest::newRow("unresolvedType2")
             << QStringLiteral("unresolvedType2.qml")
             << ResultBuilder()
-               .addExpected("QQC2.Label was not found. Did you add all imports and dependencies?"_L1)
+               .addExpected("QQC2.Label was not found."_L1)
                .addUnexpected("'QQC2.Label' is used but it is not resolved"_L1)
                .addUnexpected("Type QQC2.Label is used but it is not resolved"_L1)
                .build()
@@ -2284,8 +2281,7 @@ void TestQmllint::dirtyQmlSnippet_data()
             << defaultOptions;
     QTest::newRow("unspecializedList")
             << u"property list l"_s
-            << ResultBuilder::singleExpected("list was not found. Did you add all imports and "
-                                             "dependencies? list is not a type. It requires an "
+            << ResultBuilder::singleExpected("list was not found. list is not a type. It requires an "
                                              "element type argument (eg. list<int>)"_L1, 1, 1)
             << defaultOptions;
     QTest::newRow("upperCaseId")
@@ -4399,10 +4395,10 @@ Item {
 })"_s
             << ResultBuilder()
                        .addExpected(
-                               "MyObject was not found. Did you add all imports and dependencies?"_L1,
+                               "MyObject was not found."_L1,
                                4, 26)
                        .addExpected(
-                               "MyObject was not found. Did you add all imports and dependencies?"_L1,
+                               "MyObject was not found."_L1,
                                6, 9)
                        .addUnexpected("incomplete"_L1)
                        .build()
@@ -5834,7 +5830,7 @@ void TestQmllint::crashes()
 
     checkResult(warnings,
                 ResultBuilder()
-                .addExpected("FooBar was not found. Did you add all imports and dependencies?"_L1)
+                .addExpected("FooBar was not found."_L1)
                 .build());
 }
 
