@@ -6,6 +6,8 @@
 
 #include <QtQuick/qquickrendercontrol.h>
 
+#include <QtGui/private/qwindow_p.h>
+
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <QtQuick/private/qquickwindowmodule_p.h>
@@ -162,6 +164,11 @@ QQuickWindowContainer::~QQuickWindowContainer()
         } else {
             d->window->destroy();
             d->window->setParent(nullptr);
+#if QT_CONFIG(accessibility)
+            auto *windowPrivate = QWindowPrivate::get(d->window);
+            if (windowPrivate->accessibleParent == this)
+                windowPrivate->setAccessibleParent(nullptr);
+#endif
         }
 
         d->window = nullptr;
@@ -215,6 +222,11 @@ void QQuickWindowContainer::setContainedWindow(QWindow *window)
         previousWindow->disconnect(this);
         previousWindow->removeEventFilter(this);
         previousWindow->setParent(nullptr);
+#if QT_CONFIG(accessibility)
+        auto *previousWindowPrivate = QWindowPrivate::get(previousWindow);
+        if (previousWindowPrivate->accessibleParent == this)
+            previousWindowPrivate->setAccessibleParent(nullptr);
+#endif
     }
 
     d->window = window;
@@ -240,6 +252,10 @@ void QQuickWindowContainer::setContainedWindow(QWindow *window)
         connect(d->window, &QObject::destroyed, this, &QQuickWindowContainer::windowDestroyed);
 
         d->window->installEventFilter(this);
+
+#if QT_CONFIG(accessibility)
+        QWindowPrivate::get(d->window)->setAccessibleParent(this);
+#endif
 
         if (d->componentComplete)
             initializeContainedWindow();

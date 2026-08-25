@@ -5,6 +5,7 @@
 #include "qaccessiblequickview_p.h"
 
 #include <QtGui/qguiapplication.h>
+#include <QtGui/private/qwindow_p.h>
 
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/private/qquickitem_p.h>
@@ -34,7 +35,12 @@ int QAccessibleQuickWindow::childCount() const
 
 QAccessibleInterface *QAccessibleQuickWindow::parent() const
 {
-    // FIXME: for now we assume to be a top level window...
+    if (QWindow *w = window()) {
+        // A quick window hosted in a window container needs to reflect the container
+        if (QObject *a11yParent = QWindowPrivate::get(w)->accessibleParent)
+            return QAccessible::queryAccessibleInterface(a11yParent);
+    }
+
     return QAccessible::queryAccessibleInterface(qApp);
 }
 
