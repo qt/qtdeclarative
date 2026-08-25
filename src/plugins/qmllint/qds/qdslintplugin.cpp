@@ -359,7 +359,7 @@ void QdsElementValidator::run(const Element &element)
                                                                : ErrUnsupportedRootTypeInQmlUi;
 
         for (const auto &unsupportedElement : unsupportedComponents) {
-            if (!unsupportedElement || !element.inherits(unsupportedElement))
+            if (!element.inherits(unsupportedElement))
                 continue;
 
             emitWarning(message.arg(element.baseTypeName()), id, element.sourceLocation());
@@ -408,7 +408,7 @@ void QdsElementValidator::run(const Element &element)
     }
 
     if (std::none_of(m_supportFunctions.cbegin(), m_supportFunctions.cend(),
-                     [&element](const Element &base) { return base && element.inherits(base); })) {
+                     [&element](const Element &base) { return element.inherits(base); })) {
         complainAboutFunctions(element);
     }
 }

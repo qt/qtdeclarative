@@ -285,8 +285,7 @@ AnchorsValidatorPass::AnchorsValidatorPass(QQmlSA::PassManager *manager)
 
 bool AnchorsValidatorPass::shouldRun(const QQmlSA::Element &element)
 {
-    return !m_item.isNull() && element.inherits(m_item)
-            && element.hasOwnPropertyBindings(u"anchors"_s);
+    return element.inherits(m_item) && element.hasOwnPropertyBindings(u"anchors"_s);
 }
 
 void AnchorsValidatorPass::run(const QQmlSA::Element &element)
@@ -381,7 +380,7 @@ ControlsSwipeDelegateValidatorPass::ControlsSwipeDelegateValidatorPass(QQmlSA::P
 
 bool ControlsSwipeDelegateValidatorPass::shouldRun(const QQmlSA::Element &element)
 {
-    return !m_swipeDelegate.isNull() && element.inherits(m_swipeDelegate);
+    return element.inherits(m_swipeDelegate);
 }
 
 void ControlsSwipeDelegateValidatorPass::run(const QQmlSA::Element &element)
@@ -974,7 +973,7 @@ PropertyChangesValidatorPass::PropertyChangesValidatorPass(QQmlSA::PassManager *
 
 bool PropertyChangesValidatorPass::shouldRun(const QQmlSA::Element &element)
 {
-    return !m_propertyChanges.isNull() && element.inherits(m_propertyChanges);
+    return element.inherits(m_propertyChanges);
 }
 
 void PropertyChangesValidatorPass::run(const QQmlSA::Element &element)
@@ -1038,7 +1037,7 @@ StateNoItemChildrenValidator::StateNoItemChildrenValidator(QQmlSA::PassManager *
 
 bool StateNoItemChildrenValidator::shouldRun(const QQmlSA::Element &element)
 {
-    return !m_state.isNull() && element.inherits(m_state);
+    return element.inherits(m_state);
 }
 
 void StateNoItemChildrenValidator::run(const QQmlSA::Element &element)
