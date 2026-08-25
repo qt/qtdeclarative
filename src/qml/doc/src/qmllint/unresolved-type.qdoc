@@ -39,7 +39,7 @@ The type can't be found by QML tooling, and most likely not by the QML engine.
 \qml
 import QtQuick
 
-Item { ... }
+Itme { ... } // misspelling of Item
 \endqml
 To fix this warning, correct the typo:
 \qml
