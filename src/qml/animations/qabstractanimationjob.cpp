@@ -3,6 +3,8 @@
 // Qt-Security score:significant
 
 #include <QtCore/qthreadstorage.h>
+#include <QtCore/qnumeric.h>
+#include <QtCore/q26numeric.h>
 
 #include "private/qabstractanimationjob_p.h"
 #include "private/qanimationgroupjob_p.h"
@@ -18,6 +20,22 @@ Q_GLOBAL_STATIC(QThreadStorage<QQmlAnimationTimer *>, animationTimer)
 #endif
 
 DEFINE_BOOL_CONFIG_OPTION(animationTickDump, QML_ANIMATION_TICK_DUMP);
+
+namespace {
+
+/*!
+    \internal
+    Returns INT_MAX in case of overflow.
+*/
+int mulSaturating(int a, int b)
+{
+    int r;
+    if (qMulOverflow(a, b, &r))
+        return std::numeric_limits<int>::max();
+    return r;
+}
+
+} // namespace
 
 QAnimationJobChangeListener::~QAnimationJobChangeListener()
 {
@@ -101,9 +119,9 @@ void QQmlAnimationTimer::updateAnimationsTime(qint64 delta)
         insideTick = true;
         for (currentAnimationIdx = 0; currentAnimationIdx < animations.size(); ++currentAnimationIdx) {
             QAbstractAnimationJob *animation = animations.at(currentAnimationIdx);
-            int elapsed = animation->m_totalCurrentTime
+            qint64 elapsed = animation->m_totalCurrentTime
                           + (animation->direction() == QAbstractAnimationJob::Forward ? delta : -delta);
-            animation->setCurrentTime(elapsed);
+            animation->setCurrentTime(q26::saturating_cast<int>(elapsed));
         }
         if (animationTickDump()) {
             qDebug() << "***** Dumping Animation Tree ***** ( tick:" << lastTick << "delta:" << delta << ")";
@@ -377,7 +395,8 @@ void QAbstractAnimationJob::setState(QAbstractAnimationJob::State newState)
         int dura = duration();
 
         if (dura == -1 || m_loopCount < 0
-            || (oldDirection == Forward && (oldCurrentTime * (oldCurrentLoop + 1)) == (dura * m_loopCount))
+            || (oldDirection == Forward
+                && qint64(oldCurrentTime) * (oldCurrentLoop + 1) == qint64(dura) * m_loopCount)
             || (oldDirection == Backward && oldCurrentTime == 0)) {
                finished();
         }
@@ -429,7 +448,7 @@ int QAbstractAnimationJob::totalDuration() const
     int loopcount = loopCount();
     if (loopcount < 0)
         return -1;
-    return dura * loopcount;
+    return mulSaturating(dura, loopcount);
 }
 
 void QAbstractAnimationJob::setCurrentTime(int msecs)
@@ -455,7 +474,7 @@ void QAbstractAnimationJob::setCurrentTime(int msecs)
         m_totalCurrentTime = msecs;
         m_currentTime = msecs - m_currentLoopStartTime;
     } else {
-        totalDura = dura <= 0 ? dura : ((m_loopCount < 0) ? -1 : dura * m_loopCount);
+        totalDura = dura <= 0 ? dura : ((m_loopCount < 0) ? -1 : mulSaturating(dura, m_loopCount));
         if (totalDura != -1)
             msecs = qMin(totalDura, msecs);
         m_totalCurrentTime = msecs;

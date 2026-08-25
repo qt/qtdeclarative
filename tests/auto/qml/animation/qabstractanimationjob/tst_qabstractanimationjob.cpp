@@ -8,6 +8,8 @@
 #include <private/qanimationgroupjob_p.h>
 #include <private/qcoreapplication_p.h>
 
+#include <limits>
+
 class tst_QAbstractAnimationJob : public QObject
 {
   Q_OBJECT
@@ -22,6 +24,7 @@ private slots:
     void loopCount();
     void state();
     void totalDuration();
+    void finishedNotEmittedOnEarlyStop();
     void avoidJumpAtStart();
     void avoidJumpAtStartWithStop();
     void avoidJumpAtStartWithRunning();
@@ -117,6 +120,34 @@ void tst_QAbstractAnimationJob::totalDuration()
     QCOMPARE(anim.duration(), 10);
     anim.setLoopCount(5);
     QCOMPARE(anim.totalDuration(), 50);
+
+    // totalDuration() saturates to INT_MAX instead of overflowing
+    const int Max = std::numeric_limits<int>::max();
+    anim.setDuration(Max);
+    QCOMPARE(anim.totalDuration(), Max);
+}
+
+void tst_QAbstractAnimationJob::finishedNotEmittedOnEarlyStop()
+{
+    // 3 * 1431655766 overflows int to 2, which would match
+    // currentLoopTime * (currentLoop + 1)
+    // We don't want it to report finished, though
+    struct FinishedListener : QAnimationJobChangeListener
+    {
+        int finishedCount = 0;
+        void animationFinished(QAbstractAnimationJob *) override { ++finishedCount; }
+    } listener;
+
+    TestableQAbstractAnimation anim;
+    anim.setDuration(3);
+    anim.setLoopCount(1431655766);
+    anim.addAnimationChangeListener(&listener, QAbstractAnimationJob::Completion);
+
+    anim.start();
+    anim.setCurrentTime(4); // currentLoop = 1, currentLoopTime = 1
+    anim.stop();            // manual early stop — finished() must NOT fire
+
+    QCOMPARE(listener.finishedCount, 0);
 }
 
 void tst_QAbstractAnimationJob::avoidJumpAtStart()
