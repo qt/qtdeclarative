@@ -2043,6 +2043,8 @@ QQuickTransform *QQuickItemGenerator::createAnimatedTransformGroup(QQuickItem *i
         return nullptr;
 
     auto *baseGroup = new QQuickTransformGroup(item);
+    QQuickTransformGroup *earliestOverrideGroup = nullptr;
+    bool anyNonConstant = false;
 
     for (int groupIndex = 0; groupIndex < info.transform.animationGroupCount(); ++groupIndex) {
         int animStart = info.transform.animationGroup(groupIndex);
@@ -2061,6 +2063,9 @@ QQuickTransform *QQuickItemGenerator::createAnimatedTransformGroup(QQuickItem *i
         const bool freeze =
                 firstAnimation.flags & QQuickAnimatedProperty::PropertyAnimation::FreezeAtEnd;
         bool hasNonConstant = false;
+
+        if (replace && !earliestOverrideGroup)
+            earliestOverrideGroup = subGroup;
 
         for (int i = nextAnimStart - 1; i >= animStart; --i) {
             const QQuickAnimatedProperty::PropertyAnimation &anim = info.transform.animation(i);
@@ -2166,6 +2171,8 @@ QQuickTransform *QQuickItemGenerator::createAnimatedTransformGroup(QQuickItem *i
             }
         }
 
+        anyNonConstant = anyNonConstant || hasNonConstant;
+
         if (replace && hasNonConstant) {
             const int startOffsetMs = QQuickVectorImageGenerator::Utils::processAnimationTime(
                     firstAnimation.startOffset);
@@ -2227,6 +2234,9 @@ QQuickTransform *QQuickItemGenerator::createAnimatedTransformGroup(QQuickItem *i
         auto baseSeq = baseGroup->transformSequence();
         baseSeq.append(&baseSeq, staticMatrix);
     }
+
+    if (!anyNonConstant && earliestOverrideGroup)
+        baseGroup->activateOverride(earliestOverrideGroup);
 
     return baseGroup;
 }
