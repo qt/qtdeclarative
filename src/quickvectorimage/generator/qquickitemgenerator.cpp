@@ -2254,6 +2254,8 @@ void QQuickItemGenerator::bindMotionPath(QQuickItem *item, const QQuickAnimatedP
     const QQuickAnimatedProperty::PropertyAnimation &pathAnim = motionPath.animation(0);
 
     auto *pathObj = new QQuickPath(item);
+    auto *pathStatus = qobject_cast<QQmlParserStatus *>(pathObj);
+    pathStatus->classBegin();
     auto *pathSvg = new QQuickPathSvg(pathObj);
     auto pathElements = pathObj->pathElements();
     pathElements.append(&pathElements, pathSvg);
@@ -2261,6 +2263,7 @@ void QQuickItemGenerator::bindMotionPath(QQuickItem *item, const QQuickAnimatedP
 
     auto *interpolator = new QQuickPathInterpolator(item);
     interpolator->setPath(pathObj);
+    pathStatus->componentComplete();
 
     QQuickAnimatedProperty::PropertyAnimation progressAnim;
     progressAnim.frames = pathAnim.frames;
