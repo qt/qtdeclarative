@@ -4409,6 +4409,14 @@ MyObject {
                                     .build()
                                  << defaultOptions;
 
+    QTest::newRow("propertyChangeHandler")
+            << u"MyItem { onMyPropertyChanged: {console.log(\"hello\");}"_s
+            << ResultBuilder().addUnexpected("onMyPropertyChanged"_L1).build() << defaultOptions;
+
+    QTest::newRow("signalChangehandler")
+            << u"MyItem { onMySignal: {console.log(\"hello\");} }"_s
+            << ResultBuilder().addUnexpected("onMySignal"_L1).build() << defaultOptions;
+
     QTest::newRow("objectBindings")
             << uR"(import MissingRegistration
 import QtQuick
