@@ -1559,11 +1559,12 @@ QStyleKitStylePrivate::metricsForReader(QQStyleKitReader *reader) const
         metrics.margins = elementMargins(background);
     }
     const auto *textProps = props->text();
-    if (textProps)
+    if (textProps) {
         metrics.textPadding = QMargins(qSaturateRound(textProps->leftPadding()),
                                        qSaturateRound(textProps->topPadding()),
                                        qSaturateRound(textProps->rightPadding()),
                                        qSaturateRound(textProps->bottomPadding()));
+    }
     const auto *indicator = props->indicator();
     if (indicator) {
         metrics.indicatorMargins = elementMargins(indicator);
