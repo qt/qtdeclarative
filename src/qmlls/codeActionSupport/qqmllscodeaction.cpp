@@ -214,7 +214,12 @@ qmlObjectDefinedAt(const QQmlLSUtils::ItemLocation &item)
         return std::nullopt;
     }
     auto parentObject = item.domItem.qmlObject();
+    if (!parentObject)
+        return std::nullopt;
+
     const auto objectLoc = FileLocations::treeOf(parentObject);
+    if (!objectLoc)
+        return std::nullopt;
 
     if (item.fileLocation->info().fullRegion.begin() != objectLoc->info().fullRegion.begin()) {
         return std::nullopt;

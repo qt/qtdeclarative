@@ -111,6 +111,9 @@ void tst_qmlls_code_action::wrapComponentInLoader_data()
     QTest::newRow("property_def") << propertyDoc << Range{ { 0, 22 }, { 0, 36 } } << CodeActions{};
     QTest::newRow("property_name") << propertyDoc << Range{ { 0, 35 }, { 0, 36 } } << CodeActions{};
 
+    const auto idDoc = fakeTextDocument("import QtQuick; Item { Item { id: child } }");
+    QTest::newRow("object_id") << idDoc << Range{ { 0, 36 }, { 0, 36 } } << CodeActions{};
+
     const auto itemWithBindingDoc =
             fakeTextDocument("import QtQuick; Item{ property var p: Item {} }");
     QTest::newRow("binding") << itemWithBindingDoc << Range{ { 0, 39 }, { 0, 45 } }
