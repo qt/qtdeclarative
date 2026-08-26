@@ -105,6 +105,9 @@ WM_Obscure           = QEvent::User + 1,
 // (updatePaintNode())
 WM_RequestSync       = QEvent::User + 2,
 
+// Passed from the RL to the RT when a window is exposed
+WM_Exposed           = QEvent::User + 3,
+
 // Passed by the RL to the RT to free up maybe release SG and GL contexts
 // if no windows are rendering.
 WM_TryRelease        = QEvent::User + 4,

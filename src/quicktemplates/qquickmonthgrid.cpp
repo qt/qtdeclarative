@@ -45,7 +45,8 @@ QT_BEGIN_NAMESPACE
 
     \snippet qtquickcontrols-monthgrid-localization.qml 1
 
-    \sa DayOfWeekRow, WeekNumberColumn, CalendarModel
+    \sa DayOfWeekRow, WeekNumberColumn, CalendarModel,
+        {Qt Quick Controls - Event Calendar}
 */
 
 /*!

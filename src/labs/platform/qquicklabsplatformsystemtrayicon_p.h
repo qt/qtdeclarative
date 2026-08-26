@@ -80,8 +80,8 @@ Q_SIGNALS:
     void visibleChanged();
     void tooltipChanged();
     void menuChanged();
-    Q_REVISION(2, 1) void geometryChanged();
-    Q_REVISION(2, 1) void iconChanged();
+    Q_REVISION(1, 1) void geometryChanged();
+    Q_REVISION(1, 1) void iconChanged();
 
 protected:
     void init();

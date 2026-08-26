@@ -19,32 +19,58 @@ QT_BEGIN_NAMESPACE
    The following properties are available:
 
    \list
-   \li \l bool \c eventPoint.accepted: see also \l QEventPoint::accepted
-   \li \l PointerDevice \c eventPoint.device: see also \l QEventPoint::device
-   \li \l size \c eventPoint.ellipseDiameters: see also \l QEventPoint::ellipseDiameters
-   \li \l point \c eventPoint.globalGrabPosition: see also \l QEventPoint::globalGrabPosition
-   \li \l point \c eventPoint.globalLastPosition: see also \l QEventPoint::globalLastPosition
-   \li \l point \c eventPoint.globalPosition: see also \l QEventPoint::globalPosition
-   \li \l point \c eventPoint.globalPressPosition: see also \l QEventPoint::globalPressPosition
-   \li \l bool \c eventPoint.grabPosition: see also \l QEventPoint::grabPosition
-   \li \l int \c eventPoint.id: see also \l QEventPoint::id
-   \li \l point \c eventPoint.lastPosition: see also \l QEventPoint::lastPosition
-   \li \l ulong \c eventPoint.lastTimestamp: see also \l QEventPoint::lastTimestamp
-   \li \l point \c eventPoint.position: see also \l QEventPoint::position
-   \li \l point \c eventPoint.pressPosition: see also \l QEventPoint::pressPosition
-   \li \l int \c eventPoint.pressTimestamp: see also \l QEventPoint::pressTimestamp
-   \li \l real \c eventPoint.pressure: see also \l QEventPoint::pressure
-   \li \l real \c eventPoint.rotation: see also \l QEventPoint::rotation
-   \li \l point \c eventPoint.sceneGrabPosition: see also \l QEventPoint::sceneGrabPosition
-   \li \l point \c eventPoint.sceneLastPosition: see also \l QEventPoint::sceneLastPosition
-   \li \l point \c eventPoint.scenePosition: see also \l QEventPoint::scenePosition
-   \li \l ulong \c eventPoint.pressTimestamp: see also \l QEventPoint::pressTimestamp
-   \li \l point \c eventPoint.scenePressPosition: see also \l QEventPoint::scenePressPosition
-   \li \l {QML Enumerations}{enumeration} \c eventPoint.state: see also \l QEventPoint::state
-   \li \l real \c eventPoint.timeHeld: see also \l QEventPoint::timeHeld
-   \li \l ulong \c eventPoint.timestamp: see also \l QEventPoint::timestamp
-   \li \l pointingDeviceUniqueId \c eventPoint.uniqueId: see also \l QEventPoint::uniqueId
-   \li \l vector2d \c eventPoint.velocity: see also \l QEventPoint::velocity
+   \li \l bool \c eventPoint.accepted \br
+       See also \l {QEventPoint::accepted}.
+   \li \l PointerDevice \c eventPoint.device \br
+       See also \l {QEventPoint::device}.
+   \li \l size \c eventPoint.ellipseDiameters \br
+       See also \l {QEventPoint::ellipseDiameters}.
+   \li \l point \c eventPoint.globalGrabPosition \br
+       See also \l {QEventPoint::globalGrabPosition}.
+   \li \l point \c eventPoint.globalLastPosition \br
+       See also \l {QEventPoint::globalLastPosition}.
+   \li \l point \c eventPoint.globalPosition \br
+       See also \l {QEventPoint::globalPosition}.
+   \li \l point \c eventPoint.globalPressPosition \br
+       See also \l {QEventPoint::globalPressPosition}.
+   \li \l bool \c eventPoint.grabPosition \br
+       See also \l {QEventPoint::grabPosition}.
+   \li \l int \c eventPoint.id \br
+       See also \l {QEventPoint::id}.
+   \li \l point \c eventPoint.lastPosition \br
+       See also \l {QEventPoint::lastPosition}.
+   \li \l ulong \c eventPoint.lastTimestamp \br
+       See also \l {QEventPoint::lastTimestamp}.
+   \li \l point \c eventPoint.position \br
+       See also \l {QEventPoint::position}.
+   \li \l point \c eventPoint.pressPosition \br
+       See also \l {QEventPoint::pressPosition}.
+   \li \l int \c eventPoint.pressTimestamp \br
+       See also \l {QEventPoint::pressTimestamp}.
+   \li \l real \c eventPoint.pressure \br
+       See also \l {QEventPoint::pressure}.
+   \li \l real \c eventPoint.rotation \br
+       See also \l {QEventPoint::rotation}.
+   \li \l point \c eventPoint.sceneGrabPosition \br
+       See also \l {QEventPoint::sceneGrabPosition}.
+   \li \l point \c eventPoint.sceneLastPosition \br
+       See also \l {QEventPoint::sceneLastPosition}.
+   \li \l point \c eventPoint.scenePosition \br
+       See also \l {QEventPoint::scenePosition}.
+   \li \l ulong \c eventPoint.pressTimestamp \br
+       See also \l {QEventPoint::pressTimestamp}.
+   \li \l point \c eventPoint.scenePressPosition \br
+       See also \l {QEventPoint::scenePressPosition}.
+   \li \l {QML Enumerations}{enumeration} \c eventPoint.state \br
+       See also \l {QEventPoint::state}.
+   \li \l real \c eventPoint.timeHeld \br
+       See also \l {QEventPoint::timeHeld}.
+   \li \l ulong \c eventPoint.timestamp \br
+       See also \l {QEventPoint::timestamp}.
+   \li \l pointingDeviceUniqueId \c eventPoint.uniqueId \br
+       See also \l {QEventPoint::uniqueId}.
+   \li \l vector2d \c eventPoint.velocity \br
+       See also \l {QEventPoint::velocity}.
    \endlist
 
 

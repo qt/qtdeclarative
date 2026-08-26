@@ -37,6 +37,7 @@ set(qml_files
     BadType.qml
     BaseMember.qml
     BindingExpression.qml
+    Categorizer.qml
     Cycle1.qml
     Cycle2.qml
     Cycle3.qml
@@ -161,6 +162,7 @@ set(qml_files
     listlength.qml
     math.qml
     mathOperations.qml
+    mergeSideEffects.qml
     methods.qml
     modulePrefix.qml
     moveRegVoid.qml

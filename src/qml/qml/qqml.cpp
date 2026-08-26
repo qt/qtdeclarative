@@ -1267,7 +1267,9 @@ void AOTCompiledContext::storeNameSloppy(uint nameIndex, void *value, QMetaType 
         } else {
             QVariant var(propType);
             QV4::ExecutionEngine *v4 = engine->handle();
-            v4->metaTypeFromJS(v4->metaTypeToJS(type, value), propType, var.data());
+            QV4::Scope scope(v4);
+            QV4::ScopedValue val(scope, v4->metaTypeToJS(type, value));
+            v4->metaTypeFromJS(val, propType, var.data());
             storeResult = storeObjectProperty(&l, qmlScopeObject, var.data());
         }
 
@@ -1286,7 +1288,9 @@ void AOTCompiledContext::storeNameSloppy(uint nameIndex, void *value, QMetaType 
         } else {
             QVariant var(propType);
             QV4::ExecutionEngine *v4 = engine->handle();
-            v4->metaTypeFromJS(v4->metaTypeToJS(type, value), propType, var.data());
+            QV4::Scope scope(v4);
+            QV4::ScopedValue val(scope, v4->metaTypeToJS(type, value));
+            v4->metaTypeFromJS(val, propType, var.data());
             storeResult = storeFallbackProperty(&l, qmlScopeObject, var.data());
         }
         break;
@@ -1504,7 +1508,9 @@ void AOTCompiledContext::initCallGlobalLookup(uint index) const
 bool AOTCompiledContext::loadGlobalLookup(uint index, void *target, QMetaType type) const
 {
     QV4::Lookup *l = compilationUnit->runtimeLookups + index;
-    if (!QV4::ExecutionEngine::metaTypeFromJS(l->globalGetter(l, engine->handle()), type, target)) {
+    QV4::Scope scope(engine->handle());
+    QV4::ScopedValue val(scope, l->globalGetter(l, engine->handle()));
+    if (!QV4::ExecutionEngine::metaTypeFromJS(val, type, target)) {
         engine->handle()->throwTypeError();
         return false;
     }

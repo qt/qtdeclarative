@@ -899,7 +899,9 @@ void QQuickDeliveryAgentPrivate::deliverKeyEvent(QKeyEvent *e)
                                          e->isAutoRepeat(), e->count());
 
         do {
-            e->accept();
+            Q_ASSERT(e->type() != QEvent::ShortcutOverride || !e->isAccepted());
+            if (e->type() != QEvent::ShortcutOverride)
+                e->accept();
             QCoreApplication::sendEvent(item, e);
         } while (!e->isAccepted() && (item = item->parentItem()));
     }
@@ -1055,6 +1057,7 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEvent(
 
     if (subtreeHoverEnabled) {
         hoveredLeafItemFound = false;
+        QQuickPointerHandlerPrivate::deviceDeliveryTargets(QPointingDevice::primaryPointingDevice()).clear();
         deliverHoverEventRecursive(rootItem, scenePos, lastScenePos, modifiers, timestamp);
     }
 

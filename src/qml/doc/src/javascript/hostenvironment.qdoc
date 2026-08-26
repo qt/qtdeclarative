@@ -47,6 +47,10 @@ to use from C++. See
 \l {qtqml-cppintegration-interactqmlfromcpp.html}{Interacting with QML Objects from C++}
 for more information.
 
+The exception to this rule are functions assigned to signal handlers: There, type annotations are
+forbidden to avoid a potential mismatch with the types of the signal. This does not cause issues for
+tooling, as the signal already provides the necessary information.
+
 By default, type annotations are ignored by the interpreter and the JIT
 compiler, but enforced by \l{qmlcachegen} and \l{qmlsc} when compiling to C++.
 This can lead to differences in behavior if you either pass values that

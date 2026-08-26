@@ -806,7 +806,8 @@ ReturnedValue UrlSearchParamsCtor::virtualCallAsConstructor(const FunctionObject
         uint len = argArray->getLength();
 
         for (uint i = 0; i < len; i++) {
-            QV4::Value pair = argArray->get(i);
+            // safe to user fromReturnedValue: Normal array, which will ensure marking
+            QV4::Value pair = Value::fromReturnedValue(argArray->get(i));
             auto *pairArrayObject = pair.as<ArrayObject>();
 
             if (pairArrayObject == nullptr) {
@@ -895,11 +896,14 @@ void UrlSearchParamsObject::initializeParams(ScopedArrayObject& params)
 
     for (uint i = 0; i < len; i++)
     {
-        QV4::Value pair = params->get(i);
+        // fromReturnedValue is safe; everything is reachable via params
+        // so the gc won't collect it; we control params, so there can't be
+        // any weird proxy magic
+        QV4::Value pair = Value::fromReturnedValue(params->get(i));
         auto *pairArrayObject = pair.as<ArrayObject>();
 
-        QV4::Value key = pairArrayObject->get(uint(0));
-        QV4::Value value = pairArrayObject->get(uint(1));
+        QV4::Value key = Value::fromReturnedValue(pairArrayObject->get(uint(0)));
+        QV4::Value value = Value::fromReturnedValue(pairArrayObject->get(uint(1)));
 
         scopedKeys->put(i, key);
         scopedValues->put(i, value);
@@ -1014,11 +1018,11 @@ QList<QStringList> UrlSearchParamsObject::params() const
     uint len = scopedArray->getLength();
 
     for (uint i = 0; i < len; i++) {
-        QV4::Value pair = scopedArray->get(i);
+        QV4::Value pair = Value::fromReturnedValue(scopedArray->get(i));
         auto *pairArrayObject = pair.as<ArrayObject>();
 
-        QV4::Value key = pairArrayObject->get(uint(0));
-        QV4::Value value = pairArrayObject->get(uint(1));
+        QV4::Value key = Value::fromReturnedValue(pairArrayObject->get(uint(0)));
+        QV4::Value value = Value::fromReturnedValue(pairArrayObject->get(uint(1)));
 
         result << QStringList { key.toQString(), value.toQString() };
     }
@@ -1063,10 +1067,11 @@ int UrlSearchParamsObject::indexOf(QString name, int last) const
     int len = scopedArray->getLength();
 
     for (int i = last + 1; i < len; i++) {
-        QV4::Value pair = scopedArray->get(i);
+        // fromReturnedValue is safe, scopedArray is a normal array and takes care of marking
+        QV4::Value pair = Value::fromReturnedValue(scopedArray->get(i));
         auto *pairArrayObject = pair.as<ArrayObject>();
 
-        QV4::Value key = pairArrayObject->get(uint(0));
+        QV4::Value key = Value::fromReturnedValue(pairArrayObject->get(uint(0)));
 
         if (key.toQString() == name)
             return i;
@@ -1084,10 +1089,10 @@ QString UrlSearchParamsObject::stringAt(int index, int pairIndex) const
     if (index >= scopedArray->getLength())
         return {};
 
-    QV4::Value pair = scopedArray->get(index);
+    QV4::Value pair = Value::fromReturnedValue(scopedArray->get(index));
     auto *pairArrayObject = pair.as<ArrayObject>();
 
-    QV4::Value value = pairArrayObject->get(pairIndex);
+    QV4::Value value = Value::fromReturnedValue(pairArrayObject->get(pairIndex));
 
     return value.toQString();
 }
@@ -1101,10 +1106,10 @@ QV4::Heap::String * UrlSearchParamsObject::stringAtRaw(int index, int pairIndex)
     if (index >= scopedArray->getLength())
         return nullptr;
 
-    QV4::Value pair = scopedArray->get(index);
+    QV4::Value pair = Value::fromReturnedValue(scopedArray->get(index));
     auto *pairArrayObject = pair.as<ArrayObject>();
 
-    QV4::Value value = pairArrayObject->get(pairIndex);
+    QV4::Value value = Value::fromReturnedValue(pairArrayObject->get(pairIndex));
 
     return value.as<String>()->d();
 }

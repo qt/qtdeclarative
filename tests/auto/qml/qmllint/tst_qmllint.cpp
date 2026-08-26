@@ -513,7 +513,7 @@ void TestQmllint::dirtyQmlCode_data()
                                             3, 1 } } };
     QTest::newRow("invalidAliasTarget1") << QStringLiteral("invalidAliasTarget.qml")
                                          << Result { { Message {
-                                            QStringLiteral("Invalid alias expression – an initalizer is needed."),
+                                            QStringLiteral("Invalid alias expression - an initalizer is needed."),
                                             6, 18 } } };
     QTest::newRow("invalidAliasTarget2") << QStringLiteral("invalidAliasTarget.qml")
                                          << Result { { Message {
@@ -1109,6 +1109,13 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
     QTest::newRow("missingRequiredOnObjectDefinitionBinding")
             << QStringLiteral("missingRequiredPropertyOnObjectDefinitionBinding.qml")
             << Result{ { { uR"(Component is missing required property i from here)"_s, 4, 26 } } };
+    QTest::newRow("locationUnqualifiedLookupAssign")
+            << QStringLiteral("locationUnqualifiedLookupAssign.qml")
+            << Result{ { Message{ QStringLiteral("Unqualified access"), 5, 21 } } };
+    QTest::newRow("inlineComponentSearchInfiniteLoop")
+            << QStringLiteral("InlineComponentSearchInfiniteLoop_Main.qml")
+            << Result{ { { "InlineComponentSearchInfiniteLoop_Other.a was not found. "
+                           "Did you add all import paths?"_L1, 5, 5 } } };
 }
 
 void TestQmllint::dirtyQmlCode()
@@ -1246,7 +1253,8 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("QQmlEasingEnums::Type") << QStringLiteral("animationEasing.qml");
     QTest::newRow("ValidLiterals") << QStringLiteral("validLiterals.qml");
     QTest::newRow("GoodModulePrefix") << QStringLiteral("goodModulePrefix.qml");
-    QTest::newRow("required property in Component") << QStringLiteral("requiredPropertyInComponent.qml");
+    QTest::newRow("required_property_in_Component") << QStringLiteral("requiredPropertyInComponent.qml");
+    QTest::newRow("requiredPropertyInGroupedPropertyScope") << QStringLiteral("requiredPropertyInGroupedPropertyScope.qml");
     QTest::newRow("bytearray") << QStringLiteral("bytearray.qml");
     QTest::newRow("initReadonly") << QStringLiteral("initReadonly.qml");
     QTest::newRow("connectionNoParent") << QStringLiteral("connectionNoParent.qml"); // QTBUG-97600
@@ -1305,9 +1313,6 @@ void TestQmllint::cleanQmlCode_data()
 void TestQmllint::cleanQmlCode()
 {
     QFETCH(QString, filename);
-
-    QJsonArray warnings;
-
     runTest(filename, Result::clean());
 }
 
@@ -1364,8 +1369,6 @@ void TestQmllint::compilerWarnings()
     QFETCH(QString, filename);
     QFETCH(Result, result);
     QFETCH(bool, enableCompilerWarnings);
-
-    QJsonArray warnings;
 
     auto categories = QQmlJSLogger::defaultCategories();
 

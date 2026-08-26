@@ -43,6 +43,8 @@ class Q_QUICKDIALOGS2QUICKIMPL_PRIVATE_EXPORT QQuickAbstractColorPicker : public
     QML_UNCREATABLE("AbstractColorPicker is abstract.")
 
 public:
+    ~QQuickAbstractColorPicker() override;
+
     QColor color() const;
     void setColor(const QColor &c);
 

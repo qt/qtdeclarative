@@ -1581,8 +1581,10 @@ void tst_qqmlengine::stringToColor()
 
     const QMetaType metaType(QMetaType::QColor);
     QVariant color(metaType);
+    QV4::Scope scope(engine.handle());
+    QV4::ScopedValue colorString(scope, engine.handle()->newString(QStringLiteral("#abcdef")));
     QVERIFY(QV4::ExecutionEngine::metaTypeFromJS(
-                engine.handle()->newString(QStringLiteral("#abcdef"))->asReturnedValue(),
+                colorString,
                 metaType, color.data()));
     QVERIFY(color.isValid());
     QCOMPARE(color.metaType(), metaType);

@@ -32,6 +32,7 @@ private slots:
     void disabledOnReadonlyProperty();
     void delayed();
     void bindingOverwriting();
+    void bindingInDeadContext();
     void bindToQmlComponent();
     void bindingDoesNoWeirdConversion();
     void bindNaNToInt();
@@ -41,6 +42,8 @@ private slots:
     void whenEvaluatedEarlyEnough();
     void propertiesAttachedToBindingItself();
     void toggleEnableProperlyRemembersValues();
+    void deleteStashedObject();
+    void multiValueTypeBinding();
 
 private:
     QQmlEngine engine;
@@ -472,6 +475,40 @@ void tst_qqmlbinding::bindingOverwriting()
     QLoggingCategory::setFilterRules(QString());
 }
 
+void tst_qqmlbinding::bindingInDeadContext()
+{
+    // We manually control the deletion order of the objects here.
+    // This is what some of our views also do. One way to prevent
+    // the engine from deleting objects is to parent them to the
+    // application.
+
+    QScopedPointer<QObject> o;
+    QScopedPointer<QObject> inner1;
+    {
+        QScopedPointer<QObject> inner2;
+
+        QQmlEngine engine;
+        QQmlComponent c(&engine, testFileUrl("bindingInDeadContext.qml"));
+
+        QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+        o.reset(c.create());
+        QVERIFY(!o.isNull());
+        o->setParent(QCoreApplication::instance());
+
+        inner1.reset(o->property("inner1").value<QObject *>());
+        QVERIFY(inner1);
+        inner1->setParent(QCoreApplication::instance());
+
+        inner2.reset(o->property("inner2").value<QObject *>());
+        QVERIFY(inner2);
+        inner2->setParent(QCoreApplication::instance());
+    }
+
+    // The objectName binding did not get re-evaluated when inner2 died
+    // because the engine was gone already.
+    QCOMPARE(inner1->objectName(), "aa");
+}
+
 void tst_qqmlbinding::bindToQmlComponent()
 {
     QQmlEngine engine;
@@ -652,6 +689,41 @@ void tst_qqmlbinding::toggleEnableProperlyRemembersValues()
         }
         root->setProperty("enabled", false);
     }
+}
+
+void tst_qqmlbinding::deleteStashedObject()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("deleteStashedObject.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+
+    QTest::ignoreMessage(QtDebugMsg, "alive");
+    QTest::ignoreMessage(QtDebugMsg, "destroy");
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(object);
+    QVERIFY(object->property("page").value<QObject *>() != nullptr);
+
+    QTest::ignoreMessage(QtDebugMsg, "dead");
+    QTest::ignoreMessage(QtDebugMsg, "before");
+    QTest::ignoreMessage(QtDebugMsg, "after");
+    QTRY_VERIFY(object->property("page").value<QObject *>() == nullptr);
+}
+
+void tst_qqmlbinding::multiValueTypeBinding()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("multiValueTypeBinding.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(object);
+
+    QObject *label = object->property("label").value<QObject *>();
+    QVERIFY(label);
+
+    QRectF rect = label->property("rect").toRectF();
+    QCOMPARE(rect.x(), 12);
+    QCOMPARE(rect.y(), 24);
+    QCOMPARE(rect.width(), 9);
 }
 
 QTEST_MAIN(tst_qqmlbinding)

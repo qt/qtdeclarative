@@ -84,8 +84,6 @@ private:
 
     uint m_dirtyGeometry: 1;
     uint m_dirtyMaterial: 1;
-
-    static qint64 m_totalAllocation; // all SG glyph vertices and indices; only for qCDebug metrics
 };
 
 QT_END_NAMESPACE

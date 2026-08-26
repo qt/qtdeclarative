@@ -382,7 +382,8 @@ bool QQmlComponentPrivate::setInitialProperty(
         }
         const QString lastProperty = properties.last();
         segment = scope.engine->newString(lastProperty);
-        object->put(segment, scope.engine->metaTypeToJS(value.metaType(), value.constData()));
+        QV4::ScopedValue v(scope, scope.engine->metaTypeToJS(value.metaType(), value.constData()));
+        object->put(segment, v);
         if (scope.engine->hasException) {
             qmlWarning(base, scope.engine->catchExceptionAsQmlError());
             scope.engine->hasException = false;
@@ -927,6 +928,11 @@ QObject *QQmlComponent::create(QQmlContext *context)
     there are unset required properties, the object creation fails and returns
     \c nullptr, in which case \l isError() will return \c true.
 
+    If \a context is \nullptr (the default), it will create the instance in the
+    \l {QQmlEngine::rootContext()}{root context} of the engine.
+
+    The ownership of the returned object instance is transferred to the caller.
+
     \sa QQmlComponent::create
     \since 5.14
 */
@@ -1419,8 +1425,8 @@ void QQmlComponentPrivate::completeLoadFromModule(QAnyStringView uri, QAnyString
     \a incubator. \a context specifies the context within which to create the object
     instance.
 
-    If \a context is \nullptr (by default), it will create the instance in the
-    engine's \l {QQmlEngine::rootContext()}{root context}.
+    If \a context is \nullptr (the default), it will create the instance in the
+    \l {QQmlEngine::rootContext()}{root context} of the engine.
 
     \a forContext specifies a context that this object creation depends upon.
     If the \a forContext is being created asynchronously, and the

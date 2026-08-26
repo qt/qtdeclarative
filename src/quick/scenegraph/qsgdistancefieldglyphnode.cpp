@@ -9,7 +9,8 @@ QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(lcSgText, "qt.scenegraph.text")
 
-qint64 QSGDistanceFieldGlyphNode::m_totalAllocation = 0;
+// all SG glyph vertices and indices; only for qCDebug metrics
+static std::atomic<qint64> s_totalAllocation = 0;
 
 QSGDistanceFieldGlyphNode::QSGDistanceFieldGlyphNode(QSGRenderContext *context)
     : m_glyphNodeType(RootGlyphNode)
@@ -314,9 +315,9 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
         }
     }
 
-    m_totalAllocation += vp.size() * sizeof(QSGGeometry::TexturedPoint2D) + ip.size() * sizeof(quint16);
+    s_totalAllocation += vp.size() * sizeof(QSGGeometry::TexturedPoint2D) + ip.size() * sizeof(quint16);
     qCDebug(lcSgText) << "allocating for" << vp.size() << "vtx (reserved" << likelyGlyphCount * 4 << "):" << vp.size() * sizeof(QSGGeometry::TexturedPoint2D)
-            << "bytes;" << ip.size() << "idx:" << ip.size() * sizeof(quint16) << "bytes; total bytes so far" << m_totalAllocation;
+            << "bytes;" << ip.size() << "idx:" << ip.size() * sizeof(quint16) << "bytes; total bytes so far" << s_totalAllocation;
     g->allocate(vp.size(), ip.size());
     memcpy(g->vertexDataAsTexturedPoint2D(), vp.constData(), vp.size() * sizeof(QSGGeometry::TexturedPoint2D));
     memcpy(g->indexDataAsUShort(), ip.constData(), ip.size() * sizeof(quint16));
