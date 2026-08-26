@@ -1155,7 +1155,7 @@ bool QQmlDomAstCreatorBase::visit(AST::UiScriptBinding *el)
             FileLocations::addRegion(containingObjectEl.fileLocations, IdColonTokenRegion,
                                      el->colonToken);
             FileLocations::addRegion(containingObjectEl.fileLocations, IdNameRegion,
-                                     combineLocations(el->statement));
+                                     iExp->identifierToken);
             QmlComponent &comp = current<QmlComponent>();
             pathFromOwner = comp.addId(idVal, AddOption::KeepExisting, &idPtr);
             QRegularExpression idRe(QRegularExpression::anchoredPattern(
