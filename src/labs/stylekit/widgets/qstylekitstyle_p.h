@@ -225,7 +225,7 @@ private:
                          QPainter *p,
                          Qt::Alignment defaultAlignment = Qt::AlignHCenter | Qt::AlignVCenter) const;
     void drawStyledItemRect(const QQStyleKitDelegateProperties *, const QRectF &rect, QPainter *p) const;
-    void drawBackground(const QQStyleKitDelegateProperties *, const QRect &rect, QPainter *p) const;
+    void drawStyledItemContents(const QQStyleKitDelegateProperties *, const QRectF &rect, QPainter *p) const;
     void drawStyledItemImage(const QQStyleKitImageProperties *image, const QRectF &rect,
                              qreal opacity, QPainter *p) const;
 
