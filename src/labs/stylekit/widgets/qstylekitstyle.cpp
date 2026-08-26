@@ -269,6 +269,10 @@ Q_STATIC_LOGGING_CATEGORY(lcStyleKit, "qt.labs.stylekit")
 
     \list
         \li \b{Shadows} — shadows are not rendered.
+        \li \b{Delegate scale above 1.0 on a control's background} — a widget cannot paint
+            outside its own rect, so the scaled background is clipped at the widget edge.
+            Use \l {DelegateStyle::}{margins} to inset the background and reserve room for
+            it to grow. Scaling indicators, handles and foregrounds is unaffected.
         \li \b{Variations} — setting a \l StyleVariation on a widget instance is
             not yet supported.
         \li \b{Custom controls} — styling custom widgets using \l CustomControl
@@ -496,6 +500,35 @@ static QMargins elementMargins(const QQStyleKitDelegateProperties *element)
                     qSaturateRound(element->topMargin()),
                     qSaturateRound(element->rightMargin()),
                     qSaturateRound(element->bottomMargin()));
+}
+
+/*! \internal
+    Applies \a element's rotation and scale to \a painter about the centre of \a box.
+    Returns \c false if the scale is 0 or if \a element is null, otherwise returns \c true.
+*/
+static bool applyDelegateTransform(QPainter *painter,
+                                   const QQStyleKitDelegateProperties *element,
+                                   const QRectF &box)
+{
+    if (!element)
+        return false;
+
+    const qreal scale = element->scale();
+    if (qFuzzyIsNull(scale))
+        return false;
+
+    const qreal rotation = element->rotation();
+    if (qFuzzyIsNull(rotation) && qFuzzyCompare(scale, 1.0))
+        return true;
+
+    const QPointF center = box.center();
+    painter->translate(center);
+    if (!qFuzzyIsNull(rotation))
+        painter->rotate(rotation);
+    if (!qFuzzyCompare(scale, 1.0))
+        painter->scale(scale, scale);
+    painter->translate(-center);
+    return true;
 }
 
 // Copied from qstylesheetstyle.cpp
@@ -1261,10 +1294,16 @@ void QStyleKitStylePrivate::drawControlIndicator(const QQStyleKitDelegatePropert
     if (!indicator || !indicator->visible() || indicator->opacity() <= 0 || !rect.isValid())
         return;
 
+    // The foreground is a "child" of the indicator container so it
+    // inherits the indicator's transform. Apply it here and let the foreground stack its
+    // own on top.
+    QPainterStateGuard stateGuard(painter);
+    if (!applyDelegateTransform(painter, indicator, rect))
+        return;
+
     // indicator (background)
     QRectF indicatorRect = rect;
-    if (indicator->visible() && indicator->opacity() > 0)
-        drawStyledItemRect(indicator, indicatorRect, painter);
+    drawStyledItemContents(indicator, indicatorRect, painter);
 
     const QQStyleKitDelegateProperties *foreground = nullptr;
     if (auto *indicatorWithSubTypes = qobject_cast<const QQStyleKitIndicatorWithSubTypes *>(indicator)) {
@@ -1325,6 +1364,18 @@ void QStyleKitStylePrivate::drawStyledItemRect(const QQStyleKitDelegatePropertie
         return;
 
     QPainterStateGuard stateGuard(painter);
+    if (!applyDelegateTransform(painter, props, rect))
+        return;
+    drawStyledItemContents(props, rect, painter);
+}
+
+void QStyleKitStylePrivate::drawStyledItemContents(const QQStyleKitDelegateProperties *props,
+                                                   const QRectF &rect, QPainter *painter) const
+{
+    if (!props || !props->visible() || props->opacity() <= 0 || !rect.isValid())
+        return;
+
+    QPainterStateGuard stateGuard(painter);
     painter->setRenderHint(QPainter::Antialiasing, true);
     if (props->clip())
         painter->setClipping(true);
@@ -1356,14 +1407,6 @@ void QStyleKitStylePrivate::drawStyledItemRect(const QQStyleKitDelegatePropertie
     const qreal yRadius = qMax(0.0, qMin(props->bottomLeftRadius() - inset, minDimension / 2.0));
 
     QRectF adjustedRect = rect.adjusted(inset, inset, -inset, -inset);
-
-    // rotation
-    if (props->rotation() != 0) {
-        const auto center = rect.center();
-        painter->translate(center);
-        painter->rotate(props->rotation());
-        painter->translate(-center);
-    }
 
     // gradients/color
     // TODO: support palette roles for colors and gradients
@@ -1490,15 +1533,14 @@ QStyleKitStylePrivate::ControlMetrics QStyleKitStylePrivate::metricsForReader(QQ
     metrics.foregroundMargins = QMargins(0, 0, 0, 0);
     const auto *background = props->background();
 
-    const auto scaledSize = [](qreal w, qreal h, qreal scale) {
+    // Note: scale is deliberately absent here as it should not affect layout
+    const auto elementSize = [](qreal w, qreal h) {
         constexpr qreal zero(.0);
-        const QSizeF size(std::max(zero, w), std::max(zero, h));
-        return (scale ? scale * size : size).toSize();
+        return QSizeF(std::max(zero, w), std::max(zero, h)).toSize();
     };
 
     if (background) {
-        metrics.bgImplicitSize = scaledSize(background->width(), background->height(),
-                                            background->scale());
+        metrics.bgImplicitSize = elementSize(background->width(), background->height());
         metrics.margins = elementMargins(background);
     }
     const auto *textProps = props->text();
@@ -1510,8 +1552,7 @@ QStyleKitStylePrivate::ControlMetrics QStyleKitStylePrivate::metricsForReader(QQ
     const auto *indicator = props->indicator();
     if (indicator) {
         metrics.indicatorMargins = elementMargins(indicator);
-        metrics.indicatorImplicitSize = scaledSize(indicator->width(), indicator->height(),
-                                                   indicator->scale());
+        metrics.indicatorImplicitSize = elementSize(indicator->width(), indicator->height());
 
         const auto *foreground = indicator->foreground();
         if (foreground) {
@@ -1522,16 +1563,14 @@ QStyleKitStylePrivate::ControlMetrics QStyleKitStylePrivate::metricsForReader(QQ
                                     - metrics.foregroundMargins.right())));
             const auto foregroundH = resolvedHeight(foreground,
                 std::max(.0, qreal(metrics.indicatorImplicitSize.height()
-                                    - metrics.foregroundMargins.top()
-                                    - metrics.foregroundMargins.bottom())));
-            metrics.foregroundImplicitSize = scaledSize(foregroundW, foregroundH,
-                                                        foreground->scale());
+                    - metrics.foregroundMargins.top()
+                    - metrics.foregroundMargins.bottom())));
+            metrics.foregroundImplicitSize = elementSize(foregroundW, foregroundH);
         }
     }
     const auto *handle = props->handle();
     if (handle) {
-        metrics.handleImplicitSize = scaledSize(handle->width(), handle->height(),
-                                                handle->scale());
+        metrics.handleImplicitSize = elementSize(handle->width(), handle->height());
         metrics.handleMargins = elementMargins(handle);
     }
     return metrics;
@@ -2056,10 +2095,15 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
             // groove
             QStyleOptionProgressBar contents(*progressBar);
             contents.rect = subElementRect(SE_ProgressBarGroove, progressBar, w);
+            const QRect grooveRect = contents.rect;
             proxy()->drawControl(CE_ProgressBarGroove, &contents, p, w);
             // track
             contents.rect = subElementRect(SE_ProgressBarContents, progressBar, w);
-            proxy()->drawControl(CE_ProgressBarContents, &contents, p, w);
+            // The track is the groove's foreground child, so it inherits the indicator's
+            // transform
+            QPainterStateGuard stateGuard(p);
+            if (applyDelegateTransform(p, r.indicator(), grooveRect))
+                proxy()->drawControl(CE_ProgressBarContents, &contents, p, w);
             // We intentionally don't draw the label as it is not drawn on the Controls Style
             return;
         }
@@ -2084,8 +2128,11 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
             const auto x = progressBar->invertedAppearance ? progressBar->rect.right() - width : progressBar->rect.left();
             const auto contentsRect = QRect(x, progressBar->rect.y(), width, progressBar->rect.height());
             const auto *foreground = r.indicator() ? r.indicator()->foreground() : nullptr;
-            if (foreground && foreground->visible() && foreground->opacity() > 0)
-                d->drawStyledItemRect(foreground, contentsRect, p);
+            if (foreground && foreground->visible() && foreground->opacity() > 0) {
+                QPainterStateGuard stateGuard(p);
+                if (applyDelegateTransform(p, foreground, progressBar->rect))
+                    d->drawStyledItemContents(foreground, contentsRect, p);
+            }
             return;
         }
         break;
@@ -2916,7 +2963,17 @@ void QStyleKitStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCom
                         const qreal trackY = fgY + (1.0 - ratio) * (foreground->fillHeight() ? fgH - minW : fgH);
                         trackRect = QRectF(fgX, trackY, fgW, trackH);
                     }
-                    d->drawStyledItemRect(foreground, visualRect(opt->direction, grooveRect, trackRect.toAlignedRect()), p);
+                    // The track is the groove's foreground child, so it inherits the
+                    // indicator's transform.
+                    const QRect foregroundBox = visualRect(
+                        opt->direction, grooveRect, QRectF(fgX, fgY, fgW, fgH).toAlignedRect());
+                    QPainterStateGuard stateGuard(p);
+                    if (applyDelegateTransform(p, indicator, grooveRect)
+                        && applyDelegateTransform(p, foreground, foregroundBox)) {
+                        d->drawStyledItemContents(
+                            foreground,
+                            visualRect(opt->direction, grooveRect, trackRect.toAlignedRect()), p);
+                    }
                 }
             }
 
