@@ -565,10 +565,9 @@ Item {
 
 \section3 Default Properties
 
-An object definition can have a single \e default property. A default property
-is the property to which a value is assigned if an object is declared within
-another object's definition without declaring it as a value for a particular
-property.
+An object definition can have a single \e default property. When one object
+is nested directly inside another object without specifying a property,
+it is automatically assigned to the enclosing object's default property.
 
 Declaring a property with the optional \c default keyword marks it as the
 default property. For example, say there is a file Framer.qml with a default
