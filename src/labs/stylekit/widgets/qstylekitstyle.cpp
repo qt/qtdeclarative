@@ -8,63 +8,63 @@
 #include <QtWidgets/qstyle.h>
 #include <QtWidgets/qapplication.h>
 #if QT_CONFIG(scrollarea)
-#include <QtWidgets/qabstractscrollarea.h>
+#  include <QtWidgets/qabstractscrollarea.h>
 #endif
 #if QT_CONFIG(itemviews)
-#include <QtWidgets/qabstractitemview.h>
+#  include <QtWidgets/qabstractitemview.h>
 #endif
 #if QT_CONFIG(lineedit)
-#include <QtWidgets/qlineedit.h>
+#  include <QtWidgets/qlineedit.h>
 #endif
 #if QT_CONFIG(pushbutton)
-#include <QtWidgets/qpushbutton.h>
+#  include <QtWidgets/qpushbutton.h>
 #endif
 #if QT_CONFIG(checkbox)
-#include <QtWidgets/qcheckbox.h>
+#  include <QtWidgets/qcheckbox.h>
 #endif
 #if QT_CONFIG(radiobutton)
-#include <QtWidgets/qradiobutton.h>
+#  include <QtWidgets/qradiobutton.h>
 #endif
 #if QT_CONFIG(combobox)
-#include <QtWidgets/qcombobox.h>
+#  include <QtWidgets/qcombobox.h>
 #endif
 #if QT_CONFIG(slider)
-#include <QtWidgets/qslider.h>
+#  include <QtWidgets/qslider.h>
 #endif
 #if QT_CONFIG(scrollbar)
-#include <QtWidgets/qscrollbar.h>
+#  include <QtWidgets/qscrollbar.h>
 #endif
 #if QT_CONFIG(spinbox)
-#include <QtWidgets/qspinbox.h>
+#  include <QtWidgets/qspinbox.h>
 #endif
 #if QT_CONFIG(progressbar)
-#include <QtWidgets/qprogressbar.h>
+#  include <QtWidgets/qprogressbar.h>
 #endif
 #if QT_CONFIG(textedit)
-#include <QtWidgets/qtextedit.h>
-#include <QtWidgets/qplaintextedit.h>
+#  include <QtWidgets/qtextedit.h>
+#  include <QtWidgets/qplaintextedit.h>
 #endif
 #if QT_CONFIG(tabbar)
-#include <QtWidgets/qtabbar.h>
+#  include <QtWidgets/qtabbar.h>
 #endif
 #if QT_CONFIG(tabwidget)
-#include <QtWidgets/qtabwidget.h>
+#  include <QtWidgets/qtabwidget.h>
 #endif
 #if QT_CONFIG(toolbar)
-#include <QtWidgets/qtoolbar.h>
+#  include <QtWidgets/qtoolbar.h>
 #endif
 #if QT_CONFIG(toolbutton)
-#include <QtWidgets/qtoolbutton.h>
+#  include <QtWidgets/qtoolbutton.h>
 #endif
 #if QT_CONFIG(groupbox)
-#include <QtWidgets/qgroupbox.h>
+#  include <QtWidgets/qgroupbox.h>
 #endif
 #if QT_CONFIG(menu)
-#include <QtWidgets/qmenu.h>
-#include <QtWidgets/qmenubar.h>
+#  include <QtWidgets/qmenu.h>
+#  include <QtWidgets/qmenubar.h>
 #endif
 #if QT_CONFIG(label)
-#include <QtWidgets/qlabel.h>
+#  include <QtWidgets/qlabel.h>
 #endif
 #include <QtWidgets/private/qwidget_p.h>
 #include <QtCore/private/qobject_p.h>
@@ -421,8 +421,8 @@ static QQStyleKitReader::ControlType itemViewControlType(const QStyleOption *opt
 {
     const auto *itemViewOption = qstyleoption_cast<const QStyleOptionViewItem *>(opt);
     return itemViewOption && (itemViewOption->features & QStyleOptionViewItem::HasCheckIndicator)
-            ? QQStyleKitReader::ControlType::CheckDelegate
-            : QQStyleKitReader::ControlType::ItemDelegate;
+        ? QQStyleKitReader::ControlType::CheckDelegate
+        : QQStyleKitReader::ControlType::ItemDelegate;
 }
 #endif
 
@@ -536,15 +536,15 @@ static const QWidget *containerWidget(const QWidget *w)
 {
 #if QT_CONFIG(lineedit)
     if (qobject_cast<const QLineEdit *>(w)) {
-        //if the QLineEdit is an embeddedWidget, we need the real widget
+        // if the QLineEdit is an embeddedWidget, we need the real widget
         QWidget *parent = w->parentWidget();
         if (false
-#if QT_CONFIG(combobox)
+#  if QT_CONFIG(combobox)
             || qobject_cast<const QComboBox *>(parent)
-#endif
-#if QT_CONFIG(spinbox)
+#  endif
+#  if QT_CONFIG(spinbox)
             || qobject_cast<const QAbstractSpinBox *>(parent)
-#endif
+#  endif
         ) {
             return parent;
         }
@@ -915,7 +915,7 @@ QStyleKitStylePrivate::SubElementKey QStyleKitStylePrivate::subElementKeyForOpti
             action = menuBar->actionAt(menuOpt->rect.center());
         if (action) {
             key.widget = widget;
-            key.id = SubElementKey::Action{action};
+            key.id = SubElementKey::Action{ action };
         }
         return key;
     }
@@ -925,7 +925,7 @@ QStyleKitStylePrivate::SubElementKey QStyleKitStylePrivate::subElementKeyForOpti
         if (tabOpt->tabIndex < 0)
             return key;
         key.widget = widget;
-        key.id = SubElementKey::Tab{tabOpt->tabIndex};
+        key.id = SubElementKey::Tab{ tabOpt->tabIndex };
         return key;
     }
 #endif
@@ -1070,13 +1070,13 @@ QQSK::State QStyleKitStylePrivate::resolvedStateFor(
 const QStyleKitStylePrivate::ControlMetrics &QStyleKitStylePrivate::metricsFor(
     QQStyleKitReader::ControlType type, QQSK::State state) const
 {
-    if (auto it = metricsCache.find({type, state}); it != metricsCache.end())
+    if (auto it = metricsCache.find({ type, state }); it != metricsCache.end())
         return *it;
 
     auto *reader = ensureSharedReader();
     Q_ASSERT(reader);
     reader->setControlTypeAndState(type, state);
-    return *metricsCache.insert({type, state}, metricsForReader(reader));
+    return *metricsCache.insert({ type, state }, metricsForReader(reader));
 }
 
 /*! \internal
@@ -1422,7 +1422,7 @@ void QStyleKitStylePrivate::drawStyledItemContents(const QQStyleKitDelegatePrope
         QQmlListProperty<QQuickGradientStop> stops = gradient->stops();
         const int stopCount = stops.count(&stops);
         for (int i = 0; i < stopCount; i++) {
-            QQuickGradientStop *stop = static_cast<QQuickGradientStop*>(stops.at(&stops, i));
+            QQuickGradientStop *stop = static_cast<QQuickGradientStop *>(stops.at(&stops, i));
             linearGradient.setColorAt(stop->position(), stop->color());
         }
         QBrush gradientBrush(linearGradient);
@@ -1491,8 +1491,8 @@ void QStyleKitStylePrivate::drawStyledItemImage(const QQStyleKitImageProperties 
 }
 
 QRect QStyleKitStylePrivate::getAlignedRectInContainer(const QRect &container, const QSize &size,
-                                                     uint alignment, const QMargins &padding,
-                                                     const QMargins &margins) const
+                                                       uint alignment, const QMargins &padding,
+                                                       const QMargins &margins) const
 {
     QRect r(QPoint(0, 0), size);
 
@@ -1563,8 +1563,8 @@ QStyleKitStylePrivate::ControlMetrics QStyleKitStylePrivate::metricsForReader(QQ
                                     - metrics.foregroundMargins.right())));
             const auto foregroundH = resolvedHeight(foreground,
                 std::max(.0, qreal(metrics.indicatorImplicitSize.height()
-                    - metrics.foregroundMargins.top()
-                    - metrics.foregroundMargins.bottom())));
+                                    - metrics.foregroundMargins.top()
+                                    - metrics.foregroundMargins.bottom())));
             metrics.foregroundImplicitSize = elementSize(foregroundW, foregroundH);
         }
     }
@@ -1712,7 +1712,7 @@ QStringList QStyleKitStyle::customThemeNames() const
 
 /*! \reimp */
 void QStyleKitStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt, QPainter *p,
-    const QWidget *w) const
+                                   const QWidget *w) const
 {
     Q_D(const QStyleKitStyle);
 
@@ -1744,8 +1744,8 @@ void QStyleKitStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt,
     case PE_FrameButtonBevel:
         if (const auto *btn = qstyleoption_cast<const QStyleOptionButton *>(opt)) {
             const auto controlType = btn->features & QStyleOptionButton::Flat
-                                        ? QQStyleKitReader::ControlType::FlatButton
-                                        : QQStyleKitReader::ControlType::Button;
+                ? QQStyleKitReader::ControlType::FlatButton
+                : QQStyleKitReader::ControlType::Button;
             const auto r = d->resolve(w, controlType, btn->state);
             if (!r.isValid())
                 break;
@@ -1757,9 +1757,9 @@ void QStyleKitStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt,
         QQStyleKitReader::ControlType controlType;
         const bool isPopup = w && (false
 #if QT_CONFIG(combobox)
-            || w->inherits("QComboBoxPrivateContainer")
+                || w->inherits("QComboBoxPrivateContainer")
 #endif
-        );
+            );
         if (isPopup)
             controlType = QQStyleKitReader::ControlType::Popup;
 #if QT_CONFIG(lineedit)
@@ -1796,16 +1796,16 @@ void QStyleKitStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt,
             }
 
             const QObject *parent = w ? w->parent() : nullptr;
-#if QT_CONFIG(spinbox)
+#  if QT_CONFIG(spinbox)
             const bool isInSpinBox = qobject_cast<const QAbstractSpinBox *>(parent);
-#else
+#  else
             const bool isInSpinBox = false;
-#endif
-#if QT_CONFIG(combobox)
+#  endif
+#  if QT_CONFIG(combobox)
             const bool isInComboBox = qobject_cast<const QComboBox *>(parent);
-#else
+#  else
             const bool isInComboBox = false;
-#endif
+#  endif
             // For spinbox and combobox, the line edit doesn't have its own background in the Controls style
             if (isInSpinBox || isInComboBox)
                 return;
@@ -1932,7 +1932,7 @@ void QStyleKitStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt,
 
 /*! \reimp */
 void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt, QPainter *p,
-    const QWidget *w) const
+                                 const QWidget *w) const
 {
     Q_D(const QStyleKitStyle);
 
@@ -2074,7 +2074,7 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
             if (!r.isValid())
                 break;
             const QRect textRect = subControlRect(CC_ComboBox, comboBox, SC_ComboBoxEditField, w)
-                                   .marginsRemoved(r.metrics->textPadding);
+                .marginsRemoved(r.metrics->textPadding);
             uint textFlags = Qt::TextShowMnemonic;
             if (!styleHint(SH_UnderlineShortcut, opt, w))
                 textFlags |= Qt::TextHideMnemonic;
@@ -2197,24 +2197,24 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
 #endif // QT_CONFIG(itemviews)
 #ifndef QT_NO_FRAME
     case CE_ShapedFrame: {
-#if QT_CONFIG(scrollarea)
-    if (qobject_cast<const QAbstractScrollArea *>(w))
-        // ScrollView has no styling in Controls, keep consistent
-        return;
-#endif
+#  if QT_CONFIG(scrollarea)
+        if (qobject_cast<const QAbstractScrollArea *>(w))
+            // ScrollView has no styling in Controls, keep consistent
+            return;
+#  endif
         auto controlType = QQStyleKitReader::ControlType::Frame;
-#if QT_CONFIG(combobox)
+#  if QT_CONFIG(combobox)
         if (w && w->inherits("QComboBoxPrivateContainer"))
             controlType = QQStyleKitReader::ControlType::Popup;
-#endif
-#if QT_CONFIG(textedit)
+#  endif
+#  if QT_CONFIG(textedit)
         else if (w && qobject_cast<const QTextEdit *>(w))
             controlType = QQStyleKitReader::ControlType::TextArea;
-#endif
-#if QT_CONFIG(label)
+#  endif
+#  if QT_CONFIG(label)
         else if (w && qobject_cast<const QLabel *>(w))
             controlType = QQStyleKitReader::ControlType::Label;
-#endif
+#  endif
         // Fallback to Frame
         if (qstyleoption_cast<const QStyleOptionFrame *>(opt)) {
             const auto r = d->resolve(w, controlType, opt->state);
@@ -2349,7 +2349,7 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
             // indicators
             const QRect contentRect = opt->rect.marginsRemoved(r.metrics->padding);
             const auto *indicator = r.indicator();
-            const auto *first  = indicator ? indicator->first()  : nullptr;
+            const auto *first = indicator ? indicator->first() : nullptr;
             const auto *second = indicator ? indicator->second() : nullptr;
             int leftOffset = 0, rightOffset = 0;
             const int spacing = r.metrics->spacing;
@@ -2400,7 +2400,7 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
             }
 
             const int tabIdx = menuItem->text.indexOf(QLatin1Char('\t'));
-            const QString label    = tabIdx >= 0 ? menuItem->text.left(tabIdx) : menuItem->text;
+            const QString label = tabIdx >= 0 ? menuItem->text.left(tabIdx) : menuItem->text;
             const QString shortcut = tabIdx >= 0 ? menuItem->text.mid(tabIdx + 1) : QString();
             uint textFlags = Qt::TextShowMnemonic;
             if (!styleHint(SH_UnderlineShortcut, opt, w))
@@ -2523,8 +2523,8 @@ QRect QStyleKitStyle::subElementRect(SubElement r, const QStyleOption *opt, cons
     case SE_PushButtonBevel:
         if (const auto *btn = qstyleoption_cast<const QStyleOptionButton *>(opt)) {
             const auto controlType = btn->features & QStyleOptionButton::Flat
-                                        ? QQStyleKitReader::ControlType::FlatButton
-                                        : QQStyleKitReader::ControlType::Button;
+                ? QQStyleKitReader::ControlType::FlatButton
+                : QQStyleKitReader::ControlType::Button;
             const auto resolved = d->resolveLayout(controlType, opt->state);
             if (!resolved.isValid())
                 break;
@@ -2536,8 +2536,8 @@ QRect QStyleKitStyle::subElementRect(SubElement r, const QStyleOption *opt, cons
     case SE_PushButtonContents:
         if (const auto *btn = qstyleoption_cast<const QStyleOptionButton *>(opt)) {
             const auto controlType = btn->features & QStyleOptionButton::Flat
-                                        ? QQStyleKitReader::ControlType::FlatButton
-                                        : QQStyleKitReader::ControlType::Button;
+                ? QQStyleKitReader::ControlType::FlatButton
+                : QQStyleKitReader::ControlType::Button;
             const auto resolved = d->resolveLayout(controlType, opt->state);
             if (!resolved.isValid())
                 break;
@@ -2941,13 +2941,13 @@ void QStyleKitStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCom
                     const qreal fgX = hAlign & Qt::AlignRight
                         ? grooveRect.left() + foreground->leftMargin() + availableW - fgW
                         : hAlign & Qt::AlignHCenter
-                            ? grooveRect.left() + foreground->leftMargin() + (availableW - fgW) / 2
-                            : grooveRect.left() + foreground->leftMargin();
+                        ? grooveRect.left() + foreground->leftMargin() + (availableW - fgW) / 2
+                        : grooveRect.left() + foreground->leftMargin();
                     const qreal fgY = vAlign & Qt::AlignBottom
                         ? grooveRect.top() + foreground->topMargin() + availableH - fgH
                         : vAlign & Qt::AlignVCenter
-                            ? grooveRect.top() + foreground->topMargin() + (availableH - fgH) / 2
-                            : grooveRect.top() + foreground->topMargin();
+                        ? grooveRect.top() + foreground->topMargin() + (availableH - fgH) / 2
+                        : grooveRect.top() + foreground->topMargin();
 
                     const qreal minW = foreground->minimumWidth();
                     QRectF trackRect;
@@ -3505,13 +3505,13 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
                 QRect contentsRect = frameRect.marginsRemoved(metrics.padding);
                 const bool hasMenuButton = (tool->features
                     & (QStyleOptionToolButton::MenuButtonPopup | QStyleOptionToolButton::HasMenu))
-                   != 0;
+                    != 0;
                 const auto *indicator = resolved.indicator();
                 if (hasMenuButton && indicator && indicator->visible() && indicator->opacity() > 0) {
                     const QRect menuRect = subControlRect(CC_ToolButton, opt, SC_ToolButtonMenu, w);
                     const int spacing = metrics.spacing;
                     const uint indicatorAlign = resolvedAlignment(indicator->alignment(),
-                        Qt::AlignRight, Qt::AlignVCenter);
+                                                                  Qt::AlignRight, Qt::AlignVCenter);
                     if (indicatorAlign & Qt::AlignLeft)
                         contentsRect.setLeft(menuRect.right() + spacing);
                     else if (indicatorAlign & Qt::AlignRight)
@@ -3553,7 +3553,7 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
 
 /*! \reimp */
 QSize QStyleKitStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt,
-    const QSize &contentsSize, const QWidget *widget) const
+                                       const QSize &contentsSize, const QWidget *widget) const
 {
     Q_D(const QStyleKitStyle);
 
@@ -3566,8 +3566,8 @@ QSize QStyleKitStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt,
         auto controlType = QQStyleKitReader::ControlType::ToolButton;
         if (const auto *buttonOpt = qstyleoption_cast<const QStyleOptionButton *>(opt)) {
             controlType = (buttonOpt->features & QStyleOptionButton::Flat)
-                  ? QQStyleKitReader::ControlType::FlatButton
-                  : QQStyleKitReader::ControlType::Button;
+                ? QQStyleKitReader::ControlType::FlatButton
+                : QQStyleKitReader::ControlType::Button;
         }
         const auto resolved = d->resolveLayout(controlType, opt->state);
         if (!resolved.isValid())
@@ -3575,13 +3575,13 @@ QSize QStyleKitStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt,
 
         const auto &metrics = *resolved.metrics;
         const QSize contentSize = contentsSize
-                                  + QSize(metrics.padding.left() + metrics.padding.right(),
-                                          metrics.padding.top() + metrics.padding.bottom())
-                                  + QSize(metrics.textPadding.left() + metrics.textPadding.right(),
-                                          metrics.textPadding.top() + metrics.textPadding.bottom());
+            + QSize(metrics.padding.left() + metrics.padding.right(),
+                    metrics.padding.top() + metrics.padding.bottom())
+            + QSize(metrics.textPadding.left() + metrics.textPadding.right(),
+                    metrics.textPadding.top() + metrics.textPadding.bottom());
         const QSize bgSize = metrics.bgImplicitSize
-                             + QSize(metrics.margins.left() + metrics.margins.right(),
-                                     metrics.margins.top() + metrics.margins.bottom());
+            + QSize(metrics.margins.left() + metrics.margins.right(),
+                    metrics.margins.top() + metrics.margins.bottom());
         return contentSize.expandedTo(bgSize);
     }
 #endif
@@ -3685,11 +3685,11 @@ QSize QStyleKitStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt,
         if (const auto *lineEdit = qstyleoption_cast<const QStyleOptionFrame *>(opt)) {
             QStyleOption lineEditOpt(*lineEdit);
             lineEditOpt.state &= ~QStyle::State_Sunken;
-#if QT_CONFIG(spinbox)
+#  if QT_CONFIG(spinbox)
             const bool isInSpinBox = widget && qobject_cast<const QSpinBox *>(widget->parent());
-#else
+#  else
             const bool isInSpinBox = false;
-#endif
+#  endif
             auto controlType = isInSpinBox ? QQStyleKitReader::ControlType::SpinBox : QQStyleKitReader::ControlType::TextField;
             const auto resolved = d->resolveLayout(controlType, lineEditOpt.state);
             if (!resolved.isValid())
@@ -3845,7 +3845,7 @@ QSize QStyleKitStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt,
                 break;
             const auto &m = *resolved.metrics;
             const auto *indicator = resolved.indicator();
-            const auto *first = indicator ? indicator->first()  : nullptr;
+            const auto *first = indicator ? indicator->first() : nullptr;
             const auto *second = indicator ? indicator->second() : nullptr;
             int indicatorW = 0;
             int indicatorH = 0;
@@ -3879,7 +3879,7 @@ QSize QStyleKitStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt,
             break;
         const auto &m = *resolved.metrics;
         const int height = std::max(contentsSize.height(), m.bgImplicitSize.height())
-                         + m.margins.top() + m.margins.bottom();
+            + m.margins.top() + m.margins.bottom();
         return QSize(contentsSize.width(), height);
     }
 #endif // QT_CONFIG(menu)
@@ -3936,13 +3936,13 @@ int QStyleKitStyle::pixelMetric(PixelMetric m, const QStyleOption *opt, const QW
         if (!resolved.isValid())
             break;
         return m == PM_MenuHMargin ? resolved.metrics->padding.left()
-                                    : resolved.metrics->padding.top();
+                                   : resolved.metrics->padding.top();
     }
 #endif
 #if QT_CONFIG(menubar)
     case PM_MenuBarItemSpacing: {
         const auto resolved = d->resolveLayout(QQStyleKitReader::ControlType::MenuBarItem,
-                                                opt ? opt->state : QStyle::State_None);
+                                               opt ? opt->state : QStyle::State_None);
         if (resolved.isValid())
             return resolved.metrics->spacing;
         break;
@@ -3954,14 +3954,14 @@ int QStyleKitStyle::pixelMetric(PixelMetric m, const QStyleOption *opt, const QW
         return 0;
     case PM_ToolBarItemMargin: {
         const auto resolved = d->resolveLayout(QQStyleKitReader::ControlType::ToolBar,
-                                                opt ? opt->state : QStyle::State_None);
+                                               opt ? opt->state : QStyle::State_None);
         if (!resolved.isValid())
             break;
         return resolved.metrics->padding.left();
     }
     case PM_ToolBarItemSpacing: {
         const auto resolved = d->resolveLayout(QQStyleKitReader::ControlType::ToolBar,
-                                                opt ? opt->state : QStyle::State_None);
+                                               opt ? opt->state : QStyle::State_None);
         if (resolved.isValid())
             return resolved.metrics->spacing;
         break;
@@ -3970,7 +3970,7 @@ int QStyleKitStyle::pixelMetric(PixelMetric m, const QStyleOption *opt, const QW
         // The only lever available to honor the style's background width/height
         // QToolBarLayout uses this to calculate the minimum size of the toolbar
         const auto resolved = d->resolveLayout(QQStyleKitReader::ControlType::ToolBar,
-                                                opt ? opt->state : QStyle::State_None);
+                                               opt ? opt->state : QStyle::State_None);
         if (!resolved.isValid())
             break;
         const auto &metrics = *resolved.metrics;
@@ -4000,7 +4000,7 @@ int QStyleKitStyle::pixelMetric(PixelMetric m, const QStyleOption *opt, const QW
 
 /*! \reimp */
 int QStyleKitStyle::styleHint(StyleHint sh, const QStyleOption *opt, const QWidget *w,
-    QStyleHintReturn *shret) const
+                              QStyleHintReturn *shret) const
 {
     switch (sh) {
     // keep consistent with the Controls style behavior
@@ -4088,7 +4088,7 @@ void QStyleKitStyle::polish(QWidget *widget)
         || qobject_cast<const QTabBar *>(widget)
 #endif
 #if QT_CONFIG(tabwidget)
-            || qobject_cast<const QTabWidget *>(widget)
+        || qobject_cast<const QTabWidget *>(widget)
 #endif
 #if QT_CONFIG(menu)
         || qobject_cast<const QMenu *>(widget)
