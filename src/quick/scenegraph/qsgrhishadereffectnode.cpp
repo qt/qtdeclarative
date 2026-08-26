@@ -978,6 +978,17 @@ bool QSGRhiGuiThreadShaderEffectManager::reflect(ShaderInfo *result)
         if (ubufBinding == -1 && ubuf.binding >= 0) {
             ubufBinding = ubuf.binding;
             for (const QShaderDescription::BlockVariable &member : ubuf.members) {
+                // The uniform buffer is sized from ubuf.size, while the members are
+                // written at their own offsets, so a member reaching outside the block
+                // would have updateUniformData() write past the buffer.
+                if (member.offset < 0 || member.size < 0
+                    || member.offset > ubuf.size - member.size)
+                {
+                    qWarning("Uniform block member %s at offset %d with size %d does not fit "
+                             "the %d byte block; shader will not be used",
+                             member.name.constData(), member.offset, member.size, ubuf.size);
+                    return false;
+                }
                 ShaderInfo::Variable v;
                 v.type = ShaderInfo::Constant;
                 v.name = member.name;

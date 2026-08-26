@@ -254,6 +254,13 @@ void QSGMaterialShaderPrivate::prepare(QShader::Variant vertexShaderVariant)
         }
         for (int i = 0; i < ubufCount; ++i) {
             const QShaderDescription::UniformBlock &ubuf(ubufs[i]);
+            if (ubuf.size <= 0) {
+                // QByteArray::fill() would treat a negative size as "keep the current
+                // size", leaving a buffer that every member offset then writes past.
+                qWarning("Uniform block %s has an invalid size (%d); ignored",
+                         ubuf.blockName.constData(), ubuf.size);
+                continue;
+            }
             if (ubufBinding == -1 && ubuf.binding >= 0) {
                 ubufBinding = ubuf.binding;
                 ubufSize = ubuf.size;
