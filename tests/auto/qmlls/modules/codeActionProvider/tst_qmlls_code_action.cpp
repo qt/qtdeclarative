@@ -159,6 +159,32 @@ void tst_qmlls_code_action::wrapComponentInLoader_data()
                                    << CodeActions{ codeAction(std::move(edits)) };
     }
 
+    {
+        const auto itemWithSemicolonDoc = fakeTextDocument("import QtQuick\n"
+                                                           "Item {\n"
+                                                           "    Item {\n"
+                                                           "        id: child;\n"
+                                                           "    }\n"
+                                                           "}");
+        TextEdits edits{
+            TextEdit{ Range{ { 2, 4 }, { 2, 4 } },
+                      "// TODO: Move position bindings from the component to the Loader.\n"
+                      "//       Check all uses of 'parent' inside the root element of the "
+                      "component.\n"
+                      "//       Rename all outer uses of the id \"child\" to "
+                      "\"loader_child.item\".\n" },
+            TextEdit{ Range{ { 2, 10 }, { 2, 10 } }, "\n" },
+            TextEdit{ Range{ { 2, 4 }, { 2, 4 } }, "Component {\n    id: component_child\n" },
+            TextEdit{ Range{ { 4, 5 }, { 4, 5 } }, "\n}\n" },
+            TextEdit{ Range{ { 4, 5 }, { 4, 5 } },
+                      "Loader {\n    id: loader_child\n    sourceComponent: component_child\n}\n" }
+        };
+
+        QTest::newRow("childItemWithSemicolon")
+                << itemWithSemicolonDoc << Range{ { 2, 4 }, { 4, 5 } }
+                << CodeActions{ codeAction(std::move(edits)) };
+    }
+
     const auto nestedDoc = fakeTextDocument("import QtQuick;\n"
                                             "Item {\n"
                                             "   Item {\n"
