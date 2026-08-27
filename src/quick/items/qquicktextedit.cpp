@@ -1711,6 +1711,12 @@ void QQuickTextEdit::componentComplete()
         else
 #endif
             d->control->setPlainText(d->text);
+    } else if (!d->document->isEmpty()) {
+        // Content was loaded into the document (e.g. via textDocument.source) while
+        // we were not yet componentComplete: at that point text() could not recompute
+        // and no binding/handler was connected to observe the change. Notify now.
+        d->textCached = false;
+        emit textChanged();
     }
 
     if (d->dirty) {
