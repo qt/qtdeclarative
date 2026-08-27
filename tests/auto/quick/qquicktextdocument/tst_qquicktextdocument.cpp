@@ -44,6 +44,7 @@ private slots:
     void sourceAndSave_data();
     void sourceAndSave();
     void sourceEmitsTextChanged();
+    void sourceResetsCursor();
     void loadErrorNoSuchFile();
     void loadErrorPermissionDenied();
     void overrideTextFormat_data();
@@ -677,6 +678,18 @@ void tst_qquicktextdocument::sourceEmitsTextChanged()
     // on object-construction order, so the count is 1 or 2.
     QCOMPARE_GE(textEdit->property("textChangedCount").toInt(), 1);
     QCOMPARE(textEdit->property("boundText").toString(), loaded);
+}
+
+// QTBUG-120180: after loading via textDocument.source, the cursor should be at the
+// start of the freshly loaded document, not left at the end by setPlainText()/setHtml().
+void tst_qquicktextdocument::sourceResetsCursor()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, testFileUrl("sourceBinding.qml"));
+    QScopedPointer<QQuickTextEdit> textEdit(qobject_cast<QQuickTextEdit *>(c.create()));
+    QVERIFY2(!textEdit.isNull(), qPrintable(c.errorString()));
+    QVERIFY(textEdit->property("text").toString().contains(QString::fromUtf8("Κόσμε")));
+    QCOMPARE(textEdit->property("cursorPosition").toInt(), 0);
 }
 
 QTEST_MAIN(tst_qquicktextdocument)
