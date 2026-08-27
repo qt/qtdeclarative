@@ -1107,7 +1107,6 @@ void QQuickTextNodeEngine::addTextBlock(QTextDocument *textDocument, const QText
             qreal xoff = fontMetrics.horizontalAdvance(QLatin1Char(' '));
             if (block.textDirection() == Qt::LeftToRight)
                 xoff = -xoff - size.width();
-            setPosition(pos + QPointF(xoff, 0));
 
             QTextLayout layout;
             layout.setFont(font);
@@ -1116,6 +1115,11 @@ void QQuickTextNodeEngine::addTextBlock(QTextDocument *textDocument, const QText
             QTextLine line = layout.createLine();
             line.setPosition(QPointF(0, 0));
             layout.endLayout();
+
+            // Align the marker to the first line's baseline, so it does not float
+            // above taller content such as an inline image or a larger font.
+            const qreal baselineOffset = firstLine.ascent() - line.ascent();
+            setPosition(pos + QPointF(xoff, baselineOffset));
 
             // set the color for the bullets, instead of using the previous QTextBlock's color.
             if (charFormat.foreground().style() == Qt::NoBrush)
