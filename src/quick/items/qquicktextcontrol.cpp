@@ -1508,7 +1508,10 @@ void QQuickTextControlPrivate::focusEvent(QFocusEvent *e)
             && e->reason() != Qt::PopupFocusReason
             && cursor.hasSelection()) {
             cursor.clearSelection();
-            emit q->selectionChanged();
+            // Use the private overload so lastSelectionStart/End are updated too;
+            // a bare emit would leave that cache stale and suppress a later
+            // programmatic select() to the same range (QTBUG-83224).
+            selectionChanged();
         }
     }
 }
