@@ -2038,10 +2038,8 @@ void QQuickTextEdit::select(int start, int end)
     if (start < 0 || end < 0 || start >= d->document->characterCount() || end >= d->document->characterCount())
         return;
     QTextCursor cursor = d->control->textCursor();
-    cursor.beginEditBlock();
     cursor.setPosition(start, QTextCursor::MoveAnchor);
     cursor.setPosition(end, QTextCursor::KeepAnchor);
-    cursor.endEditBlock();
     d->control->setTextCursor(cursor);
 
     // QTBUG-11100
