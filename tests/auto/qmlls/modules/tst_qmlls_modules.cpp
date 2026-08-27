@@ -490,7 +490,7 @@ void tst_qmlls_modules::buildDir()
 
     // change the file content to force qqml— to recreate a new DomItem
     // if it reuses the old DomItem then it will not know about the added build directory
-    TextDocumentContentChangeEventVariant1 change;
+    TextDocumentContentChangePartial change;
     change.range = Range{ Position{ 4, 0 }, Position{ 4, 0 } };
     change.text = "\n";
 
@@ -514,7 +514,7 @@ void tst_qmlls_modules::inMemoryEnumCompletion()
     QVERIFY(uri);
 
     // add in memory enum that does not exist on disk
-    TextDocumentContentChangeEventVariant1 change;
+    TextDocumentContentChangePartial change;
     change.range = Range{ Position{ 3, 0 }, Position{ 3, 0 } };
     change.text = "enum HelloEnum { Hello, World, Kitty, Qt }\nproperty var myP: SimpleItem.H";
 
@@ -1266,7 +1266,7 @@ struct EditingRecorder
 
         DidChangeTextDocumentParams params;
         params.textDocument = VersionedTextDocumentIdentifier{ { lastFileUri }, ++version };
-        params.contentChanges.append(TextDocumentContentChangeEventVariant1{
+        params.contentChanges.append(TextDocumentContentChangePartial{
                 Range{ Position{ startLine, startCharacter }, Position{ endLine, endCharacter } },
                 std::nullopt, // deprecated range length
                 newText.toUtf8(),
@@ -1358,6 +1358,15 @@ void tst_qmlls_modules::linting_data()
             << inMemoryEnumScenario(testFileUrl(u"linting/SimpleItem.qml"_s).toEncoded());
 }
 
+static QByteArrayView diagnosticMessage(const Diagnostic &c)
+{
+    return std::visit(qOverloadedVisitor{
+                              [](const QByteArray &data) { return data; },
+                              [](const MarkupContent &data) { return data.value; },
+                      },
+                      c.message);
+}
+
 void tst_qmlls_modules::linting()
 {
     QFETCH(QString, filePath);
@@ -1374,18 +1383,20 @@ void tst_qmlls_modules::linting()
                 auto expectedMessage = recorder.diagnosticsPerFileVersions.find(*p.version);
                 if (expectedMessage == recorder.diagnosticsPerFileVersions.end()) {
                     if (p.diagnostics.size() > 0)
-                        qCDebug(lc) << "Did not expect message" << p.diagnostics.front().message;
+                        qCDebug(lc) << "Did not expect message"
+                                    << diagnosticMessage(p.diagnostics.front());
 
                     QVERIFY(p.diagnostics.size() == 0);
                     diagnosticOk = true;
                     return;
                 }
                 QVERIFY(p.diagnostics.size() > 0);
-                if (!p.diagnostics.front().message.contains(expectedMessage->toUtf8())) {
+                if (!diagnosticMessage(p.diagnostics.front()).contains(expectedMessage->toUtf8())) {
                     qCDebug(lc) << "expected a message with" << *expectedMessage << "but got"
-                                << p.diagnostics.front().message;
+                                << diagnosticMessage(p.diagnostics.front());
                 }
-                QVERIFY(p.diagnostics.front().message.contains(expectedMessage->toUtf8()));
+                QVERIFY(diagnosticMessage(p.diagnostics.front())
+                                .contains(expectedMessage->toUtf8()));
                 diagnosticOk = true;
             });
     for (const auto &action : recorder.actions) {
@@ -1568,7 +1579,7 @@ void tst_qmlls_modules::warnings()
 
                 if (expectedWarnings.warnings.isEmpty()) {
                     for (const auto& x: p.diagnostics)
-                        qCDebug(lc) << "Received unexpected message:" << x.message;
+                        qCDebug(lc) << "Received unexpected message:" << diagnosticMessage(x);
                     QCOMPARE(p.diagnostics.size(), 0);
                     diagnosticOk = true;
                     return;
@@ -1576,7 +1587,8 @@ void tst_qmlls_modules::warnings()
 
                 for (qsizetype i = 0;
                      i < std::min(p.diagnostics.size(), expectedWarnings.warnings.size()); ++i) {
-                    QCOMPARE(p.diagnostics[i].message, expectedWarnings.warnings[i].toUtf8());
+                    QCOMPARE(diagnosticMessage(p.diagnostics[i]),
+                             expectedWarnings.warnings[i].toUtf8());
                 }
                 QCOMPARE(p.diagnostics.size(), expectedWarnings.warnings.size());
                 diagnosticOk = true;
@@ -1821,7 +1833,7 @@ void tst_qmlls_modules::qmldirImports()
 
                 qCDebug(lc) << qJoin(p.diagnostics.begin(), p.diagnostics.end(),
                                      "Received unexpected messages:\n"_ba, "\n"_ba,
-                                     [](const Diagnostic &d) { return d.message; });
+                                     diagnosticMessage);
                 QCOMPARE(p.diagnostics.size(), 0);
                 diagnosticOk = true;
             });
@@ -1916,7 +1928,7 @@ void tst_qmlls_modules::quickFixes()
 
                 qCDebug(lc) << qJoin(p.diagnostics.begin(), p.diagnostics.end(),
                                      "Received unexpected messages:\n"_ba, "\n"_ba,
-                                     [](const Diagnostic &d) { return d.message; });
+                                     diagnosticMessage);
                 QCOMPARE_GE(p.diagnostics.size(), diagnosticIndex);
 
                 QList<Diagnostic> partially_sorted{ p.diagnostics };
@@ -2138,7 +2150,7 @@ void tst_qmlls_modules::semanticHighlightingDelta()
     didChange.textDocument.uri = *uri;
     didChange.textDocument.version = 2;
 
-    TextDocumentContentChangeEventVariant1 change;
+    TextDocumentContentChangePartial change;
     change.range = Range{ Position{ 8, 4 }, Position{ 8, 4 } };
     change.text = "const Patron = 42";
 

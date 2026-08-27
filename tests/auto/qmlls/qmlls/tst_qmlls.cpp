@@ -249,7 +249,7 @@ void tst_Qmlls::didOpenTextDocument()
     DidChangeTextDocumentParams cParams;
     cParams.textDocument.uri = uri;
     cParams.textDocument.version = 2;
-    TextDocumentContentChangeEventVariant2 change;
+    TextDocumentContentChangeWholeDocument change;
     change.text = file.readAll().replace("wildth", "wid");
     cParams.contentChanges.append(change);
     m_protocol.notifyDidChangeTextDocument(cParams);

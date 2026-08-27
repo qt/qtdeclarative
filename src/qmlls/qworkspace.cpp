@@ -64,8 +64,8 @@ void WorkspaceHandlers::setupCapabilities(QLspSpecification::ServerCapabilities 
     folders.supported = true;
     folders.changeNotifications = true;
     if (!caps.workspace)
-        caps.workspace = QJsonObject();
-    caps.workspace->insert(u"workspaceFolders"_s, QTypedJson::toJsonValue(folders));
+        caps.workspace.emplace();
+    caps.workspace->workspaceFolders = folders;
 
     QJsonObject expCap;
     if (caps.experimental.has_value() && caps.experimental->isObject())

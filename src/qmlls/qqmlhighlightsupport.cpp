@@ -238,7 +238,7 @@ void QQmlHighlightSupport::setupCapabilities(QLspSpecification::ServerCapabiliti
 {
     QLspSpecification::SemanticTokensOptions options;
     options.range = true;
-    options.full = QJsonObject({ { u"delta"_s, true } });
+    options.full = SemanticTokensFullDelta{ true };
 
     options.legend.tokenTypes = extendedTokenTypesList();
     options.legend.tokenModifiers = defaultTokenModifiersList();

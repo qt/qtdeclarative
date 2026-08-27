@@ -316,7 +316,7 @@ void tst_qmlls_cli::warnings()
              &countUnexpectedDiagnostics](const QByteArray &,
                                           const QLspSpecification::PublishDiagnosticsParams &p) {
                 for (const auto &d : p.diagnostics) {
-                    const QString message = QString::fromUtf8(d.message);
+                    const QString message = QString::fromUtf8(std::get<QByteArray>(d.message));
                     for (int i = 0; i < expectedDiagnostics.size(); ++i) {
                         if (message.contains(expectedDiagnostics[i]))
                             ++countExpectedDiagnostics[i];

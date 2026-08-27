@@ -44,12 +44,12 @@ void TextSynchronization::didDidChangeTextDocument(const DidChangeTextDocumentPa
     {
         QMutexLocker l(document->mutex());
         for (const auto &change : changes) {
-            if (auto plainText = std::get_if<TextDocumentContentChangeEventVariant2>(&change)) {
+            if (auto plainText = std::get_if<TextDocumentContentChangeWholeDocument>(&change)) {
                 document->setPlainText(QString::fromUtf8(plainText->text));
                 continue;
             }
 
-            const auto &withRange = std::get<TextDocumentContentChangeEventVariant1>(change);
+            const auto &withRange = std::get<TextDocumentContentChangePartial>(change);
             const auto &range = withRange.range;
             const auto &rangeStart = range.start;
             const int start =
