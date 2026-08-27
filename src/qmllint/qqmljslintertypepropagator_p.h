@@ -67,6 +67,7 @@ private:
     void warnAboutTypeCoercion(int lhs) override;
 
     bool checkTypeResolved(const QQmlJSScope::ConstPtr &type);
+    void checkWrite(const QQmlJSRegisterContent &callBase, const QString &propertyName);
 
     QQmlSA::PassManager *m_passManager = nullptr;
     const QQmlJS::LinterContext &m_context;

@@ -1793,6 +1793,10 @@ void TestQmllint::dirtyQmlSnippet_data()
                .addUnexpected("Unqualified access"_L1, 1, 66)
                .build()
             << defaultOptions;
+    QTest::newRow("assignToMissingProperty")
+            << u"Rectangle { id: foo } function f() { foo.bar = 42; }"_s
+            << ResultBuilder().addExpected("Member \"bar\" not found on type"_L1, 1, 38).build()
+            << defaultOptions;
     CallQmllintOptions withQuickPlugin;
     withQuickPlugin.plugins << "Quick"_L1;
     QTest::newRow("color-hex")
@@ -2307,6 +2311,9 @@ void TestQmllint::cleanQmlSnippet_data()
 
     const CallQmllintOptions defaultOptions;
 
+    QTest::newRow("assignToVariantProperty")
+            << u"Rectangle { id: foo; property var bar; } function f() { foo.bar.foo.bar = 42; }"_s
+            << defaultOptions;
     QTest::newRow("color-hex") << u"property color myColor: \"#123456\""_s << defaultOptions;
     QTest::newRow("color-hex2") << u"property color myColor: \"#FFFFFFFF\""_s << defaultOptions;
     QTest::newRow("color-hex3") << u"property color myColor: \"#A0AAff1f\""_s << defaultOptions;
