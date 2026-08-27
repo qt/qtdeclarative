@@ -658,8 +658,10 @@ void QQmlJSTypePropagator::generate_StoreProperty(int nameIndex, int base)
 
     QQmlJSRegisterContent property = m_typeResolver->memberType(callBase, propertyName);
     if (!property.isProperty()) {
-        addError(u"Type %1 does not have a property %2 for writing"_s
-                         .arg(callBase.descriptiveName(), propertyName));
+        QString name = callBase.descriptiveName();
+        if (!name.isEmpty())
+            name += u' ';
+        addError(u"Type %1does not have a property %2 for writing"_s.arg(name, propertyName));
         return;
     }
 
