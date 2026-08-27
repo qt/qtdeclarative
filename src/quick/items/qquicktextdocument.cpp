@@ -353,6 +353,7 @@ void QQuickTextDocumentPrivate::load()
             {
                 doc->setPlainText(QString::fromUtf8(data));
             }
+            editor->setCursorPosition(0);
             setStatus(QQuickTextDocument::Status::Loaded, {});
             qCDebug(lcTextDoc) << editor << "loaded" << filePath
                                << "as" << editor->textFormat() << "detected" << detectedFormat
