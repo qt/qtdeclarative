@@ -492,14 +492,26 @@ void QQuickShapeGenericRenderer::triangulateFill(const QPainterPath &path,
         vdst[i].set(vsrc[i * 2] / triangulationScale, vsrc[i * 2 + 1] / triangulationScale, fillColor);
 
     size_t indexByteSize;
-    if (ts.indices.type() == QVertexIndexVector::UnsignedShort) {
+    if (ts.indices.type() == QVertexIndexVector::UnsignedShort || vertexCount <= 0xffff) {
         *indexType = QSGGeometry::UnsignedShortType;
+        const int indexCount = ts.indices.size();
+
         // fillIndices is still QList<quint32>. Just resize to N/2 and pack
         // the N quint16s into it. To ensure that there is enough space to hold the full buffer,
         // we round the number up. Any redundant padding indexes will be ignored as the renderer
         // processes geometry in triplets.
-        fillIndices->resize((ts.indices.size() + 1) / 2);
-        indexByteSize = ts.indices.size() * sizeof(quint16);
+        fillIndices->resize((indexCount + 1) / 2);
+
+        // If indices are 32-bit, we convert to 16-bit and return early.
+        if (ts.indices.type() != QVertexIndexVector::UnsignedShort) {
+            quint16 *dst = reinterpret_cast<quint16 *>(fillIndices->data());
+            const quint32 *src = reinterpret_cast<const quint32 *>(ts.indices.data());
+            for (int i = 0; i < indexCount; ++i)
+                dst[i] = quint16(src[i]);
+            return; // Early exit to skip memcpy()
+        }
+
+        indexByteSize = indexCount * sizeof(quint16);
     } else {
         *indexType = QSGGeometry::UnsignedIntType;
         fillIndices->resize(ts.indices.size());
