@@ -302,7 +302,7 @@ QSGCurveFillMaterial::QSGCurveFillMaterial(QSGCurveFillNode *node)
     : m_node(node)
 {
     setFlag(Blending, true);
-    setFlag(RequiresDeterminant, true);
+    setFlag(RequiresFullMatrixExceptTranslate, true);
 }
 
 QSGCurveFillMaterial::~QSGCurveFillMaterial()

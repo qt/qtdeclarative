@@ -16,20 +16,47 @@ QSGCurveFillNode::QSGCurveFillNode()
     updateMaterial();
 }
 
+void QSGCurveFillNode::updateMaterialFlags()
+{
+    Q_ASSERT(m_material != nullptr);
+
+    const bool wasFullMatrixEnabled = m_material->flags().testFlag(QSGMaterial::RequiresFullMatrix);
+    const bool needsFullMatrixEnabled =
+        m_gradientType != QGradient::NoGradient || m_textureProvider != nullptr;
+
+    if (wasFullMatrixEnabled == needsFullMatrixEnabled)
+        return;
+
+    m_material->setFlag(QSGMaterial::RequiresFullMatrix, needsFullMatrixEnabled);
+
+    // Clearing RequiresFullMatrix also clears RequiresFullMatrixExceptTranslate, so we need
+    // to restore it.
+    if (!needsFullMatrixEnabled)
+        m_material->setFlag(QSGMaterial::RequiresFullMatrixExceptTranslate, true);
+
+    markDirty(DirtyGeometry);
+}
+
 void QSGCurveFillNode::updateMaterial()
 {
     m_material.reset(new QSGCurveFillMaterial(this));
     setMaterial(m_material.data());
+    updateMaterialFlags();
 }
 
 void QSGCurveFillNode::cookGeometry()
 {
+    // The batch renderer can only merge geometry with 16-bit indices, so use
+    // those whenever the vertex count allows it.
+    const QSGGeometry::Type indexType = m_uncookedVertexes.size() <= 0xffff
+            ? QSGGeometry::UnsignedShortType
+            : QSGGeometry::UnsignedIntType;
     QSGGeometry *g = geometry();
-    if (g->indexType() != QSGGeometry::UnsignedIntType) {
+    if (g->indexType() != indexType) {
         g = new QSGGeometry(attributes(),
                             m_uncookedVertexes.size(),
                             m_uncookedIndexes.size(),
-                            QSGGeometry::UnsignedIntType);
+                            indexType);
         setGeometry(g);
     } else {
         g->allocate(m_uncookedVertexes.size(), m_uncookedIndexes.size());
@@ -39,9 +66,15 @@ void QSGCurveFillNode::cookGeometry()
     memcpy(g->vertexData(),
            m_uncookedVertexes.constData(),
            g->vertexCount() * g->sizeOfVertex());
-    memcpy(g->indexData(),
-           m_uncookedIndexes.constData(),
-           g->indexCount() * g->sizeOfIndex());
+    if (indexType == QSGGeometry::UnsignedShortType) {
+        quint16 *dst = static_cast<quint16 *>(g->indexData());
+        for (qsizetype i = 0; i < m_uncookedIndexes.size(); ++i)
+            dst[i] = quint16(m_uncookedIndexes.at(i));
+    } else {
+        memcpy(g->indexData(),
+               m_uncookedIndexes.constData(),
+               g->indexCount() * g->sizeOfIndex());
+    }
 
     m_uncookedIndexes.clear();
     m_uncookedIndexes.squeeze();
