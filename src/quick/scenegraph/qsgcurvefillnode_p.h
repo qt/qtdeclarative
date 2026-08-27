@@ -68,6 +68,8 @@ public:
             connect(m_textureProvider, &QSGTextureProvider::destroyed,
                     this, &QSGCurveFillNode::handleTextureProviderDestroyed);
         }
+
+        updateMaterialFlags();
     }
 
 
@@ -91,6 +93,8 @@ public:
     {
         m_gradientType = type;
         markDirty(DirtyMaterial);
+
+        updateMaterialFlags();
     }
 
     QGradient::Type gradientType() const
@@ -262,6 +266,7 @@ private:
         float nx, ny; // normal vector describing the direction to shift the vertex for AA
     };
 
+    void updateMaterialFlags();
     void updateMaterial();
     static const QSGGeometry::AttributeSet &attributes();
 
