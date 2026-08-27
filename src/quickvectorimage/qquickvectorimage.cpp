@@ -122,8 +122,6 @@ void QQuickVectorImagePrivate::loadFile()
 
         incubator = new QQuickVectorImageIncubator(mode, context.get(), q);
         QObject::connect(incubator, &QQuickVectorImageIncubator::statusUpdated, q,
-                         &QQuickVectorImage::statusChanged);
-        QObject::connect(incubator, &QQuickVectorImageIncubator::statusUpdated, q,
                          &QQuickVectorImage::updateItem);
         incubator->start(localFile, flags);
     } else {
@@ -155,13 +153,19 @@ void QQuickVectorImagePrivate::loadFile()
                                           << "(errorState:" << gen.errorState() << ")";
         }
         q->updateItem();
-        emit q->statusChanged();
     }
 }
 
 void QQuickVectorImage::updateItem()
 {
     Q_D(QQuickVectorImage);
+
+    const QQuickItem *oldGenItem = generatedItem();
+    auto emitter = qScopeGuard([&] { // emit at any function exit
+        if (generatedItem() != oldGenItem)
+            emit generatedItemChanged();
+        emit statusChanged();
+    });
 
     QQuickItem *item = nullptr;
     if (d->incubator != nullptr) {
@@ -186,11 +190,6 @@ void QQuickVectorImage::updateItem()
 
     d->rootItem = new QQuickItem(this);
     d->rootItem->setParentItem(this);
-    auto emitter = qScopeGuard([&] { emit generatedItemChanged(); }); // emit at any function exit
-
-    if (item->width() == 0 || item->height() == 0)
-        return;
-
     d->rootItem->setImplicitWidth(item->width());
     d->rootItem->setImplicitHeight(item->height());
 
