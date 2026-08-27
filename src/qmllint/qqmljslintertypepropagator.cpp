@@ -131,6 +131,25 @@ void QQmlJSLinterTypePropagator::generate_GetOptionalLookup(int index, int offse
     }
 }
 
+void QQmlJSLinterTypePropagator::checkWrite(const QQmlJSRegisterContent &callBase,
+                                            const QString &propertyName)
+{
+    if (m_typeResolver->memberType(callBase, propertyName).isProperty())
+        return;
+    auto containedType = callBase.containedType();
+    if (!containedType)
+        return;
+    const QString internalName = callBase.containedType()->internalName();
+    if (internalName == "QJSValue"_L1 || internalName == "QVariant"_L1)
+        return;
+
+    QString typeName = callBase.descriptiveName();
+    if (!typeName.isEmpty())
+        typeName.prepend(u' ');
+    m_logger->log(u"Member \"%1\" not found on type%2"_s.arg(propertyName, typeName),
+                  qmlMissingProperty, currentSourceLocation());
+}
+
 void QQmlJSLinterTypePropagator::generate_StoreProperty(int nameIndex, int base)
 {
     QQmlJSTypePropagator::generate_StoreProperty(nameIndex, base);
@@ -138,6 +157,8 @@ void QQmlJSLinterTypePropagator::generate_StoreProperty(int nameIndex, int base)
     auto callBase = m_state.registers[base].content;
     const QString propertyName = m_jsUnitGenerator->stringForIndex(nameIndex);
     const bool isAttached = callBase.variant() == QQmlJSRegisterContent::Attachment;
+
+    checkWrite(callBase, propertyName);
 
     QQmlSA::PassManagerPrivate::get(m_passManager)->analyzeWrite(
             QQmlJSScope::createQQmlSAElement(callBase.containedType()),
