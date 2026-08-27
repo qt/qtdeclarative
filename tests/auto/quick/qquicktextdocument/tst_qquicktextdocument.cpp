@@ -43,6 +43,7 @@ private slots:
     void replaceDocument();
     void sourceAndSave_data();
     void sourceAndSave();
+    void sourceEmitsTextChanged();
     void loadErrorNoSuchFile();
     void loadErrorPermissionDenied();
     void overrideTextFormat_data();
@@ -654,6 +655,28 @@ void tst_qquicktextdocument::independentDocumentsSameSource() // QTBUG-120772
     fragCountAndItalic = fragmentsAndItalics(textEditMarkdown->textDocument()->textDocument());
     QCOMPARE(fragCountAndItalic.first, 3);
     QCOMPARE(fragCountAndItalic.second, 1);
+}
+
+// QTBUG-149576: loading content via textDocument.source (which happens during QML
+// initialization, before componentComplete) must emit textChanged, so that bindings
+// on the text property reflect the loaded content and don't stay stuck at empty.
+void tst_qquicktextdocument::sourceEmitsTextChanged()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, testFileUrl("sourceBinding.qml"));
+    QScopedPointer<QQuickTextEdit> textEdit(qobject_cast<QQuickTextEdit *>(c.create()));
+    QVERIFY2(!textEdit.isNull(), qPrintable(c.errorString()));
+
+    const QString loaded = textEdit->property("text").toString();
+    QVERIFY(loaded.contains(QString::fromUtf8("Γειά σου Κόσμε!")));
+    // textChanged must have been emitted at least once for the loaded content, so that a
+    // binding on the text property reflects it rather than the empty initial value.
+    // The exact count is not guaranteed: the document load (setSource -> setPlainText) emits
+    // textChanged during QML init, and componentComplete emits it again; whether the QML
+    // onTextChanged handler is already connected when the load-time emission happens depends
+    // on object-construction order, so the count is 1 or 2.
+    QCOMPARE_GE(textEdit->property("textChangedCount").toInt(), 1);
+    QCOMPARE(textEdit->property("boundText").toString(), loaded);
 }
 
 QTEST_MAIN(tst_qquicktextdocument)
