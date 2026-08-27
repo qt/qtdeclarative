@@ -254,6 +254,7 @@ private slots:
     void textObjectBaselineAlignment();
     void textObjectBaselineVsBottomAlignment();
     void selectedTextColorOrderedList();
+    void testSelectFunction();
 
 private:
     void simulateKeys(QWindow *window, const QList<Key> &keys);
@@ -7425,6 +7426,52 @@ void tst_qquicktextedit::selectedTextColorOrderedList()
              qPrintable(QString("No red pixels found on line y=%1; "
                                 "selectedTextColor was not applied to selected list text")
                                 .arg(lineY)));
+}
+
+void tst_qquicktextedit::testSelectFunction()
+{
+    // Create a QQuickTextEdit instance
+    QQmlComponent textEditComponent(&engine);
+    textEditComponent.setData("import QtQuick \nTextEdit { text: \"Hello, world!\" }", QUrl());
+    QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit *>(textEditComponent.create());
+    QVERIFY(textEditObject != nullptr);
+
+    // Set up signal spy
+    QSignalSpy selectedTextSpy(textEditObject, &QQuickTextEdit::selectedTextChanged);
+    QSignalSpy selectionStartSpy(textEditObject, &QQuickTextEdit::selectionStartChanged);
+    QSignalSpy selectionEndSpy(textEditObject, &QQuickTextEdit::selectionEndChanged);
+    QSignalSpy textChangeSpy(textEditObject, &QQuickTextEdit::textChanged);
+
+    // Verify initial state
+    QCOMPARE(textEditObject->selectedText(), QString());
+    QCOMPARE(textEditObject->selectionStart(), 0);
+    QCOMPARE(textEditObject->selectionEnd(), 0);
+    QCOMPARE(selectedTextSpy.count(), 0);
+    QCOMPARE(selectionStartSpy.count(), 0);
+    QCOMPARE(selectionEndSpy.count(), 0);
+    QCOMPARE(textChangeSpy.count(), 0);
+
+    // Test valid selection
+    textEditObject->select(0, 5);
+    QCOMPARE(textEditObject->selectedText(), QString("Hello"));
+    QCOMPARE(textEditObject->selectionStart(), 0);
+    QCOMPARE(textEditObject->selectionEnd(), 5);
+    QCOMPARE(selectedTextSpy.count(), 1);
+    QCOMPARE(selectionStartSpy.count(), 0);
+    QCOMPARE(selectionEndSpy.count(), 1);
+    QCOMPARE(textChangeSpy.count(), 0);
+
+    // Test deselection
+    textEditObject->deselect();
+    QCOMPARE(textEditObject->selectedText(), QString());
+    QCOMPARE(textEditObject->selectionStart(), 5); // Cursor remains at the end of the previous selection
+    QCOMPARE(textEditObject->selectionEnd(), 5);
+    QCOMPARE(selectedTextSpy.count(), 2);
+    QCOMPARE(selectionStartSpy.count(), 1);
+    QCOMPARE(selectionEndSpy.count(), 1);
+    QCOMPARE(textChangeSpy.count(), 0);
+
+    delete textEditObject;
 }
 
 QT_END_NAMESPACE
