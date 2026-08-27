@@ -303,6 +303,7 @@ function(_qt_internal_write_qmldir_part target qt_cmake_export_namespace)
         # actually not specific to $target, but we need a unique identifier
         set(customtargetname "generate_finalqtconf_${target}")
         add_custom_target("${customtargetname}" DEPENDS "${qt_conf_list_path}.done")
+        _qt_internal_assign_to_internal_targets_folder("${customtargetname}")
         get_directory_property(all_targets
             DIRECTORY ${PROJECT_SOURCE_DIR}
             QT_QMLDIR_DEFERRED_WRITEOUT_ALL_TARGETS
