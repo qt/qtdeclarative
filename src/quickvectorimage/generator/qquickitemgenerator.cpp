@@ -232,7 +232,9 @@ QString QQuickItemGenerator::generateNodeBase(const NodeInfo &info, const QStrin
     if (!info.isDefaultTransform && !info.transform.isAnimated()) {
         QTransform transform = info.transform.defaultValue().value<QTransform>();
         auto *matrix = new QQuickMatrix4x4(item);
-        matrix->setMatrix(QMatrix4x4(transform));
+        QMatrix4x4 m(transform);
+        m.optimize();
+        matrix->setMatrix(m);
         auto transformProp = item->transform();
         transformProp.append(&transformProp, matrix);
     }
@@ -1120,6 +1122,7 @@ void QQuickItemGenerator::generateMask(QQuickItem *item, const NodeInfo &info,
         const QTransform elementXf = info.transform.defaultValue().value<QTransform>();
         QMatrix4x4 mat(elementXf);
         mat.translate(svgMaskRect.x(), svgMaskRect.y());
+        mat.optimize();
         auto *matrix = new QQuickMatrix4x4(shaderEffect);
         matrix->setMatrix(mat);
         auto transformProp = shaderEffect->transform();
@@ -1280,6 +1283,7 @@ QQuickItem *QQuickItemGenerator::generateFilter(QQuickItem *item, const NodeInfo
         const QTransform elementXf = info.transform.defaultValue().value<QTransform>();
         QMatrix4x4 mat(elementXf);
         mat.translate(lastStepRect.x(), lastStepRect.y());
+        mat.optimize();
         auto *matrix = new QQuickMatrix4x4(lastOutput);
         matrix->setMatrix(mat);
         auto transformProp = lastOutput->transform();
@@ -2230,7 +2234,9 @@ QQuickTransform *QQuickItemGenerator::createAnimatedTransformGroup(QQuickItem *i
     if (!info.isDefaultTransform) {
         const QTransform transform = info.transform.defaultValue().value<QTransform>();
         auto *staticMatrix = new QQuickMatrix4x4(baseGroup);
-        staticMatrix->setMatrix(QMatrix4x4(transform));
+        QMatrix4x4 m(transform);
+        m.optimize();
+        staticMatrix->setMatrix(m);
         auto baseSeq = baseGroup->transformSequence();
         baseSeq.append(&baseSeq, staticMatrix);
     }
