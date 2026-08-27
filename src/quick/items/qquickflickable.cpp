@@ -1775,7 +1775,15 @@ void QQuickFlickable::wheelEvent(QWheelEvent *event)
         return;
     }
 
-    if (event->source() == Qt::MouseEventNotSynthesized || event->pixelDelta().isNull() || event->phase() == Qt::NoScrollPhase) {
+    // Within a touchpad gesture, pixelDelta rounds down to (0, 0) whenever the fingers
+    // moved less than one pixel since the previous frame. Keep such a frame on the
+    // pixelDelta path: falling back to angleDelta would start a wheel flick in the
+    // middle of the ongoing drag.
+    const bool isTouchpadFrameWithLostPixelDelta =
+            event->deviceType() == QInputDevice::DeviceType::TouchPad
+            && !event->angleDelta().isNull();
+    if (event->source() == Qt::MouseEventNotSynthesized || event->phase() == Qt::NoScrollPhase
+        || (event->pixelDelta().isNull() && !isTouchpadFrameWithLostPixelDelta)) {
         // no pixel delta (physical mouse wheel, or "dumb" touchpad), so use angleDelta
         int xDelta = event->angleDelta().x();
         int yDelta = event->angleDelta().y();

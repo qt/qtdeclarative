@@ -179,6 +179,7 @@ private slots:
     void wheel();
     void wheelBackwards();
     void trackpad();
+    void nativeTrackpadUsesPixelDelta();
     void nestedTrackpad();
     void nestedSameDirectionTrackpad();
     void movingAndFlicking();
@@ -1042,6 +1043,49 @@ void tst_qquickflickable::trackpad()
 
     QTRY_COMPARE(moveEndSpy.size(), 1); // QTBUG-55871
     QCOMPARE(flick->property("movementsAfterEnd").value<int>(), 0); // QTBUG-55886
+}
+
+void tst_qquickflickable::nativeTrackpadUsesPixelDelta()
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("wheel.qml")));
+
+    auto *flick = window.rootObject()->findChild<QQuickFlickable *>("flick");
+    QVERIFY(flick);
+    QSignalSpy flickStartedSpy(flick, &QQuickFlickable::flickStarted);
+
+    const QPoint pos(200, 200);
+    quint64 timestamp = 10;
+    const auto sendWheelEvent = [&](const QPoint &pixelDelta, const QPoint &angleDelta,
+                                    Qt::ScrollPhase phase, Qt::MouseEventSource source) {
+        QWheelEvent event(pos, window.mapToGlobal(pos), pixelDelta, angleDelta,
+                          Qt::NoButton, Qt::NoModifier, phase, false, source,
+                          touchpad.get());
+        event.setTimestamp(timestamp);
+        timestamp += 16;
+        QGuiApplication::sendEvent(&window, &event);
+    };
+
+    // One slow two-finger scroll, in which every third update has its pixelDelta
+    // rounded down to (0, 0) while angleDelta stays non-null.
+    sendWheelEvent(QPoint(), QPoint(), Qt::ScrollBegin, Qt::MouseEventNotSynthesized);
+    for (int i = 0; i < 8; ++i) {
+        const bool pixelDeltaRoundedToZero = (i % 3 == 1);
+        sendWheelEvent(pixelDeltaRoundedToZero ? QPoint() : QPoint(-4, 0),
+                       pixelDeltaRoundedToZero ? QPoint(-4, 0) : QPoint(-24, 0),
+                       Qt::ScrollUpdate, Qt::MouseEventSynthesizedBySystem);
+    }
+
+    QVERIFY(flick->contentX() > 0);
+    QVERIFY(flick->isDragging());
+    QCOMPARE(flickStartedSpy.size(), 0);
+
+    // The content followed the fingers, so lifting them must not add inertia.
+    const qreal contentXWhenFingersLifted = flick->contentX();
+    sendWheelEvent(QPoint(), QPoint(), Qt::ScrollEnd, Qt::MouseEventNotSynthesized);
+    QTRY_VERIFY(!flick->isMoving());
+    QCOMPARE(flick->contentX(), contentXWhenFingersLifted);
+    QCOMPARE(flickStartedSpy.size(), 0);
 }
 
 void tst_qquickflickable::nestedTrackpad()
