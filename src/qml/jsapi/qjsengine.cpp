@@ -791,6 +791,8 @@ QJSValue QJSEngine::newArray(uint length)
   available as properties of the created QJSValue.
 
   If \a object is a null pointer, this function returns a null value.
+  The same holds if \a object has been scheduled for deletion or when
+  its destructor is already running.
 
   If a default prototype has been registered for the \a object's class
   (or its superclass, recursively), the prototype of the new script
