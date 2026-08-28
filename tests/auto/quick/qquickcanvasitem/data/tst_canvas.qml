@@ -129,15 +129,14 @@ CanvasTestCase {
        tryCompare(c, "availableChangedCount", 1);
 
        c.requestPaint();
-       var imagePath = applicationDirPath + "/c.png";
-       verify(c.save(imagePath));
-       c.loadImage(imagePath);
-       tryVerify(function() { return c.isImageLoaded(imagePath) })
-       verify(!c.isImageLoading(imagePath));
-       verify(!c.isImageError(imagePath));
-       var sizedImagePath = applicationDirPath + "/c2.png";
-       verify(c.save(sizedImagePath, Qt.size(c.width / 2, c.height / 2)));
-       var img = createTemporaryQmlObject("import QtQuick 2.0; Image { source: \"file://" + sizedImagePath + "\" }", c)
+       verify(c.save(temporaryImagePath));
+       c.loadImage(temporaryImageUrl);
+       tryVerify(function() { return c.isImageLoaded(temporaryImageUrl) })
+       verify(!c.isImageLoading(temporaryImageUrl));
+       verify(!c.isImageError(temporaryImageUrl));
+       verify(c.save(temporarySizedImagePath, Qt.size(c.width / 2, c.height / 2)));
+       var img = createTemporaryQmlObject("import QtQuick 2.0; Image {}", c)
+       img.source = temporarySizedImageUrl
        tryVerify(function() { return img.width === c.width / 2 && img.height === c.height / 2 })
        c.destroy();
   }
