@@ -29,8 +29,11 @@ public:
 
     QObject *object() const;
 
+protected:
+    bool event(QEvent *) override;
+
 Q_SIGNALS:
-    void objectChanged();
+    void objectChanged(QObject *object);
 };
 
 QT_END_NAMESPACE

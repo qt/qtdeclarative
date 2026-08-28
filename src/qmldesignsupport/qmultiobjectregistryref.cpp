@@ -155,6 +155,14 @@ QList<QObject *> QMultiObjectRegistryRef::objectsList()
     will be null as QML is not able to resolve an object being deleted.
 */
 
+/*!
+    \reimp
+*/
+bool QMultiObjectRegistryRef::event(QEvent *event)
+{
+    return QAbstractObjectRegistryRef::event(event);
+}
+
 void QMultiObjectRegistryRefPrivate::handleInitialObjects()
 {
     Q_Q(QMultiObjectRegistryRef);

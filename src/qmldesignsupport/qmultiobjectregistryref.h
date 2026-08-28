@@ -31,6 +31,9 @@ public:
     QQmlListProperty<QObject> objects();
     QList<QObject *> objectsList();
 
+protected:
+    bool event(QEvent *) override;
+
 Q_SIGNALS:
     void objectsChanged();
     void objectAdded(QObject *obj);

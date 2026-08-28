@@ -105,6 +105,14 @@ QObject *QObjectRegistryRef::object() const
     return d->m_object;
 }
 
+/*!
+    \reimp
+*/
+bool QObjectRegistryRef::event(QEvent *event)
+{
+    return QAbstractObjectRegistryRef::event(event);
+}
+
 void QObjectRegistryRefPrivate::handleInitialObjects()
 {
     if (!registry())
@@ -151,7 +159,7 @@ void QObjectRegistryRefPrivate::setObject(QObject *obj)
         return;
 
     m_object = obj;
-    emit q->objectChanged();
+    emit q->objectChanged(m_object);
 }
 
 void QObjectRegistryRefPrivate::printMultiWarning() const

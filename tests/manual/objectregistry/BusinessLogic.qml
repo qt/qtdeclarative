@@ -30,7 +30,7 @@ Item {
         id: listViewRef
         key: "ListView"
 
-        onObjectChanged: {
+        onObjectChanged: (object)=> {
             object.model = contactsModel
 
             // Manual check that object property values are all initialized
@@ -117,7 +117,7 @@ Item {
             id: listLabelRef
             key: "List Label"
 
-            onObjectChanged: {
+            onObjectChanged: (object)=> {
                 // Manual check that object property values are all initialized
                 console.log("listLabel - x: " + object.x)
                 console.log("listLabel - text: " + object.text)

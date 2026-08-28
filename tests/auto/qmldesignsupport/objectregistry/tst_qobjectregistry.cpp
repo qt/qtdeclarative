@@ -128,6 +128,7 @@ void tst_qobjectregistry::cppRegistration()
     QVERIFY(!ref.object());
     QVERIFY(!registry.target());
     QCOMPARE(spyObjectChanged.size(), 1);
+    QVERIFY(!spyObjectChanged.at(0).at(0).value<QObject *>());
     QCOMPARE(spyTargetChanged.size(), 1);
 }
 
@@ -326,11 +327,17 @@ void tst_qobjectregistry::keyChange()
 
     spyObjectChanged1.clear();
 
+    QSignalSpy spyKeyChanged1(&ref1, &QAbstractObjectRegistryRef::keyChanged);
+
     // Change keys on reference side
     ref1.setKey("SingleAfter");
 
     QVERIFY(spyObjectChanged1.size() == 1);
     QVERIFY(ref1.object() == ref2.object());
+
+    QCOMPARE(spyKeyChanged1.size(), 1);
+    QCOMPARE(spyKeyChanged1.at(0).at(0).toString(), ref1.key());
+    QCOMPARE(spyObjectChanged1.at(0).at(0).value<QObject *>(), ref1.object());
 
     spyObjectsChanged3.clear();
     spyObjectAdded3.clear();
