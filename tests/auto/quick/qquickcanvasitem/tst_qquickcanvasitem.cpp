@@ -3,6 +3,8 @@
 #include <QtQuickTest/quicktest.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcontext.h>
+#include <QtCore/qtemporarydir.h>
+#include <QtCore/qurl.h>
 
 class Setup : public QObject
 {
@@ -21,9 +23,18 @@ public slots:
             false
 #endif
             ));
-        engine->rootContext()->setContextProperty("applicationDirPath",
-                                                  QCoreApplication::applicationDirPath());
+        const QString imagePath = m_temporaryDir.filePath(QStringLiteral("c.png"));
+        const QString sizedImagePath = m_temporaryDir.filePath(QStringLiteral("c2.png"));
+        engine->rootContext()->setContextProperty("temporaryImagePath", imagePath);
+        engine->rootContext()->setContextProperty("temporaryImageUrl",
+                                                  QUrl::fromLocalFile(imagePath));
+        engine->rootContext()->setContextProperty("temporarySizedImagePath", sizedImagePath);
+        engine->rootContext()->setContextProperty("temporarySizedImageUrl",
+                                                  QUrl::fromLocalFile(sizedImagePath));
     }
+
+private:
+    QTemporaryDir m_temporaryDir;
 };
 
 QUICK_TEST_MAIN_WITH_SETUP(qquickcanvasitem, Setup)

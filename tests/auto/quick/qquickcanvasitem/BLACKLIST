@@ -5,8 +5,6 @@ macos
 [canvas::test_save]
 windows
 macos
-# QTBUG-41043
-android
 [canvas::test_toDataURL]
 *
 [fillRect::test_fillRect]
