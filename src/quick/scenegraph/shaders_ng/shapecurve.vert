@@ -2,11 +2,13 @@
 
 layout(location = 0) in vec4 vertexCoord;
 layout(location = 1) in vec4 vertexTexCoord;
-layout(location = 2) in vec4 vertexGradient;
+layout(location = 2) in vec4 vertexTexCoordDerivative; // (du/dx, dv/dx) in local coords
 layout(location = 3) in vec2 normalVector;
 
 layout(location = 0) out vec4 qt_TexCoord;
-layout(location = 1) out vec4 gradient;
+
+// Calculated (du/dx, dv/du) in view space. Only calculated for !USE_DERIVATIVES.
+layout(location = 1) out vec4 texCoordDerivative;
 
 #if defined(LINEARGRADIENT)
 layout(location = 2) out float gradTabIndex;
@@ -67,9 +69,13 @@ void main()
 {
     vec2 offset = normalVector * SQRT2/ubuf.matrixScale;
 
-    qt_TexCoord = addOffset(vertexTexCoord, offset, vertexGradient);
+    qt_TexCoord = addOffset(vertexTexCoord, offset, vertexTexCoordDerivative);
 
-    gradient = vertexGradient / ubuf.matrixScale;
+#if !defined(USE_DERIVATIVES)
+    // We get the UV derivative in local coordinates and convert these to view space
+    // by multiplying 1/matrixScale (i.e. scaling the denominator of the derivative)
+    texCoordDerivative = vertexTexCoordDerivative / ubuf.matrixScale;
+#endif
 
 #if defined(LINEARGRADIENT) || defined(RADIALGRADIENT) || defined(CONICALGRADIENT) || defined(TEXTUREFILL)
     vec2 gradVertexCoord = (ubuf.gradientMatrix * vertexCoord).xy;

@@ -4,7 +4,7 @@
 #version 440
 
 layout(location = 0) in vec4 qt_TexCoord;
-layout(location = 1) in vec4 gradient;
+layout(location = 1) in vec4 texCoordDerivative;
 
 #if defined(LINEARGRADIENT)
 layout(location = 2) in float gradTabIndex;
@@ -115,10 +115,10 @@ void main()
     // f(x, y) = u(x, y) - v(x, y)
     // f'(x, y) = dudx - dvdx
 
-    float dudx = gradient.x;
-    float dvdx = gradient.y;
-    float dudy = gradient.z;
-    float dvdy = gradient.w;
+    float dudx = texCoordDerivative.x;
+    float dvdx = texCoordDerivative.y;
+    float dudy = texCoordDerivative.z;
+    float dvdy = texCoordDerivative.w;
 
     // Test with analytic derivatives
 //    dudx = dFdx(qt_TexCoord.x);
