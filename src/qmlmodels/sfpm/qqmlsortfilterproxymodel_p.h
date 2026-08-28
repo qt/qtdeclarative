@@ -115,8 +115,7 @@ public:
     QVariant sourceData(const QModelIndex &sourceIndex, int role) const;
     QHash<int, QByteArray> roleNames() const override;
     int itemRoleForName(const QString& roleName) const;
-    Qt::weak_ordering compareData(const QVariant &lhs, const QVariant &rhs,
-                                  const QCollator *collator = nullptr);
+    Qt::weak_ordering compareData(const QVariant &lhs, const QVariant &rhs);
 
 protected:
     bool filterAcceptsRow(int sourceRow, const QModelIndex& sourceParent) const ;

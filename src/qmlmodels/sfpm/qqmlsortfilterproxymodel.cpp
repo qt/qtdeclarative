@@ -828,10 +828,9 @@ void QQmlSortFilterProxyModel::setPrimarySortOrder(const Qt::SortOrder order)
 /*!
     \internal
  */
-Qt::weak_ordering QQmlSortFilterProxyModel::compareData(const QVariant &lhs, const QVariant &rhs,
-                                                        const QCollator *collator)
+Qt::weak_ordering QQmlSortFilterProxyModel::compareData(const QVariant &lhs, const QVariant &rhs)
 {
-    return QAbstractItemModel::compareData(lhs, rhs, collator);
+    return QAbstractItemModel::compareData(lhs, rhs);
 }
 
 /*!
