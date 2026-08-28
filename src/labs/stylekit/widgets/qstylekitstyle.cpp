@@ -1675,10 +1675,20 @@ void QStyleKitStyle::setStylePath(const QString &filePath)
     Q_D(QStyleKitStyle);
     if (d->stylePath == filePath)
         return;
+
+    const QString oldThemeName = themeName();
+    const QStringList oldThemeNames = availableThemeNames();
+    const QStringList oldCustomThemeNames = customThemeNames();
+
     d->stylePath = filePath;
-    if (d->loadStyle())
+    if (d->loadStyle()) {
         d->updateStyle();
-    emit stylePathChanged();
+        if (const QStringList names = availableThemeNames(); names != oldThemeNames)
+            emit availableThemeNamesChanged(names);
+        if (const QStringList names = customThemeNames(); names != oldCustomThemeNames)
+            emit customThemeNamesChanged(names);
+    }
+    emit stylePathChanged(d->stylePath);
 }
 
 /*!
@@ -1714,7 +1724,7 @@ void QStyleKitStyle::setThemeName(const QString &themeName)
         return;
     d->style->setThemeName(themeName);
     d->updateStyle();
-    emit themeNameChanged();
+    emit themeNameChanged(d->style->themeName());
 }
 
 /*!

@@ -16,8 +16,8 @@ class Q_LABSSTYLEKIT_EXPORT QStyleKitStyle : public QCommonStyle
     Q_OBJECT
     Q_PROPERTY(QString stylePath READ stylePath WRITE setStylePath NOTIFY stylePathChanged FINAL)
     Q_PROPERTY(QString themeName READ themeName WRITE setThemeName NOTIFY themeNameChanged FINAL)
-    Q_PROPERTY(QStringList availableThemeNames READ availableThemeNames NOTIFY stylePathChanged FINAL)
-    Q_PROPERTY(QStringList customThemeNames READ customThemeNames NOTIFY stylePathChanged FINAL)
+    Q_PROPERTY(QStringList availableThemeNames READ availableThemeNames NOTIFY availableThemeNamesChanged FINAL)
+    Q_PROPERTY(QStringList customThemeNames READ customThemeNames NOTIFY customThemeNamesChanged FINAL)
 
 public:
     QStyleKitStyle();
@@ -62,8 +62,10 @@ protected:
     bool event(QEvent *event) override;
 
 Q_SIGNALS:
-    void stylePathChanged();
-    void themeNameChanged();
+    void stylePathChanged(const QString &stylePath);
+    void themeNameChanged(const QString &themeName);
+    void availableThemeNamesChanged(const QStringList &availableThemeNames);
+    void customThemeNamesChanged(const QStringList &customThemeNames);
 
 private:
     Q_DISABLE_COPY_MOVE(QStyleKitStyle)
