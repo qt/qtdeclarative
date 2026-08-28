@@ -93,7 +93,7 @@ void QAbstractObjectRegistryRef::setKey(const QString &key)
                        << ") when setting key to QAbstractObjectRegistryRef."
                        << " Most likely reason for this is that QML engine could not be resolved.";
             d->m_key = key;
-            emit keyChanged();
+            emit keyChanged(d->m_key);
             return;
         }
     }
@@ -108,7 +108,7 @@ void QAbstractObjectRegistryRef::setKey(const QString &key)
 
     d->handleInitialObjects();
 
-    emit keyChanged();
+    emit keyChanged(d->m_key);
 }
 
 QQmlListProperty<QObject> QAbstractObjectRegistryRef::data()
@@ -120,6 +120,14 @@ QQmlListProperty<QObject> QAbstractObjectRegistryRef::data()
             &QAbstractObjectRegistryRefPrivate::dataClear,
             &QAbstractObjectRegistryRefPrivate::dataReplace,
             &QAbstractObjectRegistryRefPrivate::dataRemoveLast };
+}
+
+/*!
+    \reimp
+*/
+bool QAbstractObjectRegistryRef::event(QEvent *event)
+{
+    return QObject::event(event);
 }
 
 QAbstractObjectRegistryRefPrivate::QAbstractObjectRegistryRefPrivate(QQmlEngine *engine)

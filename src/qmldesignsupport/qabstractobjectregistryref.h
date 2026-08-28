@@ -37,8 +37,10 @@ protected:
     explicit QAbstractObjectRegistryRef(QAbstractObjectRegistryRefPrivate &dd,
                                         QObject *parent = nullptr);
 
+    bool event(QEvent *) override;
+
 Q_SIGNALS:
-    void keyChanged();
+    void keyChanged(const QString &key);
     void dataChanged();
 };
 
