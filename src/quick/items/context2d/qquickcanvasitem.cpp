@@ -17,6 +17,7 @@
 #include <qqmlinfo.h>
 #include <private/qqmlengine_p.h>
 #include <QtCore/QBuffer>
+#include <QtCore/QDir>
 #include <QtCore/qdatetime.h>
 
 #include <private/qv4value_p.h>
@@ -955,10 +956,13 @@ void QQuickCanvasItem::checkAnimationCallbacks()
 bool QQuickCanvasItem::save(const QString &filename, const QSizeF &imageSize) const
 {
     Q_D(const QQuickCanvasItem);
-    QUrl url;
-    url.setPath(filename); // `filename` may contain # or % characters
-    url = d->baseUrl.resolved(url);
-    return toImage(QRectF(QPointF(0, 0), imageSize)).save(url.toLocalFile());
+    QString localFile = filename;
+    if (QDir::isRelativePath(filename)) {
+        QUrl url;
+        url.setPath(filename); // `filename` may contain # or % characters
+        localFile = d->baseUrl.resolved(url).toLocalFile();
+    }
+    return toImage(QRectF(QPointF(0, 0), imageSize)).save(localFile);
 }
 
 QQmlRefPointer<QQuickCanvasPixmap> QQuickCanvasItem::loadedPixmap(const QUrl& url, QSizeF sourceSize)
