@@ -3,6 +3,8 @@
 
 #include <qtest.h>
 #include <QtTest/QSignalSpy>
+#include <QtCore/qmimedata.h>
+#include <QtCore/qpointer.h>
 #include <QtQuickTest/quicktest.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/testhttpserver_p.h>
@@ -118,6 +120,7 @@ private slots:
 #if QT_CONFIG(clipboard) && QT_CONFIG(shortcut)
     void copyAndPaste();
     void copyAndPasteKeySequence();
+    void canPasteDoesNotRetrieveData();
     void canPasteEmpty();
     void canPaste();
     void middleClickPaste();
@@ -2780,6 +2783,93 @@ void tst_qquicktextinput::copyAndPasteKeySequence()
     }
 
     delete textInput;
+}
+#endif
+
+#if QT_CONFIG(clipboard) && QT_CONFIG(shortcut)
+namespace {
+// QMimeData that counts how often its *contents* are requested, as opposed to its formats.
+class CountingMimeData : public QMimeData
+{
+public:
+    explicit CountingMimeData(const QString &text)
+    {
+        setText(text);
+        // Avoid platform setters retrieving one text format to synthesize the other.
+        setData(QStringLiteral("text/plain;charset=utf-8"), text.toUtf8());
+    }
+    mutable int retrieveCount = 0;
+
+protected:
+    QVariant retrieveData(const QString &mimeType, QMetaType type) const override
+    {
+        ++retrieveCount;
+        return QMimeData::retrieveData(mimeType, type);
+    }
+};
+} // namespace
+
+// Checking whether paste is available must not retrieve the clipboard contents.
+void tst_qquicktextinput::canPasteDoesNotRetrieveData()
+{
+    if (!PlatformQuirks::isClipboardAvailable())
+        QSKIP("This machine has no clipboard support.");
+
+    QClipboard *clipboard = QGuiApplication::clipboard();
+    // Relies on the platform clipboard handing back the QMimeData that was set
+    // (true for the default QPlatformClipboard used by offscreen/minimal).
+    QPointer<CountingMimeData> data = new CountingMimeData(QStringLiteral("some text"));
+    clipboard->setMimeData(data.data());
+    if (!data || clipboard->mimeData() != data.data())
+        QSKIP("Platform clipboard does not return the QMimeData that was set.");
+    if (data->retrieveCount != 0)
+        QSKIP("Platform clipboard retrieves the data when setting it.");
+
+    // Direct evaluation only checks the advertised formats.
+    QQuickTextInput textInput;
+    QVERIFY(textInput.canPaste());
+    if (!data || clipboard->mimeData() != data.data())
+        QSKIP("Clipboard data changed while running the test.");
+    QCOMPARE(data->retrieveCount, 0);
+    QSignalSpy spy(&textInput, &QQuickTextInput::canPasteChanged);
+    // Some platform clipboards notify asynchronously. Invoke the signal directly
+    // so the test does not process events and allow an external clipboard consumer
+    // to retrieve the data.
+    const auto notifyDataChanged = [clipboard] {
+        return QMetaObject::invokeMethod(clipboard, "dataChanged", Qt::DirectConnection);
+    };
+
+    // A clipboard change with the same availability does not emit a change signal.
+    QPointer<CountingMimeData> more = new CountingMimeData(QStringLiteral("more text"));
+    clipboard->setMimeData(more.data());
+    if (!more || clipboard->mimeData() != more.data())
+        QSKIP("Platform clipboard does not return the QMimeData that was set.");
+    QVERIFY(notifyDataChanged());
+    if (!more || clipboard->mimeData() != more.data())
+        QSKIP("Clipboard data changed while running the test.");
+    QCOMPARE(spy.size(), 0);
+    QVERIFY(textInput.canPaste());
+    QCOMPARE(more->retrieveCount, 0);
+
+    clipboard->clear();
+    QVERIFY(notifyDataChanged());
+    QCOMPARE(spy.size(), 1);
+    QVERIFY(!textInput.canPaste());
+
+    // An advertised text format is sufficient, even if retrieving it would return empty data.
+    QPointer<CountingMimeData> empty = new CountingMimeData(QString());
+    QVERIFY(empty->hasText());
+    clipboard->setMimeData(empty.data());
+    if (!empty || clipboard->mimeData() != empty.data())
+        QSKIP("Platform clipboard does not return the QMimeData that was set.");
+    QVERIFY(notifyDataChanged());
+    if (!empty || clipboard->mimeData() != empty.data())
+        QSKIP("Clipboard data changed while running the test.");
+    QCOMPARE(spy.size(), 2);
+    QVERIFY(textInput.canPaste());
+    QCOMPARE(empty->retrieveCount, 0);
+
+    clipboard->clear();
 }
 #endif
 
