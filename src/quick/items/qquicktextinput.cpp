@@ -2573,7 +2573,7 @@ bool QQuickTextInput::canPaste() const
         bool canPaste = false;
         if (!d->m_readOnly) {
             if (const QMimeData *mimeData = QGuiApplication::clipboard()->mimeData())
-                canPaste = mimeData->hasText() && !mimeData->text().isEmpty();
+                canPaste = mimeData->hasText();
         }
         const_cast<QQuickTextInputPrivate *>(d)->canPaste = canPaste;
         const_cast<QQuickTextInputPrivate *>(d)->canPasteValid = true;
@@ -3006,7 +3006,7 @@ void QQuickTextInput::q_canPasteChanged()
     bool canPaste = false;
     if (!d->m_readOnly) {
         if (const QMimeData *mimeData = QGuiApplication::clipboard()->mimeData())
-            canPaste = mimeData->hasText() && !mimeData->text().isEmpty();
+            canPaste = mimeData->hasText();
     }
     d->canPaste = canPaste;
 #endif
