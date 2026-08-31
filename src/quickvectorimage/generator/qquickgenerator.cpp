@@ -49,7 +49,9 @@ bool QQuickGenerator::generate()
 {
     m_errorState = QQuickVectorImageGenerator::NoError;
     QSvgVisitorImpl loader(m_source, this, m_flags.testFlag(QQuickVectorImageGenerator::AssumeTrustedSource));
-    return loader.doTraversal();
+    if (!loader.doTraversal())
+        m_errorState = QQuickVectorImageGenerator::LoadFailed;
+    return m_errorState == QQuickVectorImageGenerator::NoError;
 }
 
 void QQuickGenerator::optimizePaths(const PathNodeInfo &info, const QRectF &overrideBoundingRect)

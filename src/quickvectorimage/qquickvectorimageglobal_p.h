@@ -43,7 +43,8 @@ namespace QQuickVectorImageGenerator
 
     enum ErrorState {
         NoError = 0,
-        SanityLimitsExceeded
+        SanityLimitsExceeded,
+        LoadFailed
     };
 }
 

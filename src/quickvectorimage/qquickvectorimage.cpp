@@ -152,11 +152,12 @@ void QQuickVectorImagePrivate::loadFile()
         if (!generatedWithPlugin)
             gen.generate();
 
-        if (gen.errorState() == QQuickVectorImageGenerator::NoError) {
-            pendingRootItem = gen.takeRootItem();
+        if (gen.errorState() != QQuickVectorImageGenerator::NoError) {
+            qCWarning(lcQuickVectorImage)
+                    << "QQuickItemGenerator: failed to generate" << imageSource
+                    << "(errorState:" << gen.errorState() << ")";
         } else {
-            qCWarning(lcQuickVectorImage) << "QQuickItemGenerator: failed to generate" << imageSource
-                                          << "(errorState:" << gen.errorState() << ")";
+            pendingRootItem = gen.takeRootItem();
         }
         q->updateItem();
     }
@@ -544,10 +545,12 @@ QQuickVectorImage::Status QQuickVectorImage::status() const
 {
     Q_D(const QQuickVectorImage);
     if (d->incubator == nullptr) {
-        if (d->rootItem == nullptr)
+        if (d->rootItem != nullptr)
+            return Status::Ready;
+        else if (!isComponentComplete() || d->imageSource.isEmpty())
             return Status::Null;
         else
-            return Status::Ready;
+            return Status::Error;
     }
 
     switch (d->incubator->status()) {
