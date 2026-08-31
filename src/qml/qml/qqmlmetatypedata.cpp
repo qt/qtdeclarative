@@ -252,6 +252,18 @@ QQmlPropertyCache::ConstPtr QQmlMetaTypeData::findPropertyCacheInCompositeTypes(
             : propertyCacheForPotentialInlineComponentType(t, iter);
 }
 
+QVarLengthArray<QQmlPropertyCache::ConstPtr, 4>
+QQmlMetaTypeData::findPropertyCachesInCompositeTypes(QMetaType t) const
+{
+    QVarLengthArray<QQmlPropertyCache::ConstPtr, 4> result;
+    const auto [begin, end] = compositeTypes.equal_range(t.iface());
+    for (auto iter = begin; iter != end; ++iter) {
+        if (auto cache = propertyCacheForPotentialInlineComponentType(t, iter))
+            result.append(std::move(cache));
+    }
+    return result;
+}
+
 void QQmlMetaTypeData::clearCompositeTypes()
 {
     // Unregister all remaining composite types.

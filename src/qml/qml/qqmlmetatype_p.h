@@ -24,6 +24,7 @@
 
 #include <QtCore/qset.h>
 #include <QtCore/qtyperevision.h>
+#include <QtCore/qvarlengtharray.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -172,6 +173,10 @@ public:
     static QQmlPropertyCache::ConstPtr rawPropertyCacheForType(QMetaType metaType);
     static QQmlPropertyCache::ConstPtr rawPropertyCacheForType(
             QMetaType metaType, QTypeRevision version);
+
+    // All property caches for a composite metatype, which may map to more than one of them.
+    static QVarLengthArray<QQmlPropertyCache::ConstPtr, 4> rawCompositePropertyCachesForType(
+            QMetaType metaType);
 
     static bool canConvert(QObject *o, QMetaType metaType);
     static bool canConvert(const QQmlPropertyCache::ConstPtr &from, QMetaType metaType);
