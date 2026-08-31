@@ -2836,25 +2836,25 @@ QRect QStyleKitStyle::subElementRect(SubElement r, const QStyleOption *opt,
             const uint textAlign = textProps
                 ? resolvedAlignment(textProps->alignment(), Qt::AlignLeft, Qt::AlignVCenter)
                 : uint(Qt::AlignLeft | Qt::AlignVCenter);
-        if (textAlign & Qt::AlignLeft) {
-            textRect.setLeft(textRect.left() + metrics.textPadding.left());
-        } else if (textAlign & Qt::AlignHCenter) {
-            textRect.setLeft(textRect.left() + metrics.textPadding.left() / 2);
-            textRect.setRight(textRect.right() - metrics.textPadding.right() / 2);
-        } else {
-            textRect.setRight(textRect.right() - metrics.textPadding.right());
+            if (textAlign & Qt::AlignLeft) {
+                textRect.setLeft(textRect.left() + metrics.textPadding.left());
+            } else if (textAlign & Qt::AlignHCenter) {
+                textRect.setLeft(textRect.left() + metrics.textPadding.left() / 2);
+                textRect.setRight(textRect.right() - metrics.textPadding.right() / 2);
+            } else {
+                textRect.setRight(textRect.right() - metrics.textPadding.right());
+            }
+            if (textAlign & Qt::AlignTop) {
+                textRect.setTop(textRect.top() + metrics.textPadding.top());
+            } else if (textAlign & Qt::AlignVCenter) {
+                textRect.setTop(textRect.top() + metrics.textPadding.top() / 2);
+                textRect.setBottom(textRect.bottom() - metrics.textPadding.bottom() / 2);
+            } else {
+                textRect.setBottom(textRect.bottom() - metrics.textPadding.bottom());
+            }
+            return visualRect(opt->direction, opt->rect, textRect);
         }
-        if (textAlign & Qt::AlignTop) {
-            textRect.setTop(textRect.top() + metrics.textPadding.top());
-        } else if (textAlign & Qt::AlignVCenter) {
-            textRect.setTop(textRect.top() + metrics.textPadding.top() / 2);
-            textRect.setBottom(textRect.bottom() - metrics.textPadding.bottom() / 2);
-        } else {
-            textRect.setBottom(textRect.bottom() - metrics.textPadding.bottom());
-        }
-        return visualRect(opt->direction, opt->rect, textRect);
-    }
-    break;
+        break;
 #endif // QT_CONFIG(itemviews)
     case SE_PushButtonFocusRect:
     case SE_CheckBoxClickRect:
