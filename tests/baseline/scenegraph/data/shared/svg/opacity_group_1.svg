@@ -1,0 +1,7 @@
+<svg viewBox="0 0 380 380" xmlns="http://www.w3.org/2000/svg">
+    <rect width="380" height="300" fill="green"/>
+    <g transform="translate(40, 40)" opacity="0.5">
+        <rect width="300" height="200" fill="blue"/>
+        <text x="10" y="125" style="font-size: 48px" fill="white">Qt Rocks!</text>
+    </g>
+</svg>

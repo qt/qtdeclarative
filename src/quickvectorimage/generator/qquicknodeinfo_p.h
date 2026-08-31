@@ -178,6 +178,8 @@ struct StructureNodeInfo : NodeInfo
     QRectF viewBox;
     QSize size;
     QRectF clipBox;
+    QRectF opacityGroupBounds;
+    QString opacityGroupBoundsReferenceId;
     bool isPathContainer = false;
     std::optional<TimelineInfo> timelineInfo;
 };

@@ -1587,6 +1587,8 @@ bool QSvgVisitorImpl::visitStructureNodeStart(const QSvgStructureNode *node)
     fillAnimationInfo(node, info);
     info.forceSeparatePaths = forceSeparatePaths;
     info.isPathContainer = isPathContainer(m_doc, node);
+    if (!info.isDefaultOpacity || info.opacity.isAnimated())
+        info.opacityGroupBounds = node->bounds(m_doc);
     info.stage = StructureNodeStage::Start;
 
     return m_generator->generateStructureNode(info);

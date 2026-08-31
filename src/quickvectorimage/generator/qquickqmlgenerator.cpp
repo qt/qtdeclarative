@@ -588,6 +588,7 @@ void QQuickQmlGenerator::generateImageNode(const ImageNodeInfo &info)
 
     const QFileInfo assetFileInfo(filePath);
 
+    registerGraphicItem();
     stream() << "Image {";
 
     m_indentLevel++;
@@ -1035,6 +1036,7 @@ void QQuickQmlGenerator::outputShapePath(const PathNodeInfo &info, const QPainte
     if (noPen && noFill)
         return;
     auto fillRule = QQuickShapePath::FillRule(painterPath ? painterPath->fillRule() : quadPath->fillRule());
+    registerGraphicItem();
     stream() << "ShapePath {";
     m_indentLevel++;
 
@@ -1267,6 +1269,7 @@ void QQuickQmlGenerator::generateTextNode(const TextNodeInfo &info)
     stream() << "Item {";
     m_indentLevel++;
     generateNodeBase(info);
+    registerGraphicItem();
 
     if (!info.isTextArea)
         stream() << "Item { id: textAlignItem_" << m_textNodeCounter << "; x: " << info.position.x() << "; y: " << info.position.y() << "}";
@@ -1754,6 +1757,68 @@ void QQuickQmlGenerator::generateTransformTimeline(const QString &targetName, co
 }
 
 bool QQuickQmlGenerator::generateStructureNode(const StructureNodeInfo &info)
+{
+    const bool isStartStage = (info.stage == StructureNodeStage::Start);
+    bool doWrap = false;
+    if (isStartStage)
+        doWrap = !info.opacityGroupBounds.isNull() || !info.opacityGroupBoundsReferenceId.isEmpty();
+    else
+        doWrap = (!m_opacityWrapperIds.isEmpty() && m_opacityWrapperIds.top() == info.id);
+    bool res = false;
+    if (!doWrap) {
+        res = generateStructureNode_helper(info);
+    } else {
+        StructureNodeInfo wrappedInfo = info;
+        wrappedInfo.isDefaultOpacity = true;
+        wrappedInfo.opacity = QQuickAnimatedProperty(QVariant::fromValue(1.0));
+        const QString wrapperId = info.id + "_opacityWrapper"_L1;
+        if (isStartStage) {
+            stream() << "Item { // Opacity group wrapper";
+            m_indentLevel++;
+            stream() << "id: " << wrapperId;
+            stream() << "layer.sourceRect: ";
+            if (!info.opacityGroupBoundsReferenceId.isEmpty()) {
+                stream(SameLine) << info.opacityGroupBoundsReferenceId << ".originalBounds";
+            } else {
+                stream(SameLine) << "Qt.rect("
+                                 << info.opacityGroupBounds.x() << ", "
+                                 << info.opacityGroupBounds.y() << ", "
+                                 << info.opacityGroupBounds.width() << ", "
+                                 << info.opacityGroupBounds.height() << ")";
+            }
+            stream() << "opacity: " << info.opacity.defaultValue().toReal();
+            generatePropertyAnimation(info.opacity, wrapperId, "opacity"_L1);
+            m_opacityWrapperIds.push(info.id);
+            m_opacityWrapperShapeCounts.push(0);
+        }
+
+        res = generateStructureNode_helper(wrappedInfo);
+
+        if (!isStartStage) {
+            m_opacityWrapperIds.pop();
+            if (m_opacityWrapperShapeCounts.pop() > 1) {
+                const QString itemSpyId = wrapperId + "_itemspy"_L1;
+                stream() << "layer.enabled: true";
+                stream() << "x: layer.sourceRect.x";
+                stream() << "y: layer.sourceRect.y";
+                stream() << "width: layer.sourceRect.width";
+                stream() << "height: layer.sourceRect.height";
+                stream() << "layer.textureSize: " << itemSpyId << ".requiredTextureSize";
+                stream() << "ItemSpy {";
+                m_indentLevel++;
+                stream() << "id: " << itemSpyId;
+                stream() << "anchors.fill: parent";
+                m_indentLevel--;
+                stream() << "}";
+            }
+            m_indentLevel--;
+            stream() << "}";
+        }
+    }
+    return res;
+}
+
+bool QQuickQmlGenerator::generateStructureNode_helper(const StructureNodeInfo &info)
 {
     if (Q_UNLIKELY(errorState() || !isNodeVisible(info)))
         return false;
