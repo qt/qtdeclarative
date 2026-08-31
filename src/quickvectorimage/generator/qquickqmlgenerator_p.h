@@ -154,6 +154,13 @@ private:
     void generateMarkers(const PathNodeInfo &info);
     qsizetype generateFilterStep(const FilterNodeInfo &info, qsizetype stepIndex);
 
+    bool generateStructureNode_helper(const StructureNodeInfo &info);
+    void registerGraphicItem()
+    {
+        if (!m_opacityWrapperShapeCounts.isEmpty())
+            m_opacityWrapperShapeCounts.top()++;
+    }
+
     bool usingTimelineAnimation() const
     {
         return m_flags.testFlag(QQuickVectorImageGenerator::TimelineAnimation);
@@ -200,6 +207,8 @@ private:
     quint32 m_nodeCounter = 0;
     QString m_defsSuffix;
     QString m_indentString;
+    QStack<QString> m_opacityWrapperIds;
+    QStack<int> m_opacityWrapperShapeCounts;
 };
 
 QT_END_NAMESPACE

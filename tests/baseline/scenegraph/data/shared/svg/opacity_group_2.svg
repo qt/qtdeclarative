@@ -1,0 +1,8 @@
+<svg viewBox="0 0 380 380" xmlns="http://www.w3.org/2000/svg">
+  <text x="20" y="175" style="font-size: 48px; font-weight: bold;" fill="black">BACKGROUND</text>  
+  <g transform="translate(40, 75)" opacity="0.8">
+    <circle cx="150" cy="25" r="75" fill="red" />
+    <circle cx="100" cy="100" r="75" fill="green" />
+    <circle cx="200" cy="100" r="75" fill="blue" />
+    </g>
+</svg>
