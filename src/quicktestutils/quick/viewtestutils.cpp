@@ -541,7 +541,7 @@ namespace QQuickTest {
         case QPointingDevice::DeviceType::Stylus:
         case QPointingDevice::DeviceType::Airbrush:{
             const QPointF nativeLocal = QHighDpi::toNativeLocalPosition(p, window);
-            const QPointF nativeGlobal = QHighDpi::toNativeGlobalPosition(window->mapToGlobal(p), window);
+            const QPointF nativeGlobal = QHighDpi::toNativeGlobalPosition(window->mapToGlobal(QPointF(p)), window);
             QTest::lastMouseTimestamp += delay >= 0 ? delay : defaultDelay ? defaultDelay : 1;
             pressedTabletButton = button;
             pressedTabletModifiers = modifiers;
@@ -572,7 +572,7 @@ namespace QQuickTest {
         case QPointingDevice::DeviceType::Stylus:
         case QPointingDevice::DeviceType::Airbrush: {
             const QPointF nativeLocal = QHighDpi::toNativeLocalPosition(p, window);
-            const QPointF nativeGlobal = QHighDpi::toNativeGlobalPosition(window->mapToGlobal(p), window);
+            const QPointF nativeGlobal = QHighDpi::toNativeGlobalPosition(window->mapToGlobal(QPointF(p)), window);
             const auto delay = QTest::defaultMouseDelay();
             // often QTest::defaultMouseDelay() == 0; but avoid infinite velocity
             QTest::lastMouseTimestamp += delay >= 0 ? delay : defaultDelay ? defaultDelay : 1;
@@ -605,7 +605,7 @@ namespace QQuickTest {
         case QPointingDevice::DeviceType::Stylus:
         case QPointingDevice::DeviceType::Airbrush: {
             const QPointF nativeLocal = QHighDpi::toNativeLocalPosition(p, window);
-            const QPointF nativeGlobal = QHighDpi::toNativeGlobalPosition(window->mapToGlobal(p), window);
+            const QPointF nativeGlobal = QHighDpi::toNativeGlobalPosition(window->mapToGlobal(QPointF(p)), window);
             QTest::lastMouseTimestamp += delay >= 0 ? delay : defaultDelay ? defaultDelay : 1;
             QWindowSystemInterface::handleTabletEvent(window, QTest::lastMouseTimestamp, dev, nativeLocal, nativeGlobal,
                                                       Qt::NoButton, 0, 0, 0, 0, 0, 0, modifiers);
