@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 // Qt-Security score:significant
 
+#include "qqmlmetatype_p.h"
 #include "qqmlpropertyvalidator_p.h"
 
 #include <private/qqmlcustomparser_p.h>
@@ -781,10 +782,29 @@ QQmlError QQmlPropertyValidator::validateObjectBinding(const QQmlPropertyData *p
             // Will be true if the assigned type inherits propertyMetaObject
             // Determine isAssignable value
             bool isAssignable = false;
-            QQmlPropertyCache::ConstPtr c = propertyCaches.at(binding->value.objectIndex);
-            while (c && !isAssignable) {
-                isAssignable |= c == propertyMetaObject;
-                c = c->parent();
+            QQmlPropertyCache::ConstPtr source = propertyCaches.at(binding->value.objectIndex);
+
+            const auto inheritsFrom = [&](const QQmlPropertyCache::ConstPtr &target) {
+                for (QQmlPropertyCache::ConstPtr c = source; c; c = c->parent()) {
+                    if (c == target)
+                        return true;
+                }
+                return false;
+            };
+
+            isAssignable = inheritsFrom(propertyMetaObject);
+
+            if (!isAssignable) {
+                // A single (composite) metatype can map to multiple property caches when
+                // there are multiple engines; rawPropertyCacheForType only returns one of
+                // them. For non-composite types this yields an empty list and is a no-op.
+                const auto candidates = QQmlMetaType::rawCompositePropertyCachesForType(propType);
+                for (const auto &candidate : candidates) {
+                    if (inheritsFrom(candidate)) {
+                        isAssignable = true;
+                        break;
+                    }
+                }
             }
 
             if (!isAssignable) {
