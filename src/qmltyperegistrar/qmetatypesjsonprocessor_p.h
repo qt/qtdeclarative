@@ -157,7 +157,7 @@ struct MetaTypePrivate
 
     enum Kind : quint8 { Object, Gadget, Namespace, Unknown };
 
-    MetaTypePrivate() = default;
+    MetaTypePrivate() { }
     MetaTypePrivate(const QCborMap &cbor, const QString &inputFile);
 
     const QCborMap cbor; // need to keep this to hold on to the strings
