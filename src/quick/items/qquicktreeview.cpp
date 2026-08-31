@@ -38,15 +38,16 @@
     When you declare a TreeView, you need to specify:
 
     \list
-      \li \b{A data model}. TreeView can work with data models that derive from
-        \l QAbstractItemModel.
+      \li \b{A data model}. TreeView can work with any data model that derives
+        from \l QAbstractItemModel, including the ready-made \l TreeModel and
+        \l QRangeModel.
       \li \b{A delegate}. A delegate is a template that specifies how the tree
         nodes are displayed in the UI.
     \endlist
 
     \qml
     TreeView {
-        // The model needs to be a QAbstractItemModel
+        // The model must inherit QAbstractItemModel
         model: myTreeModel
         // You can set a custom delegate or use a built-in TreeViewDelegate
         delegate: TreeViewDelegate {}
@@ -55,10 +56,22 @@
 
     \section2 Creating a data model
 
-    A TreeView only accepts a model that inherits \l QAbstractItemModel.
+    A TreeView only accepts a model that inherits \l QAbstractItemModel, but you
+    don't have to implement such a model yourself. Depending on where your data
+    lives, choose one of the following:
 
-    For information on how to create and use a custom tree model, see the
-    example: \l {Qt Quick Controls - Table of Contents}.
+    \list
+      \li For simple data that you declare in QML, use \l TreeModel (since Qt
+        6.10) from \c Qt.labs.qmlmodels. It stores JavaScript and JSON objects
+        as tree data, where each node keeps its children in a \c rows array.
+      \li For data that already lives in C++ containers, use \l QRangeModel
+        (since Qt 6.10). It adapts any C++ range to \l QAbstractItemModel, and
+        represents that range as a tree when the row type implements a tree
+        traversal protocol.
+      \li For full control, implement your own \l QAbstractItemModel subclass.
+        For an example of how to create and use a custom tree model, see the
+        \l {Qt Quick Controls - Table of Contents} example.
+    \endlist
 
     \section2 Customize tree nodes
 
