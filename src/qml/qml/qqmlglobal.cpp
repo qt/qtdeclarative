@@ -1112,9 +1112,9 @@ bool qmlobject_can_qml_cast(QObject *object, const QQmlType &type)
 
     // A non-composite type will always have a metaobject.
     const QMetaObject *typeMetaObject = type.metaObject();
-    const QQmlPropertyCache::ConstPtr typePropertyCache = typeMetaObject
-            ? QQmlPropertyCache::ConstPtr()
-            : QQmlMetaType::findPropertyCacheInCompositeTypes(type.typeId());
+    QVarLengthArray<QQmlPropertyCache::ConstPtr, 4> allPropertyCacheCandidates =
+            typeMetaObject ? QVarLengthArray<QQmlPropertyCache::ConstPtr, 4>{}
+                           : QQmlMetaType::rawCompositePropertyCachesForType(type.typeId());
 
     if (const QQmlData *ddata = ddata_for_cast(object)) {
         for (const QQmlPropertyCache *propertyCache = ddata->propertyCache.data(); propertyCache;
@@ -1134,17 +1134,17 @@ bool qmlobject_can_qml_cast(QObject *object, const QQmlType &type)
                 // property caches to be unrelated but the types still convertible.
                 // Multiple property caches can hold the same metaobject, for example for
                 // versions of non-composite types.
-                if (propertyCache == typePropertyCache.data())
+                if (allPropertyCacheCandidates.contains(propertyCache))
                     return true;
             }
         }
     }
 
-    // If nothing else works, we have to create the metaobjects.
+    // If nothing else works, we have to create the metaobjects (if we can).
+    if (!typeMetaObject && !allPropertyCacheCandidates.isEmpty())
+        typeMetaObject = allPropertyCacheCandidates.first()->createMetaObject();
 
-    return object->metaObject()->inherits(typeMetaObject
-            ? typeMetaObject
-            : (typePropertyCache ? typePropertyCache->createMetaObject() : nullptr));
+    return object->metaObject()->inherits(typeMetaObject);
 }
 
 QT_END_NAMESPACE

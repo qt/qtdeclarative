@@ -23,6 +23,7 @@
 #include <private/qqmlvaluetype_p.h>
 
 #include <QtCore/qset.h>
+#include <QtCore/qvarlengtharray.h>
 #include <QtCore/qvector.h>
 
 QT_BEGIN_NAMESPACE
@@ -126,6 +127,10 @@ struct QQmlMetaTypeData
     QQmlPropertyCache::ConstPtr propertyCache(const QMetaObject *metaObject, QTypeRevision version);
     QQmlPropertyCache::ConstPtr propertyCache(const QQmlType &type, QTypeRevision version);
     QQmlPropertyCache::ConstPtr findPropertyCacheInCompositeTypes(QMetaType t) const;
+
+    // Same, but returns all matches rather than only the last inserted one.
+    QVarLengthArray<QQmlPropertyCache::ConstPtr, 4> findPropertyCachesInCompositeTypes(
+            QMetaType t) const;
 
     static QQmlPropertyCache::ConstPtr propertyCacheForPotentialInlineComponentType(
             QMetaType t, const QQmlMetaTypeData::CompositeTypes::const_iterator &iter);

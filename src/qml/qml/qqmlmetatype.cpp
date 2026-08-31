@@ -1561,6 +1561,20 @@ QQmlPropertyCache::ConstPtr QQmlMetaType::rawPropertyCacheForType(QMetaType meta
 /*!
  * \internal
  *
+ * Returns all candidate property caches for a composite
+ * metatype instead of only the last inserted one.
+ * compare rawPropertyCacheForType (which handles however also non-composites)
+ */
+QVarLengthArray<QQmlPropertyCache::ConstPtr, 4>
+QQmlMetaType::rawCompositePropertyCachesForType(QMetaType metaType)
+{
+    const QQmlMetaTypeDataPtr data;
+    return data->findPropertyCachesInCompositeTypes(metaType);
+}
+
+/*!
+ * \internal
+ *
  * Look up by QQmlType and version. We only fall back to lookup by metaobject if the type
  * has no revisiononed attributes here. Unspecified versions are interpreted as "any".
  */

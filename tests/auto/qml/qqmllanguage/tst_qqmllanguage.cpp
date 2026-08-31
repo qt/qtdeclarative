@@ -298,6 +298,8 @@ private slots:
     void instanceof();
     void instanceofMultiEngine();
     void instanceofMultiEngineInlineComponent();
+    void propertyValidatorMultiEngine();
+    void canQmlCastMultiEngine();
 
     void concurrentLoadQmlDir();
 
@@ -6011,6 +6013,51 @@ void tst_qqmllanguage::instanceofMultiEngineInlineComponent()
     QVariant result2 = expr2.evaluate();
     QVERIFY2(!expr2.hasError(), qPrintable(expr2.error().description()));
     QVERIFY(result2.toBool());
+}
+
+// verify that the property validator does not get confused when
+// multiple engines end up registering the same type, leading to
+// multiple entries in compositeTypes
+void tst_qqmllanguage::propertyValidatorMultiEngine()
+{
+    QQmlEngine engine1;
+    QQmlComponent c1(&engine1, testFileUrl("propertyValidatorMultiEngine/Consumer1.qml"));
+    QVERIFY2(c1.isReady(), qPrintable(c1.errorString()));
+
+    QQmlEngine engine2;
+    QQmlComponent c2(&engine2, testFileUrl("propertyValidatorMultiEngine/Consumer1.qml"));
+    QVERIFY2(c2.isReady(), qPrintable(c2.errorString()));
+
+    QQmlComponent c3(&engine1, testFileUrl("propertyValidatorMultiEngine/Consumer2.qml"));
+    QVERIFY2(c3.isReady(), qPrintable(c3.errorString()));
+}
+
+// Verify that qmlobject_can_qml_cast() still recognizes a composite type when
+// multiple engines have loaded the same QML file
+void tst_qqmllanguage::canQmlCastMultiEngine()
+{
+    const QUrl url = testFileUrl("canQmlCastMultiEngine/Main.qml");
+
+    QQmlEngine engine1;
+    QQmlComponent c1(&engine1, url);
+    QVERIFY2(c1.isReady(), qPrintable(c1.errorString()));
+    QScopedPointer<QObject> obj1(c1.create());
+    QVERIFY(obj1);
+
+    // A second engine loads the same file and registers another compilation unit
+    // (and thus another property cache) for Foo.
+    QQmlEngine engine2;
+    QQmlComponent c2(&engine2, url);
+    QVERIFY2(c2.isReady(), qPrintable(c2.errorString()));
+    QScopedPointer<QObject> obj2(c2.create());
+    QVERIFY(obj2);
+
+    // Call the typed function on engine1's object with engine1's Foo instance.
+    QQmlExpression expr(engine1.contextForObject(obj1.data()), obj1.data(),
+                        QStringLiteral("check(theFoo)"));
+    const QVariant result = expr.evaluate();
+    QVERIFY2(!expr.hasError(), qPrintable(expr.error().description()));
+    QVERIFY(result.toBool());
 }
 
 void tst_qqmllanguage::concurrentLoadQmlDir()
