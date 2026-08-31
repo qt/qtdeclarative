@@ -151,7 +151,10 @@ QQuickItemGenerator::QQuickItemGenerator(const QString &fileName,
 {
 }
 
-QQuickItemGenerator::~QQuickItemGenerator() = default;
+QQuickItemGenerator::~QQuickItemGenerator()
+{
+    delete m_rootItem;
+}
 
 void QQuickItemGenerator::setAnimationProvider(std::unique_ptr<QQuickGeneratorAnimationProvider> provider)
 {
