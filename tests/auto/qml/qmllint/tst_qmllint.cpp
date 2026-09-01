@@ -4443,6 +4443,19 @@ Item {
                        .addUnexpected("Property \"myObj\" has incomplete type \"MyObject1\""_L1)
                        .build()
             << defaultOptions;
+
+    QTest::newRow("propertyUsage")
+            << uR"(import MissingRegistration
+import QtQuick
+Item {
+    property MyObject1 myObj
+    function f() { return myObj; }
+})"_s
+            << ResultBuilder()
+                       .addExpected("MyObject1 was not found"_L1, 4, 5)
+                       .addUnexpected("Type \"MyObject1\" of property \"myObj\" not found."_L1)
+                       .build()
+            << defaultOptions;
 }
 
 void TestQmllint::missingRegistration()

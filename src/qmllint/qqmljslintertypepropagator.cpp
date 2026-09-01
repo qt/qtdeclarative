@@ -242,10 +242,13 @@ QQmlJSLinterTypePropagator::propertyResolution(QQmlJSScope::ConstPtr scope,
 
     Q_ASSERT(!errorType.isEmpty());
 
-    m_logger->log(
-            u"Type \"%1\" of property \"%2\" not %3. This is likely due to a missing dependency entry or a type not being exposed declaratively."_s
-                    .arg(property.typeName(), propertyName, errorType),
-            qmlUnresolvedType, currentSourceLocation());
+    if (QQmlJSScope::ownerOfProperty(scope, propertyName).scope->filePath()
+        != m_logger->filePath()) {
+        m_logger->log(
+                u"Type \"%1\" of property \"%2\" not %3. This is likely due to a missing dependency entry or a type not being exposed declaratively."_s
+                        .arg(property.typeName(), propertyName, errorType),
+                qmlUnresolvedType, currentSourceLocation());
+    }
 
     return PropertyTypeUnresolved;
 }
