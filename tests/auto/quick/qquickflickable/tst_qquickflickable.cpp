@@ -1571,7 +1571,7 @@ void tst_qquickflickable::dragAndSwitchDirection()
     flickable->setContentX(flickable->width() / 2);
     flickable->setContentY(flickable->height() / 2);
 
-    const QPoint initialContentPos = QPoint(flickable->contentX(), flickable->contentY());
+    const QPointF initialContentPos = QPointF(flickable->contentX(), flickable->contentY());
     const QPoint dragDirection = QPoint(dragH ? 1 : 0, dragH ? 0 : 1);
     const QPoint dragIncrement = dragDirection * qApp->styleHints()->startDragDistance() / 2;
     const QPoint dragFrom = QPoint(flickable->width(), flickable->height()) / 2;
@@ -1589,7 +1589,7 @@ void tst_qquickflickable::dragAndSwitchDirection()
     // What matters is that the flickable is now in a dragging state, and that
     // the contentItem has moved a bit in the expected direction.
     QVERIFY(flickable->isDragging());
-    QPoint expectedContentPos(flickable->contentX(), flickable->contentY());
+    QPointF expectedContentPos(flickable->contentX(), flickable->contentY());
     QCOMPARE_NE(initialContentPos, expectedContentPos);
 
     // We now reverse the drag direction, and drag beyond the initial starting
