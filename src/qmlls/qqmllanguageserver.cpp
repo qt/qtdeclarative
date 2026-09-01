@@ -92,7 +92,7 @@ QQmlLanguageServer::QQmlLanguageServer(std::function<void(const QByteArray &)> s
     registerModule(&m_progressSupport);
     registerModule(&m_highlightSupport);
 
-    qCWarning(lspServerLog) << "Did Setup";
+    qCDebug(lspServerLog) << "Did Setup";
 }
 
 QQmlLanguageServer::~QQmlLanguageServer()
