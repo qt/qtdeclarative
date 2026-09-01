@@ -871,6 +871,7 @@ QQStyleKitReader *QStyleKitStylePrivate::readerForWidget(const QWidget *widget) 
     auto *widgetReader = new QQStyleKitReader(const_cast<QStyleKitStyle *>(q));
     widgetReader->setExplicitStyle(effective);
     widgetReader->setTarget(paintTarget(widget));
+    widgetReader->setControlType(controlTypeForWidget(widget));
     widgetReader->setCompleted(true);
     widgetReaders.insert(widget, widgetReader);
     QObjectPrivate::connect(widget, &QObject::destroyed, this,
@@ -1045,7 +1046,22 @@ QQSK::State QStyleKitStylePrivate::resolvedStateFor(QQStyleKitReader::ControlTyp
     flags.setFlag(QQSK::StateFlag::Checked, state & QStyle::State_On);
     flags.setFlag(QQSK::StateFlag::Focused, state & QStyle::State_HasFocus);
     flags.setFlag(QQSK::StateFlag::Highlighted, state & QStyle::State_Selected);
-    flags.setFlag(QQSK::StateFlag::Vertical, !(state & QStyle::State_Horizontal));
+
+    bool hasOrientation = false;
+    switch (type) {
+    case QQStyleKitReader::ProgressBar:
+    case QQStyleKitReader::ScrollBar:
+    case QQStyleKitReader::ScrollIndicator:
+    case QQStyleKitReader::Slider:
+    case QQStyleKitReader::ToolBar:
+    case QQStyleKitReader::ToolSeparator:
+        hasOrientation = true;
+        break;
+    default:
+        break;
+    }
+    if (hasOrientation)
+        flags.setFlag(QQSK::StateFlag::Vertical, !(state & QStyle::State_Horizontal));
     // Some widgets don't set State_Enabled in their
     // style option even when the widget is enabled.
     // Fall back to widget->isEnabled() in that case
