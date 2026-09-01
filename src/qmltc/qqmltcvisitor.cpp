@@ -429,6 +429,12 @@ bool Visitor::checkCustomParser(const QQmlJSScope::ConstPtr &scope)
     return false;
 }
 
+void Visitor::checkGroupedAndAttachedScopes()
+{
+    for (const auto &scope : std::as_const(m_objectDefinitionScopes))
+        checkCustomParser(scope);
+}
+
 QQmlJSScope::ConstPtr fetchType(const QQmlJSMetaPropertyBinding &binding)
 {
     switch (binding.bindingType()) {

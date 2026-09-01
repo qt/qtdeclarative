@@ -159,6 +159,7 @@ public:
 
     bool checkCustomParser(const QQmlJSScope::ConstPtr &scope) override;
     bool hasSeenCustomParsers() const { return m_seenCustomParsers; }
+    void checkGroupedAndAttachedScopes() override;
 
 protected:
     QStringList m_qmlTypeNames; // names of QML types arranged as a stack

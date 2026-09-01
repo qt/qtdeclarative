@@ -293,7 +293,7 @@ protected:
 
     void breakInheritanceCycles(const QQmlJSScope::Ptr &scope);
     void checkDeprecation(const QQmlJSScope::ConstPtr &scope);
-    void checkGroupedAndAttachedScopes(QQmlJSScope::ConstPtr scope);
+    virtual void checkGroupedAndAttachedScopes() { }
     void checkForComponentTypeWithProperties(const QQmlJSScope::ConstPtr &scope);
     bool rootScopeIsValid() const { return m_exportedRootScope->sourceLocation().isValid(); }
 

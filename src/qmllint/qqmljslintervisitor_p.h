@@ -143,6 +143,8 @@ private:
     void checkSingletonRoot();
     void checkFileSelections();
     void checkUnusedImports();
+    void checkGroupedAndAttachedScope(const QQmlJSScope::ConstPtr &scope);
+    void checkGroupedAndAttachedScopes() override;
 
     bool m_rootIsSingleton = false;
 };

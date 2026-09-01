@@ -580,8 +580,7 @@ void QQmlJSImportVisitor::endVisit(UiProgram *)
     resolveAliases();
     resolveGroupProperties();
 
-    for (const auto &scope : std::as_const(m_objectDefinitionScopes))
-        checkGroupedAndAttachedScopes(scope);
+    checkGroupedAndAttachedScopes();
 
     setAllBindings();
     processDefaultProperties();
@@ -1599,38 +1598,6 @@ void QQmlJSImportVisitor::checkDeprecation(const QQmlJSScope::ConstPtr &original
 
                 m_logger->log(message, qmlDeprecated, originalScope->sourceLocation());
             }
-        }
-    }
-}
-
-void QQmlJSImportVisitor::checkGroupedAndAttachedScopes(QQmlJSScope::ConstPtr scope)
-{
-    // These warnings do not apply for custom parsers and their children and need to be handled on a
-    // case by case basis
-    if (checkCustomParser(scope))
-        return;
-
-    auto children = scope->childScopes();
-    while (!children.isEmpty()) {
-        auto childScope = children.takeFirst();
-        const auto type = childScope->scopeType();
-        switch (type) {
-        case QQmlSA::ScopeType::GroupedPropertyScope:
-        case QQmlSA::ScopeType::AttachedPropertyScope:
-            if (!childScope->baseType() && !m_unresolvedTypes.hasSeen(childScope)) {
-                // note: if we already warn about the unknown property scope then we don't have to
-                // warn again about it being unresolved later
-                m_logger->log(QStringLiteral("unknown %1 property scope %2.")
-                                      .arg(type == QQmlSA::ScopeType::GroupedPropertyScope
-                                                   ? QStringLiteral("grouped")
-                                                   : QStringLiteral("attached"),
-                                           childScope->internalName()),
-                              qmlUnqualified, childScope->sourceLocation());
-            }
-            children.append(childScope->childScopes());
-            break;
-        default:
-            break;
         }
     }
 }
