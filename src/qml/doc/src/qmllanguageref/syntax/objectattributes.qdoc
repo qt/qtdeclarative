@@ -124,8 +124,8 @@ See the upcoming sections on \l {Default Properties}{default properties},
 about their respective meaning.
 
 Declaring a custom property implicitly creates a value-change
-\l{Signal attributes}{signal} for that property, as well as an associated
-\l{Signal handler attributes}{signal handler} called
+\l{Signal attributes}{signal} for that property. To react to the signal,
+declare a \l{Signal handler attributes}{signal handler} called
 \e on<PropertyName>Changed, where \e <PropertyName> is the name of the
 property, with the first letter capitalized.
 
@@ -293,6 +293,10 @@ Rectangle {
     }
 }
 \endqml
+
+The QML engine cannot evaluate every binding at the start of object creation.
+The engine evaluates such bindings later, and this first evaluation assigns a
+value to the property. The assignment can emit the property's change signal.
 
 \note To assign a binding expression imperatively, the binding expression
 must be contained in a function that is passed into \l{Qt::binding()}{Qt.binding()},
@@ -529,6 +533,30 @@ does not change some other value that then updates textItem.text. If
 the displayed text at all, as property bindings are not bi-directional: the
 \c buttonText value would have changed if textItem.text was changed, but not
 the other way around.
+
+\section4 Property Aliases and Change Notification
+
+As with an ordinary property, declaring a property alias implicitly creates a
+value-change \l{Signal attributes}{signal} for the alias. To react to the
+signal, declare a \l{Signal handler attributes}{signal handler} called
+\e on<AliasName>Changed, where \e <AliasName> is the name of the alias, with
+the first letter capitalized.
+
+The alias's change signal is emitted whenever the value of the aliased property
+changes, regardless of whether the change comes through the alias or through
+the aliased property directly. In the \c Button example above, \c Button emits
+\c buttonTextChanged whenever \c textItem.text changes, and an
+\c onButtonTextChanged handler responds to those changes just as it would for an
+ordinary property.
+
+If the alias refers to a property of an object implemented in C++, change
+notification requires that property to have a \c NOTIFY signal or to be
+\l{Qt Bindable Properties}{bindable}, the same as for an ordinary property.
+Without a \c NOTIFY signal or a bindable interface, neither the property nor
+the alias emits a change signal.
+
+An alias declaration assigns no value. It only refers to a property that
+already exists. The declaration itself does not emit a change signal.
 
 \section4 Property Aliases and Types
 
@@ -894,7 +922,9 @@ whenever a property value changes, as previously described in the section on
 \l{Property attributes}{property attributes}.  See the upcoming section on
 \l{Property change signal handlers}{property change signal handlers} for more
 information about why these signals are useful, and how to use them.
-
+Property aliases provide change signals as well: an alias's change signal
+is emitted whenever the value of the aliased property changes. See
+\l{Property Aliases and Change Notification} for details.
 
 \section2 Signal Handler Attributes
 
