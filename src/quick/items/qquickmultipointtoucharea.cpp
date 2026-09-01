@@ -659,14 +659,23 @@ void QQuickMultiPointTouchArea::updateTouchData(QEvent *event, RemapEventPoints 
         if (!_stealMouse /* !ignoring gesture*/) {
             bool offerGrab = false;
             const int dragThreshold = QGuiApplication::styleHints()->startDragDistance();
+
+            // overThreshold test predicate which does not consider deltas with floating
+            // point rounding residuals to be over the threshld. Required for test stability
+            // at fractional scale factors where scaling may introduce rounding errors.
+            const auto overThreshold = [dragThreshold](qreal delta) {
+                return qAbs(delta) > dragThreshold
+                        && !qFuzzyCompare(qAbs(delta), qreal(dragThreshold));
+            };
+
             for (const QEventPoint &p : std::as_const(touchPoints)) {
                 if (p.state() == QEventPoint::State::Released)
                     continue;
                 const QPointF currentPos = mapFromScene(p.scenePosition());
                 const QPointF startPos = mapFromScene(p.scenePressPosition());
-                if (qAbs(currentPos.x() - startPos.x()) > dragThreshold)
+                if (overThreshold(currentPos.x() - startPos.x()))
                     offerGrab = true;
-                else if (qAbs(currentPos.y() - startPos.y()) > dragThreshold)
+                else if (overThreshold(currentPos.y() - startPos.y()))
                     offerGrab = true;
                 if (offerGrab)
                     break;
