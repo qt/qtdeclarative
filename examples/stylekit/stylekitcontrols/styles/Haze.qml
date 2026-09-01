@@ -96,13 +96,12 @@ Style {
     }
 
     delayButton {
-        padding: 0
         indicator {
-            radius: 8
-            foreground {
-                margins: 0
-                radius: 8
-            }
+            // Move the progress under the contents (hence a negative margin)
+            height: 2
+            bottomMargin: -5
+            foreground.margins: 0
+            border.width: 0
         }
     }
 
@@ -399,7 +398,6 @@ Style {
             }
 
             indicator {
-                color: "white"
                 foreground.image.color: palette.accent
             }
 
@@ -442,10 +440,6 @@ Style {
             checked {
                 background.color: palette.accent
             }
-        }
-
-        delayButton {
-            indicator.color: "transparent"
         }
 
         comboBox {
@@ -604,10 +598,6 @@ Style {
             }
         }
 
-        delayButton {
-            indicator.color: "transparent"
-        }
-
         comboBox {
             hovered {
                 background {
@@ -756,10 +746,13 @@ Style {
 
             delayButton {
                 indicator {
-                    color: "transparent"
+                    height: 6
+                    border.width: 1
+                    color: "white"
+                    bottomMargin: -2
                     foreground.margins: 0
+                    foreground.color: "black"
                 }
-                checked.text.color: "white"
             }
 
             dial {
@@ -977,7 +970,7 @@ Style {
             }
 
             delayButton {
-                indicator.color: "transparent"
+                indicator.foreground.color: "#678367"
             }
 
             pane {

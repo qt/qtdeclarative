@@ -182,15 +182,16 @@ BaseStyle {
     }
 
     delayButton {
-        padding: 0
         indicator {
+            height: 6
             fillWidth: true
-            fillHeight: true
-            color: __transparent
-            border.width: 0
+            border.width: 1
+            alignment: Qt.AlignBottom
             foreground {
+                margins: 2
                 fillWidth: true
                 fillHeight: true
+                color: palette.accent
                 delegate: ProgressDelegate {}
             }
         }

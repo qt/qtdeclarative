@@ -167,10 +167,12 @@ Style {
     }
 
     delayButton {
-        padding: 0
         indicator {
-            color: "transparent"
-            border.width: 0
+            height: 10
+            bottomMargin: -2
+            leftMargin: 5
+            rightMargin: 5
+            border.width: 1
         }
     }
 

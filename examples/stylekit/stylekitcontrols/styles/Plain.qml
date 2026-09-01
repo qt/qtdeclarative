@@ -78,15 +78,9 @@ Style {
     }
 
     delayButton {
-        padding: 0
         indicator {
-            radius: 4
-            foreground {
-                radius: 4
-                color: palette.accent.lighter(1.2)
-            }
+            bottomMargin: -3
         }
-        checked.indicator.foreground.color: palette.accent.darker(1.2)
     }
 
     itemDelegate {
