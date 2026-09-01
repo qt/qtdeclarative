@@ -26,22 +26,25 @@ void QQmlJSLinterTypePropagator::generate_Ret()
 {
     QQmlJSTypePropagator::generate_Ret();
 
+    const auto accumulatorIn = m_state.accumulatorIn();
     if (m_function->isSignalHandler) {
         // Signal handlers cannot return anything.
-    } else if (m_state.accumulatorIn().contains(m_typeResolver->voidType())) {
+    } else if (accumulatorIn.contains(m_typeResolver->voidType())) {
         // You can always return undefined.
-    } else if (!m_returnType.isValid() && m_state.accumulatorIn().isValid()) {
+    } else if (!m_returnType.isValid() && accumulatorIn.isValid()) {
         if (m_function->isFullyTyped) {
             // Do not complain if the function didn't have a valid annotation in the first place.
             m_logger->log(u"Function without return type annotation returns %1"_s.arg(
                                   m_state.accumulatorIn().containedTypeName()),
                           qmlIncompatibleType, currentFunctionSourceLocation());
         }
-    } else if (!canConvertFromTo(m_state.accumulatorIn(), m_returnType)) {
-        m_logger->log(u"Cannot assign binding of type %1 to %2"_s.arg(
-                              m_state.accumulatorIn().containedTypeName(),
-                              m_returnType.containedTypeName()),
-                      qmlIncompatibleType, currentFunctionSourceLocation());
+    } else if (!canConvertFromTo(accumulatorIn, m_returnType)) {
+        if (checkTypeResolved(accumulatorIn.containedType())) {
+            m_logger->log(u"Cannot assign binding of type %1 to %2"_s.arg(
+                                  m_state.accumulatorIn().containedTypeName(),
+                                  m_returnType.containedTypeName()),
+                          qmlIncompatibleType, currentFunctionSourceLocation());
+        }
     }
 
     const QQmlJS::SourceLocation location = m_function->isProperty

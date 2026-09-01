@@ -4384,6 +4384,19 @@ MyItem {
                        .build()
             << defaultOptions;
 
+    QTest::newRow("connections")
+            << uR"(import MissingRegistration
+import QtQuick
+Item {
+    MyItem { id: myItem }
+    Connections { target: myItem }
+})"_s
+            << ResultBuilder()
+                       .addExpected("MyItem was not found", 4, 5)
+                       .addUnexpected("Cannot assign binding of type MyItem to QObject"_L1)
+                       .build()
+            << defaultOptions;
+
     QTest::newRow("defaultProperty")
             << uR"(import MissingRegistration
 import QtQuick
