@@ -59,6 +59,7 @@ struct LSPSession
     {
         LSPSession session;
         // TODO need to be careful about the timeouts(?)
+        session.client->registerPublishDiagnosticsNotificationHandler([](auto, auto) { });
         session.client->sendInitializeRequest(std::move(initializeParams));
         session.client->notifyInitialized({});
 
