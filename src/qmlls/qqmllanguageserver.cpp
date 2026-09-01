@@ -87,7 +87,7 @@ QQmlLanguageServer::QQmlLanguageServer(std::function<void(const QByteArray &)> s
     m_server.addServerModule(&m_documentSymbolSupport);
     m_server.addServerModule(&m_highlightSupport);
     m_server.finishSetup();
-    qCWarning(lspServerLog) << "Did Setup";
+    qCDebug(lspServerLog) << "Did Setup";
 }
 
 QQmlLanguageServer::~QQmlLanguageServer()
