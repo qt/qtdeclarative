@@ -74,9 +74,9 @@ QT_BEGIN_NAMESPACE
     \qmlproperty IndicatorStyle ControlStyleProperties::indicator
 
     Grouped property for styling the indicator of a control. For a
-    \l {AbstractStylableControls::}{checkBox}, the indicator is the
+    \l {StylableControls::}{checkBox}, the indicator is the
     frame, and its \l {IndicatorStyle::}{foreground} is the check mark.
-    For a \l {AbstractStylableControls::}{slider}, the indicator is
+    For a \l {StylableControls::}{slider}, the indicator is
     the groove, and the foreground is the fill.
 
     \sa DelegateStyle
@@ -759,9 +759,9 @@ QT_BEGIN_NAMESPACE
     \l foreground describes the content drawn inside it. For example,
     \c {checkBox.indicator} styles the check box frame and
     \c {checkBox.indicator.foreground} styles the check mark. For
-    \l {AbstractStylableControls::}{switchControl},
-    \l {AbstractStylableControls::}{slider} and
-    \l {AbstractStylableControls::}{progressBar}, the indicator styles
+    \l {StylableControls::}{switchControl},
+    \l {StylableControls::}{slider} and
+    \l {StylableControls::}{progressBar}, the indicator styles
     the groove and the foreground styles the fill.
 
     \snippet DelegateStyle_indicator.qml checkBox
@@ -796,9 +796,9 @@ QT_BEGIN_NAMESPACE
     indicator. For example, \c {checkBox.indicator} describes
     the check box frame, while \c {checkBox.indicator.foreground} is the check mark.
 
-    For controls like \l {AbstractStylableControls::}{slider},
-    \l {AbstractStylableControls::}{progressBar}, and
-    \l {AbstractStylableControls::}{switchControl}, the \c {indicator.foreground}
+    For controls like \l {StylableControls::}{slider},
+    \l {StylableControls::}{progressBar}, and
+    \l {StylableControls::}{switchControl}, the \c {indicator.foreground}
     represents the progress track or fill within the groove, while the \c indicator
     itself represents the groove.
 */

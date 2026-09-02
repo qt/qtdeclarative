@@ -79,7 +79,7 @@ class QQStyleKitControls : public QObject, public QQmlParserStatus
     Q_PROPERTY(QQStyleKitControl *menuItem READ menuItem WRITE set_menuItem NOTIFY menuItemChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *menuSeparator READ menuSeparator WRITE set_menuSeparator NOTIFY menuSeparatorChanged FINAL)
     QML_UNCREATABLE("This component is abstract, and cannot be instantiated")
-    QML_NAMED_ELEMENT(AbstractStylableControls)
+    QML_NAMED_ELEMENT(StylableControls)
 
     Q_PROPERTY(QQmlListProperty<QObject> data READ data NOTIFY dataChanged FINAL)
     Q_CLASSINFO("DefaultProperty", "data")

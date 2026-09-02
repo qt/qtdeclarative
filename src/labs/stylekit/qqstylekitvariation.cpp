@@ -11,7 +11,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype StyleVariation
     \inqmlmodule Qt.labs.StyleKit
-    \inherits AbstractStylableControls
+    \inherits StylableControls
     \brief Defines alternative styling for specific controls.
 
 
@@ -56,8 +56,8 @@ QT_BEGIN_NAMESPACE
 
     \snippet TypeVariationSnippets.qml frame with variation
 
-    Because \l {AbstractStylableControls::}{groupBox} falls back to
-    \l {AbstractStylableControls::}{frame} in the style hierarchy, type variations
+    Because \l {StylableControls::}{groupBox} falls back to
+    \l {StylableControls::}{frame} in the style hierarchy, type variations
     set on \c frame are automatically inherited by \c groupBox as well. To opt out,
     reset the variations for the subtype.
 
