@@ -88,6 +88,8 @@ public:
     struct HoverItemState {
         QPointer<QQuickItem> item;
         uint hoverId = 0;
+        // true as long as this item's hover is from a fingertip touching it, rather than a mouse or stylus
+        bool fromTouch = false;
     };
     using HoverItems = QList<HoverItemState>;
     HoverItems hoverItems;
@@ -104,6 +106,7 @@ public:
     uchar compressedTouchCount = 0;
     bool allowChildEventFiltering = true;
     bool hoveredLeafItemFound = false;
+    bool lastMousePositionFromTouch = false;
 
     bool isSubsceneAgent = false;
     static bool subsceneAgentsExist;
@@ -212,6 +215,8 @@ public:
                         const QPointF &lastScenePos, const QPointF &globalPos,
                         Qt::KeyboardModifiers modifiers, ulong timestamp);
     bool clearHover(ulong timestamp = 0);
+    void clearTouchHover(ulong timestamp = 0);
+    bool isHoveredByHoveringDevice(const QQuickItem *item) const;
 
 #if QT_CONFIG(quick_draganddrop)
     void deliverDragEvent(QQuickDragGrabber *, QEvent *);

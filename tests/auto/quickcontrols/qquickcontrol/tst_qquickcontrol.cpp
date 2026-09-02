@@ -11,6 +11,9 @@
 #include <QtQuickTemplates2/private/qquicktextfield_p.h>
 #include <QtQuickControlsTestUtils/private/qtest_quickcontrols_p.h>
 #include <QtQuick/private/qquicktext_p_p.h>
+#include <QtQuick/private/qquickwindow_p.h>
+#include <QtQuick/private/qquickdeliveryagent_p_p.h>
+#include <QtGui/private/qguiapplication_p.h>
 
 using namespace QQuickVisualTestUtils;
 
@@ -27,6 +30,8 @@ private slots:
     void fractionalFontSize();
     void resizeBackgroundKeepsBindings();
     void hoverInMouseArea();
+    void hoverAfterTouch();
+    void hoverAfterTouchWithTwoFingers();
     void backgroundAlignment();
 
 private:
@@ -136,6 +141,133 @@ void tst_QQuickControl::hoverInMouseArea()
     QVERIFY(textField);
     pointLerper.move(mapCenterToWindow(textField));
     QVERIFY(textField->isHovered());
+}
+
+/*
+    Puts the window into the state that the hover-after-touch tests below need: nothing hovered,
+    and no hovering device anywhere near the Buttons, whatever the platform did while the
+    window was being mapped. Moving the mouse to an empty spot does not get us there:
+
+    - the platform may already have established hover from an enter event at wherever it
+      thinks the cursor is (the offscreen plugin claims global (0, 0), which lands inside
+      upperButton), and flushFrameSynchronousEvents() then keeps re-delivering hover from
+      lastMousePosition on every frame;
+    - QGuiApplicationPrivate::processMouseEvent() discards a MouseMove whose global
+      position equals lastCursorPosition, and every window these tests create is mapped at
+      the same place: from the second window onwards, QTest::mouseMove() to a fixed point
+      is a no-op, and the stale hover above survives it;
+    - on a platform with a real cursor, that position is wherever the pointer happens to be,
+      which a test must not depend on.
+
+    So set the state directly instead of trying to arrive at it via events: reset
+    lastCursorPosition to the far-offscreen value that means "no cursor has been seen"
+    (which is what isHoveredByHoveringDevice() consults), and drop the hover the platform
+    established, along with the position that would resurrect it.
+*/
+static QQuickDeliveryAgentPrivate *prepareForFingertipHover(QQuickWindow *window)
+{
+    auto *deliveryAgent = QQuickWindowPrivate::get(window)->deliveryAgentPrivate();
+    QGuiApplicationPrivate::lastCursorPosition.reset();
+    deliveryAgent->clearHover();
+    deliveryAgent->lastMousePosition = {};
+    // A Control only becomes hovered on touch via flushFrameSynchronousEvents(), so the
+    // tests drive that explicitly instead of relying on a frame landing at the right
+    // moment; with a zero interval it never postpones the delivery.
+    deliveryAgent->frameSynchronousHoverInterval = 0;
+    return deliveryAgent;
+}
+
+void tst_QQuickControl::hoverAfterTouch() // QTBUG-62912
+{
+    // A Control that is tapped on a touchscreen becomes hovered while the finger is
+    // down, and must stop being hovered when the finger is lifted: a fingertip has no
+    // hover state that outlives contact. This used to work only on Windows, where the
+    // QPA plugin synthesizes a LeaveEvent; QQuickAbstractButton accepts touch events
+    // directly, so it never got the synth-mouse treatment that saved MouseArea either.
+    QQuickApplicationHelper helper(this, QStringLiteral("hoverAfterTouch.qml"));
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    auto *upperButton = window->property("upperButton").value<QQuickButton *>();
+    QVERIFY(upperButton);
+    auto *lowerButton = window->property("lowerButton").value<QQuickButton *>();
+    QVERIFY(lowerButton);
+
+    const QPoint upperCenter = mapCenterToWindow(upperButton);
+    const QPoint lowerCenter = mapCenterToWindow(lowerButton);
+
+    auto *deliveryAgent = prepareForFingertipHover(window);
+    QVERIFY(!upperButton->isHovered());
+    QVERIFY(!lowerButton->isHovered());
+
+    QTest::touchEvent(window, touchDevice.data()).press(0, upperCenter);
+    deliveryAgent->flushFrameSynchronousEvents(window);
+    QVERIFY(upperButton->isHovered());
+    QVERIFY(!lowerButton->isHovered());
+
+    QTest::touchEvent(window, touchDevice.data()).release(0, upperCenter);
+    deliveryAgent->flushFrameSynchronousEvents(window);
+    QVERIFY(!upperButton->isHovered());
+
+    // Tapping a second Control must not leave the first one stuck (the original
+    // QTBUG-40856 complaint), and must not leave the second one stuck either.
+    QTest::touchEvent(window, touchDevice.data()).press(1, lowerCenter);
+    deliveryAgent->flushFrameSynchronousEvents(window);
+    QVERIFY(lowerButton->isHovered());
+    QVERIFY(!upperButton->isHovered());
+
+    QTest::touchEvent(window, touchDevice.data()).release(1, lowerCenter);
+    deliveryAgent->flushFrameSynchronousEvents(window);
+    QVERIFY(!lowerButton->isHovered());
+    QVERIFY(!upperButton->isHovered());
+}
+
+void tst_QQuickControl::hoverAfterTouchWithTwoFingers() // QTBUG-62912
+{
+    // Hover must survive until the *last* finger is lifted. The Windows plugin used to
+    // send a LeaveEvent per WM_POINTERLEAVE, i.e. per contact, so lifting one of two
+    // fingers already cleared hover.
+    QQuickApplicationHelper helper(this, QStringLiteral("hoverAfterTouch.qml"));
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    auto *upperButton = window->property("upperButton").value<QQuickButton *>();
+    QVERIFY(upperButton);
+    auto *lowerButton = window->property("lowerButton").value<QQuickButton *>();
+    QVERIFY(lowerButton);
+
+    const QPoint upperCenter = mapCenterToWindow(upperButton);
+    const QPoint lowerCenter = mapCenterToWindow(lowerButton);
+
+    auto *deliveryAgent = prepareForFingertipHover(window);
+    QVERIFY(!upperButton->isHovered());
+    QVERIFY(!lowerButton->isHovered());
+
+    // One named sequence, committed explicitly: QTest::touchEvent() builds a fresh
+    // sequence each time, and stationary() on a fresh sequence has no previous point to
+    // copy, so the finger would teleport to global (0, 0).
+    auto seq = QTest::touchEvent(window, touchDevice.data(), false);
+    seq.press(0, upperCenter).press(1, lowerCenter).commit();
+    deliveryAgent->flushFrameSynchronousEvents(window);
+    // Only one Control gets hover, because hover is still single-point (see
+    // tst_HoverHandler::twoHandlersTwoTouches); which one does not matter here.
+    QVERIFY(upperButton->isHovered() || lowerButton->isHovered());
+
+    // Lift only the second finger: the first is still down, so hover must remain.
+    // The flush is load-bearing: while delivering this event, deliverUpdatedPoints()
+    // transiently sends HoverLeave to upperButton as it processes point 1 down at
+    // lowerCenter, and the flush is what re-enters it at lastMousePosition.
+    seq.stationary(0).release(1, lowerCenter).commit();
+    deliveryAgent->flushFrameSynchronousEvents(window);
+    QVERIFY(upperButton->isHovered() || lowerButton->isHovered());
+
+    // Now the last finger goes up.
+    seq.release(0, upperCenter).commit();
+    deliveryAgent->flushFrameSynchronousEvents(window);
+    QVERIFY(!upperButton->isHovered());
+    QVERIFY(!lowerButton->isHovered());
 }
 
 void tst_QQuickControl::backgroundAlignment()
