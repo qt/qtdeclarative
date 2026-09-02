@@ -279,14 +279,14 @@ void tst_QQuickTextArea::placeholderWrapMode()
 
     auto *placeholder = textArea->findChild<QQuickPlaceholderText *>();
     QVERIFY(placeholder);
-    QCOMPARE(placeholder->wrapMode(), textArea->wrapMode());
+    QCOMPARE(int(placeholder->wrapMode()), int(textArea->wrapMode()));
 
     QCOMPARE(textArea->wrapMode(), QQuickTextEdit::NoWrap);
     QTRY_COMPARE(placeholder->lineCount(), 1);
     const qreal implicitHeightBeforeWrap = placeholder->implicitHeight();
 
     textArea->setWrapMode(QQuickTextEdit::WordWrap);
-    QCOMPARE(placeholder->wrapMode(), textArea->wrapMode());
+    QCOMPARE(int(placeholder->wrapMode()), int(textArea->wrapMode()));
 
     QTRY_VERIFY(placeholder->lineCount() > 1);
     QVERIFY(placeholder->implicitHeight() > implicitHeightBeforeWrap);
