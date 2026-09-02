@@ -1,7 +1,7 @@
 import QtQml 2.0
 import Test 1.0
 MyDeferredProperties {
-    groupProperty: QtObject {
+    groupedProperty: QtObject {
         objectName: "outerobj"
         property bool wasCompleted: false
         Component.onCompleted: wasCompleted = true

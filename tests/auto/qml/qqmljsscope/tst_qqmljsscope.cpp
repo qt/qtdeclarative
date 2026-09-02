@@ -362,7 +362,7 @@ void tst_qqmljsscope::unknownCppBase()
 
 void tst_qqmljsscope::groupedProperties()
 {
-    QQmlJSScope::ConstPtr root = run(u"groupProperties.qml"_s);
+    QQmlJSScope::ConstPtr root = run(u"groupedProperties.qml"_s);
     QVERIFY(root);
 
     QVERIFY(root->hasProperty(u"anchors"_s));
@@ -373,7 +373,7 @@ void tst_qqmljsscope::groupedProperties()
     const auto getBindingsWithinGroup =
             [&](QMultiHash<QString, QQmlJSMetaPropertyBinding> *bindings, qsizetype index) -> void {
         const auto &binding = anchorBindings[index];
-        QCOMPARE(binding.bindingType(), QQmlSA::BindingType::GroupProperty);
+        QCOMPARE(binding.bindingType(), QQmlSA::BindingType::GroupedProperty);
         auto anchorScope = binding.groupType();
         QVERIFY(anchorScope);
         *bindings = anchorScope->ownPropertyBindings();
@@ -420,7 +420,7 @@ void tst_qqmljsscope::groupedPropertiesConsistency()
     {
         QQmlEngine engine;
         QQmlComponent component(&engine);
-        component.loadUrl(testFileUrl(u"groupPropertiesConsistency.qml"_s));
+        component.loadUrl(testFileUrl(u"groupedPropertiesConsistency.qml"_s));
         QVERIFY2(component.isReady(), qPrintable(component.errorString()));
         QScopedPointer<QObject> root(component.create());
         QVERIFY2(root, qPrintable(component.errorString()));
@@ -429,7 +429,7 @@ void tst_qqmljsscope::groupedPropertiesConsistency()
     }
 
     {
-        QQmlJSScope::ConstPtr root = run(u"groupPropertiesConsistency.qml"_s);
+        QQmlJSScope::ConstPtr root = run(u"groupedPropertiesConsistency.qml"_s);
         QVERIFY(root);
 
         const auto fontBindings = root->propertyBindings(u"font"_s);
@@ -437,14 +437,14 @@ void tst_qqmljsscope::groupedPropertiesConsistency()
 
         // The binding order in QQmlJSScope case is "reversed": first come
         // bindings on the leaf type, followed by the bindings on the base type
-        QCOMPARE(fontBindings[0].bindingType(), QQmlSA::BindingType::GroupProperty);
+        QCOMPARE(fontBindings[0].bindingType(), QQmlSA::BindingType::GroupedProperty);
         QCOMPARE(fontBindings[1].bindingType(), QQmlSA::BindingType::Script);
     }
 }
 
 void tst_qqmljsscope::groupedPropertySyntax()
 {
-    QQmlJSScope::ConstPtr root = run(u"groupPropertySyntax.qml"_s);
+    QQmlJSScope::ConstPtr root = run(u"groupedPropertySyntax.qml"_s);
     QVERIFY(root);
 
     const auto fontBindings = root->propertyBindings(u"font"_s);
@@ -452,7 +452,7 @@ void tst_qqmljsscope::groupedPropertySyntax()
 
     // The binding order in QQmlJSScope case is "reversed": first come
     // bindings on the leaf type, followed by the bindings on the base type
-    QCOMPARE(fontBindings[0].bindingType(), QQmlSA::BindingType::GroupProperty);
+    QCOMPARE(fontBindings[0].bindingType(), QQmlSA::BindingType::GroupedProperty);
     auto fontScope = fontBindings[0].groupType();
     QVERIFY(fontScope);
     QCOMPARE(fontScope->accessSemantics(), QQmlJSScope::AccessSemantics::Value);
@@ -916,7 +916,7 @@ void tst_qqmljsscope::resolvedNonUniqueScopes()
     {
         auto topLevelBindings = root->propertyBindings(u"p"_s);
         QCOMPARE(topLevelBindings.size(), 1);
-        QCOMPARE(topLevelBindings[0].bindingType(), QQmlSA::BindingType::GroupProperty);
+        QCOMPARE(topLevelBindings[0].bindingType(), QQmlSA::BindingType::GroupedProperty);
         auto pScope = topLevelBindings[0].groupType();
         auto pBindings = pScope->ownPropertyBindings();
         QCOMPARE(pBindings.size(), 1);

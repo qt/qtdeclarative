@@ -1510,12 +1510,12 @@ void Compiler::compileAttachedPropertyBinding(Type &current,
  * \internal
  * Helper method used to keep compileBindingByType() readable.
  */
-void Compiler::compileGroupPropertyBinding(Type &current,
+void Compiler::compileGroupedPropertyBinding(Type &current,
                                            const QQmlJSMetaPropertyBinding &binding,
                                            const QQmlJSScope::ConstPtr &type,
                                            const BindingAccessorData &accessor)
 {
-    Q_ASSERT(binding.bindingType() == QQmlSA::BindingType::GroupProperty);
+    Q_ASSERT(binding.bindingType() == QQmlSA::BindingType::GroupedProperty);
 
     const QString &propertyName = binding.propertyName();
     const QQmlJSMetaProperty property = type->property(propertyName);
@@ -1524,7 +1524,7 @@ void Compiler::compileGroupPropertyBinding(Type &current,
     Q_ASSERT(accessor.name == u"this"_s); // doesn't have to hold, in fact
     if (property.read().isEmpty()) {
         recordError(binding.sourceLocation(),
-                    u"READ function of group property '" + propertyName + u"' is unknown");
+                    u"READ function of grouped property '" + propertyName + u"' is unknown");
         return;
     }
 
@@ -1535,7 +1535,7 @@ void Compiler::compileGroupPropertyBinding(Type &current,
     if (!isValueType
         && propertyType->accessSemantics() != QQmlJSScope::AccessSemantics::Reference) {
         recordError(binding.sourceLocation(),
-                    u"Group property '" + propertyName + u"' has unsupported access semantics");
+                    u"Grouped property '" + propertyName + u"' has unsupported access semantics");
         return;
     }
 
@@ -1549,19 +1549,19 @@ void Compiler::compileGroupPropertyBinding(Type &current,
     QString groupAccessor = CodeGenerator::wrap_privateClass(accessor.name, property) + u"->"
             + property.read() + u"()";
     // NB: used when isValueType == true
-    const QString groupPropertyVarName = accessor.name + u"_group_" + propertyName;
+    const QString groupedPropertyVarName = accessor.name + u"_group_" + propertyName;
     // value types are special
     if (generateValueTypeCode) {
         if (property.write().isEmpty()) { // just reject this
             recordError(binding.sourceLocation(),
-                        u"Group property '" + propertyName + u"' is a value type without a setter");
+                        u"Grouped property '" + propertyName + u"' is a value type without a setter");
             return;
         }
 
-        current.endInit.body << u"auto " + groupPropertyVarName + u" = " + groupAccessor + u";";
+        current.endInit.body << u"auto " + groupedPropertyVarName + u" = " + groupAccessor + u";";
         // addressof operator is to make the binding logic work, which
         // expects that `accessor.name` is a pointer type
-        groupAccessor = CodeGenerator::wrap_addressof(groupPropertyVarName);
+        groupAccessor = CodeGenerator::wrap_addressof(groupedPropertyVarName);
     }
 
     // compile bindings of the grouped property
@@ -1577,18 +1577,18 @@ void Compiler::compileGroupPropertyBinding(Type &current,
     compile(it, firstScript);
     it = firstScript;
 
-    // NB: script bindings are special on group properties. if our group is
+    // NB: script bindings are special on grouped properties. if our group is
     // a value type, the binding would be installed on the *object* that
     // holds the value type and not on the value type itself. this may cause
     // subtle side issues (esp. when script binding is actually a simple
     // enum value assignment - which is not recognized specially):
     //
-    // auto valueTypeGroupProperty = getCopy();
-    // installBinding(valueTypeGroupProperty, "subproperty1"); // changes subproperty1 value
-    // setCopy(valueTypeGroupProperty); // oops, subproperty1 value changed to old again
+    // auto valueTypeGroupedProperty = getCopy();
+    // installBinding(valueTypeGroupedProperty, "subproperty1"); // changes subproperty1 value
+    // setCopy(valueTypeGroupedProperty); // oops, subproperty1 value changed to old again
     if (generateValueTypeCode) { // write the value type back
         current.endInit.body << CodeGenerator::wrap_privateClass(accessor.name, property)
-                        + u"->" + property.write() + u"(" + groupPropertyVarName + u");";
+                        + u"->" + property.write() + u"(" + groupedPropertyVarName + u");";
     }
 
     // once the value is written back, process the script bindings
@@ -1626,16 +1626,16 @@ void Compiler::compileTranslationBinding(Type &current,
     if (accessor.isValueType) {
         Q_ASSERT(accessor.scope != type);
         bindingTarget = u"this"_s; // TODO: not necessarily "this"?
-        auto [groupProperty, groupPropertyIndex] =
+        auto [groupedProperty, groupedPropertyIndex] =
                 getMetaPropertyIndex(accessor.scope, accessor.propertyName);
-        if (groupPropertyIndex < 0) {
+        if (groupedPropertyIndex < 0) {
             recordError(binding.sourceLocation(),
-                        u"Binding on group property '" + accessor.propertyName
+                        u"Binding on grouped property '" + accessor.propertyName
                                 + u"' of unknown type");
             return;
         }
         valueTypeIndex = absoluteIndex;
-        absoluteIndex = groupPropertyIndex; // e.g. index of accessor.name
+        absoluteIndex = groupedPropertyIndex; // e.g. index of accessor.name
     }
 
     CodeGenerator::TranslationBindingInfo info;
@@ -1683,13 +1683,13 @@ void Compiler::compileBinding(Type &current,
         // (potentially, with all the bindings inside of it), period.
         if (type->isNameDeferred(propertyName)) {
             const auto location = binding.sourceLocation();
-            // make sure group property is not generalized by checking if type really has a property
+            // make sure grouped property is not generalized by checking if type really has a property
             // called propertyName. If not, it is probably an id.
-            if (binding.bindingType() == QQmlSA::BindingType::GroupProperty
+            if (binding.bindingType() == QQmlSA::BindingType::GroupedProperty
                 && type->hasProperty(propertyName)) {
                 qCWarning(lcQmltcCompiler)
                         << QStringLiteral("Binding at line %1 column %2 is not deferred as it is a "
-                                          "binding on a group property.")
+                                          "binding on a grouped property.")
                                    .arg(QString::number(location.startLine),
                                         QString::number(location.startColumn));
                 // we do not support PropertyChanges and other types with similar
@@ -1787,8 +1787,8 @@ void Compiler::compileBindingByType(Type &current, const QQmlJSMetaPropertyBindi
         compileAttachedPropertyBinding(current, binding, type, accessor);
         break;
     }
-    case QQmlSA::BindingType::GroupProperty: {
-        compileGroupPropertyBinding(current, binding, type, accessor);
+    case QQmlSA::BindingType::GroupedProperty: {
+        compileGroupedPropertyBinding(current, binding, type, accessor);
         break;
     }
 
@@ -1946,16 +1946,16 @@ void Compiler::compileScriptBinding(Type &current, const QQmlJSMetaPropertyBindi
         if (accessor.isValueType) {
             Q_ASSERT(accessor.scope != objectType);
             bindingTarget = u"this"_s; // TODO: not necessarily "this"?
-            auto [groupProperty, groupPropertyIndex] =
+            auto [groupedProperty, groupedPropertyIndex] =
                     getMetaPropertyIndex(accessor.scope, accessor.propertyName);
-            if (groupPropertyIndex < 0) {
+            if (groupedPropertyIndex < 0) {
                 recordError(binding.sourceLocation(),
-                            u"Binding on group property '" + accessor.propertyName
+                            u"Binding on grouped property '" + accessor.propertyName
                                     + u"' of unknown type");
                 return;
             }
             valueTypeIndex = absoluteIndex;
-            absoluteIndex = groupPropertyIndex; // e.g. index of accessor.name
+            absoluteIndex = groupedPropertyIndex; // e.g. index of accessor.name
         }
 
         CodeGenerator::generate_createBindingOnProperty(

@@ -331,7 +331,7 @@ static void warnIgnoredProperties(QQmlBind *q)
 {
     qmlWarning(q)
         << "You should not set the 'object', 'property', or 'value' properties when using "
-           "generalized group properties. They are ignored.";
+           "generalized grouped properties. They are ignored.";
 }
 
 void QQmlBindEntry::validate(QQmlBind *q) const
@@ -682,7 +682,7 @@ void QQmlBind::setObject(QObject *obj)
 
     The property to be updated.
 
-    This can be a group property if the expression results in accessing a
+    This can be a grouped property if the expression results in accessing a
     property of a \l {QML Value Types}{value type}. For example:
 
     \qml
@@ -1056,7 +1056,7 @@ void QQmlBindPrivate::decodeBinding(
             return;
         }
         Q_FALLTHROUGH();
-    case QV4::CompiledData::Binding::Type_GroupProperty: {
+    case QV4::CompiledData::Binding::Type_GroupedProperty: {
         const QString pre = propertyName + u'.';
         const QV4::CompiledData::Object *subObj
                 = compilationUnit->objectAt(binding->value.objectIndex);
@@ -1116,7 +1116,7 @@ void QQmlBindPrivate::decodeBinding(
 
     switch (binding->type()) {
     case QV4::CompiledData::Binding::Type_AttachedProperty:
-    case QV4::CompiledData::Binding::Type_GroupProperty:
+    case QV4::CompiledData::Binding::Type_GroupedProperty:
         Q_UNREACHABLE(); // Handled above
         break;
     case QV4::CompiledData::Binding::Type_Translation:

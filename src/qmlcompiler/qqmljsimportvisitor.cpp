@@ -227,7 +227,7 @@ bool QQmlJSImportVisitor::enterEnvironmentNonUnique(QQmlJSScope::ScopeType type,
              || type == QQmlSA::ScopeType::AttachedPropertyScope);
 
     const auto pred = [&](const QQmlJSScope::ConstPtr &s) {
-        // it's either attached or group property, so use internalName()
+        // it's either attached or grouped property, so use internalName()
         // directly. see setScopeName() for details
         return s->internalName() == name;
     };
@@ -417,7 +417,7 @@ void QQmlJSImportVisitor::resolveAliases()
     }
 }
 
-void QQmlJSImportVisitor::resolveGroupProperties()
+void QQmlJSImportVisitor::resolveGroupedProperties()
 {
     QQueue<QQmlJSScope::Ptr> objects;
     objects.enqueue(m_exportedRootScope);
@@ -577,7 +577,7 @@ void QQmlJSImportVisitor::endVisit(UiProgram *)
     }
 
     resolveAliases();
-    resolveGroupProperties();
+    resolveGroupedProperties();
 
     checkGroupedAndAttachedScopes();
 
@@ -2423,7 +2423,7 @@ void QQmlJSImportVisitor::handleLiteralBinding(const QQmlJSMetaPropertyBinding &
 
 /*! \internal
 
-    Creates a new binding of either a GroupProperty or an AttachedProperty type.
+    Creates a new binding of either a GroupedProperty or an AttachedProperty type.
     The binding is added to the parentScope() of \a scope, under property name
     \a name and location \a srcLocation.
 */
@@ -2436,7 +2436,7 @@ createNonUniqueScopeBinding(QQmlJSScope::Ptr &scope, const QString &name,
         Q_ASSERT(type == QQmlSA::ScopeType::GroupedPropertyScope
                  || type == QQmlSA::ScopeType::AttachedPropertyScope);
         const QQmlSA::BindingType bindingType = (type == QQmlSA::ScopeType::GroupedPropertyScope)
-                ? QQmlSA::BindingType::GroupProperty
+                ? QQmlSA::BindingType::GroupedProperty
                 : QQmlSA::BindingType::AttachedProperty;
 
         const auto propertyBindings = scope->parentScope()->ownPropertyBindings(name);

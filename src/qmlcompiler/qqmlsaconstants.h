@@ -6,6 +6,7 @@
 #define QQMLSACONSTANTS_H
 
 #include <QtCore/qtconfigmacros.h>
+#include <QtCore/qtdeprecationmarkers.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -25,7 +26,10 @@ enum class BindingType : unsigned int {
     Interceptor,
     ValueSource,
     AttachedProperty,
-    GroupProperty,
+    GroupedProperty,
+#if QT_DEPRECATED_SINCE(6, 14)
+    GroupProperty Q_DECL_ENUMERATOR_DEPRECATED_X("Use GroupedProperty instead.") = GroupedProperty,
+#endif
 };
 
 enum class ScriptBindingKind : unsigned int {

@@ -50,12 +50,12 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> QQmlTypeCompiler::compile()
             customParsers.insert(it.key(), customParser);
     }
 
-    QQmlPendingGroupPropertyBindings pendingGroupPropertyBindings;
+    QQmlPendingGroupedPropertyBindings pendingGroupedPropertyBindings;
 
 
     {
         QQmlPropertyCacheCreator<QQmlTypeCompiler> propertyCacheBuilder(
-                &m_propertyCaches, &pendingGroupPropertyBindings,
+                &m_propertyCaches, &pendingGroupedPropertyBindings,
                 loader, this, imports(), typeData->typeClassName());
         QQmlError cycleError = propertyCacheBuilder.verifyNoICCycle();
         if (cycleError.isValid()) {
@@ -77,8 +77,8 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> QQmlTypeCompiler::compile()
                     recordError(error);
                     return nullptr;
                 }
-                pendingGroupPropertyBindings.resolveMissingPropertyCaches(&m_propertyCaches);
-                pendingGroupPropertyBindings.clear(); // anything that can be processed is now processed
+                pendingGroupedPropertyBindings.resolveMissingPropertyCaches(&m_propertyCaches);
+                pendingGroupedPropertyBindings.clear(); // anything that can be processed is now processed
             }
         } while (result.canResume);
     }
@@ -679,7 +679,7 @@ void QQmlCustomParserScriptIndexer::scanObjectRecursively(int objectIndex, bool 
             break;
         case QV4::CompiledData::Binding::Type_Object:
         case QV4::CompiledData::Binding::Type_AttachedProperty:
-        case QV4::CompiledData::Binding::Type_GroupProperty:
+        case QV4::CompiledData::Binding::Type_GroupedProperty:
             scanObjectRecursively(binding->value.objectIndex, annotateScriptBindings);
             break;
         default:
@@ -774,7 +774,7 @@ void QQmlComponentAndAliasResolver<QQmlTypeCompiler>::setObjectId(int index) con
 }
 
 template<>
-void QQmlComponentAndAliasResolver<QQmlTypeCompiler>::resolveGeneralizedGroupProperty(
+void QQmlComponentAndAliasResolver<QQmlTypeCompiler>::resolveGeneralizedGroupedProperty(
         const CompiledObject &component, CompiledBinding *binding)
 {
     Q_UNUSED(component);
@@ -789,7 +789,7 @@ void QQmlComponentAndAliasResolver<QQmlTypeCompiler>::resolveGeneralizedGroupPro
 
     Attempts to resolve a "deep alias" — an alias whose sub-property path
     goes through a QObject property, an inline component binding, or another
-    alias. For example: \c{alias foo: target.groupProp.innerProp}
+    alias. For example: \c{alias foo: target.groupedProp.innerProp}
 
     First searches the target object's bindings and aliases for \a property,
     then looks up \a subProperty on the bound/aliased object's property cache.
@@ -1161,7 +1161,7 @@ bool QQmlDeferredAndCustomParserBindingScanner::scanObject(
         bool isExternal = false;
         if (binding->type() >= Binding::Type_Object) {
             const bool isOwnProperty = hasPropertyData || binding->isAttachedProperty();
-            isExternal = !isOwnProperty && binding->isGroupProperty();
+            isExternal = !isOwnProperty && binding->isGroupedProperty();
             if (isOwnProperty || isExternal) {
                 qSwap(_seenObjectWithId, seenSubObjectWithId);
 
@@ -1190,7 +1190,7 @@ bool QQmlDeferredAndCustomParserBindingScanner::scanObject(
             if (isExternal || !disableInternalDeferredProperties())
                 isDeferred = true;
         } else if (!deferredPropertyNames.isEmpty() && deferredPropertyNames.contains(name)) {
-            if (!seenSubObjectWithId && binding->type() != Binding::Type_GroupProperty) {
+            if (!seenSubObjectWithId && binding->type() != Binding::Type_GroupedProperty) {
                 if (isExternal || !disableInternalDeferredProperties())
                     isDeferred = true;
             }

@@ -660,16 +660,16 @@ class Q_QMLCOMPILER_EXPORT QQmlJSMetaPropertyBinding
             friend bool operator!=(AttachedProperty a, AttachedProperty b) { return !(a == b); }
             QWeakPointer<const QQmlJSScope> value;
         };
-        struct GroupProperty {
-            /* Given a group property declaration like
+        struct GroupedProperty {
+            /* Given a grouped property declaration like
                anchors.left: root.left
                the QQmlJSMetaPropertyBinding will have name "anchors", and a m_bindingContent
-               of type GroupProperty, with groupScope pointing to the scope introudced by anchors
+               of type GroupedProperty, with groupScope pointing to the scope introudced by anchors
                In that scope, there will be another QQmlJSMetaPropertyBinding, with name "left" and
                m_bindingContent Script (for root.left).
-               There should never be more than one GroupProperty for the same name in the same
+               There should never be more than one GroupedProperty for the same name in the same
                scope, though: If the scope also contains anchors.top: root.top that should reuse the
-               GroupProperty content (and add a top: root.top binding in it). There might however
+               GroupedProperty content (and add a top: root.top binding in it). There might however
                still be an additional object or script binding ( anchors: {left: foo, right: bar };
                anchors: root.someFunction() ) or another binding to the property in a "derived"
                type.
@@ -677,13 +677,13 @@ class Q_QMLCOMPILER_EXPORT QQmlJSMetaPropertyBinding
                ### TODO: Obtaining the effective binding result requires some resolving function
             */
             QWeakPointer<const QQmlJSScope> groupScope;
-            friend bool operator==(GroupProperty a, GroupProperty b) { return a.groupScope.owner_equal(b.groupScope); }
-            friend bool operator!=(GroupProperty a, GroupProperty b) { return !(a == b); }
+            friend bool operator==(GroupedProperty a, GroupedProperty b) { return a.groupScope.owner_equal(b.groupScope); }
+            friend bool operator!=(GroupedProperty a, GroupedProperty b) { return !(a == b); }
         };
         using type = std::variant<Invalid, BoolLiteral, NumberLiteral, StringLiteral,
                                   RegexpLiteral, Null, TranslationString,
                                   TranslationById, Script, Object, Interceptor,
-                                  ValueSource, AttachedProperty, GroupProperty
+                                  ValueSource, AttachedProperty, GroupedProperty
                                  >;
     };
     using BindingContent = Content::type;
@@ -746,7 +746,7 @@ public:
     void setGroupBinding(const QSharedPointer<const QQmlJSScope> &groupScope)
     {
         ensureSetBindingTypeOnce();
-        m_bindingContent = Content::GroupProperty { groupScope };
+        m_bindingContent = Content::GroupedProperty { groupScope };
     }
 
     void setAttachedBinding(const QSharedPointer<const QQmlJSScope> &attachingScope)
@@ -894,7 +894,7 @@ public:
 
     QSharedPointer<const QQmlJSScope> groupType() const
     {
-        if (auto *group = std::get_if<Content::GroupProperty>(&m_bindingContent))
+        if (auto *group = std::get_if<Content::GroupedProperty>(&m_bindingContent))
             return group->groupScope.lock();
         // warn
         return {};

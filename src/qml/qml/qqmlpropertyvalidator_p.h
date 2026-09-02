@@ -45,7 +45,7 @@ public:
 private:
     QList<QQmlError> validateObject(
             int objectIndex, const QV4::CompiledData::Binding *instantiatingBinding,
-            bool populatingValueTypeGroupProperty = false,
+            bool populatingValueTypeGroupedProperty = false,
             QQmlPropertyResolver::RevisionCheck checkRevision
                     = QQmlPropertyResolver::CheckRevision) const;
     QQmlError validateLiteralBinding(

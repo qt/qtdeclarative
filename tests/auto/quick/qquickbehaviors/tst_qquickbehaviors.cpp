@@ -183,7 +183,7 @@ void tst_qquickbehaviors::group()
     /* XXX TODO Create a test element for this case.
     {
         QQmlEngine engine;
-        QQmlComponent c(&engine, testFileUrl("groupProperty.qml")));
+        QQmlComponent c(&engine, testFileUrl("groupedProperty.qml")));
         QScopedPointer<QQuickRectangle> rect(qobject_cast<QQuickRectangle*>(c.create()));;
         QVERIFY2(!rect.isNull(), qPrintable(c.errorString()));
 
@@ -197,7 +197,7 @@ void tst_qquickbehaviors::group()
 
     {
         QQmlEngine engine;
-        QQmlComponent c(&engine, testFileUrl("groupProperty2.qml"));
+        QQmlComponent c(&engine, testFileUrl("groupedProperty2.qml"));
         QScopedPointer<QQuickRectangle> rect(qobject_cast<QQuickRectangle*>(c.create()));;
         QVERIFY2(!rect.isNull(), qPrintable(c.errorString()));
 

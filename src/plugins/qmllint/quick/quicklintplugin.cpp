@@ -394,7 +394,7 @@ void ControlsSwipeDelegateValidatorPass::run(const QQmlSA::Element &element)
             if (bindings.isEmpty())
                 continue;
 
-            if (bindings.first().bindingType() != QQmlSA::BindingType::GroupProperty)
+            if (bindings.first().bindingType() != QQmlSA::BindingType::GroupedProperty)
                 continue;
 
             auto anchors = bindings.first().groupType();
@@ -422,7 +422,7 @@ void ControlsSwipeDelegateValidatorPass::run(const QQmlSA::Element &element)
         return;
 
     const auto firstSwipe = swipe.begin().value();
-    if (firstSwipe.bindingType() != QQmlSA::BindingType::GroupProperty)
+    if (firstSwipe.bindingType() != QQmlSA::BindingType::GroupedProperty)
         return;
 
     auto group = firstSwipe.groupType();

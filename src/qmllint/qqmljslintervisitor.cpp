@@ -623,7 +623,7 @@ void LinterVisitor::handleUselessExpressionStatement(const ExpressionStatement *
         if (usb->qualifiedId->next)
             return; // group/attached property, give up
         if (m_savedBindingOuterScope->scopeType() == QQmlSA::ScopeType::GroupedPropertyScope)
-            return; // group property, give up
+            return; // grouped property, give up
 
         QQmlJSScope::Ptr object = m_currentScope;
         while (object && object->scopeType() != QQmlSA::ScopeType::QMLScope)

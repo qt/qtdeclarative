@@ -24,7 +24,7 @@ QtObject {
     property color c2: "red"
     property font f: Qt.font({ family: "Arial", pointSize: 20 })
 
-    // ensure that group property specification works as expected.
+    // ensure that grouped property specification works as expected.
     property font f2
     f2.family: "Arial"
     f2.pointSize: 45

@@ -4,7 +4,7 @@
 // A child Rectangle is added BEFORE the Keys attached property.
 // The content at the Keys object's old index now holds the Rectangle;
 // the Keys attached object moves to a new index.  Same mismatch pattern
-// as GroupPropIndexShift but for an attached property.
+// as GroupedPropIndexShift but for an attached property.
 import QtQuick
 
 Item {

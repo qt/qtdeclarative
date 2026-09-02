@@ -37,7 +37,7 @@ static bool functionBelongsToObject(const QV4::Function *f,
     const QV4::CompiledData::Object *obj = cu->objectAt(objectIndex);
     for (auto binding = obj->bindingsBegin(), end = obj->bindingsEnd(); binding != end; ++binding) {
         switch (binding->type()) {
-        case QV4::CompiledData::Binding::Type_GroupProperty:
+        case QV4::CompiledData::Binding::Type_GroupedProperty:
         case QV4::CompiledData::Binding::Type_AttachedProperty:
         case QV4::CompiledData::Binding::Type_Object:
             if (functionBelongsToObject(f, cu, binding->value.objectIndex))
@@ -255,7 +255,7 @@ void BindingPatchContext::recordBindingValues(
         case QV4::CompiledData::Binding::Type_AttachedProperty:
             attachedContext(unit, binding, seenChildren);
             continue;
-        case QV4::CompiledData::Binding::Type_GroupProperty:
+        case QV4::CompiledData::Binding::Type_GroupedProperty:
             childContext(unit, binding, seenChildren);
             continue;
         default:
@@ -444,7 +444,7 @@ void BindingPatchContext::stashExternalState(const std::vector<CompositeLevel> &
         }
     }
 
-    // Recurse into child contexts (group properties)
+    // Recurse into child contexts (grouped properties)
     for (auto &[name, child] : m_children) {
         if (child)
             child->stashExternalState(internalUnits, seenChildren);
@@ -464,7 +464,7 @@ void BindingPatchContext::refreshObjects()
             continue;
 
         // Children with a non-empty prefix share m_object with their parent
-        // (value-type group properties like "font."). Update them to match.
+        // (value-type grouped properties like "font."). Update them to match.
         if (!child->prefix.isEmpty()) {
             child->m_object = m_object;
             child->refreshObjects();
@@ -557,7 +557,7 @@ void BindingPatchContext::restoreExternalState()
     }
     m_storedSignalHandlers.clear();
 
-    // Recurse into child contexts (group properties)
+    // Recurse into child contexts (grouped properties)
     for (auto &[name, child] : m_children) {
         if (child)
             child->restoreExternalState();
@@ -687,7 +687,7 @@ bool BindingPatchContext::applyBindingChange(const QQmlRefPointer<QV4::Executabl
     for (auto binding = obj->bindingsBegin(), end = obj->bindingsEnd(); binding != end; ++binding) {
         BindingPatchContext *child = nullptr;
         switch (binding->type()) {
-        case QV4::CompiledData::Binding::Type_GroupProperty:
+        case QV4::CompiledData::Binding::Type_GroupedProperty:
             child = childContext(unit, binding, &seenChildren);
             break;
         case QV4::CompiledData::Binding::Type_AttachedProperty:
@@ -887,12 +887,12 @@ void BindingPatchContext::resetBinding(
         // A generalized grouped property whose first chain part is an id (e.g. "someId.x")
         // does not name a property of m_object; it targets an external object resolved by id.
         // Reset the sub-bindings on that target.
-        Q_ASSERT(binding->isGroupProperty());
+        Q_ASSERT(binding->isGroupedProperty());
         if (BindingPatchContext *child = childContext(oldUnit, binding, nullptr)) {
             child->resetBindings(
                     oldUnit, binding->value.objectIndex, newUnit,
                     reboundSubObjectIndex(rebound, name,
-                                          QV4::CompiledData::Binding::Type_GroupProperty));
+                                          QV4::CompiledData::Binding::Type_GroupedProperty));
         }
         return;
     }
@@ -906,12 +906,12 @@ void BindingPatchContext::resetBinding(
         QQmlListReference list = prop.read().value<QQmlListReference>();
         if (list.clear())
             return;
-    } else if (flags.testFlag(QMetaType::PointerToQObject) && binding->isGroupProperty()) {
+    } else if (flags.testFlag(QMetaType::PointerToQObject) && binding->isGroupedProperty()) {
         if (BindingPatchContext *child = childContext(oldUnit, binding, nullptr)) {
             child->resetBindings(
                     oldUnit, binding->value.objectIndex, newUnit,
                     reboundSubObjectIndex(rebound, name,
-                                          QV4::CompiledData::Binding::Type_GroupProperty));
+                                          QV4::CompiledData::Binding::Type_GroupedProperty));
         }
         return;
     }

@@ -70,7 +70,7 @@ hasChangedNonCompositeBaseType(const QQmlRefPointer<QV4::ExecutableCompilationUn
     const QV4::CompiledData::Object *oldObj = oldUnit->objectAt(objectIndex);
     const auto *oldTypeRef = oldUnit->resolvedType(oldObj->inheritedTypeNameIndex);
     if (!oldTypeRef)
-        return false; // Group property sub-objects have no inherited type.
+        return false; // Grouped property sub-objects have no inherited type.
 
     const QV4::CompiledData::Object *newObj = newUnit->objectAt(objectIndex);
     const auto *newTypeRef = newUnit->resolvedType(newObj->inheritedTypeNameIndex);

@@ -980,7 +980,7 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
             return false;
     }
 
-    if (bindingType == QV4::CompiledData::Binding::Type_GroupProperty) {
+    if (bindingType == QV4::CompiledData::Binding::Type_GroupedProperty) {
         const QV4::CompiledData::Object *obj = compilationUnit->objectAt(binding->value.objectIndex);
         if (stringAt(obj->inheritedTypeNameIndex).isEmpty()) {
 
@@ -1869,15 +1869,15 @@ void QQmlObjectCreator::registerPostHocRequiredProperties(const QV4::CompiledDat
         //    type in the hierarchy that has checked the C++ properties (via 1.)
         // 3. required attached properties are explicitly not supported. to
         //    achieve that, go through all its properties
-        // 4. required group properties: the group itself is covered by 1.
+        // 4. required grouped properties: the group itself is covered by 1.
         //    required sub-properties are not properly handled (QTBUG-96544), so
         //    just return the old range here for consistency
         QV4::ResolvedTypeReference *typeRef = resolvedType(_compiledObject->inheritedTypeNameIndex);
-        if (!typeRef) { // inside a binding on attached/group property
+        if (!typeRef) { // inside a binding on attached/grouped property
             Q_ASSERT(binding);
             if (binding->isAttachedProperty())
                 return { 0, _propertyCache->propertyCount() }; // 3.
-            Q_ASSERT(binding->isGroupProperty());
+            Q_ASSERT(binding->isGroupedProperty());
             return { 0, _propertyCache->propertyOffset() + 1 }; // 4.
         }
         Q_ASSERT(!_compiledObject->hasFlag(QV4::CompiledData::Object::IsComponent));
@@ -1891,7 +1891,7 @@ void QQmlObjectCreator::registerPostHocRequiredProperties(const QV4::CompiledDat
         const QQmlPropertyData *propertyData = _propertyCache->maybeUnresolvedProperty(i);
         if (!propertyData)
             continue;
-        // TODO: the property might be a group property (in which case we need
+        // TODO: the property might be a grouped property (in which case we need
         // to dive into its sub-properties and check whether there are any
         // required elements there) - QTBUG-96544
         if (!propertyData->isRequired() && postHocRequired.isEmpty())
@@ -1987,7 +1987,7 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
     qSwap(_propertyCache, cache);
     qSwap(_vmeMetaObject, vmeMetaObject);
 
-    // If it's a group property object, don't populate CU and object index.
+    // If it's a grouped property object, don't populate CU and object index.
     // It might be populated at the actual instantiation point, or the object might not be
     // created by QML at all.
     if (!stringAt(_compiledObject->inheritedTypeNameIndex).isEmpty()) {

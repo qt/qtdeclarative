@@ -62,18 +62,18 @@ void TestTypeGrouped::setStr(const QString &s)
     emit strChanged();
 }
 
-QmlGroupPropertyTestType::QmlGroupPropertyTestType(QObject *parent) : QObject(parent) { }
-TestTypeGrouped *QmlGroupPropertyTestType::getGroup()
+QmlGroupedPropertyTestType::QmlGroupedPropertyTestType(QObject *parent) : QObject(parent) { }
+TestTypeGrouped *QmlGroupedPropertyTestType::getGroup()
 {
     return &m_group;
 }
 
-QmlGeneralizedGroupPropertyTestType::QmlGeneralizedGroupPropertyTestType(QObject *parent)
+QmlGeneralizedGroupedPropertyTestType::QmlGeneralizedGroupedPropertyTestType(QObject *parent)
     : QObject(parent)
 {
 }
 
-TestTypeGrouped *QmlGeneralizedGroupPropertyTestType::getGroup()
+TestTypeGrouped *QmlGeneralizedGroupedPropertyTestType::getGroup()
 {
     return &m_group;
 }

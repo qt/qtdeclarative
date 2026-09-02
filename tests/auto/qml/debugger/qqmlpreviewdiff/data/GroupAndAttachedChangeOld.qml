@@ -1,7 +1,7 @@
 // Copyright (C) 2026 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
-// Both a group property (font) and an attached property (Keys) on the same object.
+// Both a grouped property (font) and an attached property (Keys) on the same object.
 import QtQuick
 
 Text {

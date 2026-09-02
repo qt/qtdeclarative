@@ -1166,7 +1166,7 @@ propertyBindingFromReferrerScope(const QQmlJSScope::ConstPtr &referrerScope, con
     const auto binding = bindings.begin();
     const auto bindingType = binding->bindingType();
     const bool bindingIsAttached = bindingType == QQmlSA::BindingType::AttachedProperty;
-    if (!bindingIsAttached && bindingType != QQmlSA::BindingType::GroupProperty)
+    if (!bindingIsAttached && bindingType != QQmlSA::BindingType::GroupedProperty)
         return {};
 
     // Generalized grouped properties, like Bindings or PropertyChanges, for example, have bindings

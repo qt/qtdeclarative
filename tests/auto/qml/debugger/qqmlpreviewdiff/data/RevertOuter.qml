@@ -4,7 +4,7 @@
 // Analog of ApplicationFlow.qml: instantiates the derived Home and attaches an
 // external handler to the nested button through the alias, exactly like
 // ApplicationFlow's "getStartedbutton.onClicked". This anchors the button's
-// stash context to the outer CU's group-property view.
+// stash context to the outer CU's grouped-property view.
 import QtQuick
 
 Item {

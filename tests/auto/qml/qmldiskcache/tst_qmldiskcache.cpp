@@ -1420,7 +1420,7 @@ void tst_qmldiskcache::invalidateSaveLoadCache()
 
 void tst_qmldiskcache::duplicateIdsInInlineComponents()
 {
-    // Exercise the case of loading strange generalized group properties from .qmlc.
+    // Exercise the case of loading strange generalized grouped properties from .qmlc.
 
     QQmlEngine engine;
 

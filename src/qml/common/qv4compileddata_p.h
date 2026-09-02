@@ -579,7 +579,7 @@ struct Binding
         Type_Script,
         Type_Object,
         Type_AttachedProperty,
-        Type_GroupProperty
+        Type_GroupedProperty
     };
 
     enum Flag : unsigned int {
@@ -636,7 +636,7 @@ struct Binding
     {
         switch (type()) {
         case Type_AttachedProperty:
-        case Type_GroupProperty:
+        case Type_GroupedProperty:
             return false;
         default:
             return !hasSignalHandlerBindingFlag();
@@ -651,7 +651,7 @@ struct Binding
         if (hasSignalHandlerBindingFlag()) {
             Q_ASSERT(!isValueBinding());
             Q_ASSERT(!isAttachedProperty());
-            Q_ASSERT(!isGroupProperty());
+            Q_ASSERT(!isGroupedProperty());
             return true;
         }
         return false;
@@ -662,15 +662,15 @@ struct Binding
         if (type() == Type_AttachedProperty) {
             Q_ASSERT(!isValueBinding());
             Q_ASSERT(!isSignalHandler());
-            Q_ASSERT(!isGroupProperty());
+            Q_ASSERT(!isGroupedProperty());
             return true;
         }
         return false;
     }
 
-    bool isGroupProperty() const
+    bool isGroupedProperty() const
     {
-        if (type() == Type_GroupProperty) {
+        if (type() == Type_GroupedProperty) {
             Q_ASSERT(!isValueBinding());
             Q_ASSERT(!isSignalHandler());
             Q_ASSERT(!isAttachedProperty());

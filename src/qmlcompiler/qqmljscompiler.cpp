@@ -236,7 +236,7 @@ bool qCompileQmlFile(QmlIR::Document &irDocument, const QString &inputFileName,
                 if (const auto *binding = bindingOrFunction.binding()) {
                     switch (binding->type()) {
                     case QmlIR::Binding::Type_AttachedProperty:
-                    case QmlIR::Binding::Type_GroupProperty:
+                    case QmlIR::Binding::Type_GroupedProperty:
                         effectiveScopes.insert(
                                     irDocument.objects.at(binding->value.objectIndex), scope);
                         return;

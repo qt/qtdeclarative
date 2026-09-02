@@ -225,7 +225,7 @@ void QQuickPropertyChangesParser::verifyList(
               QQuickPropertyChanges::tr(
                       "PropertyChanges does not support creating state-specific objects."));
         break;
-    case QV4::CompiledData::Binding::Type_GroupProperty:
+    case QV4::CompiledData::Binding::Type_GroupedProperty:
     case QV4::CompiledData::Binding::Type_AttachedProperty: {
         const QV4::CompiledData::Object *subObj = compilationUnit->objectAt(binding->value.objectIndex);
         const QV4::CompiledData::Binding *subBinding = subObj->bindingTable();
@@ -258,7 +258,7 @@ void QQuickPropertyChangesPrivate::decodeBinding(const QString &propertyPrefix, 
     QString propertyName = propertyPrefix + compilationUnit->stringAt(binding->propertyNameIndex);
 
     switch (binding->type()) {
-    case QV4::CompiledData::Binding::Type_GroupProperty:
+    case QV4::CompiledData::Binding::Type_GroupedProperty:
     case QV4::CompiledData::Binding::Type_AttachedProperty: {
         QString pre = propertyName + QLatin1Char('.');
         const QV4::CompiledData::Object *subObj = compilationUnit->objectAt(binding->value.objectIndex);

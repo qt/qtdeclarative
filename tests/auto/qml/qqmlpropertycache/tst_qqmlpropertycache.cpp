@@ -37,7 +37,7 @@ private slots:
     void restrictRegistrationVersion();
     void rejectOverriddenFinal();
     void overriddenSignals();
-    void duplicateIdsAndGeneralizedGroupProperties();
+    void duplicateIdsAndGeneralizedGroupedProperties();
 
     void appendPropertyAttr_logging_data();
     void appendPropertyAttr_logging();
@@ -795,10 +795,10 @@ void tst_qqmlpropertycache::overriddenSignals()
     // Should be an error, but we can't enforce it yet.
 }
 
-void tst_qqmlpropertycache::duplicateIdsAndGeneralizedGroupProperties()
+void tst_qqmlpropertycache::duplicateIdsAndGeneralizedGroupedProperties()
 {
     QQmlEngine engine;
-    QQmlComponent c(&engine, testFileUrl("duplicateIdsAndGeneralizedGroupProperties.qml"));
+    QQmlComponent c(&engine, testFileUrl("duplicateIdsAndGeneralizedGroupedProperties.qml"));
     QVERIFY2(c.isReady(), qPrintable(c.errorString()));
 
     QTest::ignoreMessage(QtDebugMsg, "1 true true true");

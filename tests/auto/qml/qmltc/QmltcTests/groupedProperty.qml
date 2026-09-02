@@ -1,7 +1,7 @@
 import QmltcTests 1.0
 import QtQml 2.0
 
-QmlGroupPropertyTestType {
+QmlGroupedPropertyTestType {
     group.count: 42
     group.formula: 41 + 1
     group.object: QtObject {

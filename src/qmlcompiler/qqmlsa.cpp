@@ -74,7 +74,8 @@ static_assert(QQmlJSScope::sizeofQQmlSAElement() == sizeof(Element));
     \value Interceptor      The binding is an interceptor that can intercept writes to properties such as \l[Quick]{Behavior}
     \value ValueSource      The binging is a \l{Defining QML Types from C++#Property Value Sources}{property value source}
     \value AttachedProperty The binding is an \l{QML Object Attributes#Attached Properties and Attached Signal Handlers}{attached object}
-    \value GroupProperty    The binding is a \l{QML Object Attributes#Grouped Properties}{grouped property}
+    \value GroupedProperty  The binding is a \l{QML Object Attributes#Grouped Properties}{grouped property}
+    \omitvalue GroupProperty
 */
 
 /*!
@@ -328,7 +329,7 @@ const QQmlJSMetaPropertyBinding BindingPrivate::binding(const QQmlSA::Binding &b
 }
 
 /*!
-    Returns the type of the property of this binding if it is a group property,
+    Returns the type of the property of this binding if it is a grouped property,
     otherwise returns an invalid Element.
  */
 Element Binding::groupType() const
@@ -1575,7 +1576,7 @@ void PassManagerPrivate::addBindingSourceLocations(const Element &element, const
     auto ownBindings = currentScope.ownPropertyBindings();
     for (auto &binding : ownBindings) {
         switch (binding.bindingType()) {
-        case QQmlSA::BindingType::GroupProperty:
+        case QQmlSA::BindingType::GroupedProperty:
             addBindingSourceLocations(element, Element{ binding.groupType() },
                                       prefix + binding.propertyName() + u'.');
             continue; // don't insert into m_bindingsByLocation

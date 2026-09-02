@@ -66,7 +66,7 @@ struct QQmlBindingInstantiationContext {
     const QQmlPropertyData *instantiatingProperty = nullptr;
 };
 
-struct QQmlPendingGroupPropertyBindings : public QList<QQmlBindingInstantiationContext>
+struct QQmlPendingGroupedPropertyBindings : public QList<QQmlBindingInstantiationContext>
 {
     void resolveMissingPropertyCaches(
             QQmlPropertyCacheVector *propertyCaches) const;
@@ -207,7 +207,7 @@ public:
     using InlineComponent = typename std::remove_reference<decltype (*(std::declval<CompiledObject>().inlineComponentsBegin()))>::type;
 
     QQmlPropertyCacheCreator(QQmlPropertyCacheVector *propertyCaches,
-                             QQmlPendingGroupPropertyBindings *pendingGroupPropertyBindings,
+                             QQmlPendingGroupedPropertyBindings *pendingGroupedPropertyBindings,
                              QQmlTypeLoader *typeLoader,
                              const ObjectContainer *objectContainer, const QQmlImports *imports,
                              const QByteArray &typeClassName);
@@ -291,7 +291,7 @@ protected:
     const ObjectContainer * const objectContainer;
     const QQmlImports * const imports;
     QQmlPropertyCacheVector *propertyCaches;
-    QQmlPendingGroupPropertyBindings *pendingGroupPropertyBindings;
+    QQmlPendingGroupedPropertyBindings *pendingGroupedPropertyBindings;
     QByteArray typeClassName; // not const as we temporarily chang it for inline components
     unsigned int currentRoot; // set to objectID of inline component root when handling inline components
 
@@ -305,7 +305,7 @@ protected:
 template <typename ObjectContainer>
 inline QQmlPropertyCacheCreator<ObjectContainer>::QQmlPropertyCacheCreator(
         QQmlPropertyCacheVector *propertyCaches,
-        QQmlPendingGroupPropertyBindings *pendingGroupPropertyBindings,
+        QQmlPendingGroupedPropertyBindings *pendingGroupedPropertyBindings,
         QQmlTypeLoader *typeLoader,
         const ObjectContainer *objectContainer, const QQmlImports *imports,
         const QByteArray &typeClassName)
@@ -313,7 +313,7 @@ inline QQmlPropertyCacheCreator<ObjectContainer>::QQmlPropertyCacheCreator(
     , objectContainer(objectContainer)
     , imports(imports)
     , propertyCaches(propertyCaches)
-    , pendingGroupPropertyBindings(pendingGroupPropertyBindings)
+    , pendingGroupedPropertyBindings(pendingGroupedPropertyBindings)
     , typeClassName(typeClassName)
     , currentRoot(-1)
 {
@@ -652,8 +652,8 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjectRecur
         for ( ; binding != end; ++binding) {
             if (binding->type() == QV4::CompiledData::Binding::Type_Object
                     && (binding->flags() & QV4::CompiledData::Binding::IsOnAssignment)) {
-                // If the on assignment is inside a group property, we need to distinguish between QObject based
-                // group properties and value type group properties. For the former the base type is derived from
+                // If the on assignment is inside a grouped property, we need to distinguish between QObject based
+                // grouped properties and value type grouped properties. For the former the base type is derived from
                 // the property that references us, for the latter we only need a meta-object on the referencing object
                 // because interceptors can't go to the shared value type instances.
                 if (context.instantiatingProperty && QQmlMetaType::isValueType(context.instantiatingProperty->propType())) {
@@ -702,7 +702,7 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjectRecur
     for (; binding != end; ++binding) {
         switch (binding->type()) {
         case QV4::CompiledData::Binding::Type_Object:
-        case QV4::CompiledData::Binding::Type_GroupProperty:
+        case QV4::CompiledData::Binding::Type_GroupedProperty:
         case QV4::CompiledData::Binding::Type_AttachedProperty:
             // We can always resolve object, group, and attached properties.
             break;
@@ -714,12 +714,12 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjectRecur
         QQmlBindingInstantiationContext context(
                     objectIndex, &(*binding), stringAt(binding->propertyNameIndex), thisCache);
 
-        // Binding to group property where we failed to look up the type of the
-        // property? Possibly a group property that is an alias that's not resolved yet.
+        // Binding to grouped property where we failed to look up the type of the
+        // property? Possibly a grouped property that is an alias that's not resolved yet.
         // Let's attempt to resolve it after we're done with the aliases and fill in the
         // propertyCaches entry then.
         if (!thisCache || !context.resolveInstantiatingProperty())
-            pendingGroupPropertyBindings->append(context);
+            pendingGroupedPropertyBindings->append(context);
 
         QQmlError error = buildMetaObjectRecursively(
                     binding->value.objectIndex, context, VMEMetaObjectIsRequired::Maybe);

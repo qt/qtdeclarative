@@ -446,7 +446,7 @@ QQmlJSScope::ConstPtr fetchType(const QQmlJSMetaPropertyBinding &binding)
         return binding.valueSourceType();
     case QQmlSA::BindingType::AttachedProperty:
         return binding.attachedType();
-    case QQmlSA::BindingType::GroupProperty:
+    case QQmlSA::BindingType::GroupedProperty:
         return binding.groupType();
     default:
         return {};

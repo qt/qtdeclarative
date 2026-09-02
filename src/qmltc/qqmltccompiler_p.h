@@ -146,7 +146,7 @@ private:
                                         const QQmlJSScope::ConstPtr &type,
                                         const BindingAccessorData &accessor);
 
-    void compileGroupPropertyBinding(Type &current, const QQmlJSMetaPropertyBinding &binding,
+    void compileGroupedPropertyBinding(Type &current, const QQmlJSMetaPropertyBinding &binding,
                                      const QQmlJSScope::ConstPtr &type,
                                      const BindingAccessorData &accessor);
 

@@ -234,13 +234,13 @@ private slots:
     void attachedPropertyValueChange();
     void attachedPropertyAdded();
     void attachedPropertyRemoved();
-    void groupPropertyFontChange();
-    void groupPropertyValueTypeOverridePreserved();
-    void groupPropertyAnchorsChange();
-    void groupPropertyAnchorsTargetChange();
-    void groupPropIndexShift();
-    void groupPropChildRemoved();
-    void groupPropertyRemoved();
+    void groupedPropertyFontChange();
+    void groupedPropertyValueTypeOverridePreserved();
+    void groupedPropertyAnchorsChange();
+    void groupedPropertyAnchorsTargetChange();
+    void groupedPropIndexShift();
+    void groupedPropChildRemoved();
+    void groupedPropertyRemoved();
     void attachedPropIndexShift();
     void multiGroupChange();
     void groupAndAttachedChange();
@@ -473,9 +473,9 @@ private slots:
     void reloadDeferredProperty_data();
     void reloadDeferredProperty();
 
-    // A value-type group property ("spot.x") whose first chain part is also the id of another
+    // A value-type grouped property ("spot.x") whose first chain part is also the id of another
     // object. The patcher must resolve it to the host's value property, not to the id object.
-    void groupPropertyNameClashesWithId();
+    void groupedPropertyNameClashesWithId();
 
     // A base-type property that un-reloaded derived instances still bind to is
     // removed on reload. Re-resolving the binding target against the relinked
@@ -1617,11 +1617,11 @@ void tst_QQmlPreviewObjectPatch::attachedPropertyRemoved()
     // But since the property has no RESET, it retains its value.
 }
 
-// Group property change on a value type (font.pixelSize: 12 → 24).
-void tst_QQmlPreviewObjectPatch::groupPropertyFontChange()
+// Grouped property change on a value type (font.pixelSize: 12 → 24).
+void tst_QQmlPreviewObjectPatch::groupedPropertyFontChange()
 {
 
-    QQmlComponent oldComp(&engine, testFileUrl("GroupPropertyFontChangeOld.qml"));
+    QQmlComponent oldComp(&engine, testFileUrl("GroupedPropertyFontChangeOld.qml"));
     QVERIFY2(oldComp.isReady(), qPrintable(oldComp.errorString()));
     QScopedPointer<QObject> object(oldComp.create());
     QVERIFY(object);
@@ -1629,7 +1629,7 @@ void tst_QQmlPreviewObjectPatch::groupPropertyFontChange()
     QFont oldFont = object->property("font").value<QFont>();
     QCOMPARE(oldFont.pixelSize(), 12);
 
-    QQmlComponent newComp(&engine, testFileUrl("GroupPropertyFontChangeNew.qml"));
+    QQmlComponent newComp(&engine, testFileUrl("GroupedPropertyFontChangeNew.qml"));
     QVERIFY2(newComp.isReady(), qPrintable(newComp.errorString()));
 
     const auto oldExecUnit = QQmlComponentPrivate::get(&oldComp)->compilationUnit();
@@ -1647,9 +1647,9 @@ void tst_QQmlPreviewObjectPatch::groupPropertyFontChange()
 // *value-type sub-property* (font.pixelSize) rather than a top-level property. The change is a
 // trivial diff, so it is patched in place: the guarded write sees the property no longer holds the
 // old default and leaves the override untouched.
-void tst_QQmlPreviewObjectPatch::groupPropertyValueTypeOverridePreserved()
+void tst_QQmlPreviewObjectPatch::groupedPropertyValueTypeOverridePreserved()
 {
-    QQmlComponent oldComp(&engine, testFileUrl("GroupPropertyFontChangeOld.qml"));
+    QQmlComponent oldComp(&engine, testFileUrl("GroupedPropertyFontChangeOld.qml"));
     QVERIFY2(oldComp.isReady(), qPrintable(oldComp.errorString()));
     QScopedPointer<QObject> object(oldComp.create());
     QVERIFY(object);
@@ -1661,7 +1661,7 @@ void tst_QQmlPreviewObjectPatch::groupPropertyValueTypeOverridePreserved()
     QVERIFY(pixelSize.write(99));
     QCOMPARE(object->property("font").value<QFont>().pixelSize(), 99);
 
-    QQmlComponent newComp(&engine, testFileUrl("GroupPropertyFontChangeNew.qml"));
+    QQmlComponent newComp(&engine, testFileUrl("GroupedPropertyFontChangeNew.qml"));
     QVERIFY2(newComp.isReady(), qPrintable(newComp.errorString()));
 
     const auto oldExecUnit = QQmlComponentPrivate::get(&oldComp)->compilationUnit();
@@ -1676,13 +1676,13 @@ void tst_QQmlPreviewObjectPatch::groupPropertyValueTypeOverridePreserved()
     QCOMPARE(object->property("font").value<QFont>().pixelSize(), 99);
 }
 
-// Group property change on an object type (anchors.leftMargin: 5 → 10).
+// Grouped property change on an object type (anchors.leftMargin: 5 → 10).
 // anchors is backed by QQuickAnchors*, an actual QObject, unlike font (QFont
 // value type).
-void tst_QQmlPreviewObjectPatch::groupPropertyAnchorsChange()
+void tst_QQmlPreviewObjectPatch::groupedPropertyAnchorsChange()
 {
 
-    QQmlComponent oldComp(&engine, testFileUrl("GroupPropertyAnchorsChangeOld.qml"));
+    QQmlComponent oldComp(&engine, testFileUrl("GroupedPropertyAnchorsChangeOld.qml"));
     QVERIFY2(oldComp.isReady(), qPrintable(oldComp.errorString()));
     QScopedPointer<QObject> object(oldComp.create());
     QVERIFY(object);
@@ -1692,7 +1692,7 @@ void tst_QQmlPreviewObjectPatch::groupPropertyAnchorsChange()
     QCOMPARE(anchors->property("leftMargin").toReal(), 5.0);
     QCOMPARE(object->property("value").toInt(), 10);
 
-    QQmlComponent newComp(&engine, testFileUrl("GroupPropertyAnchorsChangeNew.qml"));
+    QQmlComponent newComp(&engine, testFileUrl("GroupedPropertyAnchorsChangeNew.qml"));
     QVERIFY2(newComp.isReady(), qPrintable(newComp.errorString()));
 
     const auto oldExecUnit = QQmlComponentPrivate::get(&oldComp)->compilationUnit();
@@ -1709,12 +1709,12 @@ void tst_QQmlPreviewObjectPatch::groupPropertyAnchorsChange()
 // Change anchors.fill from "parent" to "sibling".  The fill binding's bytecode
 // is identical in both CUs — only the lookup table entry changes.  This
 // exercises three fixes:
-//   1. Function pointer update on group property targets (QQuickAnchors).
-//   2. Binding refresh on group property targets after resetLookups.
-void tst_QQmlPreviewObjectPatch::groupPropertyAnchorsTargetChange()
+//   1. Function pointer update on grouped property targets (QQuickAnchors).
+//   2. Binding refresh on grouped property targets after resetLookups.
+void tst_QQmlPreviewObjectPatch::groupedPropertyAnchorsTargetChange()
 {
 
-    QQmlComponent oldComp(&engine, testFileUrl("GroupPropertyAnchorsTargetOld.qml"));
+    QQmlComponent oldComp(&engine, testFileUrl("GroupedPropertyAnchorsTargetOld.qml"));
     QVERIFY2(oldComp.isReady(), qPrintable(oldComp.errorString()));
     QScopedPointer<QObject> object(oldComp.create());
     QVERIFY(object);
@@ -1724,7 +1724,7 @@ void tst_QQmlPreviewObjectPatch::groupPropertyAnchorsTargetChange()
     QVERIFY(target);
     QCOMPARE(target->property("width").toReal(), 200.0); // fills parent
 
-    QQmlComponent newComp(&engine, testFileUrl("GroupPropertyAnchorsTargetNew.qml"));
+    QQmlComponent newComp(&engine, testFileUrl("GroupedPropertyAnchorsTargetNew.qml"));
     QVERIFY2(newComp.isReady(), qPrintable(newComp.errorString()));
 
     const auto oldExecUnit = QQmlComponentPrivate::get(&oldComp)->compilationUnit();
@@ -1741,14 +1741,14 @@ void tst_QQmlPreviewObjectPatch::groupPropertyAnchorsTargetChange()
     QCOMPARE(target->property("height").toReal(), 100.0);
 }
 
-// A child Rectangle is inserted in the new CU before the font group property.
+// A child Rectangle is inserted in the new CU before the font grouped property.
 // Object indices are stable, but the *contents* at each index change: index 1
 // held the font-group in the old CU, now holds a Rectangle in the new CU,
 // and the font-group sits at index 2.
-void tst_QQmlPreviewObjectPatch::groupPropIndexShift()
+void tst_QQmlPreviewObjectPatch::groupedPropIndexShift()
 {
 
-    QQmlComponent oldComp(&engine, testFileUrl("GroupPropIndexShiftOld.qml"));
+    QQmlComponent oldComp(&engine, testFileUrl("GroupedPropIndexShiftOld.qml"));
     QVERIFY2(oldComp.isReady(), qPrintable(oldComp.errorString()));
     QScopedPointer<QObject> object(oldComp.create());
     QVERIFY(object);
@@ -1757,7 +1757,7 @@ void tst_QQmlPreviewObjectPatch::groupPropIndexShift()
     QCOMPARE(oldFont.pixelSize(), 12);
     QCOMPARE(object->property("marker").toInt(), 1);
 
-    QQmlComponent newComp(&engine, testFileUrl("GroupPropIndexShiftNew.qml"));
+    QQmlComponent newComp(&engine, testFileUrl("GroupedPropIndexShiftNew.qml"));
     QVERIFY2(newComp.isReady(), qPrintable(newComp.errorString()));
 
     const auto oldExecUnit = QQmlComponentPrivate::get(&oldComp)->compilationUnit();
@@ -1772,14 +1772,14 @@ void tst_QQmlPreviewObjectPatch::groupPropIndexShift()
     QCOMPARE(object->property("marker").toInt(), 2);
 }
 
-// Reverse of groupPropIndexShift: a child is removed, so the content at
+// Reverse of groupedPropIndexShift: a child is removed, so the content at
 // index 1 changes from Rectangle (old) to font-group (new).
 //   Old CU: obj0=Text, obj1=Rectangle, obj2=font-group
 //   New CU: obj0=Text, obj1=font-group
-void tst_QQmlPreviewObjectPatch::groupPropChildRemoved()
+void tst_QQmlPreviewObjectPatch::groupedPropChildRemoved()
 {
 
-    QQmlComponent oldComp(&engine, testFileUrl("GroupPropChildRemovedOld.qml"));
+    QQmlComponent oldComp(&engine, testFileUrl("GroupedPropChildRemovedOld.qml"));
     QVERIFY2(oldComp.isReady(), qPrintable(oldComp.errorString()));
     QScopedPointer<QObject> object(oldComp.create());
     QVERIFY(object);
@@ -1788,7 +1788,7 @@ void tst_QQmlPreviewObjectPatch::groupPropChildRemoved()
     QCOMPARE(oldFont.pixelSize(), 12);
     QCOMPARE(object->property("marker").toInt(), 1);
 
-    QQmlComponent newComp(&engine, testFileUrl("GroupPropChildRemovedNew.qml"));
+    QQmlComponent newComp(&engine, testFileUrl("GroupedPropChildRemovedNew.qml"));
     QVERIFY2(newComp.isReady(), qPrintable(newComp.errorString()));
 
     const auto oldExecUnit = QQmlComponentPrivate::get(&oldComp)->compilationUnit();
@@ -1803,12 +1803,12 @@ void tst_QQmlPreviewObjectPatch::groupPropChildRemoved()
     QCOMPARE(object->property("marker").toInt(), 2);
 }
 
-// Full group property removal: anchors.leftMargin is removed entirely.
+// Full grouped property removal: anchors.leftMargin is removed entirely.
 // anchors.leftMargin should revert to the default (0) via RESET.
-void tst_QQmlPreviewObjectPatch::groupPropertyRemoved()
+void tst_QQmlPreviewObjectPatch::groupedPropertyRemoved()
 {
 
-    QQmlComponent oldComp(&engine, testFileUrl("GroupPropertyRemovedOld.qml"));
+    QQmlComponent oldComp(&engine, testFileUrl("GroupedPropertyRemovedOld.qml"));
     QVERIFY2(oldComp.isReady(), qPrintable(oldComp.errorString()));
     QScopedPointer<QObject> object(oldComp.create());
     QVERIFY(object);
@@ -1817,7 +1817,7 @@ void tst_QQmlPreviewObjectPatch::groupPropertyRemoved()
     QVERIFY(anchors);
     QCOMPARE(anchors->property("leftMargin").toReal(), 42.0);
 
-    QQmlComponent newComp(&engine, testFileUrl("GroupPropertyRemovedNew.qml"));
+    QQmlComponent newComp(&engine, testFileUrl("GroupedPropertyRemovedNew.qml"));
     QVERIFY2(newComp.isReady(), qPrintable(newComp.errorString()));
 
     const auto oldExecUnit = QQmlComponentPrivate::get(&oldComp)->compilationUnit();
@@ -1829,7 +1829,7 @@ void tst_QQmlPreviewObjectPatch::groupPropertyRemoved()
     QCOMPARE(anchors->property("leftMargin").toReal(), 0.0);
 }
 
-// Same scenario as groupPropIndexShift but for an attached property (Keys).
+// Same scenario as groupedPropIndexShift but for an attached property (Keys).
 // Content at the Keys object's old index now holds a Rectangle in the new CU.
 //   Old CU: obj0=Item, obj1=Keys-attached
 //   New CU: obj0=Item, obj1=Rectangle, obj2=Keys-attached
@@ -1856,7 +1856,7 @@ void tst_QQmlPreviewObjectPatch::attachedPropIndexShift()
     QCOMPARE(object->property("marker").toInt(), 2);
 }
 
-// Multiple group properties (font + anchors) on the same object, both changing.
+// Multiple grouped properties (font + anchors) on the same object, both changing.
 void tst_QQmlPreviewObjectPatch::multiGroupChange()
 {
 
@@ -1889,7 +1889,7 @@ void tst_QQmlPreviewObjectPatch::multiGroupChange()
     QCOMPARE(anchors->property("leftMargin").toReal(), 10.0);
 }
 
-// Both a group property (font) and an attached property (Keys) on the same
+// Both a grouped property (font) and an attached property (Keys) on the same
 // object, both changing.  Tests that the inner object hash and redirect logic
 // handle mixed group+attached correctly.
 void tst_QQmlPreviewObjectPatch::groupAndAttachedChange()
@@ -2704,7 +2704,7 @@ void tst_QQmlPreviewObjectPatch::nestedCompositeAlias()
 // The trigger is that the outer component attaches an external handler to the button
 // through the alias ("theButton.onActivated", like ApplicationFlow's
 // "getStartedbutton.onClicked"). That anchors the button's stash context to the outer
-// CU's group-property view, so without the fix stashExternalState never learns that the
+// CU's grouped-property view, so without the fix stashExternalState never learns that the
 // reloaded HomeForm CU set "col: green" on this instance. It then mistakes the reloaded
 // value for an external user override, stashes it, and restores it onto the rebuilt
 // button — defeating the reset and leaving the button green forever.
@@ -5299,7 +5299,7 @@ void tst_QQmlPreviewObjectPatch::reloadDeferredProperty()
     }
 }
 
-void tst_QQmlPreviewObjectPatch::groupPropertyNameClashesWithId()
+void tst_QQmlPreviewObjectPatch::groupedPropertyNameClashesWithId()
 {
     const QString moduleDir = dataDirectory() + QStringLiteral("/HotReloadGroupIdClash");
     const QString patchedDir = dataDirectory() + QStringLiteral("/HotReloadGroupIdClashPatched");

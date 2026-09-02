@@ -1,5 +1,5 @@
 import QtQml 2.0
-GroupPropertyBase {
+GroupedPropertyBase {
     subObject {
         value: 42
     }

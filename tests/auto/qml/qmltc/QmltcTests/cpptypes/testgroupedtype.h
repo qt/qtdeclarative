@@ -46,7 +46,7 @@ signals:
 };
 
 // Note: unlike attached property, this type is the parent of the QML type
-class QmlGroupPropertyTestType : public QObject
+class QmlGroupedPropertyTestType : public QObject
 {
     Q_OBJECT
     QML_ELEMENT
@@ -56,12 +56,12 @@ class QmlGroupPropertyTestType : public QObject
     TestTypeGrouped m_group;
 
 public:
-    QmlGroupPropertyTestType(QObject *parent = nullptr);
+    QmlGroupedPropertyTestType(QObject *parent = nullptr);
 
     TestTypeGrouped *getGroup();
 };
 
-class QmlGeneralizedGroupPropertyTestType : public QObject
+class QmlGeneralizedGroupedPropertyTestType : public QObject
 {
     Q_OBJECT
     QML_ELEMENT
@@ -72,7 +72,7 @@ class QmlGeneralizedGroupPropertyTestType : public QObject
     TestTypeGrouped m_group;
 
 public:
-    QmlGeneralizedGroupPropertyTestType(QObject *parent = nullptr);
+    QmlGeneralizedGroupedPropertyTestType(QObject *parent = nullptr);
 
     TestTypeGrouped *getGroup();
 };

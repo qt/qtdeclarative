@@ -77,7 +77,7 @@ QQmlBindingInstantiationContext::QQmlBindingInstantiationContext(
 bool QQmlBindingInstantiationContext::resolveInstantiatingProperty()
 {
     if (!instantiatingBinding
-           || instantiatingBinding->type() != QV4::CompiledData::Binding::Type_GroupProperty) {
+           || instantiatingBinding->type() != QV4::CompiledData::Binding::Type_GroupedProperty) {
         return true;
     }
 
@@ -120,13 +120,13 @@ QQmlPropertyCache::ConstPtr QQmlBindingInstantiationContext::instantiatingProper
     return QQmlPropertyCache::ConstPtr();
 }
 
-void QQmlPendingGroupPropertyBindings::resolveMissingPropertyCaches(
+void QQmlPendingGroupedPropertyBindings::resolveMissingPropertyCaches(
         QQmlPropertyCacheVector *propertyCaches) const
 {
     for (QQmlBindingInstantiationContext pendingBinding: *this) {
-        const int groupPropertyObjectIndex = pendingBinding.instantiatingBinding->value.objectIndex;
+        const int groupedPropertyObjectIndex = pendingBinding.instantiatingBinding->value.objectIndex;
 
-        if (propertyCaches->at(groupPropertyObjectIndex))
+        if (propertyCaches->at(groupedPropertyObjectIndex))
             continue;
 
         Q_ASSERT(!pendingBinding.instantiatingPropertyName.isEmpty());
@@ -139,7 +139,7 @@ void QQmlPendingGroupPropertyBindings::resolveMissingPropertyCaches(
         if (!pendingBinding.resolveInstantiatingProperty())
             continue;
         if (auto cache = pendingBinding.instantiatingPropertyCache())
-            propertyCaches->set(groupPropertyObjectIndex, cache);
+            propertyCaches->set(groupedPropertyObjectIndex, cache);
     }
 }
 

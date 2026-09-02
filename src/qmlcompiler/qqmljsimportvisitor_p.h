@@ -391,7 +391,7 @@ private:
     void resolveAliases();
     bool resolveAliasProperty(const QQmlJSScope::Ptr &object, const QQmlJSMetaProperty &property);
     void populatePropertyAliases();
-    void resolveGroupProperties();
+    void resolveGroupedProperties();
     void handleIdDeclaration(QQmlJS::AST::UiScriptBinding *scriptBinding);
     virtual void handleLiteralBinding(const QQmlJSMetaPropertyBinding &,
                                       const QQmlJS::AST::UiPublicMember *);

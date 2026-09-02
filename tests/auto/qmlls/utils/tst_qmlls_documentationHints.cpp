@@ -71,7 +71,7 @@ It can also be useful for C++ integration, as it is just a plain QObject. See th
             << HtmlExtractor::ExtractionMode::Simplified
             << R"(Defines the item's position and size. The default value is 0.)";
 
-    QTest::addRow("qml-group-property-simplified-plaintext")
+    QTest::addRow("qml-grouped-property-simplified-plaintext")
             << testFile("qdochtmlparser/qml-qtquick-item.html")
             << "anchors.fill"
             << DomType::PropertyDefinition

@@ -47,7 +47,7 @@ static QString bindingTypeDescription(QmlIR::Binding::Type type)
         return u"an object"_s;
     case QmlIR::Binding::Type_AttachedProperty:
         return u"an attached property"_s;
-    case QmlIR::Binding::Type_GroupProperty:
+    case QmlIR::Binding::Type_GroupedProperty:
         return u"a grouped property"_s;
     }
 

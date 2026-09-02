@@ -497,7 +497,7 @@ struct UnitDiffer
             return oldBinding.value.compiledScriptIndex == newBinding.value.compiledScriptIndex;
         case Binding::Type_Object:
         case Binding::Type_AttachedProperty:
-        case Binding::Type_GroupProperty:
+        case Binding::Type_GroupedProperty:
             return oldBinding.value.objectIndex == newBinding.value.objectIndex
                     && objectContentEqual(
                             *oldUnit->qmlUnit()->objectAt(oldBinding.value.objectIndex),

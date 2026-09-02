@@ -5,7 +5,7 @@ import QtQml
 import QtQuick
 import QmltcTests
 
-QmlGeneralizedGroupPropertyTestType {
+QmlGeneralizedGroupedPropertyTestType {
     id: root
 
     property int myInt: 5

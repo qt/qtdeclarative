@@ -164,7 +164,7 @@ private slots:
     void repeatedSetDataWithInlineComponent();
     void setInitialPropertyInteraction();
     void invalidBaseUrl();
-    void uselessGroupProperty();
+    void uselessGroupedProperty();
     void componentCompilationUnitSetter();
     void setDataSynchronous();
     void setDataAsynchronous();
@@ -989,12 +989,12 @@ void tst_qqmlcomponent::testRequiredProperties()
     comp.loadUrl(testFile);
     QScopedObjPointer obj {comp.create()};
     QEXPECT_FAIL("required not set (group)",
-                 "We fail to recognize required sub-properties inside a group property when that "
-                 "group property is unused (QTBUG-96544)",
+                 "We fail to recognize required sub-properties inside a grouped property when that "
+                 "grouped property is unused (QTBUG-96544)",
                  Abort);
     QEXPECT_FAIL("required two set one (group)",
-                 "We fail to recognized required sub-properties inside a group property, even when "
-                 "that group property is used (QTBUG-96544)",
+                 "We fail to recognized required sub-properties inside a grouped property, even when "
+                 "that grouped property is used (QTBUG-96544)",
                  Abort);
     if (shouldSucceed) {
         QVERIFY2(comp.isReady(), qPrintable(comp.errorString()));
@@ -1961,10 +1961,10 @@ void tst_qqmlcomponent::invalidBaseUrl()
             "Can't resolve relative qmldir URL ./qmldir on invalid base URL"_L1));
 }
 
-void tst_qqmlcomponent::uselessGroupProperty()
+void tst_qqmlcomponent::uselessGroupedProperty()
 {
     QQmlEngine engine;
-    QQmlComponent component(&engine, testFileUrl("uselessGroupProperty.qml"));
+    QQmlComponent component(&engine, testFileUrl("uselessGroupedProperty.qml"));
     QVERIFY2(component.isReady(), qPrintable(component.errorString()));
     std::unique_ptr<QObject> object(component.create());
     QVERIFY(!object);

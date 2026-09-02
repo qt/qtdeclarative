@@ -124,7 +124,7 @@ private slots:
     void noDoubleEvaluationForFlushedBindings_data();
     void noDoubleEvaluationForFlushedBindings();
     void autoComponentCreation();
-    void autoComponentCreationInGroupProperty();
+    void autoComponentCreationInGroupedProperty();
     void propertyValueSource();
     void requiredProperty();
     void requiredPropertyFromCpp_data();
@@ -309,7 +309,7 @@ private slots:
 
     void thisInQmlScope();
 
-    void valueTypeGroupPropertiesInBehavior();
+    void valueTypeGroupedPropertiesInBehavior();
 
     void retrieveQmlTypeId();
 
@@ -365,7 +365,7 @@ private slots:
     void multiExtensionQmlTypes();
     void extensionSpecial();
     void extensionRevision();
-    void extendedGroupProperty();
+    void extendedGroupedProperty();
     void invalidInlineComponent();
     void warnOnInjectedParameters();
 #if QT_CONFIG(wheelevent)
@@ -376,7 +376,7 @@ private slots:
 
     void hangOnWarning();
 
-    void groupPropertyFromNonExposedBaseClass();
+    void groupedPropertyFromNonExposedBaseClass();
 
     void listEnumConversion();
     void deepInlineComponentScriptBinding();
@@ -1865,9 +1865,9 @@ void tst_qqmllanguage::autoComponentCreation()
     }
 }
 
-void tst_qqmllanguage::autoComponentCreationInGroupProperty()
+void tst_qqmllanguage::autoComponentCreationInGroupedProperty()
 {
-    QQmlComponent component(&engine, testFileUrl("autoComponentCreationInGroupProperties.qml"));
+    QQmlComponent component(&engine, testFileUrl("autoComponentCreationInGroupedProperties.qml"));
     VERIFY_ERRORS(0);
     QScopedPointer<MyTypeObject> object(qobject_cast<MyTypeObject *>(component.create()));
     QVERIFY(object != nullptr);
@@ -2378,7 +2378,7 @@ void tst_qqmllanguage::aliasProperties()
         QVERIFY(subObject->property("success").toBool());
     }
 
-    // Property bindings on group properties that are actually aliases (QTBUG-51043)
+    // Property bindings on grouped properties that are actually aliases (QTBUG-51043)
     {
         QQmlComponent component(&engine, testFileUrl("alias.15.qml"));
         VERIFY_ERRORS(0);
@@ -2392,7 +2392,7 @@ void tst_qqmllanguage::aliasProperties()
         QCOMPARE(subItem->property("y").toInt(), 1);
     }
 
-    // Nested property bindings on group properties that are actually aliases (QTBUG-94983)
+    // Nested property bindings on grouped properties that are actually aliases (QTBUG-94983)
     {
         QQmlComponent component(&engine, testFileUrl("alias.15a.qml"));
         VERIFY_ERRORS(0);
@@ -5332,8 +5332,8 @@ void tst_qqmllanguage::deferredProperties()
     QObject *outerObj = object->findChild<QObject *>(QStringLiteral("outerobj"));
     QVERIFY(!outerObj);
 
-    QObject *groupProperty = object->property("groupProperty").value<QObject *>();
-    QVERIFY(!groupProperty);
+    QObject *groupedProperty = object->property("groupedProperty").value<QObject *>();
+    QVERIFY(!groupedProperty);
 
     QQmlListProperty<QObject> listProperty = object->property("listProperty").value<QQmlListProperty<QObject>>();
     QCOMPARE(listProperty.count(&listProperty), 0);
@@ -5357,8 +5357,8 @@ void tst_qqmllanguage::deferredProperties()
     QVERIFY(outerObj);
     QCOMPARE(outerObj->property("wasCompleted"), QVariant(true));
 
-    groupProperty = object->property("groupProperty").value<QObject *>();
-    QCOMPARE(groupProperty, outerObj);
+    groupedProperty = object->property("groupedProperty").value<QObject *>();
+    QCOMPARE(groupedProperty, outerObj);
 
     listProperty = object->property("listProperty").value<QQmlListProperty<QObject>>();
     QCOMPARE(listProperty.count(&listProperty), 4);
@@ -5448,8 +5448,8 @@ void tst_qqmllanguage::executeDeferredPropertiesOnce()
     QObjectList outerObjsAtCreation = object->findChildren<QObject *>(QStringLiteral("outerobj"));
     QVERIFY(outerObjsAtCreation.isEmpty());
 
-    QObject *groupProperty = object->property("groupProperty").value<QObject *>();
-    QVERIFY(!groupProperty);
+    QObject *groupedProperty = object->property("groupedProperty").value<QObject *>();
+    QVERIFY(!groupedProperty);
 
     QQmlListProperty<QObject> listProperty = object->property("listProperty").value<QQmlListProperty<QObject>>();
     QCOMPARE(listProperty.count(&listProperty), 0);
@@ -5462,7 +5462,7 @@ void tst_qqmllanguage::executeDeferredPropertiesOnce()
     QCOMPARE(qmlData->deferredData.last()->bindings.size(), 3); // "outerobj", "outerlist1", "outerlist2"
 
     // first execution creates the outer object
-    testExecuteDeferredOnce(QQmlProperty(object.data(), "groupProperty"));
+    testExecuteDeferredOnce(QQmlProperty(object.data(), "groupedProperty"));
 
     QCOMPARE(qmlData->deferredData.size(), 2); // MyDeferredListProperty.qml + deferredListProperty.qml
     QCOMPARE(qmlData->deferredData.first()->bindings.size(), 2); // "innerlist1", "innerlist2"
@@ -5475,14 +5475,14 @@ void tst_qqmllanguage::executeDeferredPropertiesOnce()
     QCOMPARE(outerObjsAfterFirstExecute.size(), 1);
     QCOMPARE(outerObjsAfterFirstExecute.first()->property("wasCompleted"), QVariant(true));
 
-    groupProperty = object->property("groupProperty").value<QObject *>();
-    QCOMPARE(groupProperty, outerObjsAfterFirstExecute.first());
+    groupedProperty = object->property("groupedProperty").value<QObject *>();
+    QCOMPARE(groupedProperty, outerObjsAfterFirstExecute.first());
 
     listProperty = object->property("listProperty").value<QQmlListProperty<QObject>>();
     QCOMPARE(listProperty.count(&listProperty), 0);
 
     // re-execution does nothing (to avoid overriding the property)
-    testExecuteDeferredOnce(QQmlProperty(object.data(), "groupProperty"));
+    testExecuteDeferredOnce(QQmlProperty(object.data(), "groupedProperty"));
 
     QCOMPARE(qmlData->deferredData.size(), 2); // MyDeferredListProperty.qml + deferredListProperty.qml
     QCOMPARE(qmlData->deferredData.first()->bindings.size(), 2); // "innerlist1", "innerlist2"
@@ -5494,8 +5494,8 @@ void tst_qqmllanguage::executeDeferredPropertiesOnce()
     QObjectList outerObjsAfterSecondExecute = object->findChildren<QObject *>(QStringLiteral("outerobj")); // deferredListProperty.qml
     QCOMPARE(outerObjsAfterFirstExecute, outerObjsAfterSecondExecute);
 
-    groupProperty = object->property("groupProperty").value<QObject *>();
-    QCOMPARE(groupProperty, outerObjsAfterFirstExecute.first());
+    groupedProperty = object->property("groupedProperty").value<QObject *>();
+    QCOMPARE(groupedProperty, outerObjsAfterFirstExecute.first());
 
     listProperty = object->property("listProperty").value<QQmlListProperty<QObject>>();
     QCOMPARE(listProperty.count(&listProperty), 0);
@@ -6118,10 +6118,10 @@ void tst_qqmllanguage::thisInQmlScope()
     QCOMPARE(o->property("b"), QVariant(42));
 }
 
-void tst_qqmllanguage::valueTypeGroupPropertiesInBehavior()
+void tst_qqmllanguage::valueTypeGroupedPropertiesInBehavior()
 {
     QQmlEngine engine;
-    QQmlComponent component(&engine, testFileUrl("groupPropertyInPropertyValueSource.qml"));
+    QQmlComponent component(&engine, testFileUrl("groupedPropertyInPropertyValueSource.qml"));
     VERIFY_ERRORS(0);
     QScopedPointer<QObject> o(component.create());
     QVERIFY(!o.isNull());
@@ -7139,7 +7139,7 @@ void tst_qqmllanguage::extensionRevision()
     }
 }
 
-void tst_qqmllanguage::extendedGroupProperty()
+void tst_qqmllanguage::extendedGroupedProperty()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine);
@@ -7344,7 +7344,7 @@ void tst_qqmllanguage::hangOnWarning()
     QVERIFY(object != nullptr);
 }
 
-void tst_qqmllanguage::groupPropertyFromNonExposedBaseClass()
+void tst_qqmllanguage::groupedPropertyFromNonExposedBaseClass()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("derivedFromUnexposedBase.qml"));
@@ -7358,7 +7358,7 @@ void tst_qqmllanguage::groupPropertyFromNonExposedBaseClass()
     QCOMPARE(root->group->value, 42);
     QCOMPARE(root->groupGadget.value, 42);
 
-    c.loadUrl(testFileUrl("dynamicGroupPropertyRejected.qml"));
+    c.loadUrl(testFileUrl("dynamicGroupedPropertyRejected.qml"));
     QVERIFY(c.isError());
     QVERIFY2(c.errorString().contains("Unsupported grouped property access"), qPrintable(c.errorString()));
 }

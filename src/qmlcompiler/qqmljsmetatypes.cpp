@@ -108,7 +108,7 @@ QSharedPointer<const QQmlJSScope> QQmlJSMetaPropertyBinding::literalType(const Q
     case BindingType::Interceptor:
     case BindingType::ValueSource:
     case BindingType::AttachedProperty:
-    case BindingType::GroupProperty:
+    case BindingType::GroupedProperty:
         return {};
     }
     Q_UNREACHABLE_RETURN({});

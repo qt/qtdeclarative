@@ -7,6 +7,6 @@ MyContainer {
     }
 
     MyTypeObject {
-        selfGroupProperty.id: "name.with.dots"
+        selfGroupedProperty.id: "name.with.dots"
     }
 }

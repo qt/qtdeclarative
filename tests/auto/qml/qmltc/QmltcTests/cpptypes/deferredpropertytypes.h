@@ -33,7 +33,7 @@ public:
     QBindable<QQuickItem *> bindableDeferredProperty();
 };
 
-// group properties:
+// grouped properties:
 
 class TestTypeGroupedWithDeferred : public TestTypeGrouped
 {

@@ -382,7 +382,7 @@ QString Object::appendBinding(Binding *b, bool isListBinding)
     const bool bindingToDefaultProperty = (b->propertyNameIndex == quint32(0));
     if (!isListBinding
             && !bindingToDefaultProperty
-            && b->type() != QV4::CompiledData::Binding::Type_GroupProperty
+            && b->type() != QV4::CompiledData::Binding::Type_GroupedProperty
             && b->type() != QV4::CompiledData::Binding::Type_AttachedProperty
             && !b->hasFlag(QV4::CompiledData::Binding::IsOnAssignment)) {
         Binding *existing = findBinding(b->propertyNameIndex);
@@ -1472,9 +1472,9 @@ void IRBuilder::appendBinding(const QQmlJS::SourceLocation &qualifiedNameLocatio
     if (_propertyDeclaration && _propertyDeclaration->isReadOnly())
         binding->setFlag(Binding::InitializerForReadOnlyDeclaration);
 
-    // No type name on the initializer means it must be a group property
+    // No type name on the initializer means it must be a grouped property
     if (_objects.at(objectIndex)->inheritedTypeNameIndex == emptyStringIndex)
-        binding->setType(Binding::Type_GroupProperty);
+        binding->setType(Binding::Type_GroupedProperty);
     else
         binding->setType(Binding::Type_Object);
 
@@ -1646,7 +1646,7 @@ bool IRBuilder::resolveQualifiedId(QQmlJS::AST::UiQualifiedId **nameToResolve, O
             if (isAttachedProperty) {
                 if (!binding->isAttachedProperty())
                     binding = nullptr;
-            } else if (!binding->isGroupProperty()) {
+            } else if (!binding->isGroupedProperty()) {
                 binding = nullptr;
             }
         }
@@ -1666,7 +1666,7 @@ bool IRBuilder::resolveQualifiedId(QQmlJS::AST::UiQualifiedId **nameToResolve, O
             if (isAttachedProperty)
                 binding->setType(QV4::CompiledData::Binding::Type_AttachedProperty);
             else
-                binding->setType(QV4::CompiledData::Binding::Type_GroupProperty);
+                binding->setType(QV4::CompiledData::Binding::Type_GroupedProperty);
 
             int objIndex = 0;
             if (!defineQMLObject(&objIndex, nullptr, binding->location, nullptr, nullptr))
@@ -1680,7 +1680,7 @@ bool IRBuilder::resolveQualifiedId(QQmlJS::AST::UiQualifiedId **nameToResolve, O
             }
             *object = _objects.at(objIndex);
         } else {
-            Q_ASSERT(binding->isAttachedProperty() || binding->isGroupProperty());
+            Q_ASSERT(binding->isAttachedProperty() || binding->isGroupedProperty());
             *object = _objects.at(binding->value.objectIndex);
         }
 
@@ -1964,7 +1964,7 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
         bindingPtr = writeBindings(bindingPtr, o, &QV4::CompiledData::Binding::isValueBindingNoAlias);
         bindingPtr = writeBindings(bindingPtr, o, &QV4::CompiledData::Binding::isSignalHandler);
         bindingPtr = writeBindings(bindingPtr, o, &QV4::CompiledData::Binding::isAttachedProperty);
-        bindingPtr = writeBindings(bindingPtr, o, &QV4::CompiledData::Binding::isGroupProperty);
+        bindingPtr = writeBindings(bindingPtr, o, &QV4::CompiledData::Binding::isGroupedProperty);
         bindingPtr = writeBindings(bindingPtr, o, &QV4::CompiledData::Binding::isValueBindingToAlias);
         Q_ASSERT((bindingPtr - objectToWrite->offsetToBindings - objectPtr) / sizeof(QV4::CompiledData::Binding) == unsigned(o->bindingCount()));
 

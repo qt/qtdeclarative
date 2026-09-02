@@ -355,7 +355,7 @@ public:
     PoolList<RequiredPropertyExtraData>::Iterator requiredPropertyExtraDataEnd() const {return requiredPropertyExtraDatas->end(); }
 
     // If set, then declarations for this object (and init bindings for these) should go into the
-    // specified object. Used for declarations inside group properties.
+    // specified object. Used for declarations inside grouped properties.
     Object *declarationsOverride;
 
     void init(QQmlJS::MemoryPool *pool, int typeNameIndex, int idIndex, const QV4::CompiledData::Location &location);

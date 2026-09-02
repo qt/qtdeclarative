@@ -23,7 +23,7 @@ QT_BEGIN_NAMESPACE
  * QV4::Function. In particular you don't need a compilation unit or byte code
  * to set this up.
  *
- * \note The target cannot be a group property, but the source can.
+ * \note The target cannot be a grouped property, but the source can.
  */
 
 QQmlAnyBinding QQmlPropertyToPropertyBinding::create(

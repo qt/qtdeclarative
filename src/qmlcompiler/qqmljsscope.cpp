@@ -779,7 +779,7 @@ void QQmlJSScope::resolveGroup(
         const QQmlJS::ContextualTypes &contextualTypes, QSet<QString> *usedTypes)
 {
     Q_ASSERT(baseType);
-    // Generalized group properties are always composite,
+    // Generalized grouped properties are always composite,
     // which means we expect contextualTypes to be QML names.
     Q_ASSERT(self->isComposite());
 

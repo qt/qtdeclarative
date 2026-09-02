@@ -40,7 +40,7 @@ Item {
 
     Rectangle {
         // Anchored to 20px off the top center corner of the parent.
-        // Notice the different group property syntax for 'anchors' compared to
+        // Notice the different grouped property syntax for 'anchors' compared to
         // the previous Rectangle. Both are valid.
         anchors { horizontalCenter: parent.horizontalCenter; top: parent.top; topMargin: 20 }
 

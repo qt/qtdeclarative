@@ -333,7 +333,7 @@ class MyTypeObject : public QObject
     Q_PROPERTY(MyGroupedObject *grouped READ grouped CONSTANT)
     Q_PROPERTY(MyGroupedObject *nullGrouped READ nullGrouped CONSTANT)
 
-    Q_PROPERTY(MyTypeObject *selfGroupProperty READ selfGroupProperty)
+    Q_PROPERTY(MyTypeObject *selfGroupedProperty READ selfGroupedProperty)
 
 public:
     MyTypeObject()
@@ -678,7 +678,7 @@ public:
 
     MyGroupedObject *nullGrouped() { return 0; }
 
-    MyTypeObject *selfGroupProperty() { return this; }
+    MyTypeObject *selfGroupedProperty() { return this; }
 
     void doAction() { emit action(); }
 signals:
@@ -1559,9 +1559,9 @@ private:
 class DeferredProperties : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QObject *groupProperty MEMBER m_group)
+    Q_PROPERTY(QObject *groupedProperty MEMBER m_group)
     Q_PROPERTY(QQmlListProperty<QObject> listProperty READ listProperty)
-    Q_CLASSINFO("DeferredPropertyNames", "groupProperty,listProperty")
+    Q_CLASSINFO("DeferredPropertyNames", "groupedProperty,listProperty")
     Q_CLASSINFO("DefaultProperty", "listProperty")
 public:
     QQmlListProperty<QObject> listProperty() { return QQmlListProperty<QObject>(this, &m_list); }

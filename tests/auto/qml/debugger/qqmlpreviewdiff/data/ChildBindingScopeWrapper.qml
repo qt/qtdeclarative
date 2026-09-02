@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 // Derived type using grouped property syntax on the widget's timer.
-// This creates a compiled GroupProperty sub-object for "widget.button",
+// This creates a compiled GroupedProperty sub-object for "widget.button",
 // causing stashExternalState to visit the timer with unit=this CU.
 
 import QtQml

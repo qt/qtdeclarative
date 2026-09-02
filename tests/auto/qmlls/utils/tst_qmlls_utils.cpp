@@ -1205,9 +1205,9 @@ void tst_qmlls_utils::findUsages_data()
         }
     }
     {
-        const auto testFileName = testFile("findUsages/groupPropertyUsage/groupPropertyUsage.qml");
+        const auto testFileName = testFile("findUsages/groupedPropertyUsage/groupedPropertyUsage.qml");
         const auto testFileContent = readFileContent(testFileName);
-        const auto otherFileName = testFile("findUsages/groupPropertyUsage/fontFamilyUsage.qml");
+        const auto otherFileName = testFile("findUsages/groupedPropertyUsage/fontFamilyUsage.qml");
         const auto otherFileContent = readFileContent(otherFileName);
         {
             QList<QQmlLSUtils::Location> expectedUsages;
@@ -1221,12 +1221,12 @@ void tst_qmlls_utils::findUsages_data()
                                                           strlen("family"));
             expectedUsages << QQmlLSUtils::Location::from(testFileName, testFileContent, 33, 48,
                                                           strlen("family"));
-            const auto groupPropertyUsages1 = makeUsages(testFileName, expectedUsages);
-            QTest::addRow("groupPropertyUsages1") << 14 << 17 << groupPropertyUsages1;
-            const auto groupPropertyUsages1FromOtherFile =
+            const auto groupedPropertyUsages1 = makeUsages(testFileName, expectedUsages);
+            QTest::addRow("groupedPropertyUsages1") << 14 << 17 << groupedPropertyUsages1;
+            const auto groupedPropertyUsages1FromOtherFile =
                     makeUsages(otherFileName, expectedUsages);
-            QTest::addRow("groupPropertyUsages1FromOtherFile")
-                    << 5 << 37 << groupPropertyUsages1FromOtherFile;
+            QTest::addRow("groupedPropertyUsages1FromOtherFile")
+                    << 5 << 37 << groupedPropertyUsages1FromOtherFile;
         }
         {
             QList<QQmlLSUtils::Location> expectedUsages;
@@ -1242,8 +1242,8 @@ void tst_qmlls_utils::findUsages_data()
                                                           strlen("font"));
             expectedUsages << QQmlLSUtils::Location::from(testFileName, testFileContent, 33, 43,
                                                           strlen("font"));
-            const auto groupPropertyUsages2 = makeUsages(testFileName, expectedUsages);
-            QTest::addRow("groupPropertyUsages2") << 23 << 5 << groupPropertyUsages2;
+            const auto groupedPropertyUsages2 = makeUsages(testFileName, expectedUsages);
+            QTest::addRow("groupedPropertyUsages2") << 23 << 5 << groupedPropertyUsages2;
         }
     }
     {
@@ -1312,7 +1312,7 @@ void tst_qmlls_utils::findUsages_data()
                                                       strlen("\"patronChanged\""));
         const auto bindings = makeUsages(testFileName, expectedUsages);
         QTest::addRow("propertyInBindingsFromDecl") << 11 << 23 << bindings;
-        QTest::addRow("generalizedGroupPropertyBindings") << 27 << 19 << bindings;
+        QTest::addRow("generalizedGroupedPropertyBindings") << 27 << 19 << bindings;
     }
     {
         const auto testFileName = testFile("findUsages/enums/Enums.qml");

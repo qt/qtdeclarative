@@ -184,7 +184,7 @@ void QQmlComponentAndAliasResolver<QV4::CompiledData::CompilationUnit>::setObjec
 }
 
 template<>
-void QQmlComponentAndAliasResolver<QV4::CompiledData::CompilationUnit>::resolveGeneralizedGroupProperty(
+void QQmlComponentAndAliasResolver<QV4::CompiledData::CompilationUnit>::resolveGeneralizedGroupedProperty(
         const CompiledObject &component, CompiledBinding *binding)
 {
     // We cannot make it fail here. It might be a custom-parsed property
@@ -367,11 +367,11 @@ QQmlError QQmlTypeData::createTypeAndPropertyCaches(
     m_compiledData->inlineComponentData = m_inlineComponentData;
     m_compiledData->qmlType = m_qmlType;
 
-    QQmlPendingGroupPropertyBindings pendingGroupPropertyBindings;
+    QQmlPendingGroupedPropertyBindings pendingGroupedPropertyBindings;
 
     {
         QQmlPropertyCacheCreator<QV4::CompiledData::CompilationUnit> propertyCacheCreator(
-                &m_compiledData->propertyCaches, &pendingGroupPropertyBindings, m_typeLoader,
+                &m_compiledData->propertyCaches, &pendingGroupedPropertyBindings, m_typeLoader,
                 m_compiledData.data(), m_importCache.data(), typeClassName());
 
         QQmlError error = propertyCacheCreator.verifyNoICCycle();
@@ -390,15 +390,15 @@ QQmlError QQmlTypeData::createTypeAndPropertyCaches(
                         error.isValid()) {
                     return error;
                 }
-                pendingGroupPropertyBindings.resolveMissingPropertyCaches(
+                pendingGroupedPropertyBindings.resolveMissingPropertyCaches(
                         &m_compiledData->propertyCaches);
-                pendingGroupPropertyBindings.clear(); // anything that can be processed is now processed
+                pendingGroupedPropertyBindings.clear(); // anything that can be processed is now processed
             }
 
         } while (result.canResume);
     }
 
-    pendingGroupPropertyBindings.resolveMissingPropertyCaches(&m_compiledData->propertyCaches);
+    pendingGroupedPropertyBindings.resolveMissingPropertyCaches(&m_compiledData->propertyCaches);
     return QQmlError();
 }
 

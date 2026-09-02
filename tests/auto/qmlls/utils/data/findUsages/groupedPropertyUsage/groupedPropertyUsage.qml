@@ -26,10 +26,10 @@ Text {
     }
 
     Item {
-        property var family // should not be in groupPropertyUsages1
-        property int font // should not be in groupPropertyUsages2
+        property var family // should not be in groupedPropertyUsages1
+        property int font // should not be in groupedPropertyUsages2
 
-        property var realFont: textRoot.font // should be in groupPropertyUsages2
-        property var realFamily: textRoot.font.family // should be in groupPropertyUsages1
+        property var realFont: textRoot.font // should be in groupedPropertyUsages2
+        property var realFamily: textRoot.font.family // should be in groupedPropertyUsages1
     }
 }
