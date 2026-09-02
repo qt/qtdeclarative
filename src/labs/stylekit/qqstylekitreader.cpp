@@ -473,50 +473,58 @@ void QQStyleKitReader::maybeTrackDelegates()
         });
 }
 
-void QQStyleKitReader::updateControl()
+void QQStyleKitReader::updateControl(bool applyStateChange)
 {
     const QQStyleKitStyle *currentStyle = style();
     if (!m_completed || !currentStyle || !currentStyle->loaded())
         return;
 
-    /* Alternate between two states to trigger a state change. The state group
-     * will, upon changing state, take care of reading the updated property values,
-     * compare them against the current ones in the local storage, and emit changes
-     * (possibly using a transition) if changed. Since the new state might change the
-     * transition, we need to update it first before we do the state change, so that
-     * it takes effect.
-     * If we have skipped tracking some delegates because they are hidden, we need to
-     * check again if this is still the case for the current state. Otherwise, we now
-     * need to track them. Untracked delegates are not backed by PropertyChanges objects,
-     * and hence, will not update when we do a state swap below.
-     * Note that the first time this function is called after start-up, none of the
-     * delegates are yet tracked, and therefore will be created now. */
+    if (applyStateChange) {
+        /* Alternate between two states to trigger a state change. The state group
+        * will, upon changing state, take care of reading the updated property values,
+        * compare them against the current ones in the local storage, and emit changes
+        * (possibly using a transition) if changed. Since the new state might change the
+        * transition, we need to update it first before we do the state change, so that
+        * it takes effect.
+        * If we have skipped tracking some delegates because they are hidden, we need to
+        * check again if this is still the case for the current state. Otherwise, we now
+        * need to track them. Untracked delegates are not backed by PropertyChanges objects,
+        * and hence, will not update when we do a state swap below.
+        * Note that the first time this function is called after start-up, none of the
+        * delegates are yet tracked, and therefore will be created now. */
 
-    maybeTrackDelegates();
+        maybeTrackDelegates();
 
-    auto transitionProp = stateGroup()->transitionsProperty();
-    const int transitionCountInStateGroup = transitionProp.count(&transitionProp);
-    const bool enabled = m_transitionsEnabled && QQStyleKit::qmlAttachedProperties()->transitionsEnabled();
-    QQuickTransition *transitionInStyle = enabled ? transition() : nullptr;
-    QQuickTransition *transitionInStateGroup =
-        transitionCountInStateGroup > 0 ? transitionProp.at(&transitionProp, 0) : nullptr;
-    if (transitionInStyle != transitionInStateGroup) {
-        transitionProp.clear(&transitionProp);
-        if (transitionInStyle)
-            transitionProp.append(&transitionProp, transitionInStyle);
-    }
+        auto transitionProp = stateGroup()->transitionsProperty();
+        const int transitionCountInStateGroup = transitionProp.count(&transitionProp);
+        const bool enabled = m_transitionsEnabled && QQStyleKit::qmlAttachedProperties()->transitionsEnabled();
+        QQuickTransition *transitionInStyle = enabled ? transition() : nullptr;
+        QQuickTransition *transitionInStateGroup =
+            transitionCountInStateGroup > 0 ? transitionProp.at(&transitionProp, 0) : nullptr;
+        if (transitionInStyle != transitionInStateGroup) {
+            transitionProp.clear(&transitionProp);
+            if (transitionInStyle)
+                transitionProp.append(&transitionProp, transitionInStyle);
+        }
 
-    switch (m_alternateState) {
-    case AlternateState::Alternate1:
-        m_alternateState = AlternateState::Alternate2;
-        stateGroup()->setState(kAlternate2);
-        break;
-    case AlternateState::Alternate2:
-        m_alternateState = AlternateState::Alternate1;
-        stateGroup()->setState(kAlternate1);
-        break;
-    default:
-        Q_UNREACHABLE();
+        switch (m_alternateState) {
+        case AlternateState::Alternate1:
+            m_alternateState = AlternateState::Alternate2;
+            stateGroup()->setState(kAlternate2);
+            break;
+        case AlternateState::Alternate2:
+            m_alternateState = AlternateState::Alternate1;
+            stateGroup()->setState(kAlternate1);
+            break;
+        default:
+            Q_UNREACHABLE();
+        }
+    } else {
+        // Since no state change occurs, the property values in
+        // the local storage no longer reflect this StyleReader's
+        // current state. Clear it to avoid returning stale values
+        // from subsequent property reads.
+        clearLocalStorage();
     }
 
     auto textOverrideSig = textFontOverridesSignature(global()->text());
@@ -757,7 +765,8 @@ void QQStyleKitReader::setHighlighted(bool highlighted)
     updateControl();
 }
 
-void QQStyleKitReader::setControlTypeAndState(QQStyleKitExtendableControlType controlType, QQSK::State flags)
+void QQStyleKitReader::setControlTypeAndState(QQStyleKitExtendableControlType controlType, QQSK::State flags,
+                                              bool applyStateChange)
 {
     // Apply type and states in one shot to avoid calling
     // populateLocalStorage() + updateControl() once per individual setter
@@ -767,27 +776,13 @@ void QQStyleKitReader::setControlTypeAndState(QQStyleKitExtendableControlType co
     if (!typeChanged && !stateChanged)
         return;
 
-    populateLocalStorage();
+    if (applyStateChange)
+        populateLocalStorage();
 
     m_type = controlType;
     m_state = flags;
 
-    if (typeChanged)
-        emit controlTypeChanged();
-
-    auto emitChanged = [this, &stateChanged](QQSK::StateFlag flag, void (QQStyleKitReader::*signal)()) {
-        if (stateChanged.testFlag(flag))
-            (this->*signal)();
-    };
-    emitChanged(QQSK::StateFlag::Hovered, &QQStyleKitReader::hoveredChanged);
-    emitChanged(QQSK::StateFlag::Disabled, &QQStyleKitReader::enabledChanged);
-    emitChanged(QQSK::StateFlag::Focused, &QQStyleKitReader::focusedChanged);
-    emitChanged(QQSK::StateFlag::Checked, &QQStyleKitReader::checkedChanged);
-    emitChanged(QQSK::StateFlag::Pressed, &QQStyleKitReader::pressedChanged);
-    emitChanged(QQSK::StateFlag::Vertical, &QQStyleKitReader::verticalChanged);
-    emitChanged(QQSK::StateFlag::Highlighted, &QQStyleKitReader::highlightedChanged);
-
-    updateControl();
+    updateControl(applyStateChange);
 }
 
 QObject *QQStyleKitReader::target() const

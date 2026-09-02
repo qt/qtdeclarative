@@ -763,7 +763,7 @@ void QStyleKitStylePrivate::refreshStyleFont(QWidget *widget)
     opt.initFrom(targetWidget);
     const QQSK::State currentState = resolvedStateFor(controlType, opt.state, targetWidget);
 
-    shared->setControlTypeAndState(controlType, currentState);
+    shared->setControlTypeAndState(controlType, currentState, false);
     setStyleFont(widget, shared->font());
 }
 
@@ -825,12 +825,12 @@ void QStyleKitStylePrivate::refreshStylePalette(QWidget *widget)
     QPalette stylePalette;
     if (isWindow) {
         // Windows draw their own background using the QPalette::Window role
-        shared->setControlTypeAndState(controlType, currentState);
+        shared->setControlTypeAndState(controlType, currentState, false);
         if (const auto *bg = shared->global()->background();
                 bg && bg->isDefined(QQSK::Property::Color)) {
             stylePalette.setColor(QPalette::Window, bg->color());
         }
-        shared->setControlTypeAndState(controlType, QQSK::StateFlag::Disabled);
+        shared->setControlTypeAndState(controlType, QQSK::StateFlag::Disabled, false);
         if (const auto *dbg = shared->global()->background();
                 dbg && dbg->isDefined(QQSK::Property::Color)) {
             stylePalette.setColor(QPalette::Disabled, QPalette::Window, dbg->color());
@@ -838,13 +838,13 @@ void QStyleKitStylePrivate::refreshStylePalette(QWidget *widget)
     } else {
         // The remaining text-based widgets use the QPalette::Text/WindowText roles for their
         // foreground color
-        shared->setControlTypeAndState(controlType, currentState);
+        shared->setControlTypeAndState(controlType, currentState, false);
         if (const auto *text = shared->global()->text();
                 text && text->isDefined(QQSK::Property::Color)) {
             stylePalette.setColor(QPalette::Text, text->color());
             stylePalette.setColor(QPalette::WindowText, text->color());
         }
-        shared->setControlTypeAndState(controlType, QQSK::StateFlag::Disabled);
+        shared->setControlTypeAndState(controlType, QQSK::StateFlag::Disabled, false);
         if (const auto *dt = shared->global()->text();
                 dt && dt->isDefined(QQSK::Property::Color)) {
             stylePalette.setColor(QPalette::Disabled, QPalette::Text, dt->color());
@@ -1098,7 +1098,7 @@ QStyleKitStylePrivate::metricsFor(QQStyleKitReader::ControlType type, QQSK::Stat
 
     auto *reader = ensureSharedReader();
     Q_ASSERT(reader);
-    reader->setControlTypeAndState(type, state);
+    reader->setControlTypeAndState(type, state, false);
     return *metricsCache.insert({ type, state }, metricsForReader(reader));
 }
 
@@ -1283,7 +1283,7 @@ QStyleKitStylePrivate::resolveLayout(QQStyleKitReader::ControlType type, QStyle:
     // metricsFor() sets the sharedReader to (type, resolvedState) on cache miss.
     // On hit it didn't, so make sure staticProps / staticFont reflect the state
     // and type of the caller
-    reader->setControlTypeAndState(type, resolvedState);
+    reader->setControlTypeAndState(type, resolvedState, false);
     out.staticProps = reader->global();
     out.staticFont = reader->font();
     return out;
