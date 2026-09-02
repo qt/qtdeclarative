@@ -299,6 +299,7 @@ bool QQmlJSImportVisitor::resolveAliasProperty(const QQmlJSScope::Ptr &object,
 
             if (!checkTypeResolved(type)) {
                 hasWarnedAlready = true;
+                type = { };
                 break;
             }
 
@@ -1105,7 +1106,7 @@ void QQmlJSImportVisitor::populatePropertyAliases()
             m_propertyAliases[target].append(alias);
             property = target.scope->property(target.name);
             target = Property(property.aliasTargetScope(), property.aliasTargetName());
-        } while (property.isAlias());
+        } while (property.isAlias() && target.scope);
     }
 }
 

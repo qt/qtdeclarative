@@ -1786,6 +1786,17 @@ void TestQmllint::dirtyQmlSnippet_data()
 
     const CallQmllintOptions defaultOptions;
 
+    QTest::newRow("aliasChainOnMissingTypeCrash")
+            << u"id: root\n"_s
+               u"property alias a: inner.checked\n"_s
+               u"property alias b: root.a\n"_s
+               u"NoSuchType { id: inner }\n"_s
+            << ResultBuilder()
+               .addExpected("NoSuchType was not found")
+               .addUnexpected("Cannot resolve alias \"a\"")
+               .addUnexpected("Cannot resolve alias \"b\"")
+               .build()
+            << defaultOptions;
     QTest::newRow("assignLhsLocation")
             << u"id: root; property int i; Item { Component.onCompleted: i = root.i + 5 }"_s
             << ResultBuilder()
