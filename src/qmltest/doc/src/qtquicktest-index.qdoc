@@ -34,6 +34,9 @@
     to be executed. See the documentation for the \l [QML] TestCase and
     \l [QML] SignalSpy types for more information on writing test cases.
 
+    Many of the best practices described in \l{Qt Test} also apply to Qt Quick
+    Test. These are covered in \l {Qt Test Best Practices}.
+
     \note There is no binary compatibility guarantee for the Qt Quick Test
           module. This means that an application that uses Qt Quick Test is
           only guaranteed to work with the Qt version it was developed against.
