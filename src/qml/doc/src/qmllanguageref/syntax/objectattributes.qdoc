@@ -407,27 +407,45 @@ In some cases properties contain a logical group of sub-property attributes.
 These sub-property attributes can be assigned to using either the dot notation
 or group notation.
 
-For example, the \l Text type has a \l{Text::font.family}{font} group property. Below,
-the first \l Text object initializes its \c font values using dot notation,
-while the second uses group notation:
+For example, the \l Text type has a \c font property.
+Below, the first \l Text object initializes its \c font values using
+dot notation, while the second uses group notation:
 
 \code
 Text {
     //dot notation
     font.pixelSize: 12
-    font.b: true
+    font.bold: true
 }
 
 Text {
     //group notation
-    font { pixelSize: 12; b: true }
+    font { pixelSize: 12; bold: true }
 }
 \endcode
 
-Grouped property types are types which have subproperties. If a grouped property
-type is an object type (as opposed to a value type), the property that holds it
-must be read-only. This is to prevent you from replacing the object the
-subproperties belong to.
+Grouped property syntax is available for any property whose type has
+sub-properties of its own. It is a notation, not a separate kind of property:
+whether the property holds a \l{QML Value Types}{value type} like \c font or
+an \l{QML Object Types}{object type} makes no difference to the syntax.
+
+The type of the property does affect what the engine has to do, though:
+
+\list
+\li If the property holds a value type, the engine reads the value, modifies
+    it, and writes it back. The property therefore has to be writable.
+\li If the property holds an object type, the assignments are written to the
+    object that the property currently holds. That object must not be null when
+    the assignments are applied. The property itself may be read-only or
+    writable. Making it read-only is a way to keep QML code from replacing the
+    object the sub-properties belong to, thus avoiding confusion over what
+    object the grouped properties apply to. It is generally a good idea.
+\endlist
+
+Sub-property names are resolved against the property's declared type, not
+against the type of the object it holds at run time. You also cannot use both
+forms for the same property in the same object definition: either assign an
+object to the property, or assign to its sub-properties.
 
 \section3 Property Aliases
 
