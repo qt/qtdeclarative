@@ -4819,7 +4819,7 @@ void QMacStyle::drawComplexControl(ComplexControl cc, const QStyleOptionComplex 
             // Drawing it at the button’s full rect causes the top to be clipped by the bezel,
             // though the clear icon remains fine. To avoid this, on 26.0+ we render the search
             // icon at a fixed, smaller size to prevent upscaling and eliminate clipping.
-            #if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(260000)
+            #if QT_APPLE_SDK_EQUAL_OR_ABOVE(MACOS(26))
                 if (__builtin_available(macOS 26, *)) {
                     NSButtonCell *btn = cell.searchButtonCell;
                     NSImageSymbolConfiguration *imgCfg =
@@ -4834,7 +4834,7 @@ void QMacStyle::drawComplexControl(ComplexControl cc, const QStyleOptionComplex 
 
             QRectF frameRect = cw.adjustedControlFrame(sf->rect);
 
-            #if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(260000)
+            #if QT_APPLE_SDK_EQUAL_OR_ABOVE(MACOS(26))
             if (__builtin_available(macOS 26, *)) {
                 const auto oneDevicePx = 1.0 / p->device()->devicePixelRatioF();
                 frameRect = frameRect.adjusted(+oneDevicePx, -oneDevicePx, -oneDevicePx, +oneDevicePx);
