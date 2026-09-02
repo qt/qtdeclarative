@@ -770,7 +770,17 @@ void QQuickMouseArea::mouseReleaseEvent(QMouseEvent *event)
                 d->drag->setActive(false);
 #endif
             // If we don't accept hover, we need to reset containsMouse.
-            if (!hoverEnabled())
+            bool resetHovered = !hoverEnabled();
+            if (!resetHovered && event->pointerType() == QPointingDevice::PointerType::Finger) {
+                // mousePressEvent() above set containsMouse directly, bypassing the
+                // delivery agent's hoverItems bookkeeping. So if no frame-synchronous
+                // hover pass happened to run while the finger was down, there is nothing
+                // for clearFingerHover() to clear when it is lifted.
+                // Reset containsMouse now, unless it's from a hovering device.
+                auto *da = d->deliveryAgentPrivate();
+                resetHovered = !da || !da->isHoveredByHoveringDevice(this);
+            }
+            if (resetHovered)
                 setHovered(false);
             QQuickWindow *w = window();
             if (w && w->mouseGrabberItem() == this)

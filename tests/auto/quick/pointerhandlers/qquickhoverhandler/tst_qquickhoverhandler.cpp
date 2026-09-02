@@ -54,6 +54,7 @@ private slots:
     void changeCursor();
     void touchDrag();
     void twoHandlersTwoTouches();
+    void penTouchKeepsHoverAfterRelease();
     void asProperty();
     void effectivelyClips_data();
     void effectivelyClips();
@@ -845,6 +846,52 @@ void tst_HoverHandler::twoHandlersTwoTouches()
     QQuickTouchUtils::flush(&window);
     QCOMPARE(left->isHovered(), false);
     QCOMPARE(right->isHovered(), false);
+}
+
+void tst_HoverHandler::penTouchKeepsHoverAfterRelease() // QTBUG-62912, QTBUG-111400
+{
+    // Clearing hover when contact ends is specific to fingertips: a fingertip has no
+    // proximity, so lifting it means it stops existing, whereas a pen goes on hovering
+    // above the digitizer after it stops pressing on it. QQuickHoverHandler has always
+    // made that distinction by checking PointerType::Finger, and now
+    // QQuickDeliveryAgentPrivate::handleTouchEvent() makes the same distinction on
+    // behalf of every item. This test pins the pen half of that rule; note the finger
+    // half here is still enforced by HoverHandler's own check rather than by
+    // clearFingerHover(), since the entry was created by the pen.
+    //
+    // QTest::createTouchDevice() hardcodes PointerType::Finger, so register a pen
+    // digitizer by hand.
+    std::unique_ptr<QPointingDevice> pen(new QPointingDevice(
+            QStringLiteral("test pen digitizer"), 0x50656e, QInputDevice::DeviceType::TouchScreen,
+            QPointingDevice::PointerType::Pen, QInputDevice::Capability::Position, 1, 0));
+    QWindowSystemInterface::registerInputDevice(pen.get());
+
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("hoverHandler.qml")));
+    const QQuickItem *root = window.rootObject();
+    QQuickHoverHandler *handler = root->findChild<QQuickHoverHandler *>();
+    QVERIFY(handler);
+
+    QQuickWindowPrivate::get(&window)->deliveryAgentPrivate()->frameSynchronousHoverInterval = 0;
+
+    const QPoint in(root->width() / 2, root->height() / 2);
+
+    QTest::touchEvent(&window, pen.get()).press(0, in, &window);
+    QQuickTouchUtils::flush(&window);
+    QTRY_COMPARE(handler->isHovered(), true);
+
+    // The pen lifts off, but is still in proximity, so hover survives.
+    QTest::touchEvent(&window, pen.get()).release(0, in, &window);
+    QQuickTouchUtils::flush(&window);
+    QCOMPARE(handler->isHovered(), true);
+
+    // Contrast with a fingertip at the same position: that does clear hover.
+    QTest::touchEvent(&window, touchscreen.get()).press(1, in, &window);
+    QQuickTouchUtils::flush(&window);
+    QCOMPARE(handler->isHovered(), true);
+    QTest::touchEvent(&window, touchscreen.get()).release(1, in, &window);
+    QQuickTouchUtils::flush(&window);
+    QTRY_COMPARE(handler->isHovered(), false);
 }
 
 void tst_HoverHandler::asProperty()

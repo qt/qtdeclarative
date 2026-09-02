@@ -20,6 +20,7 @@
 #include <QtQuick/private/qquickwindow_p.h>
 
 #include <QtCore/qpointer.h>
+#include <QtCore/qvarlengtharray.h>
 
 #include <algorithm>
 #include <memory>
@@ -71,6 +72,24 @@ static QQuickDeliveryAgentPrivate::HoverItems::const_iterator findHoverStateByIt
                         [item](const QQuickDeliveryAgentPrivate::HoverItemState &hoverState) {
                             return hoverState.item == item;
                         });
+}
+
+/*! \internal
+    Marks \a state as hovered, by a device that is a fingertip if \a fromTouch is \c true.
+
+    fromTouch is refreshed only if the entry is not hovered right now: an entry whose
+    hoverId is 0 is a leftover from a hover that has already ended (it stays in
+    hoverItems until deliverHoverEvent() prunes it), so hovering it again belongs to
+    whichever device is establishing hover now. As long as the entry is hovered it keeps
+    the flag it got when hover began, so that a finger tapping an item that a cursor
+    already hovers cannot turn the cursor's hover into touch hover - which
+    clearTouchHover() would then take away when the contact ends.
+*/
+static void markHovered(QQuickDeliveryAgentPrivate::HoverItemState &state, uint hoverId, bool fromTouch)
+{
+    if (state.hoverId == 0)
+        state.fromTouch = fromTouch;
+    state.hoverId = hoverId;
 }
 
 void QQuickDeliveryAgentPrivate::touchToMouseEvent(QEvent::Type type, const QEventPoint &p, const QTouchEvent *touchEvent, QMutableSinglePointEvent *mouseEvent)
@@ -721,6 +740,74 @@ bool QQuickDeliveryAgentPrivate::clearHover(ulong timestamp)
     return true;
 }
 
+/*! \internal
+    Returns \c true if \a item is currently hovered by a device that hovers (mouse,
+    or stylus in proximity) rather than only because a fingertip is touching it.
+
+    An item that sets its own hover state outside deliverHoverEvent()'s bookkeeping
+    (see QQuickMouseArea::mousePressEvent()) needs this to tell whether lifting a
+    finger should end its hover, or whether a cursor is still resting on it.
+*/
+bool QQuickDeliveryAgentPrivate::isHoveredByHoveringDevice(const QQuickItem *item) const
+{
+    const auto it = findHoverStateByItem(hoverItems, item);
+    if (it != hoverItems.cend() && it->hoverId != 0 && !it->fromTouch)
+        return true;
+
+    // deliverHoverEvent() erases an item's entry as soon as the finger moves off,
+    // so a cursor-established entry can be replaced by a touch-established hover
+    // while the cursor has not moved at all. Fall back to where the cursor is.
+    // On a platform with no cursor, lastCursorPosition is never written; this returns false.
+    if (!item->window())
+        return false;
+    const QPointF cursorScenePos =
+            item->window()->mapFromGlobal(QPointF(QGuiApplicationPrivate::lastCursorPosition));
+    return item->contains(item->mapFromScene(cursorScenePos));
+}
+
+/*! \internal
+    Clears hover on those items whose hover was established by a fingertip touching
+    them, and leaves alone any item that a hovering device - a mouse cursor, or a
+    stylus in proximity - is hovering.
+
+    Called when the last finger is lifted: a fingertip has no hover state that
+    outlives contact, so its hover has to end with the contact (QTBUG-62912). But a
+    cursor resting on an item goes on hovering it regardless of what the fingers do,
+    which is why this is not simply clearHover().
+*/
+void QQuickDeliveryAgentPrivate::clearTouchHover(ulong timestamp)
+{
+    if (hoverItems.isEmpty())
+        return;
+
+    QQuickWindow *window = rootItem->window();
+    if (!window)
+        return;
+
+    const auto globalPos = QGuiApplicationPrivate::lastCursorPosition;
+    const QPointF lastPos = window->mapFromGlobal(globalPos);
+    const auto modifiers = QGuiApplication::keyboardModifiers();
+
+    // Take a copy of the items to clear before delivering anything: delivery can both
+    // reset the stored ids and remove entries from hoverItems (see clearHover()).
+    QVarLengthArray<QPointer<QQuickItem>, 4> toClear;
+    for (auto it = hoverItems.cbegin(); it != hoverItems.cend(); ++it) {
+        if (it->item && it->fromTouch && !isHoveredByHoveringDevice(it->item))
+            toClear.append(it->item);
+    }
+
+    for (const auto &item : toClear) {
+        if (!item)
+            continue;
+        // The position is only carried in the QHoverEvent for the benefit of anything
+        // that reads it in hoverLeaveEvent(); HoverChange::Clear un-hovers regardless of
+        // whether the position is inside the item, which matters because on a
+        // touch-only platform lastCursorPosition was never set by any real cursor.
+        deliverHoverEventToItem(item, item->mapFromScene(lastPos), lastPos, lastPos,
+                                globalPos, modifiers, timestamp, HoverChange::Clear);
+    }
+}
+
 void QQuickDeliveryAgentPrivate::updateFocusItemTransform()
 {
 #if QT_CONFIG(im)
@@ -850,6 +937,9 @@ bool QQuickDeliveryAgent::event(QEvent *ev)
     case QEvent::HoverLeave:
     case QEvent::HoverMove: {
         QHoverEvent *he = static_cast<QHoverEvent*>(ev);
+        // A QHoverEvent comes from a device that hovers, so any hover established below
+        // belongs to it and not to a fingertip.
+        d->lastMousePositionFromTouch = false;
         bool accepted = d->deliverHoverEvent(he->scenePosition(),
                                               he->points().first().sceneLastPosition(),
                                               he->modifiers(), he->timestamp());
@@ -882,6 +972,7 @@ bool QQuickDeliveryAgent::event(QEvent *ev)
             return false;
         QEnterEvent *enter = static_cast<QEnterEvent*>(ev);
         const auto scenePos = enter->scenePosition();
+        d->lastMousePositionFromTouch = false;
         bool accepted = d->deliverHoverEvent(scenePos,
                                               enter->points().first().sceneLastPosition(),
                                               enter->modifiers(), enter->timestamp());
@@ -897,6 +988,7 @@ bool QQuickDeliveryAgent::event(QEvent *ev)
     case QEvent::Leave:
         d->clearHover();
         d->lastMousePosition = QPointF();
+        d->lastMousePositionFromTouch = false;
         break;
 #if QT_CONFIG(quick_draganddrop)
     case QEvent::DragEnter:
@@ -1168,7 +1260,7 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEvent(
 
     // Prune the list for items that are no longer hovered
     for (auto it = hoverItems.begin(); it != hoverItems.end();) {
-        const auto &[item, hoverId] = *it;
+        const auto &[item, hoverId, fromFinger] = *it;
         if (hoverId == currentHoverId) {
             // Still being hovered
             it++;
@@ -1309,9 +1401,9 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEventToItem(
         // line towards the root from now on.
         hoveredLeafItemFound = true;
         if (hoverItemIterator != hoverItems.end())
-            hoverItemIterator->hoverId = currentHoverId;
+            markHovered(*hoverItemIterator, currentHoverId, lastMousePositionFromTouch);
         else
-            hoverItems.append({item, currentHoverId});
+            hoverItems.append({item, currentHoverId, lastMousePositionFromTouch});
 
         if (wasHovering)
             accepted = sendHoverEvent(QEvent::HoverMove, item, localPos, scenePos, lastScenePos, globalPos, modifiers, timestamp);
@@ -1362,9 +1454,9 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEventToItem(
                     hoveredLeafItemFound = true;
                     hoverItemIterator = findHoverStateByItem(hoverItems, item);
                     if (hoverItemIterator != hoverItems.end())
-                        hoverItemIterator->hoverId = currentHoverId;
+                        markHovered(*hoverItemIterator, currentHoverId, lastMousePositionFromTouch);
                     else
-                        hoverItems.append({item, currentHoverId});
+                        hoverItems.append({item, currentHoverId, lastMousePositionFromTouch});
                     if (hh->isBlocking()) {
                         qCDebug(lcHoverTrace) << "skipping rest of hover delivery due to blocking" << hh;
                         accepted = true;
@@ -1433,6 +1525,15 @@ bool QQuickDeliveryAgentPrivate::deliverTouchCancelEvent(QTouchEvent *event)
 
     cancelTouchMouseSynthesis();
 
+    // A cancelled sequence ends just as definitely as a released one,
+    // so hover that the fingers established has to go too.
+    if (event->pointerType() == QPointingDevice::PointerType::Finger)
+        clearTouchHover(event->timestamp());
+    // Whatever the pointer type, a cancelled sequence must not leave frame-synchronous
+    // hover delivery running at the position where contact was lost.
+    lastMousePosition = {};
+    lastMousePositionFromTouch = false;
+
     return true;
 }
 
@@ -1493,6 +1594,7 @@ void QQuickDeliveryAgentPrivate::handleWindowHidden(QQuickWindow *win)
     qCDebug(lcFocus)  << "hidden" << win->title();
     clearHover();
     lastMousePosition = QPointF();
+    lastMousePositionFromTouch = false;
 }
 
 bool QQuickDeliveryAgentPrivate::allUpdatedPointsAccepted(const QPointerEvent *ev)
@@ -1760,6 +1862,37 @@ bool QQuickDeliveryAgentPrivate::compressTouchEvent(QTouchEvent *event)
     return true;
 }
 
+/*!
+    \internal
+    Returns \c true if \a event ends a finger touch sequence: that is,
+    of one or more touchpoints, every point has been released,
+    and we are sure that they came from fingers, not synthesized.
+
+    Finger touch has no hover state of its own (until we support hover-detecting touchscreens).
+    Stylus-proximity hover must not be cleared here.
+
+    This mirrors the rule in QQuickHoverHandler::handleEventPoint().
+*/
+static bool isEndOfFingerTouchSequence(const QTouchEvent *event)
+{
+    if (!event->isEndEvent())
+        return false;
+    if (!event->pointCount())
+        return false;
+    // in case of AA_SynthesizeTouchForUnhandledMouseEvents, for example (unusual)
+    if (Q_UNLIKELY(event->pointerType() != QPointingDevice::PointerType::Finger))
+        return false;
+    // Ask the device to be sure, since some don't report every still-down contact in every event:
+    // e.g. the Stationary points that QWindowsPointerHandler::translateTouchEvent()
+    // synthesizes for digitizers that send one message per finger.
+    const auto *devPriv = QPointingDevicePrivate::get(event->pointingDevice());
+    for (const auto &activePoint : devPriv->activePoints) {
+        if (activePoint.second.eventPoint.state() != QEventPoint::State::Released)
+            return false;
+    }
+    return true;
+}
+
 // entry point for touch event delivery:
 // - translate the event to window coordinates
 // - compress the event instead of delivering it if applicable
@@ -1772,11 +1905,22 @@ void QQuickDeliveryAgentPrivate::handleTouchEvent(QTouchEvent *event)
     if (event->pointCount()) {
         auto &point = event->point(0);
         if (point.state() == QEventPoint::State::Released) {
+            // Clearing lastMousePosition here switches off the frame-synchronous hover delivery
+            // in flushFrameSynchronousEvents(), which would otherwise notice that
+            // hoverItems holds entries with stale hoverIds. Hence clearTouchHover() below.
             lastMousePosition = QPointF();
+            lastMousePositionFromTouch = false;
         } else {
             lastMousePosition = point.position();
+            lastMousePositionFromTouch =
+                    event->pointerType() == QPointingDevice::PointerType::Finger;
         }
     }
+
+    // After delivery of the last touchpoint release, hover that the fingertips established
+    // has to go with it.  It's not the platform plugin's job to synthesize a LeaveEvent
+    // on touch release. And not every device has a mouse to change hover state, either.
+    const bool fingerHoverEnded = isEndOfFingerTouchSequence(event);
 
     qCDebug(lcTouch) << q << event;
 
@@ -1784,16 +1928,18 @@ void QQuickDeliveryAgentPrivate::handleTouchEvent(QTouchEvent *event)
 
     if (qquickwindow_no_touch_compression || pointerEventRecursionGuard) {
         deliverPointerEvent(event);
-        return;
-    }
-
-    if (!compressTouchEvent(event)) {
+    } else if (!compressTouchEvent(event)) {
         if (delayedTouch) {
             deliverDelayedTouchEvent();
             qCDebug(lcTouchCmprs) << "resuming delivery" << event;
         }
         deliverPointerEvent(event);
     }
+
+    // compressTouchEvent() never compresses an event that carries a released point,
+    // so an ended sequence is always delivered by one of the branches above first.
+    if (fingerHoverEnded)
+        clearTouchHover(event->timestamp());
 }
 
 /*!
@@ -1837,6 +1983,9 @@ void QQuickDeliveryAgentPrivate::handleMouseEvent(QMouseEvent *event)
 
         const QPointF last = lastMousePosition.isNull() ? event->scenePosition() : lastMousePosition;
         lastMousePosition = event->scenePosition();
+        // A real mouse move takes the position back from any fingertip that had claimed
+        // it, so hover established from here on belongs to the cursor.
+        lastMousePositionFromTouch = false;
         qCDebug(lcHoverTrace) << q << "mouse pos" << last << "->" << lastMousePosition;
         if (!event->points().size() || !event->exclusiveGrabber(event->point(0))) {
             bool accepted = deliverHoverEvent(event->scenePosition(), last, event->modifiers(), event->timestamp());
@@ -2400,7 +2549,7 @@ void QQuickDeliveryAgentPrivate::deliverUpdatedPoints(QPointerEvent *event)
 
         // Ensure that HoverHandlers are updated, in case no items got dirty so far and there's no update request
         if (event->type() == QEvent::TouchUpdate) {
-            for (const auto &[item, id] : hoverItems) {
+            for (const auto &[item, id, fromFinger] : hoverItems) {
                 if (item) {
                     bool res = deliverHoverEventToItem(item, item->mapFromScene(point.scenePosition()), point.scenePosition(), point.sceneLastPosition(),
                                                        point.globalPosition(), event->modifiers(), event->timestamp(), HoverChange::Set);

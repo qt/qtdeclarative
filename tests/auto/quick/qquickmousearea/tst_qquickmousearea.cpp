@@ -114,6 +114,8 @@ private slots:
     void hoverPropagation();
     void hoverVisible();
     void hoverAfterPress();
+    void hoverAfterTouch();
+    void hoverAfterTouchWithCursorInside();
     void subtreeHoverEnabled();
     void hoverWhenDisabled();
     void disableAfterPress();
@@ -1464,6 +1466,116 @@ void tst_QQuickMouseArea::hoverAfterPress()
     QCOMPARE(mouseArea->hovered(), true);
     QTest::mouseMove(&window, QPoint(22,33));
     QCOMPARE(mouseArea->hovered(), false);
+}
+
+void tst_QQuickMouseArea::hoverAfterTouch() // QTBUG-62912, QTBUG-40856
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("hoverAfterTouch.qml")));
+
+    auto *upperArea = window.rootObject()->findChild<QQuickMouseArea *>("upperArea");
+    QVERIFY(upperArea);
+    auto *lowerArea = window.rootObject()->findChild<QQuickMouseArea *>("lowerArea");
+    QVERIFY(lowerArea);
+    QVERIFY(!upperArea->hovered());
+    QVERIFY(!lowerArea->hovered());
+
+    // Hover on touch is established by flushFrameSynchronousEvents(), so drive it
+    // explicitly rather than hoping a frame lands between the touch events, and take
+    // the 100ms default interval out of the picture.
+    auto *deliveryAgent = QQuickWindowPrivate::get(&window)->deliveryAgentPrivate();
+    deliveryAgent->frameSynchronousHoverInterval = 0;
+
+    const QPoint upperCenter = upperArea->mapToScene(upperArea->boundingRect().center()).toPoint();
+    const QPoint lowerCenter = lowerArea->mapToScene(lowerArea->boundingRect().center()).toPoint();
+
+    // This is a pure touch test, so park the cursor outside both MouseAreas
+    // deliberately: clearFingerHover() keeps hover that a cursor owns, so leaving
+    // lastCursorPosition to whatever ran before would make the result depend on it.
+    // QTest::mouseMove sets lastCursorPosition at the QPA level, so it works even on
+    // the offscreen platform, unlike QCursor::setPos().
+    const QPoint neutral(100, 230); // in the empty strip below both MouseAreas
+    QTest::mouseMove(&window, neutral);
+    QTRY_VERIFY(!upperArea->hovered());
+    QVERIFY(!lowerArea->hovered());
+
+    // A tap makes the MouseArea hovered while the finger is down; when the finger is
+    // lifted, containsMouse must go false again. This used to depend on the synthetic
+    // mouse move that deliverTouchAsMouse() sent back to the real cursor position, so
+    // it silently depended on whether the platform drags the cursor to the touch point.
+    QTest::touchEvent(&window, touchscreen.get()).press(0, upperCenter);
+    deliveryAgent->flushFrameSynchronousEvents(&window);
+    QVERIFY(upperArea->hovered());
+    QVERIFY(!lowerArea->hovered());
+
+    QTest::touchEvent(&window, touchscreen.get()).release(0, upperCenter);
+    deliveryAgent->flushFrameSynchronousEvents(&window);
+    QVERIFY(!upperArea->hovered());
+    QVERIFY(!lowerArea->hovered());
+
+    // Tapping each in turn must never leave two of them hovered at once, which is what
+    // QTBUG-40856 originally reported.
+    QTest::touchEvent(&window, touchscreen.get()).press(1, lowerCenter);
+    deliveryAgent->flushFrameSynchronousEvents(&window);
+    QVERIFY(lowerArea->hovered());
+    QVERIFY(!upperArea->hovered());
+
+    QTest::touchEvent(&window, touchscreen.get()).release(1, lowerCenter);
+    deliveryAgent->flushFrameSynchronousEvents(&window);
+    QVERIFY(!lowerArea->hovered());
+    QVERIFY(!upperArea->hovered());
+}
+
+void tst_QQuickMouseArea::hoverAfterTouchWithCursorInside() // QTBUG-62912
+{
+    // The other half of the rule: clearing hover when contact ends must not take away
+    // hover that the mouse cursor owns. If the cursor is resting inside the MouseArea,
+    // tapping it and letting go leaves it hovered, because the cursor is still there.
+    // tst_TouchMouse::hoverEnabled covers the same ground from the QTBUG-40856 side.
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("hoverAfterTouch.qml")));
+
+    auto *upperArea = window.rootObject()->findChild<QQuickMouseArea *>("upperArea");
+    QVERIFY(upperArea);
+    auto *lowerArea = window.rootObject()->findChild<QQuickMouseArea *>("lowerArea");
+    QVERIFY(lowerArea);
+
+    auto *deliveryAgent = QQuickWindowPrivate::get(&window)->deliveryAgentPrivate();
+    deliveryAgent->frameSynchronousHoverInterval = 0;
+
+    const QPoint upperCenter = upperArea->mapToScene(upperArea->boundingRect().center()).toPoint();
+    const QPoint lowerCenter = lowerArea->mapToScene(lowerArea->boundingRect().center()).toPoint();
+
+    // Park the cursor in upperArea.
+    QTest::mouseMove(&window, upperCenter);
+    QTRY_VERIFY(upperArea->hovered());
+
+    // Tap upperArea, where the cursor already is: it stays hovered afterwards.
+    QTest::touchEvent(&window, touchscreen.get()).press(0, upperCenter);
+    deliveryAgent->flushFrameSynchronousEvents(&window);
+    QVERIFY(upperArea->hovered());
+    QTest::touchEvent(&window, touchscreen.get()).release(0, upperCenter);
+    deliveryAgent->flushFrameSynchronousEvents(&window);
+    QVERIFY(upperArea->hovered());
+
+    // Tap lowerArea instead, away from the cursor. While the finger is down the hover
+    // follows the finger, so upperArea loses it even though the cursor has not moved -
+    // that is pre-existing behavior, hover is still single-point. When the finger
+    // lifts, lowerArea loses hover too.
+    QTest::touchEvent(&window, touchscreen.get()).press(1, lowerCenter);
+    deliveryAgent->flushFrameSynchronousEvents(&window);
+    QTRY_VERIFY(lowerArea->hovered());
+    QVERIFY(!upperArea->hovered());
+
+    QTest::touchEvent(&window, touchscreen.get()).release(1, lowerCenter);
+    deliveryAgent->flushFrameSynchronousEvents(&window);
+    QVERIFY(!lowerArea->hovered());
+    // upperArea does not get hover back here: handleTouchEvent() cleared
+    // lastMousePosition on release, which switches off frame-synchronous hover
+    // delivery, and nothing else re-resolves hover at the cursor. Moving the mouse
+    // restores it.
+    QTest::mouseMove(&window, upperCenter + QPoint(1, 1));
+    QTRY_VERIFY(upperArea->hovered());
 }
 
 void tst_QQuickMouseArea::subtreeHoverEnabled()
