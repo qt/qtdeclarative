@@ -282,14 +282,6 @@ bool QQuickDeliveryAgentPrivate::deliverTouchAsMouse(QQuickItem *item, QTouchEve
                     touchToMouseEvent(QEvent::MouseButtonRelease, p, &event, &me);
                     QCoreApplication::sendEvent(item, &me);
 
-                    if (item->acceptHoverEvents() && p.globalPosition() != QGuiApplicationPrivate::lastCursorPosition) {
-                        QPointF localMousePos(qInf(), qInf());
-                        if (QWindow *w = item->window())
-                            localMousePos = item->mapFromScene(w->mapFromGlobal(QGuiApplicationPrivate::lastCursorPosition));
-                        QMouseEvent mm(QEvent::MouseMove, localMousePos, QGuiApplicationPrivate::lastCursorPosition,
-                                       Qt::NoButton, Qt::NoButton, event.modifiers());
-                        QCoreApplication::sendEvent(item, &mm);
-                    }
                     if (pointerEvent->exclusiveGrabber(p) == mouseGrabberItem) // might have ungrabbed due to event
                         pointerEvent->setExclusiveGrabber(p, nullptr);
 
