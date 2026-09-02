@@ -16,20 +16,20 @@ QT_BEGIN_NAMESPACE
     or components that should be styled according to the active \l Style and \l Theme.
 
     Like the built-in control types (such as
-    \l {AbstractStylableControls::}{abstractButton},
-    \l {AbstractStylableControls::}{pane}, and
-    \l {AbstractStylableControls::}{slider}), CustomControl inherits
+    \l {StylableControls::}{abstractButton},
+    \l {StylableControls::}{pane}, and
+    \l {StylableControls::}{slider}), CustomControl inherits
     \l ControlStyle. Unlike built-in types, which are implicitly connected to
     their control type, a CustomControl requires \l controlType to be set
     explicitly. Apart from that, they work exactly the same way.
 
     A \l Style or \l Theme can define as many custom controls as needed, and a
     CustomControl in a Theme can have the same \l controlType as one in the \l Style.
-    That is no different from, for example, a \l {AbstractStylableControls::}{slider}
+    That is no different from, for example, a \l {StylableControls::}{slider}
     being styled by both the \l Style and the \l Theme. The fallback logic is the same.
 
     Any style properties not set on a CustomControl fall back to those set
-    on a \l {AbstractStylableControls::}{control}.
+    on a \l {StylableControls::}{control}.
 
     The following snippet shows how to define styling for a custom control:
 
@@ -42,7 +42,7 @@ QT_BEGIN_NAMESPACE
 
     \labs
 
-    \sa StyleReader, ControlStyle, Style, AbstractStylableControls::getControlStyle()
+    \sa StyleReader, ControlStyle, Style, StylableControls::getControlStyle()
 */
 
 /*!
@@ -54,7 +54,7 @@ QT_BEGIN_NAMESPACE
 
     Custom control types must be in the range \c 0 to \c 100000.
 
-    \sa {StyleReader::controlType}{StyleReader.controlType}, AbstractStylableControls::getControlStyle()
+    \sa {StyleReader::controlType}{StyleReader.controlType}, StylableControls::getControlStyle()
 */
 
 using namespace Qt::StringLiterals;

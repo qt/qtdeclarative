@@ -157,72 +157,72 @@ Q_STATIC_LOGGING_CATEGORY(lcStyleKit, "qt.labs.stylekit")
         \li StyleKit control
     \row
         \li QPushButton (flat)
-        \li \l {AbstractStylableControls::flatButton}{flatButton}
+        \li \l {StylableControls::flatButton}{flatButton}
     \row
         \li QPushButton
-        \li \l {AbstractStylableControls::button}{button}
+        \li \l {StylableControls::button}{button}
     \row
         \li QCheckBox
-        \li \l {AbstractStylableControls::checkBox}{checkBox}
+        \li \l {StylableControls::checkBox}{checkBox}
     \row
         \li QRadioButton
-        \li \l {AbstractStylableControls::radioButton}{radioButton}
+        \li \l {StylableControls::radioButton}{radioButton}
     \row
         \li QComboBox
-        \li \l {AbstractStylableControls::comboBox}{comboBox}
+        \li \l {StylableControls::comboBox}{comboBox}
     \row
         \li QSlider
-        \li \l {AbstractStylableControls::slider}{slider}
+        \li \l {StylableControls::slider}{slider}
     \row
         \li QScrollBar
-        \li \l {AbstractStylableControls::scrollBar}{scrollBar}
+        \li \l {StylableControls::scrollBar}{scrollBar}
     \row
         \li QSpinBox, QDoubleSpinBox
-        \li \l {AbstractStylableControls::spinBox}{spinBox}
+        \li \l {StylableControls::spinBox}{spinBox}
     \row
         \li QProgressBar
-        \li \l {AbstractStylableControls::progressBar}{progressBar}
+        \li \l {StylableControls::progressBar}{progressBar}
     \row
         \li QLineEdit
-        \li \l {AbstractStylableControls::textField}{textField}
+        \li \l {StylableControls::textField}{textField}
     \row
         \li QTextEdit, QPlainTextEdit
-        \li \l {AbstractStylableControls::textArea}{textArea}
+        \li \l {StylableControls::textArea}{textArea}
     \row
         \li QTabBar
-        \li \l {AbstractStylableControls::tabBar}{tabBar}
+        \li \l {StylableControls::tabBar}{tabBar}
     \row
         \li QTabWidget
-        \li \l {AbstractStylableControls::page}{page}
+        \li \l {StylableControls::page}{page}
     \row
         \li QToolBar
-        \li \l {AbstractStylableControls::toolBar}{toolBar}
+        \li \l {StylableControls::toolBar}{toolBar}
     \row
         \li QToolButton
-        \li \l {AbstractStylableControls::toolButton}{toolButton}
+        \li \l {StylableControls::toolButton}{toolButton}
     \row
         \li QGroupBox
-        \li \l {AbstractStylableControls::groupBox}{groupBox}
+        \li \l {StylableControls::groupBox}{groupBox}
     \row
         \li QFrame
-        \li \l {AbstractStylableControls::frame}{frame}
+        \li \l {StylableControls::frame}{frame}
     \row
         \li QLabel
-        \li \l {AbstractStylableControls::label}{label}
+        \li \l {StylableControls::label}{label}
     \row
         \li QMenu
-        \li \l {AbstractStylableControls::menu}{menu}
+        \li \l {StylableControls::menu}{menu}
     \row
         \li QMenuBar
-        \li \l {AbstractStylableControls::menuBar}{menuBar}
+        \li \l {StylableControls::menuBar}{menuBar}
     \row
         \li Everything else
-        \li \l {AbstractStylableControls::control}{control}
+        \li \l {StylableControls::control}{control}
     \endtable
 
     Widgets not listed above are not yet supported by QStyleKitStyle and will be
     painted by \l QCommonStyle. Support for remaining widgets is planned for future
-    releases. Conversely, some control entries in \l AbstractStylableControls have no
+    releases. Conversely, some control entries in \l StylableControls have no
     Qt Widgets equivalent and are not applied when styling widgets.
 
     \section2 Sub-controls within a widget
@@ -237,29 +237,29 @@ Q_STATIC_LOGGING_CATEGORY(lcStyleKit, "qt.labs.stylekit")
     \row
         \li \l QStyledItemDelegate items - the default delegate for all Qt item views,
             including the \l QComboBox popup list
-        \li \l {AbstractStylableControls::itemDelegate}{itemDelegate}
+        \li \l {StylableControls::itemDelegate}{itemDelegate}
     \row
         \li The same items, when user-checkable (i.e. showing a check indicator)
-        \li \l {AbstractStylableControls::checkDelegate}{checkDelegate};
+        \li \l {StylableControls::checkDelegate}{checkDelegate};
             falls back to \c itemDelegate for anything not set explicitly
     \row
         \li Individual tabs in a \l QTabBar
-        \li \l {AbstractStylableControls::tabButton}{tabButton}
+        \li \l {StylableControls::tabButton}{tabButton}
     \row
         \li \l QMenu items
-        \li \l {AbstractStylableControls::menuItem}{menuItem}
+        \li \l {StylableControls::menuItem}{menuItem}
     \row
         \li Separators in a \l QMenu
-        \li \l {AbstractStylableControls::menuSeparator}{menuSeparator}
+        \li \l {StylableControls::menuSeparator}{menuSeparator}
     \row
         \li \l QMenuBar items
-        \li \l {AbstractStylableControls::menuBarItem}{menuBarItem}
+        \li \l {StylableControls::menuBarItem}{menuBarItem}
     \row
         \li Separators in a \l QToolBar
-        \li \l {AbstractStylableControls::toolSeparator}{toolSeparator}
+        \li \l {StylableControls::toolSeparator}{toolSeparator}
     \row
         \li The \l QComboBox popup list container
-        \li \l {AbstractStylableControls::popup}{popup}
+        \li \l {StylableControls::popup}{popup}
     \endtable
 
     \section1 Known Limitations

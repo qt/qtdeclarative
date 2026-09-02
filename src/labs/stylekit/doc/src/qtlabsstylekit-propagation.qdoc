@@ -47,15 +47,15 @@
 
     \section1 Control Type Hierarchy
 
-    \l {AbstractStylableControls}{The controls} form a hierarchy. A \l {AbstractStylableControls::button}{button}
-    falls back to \l {AbstractStylableControls::abstractButton}{abstractButton}, which
-    falls back to \l {AbstractStylableControls::control}{control}.
-    A \l {AbstractStylableControls::groupBox}{groupBox} falls back to
-    \l {AbstractStylableControls::frame}{frame}, which falls back to
-    \l {AbstractStylableControls::pane}{pane}, which falls back to
-    \l {AbstractStylableControls::control}{control}, and so on.
+    \l {StylableControls}{The controls} form a hierarchy. A \l {StylableControls::button}{button}
+    falls back to \l {StylableControls::abstractButton}{abstractButton}, which
+    falls back to \l {StylableControls::control}{control}.
+    A \l {StylableControls::groupBox}{groupBox} falls back to
+    \l {StylableControls::frame}{frame}, which falls back to
+    \l {StylableControls::pane}{pane}, which falls back to
+    \l {StylableControls::control}{control}, and so on.
     \c control is the root type in the hierarchy, mirroring the type
-    hierarchy of \l {Qt Quick Controls}. Refer to the \l {AbstractStylableControls}{documentation}
+    hierarchy of \l {Qt Quick Controls}. Refer to the \l {StylableControls}{documentation}
     for each control type to see its direct fallback type.
 
     When all states and fallback properties have been exhausted for a specific control type,

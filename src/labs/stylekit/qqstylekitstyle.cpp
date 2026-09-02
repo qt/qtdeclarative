@@ -25,7 +25,7 @@ QT_BEGIN_NAMESPACE
 
     \l Style is the root type in StyleKit for defining a complete visual style for
     \l [QtQuickControls] {Qt Quick Controls}. A style lets you customize
-    the appearance of \l {AbstractStylableControls}{every control type}
+    the appearance of \l {StylableControls}{every control type}
     — \l {ControlStateStyle::background}{backgrounds}, \l {ControlStateStyle::indicator}{indicators},
     \l {ControlStateStyle::handle}{handles}, \l {ControlStateStyle::}{text},
     \l {ControlStateStyle::}{padding}, and more

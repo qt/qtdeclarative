@@ -9,7 +9,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype AbstractStyle
     \inqmlmodule Qt.labs.StyleKit
-    \inherits AbstractStylableControls
+    \inherits StylableControls
     \brief Abstract base type with properties common to both \l Style and \l Theme.
 
     AbstractStyle contains properties, such and fonts and palettes, that are

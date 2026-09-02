@@ -32,14 +32,14 @@ QT_BEGIN_NAMESPACE
     overrides are set through nested states, such as \l {ControlStateStyle::}{hovered}
     \l {ControlStateStyle::}{pressed}, and \l {ControlStateStyle::}{checked}.
 
-    \l {AbstractStylableControls}{Each stylable control} in a \l Style, \l Theme, or \l StyleVariation is a ControlStyle.
-    For example, in the snippet below, \l {AbstractStylableControls::}{control},
-    \l {AbstractStylableControls::}{button} and \l {AbstractStylableControls::}{radioButton}
+    \l {StylableControls}{Each stylable control} in a \l Style, \l Theme, or \l StyleVariation is a ControlStyle.
+    For example, in the snippet below, \l {StylableControls::}{control},
+    \l {StylableControls::}{button} and \l {StylableControls::}{radioButton}
     are all ControlStyles:
 
     \snippet ControlStyleSnippets.qml ControlStyle
 
-    \sa {AbstractStylableControls}{All stylable controls}, Style, Theme,
+    \sa {StylableControls}{All stylable controls}, Style, Theme,
         StyleVariation, ControlStateStyle, DelegateStyle
 */
 

@@ -34,7 +34,7 @@ QT_BEGIN_NAMESPACE
     \l highlighted, etc. — tell StyleReader which state the control is in.
     It uses these to resolve and read the correct property values from
     the \l Style, taking \l {Theme}{Themes}, \l {StyleVariation}{StyleVariations},
-    \l {AbstractStylableControls}{fallback types}, and property propagation
+    \l {StylableControls}{fallback types}, and property propagation
     into account.
 
     When implementing a \l CustomControl, you can follow the same approach as

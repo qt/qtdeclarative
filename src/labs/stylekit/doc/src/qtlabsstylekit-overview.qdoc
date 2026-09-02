@@ -13,12 +13,12 @@
     \section1 Creating a Style
 
     A \l Style is a QML object that describes the visual appearance of all
-    \l {Qt Quick Controls} in your application — \l {AbstractStylableControls::}{button},
-    \l {AbstractStylableControls::}{slider}, \l {AbstractStylableControls::}{checkBox}, and
+    \l {Qt Quick Controls} in your application — \l {StylableControls::}{button},
+    \l {StylableControls::}{slider}, \l {StylableControls::}{checkBox}, and
     so on. Each has its own group in the style where you can set properties such as
     colors, sizes, radii, and shadows for the visual parts that make up the control.
 
-    The \l {AbstractStylableControls::control}{control group} is special, since it acts as
+    The \l {StylableControls::control}{control group} is special, since it acts as
     a fallback for all the other control groups. If you leave out some of the properties
     for a \c slider, for example, they will be read from \c control instead.
     Properties not set in \c slider or \c control fall back further to the
@@ -132,14 +132,14 @@
     If your application includes custom controls that are not part of
     \l {Qt Quick Controls}, you can still integrate them with \c StyleKit.
     Just add a \l CustomControl for each of them and style them the same
-    way you style the \l {AbstractStylableControls}{built-in controls}:
+    way you style the \l {StylableControls}{built-in controls}:
 
     \snippet CustomControlSnippets.qml custom control style
 
     In the control's implementation, use a \l StyleReader with the matching
     \l {StyleReader::controlType}{controlType} to read back the style properties.
     The correct property values are resolved by taking \l {Theme}{Themes},
-    \l {StyleVariation}{StyleVariations}, \l {AbstractStylableControls}{fallback types},
+    \l {StyleVariation}{StyleVariations}, \l {StylableControls}{fallback types},
     and property propagation into account.
     For a style reader to do this, it needs to know the state of your control.
     Therefore bind your control's state to the relevant \l StyleReader

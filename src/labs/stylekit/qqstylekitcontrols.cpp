@@ -8,11 +8,11 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \qmltype AbstractStylableControls
+    \qmltype StylableControls
     \inqmlmodule Qt.labs.StyleKit
     \brief Abstract base type containing the control types that can be styled.
 
-    AbstractControls is an abstract base type. It contains a \l ControlStyle for
+    StylableControls is an abstract base type. It contains a \l ControlStyle for
     each control type that can be styled by a \l Style, \l Theme, or \l StyleVariation.
 
     The control types form a hierarchy where properties set on a base type
@@ -36,7 +36,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle AbstractStylableControls::control
+    \qmlproperty ControlStyle StylableControls::control
 
     Grouped property for styling all controls.
 
@@ -55,7 +55,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle AbstractStylableControls::abstractButton
+    \qmlproperty ControlStyle StylableControls::abstractButton
 
     Grouped property for styling all button-like controls, including
     \l [QtQuickControls]{Button}, \l [QtQuickControls]{CheckBox},
@@ -69,7 +69,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle AbstractStylableControls::applicationWindow
+    \qmlproperty ControlStyle StylableControls::applicationWindow
 
     Grouped property for styling \l [QtQuickControls] ApplicationWindow.
 
@@ -83,7 +83,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle AbstractStylableControls::busyIndicator
+    \qmlproperty ControlStyle StylableControls::busyIndicator
 
     Grouped property for styling \l [QtQuickControls]{BusyIndicator}.
 
@@ -100,7 +100,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle AbstractStylableControls::button
+    \qmlproperty ControlStyle StylableControls::button
 
     Grouped property for styling \l [QtQuickControls]{Button}.
 
@@ -110,7 +110,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle AbstractStylableControls::checkBox
+    \qmlproperty ControlStyle StylableControls::checkBox
 
     Grouped property for styling \l [QtQuickControls]{CheckBox}.
 
@@ -120,7 +120,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle AbstractStylableControls::checkDelegate
+    \qmlproperty ControlStyle StylableControls::checkDelegate
 
     Grouped property for styling \l [QtQuickControls]{CheckDelegate}.
 
@@ -130,7 +130,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle AbstractStylableControls::comboBox
+    \qmlproperty ControlStyle StylableControls::comboBox
 
     Grouped property for styling \l [QtQuickControls]{ComboBox}.
 
@@ -142,7 +142,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle AbstractStylableControls::delayButton
+    \qmlproperty ControlStyle StylableControls::delayButton
 
     Grouped property for styling \l [QtQuickControls]{DelayButton}.
 
@@ -156,7 +156,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle AbstractStylableControls::dial
+    \qmlproperty ControlStyle StylableControls::dial
 
     Grouped property for styling \l [QtQuickControls]{Dial}.
 
@@ -166,7 +166,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle AbstractStylableControls::dialog
+    \qmlproperty ControlStyle StylableControls::dialog
 
     Grouped property for styling \l [QtQuickControls]{Dialog}.
 
@@ -176,7 +176,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle AbstractStylableControls::dialogButtonBox
+    \qmlproperty ControlStyle StylableControls::dialogButtonBox
 
     Grouped property for styling \l [QtQuickControls]{DialogButtonBox}.
 
@@ -186,7 +186,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle AbstractStylableControls::flatButton
+    \qmlproperty ControlStyle StylableControls::flatButton
 
     Grouped property for styling flat buttons (buttons with no visible
     background in their normal state). The styling will take effect for
@@ -198,7 +198,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle AbstractStylableControls::frame
+    \qmlproperty ControlStyle StylableControls::frame
 
     Grouped property for styling \l [QtQuickControls]{Frame}.
 
@@ -208,7 +208,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle AbstractStylableControls::groupBox
+    \qmlproperty ControlStyle StylableControls::groupBox
 
     Grouped property for styling \l [QtQuickControls]{GroupBox}.
 
@@ -218,7 +218,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle AbstractStylableControls::itemDelegate
+    \qmlproperty ControlStyle StylableControls::itemDelegate
 
     Grouped property for styling \l [QtQuickControls]{ItemDelegate}.
 
@@ -233,7 +233,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle AbstractStylableControls::label
+    \qmlproperty ControlStyle StylableControls::label
 
     Grouped property for styling \l [QtQuickControls]{Label}.
 
@@ -243,7 +243,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle AbstractStylableControls::menu
+    \qmlproperty ControlStyle StylableControls::menu
 
     Grouped property for styling \l [QtQuickControls]{Menu}.
 
@@ -253,7 +253,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle AbstractStylableControls::menuItem
+    \qmlproperty ControlStyle StylableControls::menuItem
 
     Grouped property for styling \l [QtQuickControls]{MenuItem}.
 
@@ -269,7 +269,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle AbstractStylableControls::menuBar
+    \qmlproperty ControlStyle StylableControls::menuBar
 
     Grouped property for styling \l [QtQuickControls]{MenuBar}.
 
@@ -285,7 +285,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle AbstractStylableControls::menuBarItem
+    \qmlproperty ControlStyle StylableControls::menuBarItem
 
     Grouped property for styling menu items in a \l [QtQuickControls]{MenuBar}.
 
@@ -301,7 +301,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle AbstractStylableControls::menuSeparator
+    \qmlproperty ControlStyle StylableControls::menuSeparator
 
     Grouped property for styling \l [QtQuickControls]{MenuSeparator}.
 
@@ -311,7 +311,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle AbstractStylableControls::page
+    \qmlproperty ControlStyle StylableControls::page
 
     Grouped property for styling \l [QtQuickControls]{Page}.
 
@@ -328,7 +328,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle AbstractStylableControls::pageIndicator
+    \qmlproperty ControlStyle StylableControls::pageIndicator
 
     Grouped property for styling \l [QtQuickControls]{PageIndicator}.
 
@@ -338,7 +338,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle AbstractStylableControls::pane
+    \qmlproperty ControlStyle StylableControls::pane
 
     Grouped property for styling \l [QtQuickControls]{Pane}.
 
@@ -348,7 +348,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle AbstractStylableControls::popup
+    \qmlproperty ControlStyle StylableControls::popup
 
     Grouped property for styling \l [QtQuickControls]{Popup}.
 
@@ -358,7 +358,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle AbstractStylableControls::progressBar
+    \qmlproperty ControlStyle StylableControls::progressBar
 
     Grouped property for styling \l [QtQuickControls]{ProgressBar}.
     For a progress bar, the groove is styled through the indicator, while the progress
@@ -376,7 +376,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle AbstractStylableControls::radioButton
+    \qmlproperty ControlStyle StylableControls::radioButton
 
     Grouped property for styling \l [QtQuickControls]{RadioButton}.
 
@@ -386,7 +386,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle AbstractStylableControls::radioDelegate
+    \qmlproperty ControlStyle StylableControls::radioDelegate
 
     Grouped property for styling \l [QtQuickControls]{RadioDelegate}.
 
@@ -396,7 +396,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle AbstractStylableControls::roundButton
+    \qmlproperty ControlStyle StylableControls::roundButton
 
     Grouped property for styling \l [QtQuickControls]{RoundButton}.
 
@@ -406,7 +406,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle AbstractStylableControls::scrollBar
+    \qmlproperty ControlStyle StylableControls::scrollBar
 
     Grouped property for styling \l [QtQuickControls]{ScrollBar}.
     The groove is styled through \l {ControlStyleProperties::}{background}, and the
@@ -418,7 +418,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle AbstractStylableControls::scrollIndicator
+    \qmlproperty ControlStyle StylableControls::scrollIndicator
 
     Grouped property for styling \l [QtQuickControls]{ScrollIndicator}.
     The groove is styled through \l {ControlStyleProperties::}{background}, and the
@@ -430,7 +430,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle AbstractStylableControls::scrollView
+    \qmlproperty ControlStyle StylableControls::scrollView
 
     Grouped property for styling \l [QtQuickControls]{ScrollView}.
 
@@ -445,7 +445,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle AbstractStylableControls::searchField
+    \qmlproperty ControlStyle StylableControls::searchField
 
     Grouped property for styling \l [QtQuickControls]{SearchField}.
 
@@ -456,7 +456,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle AbstractStylableControls::slider
+    \qmlproperty ControlStyle StylableControls::slider
 
     Grouped property for styling \l [QtQuickControls]{Slider}.
     For a slider, the groove is styled through the indicator, while the progress
@@ -472,7 +472,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle AbstractStylableControls::spinBox
+    \qmlproperty ControlStyle StylableControls::spinBox
 
     Grouped property for styling \l [QtQuickControls]{SpinBox}.
 
@@ -485,7 +485,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle AbstractStylableControls::swipeDelegate
+    \qmlproperty ControlStyle StylableControls::swipeDelegate
 
     Grouped property for styling \l [QtQuickControls]{SwipeDelegate}.
 
@@ -495,7 +495,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle AbstractStylableControls::switchControl
+    \qmlproperty ControlStyle StylableControls::switchControl
 
     Grouped property for styling \l [QtQuickControls]{Switch}.
 
@@ -505,7 +505,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle AbstractStylableControls::switchDelegate
+    \qmlproperty ControlStyle StylableControls::switchDelegate
 
     Grouped property for styling \l [QtQuickControls]{SwitchDelegate}.
 
@@ -515,7 +515,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle AbstractStylableControls::tabBar
+    \qmlproperty ControlStyle StylableControls::tabBar
 
     Grouped property for styling \l [QtQuickControls]{TabBar}.
 
@@ -525,7 +525,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle AbstractStylableControls::tabButton
+    \qmlproperty ControlStyle StylableControls::tabButton
 
     Grouped property for styling \l [QtQuickControls]{TabButton}.
 
@@ -535,7 +535,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle AbstractStylableControls::textArea
+    \qmlproperty ControlStyle StylableControls::textArea
 
     Grouped property for styling \l [QtQuickControls]{TextArea}.
 
@@ -545,7 +545,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle AbstractStylableControls::textField
+    \qmlproperty ControlStyle StylableControls::textField
 
     Grouped property for styling \l [QtQuickControls]{TextField}.
 
@@ -555,7 +555,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle AbstractStylableControls::textInput
+    \qmlproperty ControlStyle StylableControls::textInput
 
     Grouped property for styling all text input controls, including
     \l [QtQuickControls]{TextField} and \l [QtQuickControls]{TextArea}.
@@ -566,7 +566,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle AbstractStylableControls::toolBar
+    \qmlproperty ControlStyle StylableControls::toolBar
 
     Grouped property for styling \l [QtQuickControls]{ToolBar}.
 
@@ -576,7 +576,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle AbstractStylableControls::toolButton
+    \qmlproperty ControlStyle StylableControls::toolButton
 
     Grouped property for styling \l [QtQuickControls]{ToolButton}.
 
@@ -586,7 +586,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle AbstractStylableControls::toolSeparator
+    \qmlproperty ControlStyle StylableControls::toolSeparator
 
     Grouped property for styling \l [QtQuickControls]{ToolSeparator}.
 
@@ -617,7 +617,7 @@ const QList<QObject *> QQStyleKitControls::children() const
 }
 
 /*!
-    \qmlmethod ControlStyle AbstractStylableControls::getControlStyle(controlType)
+    \qmlmethod ControlStyle StylableControls::getControlStyle(controlType)
 
     Returns the \l ControlStyle for the given \a controlType, or \c null, if
     no \l ControlStyle for the type has been defined.
