@@ -27,6 +27,9 @@
         \li \l{Qt Quick Compiler}
             \list
             \li \l{QML script compiler}
+                \list
+                \li \l{QT_QML_GENERATE_AOTSTATS}
+                \endlist
             \li \l{QML type compiler}
             \endlist
         \li \l{Deploying QML Applications}{Deployment}
