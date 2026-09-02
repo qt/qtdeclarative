@@ -155,7 +155,8 @@ public:
 
     QQSK::State controlState() const;
 
-    void setControlTypeAndState(QQStyleKitExtendableControlType controlType, QQSK::State flags);
+    void setControlTypeAndState(QQStyleKitExtendableControlType controlType, QQSK::State flags,
+                                bool applyStateChange = true);
 
     QObject *target() const;
     void setTarget(QObject *target);
@@ -193,7 +194,7 @@ protected:
     void componentComplete() override;
 
 private:
-    void updateControl();
+    void updateControl(bool applyStateChange = true);
     void populateLocalStorage();
     bool dontEmitChangedSignals() const;
 
