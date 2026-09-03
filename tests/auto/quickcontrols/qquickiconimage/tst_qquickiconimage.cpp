@@ -394,7 +394,8 @@ void tst_qquickiconimage::color()
     // Set a color after component completion.
     iconImage->setColor(QColor(Qt::green));
     iconImageWindowGrab = grabItemToImage(iconImage);
-    const QPoint centerPixelPos(11, 11);
+    // The grab is in device pixels, so the centre depends on the device pixel ratio.
+    const QPoint centerPixelPos(iconImageWindowGrab.width() / 2, iconImageWindowGrab.height() / 2);
     QCOMPARE(iconImageWindowGrab.pixelColor(centerPixelPos), QColor(Qt::green));
 
     // Set a semi-transparent color after component completion.
