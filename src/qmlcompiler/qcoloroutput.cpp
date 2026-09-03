@@ -21,6 +21,7 @@ public:
     QColorOutputPrivate()
     {
         m_coloringEnabled = isColoringPossible();
+        m_hyperLinkSupport = m_coloringEnabled;
     }
 
     ~QColorOutputPrivate() { fflush(stderr); }
@@ -54,6 +55,8 @@ public:
     void setCurrentColorID(int colorId) { m_currentColorID = colorId; }
 
     bool coloringEnabled() const { return m_coloringEnabled; }
+    bool hasHyperLinkSupport() const { return m_hyperLinkSupport; }
+    void setHyperLinkSupport(bool v) { m_hyperLinkSupport = v; }
 
     void flushBuffer()
     {
@@ -70,6 +73,7 @@ private:
     QColorOutput::ColorMapping  m_colorMapping;
     int                         m_currentColorID = -1;
     bool                        m_coloringEnabled = false;
+    bool                        m_hyperLinkSupport = false;
     bool                        m_silent = false;
 
     /*
@@ -278,6 +282,29 @@ void QColorOutput::writeUncolored(const QString &message)
         d->write(message + QLatin1Char('\n'));
 }
 
+QString QColorOutput::linkify(const QString &link, const QString &message) const
+{
+    if (!d->hasHyperLinkSupport())
+        return message;
+    const QChar escape(0x1B);
+    QString result;
+    result += escape;
+    result += u']';
+    result += QString::number(8);
+    result += QLatin1String(";;");
+    result += link;
+    result += escape;
+    result += u'\\';
+    result += message;
+    result += escape;
+    result += u']';
+    result += QString::number(8);
+    result += QLatin1String(";;");
+    result += escape;
+    result += u'\\';
+    return result;
+}
+
 /*!
  \internal
  Treats \a message and \a colorID identically to write(), but instead of writing
@@ -333,6 +360,11 @@ QString QColorOutput::colorify(const QStringView message, int colorID) const
     }
 
     return message.toString();
+}
+
+void QColorOutput::setHyperLinkSupport(bool v)
+{
+    d->setHyperLinkSupport(v);
 }
 
 void QColorOutput::flushBuffer()

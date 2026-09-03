@@ -84,7 +84,9 @@ public:
     void writePrefixedMessage(const QString &message, QtMsgType type,
                               const QString &prefix = QString());
     QString colorify(QStringView message, int color = -1) const;
+    QString linkify(const QString &link, const QString &message) const;
 
+    void setHyperLinkSupport(bool v = true);
     void flushBuffer();
     qsizetype bufferSize() const;
     void truncateBuffer(qsizetype size);

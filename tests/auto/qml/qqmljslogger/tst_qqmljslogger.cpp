@@ -16,6 +16,9 @@ class TestQQmlJSLogger: public QObject
 
 private slots:
     void printFix();
+
+    void printLink_data();
+    void printLink();
 };
 
 void TestQQmlJSLogger::printFix()
@@ -33,6 +36,31 @@ void TestQQmlJSLogger::printFix()
     logger.log("Test"_L1, qmlSyntax, loc, false, false, info);
     logger.rollback();
     QVERIFY(true); // no assert hit
+}
+
+void TestQQmlJSLogger::printLink_data()
+{
+    QTest::addColumn<QString>("link");
+    QTest::addColumn<QString>("message");
+    QTest::addColumn<QString>("expectedOutput");
+
+    QTest::addRow("example.com")
+            << u"http://example.com"_s << u"This is a link"_s
+            << u"\u001B]8;;http://example.com\u001B\\This is a link\u001B]8;;\u001B\\"_s;
+}
+
+void TestQQmlJSLogger::printLink()
+{
+    QFETCH(QString, link);
+    QFETCH(QString, message);
+    QFETCH(QString, expectedOutput);
+
+    QColorOutput output;
+
+    output.setHyperLinkSupport(false);
+    QCOMPARE(output.linkify(link, message), message);
+    output.setHyperLinkSupport(true);
+    QCOMPARE(output.linkify(link, message), expectedOutput);
 }
 
 QT_END_NAMESPACE

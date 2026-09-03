@@ -317,8 +317,12 @@ void QQmlJSLogger::log(Message &&diagMsg, bool showContext, bool showFileName)
 
     // Note: since we clamped our \a type, the output message is not printed
     // exactly like it was requested, bear with us
-    m_output.writePrefixedMessage(
-            u"%1%2 [%3]"_s.arg(prefix, diagMsg.message, diagMsg.id.toString()), diagMsg.type);
+    const QString categoryName = diagMsg.id.toString();
+    const QString categoryLink = m_output.linkify(
+            "https://doc.qt.io/qt-6/qmllint-warnings-and-errors-%1.html"_L1.arg(categoryName),
+            "[%1]"_L1.arg(categoryName));
+    m_output.writePrefixedMessage(u"%1%2 %3"_s.arg(prefix, diagMsg.message, categoryLink),
+                                  diagMsg.type);
 
     if (diagMsg.loc.length > 0 && !m_code.isEmpty() && showContext)
         printContext(diagMsg.loc);
