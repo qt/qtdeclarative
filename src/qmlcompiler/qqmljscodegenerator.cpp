@@ -2561,7 +2561,7 @@ QV4::Moth::ByteCodeHandler::Verdict QQmlJSCodeGenerator::startInstruction(
 
     // If the instruction has no side effects and doesn't write any register, it's dead.
     // We might still need the label, though, and the source code comment.
-    if (!m_state.hasSideEffects() && changedRegisterVariable().isEmpty()) {
+    if (!m_state.hasInternalSideEffects() && changedRegisterVariable().isEmpty()) {
         generateJumpCodeWithTypeConversions(0);
         return SkipInstruction;
     }

@@ -94,6 +94,13 @@ QQuickAbstractColorPicker::QQuickAbstractColorPicker(QQuickAbstractColorPickerPr
     setAcceptedMouseButtons(Qt::LeftButton);
 }
 
+QQuickAbstractColorPicker::~QQuickAbstractColorPicker()
+{
+    Q_D(QQuickAbstractColorPicker);
+    if (d->m_handle)
+        d->removeImplicitSizeListener(d->m_handle);
+}
+
 QColor QQuickAbstractColorPicker::color() const
 {
     Q_D(const QQuickAbstractColorPicker);

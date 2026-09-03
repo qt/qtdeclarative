@@ -447,6 +447,8 @@ private slots:
 
     void aliasOfBindableValueTypeProperty();
 
+    void urlWithFragment();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -633,6 +635,7 @@ void tst_qqmllanguage::errors_data()
     QTest::newRow("invalidGroupedProperty.8") << "invalidGroupedProperty.8.qml" << "invalidGroupedProperty.8.errors.txt" << false;
     QTest::newRow("invalidGroupedProperty.9") << "invalidGroupedProperty.9.qml" << "invalidGroupedProperty.9.errors.txt" << false;
     QTest::newRow("invalidGroupedProperty.10") << "invalidGroupedProperty.10.qml" << "invalidGroupedProperty.10.errors.txt" << false;
+    QTest::newRow("invalidGroupedProperty.11") << "invalidGroupedProperty.11.qml" << "invalidGroupedProperty.11.errors.txt" << false;
 
     QTest::newRow("importNamespaceConflict") << "importNamespaceConflict.qml" << "importNamespaceConflict.errors.txt" << false;
     QTest::newRow("importVersionMissing (builtin)") << "importVersionMissingBuiltIn.qml" << "importVersionMissingBuiltIn.errors.txt" << false;
@@ -8391,6 +8394,17 @@ void tst_qqmllanguage::aliasOfBindableValueTypeProperty()
     QCOMPARE(o->metaObject()->metacall(o.data(), QMetaObject::BindableProperty, aaIndex, args), -1);
     QVERIFY(bindable.isValid());
     QCOMPARE(bindable.metaType(), QMetaType::fromType<QPointF>());
+}
+
+void tst_qqmllanguage::urlWithFragment()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("urlWithFragment.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QCOMPARE(o->objectName(), "outer");
 }
 
 QTEST_MAIN(tst_qqmllanguage)

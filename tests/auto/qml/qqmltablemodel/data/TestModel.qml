@@ -3,8 +3,6 @@
 
 import Qt.labs.qmlmodels 1.0
 
-import "TestUtils.js" as TestUtils
-
 TableModel {
     id: testModel
     objectName: "testModel"

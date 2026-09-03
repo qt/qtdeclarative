@@ -357,7 +357,7 @@ void tst_qmldiskcache::regenerateAfterChange()
         QCOMPARE(quint32(obj->nBindings), quint32(2));
         QCOMPARE(obj->bindingTable()->type(), QV4::CompiledData::Binding::Type_Number);
 
-        const QV4::Value value(testUnit->constants()[obj->bindingTable()->value.constantValueIndex]);
+        const auto value = QV4::Value::fromReturnedValue(testUnit->constants()[obj->bindingTable()->value.constantValueIndex]);
         QCOMPARE(value.doubleValue(), double(42));
 
         QCOMPARE(quint32(testUnit->functionTableSize), quint32(1));
@@ -1353,7 +1353,7 @@ void tst_qmldiskcache::inlineComponentDoesNotCauseConstantInvalidation()
     testCompiler.reset();
     QVERIFY(testCompiler.writeTestFile(code));
 
-    QVERIFY(testCompiler.loadTestFile());
+    QVERIFY2(testCompiler.loadTestFile(), qPrintable(testCompiler.lastErrorString));
 
     const quintptr data1 = testCompiler.unitData();
     QVERIFY(data1 != 0);

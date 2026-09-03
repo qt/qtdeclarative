@@ -1325,4 +1325,33 @@ TestCase {
 
         tryCompare(busyIndicator.contentItem, "visible", true)
     }
+
+    Component {
+        id: labelInPopupComponent
+
+        Popup {
+            id: popupInstance
+
+            property alias label: label
+
+            Material.theme: Material.Dark
+
+            Label {
+                id: label
+                text: "Should have a dark theme"
+            }
+        }
+    }
+
+    function test_popupPropagatesToChildItem() {
+        let popup = createTemporaryObject(labelInPopupComponent, testCase)
+        verify(popup)
+
+        compare(popup.Material.theme, Material.Dark)
+        compare(popup.label.Material.theme, Material.Dark)
+
+        popup.Material.theme = Material.Light
+        compare(popup.Material.theme, Material.Light)
+        compare(popup.label.Material.theme, Material.Light)
+    }
 }

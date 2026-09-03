@@ -2820,7 +2820,7 @@ void tst_QJSValue::deleteFromDifferentThread()
     std::unique_ptr<QThread> thread(QThread::create([&]() {
         QMutexLocker locker(&mutex);
         QJSValuePrivate::free(&jsval);
-        QJSValuePrivate::setValue(&jsval, QV4::Encode::undefined());
+        QJSValuePrivate::setValue(&jsval, QV4::Value::fromReturnedValue(QV4::Encode::undefined()));
         QVERIFY(storage.firstPage != nullptr);
         condition.wakeOne();
     }));

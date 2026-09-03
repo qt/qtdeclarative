@@ -41,8 +41,8 @@ bool QQuickDialogTestUtils::verifyFileDialogDelegates(QQuickListView *fileDialog
             return false;
         }
 
-        // Need to call absoluteFilePath on Windows; see comment in dialogtestutil.h.
-        actualFiles.append(QFileInfo(delegate->file().toLocalFile()).absoluteFilePath());
+        // Need to call canonicalFilePath on Windows; see comment in dialogstestutils_p.h.
+        actualFiles.append(QFileInfo(delegate->file().toLocalFile()).canonicalFilePath());
     }
 
     if (actualFiles != expectedFiles) {

@@ -277,6 +277,15 @@ public:
     QV4::PersistentValue importedScripts() const { return m_importedScripts; }
     void setImportedScripts(const QV4::PersistentValue &scripts) { m_importedScripts = scripts; }
 
+    /*
+       we can safely pass a ReturnedValue here, as setImportedScripts will directly store
+       scripts in a persistentValue, without any intermediate allocation that could trigger
+       a gc run
+    */
+    void setImportedScripts(QV4::ExecutionEngine *engine, QV4::ReturnedValue scripts) {
+        m_importedScripts.set(engine, scripts);
+    }
+
     QQmlRefPointer<QQmlContextData> linkedContext() const { return m_linkedContext; }
     void setLinkedContext(const QQmlRefPointer<QQmlContextData> &context) { m_linkedContext = context; }
 

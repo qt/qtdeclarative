@@ -153,7 +153,8 @@ void QQmlDelayedCallQueue::storeAnyArguments(DelayedFunctionCall &dfc, QQmlV4Fun
     QV4::ScopedArrayObject array(scope, engine->newArrayObject(length));
     uint i = 0;
     for (int j = offset, ej = args->length(); j < ej; ++i, ++j)
-        array->put(i, (*args)[j]);
+        // fromReturnedValue is safe, args should already ensure marking
+        array->put(i, QV4::Value::fromReturnedValue((*args)[j]));
     dfc.m_args.set(engine, array);
 }
 

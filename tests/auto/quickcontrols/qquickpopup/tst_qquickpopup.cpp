@@ -30,6 +30,7 @@
 #include <QtQuickTemplates2/private/qquickdrawer_p.h>
 #include <QtQuick/private/qquicklistview_p.h>
 #include <QtQuick/private/qquicktextedit_p.h>
+#include <QtQuick/private/qquicktaphandler_p.h>
 #include <QtQuick/private/qquickdroparea_p.h>
 #include <QtQuickControlsTestUtils/private/controlstestutils_p.h>
 #include <QtQuickControlsTestUtils/private/qtest_quickcontrols_p.h>
@@ -105,6 +106,7 @@ private slots:
     void doubleClickInMouseArea();
     void pointerEventsNotBlockedForNonPopupChildrenOfOverlayWithHigherZ();
     void resetHoveredStateForItemsWithinPopup();
+    void propagateTouchEvents();
 
 private:
     QScopedPointer<QPointingDevice> touchScreen = QScopedPointer<QPointingDevice>(QTest::createTouchDevice());
@@ -2364,6 +2366,14 @@ void tst_QQuickPopup::pointerEventsNotBlockedForNonPopupChildrenOfOverlayWithHig
     QCOMPARE(lowerMouseAreaSpy.count(), 0);
     QCOMPARE(upperMouseAreaSpy.count(), 1);
 
+    // Verify that the upper mouse area is hovered, even when a mouse press happens on top of a modal dialog
+    upperMouseArea->setHoverEnabled(true);
+    QTest::mouseMove(window, button->mapToScene(button->boundingRect().center() - QPoint(1,1)).toPoint());
+    QVERIFY(!upperMouseArea->hovered());
+    upperMouseArea->setEnabled(true);
+    QTest::mouseMove(window, button->mapToScene(button->boundingRect().center() + QPoint(1,1)).toPoint());
+    QVERIFY(upperMouseArea->hovered());
+
     popup->close();
 }
 
@@ -2399,6 +2409,34 @@ void tst_QQuickPopup::resetHoveredStateForItemsWithinPopup()
 
     // Control item hovered shall be disabled once we open the modal popup
     QTRY_VERIFY(!controlItem->isHovered());
+}
+
+void tst_QQuickPopup::propagateTouchEvents()
+{
+    QQuickApplicationHelper helper(this, "propagateTouchEvents.qml");
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    auto *popup = window->contentItem()->findChild<QQuickPopup *>();
+    popup->open();
+    QTRY_VERIFY(popup->isOpened());
+
+    auto *tapHandler = window->property("tapHandler").value<QQuickTapHandler *>();
+    QVERIFY(tapHandler);
+    QSignalSpy tapSpy(tapHandler, &QQuickTapHandler::tapped);
+    // check for the item within the popup for touch events
+    QTest::touchEvent(window, touchScreen.data()).press(0, QPoint(10, 10));
+    QTest::touchEvent(window, touchScreen.data()).release(0, QPoint(10, 10));
+    QCOMPARE(tapSpy.count(), 1);
+
+    // touch outside to close the popup window
+    QTest::touchEvent(window, touchScreen.data()).press(0, QPoint(90, 90));
+    QTest::touchEvent(window, touchScreen.data()).release(0, QPoint(90, 90));
+    QCOMPARE(tapSpy.count(), 1);
+
+    QTRY_VERIFY(!popup->isOpened());
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickPopup)

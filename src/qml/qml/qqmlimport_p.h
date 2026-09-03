@@ -389,6 +389,16 @@ QQmlImportDatabase::LocalQmldirResult QQmlImportDatabase::locateLocalQmldir(
     QString qmldirAbsoluteFilePath;
     for (QString qmldirPath : qmlDirPaths) {
         if (hasInterceptors) {
+            // TODO:
+            // 1. This is inexact. It triggers only on the existence of interceptors, not on
+            //    actual interception. If the URL was remote to begin with but no interceptor
+            //    actually changes it, we still clear the qmldirPath and consider it
+            //    QmldirInterceptedToRemote.
+            // 2. This misdiagnosis makes addLibraryImport do the right thing and postpone
+            //    the loading of pre-registered types for any QML engine that has interceptors
+            //    (even if they don't do anything in this case).
+            // Fixing this would open the door to follow-up problems but wouldn't result in any
+            // significant benefit.
             const QUrl intercepted = engine->interceptUrl(
                         QQmlImports::urlFromLocalFileOrQrcOrUrl(qmldirPath),
                         QQmlAbstractUrlInterceptor::QmldirFile);

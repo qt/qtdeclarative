@@ -521,6 +521,12 @@ pragma NativeMethodBehavior: AcceptThisObject
 
 With this line added, the example above will work as expected.
 
+\section2 Overriding toString()
+
+If you provide a Q_INVOKABLE method called \e{toString} (with no arguments), that
+method will be used to convert the object to a string in place of JavaScript's
+native \e{toString} implementation.
+
 \section1 Exposing Signals
 
 Any public \l{Signals & Slots}{signal} of a QObject-derived type is accessible

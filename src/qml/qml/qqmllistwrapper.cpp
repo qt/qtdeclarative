@@ -377,9 +377,11 @@ ReturnedValue PropertyListPrototype::method_splice(const FunctionObject *b, cons
     ScopedArrayObject newArray(scope, scope.engine->newArrayObject());
     newArray->arrayReserve(deleteCount);
     ScopedValue v(scope);
+    QV4::ScopedValue wrappedObject(scope);
     for (qsizetype i = 0; i < deleteCount; ++i) {
+        wrappedObject = QObjectWrapper::wrap(scope.engine, property->at(property, start + i));
         newArray->arrayPut(
-                    i, QObjectWrapper::wrap(scope.engine, property->at(property, start + i)));
+                    i, wrappedObject);
     }
     newArray->setArrayLengthUnchecked(deleteCount);
 

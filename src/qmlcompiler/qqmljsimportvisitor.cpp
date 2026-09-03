@@ -18,6 +18,7 @@
 #include <QtQml/private/qqmlirbuilder_p.h>
 #include "qqmljsscope_p.h"
 #include "qqmljsutils_p.h"
+#include "qqmlsa_p.h"
 
 #include <algorithm>
 #include <variant>
@@ -799,8 +800,8 @@ void QQmlJSImportVisitor::checkRequiredProperties()
         }
     }
 
-    const auto isInComponent = [this](const QQmlJSScope::ConstPtr &requiredScope) {
-        const auto compType = m_rootScopeImports.type(u"Component"_s).scope;
+    const auto compType = m_rootScopeImports.type(u"Component"_s).scope;
+    const auto isInComponent = [&](const QQmlJSScope::ConstPtr &requiredScope) {
         for (auto s = requiredScope; s; s = s->parentScope()) {
             if (s->isWrappedInImplicitComponent() || s->baseType() == compType)
                 return true;
@@ -811,9 +812,11 @@ void QQmlJSImportVisitor::checkRequiredProperties()
     const auto requiredHasBinding = [](const QList<QQmlJSScope::ConstPtr> &scopesToSearch,
                                        const QString &propName) {
         for (const auto &scope : scopesToSearch) {
+            if (scope->property(propName).isAlias())
+                continue;
             const auto &[begin, end] = scope->ownPropertyBindings(propName);
             for (auto it = begin; it != end; ++it) {
-                if (!scope->property(propName).isAlias())
+                if (QQmlSA::isRegularBindingType(it->bindingType()))
                     return true;
             }
         }
@@ -880,16 +883,17 @@ void QQmlJSImportVisitor::checkRequiredProperties()
                     : u"here"_s;
 
             if (!prevRequiredScope.isNull()) {
-                auto sourceScope = prevRequiredScope->baseType();
-                suggestion = QQmlJSFixSuggestion{
-                    "%1:%2:%3: Property marked as required in %4."_L1
-                            .arg(sourceScope->filePath())
-                            .arg(sourceScope->sourceLocation().startLine)
-                            .arg(sourceScope->sourceLocation().startColumn)
-                            .arg(requiredScopeName),
-                    sourceScope->sourceLocation()
-                };
-                suggestion->setFilename(sourceScope->filePath());
+                if (auto sourceScope = prevRequiredScope->baseType()) {
+                    suggestion = QQmlJSFixSuggestion{
+                        "%1:%2:%3: Property marked as required in %4."_L1
+                                .arg(sourceScope->filePath())
+                                .arg(sourceScope->sourceLocation().startLine)
+                                .arg(sourceScope->sourceLocation().startColumn)
+                                .arg(requiredScopeName),
+                        sourceScope->sourceLocation()
+                    };
+                    suggestion->setFilename(sourceScope->filePath());
+                }
             } else {
                 message += " (marked as required by %1)"_L1.arg(requiredScopeName);
             }
@@ -902,7 +906,8 @@ void QQmlJSImportVisitor::checkRequiredProperties()
 
     for (const auto &[_, defScope] : m_scopesByIrLocation.asKeyValueRange()) {
         if (defScope->parentScope() == m_globalScope || defScope->isInlineComponent()
-            || defScope->isComponentRootElement()) {
+            || defScope->isComponentRootElement()
+            || defScope->scopeType() != QQmlJSScope::QMLScope) {
             continue;
         }
 
@@ -917,6 +922,8 @@ void QQmlJSImportVisitor::checkRequiredProperties()
                 for (auto propertyIt = ownProperties.constBegin();
                      propertyIt != ownProperties.constEnd(); ++propertyIt) {
                     const QString propName = propertyIt.key();
+                    if (descendant->hasOwnPropertyBindings(propName))
+                        continue;
 
                     QQmlJSScope::ConstPtr prevRequiredScope;
                     for (QQmlJSScope::ConstPtr requiredScope : std::as_const(scopesToSearch)) {
@@ -1613,7 +1620,7 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
             auto tryParseAlias = [&]() {
             typeName.clear(); // type name is useless for alias here, so keep it empty
             if (!publicMember->statement) {
-                m_logger->log(QStringLiteral("Invalid alias expression – an initalizer is needed."),
+                m_logger->log(QStringLiteral("Invalid alias expression - an initalizer is needed."),
                               qmlSyntax, publicMember->memberType->firstSourceLocation()); // TODO: extend warning to cover until endSourceLocation
                 return;
             }
