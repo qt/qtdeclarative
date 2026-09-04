@@ -25,6 +25,7 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuickVectorImageIncubatorPrivate;
 class QQuickVectorImagePluginGenerator;
 class QQmlContext;
 
@@ -83,11 +84,8 @@ Q_SIGNALS:
     void statusUpdated();
 
 private:
-    std::unique_ptr<QQmlComponent> m_component;
-    std::unique_ptr<QQuickVectorImageWorker> m_generatorWorker;
-    std::unique_ptr<QThread> m_workerThread;
-    QQmlContext *m_qmlContext = nullptr;
-    QQmlIncubator::Status m_status = QQmlIncubator::Null;
+    Q_DISABLE_COPY(QQuickVectorImageIncubator)
+    Q_DECLARE_PRIVATE(QQuickVectorImageIncubator)
 };
 
 QT_END_NAMESPACE

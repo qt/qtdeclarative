@@ -63,7 +63,7 @@ qt_internal_add_qml_module(QuickVectorImage
         QtQuick.VectorImage.Helpers/auto
     SOURCES
     qquickvectorimage_p.h qquickvectorimage.cpp
-    qquickvectorimageincubator_p.h qquickvectorimageincubator.cpp
+    qquickvectorimageincubator_p.h qquickvectorimageincubator_p_p.h qquickvectorimageincubator.cpp
     qquickvectorimage_p_p.h
     LIBRARIES
         Qt::QuickPrivate
