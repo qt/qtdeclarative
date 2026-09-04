@@ -12,6 +12,7 @@
 #include <QtQml/qqmlproperty.h>
 #include <QDebug>
 #include <QtCore/qrandom.h>
+#include <QtCore/qpointer.h>
 #include <private/qquickstate_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQml/private/qqmllistwrapper_p.h>
@@ -64,6 +65,7 @@ private slots:
     void consoleLogSyntheticList();
 
     void listWrapperCreateOwnedIsIndependent();
+    void listWrapperToVariantAfterOwnerDestroyed();
 };
 
 class TestType : public QObject
@@ -1139,6 +1141,29 @@ void tst_qqmllistreference::listWrapperCreateOwnedIsIndependent()
     QCOMPARE(scopedListWrapper->arrayData()->length(), 0); // 0 because we cleared the list
     // sanity check that the original property has changed
     QCOMPARE(root->property("length").toInt(&ok), 1);
+}
+
+// A QmlListWrapper stored in a var can outlive the object owning the list.
+// Converting it to a QVariant must not walk the then-dangling QQmlListProperty.
+void tst_qqmllistreference::listWrapperToVariantAfterOwnerDestroyed()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("listWrapperDanglingObject.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY(!root.isNull());
+
+    QMetaObject::invokeMethod(root.data(), "grab");
+    QPointer<QObject> holder = root->property("holder").value<QObject *>();
+    QVERIFY(!holder.isNull());
+
+    QMetaObject::invokeMethod(root.data(), "drop");
+    gc(engine);
+    QTRY_VERIFY(holder.isNull());
+
+    const QVariant v = root->property("stash");
+    QCOMPARE(v.value<QList<QObject *>>().size(), 0);
 }
 
 QTEST_MAIN(tst_qqmllistreference)
