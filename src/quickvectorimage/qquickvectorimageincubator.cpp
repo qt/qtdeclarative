@@ -6,6 +6,7 @@
 #include <QtCore/private/qfactoryloader_p.h>
 #include <QtQml/qqmlcontext.h>
 #include <QtQml/private/qqmlcomponent_p.h>
+#include <QtQml/private/qqmlmetatype_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -101,7 +102,7 @@ void QQuickVectorImageIncubator::start(const QString &fileName,
 void QQuickVectorImageIncubator::generatorFinished()
 {
     Q_D(QQuickVectorImageIncubator);
-    Q_ASSERT(d->component == nullptr);
+    Q_ASSERT(d->componentGuard.component() == nullptr);
     Q_ASSERT(d->generatorWorker != nullptr);
     Q_ASSERT(d->generatorWorker->generator() != nullptr);
     Q_ASSERT(d->workerThread == nullptr || d->workerThread->isRunning());
@@ -126,15 +127,15 @@ void QQuickVectorImageIncubator::generatorFinished()
             return;
         }
 
-        d->component.reset(new QQmlComponent(engine));
-        connect(d->component.get(), &QQmlComponent::statusChanged,
+        d->componentGuard.setComponent(new QQmlComponent(engine));
+        connect(d->componentGuard.component(), &QQmlComponent::statusChanged,
                 this, &QQuickVectorImageIncubator::componentUpdated);
         if (asynchronous) {
-            QQmlComponentPrivate *cd = QQmlComponentPrivate::get(d->component.get());
+            QQmlComponentPrivate *cd = QQmlComponentPrivate::get(d->componentGuard.component());
             cd->setData(result, QUrl{}, QQmlComponent::Asynchronous);
-            emit d->component->statusChanged(d->component->status());
+            emit d->componentGuard.component()->statusChanged(d->componentGuard.component()->status());
         } else {
-            d->component->setData(result, QUrl{});
+            d->componentGuard.component()->setData(result, QUrl{});
         }
     } else {
         d->status = Error;
@@ -142,24 +143,59 @@ void QQuickVectorImageIncubator::generatorFinished()
     }
 }
 
+QQuickVectorImageIncubatorPrivate::QmlComponentGuard::~QmlComponentGuard()
+{
+    if (m_component != nullptr)
+        delete takeComponent(); // Updates m_baseCompilationUnit
+
+    if (m_baseCompilationUnit != nullptr) {
+        QQmlMetaType::unregisterInternalCompositeType(m_baseCompilationUnit);
+        m_baseCompilationUnit.reset();
+    }
+}
+
+QQuickVectorImageIncubatorPrivate::QmlComponentGuard QQuickVectorImageIncubatorPrivate::takeComponentGuard()
+{
+    return std::move(componentGuard);
+}
+
+QQmlComponent *QQuickVectorImageIncubatorPrivate::QmlComponentGuard::takeComponent()
+{
+    QQmlComponent *ret = nullptr;
+    if (m_component != nullptr) {
+        ret = m_component.release();
+
+        QQmlComponentPrivate *d = QQmlComponentPrivate::get(ret);
+        if (d->compilationUnit() != nullptr)
+            m_baseCompilationUnit = d->compilationUnit()->baseCompilationUnit();
+    }
+
+    return ret;
+}
+
 void QQuickVectorImageIncubator::componentUpdated()
 {
     Q_D(QQuickVectorImageIncubator);
-    Q_ASSERT(d->component != nullptr);
+    Q_ASSERT(d->componentGuard.component() != nullptr);
     Q_ASSERT(d->generatorWorker == nullptr);
     Q_ASSERT(d->workerThread == nullptr);
 
-    if (!d->component->isLoading()) {
-        if (d->component->isReady()) {
-            d->component->create(*this, d->qmlContext);
+    if (!d->componentGuard.component()->isLoading()) {
+        // The component is either ready to create or has an error.
+        // We copy the compilation unit reference before emitting statusUpdated (which triggers
+        // updateItem() in QQuickVectorImage where the component guard is expected to only
+        // carry the compilation unit)
+        QQmlComponent *component = d->componentGuard.takeComponent();
+        if (component->isReady()) {
+            component->create(*this, d->qmlContext);
         } else {
             qCWarning(lcQuickVectorImage) << "Component failed to load:"
-                                          << d->component->errorString();
+                                          << component->errorString();
             d->status = Error;
             emit statusUpdated();
         }
 
-        d->component.release()->deleteLater();
+        component->deleteLater();
     }
 }
 
