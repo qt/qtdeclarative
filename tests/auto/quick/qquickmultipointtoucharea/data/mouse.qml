@@ -6,8 +6,8 @@ MultiPointTouchArea {
 
     property int touchCount: 0
     property int cancelCount: 0
-    property int gestureStartedX: 0
-    property int gestureStartedY: 0
+    property real gestureStartedX: 0
+    property real gestureStartedY: 0
     property bool grabGesture: false
 
     minimumTouchPoints: 1
