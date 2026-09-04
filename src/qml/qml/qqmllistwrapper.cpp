@@ -188,9 +188,13 @@ ReturnedValue QmlListWrapper::createOwned(ExecutionEngine *engine, const QQmlPro
 QVariant QmlListWrapper::toVariant() const
 {
     Heap::QmlListWrapper *p = d();
-    return p->object()
-            ? QVariant::fromValue(toListReference())
-            : QVariant::fromValue(p->property()->toList<QObjectList>());
+    if (p->object())
+        return QVariant::fromValue(toListReference());
+    // check for a stale object - owner was deleted
+    if (p->property()->object)
+        return QVariant::fromValue(QObjectList{});
+    // otherwise it's a detached owned list, and we should call toList
+    return QVariant::fromValue(p->property()->toList<QObjectList>());
 }
 
 QQmlListReference QmlListWrapper::toListReference() const
