@@ -6,6 +6,7 @@
 #include "qquickvectorimage_p.h"
 #include "qquickvectorimage_p_p.h"
 #include "qquickvectorimageincubator_p.h"
+#include "qquickvectorimageincubator_p_p.h"
 #include "qquickvectorimageplugin_p.h"
 #include <QtQuickVectorImageGenerator/private/qquickitemgenerator_p.h>
 #include <QtQuickVectorImageGenerator/private/qquickvectorimageglobal_p.h>
@@ -216,6 +217,17 @@ void QQuickVectorImage::updateItem()
     }
 
     if (d->incubator) {
+        QQuickVectorImageIncubatorPrivate *dd = QQuickVectorImageIncubatorPrivate::get(d->incubator);
+        auto componentGuard = dd->takeComponentGuard();
+        if (!componentGuard.isNull()) {
+            Q_ASSERT(componentGuard.component() == nullptr);
+            connect(d->rootItem, &QObject::destroyed, d->rootItem,
+                    [componentGuard = std::move(componentGuard)]() {
+                        // componentGuard cleans up when it goes out of scope
+                        Q_UNUSED(componentGuard);
+                    });
+        }
+
         d->incubator->disconnect(this);
         d->incubator->deleteLater();
         d->incubator = nullptr;
