@@ -962,22 +962,11 @@ QT_BEGIN_NAMESPACE
 
 // ************* QQStyleKitPropertyGroup ****************
 
-QHash<PropertyPathId_t, QString> QQStyleKitPropertyGroup::s_pathStrings;
+QHash<PropertyPathId, QString> QQStyleKitPropertyGroup::s_pathStrings;
 
 QQStyleKitPropertyGroup::QQStyleKitPropertyGroup(QQSK::PropertyGroup, QObject *parent)
     : QObject(parent)
 {
-}
-
-PropertyPathId QQStyleKitPropertyGroup::propertyPathId(QQSK::Property property, PropertyPathId::Flag flag) const
-{
-    if (flag == PropertyPathId::Flag::IncludeSubtype) {
-        if (m_pathFlags.testFlag(QQSK::PropertyPathFlag::DelegateSubtype1))
-            return PropertyPathId(property, m_groupSpace.start, QQSK::PropertyGroup::DelegateSubtype1);
-        else if (m_pathFlags.testFlag(QQSK::PropertyPathFlag::DelegateSubtype2))
-            return PropertyPathId(property, m_groupSpace.start, QQSK::PropertyGroup::DelegateSubtype2);
-    }
-    return PropertyPathId(property, m_groupSpace.start, QQSK::PropertyGroup::DelegateSubtype0);
 }
 
 QString QQStyleKitPropertyGroup::pathToString() const
@@ -995,12 +984,12 @@ QString QQStyleKitPropertyGroup::pathToString() const
     if (s_pathStrings.contains(m_groupSpace.start))
         return s_pathStrings[m_groupSpace.start];
 
-    constexpr PropertyPathId_t rootGroupsSize = nestedGroupsStartSize / nestedGroupCount;
+    constexpr PropertyPathId rootGroupsSize = nestedGroupsStartSize / nestedGroupCount;
     const auto metaEnum = QMetaEnum::fromType<QQSK::PropertyGroup>();
 
-    PropertyPathId_t nestedGroupStart = m_groupSpace.start;
-    PropertyPathId_t nestedGroupSize = rootGroupsSize;
-    PropertyPathId_t nestedGroupIndex = nestedGroupStart / nestedGroupSize;
+    PropertyPathId nestedGroupStart = m_groupSpace.start;
+    PropertyPathId nestedGroupSize = rootGroupsSize;
+    PropertyPathId nestedGroupIndex = nestedGroupStart / nestedGroupSize;
     auto groupType = QQSK::PropertyGroup(nestedGroupIndex);
     if (groupType == QQSK::PropertyGroup::Control)
         return {};
@@ -1062,17 +1051,17 @@ T *QQStyleKitPropertyGroup::lazyCreateGroup(T * const &ptr, QQSK::PropertyGroup 
         /* Calculate the available property ID space for the nested group. This is done by
          * dividing the available space inside _this_ group on the number of potential groups
          * that _this_ group can potentially contain. */
-        const PropertyPathId_t nestedGroupIndex = PropertyPathId_t(group);
-        const PropertyPathId_t nestedGroupSize = m_groupSpace.size / nestedGroupCount;
+        const PropertyPathId nestedGroupIndex = PropertyPathId(group);
+        const PropertyPathId nestedGroupSize = m_groupSpace.size / nestedGroupCount;
         nestedGroup->m_groupSpace.size = nestedGroupSize;
         nestedGroup->m_groupSpace.start = m_groupSpace.start + (nestedGroupIndex * nestedGroupSize);
         /* Ensure that we haven’t exhausted the available PropertyPathId space. There must be
          * enough room remaining to assign IDs for all properties defined in QQSK::Property.
-         * If this assertion triggers, consider switching to a wider PropertyPathId_t type or
+         * If this assertion triggers, consider switching to a wider PropertyPathId type or
          * optimizing how the space is allocated. For example, certain nested paths (such as
          * control.handle.indicator) can never occur, yet we currently reserve INNER_GROUP_COUNT
          * for every nesting level, which is wasteful. */
-        Q_ASSERT(nestedGroupSize >= PropertyPathId_t(QQSK::Property::COUNT));
+        Q_ASSERT(nestedGroupSize >= PropertyPathId(QQSK::Property::COUNT));
     }
     return nestedGroup;
 }
@@ -1983,7 +1972,7 @@ QQStyleKitControlProperties::QQStyleKitControlProperties(QQSK::PropertyGroup gro
      * properties that may be applied to a control. Since we'll prepend different states
      * and subtypes during the property propagation lookup phase later, we need to reserve
      * ID space for them both already now. More docs about the property space is written in
-     * the implementation of PropertyPathId. */
+     * the implementation of QQStyleKitPropertyPath. */
     m_groupSpace.size = nestedGroupsStartSize;
     m_groupSpace.start = 0;
 
@@ -1993,7 +1982,7 @@ QQStyleKitControlProperties::QQStyleKitControlProperties(QQSK::PropertyGroup gro
          * pseudo-group. When it is prefixed to a property path, it indicates that the property
          * should be read directly from the style, bypassing any active transitions that might
          * otherwise affect its value.
-         * Note: The global group should be ignored when computing a PropertyPathId_t, as it
+         * Note: The global group should be ignored when computing a PropertyPathId, as it
          * only affect _where_ the property should be read from, not its ID. */
         m_pathFlags.setFlag(QQSK::PropertyPathFlag::Global);
     }

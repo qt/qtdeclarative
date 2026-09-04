@@ -217,7 +217,7 @@ private:
 
     QList<QObject *> m_data;
     QHash<QQStyleKitExtendableControlType, QQStyleKitControl *> m_controls;
-    QHash<PropertyPathId_t, QQSK::State> m_writtenPropertyPaths;
+    QHash<PropertyPathId, QQSK::State> m_writtenPropertyPaths;
 
     friend class QQStyleKitPropertyResolver;
     friend class QQStyleKitControl;

@@ -126,7 +126,7 @@ QString QQStyleKitDebug::styleReaderToString(const QQStyleKitReader *reader)
     return "StyleKitReader"_L1 + stateToString(reader->controlState());
 }
 
-QString QQStyleKitDebug::propertyPath(const QQStyleKitPropertyGroup *group, const PropertyPathId property)
+QString QQStyleKitDebug::propertyPath(const QQStyleKitPropertyGroup *group, const QQStyleKitPropertyPath property)
 {
     const QString path = group->pathToString();
     QString propertyName = enumToString(property.property());
@@ -201,7 +201,7 @@ QString QQStyleKitDebug::objectPath(const QQStyleKitControlProperties *propertie
 }
 
 void QQStyleKitDebug::notifyPropertyRead(
-    const PropertyPathId property,
+    const QQStyleKitPropertyPath property,
     const QQStyleKitControlProperties *storage,
     const QQSK::State state,
     const QVariant &value)
@@ -295,7 +295,7 @@ void QQStyleKitDebug::notifyPropertyWrite(
 #endif
 }
 
-void QQStyleKitDebug::notifyPropertyNotResolved(const PropertyPathId property)
+void QQStyleKitDebug::notifyPropertyNotResolved(const QQStyleKitPropertyPath property)
 {
     const QQStyleKitControlProperties *reader = QQStyleKitDebug::groupBeingRead->controlProperties();
     if (!insideControl(reader)) {
@@ -315,7 +315,7 @@ void QQStyleKitDebug::notifyPropertyNotResolved(const PropertyPathId property)
 }
 
 void QQStyleKitDebug::trace(
-    const PropertyPathId property,
+    const QQStyleKitPropertyPath property,
     const QQStyleKitControlProperties *storage,
     const QQSK::State state,
     const PropertyStorageId key)

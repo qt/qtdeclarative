@@ -23,6 +23,7 @@ qt_internal_add_qml_module(LabsStyleKit
         qqstylekitdebug_p.h qqstylekitdebug.cpp
         qqstylekitdelegate_p.h qqstylekitdelegate.cpp
         qqstylekitglobal_p.h qqstylekitglobal.cpp
+        qqstylekitpropertypath_p.h qqstylekitpropertypath.cpp
         qqstylekitpalette_p.h qqstylekitpalette.cpp
         qqstylekitfont_p.h qqstylekitfont.cpp
         qqstylekitpropertyresolver_p.h qqstylekitpropertyresolver.cpp

@@ -168,10 +168,10 @@ void QQStyleKitPropertyResolver::addTypeVariationsToReader(
         /* ids is made static, since the 'variations' path will be the same for all
          * StyleKitControls. Also, since subtypes are only possible for delegates,
          * and 'variations' is a control property, we can exclude subtypes. */
-        ids.property = styleReader->propertyPathId(QQSK::Property::Variations, PropertyPathId::Flag::ExcludeSubtype);
-        ids.alternative = styleReader->propertyPathId(QQSK::Property::NoProperty, PropertyPathId::Flag::ExcludeSubtype);
-        ids.subTypeProperty = PropertyPathId();
-        ids.subTypeAlternative = PropertyPathId();
+        ids.property = QQStyleKitPropertyPath(styleReader, QQSK::Property::Variations, QQStyleKitPropertyPath::Flag::ExcludeSubtype);
+        ids.alternative = QQStyleKitPropertyPath(styleReader, QQSK::Property::NoProperty, QQStyleKitPropertyPath::Flag::ExcludeSubtype);
+        ids.subTypeProperty = QQStyleKitPropertyPath();
+        ids.subTypeAlternative = QQStyleKitPropertyPath();
     }
 
     for (const QQStyleKitVariationAttached *attached : attachedVariations) {
@@ -289,7 +289,7 @@ void QQStyleKitPropertyResolver::rebuildVariationsForReader(
 
 template <class T>
 QVariant QQStyleKitPropertyResolver::readPropertyInStorageForState(
-    const PropertyPathId main, const PropertyPathId alternative,
+    const QQStyleKitPropertyPath main, const QQStyleKitPropertyPath alternative,
     const T *storageProvider, QQSK::State state)
 {
     /* If either the main property or its alternative is set in the storage,
@@ -304,7 +304,7 @@ QVariant QQStyleKitPropertyResolver::readPropertyInStorageForState(
      * override 'topLeftRadius' and be used as the final value. */
     Q_ASSERT(qlonglong(state) <= qlonglong(QQSK::StateFlag::MAX_STATE));
 
-    const PropertyStorageId propertyKey = main.storageId(state);
+    const PropertyStorageId propertyKey = main.createStorageId(state);
 
     if (Q_UNLIKELY(QQStyleKitDebug::enabled()))
         QQStyleKitDebug::trace(main, storageProvider, state, propertyKey);
@@ -316,7 +316,7 @@ QVariant QQStyleKitPropertyResolver::readPropertyInStorageForState(
         return propertyValue;
     }
 
-    const PropertyStorageId altPropertyKey = alternative.storageId(state);
+    const PropertyStorageId altPropertyKey = alternative.createStorageId(state);
 
     if (Q_UNLIKELY(QQStyleKitDebug::enabled()))
         QQStyleKitDebug::trace(alternative, storageProvider, state, altPropertyKey);
@@ -333,7 +333,7 @@ QVariant QQStyleKitPropertyResolver::readPropertyInStorageForState(
 
 template <class INDICES_CONTAINER>
 QVariant QQStyleKitPropertyResolver::readPropertyInControlForStates(
-    const PropertyPathId main, const PropertyPathId alternative,
+    const QQStyleKitPropertyPath main, const QQStyleKitPropertyPath alternative,
     const QQStyleKitControl *control, INDICES_CONTAINER &stateListIndices,
     int startIndex, int recursionLevel)
 {
@@ -583,8 +583,7 @@ QVariant QQStyleKitPropertyResolver::readStyleProperty(
         Q_ASSERT(subclass == QQSK::Subclass::QQStyleKitState);
         const QQStyleKitControlState *controlState = controlProperties->asQQStyleKitState();
         const QQStyleKitControl *control = controlState->control();
-        const PropertyPathId propertyPathId = group->propertyPathId(property, PropertyPathId::Flag::IncludeSubtype);
-        const PropertyStorageId key = propertyPathId.storageId(controlState->nestedState());
+        const PropertyStorageId key = QQStyleKitPropertyPath(group, property).createStorageId(controlState->nestedState());
         return control->readStyleProperty(key);
     }
 
@@ -611,17 +610,17 @@ QVariant QQStyleKitPropertyResolver::readStyleProperty(
     QScopedValueRollback rollback(s_isReadingProperty, true);
 
     PropertyPathIds ids;
-    ids.property = group->propertyPathId(property, PropertyPathId::Flag::ExcludeSubtype);
-    ids.alternative = group->propertyPathId(alternative, PropertyPathId::Flag::ExcludeSubtype);
+    ids.property = QQStyleKitPropertyPath(group, property, QQStyleKitPropertyPath::Flag::ExcludeSubtype);
+    ids.alternative = QQStyleKitPropertyPath(group, alternative, QQStyleKitPropertyPath::Flag::ExcludeSubtype);
     const bool insideSubType = pathFlags &
         (QQSK::PropertyPathFlag::DelegateSubtype1 | QQSK::PropertyPathFlag::DelegateSubtype2);
 
     if (insideSubType) {
-        ids.subTypeProperty = group->propertyPathId(property, PropertyPathId::Flag::IncludeSubtype);
-        ids.subTypeAlternative = group->propertyPathId(alternative, PropertyPathId::Flag::IncludeSubtype);
+        ids.subTypeProperty = QQStyleKitPropertyPath(group, property);
+        ids.subTypeAlternative = QQStyleKitPropertyPath(group, alternative);
     } else {
-        ids.subTypeProperty = PropertyPathId();
-        ids.subTypeAlternative = PropertyPathId();
+        ids.subTypeProperty = QQStyleKitPropertyPath();
+        ids.subTypeAlternative = QQStyleKitPropertyPath();
     }
 
     if (!pathFlags.testFlag(QQSK::PropertyPathFlag::Global)) {
@@ -656,7 +655,7 @@ bool QQStyleKitPropertyResolver::writeStyleProperty(
     const QQStyleKitControlProperties *controlProperties = group->controlProperties();
     const QQSK::PropertyPathFlags pathFlags = group->pathFlags();
     const QQSK::Subclass subclass = controlProperties->subclass();
-    const PropertyPathId propertyPathId = group->propertyPathId(property, PropertyPathId::Flag::IncludeSubtype);
+    const QQStyleKitPropertyPath propertyPath(group, property);
 
     if (pathFlags.testFlag(QQSK::PropertyPathFlag::Global)) {
         qmlWarning(controlProperties) << "Properties inside 'global' are read-only!";
@@ -666,7 +665,7 @@ bool QQStyleKitPropertyResolver::writeStyleProperty(
     if (subclass == QQSK::Subclass::QQStyleKitReader) {
         // This is a write to a StyleKitReader, probably from an ongoing transition
         QQStyleKitReader *reader = controlProperties->asQQStyleKitReader();
-        const PropertyStorageId key = propertyPathId.storageId(QQSK::StateFlag::Normal);
+        const PropertyStorageId key = propertyPath.createStorageId(QQSK::StateFlag::Normal);
         const QVariant currentValue = reader->readStyleProperty(key);
         const bool valueChanged = currentValue != value;
         if (valueChanged) {
@@ -681,7 +680,7 @@ bool QQStyleKitPropertyResolver::writeStyleProperty(
         const QQStyleKitControlState *controlState = controlProperties->asQQStyleKitState();
         QQStyleKitControl *control = controlState->control();
         const QQSK::State nestedState = controlState->nestedState();
-        const PropertyStorageId key = propertyPathId.storageId(nestedState);
+        const PropertyStorageId key = propertyPath.createStorageId(nestedState);
         const QVariant currentValue = control->readStyleProperty(key);
         const bool valueChanged = currentValue != value;
         if (valueChanged) {
@@ -694,8 +693,8 @@ bool QQStyleKitPropertyResolver::writeStyleProperty(
              * the style/theme/variation entirely if it has no stored values for it, or if
              * none match the state requested by the StyleKitReader. */
             QQStyleKitControls *controls = control->controls();
-            const QQSK::State alreadyWrittenStates = controls->m_writtenPropertyPaths[propertyPathId.pathId()];
-            controls->m_writtenPropertyPaths[propertyPathId.pathId()] = alreadyWrittenStates | nestedState;
+            const QQSK::State alreadyWrittenStates = controls->m_writtenPropertyPaths[propertyPath.pathId()];
+            controls->m_writtenPropertyPaths[propertyPath.pathId()] = alreadyWrittenStates | nestedState;
 
             control->writeStyleProperty(key, value);
             QQStyleKitDebug::notifyPropertyWrite(group, property, control, nestedState, key, value);
@@ -714,21 +713,21 @@ bool QQStyleKitPropertyResolver::hasLocalStyleProperty(
     Q_ASSERT(group);
     const QQStyleKitControlProperties *controlProperties = group->controlProperties();
     const QQSK::PropertyPathFlags pathFlags = group->pathFlags();
-    const PropertyPathId propertyPathId = group->propertyPathId(property, PropertyPathId::Flag::IncludeSubtype);
+    const QQStyleKitPropertyPath propertyPath(group, property);
     const QQSK::Subclass subclass = controlProperties->subclass();
 
     if (pathFlags.testFlag(QQSK::PropertyPathFlag::Global))
         return false;
 
     if (subclass == QQSK::Subclass::QQStyleKitReader) {
-        const PropertyStorageId key = propertyPathId.storageId(QQSK::StateFlag::Normal);
+        const PropertyStorageId key = propertyPath.createStorageId(QQSK::StateFlag::Normal);
         return controlProperties->asQQStyleKitReader()->readStyleProperty(key).isValid();
     }
 
     if (subclass == QQSK::Subclass::QQStyleKitState) {
         const QQStyleKitControlState *controlState = controlProperties->asQQStyleKitState();
         const QQStyleKitControl *control = controlState->control();
-        const PropertyStorageId key = propertyPathId.storageId(controlState->nestedState());
+        const PropertyStorageId key = propertyPath.createStorageId(controlState->nestedState());
         return control->readStyleProperty(key).isValid();
     }
 

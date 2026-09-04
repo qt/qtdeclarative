@@ -18,7 +18,7 @@
 
 #include <QtQml/QtQml>
 
-#include "qqstylekitglobal_p.h"
+#include "qqstylekitpropertypath_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -46,10 +46,10 @@ public:
     Q_ENUM(PathId)
 
     struct PropertyPathIds {
-        PropertyPathId property;
-        PropertyPathId alternative;
-        PropertyPathId subTypeProperty;
-        PropertyPathId subTypeAlternative;
+        QQStyleKitPropertyPath property;
+        QQStyleKitPropertyPath alternative;
+        QQStyleKitPropertyPath subTypeProperty;
+        QQStyleKitPropertyPath subTypeAlternative;
     };
 
     static QVariant readStyleProperty(
@@ -78,12 +78,12 @@ private:
 private:
     template <class T>
     static QVariant readPropertyInStorageForState(
-        const PropertyPathId main, const PropertyPathId alternative,
+        const QQStyleKitPropertyPath main, const QQStyleKitPropertyPath alternative,
         const T *storageProvider, QQSK::State state);
 
     template <class INDICES_CONTAINER>
     static QVariant readPropertyInControlForStates(
-        const PropertyPathId main, const PropertyPathId alternative,
+        const QQStyleKitPropertyPath main, const QQStyleKitPropertyPath alternative,
         const QQStyleKitControl *control, INDICES_CONTAINER &stateListIndices,
         int startIndex, int recursionLevel);
 
