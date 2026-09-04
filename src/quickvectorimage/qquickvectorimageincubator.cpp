@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "qquickvectorimageincubator_p.h"
+#include "qquickvectorimageincubator_p_p.h"
 #include <QtCore/private/qfactoryloader_p.h>
 #include <QtQml/qqmlcontext.h>
 #include <QtQml/private/qqmlcomponent_p.h>
@@ -33,41 +34,45 @@ void QQuickVectorImageWorker::process()
 QQuickVectorImageIncubator::QQuickVectorImageIncubator(IncubationMode incubationMode,
                                                        QQmlContext *context,
                                                        QObject *parent)
-    : QObject(parent)
+    : QObject(*new QQuickVectorImageIncubatorPrivate, parent)
     , QQmlIncubator(incubationMode)
-    , m_qmlContext(context)
 {
+    Q_D(QQuickVectorImageIncubator);
+    d->qmlContext = context;
 }
 
 QQuickVectorImageIncubator::~QQuickVectorImageIncubator()
 {
-    if (m_workerThread != nullptr && m_workerThread->isRunning()) {
-        m_workerThread->quit();
-        m_workerThread->wait();
+    Q_D(QQuickVectorImageIncubator);
+    if (d->workerThread != nullptr && d->workerThread->isRunning()) {
+        d->workerThread->quit();
+        d->workerThread->wait();
     }
 }
 
 QQmlIncubator::Status QQuickVectorImageIncubator::status() const
 {
-    return m_status;
+    Q_D(const QQuickVectorImageIncubator);
+    return d->status;
 }
 
 void QQuickVectorImageIncubator::start(const QString &fileName,
                                        QQuickVectorImageGenerator::GeneratorFlags flags)
 {
-    Q_ASSERT(m_generatorWorker == nullptr);
-    Q_ASSERT(m_workerThread == nullptr);
+    Q_D(QQuickVectorImageIncubator);
+    Q_ASSERT(d->generatorWorker == nullptr);
+    Q_ASSERT(d->workerThread == nullptr);
 
-    m_status = Loading;
+    d->status = Loading;
     emit statusUpdated();
 
     const bool asynchronous = flags.testFlag(QQuickVectorImageGenerator::AsynchronousLoading);
     if (asynchronous)
-        m_workerThread.reset(new QThread);
+        d->workerThread.reset(new QThread);
 
-    m_generatorWorker.reset(new QQuickVectorImageWorker);
-    m_generatorWorker->createGenerator(fileName, flags);
-    connect(m_generatorWorker.get(), &QQuickVectorImageWorker::finished,
+    d->generatorWorker.reset(new QQuickVectorImageWorker);
+    d->generatorWorker->createGenerator(fileName, flags);
+    connect(d->generatorWorker.get(), &QQuickVectorImageWorker::finished,
             this, &QQuickVectorImageIncubator::generatorFinished);
 
     if (flags.testFlag(QQuickVectorImageGenerator::AssumeTrustedSource)) {
@@ -79,88 +84,91 @@ void QQuickVectorImageIncubator::start(const QString &fileName,
             if (plugin != nullptr) {
                 QQuickVectorImagePluginGenerator *pluginGenerator = plugin->createGenerator(fileName);
                 if (pluginGenerator != nullptr)
-                    m_generatorWorker->addPluginGenerator(pluginGenerator);
+                    d->generatorWorker->addPluginGenerator(pluginGenerator);
             }
         }
     }
 
-    if (m_workerThread != nullptr) {
-        m_generatorWorker->moveToThread(m_workerThread.get());
-        m_workerThread->start();
+    if (d->workerThread != nullptr) {
+        d->generatorWorker->moveToThread(d->workerThread.get());
+        d->workerThread->start();
     }
 
     // Trigger generating
-    QMetaObject::invokeMethod(m_generatorWorker.get(), &QQuickVectorImageWorker::process, Qt::AutoConnection);
+    QMetaObject::invokeMethod(d->generatorWorker.get(), &QQuickVectorImageWorker::process, Qt::AutoConnection);
 }
 
 void QQuickVectorImageIncubator::generatorFinished()
 {
-    Q_ASSERT(m_component == nullptr);
-    Q_ASSERT(m_generatorWorker != nullptr);
-    Q_ASSERT(m_generatorWorker->generator() != nullptr);
-    Q_ASSERT(m_workerThread == nullptr || m_workerThread->isRunning());
+    Q_D(QQuickVectorImageIncubator);
+    Q_ASSERT(d->component == nullptr);
+    Q_ASSERT(d->generatorWorker != nullptr);
+    Q_ASSERT(d->generatorWorker->generator() != nullptr);
+    Q_ASSERT(d->workerThread == nullptr || d->workerThread->isRunning());
 
-    const QQuickVectorImageGenerator::ErrorState errorState = m_generatorWorker->generator()->errorState();
-    const bool asynchronous = m_generatorWorker->generator()->generatorFlags().testFlag(QQuickVectorImageGenerator::AsynchronousLoading);
-    const QByteArray result = m_generatorWorker->generator()->result();
-    const QString fileName = m_generatorWorker->generator()->fileName();
+    const QQuickVectorImageGenerator::ErrorState errorState = d->generatorWorker->generator()->errorState();
+    const bool asynchronous = d->generatorWorker->generator()->generatorFlags().testFlag(QQuickVectorImageGenerator::AsynchronousLoading);
+    const QByteArray result = d->generatorWorker->generator()->result();
 
-    m_generatorWorker->disconnect(this);
-    m_generatorWorker.release()->deleteLater();
+    d->generatorWorker->disconnect(this);
+    d->generatorWorker.release()->deleteLater();
 
-    if (m_workerThread != nullptr) {
-        m_workerThread->quit();
-        m_workerThread->wait();
-        m_workerThread.reset(nullptr);
+    if (d->workerThread != nullptr) {
+        d->workerThread->quit();
+        d->workerThread->wait();
+        d->workerThread.reset(nullptr);
     }
 
     if (Q_LIKELY(errorState == QQuickVectorImageGenerator::NoError)) {
-        QQmlEngine *engine = m_qmlContext->engine();
+        QQmlEngine *engine = d->qmlContext->engine();
         if (Q_UNLIKELY(engine == nullptr)) {
             qCWarning(lcQuickVectorImage) << "QQuickVectorImageIncubator::generatorFinished: Requires QML engine";
             return;
         }
 
-        m_component.reset(new QQmlComponent(engine));
-        connect(m_component.get(), &QQmlComponent::statusChanged,
+        d->component.reset(new QQmlComponent(engine));
+        connect(d->component.get(), &QQmlComponent::statusChanged,
                 this, &QQuickVectorImageIncubator::componentUpdated);
         if (asynchronous) {
-            QQmlComponentPrivate *d = QQmlComponentPrivate::get(m_component.get());
-            d->setData(result, QUrl{}, QQmlComponent::Asynchronous);
-            emit m_component->statusChanged(m_component->status());
+            QQmlComponentPrivate *cd = QQmlComponentPrivate::get(d->component.get());
+            cd->setData(result, QUrl{}, QQmlComponent::Asynchronous);
+            emit d->component->statusChanged(d->component->status());
         } else {
-            m_component->setData(result, QUrl{});
+            d->component->setData(result, QUrl{});
         }
     } else {
-        m_status = Error;
+        d->status = Error;
         emit statusUpdated();
     }
 }
 
 void QQuickVectorImageIncubator::componentUpdated()
 {
-    Q_ASSERT(m_component != nullptr);
-    Q_ASSERT(m_generatorWorker == nullptr);
-    Q_ASSERT(m_workerThread == nullptr);
+    Q_D(QQuickVectorImageIncubator);
+    Q_ASSERT(d->component != nullptr);
+    Q_ASSERT(d->generatorWorker == nullptr);
+    Q_ASSERT(d->workerThread == nullptr);
 
-    if (!m_component->isLoading()) {
-        if (m_component->isReady()) {
-            m_component->create(*this, m_qmlContext);
+    if (!d->component->isLoading()) {
+        if (d->component->isReady()) {
+            d->component->create(*this, d->qmlContext);
         } else {
             qCWarning(lcQuickVectorImage) << "Component failed to load:"
-                                          << m_component->errorString();
-            m_status = Error;
+                                          << d->component->errorString();
+            d->status = Error;
             emit statusUpdated();
         }
-        m_component.release()->deleteLater();
+
+        d->component.release()->deleteLater();
     }
 }
 
 void QQuickVectorImageIncubator::statusChanged(Status status)
 {
-    if (m_status == status)
+    Q_D(QQuickVectorImageIncubator);
+    if (d->status == status)
         return;
-    m_status = status;
+    d->status = status;
     emit statusUpdated();
 }
 
