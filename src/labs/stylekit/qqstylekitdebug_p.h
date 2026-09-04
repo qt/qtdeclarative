@@ -18,7 +18,7 @@
 
 #include <QtQuick/qquickitem.h>
 
-#include "qqstylekitglobal_p.h"
+#include "qqstylekitpropertypath_p.h"
 #include "qqstylekitcontrolproperties_p.h"
 
 QT_BEGIN_NAMESPACE
@@ -51,9 +51,9 @@ private:
 
 private:
     static inline bool enabled() { return m_item != nullptr; }
-    static void notifyPropertyNotResolved(const PropertyPathId property);
+    static void notifyPropertyNotResolved(const QQStyleKitPropertyPath property);
     static void notifyPropertyRead(
-        const PropertyPathId property,
+        const QQStyleKitPropertyPath property,
         const QQStyleKitControlProperties *resolvedControl,
         const QQSK::State state,
         const QVariant &value);
@@ -65,7 +65,7 @@ private:
         const PropertyStorageId key,
         const QVariant &value);
     static void trace(
-        const PropertyPathId property,
+        const QQStyleKitPropertyPath property,
         const QQStyleKitControlProperties *resolvedControl,
         const QQSK::State state,
         const PropertyStorageId key);
@@ -77,7 +77,7 @@ private:
     static QString styleReaderToString(const QQStyleKitReader *reader);
     static QString controlToString(const QQStyleKitControlProperties *control);
     static QString objectPath(const QQStyleKitControlProperties *properties, QObject *from);
-    static QString propertyPath(const QQStyleKitPropertyGroup *group, const PropertyPathId property);
+    static QString propertyPath(const QQStyleKitPropertyGroup *group, const QQStyleKitPropertyPath property);
 
     friend class QQStyleKitPropertyResolver;
 };

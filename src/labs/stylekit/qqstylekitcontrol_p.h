@@ -17,7 +17,7 @@
 //
 
 #include <QtQml/QtQml>
-#include "qqstylekitglobal_p.h"
+#include "qqstylekitpropertypath_p.h"
 #include "qqstylekitcontrolstate_p.h"
 #include "qqstylekitreader_p.h"
 

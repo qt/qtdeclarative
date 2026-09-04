@@ -169,66 +169,6 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(QQSK::State)
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQSK::Delegates)
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQSK::PropertyPathFlags)
 
-using PropertyPathId_t = quint32;
-using PropertyStorageId = quint32;
-using QQStyleKitExtendableControlType = quint32;
-using QQStyleKitPropertyStorage = QHash<PropertyStorageId, QVariant>;
-
-constexpr PropertyPathId_t maxPropertyStorageSpaceSize = std::numeric_limits<PropertyPathId_t>::max();
-constexpr PropertyPathId_t nestedGroupCount = PropertyPathId_t(QQSK::PropertyGroup::PATH_ID_GROUP_COUNT);
-constexpr PropertyPathId_t maxStateCombinationCount = PropertyPathId_t(QQSK::StateFlag::MAX_STATE);
-constexpr PropertyPathId_t stateStorageSpaceSize = maxPropertyStorageSpaceSize / maxStateCombinationCount;
-constexpr PropertyPathId_t subtypeCount = PropertyPathId_t(QQSK::PropertyPathFlag::DelegateSubtype2) - PropertyPathId_t(QQSK::PropertyPathFlag::DelegateSubtype0) + 1;
-constexpr PropertyPathId_t nestedGroupsStartSize = maxPropertyStorageSpaceSize / (maxStateCombinationCount * subtypeCount);
-constexpr PropertyPathId_t subtypeStorageSpaceSize = maxPropertyStorageSpaceSize / (subtypeCount * maxStateCombinationCount);
-
-struct QQStyleKitPropertyGroupSpace {
-    PropertyPathId_t size = 0;
-    PropertyPathId_t start = 0;
-};
-
-class PropertyPathId {
-    Q_GADGET
-
-public:
-    enum class Flag {
-        ExcludeSubtype,
-        IncludeSubtype
-    };
-    Q_ENUM(Flag)
-
-    PropertyPathId(
-        const QQSK::Property property = QQSK::Property::NoProperty,
-        const PropertyPathId_t groupStart = PropertyPathId_t(0),
-        QQSK::PropertyGroup subtype = QQSK::PropertyGroup::DelegateSubtype0);
-
-    inline QQSK::Property property() const { return m_property; }
-    inline PropertyPathId_t pathId() const
-    {
-        /* The path ID is the property's identifier when its group path is taken
-         * into account. Each property inside QQStyleKitControlProperties has a unique
-         * path ID. For example, both 'background.color' and 'indicator.color' use the
-         * same QQSK::Property (Color), but they still have different path IDs. */
-        return m_groupStart + PropertyPathId_t(m_property);
-    }
-    inline PropertyStorageId storageId(QQSK::State state) const
-    {
-        /* To compute the fully qualified property ID used as a key in a storage map
-         * (QMap) that holds its value, we need to prefix the path ID with the state ID,
-         * since the same path can have different values in different states.
-         * Because StateFlag::Normal == 1, we subtract 1 so that the address space for
-         * properties in the Normal state starts at 0. */
-        Q_ASSERT(state != QQSK::StateFlag::Unspecified);
-        const PropertyPathId_t stateIndex = PropertyPathId_t(state) - 1;
-        const PropertyPathId_t stateStart = stateIndex * stateStorageSpaceSize;
-        return stateStart + pathId();
-    }
-
-private:
-    QQSK::Property m_property;
-    PropertyPathId_t m_groupStart;
-};
-
 QT_END_NAMESPACE
 
 #endif // QQSTYLEKITGLOBAL_P_H

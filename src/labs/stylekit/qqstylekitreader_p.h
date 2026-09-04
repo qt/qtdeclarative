@@ -19,7 +19,7 @@
 #include <QtQml/QtQml>
 #include <QtQuick/private/qquickpalette_p.h>
 
-#include "qqstylekitglobal_p.h"
+#include "qqstylekitpropertypath_p.h"
 #include "qqstylekitcontrolproperties_p.h"
 #include "qqstylekitfont_p.h"
 

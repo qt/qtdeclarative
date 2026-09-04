@@ -23,7 +23,7 @@
 #include <QtQuick/private/qquicktransition_p.h>
 #include <QtQuick/private/qquicktext_p.h>
 
-#include "qqstylekitglobal_p.h"
+#include "qqstylekitpropertypath_p.h"
 #include "qqstylekitpropertyresolver_p.h"
 #include <QtLabsStyleKit/qtlabsstylekitexports.h>
 
@@ -52,7 +52,6 @@ public:
 
     QQStyleKitPropertyGroup(QQSK::PropertyGroup group, QObject *parent);
 
-    PropertyPathId propertyPathId(QQSK::Property property, PropertyPathId::Flag flag) const;
     QString pathToString() const;
 
     template<typename T>
@@ -101,6 +100,7 @@ public:
 
     QQStyleKitControlProperties *controlProperties() const;
     inline QQSK::PropertyPathFlags pathFlags() const { return m_pathFlags; }
+    QQStyleKitPropertyGroupSpace groupSpace() const { return m_groupSpace; }
     void emitChangedForAllStylePropertiesRecursive(EmitFlags emitFlags);
 
 protected:
@@ -111,7 +111,7 @@ private:
     bool shouldEmitLocally();
     bool shouldEmitGlobally();
 
-    static QHash<PropertyPathId_t, QString> s_pathStrings;
+    static QHash<PropertyPathId, QString> s_pathStrings;
 };
 
 // ************* QQStyleKitImageProperties ****************
