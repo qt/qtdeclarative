@@ -55,6 +55,11 @@ struct QmlListWrapper : Object
         return reinterpret_cast<QQmlListProperty<QObject>*>(m_propertyData);
     }
 
+    // True if this wraps a QObject-owned list whose owner has since been
+    // destroyed, leaving property() dangling. A detached, owner-less list
+    // has both null, and thus returns false
+    bool hasDeadOwner() const { return !object() && property()->object; }
+
 private:
     void *m_propertyData[sizeof(QQmlListProperty<QObject>)/sizeof(void*)];
 
