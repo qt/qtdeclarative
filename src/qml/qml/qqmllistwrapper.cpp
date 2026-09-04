@@ -210,6 +210,12 @@ ReturnedValue QmlListWrapper::virtualGet(const Managed *m, PropertyKey id, const
     QV4::ExecutionEngine *v4 = w->engine();
 
     if (id.isArrayIndex()) {
+        if (w->d()->hasDeadOwner()) {
+            if (hasProperty)
+                *hasProperty = false;
+            return Value::undefinedValue().asReturnedValue();
+        }
+
         const uint index = id.asArrayIndex();
         const quint32 count = w->d()->property()->count
                 ? w->d()->property()->count(w->d()->property())
@@ -231,7 +237,10 @@ ReturnedValue QmlListWrapper::virtualGet(const Managed *m, PropertyKey id, const
 qint64 QmlListWrapper::virtualGetLength(const Managed *m)
 {
     Q_ASSERT(m->as<QmlListWrapper>());
-    QQmlListProperty<QObject> *property = static_cast<const QmlListWrapper *>(m)->d()->property();
+    const QmlListWrapper *w = static_cast<const QmlListWrapper *>(m);
+    if (w->d()->hasDeadOwner())
+        return 0;
+    QQmlListProperty<QObject> *property = w->d()->property();
     Q_ASSERT(property);
     return property->count ? property->count(property) : 0;
 }
@@ -246,6 +255,9 @@ bool QmlListWrapper::virtualPut(Managed *m, PropertyKey id, const Value &value, 
     QQmlListProperty<QObject> *prop = w->d()->property();
 
     if (id.isArrayIndex()) {
+        if (w->d()->hasDeadOwner())
+            return false;
+
         if (!prop->count || !prop->replace)
             return false;
 
@@ -310,8 +322,12 @@ struct QmlListWrapperOwnPropertyKeyIterator : ObjectOwnPropertyKeyIterator
 PropertyKey QmlListWrapperOwnPropertyKeyIterator::next(const Object *o, Property *pd, PropertyAttributes *attrs)
 {
     const QmlListWrapper *w = static_cast<const QmlListWrapper *>(o);
-
-    quint32 count = w->d()->property()->count ? w->d()->property()->count(w->d()->property()) : 0;
+    // even if the list has a stale owner, we still need to list the members
+    // so we can't unconditionally return PropertyKey::invalid()
+    // if hasDeadOwner returns true
+    quint32 count = (w->d()->hasDeadOwner() || !w->d()->property()->count)
+            ? 0
+            : w->d()->property()->count(w->d()->property());
     if (arrayIndex < count) {
         uint index = arrayIndex;
         ++arrayIndex;
@@ -361,6 +377,9 @@ ReturnedValue PropertyListPrototype::method_pop(const FunctionObject *b, const V
     if (!w)
         RETURN_UNDEFINED();
 
+    if (w->d()->hasDeadOwner())
+        RETURN_UNDEFINED();
+
     QQmlListProperty<QObject> *property = w->d()->property();
 
     if (!property->count)
@@ -389,6 +408,9 @@ ReturnedValue PropertyListPrototype::method_push(const FunctionObject *b, const 
         RETURN_UNDEFINED();
     QmlListWrapper *w = instance->as<QmlListWrapper>();
     if (!w)
+        RETURN_UNDEFINED();
+
+    if (w->d()->hasDeadOwner())
         RETURN_UNDEFINED();
 
     QQmlListProperty<QObject> *property = w->d()->property();
@@ -448,6 +470,9 @@ ReturnedValue PropertyListPrototype::method_shift(const FunctionObject *b, const
     if (!w)
         RETURN_UNDEFINED();
 
+    if (w->d()->hasDeadOwner())
+        RETURN_UNDEFINED();
+
     QQmlListProperty<QObject> *property = w->d()->property();
 
     if (!property->count)
@@ -480,6 +505,9 @@ ReturnedValue PropertyListPrototype::method_splice(const FunctionObject *b, cons
         RETURN_UNDEFINED();
     QmlListWrapper *w = instance->as<QmlListWrapper>();
     if (!w)
+        RETURN_UNDEFINED();
+
+    if (w->d()->hasDeadOwner())
         RETURN_UNDEFINED();
 
     QQmlListProperty<QObject> *property = w->d()->property();
@@ -593,6 +621,9 @@ ReturnedValue PropertyListPrototype::method_unshift(const FunctionObject *b, con
     if (!w)
         RETURN_UNDEFINED();
 
+    if (w->d()->hasDeadOwner())
+        RETURN_UNDEFINED();
+
     QQmlListProperty<QObject> *property = w->d()->property();
 
     if (!property->count)
@@ -670,6 +701,9 @@ ReturnedValue firstOrLastIndexOf(const FunctionObject *b, const Value *thisObjec
 
     QmlListWrapper *w = instance->as<QmlListWrapper>();
     if (!w)
+        RETURN_UNDEFINED();
+
+    if (w->d()->hasDeadOwner())
         RETURN_UNDEFINED();
 
     QQmlListProperty<QObject> *property = w->d()->property();
@@ -758,6 +792,9 @@ ReturnedValue PropertyListPrototype::method_sort(const FunctionObject *b, const 
     if (!w)
         RETURN_UNDEFINED();
 
+    if (w->d()->hasDeadOwner())
+        RETURN_UNDEFINED();
+
     QQmlListProperty<QObject> *property = w->d()->property();
 
     if (!property->count)
@@ -794,6 +831,9 @@ ReturnedValue PropertyListPrototype::method_get_length(const FunctionObject *b, 
     if (!w)
         RETURN_UNDEFINED();
 
+    if (w->d()->hasDeadOwner())
+        RETURN_UNDEFINED();
+
     QQmlListProperty<QObject> *property = w->d()->property();
     if (!property->count)
         return scope.engine->throwTypeError(u"List doesn't define a Count function"_s);
@@ -814,6 +854,9 @@ ReturnedValue PropertyListPrototype::method_set_length(const FunctionObject *b, 
 
     const QmlListWrapper *w = instance->as<QmlListWrapper>();
     if (!w)
+        RETURN_UNDEFINED();
+
+    if (w->d()->hasDeadOwner())
         RETURN_UNDEFINED();
 
     QQmlListProperty<QObject> *property = w->d()->property();

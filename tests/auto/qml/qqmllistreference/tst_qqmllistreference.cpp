@@ -23,6 +23,14 @@ class tst_qqmllistreference : public QQmlDataTest
 public:
     tst_qqmllistreference() : QQmlDataTest(QT_QMLTEST_DATADIR) {}
 
+    // used in listWrapperOpsAfterOwnerDestroyed
+    enum class Op {
+        Length, IndexRead, IndexWrite, ForIn,
+        Pop, Push, Shift, Unshift, Splice,
+        IndexOf, LastIndexOf, Sort,
+    };
+    Q_ENUM(Op)
+
 private:
     void modeData();
 
@@ -67,6 +75,8 @@ private slots:
     void listWrapperCreateOwnedIsIndependent();
     void listWrapperIncreaseLengthWhenWritingOutOfBoundsArrayIndex();
     void listWrapperToVariantAfterOwnerDestroyed();
+    void listWrapperOpsAfterOwnerDestroyed_data();
+    void listWrapperOpsAfterOwnerDestroyed();
 };
 
 class TestType : public QObject
@@ -1179,6 +1189,40 @@ void tst_qqmllistreference::listWrapperToVariantAfterOwnerDestroyed()
 
     const QVariant v = root->property("stash");
     QCOMPARE(v.value<QList<QObject *>>().size(), 0);
+}
+
+void tst_qqmllistreference::listWrapperOpsAfterOwnerDestroyed_data()
+{
+    QTest::addColumn<QString>("op");
+    const QMetaEnum ops = QMetaEnum::fromType<Op>();
+    for (int i = 0; i < ops.keyCount(); ++i)
+        QTest::newRow(ops.key(i)) << QString::fromUtf8(ops.key(i));
+}
+
+// Operating on a wrapper whose owner has been destroyed must not
+// access dangling data
+void tst_qqmllistreference::listWrapperOpsAfterOwnerDestroyed()
+{
+    QFETCH(QString, op);
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("listWrapperDanglingOps.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY(!root.isNull());
+
+    QMetaObject::invokeMethod(root.data(), "grab");
+    QPointer<QObject> holder = root->property("holder").value<QObject *>();
+    QVERIFY(!holder.isNull());
+
+    QMetaObject::invokeMethod(root.data(), "drop");
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    QTRY_VERIFY(holder.isNull());
+
+    QVariant result;
+    QVERIFY(QMetaObject::invokeMethod(root.data(), "run",
+                                      Q_RETURN_ARG(QVariant, result), Q_ARG(QVariant, op)));
 }
 
 QTEST_MAIN(tst_qqmllistreference)
