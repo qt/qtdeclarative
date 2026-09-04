@@ -103,14 +103,13 @@ signals:
     Q_REVISION(6, 12) void retainWhileLoadingChanged();
     Q_REVISION(6, 12) void generatedItemChanged();
 
-private slots:
-    void updateRootItemScale();
-    void updateAnimationProperties();
-    void updateItem();
-
 private:
     Q_DISABLE_COPY(QQuickVectorImage)
     Q_DECLARE_PRIVATE(QQuickVectorImage)
+
+    void updateRootItemScale();
+    void updateAnimationProperties();
+    void updateItem();
 };
 
 class Q_QUICKVECTORIMAGE_EXPORT QQuickVectorImageAnimations : public QObject
