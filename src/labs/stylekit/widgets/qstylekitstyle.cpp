@@ -125,10 +125,11 @@ Q_STATIC_LOGGING_CATEGORY(lcStyleKit, "qt.labs.stylekit")
     \endcode
     \endif
 
-    The Style is loaded with an internal QQmlEngine owned by the
-    QStyleKitStyle instance. If the path is invalid or the root object is
-    not a \l Style, a warning is emitted and the style uses a default
-    fallback style until a valid \l stylePath is set.
+    QStyleKitStyle loads the Style with an internal QQmlEngine that the
+    QStyleKitStyle instance owns. If the path is invalid or the root object
+    is not a \l Style, QStyleKitStyle emits a warning and keeps the
+    previously loaded style. Until a style loads successfully, the widgets
+    use an empty fallback style.
 
     \section1 Themes
 
@@ -290,39 +291,46 @@ Q_STATIC_LOGGING_CATEGORY(lcStyleKit, "qt.labs.stylekit")
     \property QStyleKitStyle::stylePath
     \brief the path to the QML \l Style file driving this style.
 
-    The value is a path to a local file or a path to a file in the resource
-    file system (for example, \c{:/styles/MyStyle.qml}). A relative path is
-    resolved against the application's working directory. The file must
-    contain a QML component whose root object is a \l Style. Setting this
-    property reloads the style; if the new file cannot be loaded, the
-    previously loaded style is kept and a warning is emitted.
+    The value is a path to a local file or to a file in the resource file
+    system (for example, \c{:/styles/MyStyle.qml}). QStyleKitStyle resolves a
+    relative path against the application's working directory. The file must
+    contain a QML component whose root object is a \l Style.
+
+    Setting this property reloads the style. If the new file does not load,
+    QStyleKitStyle emits a warning and keeps the previously loaded style
+    and style path.
 */
 
 /*!
     \property QStyleKitStyle::themeName
     \brief the name of the active theme.
 
-    The value must be one of the entries in \l availableThemeNames, or the
-    special name \c System to follow the platform color scheme.
-    Setting this property updates all widgets to repaint with the
-    new theme.
+    The value must be one of the entries in \l availableThemeNames. That
+    list includes the special name \c System, which makes the style follow
+    the platform color scheme. The comparison ignores case.
+
+    Setting this property repolishes all widgets so that they repaint with
+    the new theme. If the name matches no theme, the \l Style emits a
+    warning and applies no theme.
 */
 
 /*!
     \property QStyleKitStyle::availableThemeNames
     \brief the list of theme names exposed by the loaded \l Style.
 
-    This list includes the built-in \c Light and \c Dark themes as well
-    as any custom themes defined by the style.
+    This list always includes \c System, which follows the platform color
+    scheme. It also includes \c Light and \c Dark when the \l Style defines
+    those themes, together with any custom themes that the style author
+    defines. The list is empty when no style is loaded.
 */
 
 /*!
     \property QStyleKitStyle::customThemeNames
     \brief the list of custom theme names defined by the loaded \l Style.
 
-    Unlike \l availableThemeNames, this list excludes the built-in \c Light and
-    \c Dark themes and contains only the themes explicitly defined by the
-    style author. Returns an empty list when no style is loaded.
+    Unlike \l availableThemeNames, this list excludes \c System, \c Light,
+    and \c Dark, and contains only the themes that the style author
+    defines explicitly. The list is empty when no style is loaded.
 
     \sa availableThemeNames, themeName
 */
@@ -1613,8 +1621,8 @@ QStyleKitStylePrivate::metricsForReader(QQStyleKitReader *reader) const
 /*!
     Constructs a QStyleKitStyle with no style loaded.
 
-    Use \l setStylePath() to load a QML \l Style after construction.
-    Until a style is loaded, the style uses a default fallback style.
+    Use \l setStylePath() to load a QML \l Style after construction. Until a
+    Style loads successfully, the widgets use an empty fallback style.
 */
 QStyleKitStyle::QStyleKitStyle()
     : QCommonStyle(*new QStyleKitStylePrivate())
@@ -1623,12 +1631,11 @@ QStyleKitStyle::QStyleKitStyle()
 
 /*!
     Constructs a QStyleKitStyle and loads the QML \l Style at \a filePath.
+    See the \l stylePath property for the accepted path forms.
 
-    \a filePath is a path to a local file or a path to a file in the resource
-    file system; a relative path is resolved against the application's working
-    directory. If the path is invalid or the root object of the loaded component
-    is not a \l Style, a warning is emitted and the constructed style uses a
-    default fallback style until a valid \l stylePath is set.
+    If the path is invalid or the root object of the loaded component is not
+    a \l Style, QStyleKitStyle emits a warning and the widgets use an empty
+    fallback style until a valid \l stylePath is set.
 */
 QStyleKitStyle::QStyleKitStyle(const QString &filePath)
     : QCommonStyle(*new QStyleKitStylePrivate())
@@ -1648,7 +1655,7 @@ QStyleKitStyle::~QStyleKitStyle()
 }
 
 /*!
-    Returns the path of the currently loaded \l Style file.
+    Returns the path most recently set for the QML \l Style file.
 
     \sa setStylePath()
 */
@@ -1663,10 +1670,10 @@ QString QStyleKitStyle::stylePath() const
 
     \a filePath is a path to a local file or a path to a file in the resource
     file system; see the \l stylePath property for the accepted forms. If it is
-    the same as the current \l stylePath, this function does nothing. If the new
-    style cannot be loaded, the previously loaded style remains active and a
-    warning is emitted; \l stylePathChanged() is still emitted to reflect
-    the changed property value.
+    the same as the current \l stylePath, this function does nothing.
+
+    If the new style does not load, QStyleKitStyle emits a warning, keeps
+    the previously loaded style active, and does not emit \l stylePathChanged().
 
     \sa stylePath()
 */
@@ -1692,8 +1699,12 @@ void QStyleKitStyle::setStylePath(const QString &filePath)
 }
 
 /*!
-    Returns the name of the currently active theme, or an empty string
-    if no \l Style has been loaded.
+    Returns the name of the requested theme, or an empty string when no
+    \l Style is loaded.
+
+    When the theme name is \c System, this function returns \c System rather
+    than the \c Light or \c Dark theme that the platform color scheme
+    resolves to.
 
     \sa setThemeName(), availableThemeNames()
 */
@@ -1706,10 +1717,14 @@ QString QStyleKitStyle::themeName() const
 /*!
     Activates the theme named \a themeName.
 
-    \a themeName must be one of the entries in \l availableThemeNames(), or the
-    special name \c System to follow the platform color scheme. If no
-    \l Style has been loaded, this function emits a warning and returns
-    without changing the active theme.
+    \a themeName must be one of the entries in \l availableThemeNames(),
+    which includes the special name \c System for following the platform
+    color scheme. The comparison ignores case.
+
+    If no \l Style is loaded, this function emits a warning and returns
+    without changing the active theme. If a Style is loaded but \a themeName
+    matches none of its themes, the Style emits a warning and applies no
+    theme.
 
     \sa themeName(), availableThemeNames()
 */
@@ -1728,10 +1743,11 @@ void QStyleKitStyle::setThemeName(const QString &themeName)
 }
 
 /*!
-    Returns the names of all themes exposed by the loaded \l Style,
-    including the built-in \c Light and \c Dark themes and any custom
-    themes defined by the style. Returns an empty list when no style
-    is loaded.
+    Returns the names of all themes that the loaded \l Style exposes. The
+    list always includes \c System, and includes \c Light and \c Dark when
+    the Style defines those themes, together with any custom themes that
+    the style author defines. Returns an empty list when no style is
+    loaded.
 
     \sa customThemeNames(), themeName()
 */
