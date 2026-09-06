@@ -90,6 +90,7 @@ Q_STATIC_LOGGING_CATEGORY(lcStyleKit, "qt.labs.stylekit")
     \inmodule QtLabsStyleKit
     \ingroup appearance
     \since 6.12
+    \preliminary
 
     \brief The QStyleKitStyle class applies a \l {Qt Labs StyleKit} style
     to Qt Widgets.
@@ -222,10 +223,10 @@ Q_STATIC_LOGGING_CATEGORY(lcStyleKit, "qt.labs.stylekit")
         \li \l {StylableControls::control}{control}
     \endtable
 
-    Widgets not listed above are not yet supported by QStyleKitStyle and will be
-    painted by \l QCommonStyle. Support for remaining widgets is planned for future
-    releases. Conversely, some control entries in \l StylableControls have no
-    Qt Widgets equivalent and are not applied when styling widgets.
+    QStyleKitStyle does not yet support widgets outside this table;
+    \l QCommonStyle paints them instead. Conversely, some control entries in
+    \l StylableControls have no Qt Widgets equivalent, and
+    QStyleKitStyle ignores them when styling widgets.
 
     \section2 Sub-controls within a widget
 
@@ -267,8 +268,7 @@ Q_STATIC_LOGGING_CATEGORY(lcStyleKit, "qt.labs.stylekit")
 
     \section1 Known limitations
 
-    QStyleKitStyle is in Tech Preview. The following StyleKit features are
-    currently not supported when used with Qt Widgets:
+    QStyleKitStyle does not support the following StyleKit features:
 
     \list
         \li \b{Shadows} -- QStyleKitStyle ignores shadow definitions.
@@ -286,8 +286,6 @@ Q_STATIC_LOGGING_CATEGORY(lcStyleKit, "qt.labs.stylekit")
             \l {DelegateStyle::}{delegate} property and always uses its
             built-in rendering.
     \endlist
-
-    Support for these features is planned for a future release.
 
     \sa QStyle, QCommonStyle, {Qt Labs StyleKit}, Style, Theme
 */
