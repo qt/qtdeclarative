@@ -98,9 +98,9 @@ Q_STATIC_LOGGING_CATEGORY(lcStyleKit, "qt.labs.stylekit")
     QStyleKitStyle is a QStyle implementation that uses a \l StyleKit \l Style
     to style Qt Widgets. The \l Style is a QML file that declaratively describes
     the visual design (colors, sizes, radii, borders, and other properties)
-    for each widget type and state. Those property values drive the painting,
-    which is done entirely with QPainter. Qt Quick and the scene graph play
-    no part in the rendering.
+    for each widget type and state. QStyleKitStyle uses those property values
+    to paint each widget entirely with QPainter. Qt Quick and the scene graph
+    play no part in the rendering.
 
     This separation means the same \l Style QML file can drive both
     Qt Quick Controls and Qt Widgets, sharing one design definition across
@@ -134,24 +134,25 @@ Q_STATIC_LOGGING_CATEGORY(lcStyleKit, "qt.labs.stylekit")
 
     \section1 Themes
 
-    A Style may define one or more named \l {Theme}{themes}. The active
-    theme is selected with \l setThemeName(); the list of available
-    themes is exposed through \l availableThemeNames. The special theme name
-    \c System makes the style follow the platform color scheme: when the
-    OS color scheme changes, the active theme is recreated automatically
-    and all widgets are repolished.
+    A Style can define one or more named \l {Theme}{themes}. Call
+    \l setThemeName() to select the active theme, and read
+    \l availableThemeNames to list the themes a Style offers. The special
+    theme name \c System makes the style follow the platform color scheme:
+    when the OS color scheme changes, QStyleKitStyle recreates the active
+    theme and repolishes all widgets.
 
-    \section1 Widget to StyleKit Control Mapping
+    \section1 Widget to StyleKit control mapping
 
     Each Qt Widgets class is mapped to a StyleKit control type, which
     determines which control entry in the \l Style applies to it. Use the
-    corresponding control entry to configure visual properties for that widget
-    type, including individual parts of the widget such as its background,
-    indicator, handle, etc. See \l ControlStyleProperties for the full list of
-    stylable properties.
-    Properties not set in a specific control entry fall back through the control
-    type hierarchy: for example, \c button falls back to \c abstractButton, which
-    falls back to \c control.
+    corresponding control entry to configure visual properties for that
+    widget type, including individual parts of the widget such as its
+    background, indicator, and handle. See \l ControlStyleProperties for the
+    full list of stylable properties.
+
+    Properties not set in a specific control entry fall back through the
+    control type hierarchy: for example, \c button falls back to
+    \c abstractButton, which falls back to \c control.
 
     \table
     \header
@@ -229,19 +230,20 @@ Q_STATIC_LOGGING_CATEGORY(lcStyleKit, "qt.labs.stylekit")
 
     \section2 Sub-controls within a widget
 
-    Separate sub-controls within a widget can be styled individually, as each one maps
-    to a separate control entry in the \l Style:
+    Each sub-control of a widget maps to its own control entry in the
+    \l Style, which lets you style the sub-controls individually.
 
     \table
     \header
-        \li Sub-element
+        \li Sub-control
         \li StyleKit control
     \row
-        \li \l QStyledItemDelegate items - the default delegate for all Qt item views,
+        \li \l QStyledItemDelegate items -- the default delegate for all Qt item views,
             including the \l QComboBox popup list
         \li \l {StylableControls::itemDelegate}{itemDelegate}
     \row
-        \li The same items, when user-checkable (i.e. showing a check indicator)
+        \li The same items, when user-checkable (that is, when they show
+            a check indicator)
         \li \l {StylableControls::checkDelegate}{checkDelegate};
             falls back to \c itemDelegate for anything not set explicitly
     \row
@@ -264,22 +266,25 @@ Q_STATIC_LOGGING_CATEGORY(lcStyleKit, "qt.labs.stylekit")
         \li \l {StylableControls::popup}{popup}
     \endtable
 
-    \section1 Known Limitations
+    \section1 Known limitations
 
     QStyleKitStyle does not support the following StyleKit features:
 
     \list
-        \li \b{Shadows} — shadows are not rendered.
-        \li \b{Delegate scale above 1.0 on a control's background} — a widget cannot paint
-            outside its own rect, so the scaled background is clipped at the widget edge.
-            Use \l {DelegateStyle::}{margins} to inset the background and reserve room for
-            it to grow. Scaling indicators, handles and foregrounds is unaffected.
-        \li \b{Variations} — setting a \l StyleVariation on a widget instance is
-            not yet supported.
-        \li \b{Custom controls} — styling custom widgets using \l CustomControl
-            is not yet supported.
-        \li \b{Custom delegates} — the \l {DelegateStyle::}{delegate} property is
-            not used; the built-in rendering is always applied.
+        \li \b{Shadows} -- QStyleKitStyle ignores shadow definitions.
+        \li \b{Delegate scale above 1.0 on a control's background} -- a
+            widget cannot paint outside its own rectangle, so QStyleKitStyle
+            clips the scaled background at the widget edge. Use
+            \l {DelegateStyle::}{margins} to inset the background and reserve
+            room for it to grow. Scaling indicators, handles, and foregrounds
+            still works.
+        \li \b{Variations} -- QStyleKitStyle does not yet apply a
+            \l StyleVariation set on a widget instance.
+        \li \b{Custom controls} -- QStyleKitStyle does not yet style custom
+            widgets declared with \l CustomControl.
+        \li \b{Custom delegates} -- QStyleKitStyle ignores the
+            \l {DelegateStyle::}{delegate} property and always uses its
+            built-in rendering.
     \endlist
 
     \sa QStyle, QCommonStyle, {Qt Labs StyleKit}, Style, Theme
