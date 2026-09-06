@@ -6,6 +6,7 @@
     \title Qt Labs StyleKit C++ Classes
     \ingroup modules
     \qtcmakepackage LabsStyleKit
+    \preliminary
     \brief Provides C++ classes for integrating Qt Labs StyleKit with Qt Widgets.
 
     For more information on the Qt Labs StyleKit module, see the
