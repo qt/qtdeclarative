@@ -50,8 +50,9 @@
     \snippet PlainStyleMain.qml 1
 
     \section1 Using the Module in your Project
-    The QML types of the module are available through the \c QtQuick.labs.StyleKit import.
-    To use the types, add the following import statement to your .qml file:
+    The QML types of the module are available through the \c Qt.labs.StyleKit
+    import. To use the types, add the following import statement to your .qml
+    file:
 
     \qml
     import Qt.labs.StyleKit
