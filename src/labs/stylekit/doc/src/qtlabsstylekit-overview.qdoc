@@ -81,8 +81,9 @@
 
     To switch themes at runtime, set \l {Style::themeName}{Style.themeName} from
     a QML file in your application to the name of the desired theme. The
-    \l {Style::themeNames}{Style.themeNames} property lists all available theme
-    names, which makes it straightforward to populate a selector control:
+    \l {Style::availableThemeNames}{Style.availableThemeNames} property lists
+    all available theme names, which makes it straightforward to populate a
+    selector control:
 
     \snippet CustomThemeSnippets.qml change theme
 
