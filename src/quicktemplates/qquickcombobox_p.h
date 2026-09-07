@@ -72,7 +72,7 @@ class Q_QUICKTEMPLATES2_EXPORT QQuickComboBox : public QQuickControl
     Q_PROPERTY(ImplicitContentWidthPolicy implicitContentWidthPolicy READ implicitContentWidthPolicy
         WRITE setImplicitContentWidthPolicy NOTIFY implicitContentWidthPolicyChanged FINAL REVISION(6, 0))
     // 6.12 (Qt 6.12)
-    Q_PROPERTY(bool highlightOnHover READ highlightOnHover WRITE setHighlightOnHover NOTIFY highlightOnHoverChanged FINAL REVISION(6, 12))
+    Q_PROPERTY(bool highlightOnHover READ highlightOnHover WRITE setHighlightOnHover NOTIFY highlightOnHoverChanged REVISION(6, 12))
     QML_NAMED_ELEMENT(ComboBox)
     QML_ADDED_IN_VERSION(2, 0)
 

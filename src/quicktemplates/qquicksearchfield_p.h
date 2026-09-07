@@ -45,14 +45,14 @@ class Q_QUICKTEMPLATES2_EXPORT QQuickSearchField : public QQuickControl
     Q_PROPERTY(QQuickPopup *popup READ popup WRITE setPopup NOTIFY popupChanged FINAL)
     Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)
     Q_PROPERTY(QString placeholderText READ placeholderText WRITE setPlaceholderText
-                       NOTIFY placeholderTextChanged FINAL REVISION(6, 12))
+                       NOTIFY placeholderTextChanged REVISION(6, 12))
     Q_PROPERTY(bool selectTextByMouse READ selectTextByMouse WRITE setSelectTextByMouse
-                       NOTIFY selectTextByMouseChanged FINAL REVISION(6, 12))
-    Q_PROPERTY(QString selectedText READ selectedText NOTIFY selectedTextChanged FINAL REVISION(6, 12))
-    Q_PROPERTY(int selectionStart READ selectionStart NOTIFY selectionStartChanged FINAL REVISION(6, 12))
-    Q_PROPERTY(int selectionEnd READ selectionEnd NOTIFY selectionEndChanged FINAL REVISION(6, 12))
+                       NOTIFY selectTextByMouseChanged REVISION(6, 12))
+    Q_PROPERTY(QString selectedText READ selectedText NOTIFY selectedTextChanged REVISION(6, 12))
+    Q_PROPERTY(int selectionStart READ selectionStart NOTIFY selectionStartChanged REVISION(6, 12))
+    Q_PROPERTY(int selectionEnd READ selectionEnd NOTIFY selectionEndChanged REVISION(6, 12))
     Q_PROPERTY(int cursorPosition READ cursorPosition WRITE setCursorPosition
-                       NOTIFY cursorPositionChanged FINAL REVISION(6, 12))
+                       NOTIFY cursorPositionChanged REVISION(6, 12))
 
     QML_NAMED_ELEMENT(SearchField)
     QML_ADDED_IN_VERSION(6, 10)

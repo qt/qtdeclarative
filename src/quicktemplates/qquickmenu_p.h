@@ -47,7 +47,7 @@ class Q_QUICKTEMPLATES2_EXPORT QQuickMenu : public QQuickPopup
 
     Q_PROPERTY(QQuickIcon icon READ icon WRITE setIcon NOTIFY iconChanged FINAL REVISION(6, 5))
     Q_PROPERTY(bool separatorsCollapsible READ separatorsCollapsible WRITE setSeparatorsCollapsible
-                       NOTIFY separatorsCollapsibleChanged FINAL REVISION(6, 12))
+                       NOTIFY separatorsCollapsibleChanged REVISION(6, 12))
 
     Q_CLASSINFO("DefaultProperty", "contentData")
     QML_NAMED_ELEMENT(Menu)
