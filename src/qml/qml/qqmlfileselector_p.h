@@ -32,12 +32,15 @@ class Q_QML_EXPORT QQmlFileSelectorPrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QQmlFileSelector)
 public:
+    enum class Owned: bool {No = false, Yes = true };
+
     QQmlFileSelectorPrivate();
     ~QQmlFileSelectorPrivate();
 
-    QFileSelector* selector;
+    void deleteSelectorIfOwned();
+
+    QTaggedPointer<QFileSelector, Owned> selector;
     QPointer<QQmlEngine> engine;
-    bool ownSelector;
     QScopedPointer<QQmlFileSelectorInterceptor> myInstance;
 };
 
