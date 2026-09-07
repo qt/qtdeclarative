@@ -930,7 +930,7 @@ void tst_TouchMouse::buttonOnTouch()
     touchSeq.stationary(0).press(1, p2, &window).commit();
     QQuickTouchUtils::flush(&window);
 
-    QCOMPARE(button1->scale(), 1);
+    QCOMPARE(button1->scale(), 1.);
 
     p1 -= QPoint(10, 0);
     p2 += QPoint(10, 0);
@@ -948,13 +948,13 @@ void tst_TouchMouse::buttonOnTouch()
     p2 += QPoint(10, 0);
     touchSeq.move(0, p1, &window).move(1, p2, &window).commit();
     QQuickTouchUtils::flush(&window);
-    QCOMPARE(button1->scale(), 2);
+    QCOMPARE(button1->scale(), 2.);
     qCDebug(lcTests) << "Button scale: " << button1->scale();
 
     touchSeq.release(0, p1, &window).release(1, p2, &window).commit();
     QQuickTouchUtils::flush(&window);
     QVERIFY(eventItem1->eventList.isEmpty());
-    QCOMPARE(button1->scale(), 2);
+    QCOMPARE(button1->scale(), 2.);
     qCDebug(lcTests) << "Button scale: " << button1->scale();
 
 
@@ -967,7 +967,7 @@ void tst_TouchMouse::buttonOnTouch()
     p2 = QPoint(60, 110);
     touchSeq.press(0, p1, &window).press(1, p2, &window).commit();
     QQuickTouchUtils::flush(&window);
-    QCOMPARE(button1->scale(), 1);
+    QCOMPARE(button1->scale(), 1.);
     QCOMPARE(eventItem1->eventList.size(), 1);
     QCOMPARE(eventItem1->eventList.at(0).type, QEvent::MouseButtonPress);
 
@@ -990,14 +990,14 @@ void tst_TouchMouse::buttonOnTouch()
     QQuickTouchUtils::flush(&window);
     qCDebug(lcTests) << "Button scale: " << button1->scale();
     QEXPECT_FAIL("", "No pinch: eventItem1 grabbed both touchpoints", Continue);
-    QCOMPARE(button1->scale(), 2);
+    QCOMPARE(button1->scale(), 2.);
 
     touchSeq.release(0, p1, &window).release(1, p2, &window).commit();
     QQuickTouchUtils::flush(&window);
     QCOMPARE(eventItem1->eventList.size(), 6);
     qCDebug(lcTests) << "Button scale: " << button1->scale();
     QEXPECT_FAIL("", "No pinch: eventItem1 grabbed both touchpoints", Continue);
-    QCOMPARE(button1->scale(), 2);
+    QCOMPARE(button1->scale(), 2.);
 }
 
 void tst_TouchMouse::pinchOnFlickable()
