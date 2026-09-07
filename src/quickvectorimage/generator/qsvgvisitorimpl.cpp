@@ -43,7 +43,8 @@ using namespace Qt::StringLiterals;
 class QSvgStyleResolver
 {
 public:
-    QSvgStyleResolver()
+    explicit QSvgStyleResolver(const QSvgDocument *doc)
+        : m_svgState(doc)
     {
         m_dummyImage = QImage(1, 1, QImage::Format_RGB32);
         m_dummyPainter.begin(&m_dummyImage);
@@ -303,7 +304,6 @@ QSvgVisitorImpl::QSvgVisitorImpl(const QString svgFileName,
     : m_svgFileName(svgFileName)
     , m_generator(generator)
     , m_assumeTrustedSource(assumeTrustedSource)
-    , m_styleResolver(new QSvgStyleResolver)
 {
 }
 
@@ -435,6 +435,7 @@ bool QSvgVisitorImpl::doTraversal()
         return false;
     }
 
+    m_styleResolver = std::make_unique<QSvgStyleResolver>(doc.get());
     QSvgVisitor::traverse(doc.get());
 
     return true;
