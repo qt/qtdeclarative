@@ -1747,6 +1747,13 @@ static QVariant objectToVariant(const QV4::Object *o, V4ObjectSet *visitedObject
 {
     Q_ASSERT(o);
 
+    QV4::ExecutionEngine *engine = o->engine();
+    if (Q_UNLIKELY(engine->checkStackLimits())) {
+        if (o->as<ArrayObject>())
+            return QVariantList();
+        return QVariantMap();
+    }
+
     V4ObjectSet recursionGuardSet;
     if (!visitedObjects) {
         visitedObjects = &recursionGuardSet;
@@ -1763,7 +1770,7 @@ static QVariant objectToVariant(const QV4::Object *o, V4ObjectSet *visitedObject
     QVariant result;
 
     if (o->as<ArrayObject>()) {
-        QV4::Scope scope(o->engine());
+        QV4::Scope scope(engine);
         QV4::ScopedArrayObject a(scope, o->asReturnedValue());
         QV4::ScopedValue v(scope);
         QVariantList list;
@@ -1776,7 +1783,7 @@ static QVariant objectToVariant(const QV4::Object *o, V4ObjectSet *visitedObject
         }
 
         result = list;
-    } else if (o->getPrototypeOf() == o->engine()->objectPrototype()->d()
+    } else if (o->getPrototypeOf() == engine->objectPrototype()->d()
                || (conversionBehvior == JSToQVariantConversionBehavior::Aggressive &&
                    !o->as<QV4::FunctionObject>())) {
         /* FunctionObject is excluded for historical reasons, even though
