@@ -1572,8 +1572,7 @@ void tst_TouchMouse::touchCancelWillCancelMousePress()
     QCOMPARE(eventItem->eventList.at(0).type, QEvent::MouseButtonPress);
 
     // Cancel it...
-    QTouchEvent cancelEvent(QEvent::TouchCancel, touchscreen.get());
-    QCoreApplication::sendEvent(&window, &cancelEvent);
+    QTest::touchEvent(&window, touchscreen.get()).cancel();
     QCOMPARE(eventItem->eventList.size(), 3);
     QCOMPARE(eventItem->eventList.at(1).type, QEvent::TouchCancel);
     QCOMPARE(eventItem->eventList.at(2).type, QEvent::UngrabMouse);

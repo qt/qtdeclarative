@@ -486,8 +486,7 @@ void tst_QQuickPinchArea::cancel()
         QCOMPARE(root->property("center").toPointF(), QPointF(40, 40)); // blackrect is at 50,50
         QCOMPARE(blackRect->scale(), 1.5);
 
-        QTouchEvent cancelEvent(QEvent::TouchCancel, touchscreen.get());
-        QCoreApplication::sendEvent(window, &cancelEvent);
+        QTest::touchEvent(window, touchscreen.get()).cancel();
         QQuickTouchUtils::flush(window);
 
         QCOMPARE(root->property("scale").toReal(), 1.0);
