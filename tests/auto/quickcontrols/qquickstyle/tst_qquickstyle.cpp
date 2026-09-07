@@ -177,7 +177,7 @@ void tst_QQuickStyle::qGuiApplicationPaletteChangesArePropagatedToControls()
     // which differs from the system palette on macOS. However, if the platform theme returns nullptr for LabelPalette (which happens when the platform theme is "offscreen"),
     // we fallback to a gray palette that is in sync with QGuiApplication::palette().
     const QColor expectedInitialWindowTextColor = qPlatformThemePalette ? qPlatformThemePalette->windowText().color() : qGuiAppPalette.windowText().color();
-    QCOMPARE(labelPrivate->palette()->windowText(), expectedInitialWindowTextColor);
+    QCOMPARE(labelPrivate->palette()->active()->windowText(), expectedInitialWindowTextColor);
     QCOMPARE(labelPrivate->defaultPalette().windowText().color(), expectedInitialWindowTextColor);
 
     qGuiAppPalette.setColor(QPalette::WindowText, QColorConstants::Magenta);
