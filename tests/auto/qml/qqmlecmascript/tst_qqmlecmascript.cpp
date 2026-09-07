@@ -448,6 +448,7 @@ private slots:
 
     void anonymousFunctionReturnTypeAnnotationIsPreserved();
     void namedFunctionExpressionReturnTypeIsPreserved();
+    void namedFunctionExpressionOwnNameIsShadowable();
     void cuObjectIndex();
     void vmeMetaObjectAccessors();
 
@@ -10893,6 +10894,36 @@ void tst_qqmlecmascript::namedFunctionExpressionReturnTypeIsPreserved() {
 
     QVERIFY(!signature.empty());
     QCOMPARE(signature.first(), QQmlMetaType::qmlType(QMetaType::fromType<int>()));
+}
+
+void tst_qqmlecmascript::namedFunctionExpressionOwnNameIsShadowable()
+{
+    QJSEngine engine;
+
+    {
+        // let can shadow the function's own name.
+        QJSValue ret = engine.evaluate(
+                "(function() {\n"
+                "    let yep = function f() {\n"
+                "        let f = 1;\n"
+                "        return f;\n"
+                "    };\n"
+                "    return yep();\n"
+                "})();\n");
+        QVERIFY2(!ret.isError(), qPrintable(ret.toString()));
+        QCOMPARE(ret.toInt(), 1);
+    }
+
+    {
+        // The name still isn't visible in the enclosing scope.
+        QJSValue ret = engine.evaluate(
+                "(function() {\n"
+                "    let yep = function f() { return 1; };\n"
+                "    return typeof f;\n"
+                "})();\n");
+        QVERIFY2(!ret.isError(), qPrintable(ret.toString()));
+        QCOMPARE(ret.toString(), QStringLiteral("undefined"));
+    }
 }
 
 void tst_qqmlecmascript::cuObjectIndex()

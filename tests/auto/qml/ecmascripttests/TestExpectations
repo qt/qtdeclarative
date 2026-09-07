@@ -389,7 +389,6 @@ language/expressions/call/11.2.3-3_3.js fails
 language/expressions/call/eval-spread-empty-leading.js fails
 language/expressions/call/eval-spread-empty-trailing.js fails
 language/expressions/call/eval-spread.js fails
-language/expressions/call/scope-lex-open.js fails
 language/expressions/class/gen-meth-dflt-params-ref-later.js fails
 language/expressions/class/gen-meth-dflt-params-ref-self.js fails
 language/expressions/class/gen-meth-static-dflt-params-ref-later.js fails
