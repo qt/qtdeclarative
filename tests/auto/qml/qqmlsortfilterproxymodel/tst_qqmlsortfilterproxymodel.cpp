@@ -2205,6 +2205,8 @@ void tst_QQmlSortFilterProxyModel::crashUntypedCompare_data()
                                           << QStringLiteral("must return int data type");
     QTest::newRow("qtbug-149043_reject2") << "qtbug-149043_rejectNonTypeParameter.qml"
                                           << QStringLiteral("parameters must be type annotated");
+    QTest::newRow("deeplyNestedModel") << "recursiveJSData.qml"
+                                       << QStringLiteral("Maximum call stack size exceeded.");
 }
 
 void tst_QQmlSortFilterProxyModel::crashUntypedCompare()
