@@ -182,7 +182,7 @@ protected:
     void accessibilityActiveChanged(bool active) override;
     QAccessible::Role accessibleRole() const override;
     Q_INVOKABLE void accessiblePressAction();
-    Q_INVOKABLE void accessibleToggleAction();
+    Q_INVOKABLE Q_REVISION(6, 11) void accessibleToggleAction();
 #endif
 
 private:

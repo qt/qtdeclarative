@@ -92,7 +92,7 @@ private Q_SLOTS:
     void movieRequestFinished();
     void playingStatusChanged();
     void onCacheChanged();
-    void onMovieFinished();
+    Q_REVISION(6, 12) void onMovieFinished();
 
 protected:
     void load() override;
