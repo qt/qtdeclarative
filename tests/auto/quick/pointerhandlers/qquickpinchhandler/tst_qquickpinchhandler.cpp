@@ -1049,8 +1049,7 @@ void tst_QQuickPinchHandler::cancel()
 
         QSKIP("cancel is not supported atm");
 
-        QTouchEvent cancelEvent(QEvent::TouchCancel, touchscreen.get());
-        QCoreApplication::sendEvent(window, &cancelEvent);
+        QTest::touchEvent(window, touchscreen.get()).cancel();
         QQuickTouchUtils::flush(window);
 
         QCOMPARE(root->property("pinchScale").toReal(), 1.0);
