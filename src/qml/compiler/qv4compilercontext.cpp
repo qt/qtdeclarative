@@ -68,13 +68,22 @@ bool Context::addLocalVar(
     if (!isCatchBlock || name != caughtVariable) {
         MemberMap::iterator it = members.find(name);
         if (it != members.end()) {
-            if (scope != VariableScope::Var || (*it).scope != VariableScope::Var)
-                return false;
-            if ((*it).type <= type) {
-                (*it).type = type;
-                (*it).function = function;
+            if ((*it).type == ThisFunctionName) {
+                // The name of a named function expression is bound in an implicit
+                // scope of its own, distinct from the function's parameter, var and
+                // lexical scope. Any real declaration sharing that name therefore
+                // shadows it rather than conflicting with it, so let it replace the
+                // placeholder entry below instead of rejecting the declaration.
+                members.erase(it);
+            } else {
+                if (scope != VariableScope::Var || (*it).scope != VariableScope::Var)
+                    return false;
+                if ((*it).type <= type) {
+                    (*it).type = type;
+                    (*it).function = function;
+                }
+                return true;
             }
-            return true;
         }
     }
 
