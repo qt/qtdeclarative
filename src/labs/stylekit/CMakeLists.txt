@@ -76,6 +76,7 @@ qt_internal_add_qml_module(LabsStyleKit
         ToolBar.qml
         ToolButton.qml
         ToolSeparator.qml
+        ToolTip.qml
         Page.qml
         Pane.qml
         Popup.qml

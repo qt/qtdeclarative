@@ -69,8 +69,9 @@ const QList<QQStyleKitExtendableControlType> QQStyleKitPropertyResolver::baseTyp
         static QList<QQStyleKitExtendableControlType> t =
             { QQStyleKitReader::ItemDelegate, QQStyleKitReader::Control };
         return t; }
+    case QQStyleKitReader::Dialog:
     case QQStyleKitReader::Menu:
-    case QQStyleKitReader::Dialog: {
+    case QQStyleKitReader::ToolTip: {
         static QList<QQStyleKitExtendableControlType> t =
             { QQStyleKitReader::Popup, QQStyleKitReader::Control };
         return t; }

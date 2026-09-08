@@ -599,6 +599,16 @@ QT_BEGIN_NAMESPACE
     \snippet ControlsSnippets.qml toolSeparator
 */
 
+/*!
+    \qmlproperty ControlStyle AbstractStylableControls::toolTip
+
+    Grouped property for styling \l [QtQuickControls]{ToolTip}.
+
+    Unset properties fall back to \l popup.
+
+    \snippet ControlsSnippets.qml toolTip
+*/
+
 using namespace Qt::StringLiterals;
 
 QQStyleKitControls::QQStyleKitControls(QObject *parent)
@@ -702,6 +712,7 @@ IMPLEMENT_ACCESSORS(textInput, QQStyleKitReader::ControlType::TextInput)
 IMPLEMENT_ACCESSORS(toolBar, QQStyleKitReader::ControlType::ToolBar)
 IMPLEMENT_ACCESSORS(toolButton, QQStyleKitReader::ControlType::ToolButton)
 IMPLEMENT_ACCESSORS(toolSeparator, QQStyleKitReader::ControlType::ToolSeparator)
+IMPLEMENT_ACCESSORS(toolTip, QQStyleKitReader::ControlType::ToolTip)
 IMPLEMENT_ACCESSORS(radioButton, QQStyleKitReader::ControlType::RadioButton)
 IMPLEMENT_ACCESSORS(radioDelegate, QQStyleKitReader::ControlType::RadioDelegate)
 IMPLEMENT_ACCESSORS(roundButton, QQStyleKitReader::ControlType::RoundButton)

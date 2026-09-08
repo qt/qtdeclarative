@@ -83,6 +83,7 @@ public:
         ToolBar,
         ToolButton,
         ToolSeparator,
+        ToolTip,
         RadioButton,
         RadioDelegate,
         RoundButton,
