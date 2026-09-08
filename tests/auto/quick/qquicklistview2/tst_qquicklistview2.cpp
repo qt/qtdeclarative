@@ -88,6 +88,7 @@ private slots:
 
     void snapOneItemResize_data();
     void snapOneItemResize();
+    void resetModelDuringDelegateCreation();
 
 private:
     void flickWithTouch(QQuickWindow *window, const QPoint &from, const QPoint &to);
@@ -1703,6 +1704,36 @@ void tst_QQuickListView2::snapOneItemResize()
                                         .arg(contentRestored)
                                         .arg(contentBefore)));
         }
+    }
+}
+
+void tst_QQuickListView2::resetModelDuringDelegateCreation()
+{
+    // Resetting the model from a delegate's Component.onCompleted re-enters
+    // MutableModelIterator while it is iterating the insertion range. The
+    // iterator used to subtract the whole removed count from its index, even
+    // when the removed range covered that index, so it walked to a negative
+    // model index and asked the model for an item that cannot exist.
+    QTest::failOnWarning(QRegularExpression("index out range"));
+
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("resetModelDuringDelegateCreation.qml")));
+
+    QQuickListView *listView = window.rootObject()->findChild<QQuickListView *>("view");
+    QVERIFY(listView);
+
+    QTRY_COMPARE(listView->count(), 15);
+    QVERIFY(window.rootObject()->property("didReset").toBool());
+
+    // Every delegate that survived the reset must carry a valid model index.
+    const auto delegates = listView->contentItem()->childItems();
+    for (const QQuickItem *delegate : delegates) {
+        const QVariant value = delegate->property("value");
+        if (!value.isValid())
+            continue;
+        const int index = value.toInt();
+        QVERIFY(index >= 0);
+        QVERIFY(index < 15);
     }
 }
 
