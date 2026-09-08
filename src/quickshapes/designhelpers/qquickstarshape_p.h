@@ -47,7 +47,7 @@ public:
                        dashPatternChanged FINAL)
     Q_PROPERTY(QQuickShapeGradient *fillGradient READ fillGradient WRITE setFillGradient NOTIFY
                        fillGradientChanged RESET resetFillGradient FINAL)
-    Q_PROPERTY(QQuickItem *fillItem READ fillItem WRITE setFillItem NOTIFY fillItemChanged FINAL REVISION(6, 12))
+    Q_PROPERTY(QQuickItem *fillItem READ fillItem WRITE setFillItem NOTIFY fillItemChanged REVISION(6, 12))
 
     QML_NAMED_ELEMENT(StarShape)
     QML_ADDED_IN_VERSION(6, 11)
@@ -108,7 +108,7 @@ Q_SIGNALS:
     void strokeStyleChanged();
     void dashOffsetChanged();
     void dashPatternChanged();
-    void fillGradientChanged();
+    Q_REVISION(6, 12) void fillGradientChanged();
     Q_REVISION(6, 12) void fillItemChanged();
 
 protected:
