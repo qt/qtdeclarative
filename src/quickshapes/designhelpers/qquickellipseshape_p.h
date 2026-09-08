@@ -53,7 +53,7 @@ public:
                        fillGradientChanged RESET resetFillGradient FINAL)
     Q_PROPERTY(BorderMode borderMode READ borderMode WRITE setBorderMode NOTIFY borderModeChanged
                        RESET resetBorderMode FINAL)
-    Q_PROPERTY(QQuickItem *fillItem READ fillItem WRITE setFillItem NOTIFY fillItemChanged FINAL REVISION(6, 12))
+    Q_PROPERTY(QQuickItem *fillItem READ fillItem WRITE setFillItem NOTIFY fillItemChanged REVISION(6, 12))
 
     QML_NAMED_ELEMENT(EllipseShape)
     QML_ADDED_IN_VERSION(6, 11)
@@ -128,7 +128,7 @@ Q_SIGNALS:
     void strokeStyleChanged();
     void dashOffsetChanged();
     void dashPatternChanged();
-    void fillGradientChanged();
+    Q_REVISION(6, 12) void fillGradientChanged();
     void borderModeChanged();
     Q_REVISION(6, 12) void fillItemChanged();
 
