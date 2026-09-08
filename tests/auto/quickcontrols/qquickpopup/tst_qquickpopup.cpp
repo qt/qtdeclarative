@@ -1,6 +1,8 @@
 // Copyright (C) 2017 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
+#include <memory>
+
 #include <QtTest/qtest.h>
 #include <QtTest/private/qtesthelpers_p.h>
 #include <QtTest/qsignalspy.h>
@@ -50,6 +52,7 @@ using namespace QQuickControlsTestUtils;
 QT_BEGIN_NAMESPACE
 extern Q_AUTOTEST_EXPORT bool qt_quicktooltipattachedprivate_short_timeout;
 extern Q_AUTOTEST_EXPORT int qt_quicktooltipattachedprivate_delay;
+extern Q_AUTOTEST_EXPORT QWindow *qt_quickpopupwindow_grabbedWindow();
 QT_END_NAMESPACE
 #endif
 
@@ -169,6 +172,7 @@ private slots:
     void popupWindowRepositionOnImplicitSizeChange();
     void popupWindowDragInsidePopup();
     void popupWindowDragHandlerDoesNotJump();
+    void popupWindowGrabRecoveredAfterGrabbingWindowDestroyed();
     void propagateTouchEvents();
     void blockEventsBehindModal_data();
     void blockEventsBehindModal();
@@ -4449,7 +4453,6 @@ void tst_QQuickPopup::popupWithExplicitSizeChangesImplicitSize()
     QCOMPARE(popup->height(), oldHeight);
 }
 
-
 void tst_QQuickPopup::dialogButtonBoxFocus_data()
 {
     QTest::addColumn<QString>("dialogObjectName");
@@ -4542,6 +4545,67 @@ void tst_QQuickPopup::dialogButtonBoxFocus()
         QTRY_VERIFY(!dialog->isOpened());
     else
         QVERIFY(dialog->isOpened());
+}
+
+// The window that takes the window-system grab for a popup chain is the window
+// hosting the popup's parent item, which is not part of the chain itself. It can
+// therefore be destroyed while popups are still open, in which case the ungrab in
+// QQuickPopupWindowPrivate::setVisible() is skipped, because popupCount() != 1 at
+// that point. The grab state must still be cleared once the remaining popups close,
+// or no popup will be able to grab again for the rest of the process' lifetime.
+void tst_QQuickPopup::popupWindowGrabRecoveredAfterGrabbingWindowDestroyed()
+{
+#ifndef QT_BUILD_INTERNAL
+    QSKIP("This test requires a developer build.");
+#else
+    if (!arePopupWindowsSupported())
+        QSKIP("The platform doesn't support popup windows. Skipping test.");
+
+#if defined(Q_OS_MACOS)
+    // QCocoaWindow doesn't implement window grabs (QTBUG-106597), so there is none here
+    // to observe.
+    QSKIP("Popup windows don't take the window grab on macOS. Skipping test.");
+#endif
+
+    // First chain: this one takes the grab, on the window hosting its parent item.
+    auto helper1 = std::make_unique<QQuickApplicationHelper>(this, "simplepopup.qml");
+    QVERIFY2(helper1->ready, helper1->failureMessage());
+    QQuickWindow *window1 = helper1->window;
+    window1->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window1));
+    QPointer<QQuickPopup> popup1 = window1->property("popup").value<QQuickPopup *>();
+    QVERIFY(popup1);
+    popup1->setPopupType(QQuickPopup::Window);
+
+    popup1->open();
+    TRY_VERIFY_POPUP_OPENED(popup1);
+    QCOMPARE(qt_quickpopupwindow_grabbedWindow(), window1);
+
+    // Second, independent chain, opened while the first popup is still up.
+    QQuickApplicationHelper helper2(this, "simplepopup.qml");
+    QVERIFY2(helper2.ready, helper2.failureMessage());
+    QQuickWindow *window2 = helper2.window;
+    window2->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window2));
+    QPointer<QQuickPopup> popup2 = window2->property("popup").value<QQuickPopup *>();
+    QVERIFY(popup2);
+    popup2->setPopupType(QQuickPopup::Window);
+    popup2->open();
+    TRY_VERIFY_POPUP_OPENED(popup2);
+
+    // Destroy the window holding the grab while the second popup is still open.
+    helper1.reset();
+    QTRY_COMPARE(QGuiApplicationPrivate::popupCount(), 1);
+
+    popup2->close();
+    QTRY_VERIFY(!popup2->isVisible());
+    QCOMPARE(qt_quickpopupwindow_grabbedWindow(), nullptr);
+
+    // The grab state must have been cleared, so this popup can grab again.
+    popup2->open();
+    TRY_VERIFY_POPUP_OPENED(popup2);
+    QCOMPARE(qt_quickpopupwindow_grabbedWindow(), window2);
+#endif
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickPopup)

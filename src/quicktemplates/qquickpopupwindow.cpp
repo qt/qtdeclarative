@@ -31,6 +31,15 @@ Q_STATIC_LOGGING_CATEGORY(lcPopupWindow, "qt.quick.controls.popup.window")
 static bool s_popupGrabOk = false;
 static QPointer<QWindow> s_grabbedWindow;
 
+#ifdef QT_BUILD_INTERNAL
+// Lets auto tests observe which window holds the popup grab, since the grab
+// itself is only visible to the window system.
+Q_AUTOTEST_EXPORT QWindow *qt_quickpopupwindow_grabbedWindow()
+{
+    return s_popupGrabOk ? s_grabbedWindow.data() : nullptr;
+}
+#endif
+
 class QQuickPopupWindowPrivate : public QQuickWindowQmlImplPrivate
 {
     Q_DECLARE_PUBLIC(QQuickPopupWindow)
@@ -174,11 +183,14 @@ void QQuickPopupWindowPrivate::setVisible(bool visible)
     const bool visibleChanged = QWindowPrivate::visible != visible;
 
     // Check if we're about to close the last popup, in which case, ungrab.
-    if (!visible && visibleChanged && QGuiApplicationPrivate::popupCount() == 1 && s_grabbedWindow) {
-        s_grabbedWindow->setMouseGrabEnabled(false);
-        s_grabbedWindow->setKeyboardGrabEnabled(false);
+    if (!visible && visibleChanged && QGuiApplicationPrivate::popupCount() == 1) {
+        if (s_grabbedWindow) {
+            s_grabbedWindow->setMouseGrabEnabled(false);
+            s_grabbedWindow->setKeyboardGrabEnabled(false);
+            qCDebug(lcPopupWindow) << "The window " << s_grabbedWindow
+                                   << "has disabled global mouse and keyboard grabs.";
+        }
         s_popupGrabOk = false;
-        qCDebug(lcPopupWindow) << "The window " << s_grabbedWindow << "has disabled global mouse and keyboard grabs.";
         s_grabbedWindow = nullptr;
     }
 
