@@ -96,6 +96,10 @@ public:
         Flag flag = Flag::IncludeSubtype);
 
     inline QQSK::Property property() const { return m_property; }
+    inline QString toString() const { return pathIdToPathString(pathId()); }
+
+    static QString pathIdToPathString(PropertyPathId pathId);
+    static QString storageIdToPathString(PropertyStorageId storageId);
 
     inline PropertyPathId pathId() const
     {

@@ -52,8 +52,6 @@ public:
 
     QQStyleKitPropertyGroup(QQSK::PropertyGroup group, QObject *parent);
 
-    QString pathToString() const;
-
     template<typename T>
     inline T styleProperty(
         QQSK::Property property,
