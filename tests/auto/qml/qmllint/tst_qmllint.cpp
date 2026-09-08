@@ -4529,6 +4529,32 @@ Item {
                        .addUnexpected("Type \"MyObject1\" of property \"myObj\" not found."_L1)
                        .build()
             << defaultOptions;
+
+    QTest::newRow("propertyWriteUsage")
+            << uR"(import MissingRegistration
+import QtQuick
+Item {
+    MyObject1  { id: myObj; }
+    function f() { myObj.hello = 42; }
+})"_s
+            << ResultBuilder()
+                       .addExpected("MyObject1 was not found"_L1, 4, 5)
+                       .addUnexpected("Member \"hello\" not found on type"_L1)
+                       .build()
+            << defaultOptions;
+
+    QTest::newRow("propertyWriteUsage2")
+            << uR"(import MissingRegistration
+import QtQuick
+Item {
+    property MyObject1 myObj
+    function f() { myObj.hello = 42; }
+})"_s
+            << ResultBuilder()
+                       .addExpected("MyObject1 was not found"_L1, 4, 5)
+                       .addUnexpected("Member \"hello\" not found on type"_L1)
+                       .build()
+            << defaultOptions;
 }
 
 void TestQmllint::missingRegistration()

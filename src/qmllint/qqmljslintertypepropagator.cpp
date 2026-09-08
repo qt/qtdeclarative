@@ -140,7 +140,7 @@ void QQmlJSLinterTypePropagator::checkWrite(const QQmlJSRegisterContent &callBas
     if (m_typeResolver->memberType(callBase, propertyName).isProperty())
         return;
     auto containedType = callBase.containedType();
-    if (!containedType)
+    if (!containedType || !checkTypeResolved(containedType))
         return;
     const QString internalName = callBase.containedType()->internalName();
     if (internalName == "QJSValue"_L1 || internalName == "QVariant"_L1)
