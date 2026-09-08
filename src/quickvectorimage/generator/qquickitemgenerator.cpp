@@ -918,8 +918,25 @@ void QQuickItemGenerator::generateDefsInstantiationNode(const StructureNodeInfo 
                 << "generateDefsInstantiationNode: unknown defs id:" << info.defsId;
         return;
     }
+
+    const qsizetype pendingStart = m_pendingLinkedTransforms.size();
+    const QHash<QString, QQuickTransformSource *> outerSources = m_transformSourceItems;
+
     for (const auto &step : *it)
         step();
+
+    QList<PendingLinkedTransform> unresolved;
+    for (qsizetype i = pendingStart; i < m_pendingLinkedTransforms.size(); ++i) {
+        const PendingLinkedTransform &pending = m_pendingLinkedTransforms.at(i);
+        auto source = m_transformSourceItems.constFind(pending.transformReferenceId);
+        if (source == m_transformSourceItems.cend())
+            unresolved.append(pending);
+        else
+            new TransformLinker(source.value(), pending.linkedMatrix, pending.item);
+    }
+    m_pendingLinkedTransforms.resize(pendingStart);
+    m_pendingLinkedTransforms.append(unresolved);
+    m_transformSourceItems = outerSources;
 }
 
 bool QQuickItemGenerator::generateMaskNode(const MaskNodeInfo &info)
