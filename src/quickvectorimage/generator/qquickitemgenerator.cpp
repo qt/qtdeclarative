@@ -286,6 +286,18 @@ bool QQuickItemGenerator::generateRootNode(const StructureNodeInfo &info)
 
         pushItem(root);
 
+        if (m_flags.testFlag(QQuickVectorImageGenerator::TimelineAnimation) && info.timelineInfo) {
+            root->setStartFrame(info.timelineInfo->startFrame);
+            root->setEndFrame(info.timelineInfo->endFrame);
+            root->setFrameRate(info.timelineInfo->frameRate);
+
+            QVariantMap markerMap;
+            for (const LottieMarkerInfo &marker : info.timelineInfo->markers)
+                markerMap.insert(marker.name, QVariantList{ marker.frame, marker.duration });
+            if (!markerMap.isEmpty())
+                root->setMarkersData(markerMap);
+        }
+
         bool scopePushed = false;
         if (m_animationProvider && info.timelineInfo) {
             if (auto *master = m_animationProvider->enterTimelineScope(root, *info.timelineInfo))
