@@ -385,9 +385,15 @@ public:
             for (const QQmlChangeSet::Change &rem : changeSet.removes()) {
                 idxEnd -= rem.count;
                 if (rem.start() <= index) {
-                    index -= rem.count;
-                    if (index < rem.start() + rem.count)
-                        removedAtIndex = true; // model index was removed
+                    if (index < rem.start() + rem.count) {
+                        // The removed range covers us. Collapse onto its start
+                        // rather than subtracting the whole count, which would
+                        // move the index before the beginning of the model.
+                        removedAtIndex = true;
+                        index = rem.start();
+                    } else {
+                        index -= rem.count;
+                    }
                 }
             }
             for (const QQmlChangeSet::Change &ins : changeSet.inserts()) {
