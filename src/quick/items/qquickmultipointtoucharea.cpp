@@ -14,7 +14,7 @@
 #include <QEvent>
 #include <QMouseEvent>
 #include <QDebug>
-#include <qpa/qplatformnativeinterface.h>
+#include <qpa/qplatformwindow_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -773,14 +773,11 @@ void QQuickMultiPointTouchArea::hoverLeaveEvent(QHoverEvent *event)
 
 void QQuickMultiPointTouchArea::setTouchEventsEnabled(bool enable)
 {
-    // Resolve function for enabling touch events from the (cocoa) platform plugin.
-    typedef void (*RegisterTouchWindowFunction)(QWindow *, bool);
-    RegisterTouchWindowFunction registerTouchWindow = reinterpret_cast<RegisterTouchWindowFunction>(
-        QFunctionPointer(QGuiApplication::platformNativeInterface()->nativeResourceFunctionForIntegration("registertouchwindow")));
-    if (!registerTouchWindow)
-        return; // Not necessarily an error, Qt might be using a different platform plugin.
-
-    registerTouchWindow(window(), enable);
+    QWindow *w = window();
+    if (!w)
+        return;
+    if (auto *cocoaWindow = w->nativeInterface<QNativeInterface::Private::QCocoaWindow>())
+        cocoaWindow->enableTrackpadTouchDelivery(enable);
 }
 
 void QQuickMultiPointTouchArea::itemChange(ItemChange change, const ItemChangeData &data)
