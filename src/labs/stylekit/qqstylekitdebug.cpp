@@ -117,23 +117,12 @@ QString QQStyleKitDebug::objectName(const QObject *obj) {
 
 QString QQStyleKitDebug::stateToString(const QQSK::State state)
 {
-    const QStringList list = enumToString(state).split('|'_L1);
-    return "["_L1 + list.join(','_L1) + "]"_L1;
+    return "["_L1 + enumToString(state) + "]"_L1;
 }
 
 QString QQStyleKitDebug::styleReaderToString(const QQStyleKitReader *reader)
 {
     return "StyleKitReader"_L1 + stateToString(reader->controlState());
-}
-
-QString QQStyleKitDebug::propertyPath(const QQStyleKitPropertyGroup *group, const QQStyleKitPropertyPath property)
-{
-    const QString path = group->pathToString();
-    QString propertyName = enumToString(property.property());
-    propertyName[0] = propertyName[0].toLower();
-    if (path.isEmpty())
-        return propertyName;
-    return path + kDot + propertyName;
 }
 
 QString QQStyleKitDebug::controlToString(const QQStyleKitControlProperties *control)
@@ -222,7 +211,7 @@ void QQStyleKitDebug::notifyPropertyRead(
     }
 
     const QString _readerPath = objectPath(reader, m_item);
-    const QString _readPropertyPath = propertyPath(QQStyleKitDebug::groupBeingRead, property);
+    const QString _readPropertyPath = property.toString();
     const QString queriedPath = _readerPath + kDot +_readPropertyPath;
 
     QString storagePath;
@@ -288,7 +277,7 @@ void QQStyleKitDebug::notifyPropertyWrite(
     else if (valueString.isEmpty())
         valueString = "<object>"_L1;
 
-    const QString path = propertyPath(group, property);
+    const QString path = property.toString();
     const QString output = storagePath + kDot + path + " (storage key:"_L1 + QString::number(key) + ") = "_L1 + valueString;
 
     qDebug().nospace().noquote() << m_outputCount++ << " | [write] "_L1 << output;
@@ -304,7 +293,7 @@ void QQStyleKitDebug::notifyPropertyNotResolved(const QQStyleKitPropertyPath pro
     }
 
     const QString _readerPath = objectPath(reader, m_item);
-    const QString _propertyPath = propertyPath(QQStyleKitDebug::groupBeingRead, property);
+    const QString _propertyPath = property.toString();
     const QString queriedPath = _readerPath + kDot +_propertyPath;
     const QString output = queriedPath + " -> <property not set>"_L1;
 
@@ -340,7 +329,7 @@ void QQStyleKitDebug::trace(
     }
 
     const QString _readerPath = objectPath(reader, m_item);
-    const QString _readPropertyPath = propertyPath(QQStyleKitDebug::groupBeingRead, property);
+    const QString _readPropertyPath = property.toString();
     const QString queriedPath = _readerPath + kDot +_readPropertyPath;
 
     QString storagePath;

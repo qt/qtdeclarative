@@ -969,52 +969,6 @@ QQStyleKitPropertyGroup::QQStyleKitPropertyGroup(QQSK::PropertyGroup, QObject *p
 {
 }
 
-QString QQStyleKitPropertyGroup::pathToString() const
-{
-    /* Start from the root of the path and build the path down to this group. This
-     * mirrors how the groups were originally created and avoids rounding issues
-     * that can arise if attempting to reconstruct the path “backwards”.
-     * Note: For each group, m_groupSpace.start is stored relative to the root,
-     * while m_groupSpace.size is relative to the parent group. However, when
-     * calculating the group index, the group-space start must be computed
-     * relative to the parent group.
-     * We cache the requested paths, as the same paths are typically requested
-     * repeatedly. The number of possible paths (and thus leaf groups) is well below
-     * 100, and in practice the cache usually ends up with fewer than 20 entries. */
-    if (s_pathStrings.contains(m_groupSpace.start))
-        return s_pathStrings[m_groupSpace.start];
-
-    constexpr PropertyPathId rootGroupsSize = nestedGroupsStartSize / nestedGroupCount;
-    const auto metaEnum = QMetaEnum::fromType<QQSK::PropertyGroup>();
-
-    PropertyPathId nestedGroupStart = m_groupSpace.start;
-    PropertyPathId nestedGroupSize = rootGroupsSize;
-    PropertyPathId nestedGroupIndex = nestedGroupStart / nestedGroupSize;
-    auto groupType = QQSK::PropertyGroup(nestedGroupIndex);
-    if (groupType == QQSK::PropertyGroup::Control)
-        return {};
-
-    QString groupName = QString::fromLatin1(metaEnum.valueToKey(static_cast<int>(groupType)));
-    groupName[0] = groupName[0].toLower();
-    QString pathString = groupName;
-
-    while (true) {
-        nestedGroupStart -= nestedGroupIndex * nestedGroupSize;
-        nestedGroupSize /= nestedGroupCount;
-        nestedGroupIndex = nestedGroupStart / nestedGroupSize;
-        groupType = QQSK::PropertyGroup(nestedGroupIndex);
-        if (groupType == QQSK::PropertyGroup::Control)
-            break;
-
-        QString groupName = QString::fromLatin1(metaEnum.valueToKey(static_cast<int>(groupType)));
-        groupName[0] = groupName[0].toLower();
-        pathString += '.'_L1 + groupName;
-    }
-
-    s_pathStrings.insert(m_groupSpace.start, pathString);
-    return pathString;
-}
-
 QQStyleKitControlProperties *QQStyleKitPropertyGroup::controlProperties() const
 {
     if (isControlProperties()) {

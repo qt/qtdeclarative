@@ -77,9 +77,9 @@ private:
     static QString styleReaderToString(const QQStyleKitReader *reader);
     static QString controlToString(const QQStyleKitControlProperties *control);
     static QString objectPath(const QQStyleKitControlProperties *properties, QObject *from);
-    static QString propertyPath(const QQStyleKitPropertyGroup *group, const QQStyleKitPropertyPath property);
 
     friend class QQStyleKitPropertyResolver;
+    friend class QQStyleKitPropertyPath;
 };
 
 QT_END_NAMESPACE
