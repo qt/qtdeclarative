@@ -883,20 +883,66 @@ bool QQuickItemGenerator::generateDefsNode(const StructureNodeInfo &info)
         return false;
 
     if (info.stage == StructureNodeStage::Start) {
-        m_defs[info.id] = {};
-        m_currentDefsRecord = &m_defs[info.id];
-    } else {
-        m_currentDefsRecord = nullptr;
-        auto it = m_defs.find(info.id);
-        if (it != m_defs.end()) {
-            auto *container = new QQuickItem;
-            m_itemStack.push(container);
-            for (const auto &step : *it)
-                step();
-            m_itemStack.pop();
-        }
+        beginDefsRecord(info.id);
+        return true;
     }
+
+    endDefsRecord();
+
     return true;
+}
+
+void QQuickItemGenerator::beginDefsRecord(const QString &id)
+{
+    m_defsIdStack.push(m_currentDefsId);
+    m_currentDefsId = id;
+
+    QList<std::function<void()>> &record = m_defs[id];
+    record.clear();
+    m_currentDefsRecord = &record;
+}
+
+void QQuickItemGenerator::endDefsRecord()
+{
+    m_currentDefsId.clear();
+    m_currentDefsRecord = nullptr;
+
+    if (m_defsIdStack.isEmpty())
+        return;
+
+    m_currentDefsId = m_defsIdStack.pop();
+    if (m_currentDefsId.isEmpty())
+        return;
+
+    auto outer = m_defs.find(m_currentDefsId);
+    if (outer != m_defs.end())
+        m_currentDefsRecord = &outer.value();
+}
+
+void QQuickItemGenerator::replayDefsRecord(const QString &id)
+{
+    auto it = m_defs.find(id);
+    if (it == m_defs.end())
+        return;
+
+    auto *container = new QQuickItem;
+    m_itemStack.push(container);
+    for (const auto &step : *it)
+        step();
+    m_itemStack.pop();
+}
+
+// Replaying the record runs the generate calls that register the def.
+template <typename T>
+typename QHash<QString, T>::iterator
+QQuickItemGenerator::resolveDef(QHash<QString, T> &registeredDefs, const QString &id)
+{
+    auto it = registeredDefs.find(id);
+    if (it != registeredDefs.end())
+        return it;
+
+    replayDefsRecord(id);
+    return registeredDefs.find(id);
 }
 
 void QQuickItemGenerator::generateDefsInstantiationNode(const StructureNodeInfo &info)
@@ -1078,7 +1124,7 @@ void QQuickItemGenerator::generateMaskContainer(const MaskNodeInfo &info)
 void QQuickItemGenerator::generateMask(QQuickItem *item, const NodeInfo &info,
                                        const QPointF &sourceOrigin)
 {
-    auto it = m_maskDefs.find(info.maskId);
+    auto it = resolveDef(m_maskDefs, info.maskId);
     if (it == m_maskDefs.end()) {
         qCWarning(lcQuickVectorImage) << "generateMask: unknown mask id:" << info.maskId;
         return;
@@ -1199,7 +1245,7 @@ static QRectF resolveRect(const QRectF &rect, FilterNodeInfo::CoordinateSystem c
 QQuickItem *QQuickItemGenerator::generateFilter(QQuickItem *item, const NodeInfo &info,
                                                 QPointF *outputOrigin)
 {
-    auto it = m_filterDefs.find(info.filterId);
+    auto it = resolveDef(m_filterDefs, info.filterId);
     if (it == m_filterDefs.end()) {
         qCWarning(lcQuickVectorImage) << "applyFilter: unknown filter id:" << info.filterId;
         return nullptr;
@@ -1635,7 +1681,7 @@ void QQuickItemGenerator::generatePatternContainer(const PatternNodeInfo &info)
 void QQuickItemGenerator::generatePattern(QQuickShapePath *shapePath, const PathNodeInfo &info,
                                           const QRectF &boundingRect, QTransform &fillTransform)
 {
-    auto it = m_patternDefs.find(info.patternId);
+    auto it = resolveDef(m_patternDefs, info.patternId);
     if (it == m_patternDefs.end()) {
         qCWarning(lcQuickVectorImage) << "generatePattern: unknown pattern id:" << info.patternId;
         return;
@@ -1728,7 +1774,7 @@ void QQuickItemGenerator::generateMarkers(const PathNodeInfo &info)
         if (markerId.isEmpty())
             continue;
 
-        auto it = m_markerDefs.find(markerId);
+        auto it = resolveDef(m_markerDefs, markerId);
         if (it == m_markerDefs.end()) {
             qCWarning(lcQuickVectorImage) << "generateMarkers: unknown marker id:" << markerId;
             continue;

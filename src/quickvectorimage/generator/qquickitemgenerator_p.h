@@ -112,6 +112,8 @@ private:
     quint32 m_nodeCounter = 0;
     QHash<QString, QList<std::function<void()>>> m_defs;
     QList<std::function<void()>> *m_currentDefsRecord = nullptr;
+    QString m_currentDefsId;
+    QStack<QString> m_defsIdStack;
     QList<std::function<void()>> *m_currentMarkerRecord = nullptr;
     QHash<QString, MaskDef> m_maskDefs;
     QHash<QString, PatternDef> m_patternDefs;
@@ -124,6 +126,14 @@ private:
     std::unique_ptr<QQuickGeneratorAnimationProvider> m_animationProvider;
     QStack<bool> m_scopePushed;
     QMap<std::array<qreal, 4>, QEasingCurve> m_easingCache;
+
+    void beginDefsRecord(const QString &id);
+    void endDefsRecord();
+    void replayDefsRecord(const QString &id);
+
+    template <typename T>
+    typename QHash<QString, T>::iterator resolveDef(QHash<QString, T> &registeredDefs,
+                                                    const QString &id);
 
     QList<std::function<void()>> *activeRecord() const;
     QQuickShape *createShapeContainer();
