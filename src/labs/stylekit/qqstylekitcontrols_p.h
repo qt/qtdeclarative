@@ -58,6 +58,7 @@ class QQStyleKitControls : public QObject, public QQmlParserStatus
     Q_PROPERTY(QQStyleKitControl *toolBar READ toolBar WRITE set_toolBar NOTIFY toolBarChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *toolButton READ toolButton WRITE set_toolButton NOTIFY toolButtonChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *toolSeparator READ toolSeparator WRITE set_toolSeparator NOTIFY toolSeparatorChanged FINAL)
+    Q_PROPERTY(QQStyleKitControl *toolTip READ toolTip WRITE set_toolTip NOTIFY toolTipChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *swipeDelegate READ swipeDelegate WRITE set_swipeDelegate NOTIFY swipeDelegateChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *switchControl READ switchControl WRITE set_switchControl NOTIFY switchControlChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *switchDelegate READ switchDelegate WRITE set_switchDelegate NOTIFY switchDelegateChanged FINAL)
@@ -118,6 +119,7 @@ public:
     IMPLEMENT_ACCESSORS(toolBar)
     IMPLEMENT_ACCESSORS(toolButton)
     IMPLEMENT_ACCESSORS(toolSeparator)
+    IMPLEMENT_ACCESSORS(toolTip)
     IMPLEMENT_ACCESSORS(swipeDelegate)
     IMPLEMENT_ACCESSORS(switchControl)
     IMPLEMENT_ACCESSORS(switchDelegate)
@@ -175,6 +177,7 @@ signals:
     void toolBarChanged();
     void toolButtonChanged();
     void toolSeparatorChanged();
+    void toolTipChanged();
     void swipeDelegateChanged();
     void switchControlChanged();
     void switchDelegateChanged();

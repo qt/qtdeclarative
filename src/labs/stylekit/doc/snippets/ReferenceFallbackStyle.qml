@@ -686,5 +686,14 @@ BaseStyle {
             foreground.visible: false
         }
     }
+
+    toolTip {
+        text.padding: 2
+        background {
+            width: 20
+            height: 20
+            color: __baseWhite
+        }
+    }
 }
 //! [1]

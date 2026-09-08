@@ -912,6 +912,17 @@ ApplicationWindow {
         }
         //! [toolSeparator]
 
+        //! [toolTip]
+        toolTip {
+            text.padding: 2
+            background {
+                width: 20
+                height: 20
+                color: "white"
+            }
+        }
+        //! [toolTip]
+
         //! [theme]
         light: Theme {
             applicationWindow.background.color: "#f0f0f0"

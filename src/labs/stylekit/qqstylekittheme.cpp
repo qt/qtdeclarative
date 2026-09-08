@@ -96,6 +96,8 @@ static QQuickTheme::Scope scopeForType(QQStyleKitExtendableControlType type)
     case QQStyleKitReader::ControlType::ToolButton:
     case QQStyleKitReader::ControlType::ToolSeparator:
         return QQuickTheme::ToolBar;
+    case QQStyleKitReader::ControlType::ToolTip:
+        return QQuickTheme::ToolTip;
     default:
         return QQuickTheme::System;
     }
