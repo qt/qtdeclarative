@@ -32,6 +32,8 @@ This property only has an effect if CMake's \l USE_FOLDERS property is \c{ON}.
 
 You can enable folder support by calling
 \l qt_standard_project_setup().
+
+\sa {Setting CMake variables and properties}
 */
 
 
@@ -67,6 +69,7 @@ disabled globally via \l QT_QML_NO_QML_PREVIEW. It has no effect on an explicit
 call to \l qt_add_qml_preview() for the same target.
 
 \sa{QT_QML_NO_QML_PREVIEW (global property)}, qt_add_qml_preview()
+\sa {Setting CMake variables and properties}
 */
 
 
@@ -94,6 +97,7 @@ CMake source file properties:
 Set this property to \c TRUE to indicate that the \c{.qml} file provides an internal type.
 
 \sa{qml-source-file-properties}{qt_target_qml_sources}
+\sa {Setting CMake variables and properties}
 */
 
 
@@ -118,6 +122,7 @@ See \l{qt_target_qml_sources_example}{qt_target_qml_sources()} for an example on
 how to set the \c QT_QML_SINGLETON_TYPE property.
 
 \sa{qml-source-file-properties}{qt_target_qml_sources}
+\sa {Setting CMake variables and properties}
 */
 
 
@@ -136,6 +141,7 @@ The file will still be added to the \c target as a resource in uncompiled form
 (see \l{qmlcachegen-auto}{Caching compiled QML sources}).
 
 \sa{qml-source-file-properties}{qt_target_qml_sources}
+\sa {Setting CMake variables and properties}
 */
 
 
@@ -154,6 +160,7 @@ the \c{.qml} file from being added as a type to the QML module's typeinfo file
 (see \l{qmldir-autogeneration}{Auto-generating \c{qmldir} and typeinfo files}).
 
 \sa{qml-source-file-properties}{qt_target_qml_sources}
+\sa {Setting CMake variables and properties}
 */
 
 
@@ -171,6 +178,7 @@ Set this property to \c TRUE to prevent the file from being included in
 \l{qmllint-auto}{automatic qmllint processing}.
 
 \sa{qml-source-file-properties}{qt_target_qml_sources}
+\sa {Setting CMake variables and properties}
 */
 
 
@@ -187,6 +195,7 @@ Set this property to \c TRUE to prevent the file from being included in
 Use this property to override the \c QML type name provided by this file.
 
 \sa{qml-source-file-properties}{qt_target_qml_sources}
+\sa {Setting CMake variables and properties}
 */
 
 
@@ -205,6 +214,7 @@ for example when the QML types were first introduced in a minor patch
 version after the \c{.0} release, specify those versions using this property.
 
 \sa{qml-source-file-properties}{qt_target_qml_sources}
+\sa {Setting CMake variables and properties}
 */
 
 
@@ -223,6 +233,7 @@ Use this property to specify a non-default \c .h and \c .cpp file name, which he
 conflicting file names.
 
 \sa{qmltc-cmake}
+\sa {Setting CMake variables and properties}
 */
 
 /*!
@@ -240,6 +251,7 @@ Set this property to \c TRUE to prevent the \c{.qml} file from being compiled to
 C++ during qmltc compilation.
 
 \sa{qmltc-cmake}
+\sa {Setting CMake variables and properties}
 */
 
 /*!
@@ -292,4 +304,5 @@ qt_add_qml_module(myapp
 \endcode
 
 \sa {Naming Custom QML Object Types}
+\sa {Setting CMake variables and properties}
 */

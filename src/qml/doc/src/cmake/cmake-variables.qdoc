@@ -35,6 +35,8 @@ The \c QT_QML_OUTPUT_DIRECTORY will also be added to the import path of the
 modules under the same base location. This allows the project to use a source
 directory structure that doesn't exactly match the URI structure of the QML
 modules, or to merge sets of QML modules under a common base point.
+
+\sa {Setting CMake variables and properties}
 */
 
 /*!
@@ -60,6 +62,7 @@ to the cmake executable.
 This variable has no effect if \l{QT_QML_GENERATE_QMLLS_INI} is disabled.
 
 \sa QT_QML_GENERATE_QMLLS_INI, {Configuring Automatic CMake Builds}
+\sa {Setting CMake variables and properties}
 */
 
 /*!
@@ -98,6 +101,7 @@ The globbing is required because .qmlls.ini files are generated in \e{all source
 subdirectories} that define QML Modules.
 
 \sa QT_QML_GENERATE_QMLLS_INI_NO_CMAKE_CALLS, {Configuring Automatic CMake Builds}
+\sa {Setting CMake variables and properties}
 */
 
 /*!
@@ -134,6 +138,7 @@ qt_add_qml_module(MyModule
 )
 \endcode
 
+\sa {Setting CMake variables and properties}
 */
 
 /*!
@@ -159,6 +164,7 @@ CMakeLists.txt file before the first call to \l qt_add_qml_module().
 set(QT_QML_GENERATE_AOTSTATS OFF)
 \endcode
 
+\sa {Setting CMake variables and properties}
 */
 
 /*!
@@ -189,6 +195,8 @@ one of the following methods:
         set(QT_QMLLINT_CONTEXT_PROPERTY_DUMP ON)
         \endcode
 \endlist
+
+\sa {Setting CMake variables and properties}
 */
 
 /*!
@@ -224,4 +232,5 @@ property, or opt back in with \l qt_add_qml_preview() even when preview is
 disabled globally.
 
 \sa qt_add_qml_preview(), {cmake-target-property-QT_QML_NO_QML_PREVIEW}{QT_QML_NO_QML_PREVIEW}
+\sa {Setting CMake variables and properties}
 */
