@@ -44,6 +44,7 @@ private slots:
 #endif
 
     void additionalMargins();
+    void anchorMargins();
     void updateFlipFlop();
 
     void independentMargins_data();
@@ -178,6 +179,31 @@ void tst_QQuickSafeArea::additionalMargins()
     auto *negativeChild = negativeItem->findChild<QQuickItem*>("negativeChild");
     QCOMPARE(negativeChild->property("margins").value<QMarginsF>(),
         QMarginsF(17, 7, 37, 27));
+}
+
+void tst_QQuickSafeArea::anchorMargins()
+{
+    QQuickApplicationHelper helper(this, "anchorMargins.qml");
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    auto *content = window->findChild<QQuickItem*>("content");
+    QVERIFY(content);
+
+    // Filling the parent while insetting each anchor margin by the
+    // parent's safe area margins positions the content within the safe area.
+    QCOMPARE(QRectF(content->position(), content->size()),
+        QRectF(20, 10, 440, 460));
+
+    // The content now covers the safe area exactly, so its own margins,
+    // and those of a child filling it, are consumed.
+    QCOMPARE(content->property("margins").value<QMarginsF>(), QMarginsF());
+
+    auto *child = content->findChild<QQuickItem*>("child");
+    QVERIFY(child);
+    QCOMPARE(child->property("margins").value<QMarginsF>(), QMarginsF());
 }
 
 void tst_QQuickSafeArea::independentMargins_data()
