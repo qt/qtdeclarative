@@ -5267,7 +5267,7 @@ void tst_qqmllanguage::propertyCacheInSync()
     QVERIFY(!o.isNull());
     QObject *anchors = qvariant_cast<QObject*>(o->property("anchors"));
     QVERIFY(anchors);
-    QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(anchors);
+    QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(anchors, engine.handle());
     QVERIFY(vmemo);
     QQmlPropertyCache::ConstPtr vmemoCache = vmemo->propertyCache();
     QVERIFY(vmemoCache);

@@ -1981,7 +1981,7 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
         _ddata->propertyCache = cache;
         scopeObjectProtector = _ddata->jsWrapper.value();
     } else {
-        vmeMetaObject = QQmlVMEMetaObject::get(_qobject);
+        vmeMetaObject = QQmlVMEMetaObject::get(_qobject, v4);
     }
 
     registerObjectWithContextById(_compiledObject, _qobject);
@@ -2125,7 +2125,7 @@ void QQmlObjectCreator::repopulateBindings(
     QQmlData *ddata = QQmlData::get(instance, /*create=*/true);
     Q_ASSERT(ddata);
 
-    QQmlVMEMetaObject *vmeMetaObject = QQmlVMEMetaObject::get(instance);
+    QQmlVMEMetaObject *vmeMetaObject = QQmlVMEMetaObject::get(instance, v4);
 
     const QV4::CompiledData::Object *obj = compilationUnit->objectAt(index);
 

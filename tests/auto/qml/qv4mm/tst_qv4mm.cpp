@@ -45,6 +45,10 @@ private slots:
     void persistentValueMarking_data();
     void persistentValueMarking();
     void multiWrappedQObjects();
+    void foreignValueInVarProperty_data();
+    void foreignValueInVarProperty();
+    void ownedValueInForeignEngine_data();
+    void ownedValueInForeignEngine();
     void accessParentOnDestruction();
     void cleanInternalClasses();
     void createObjectsOnDestruction();
@@ -258,6 +262,104 @@ void tst_qv4mm::multiWrappedQObjects()
 
     gc(engine2);
     QCOMPARE(engine2.memoryManager->m_pendingFreedObjectWrapperValue.size(), 0);
+}
+
+void tst_qv4mm::foreignValueInVarProperty_data()
+{
+    QTest::addColumn<QString>("storeStatement");
+    QTest::addColumn<bool>("refused");
+
+    // Assigning converts the value via QVariant, which refuses to move a JavaScript object to
+    // another engine. Passing it to a QML method converts it to the argument type, which copies.
+    QTest::newRow("assigned") << QStringLiteral("shared.stored = crossed") << true;
+    QTest::newRow("passed to method") << QStringLiteral("shared.store(crossed)") << false;
+}
+
+// A "var" property of an object owned by one engine comes to hold a value that lives in the
+// heap of another engine. See QTBUG-60984.
+void tst_qv4mm::foreignValueInVarProperty()
+{
+    QFETCH(QString, storeStatement);
+    QFETCH(bool, refused);
+
+    QQmlEngine owner;
+    QJSEngine other;
+
+    QQmlComponent component(&owner, testFileUrl("sharedWithOtherEngine.qml"));
+    std::unique_ptr<QObject> shared(component.create());
+    QVERIFY2(shared.get(), qPrintable(component.errorString()));
+    other.globalObject().setProperty(QStringLiteral("shared"), other.newQObject(shared.get()));
+
+    if (refused)
+        QTest::ignoreMessage(QtWarningMsg, "JSValue can't be reassigned to another engine.");
+    const QJSValue crossed = other.evaluate(
+            QStringLiteral("var crossed = { tag: 'from the other engine' }; %1; true")
+                    .arg(storeStatement));
+    QVERIFY2(!crossed.isError(), qPrintable(crossed.toString()));
+
+    // Mark bits live in the chunk of the object being marked, but they are only cleared at the
+    // end of the owning memory manager's sweep. So whatever the owning engine blackens in the
+    // other engine's chunks here stays black until that engine has swept once.
+    gc(owner);
+
+    // Everything the other engine allocates from now on hangs off objects that are already
+    // black for it.
+    const QJSValue allocated = other.evaluate(
+            QStringLiteral("crossed.late = { marker: 'allocated late' }; true"));
+    QVERIFY2(!allocated.isError(), qPrintable(allocated.toString()));
+
+    // Its mark phase skips those, never sees the new children, and frees them although they are
+    // still referenced.
+    gc(*other.handle());
+
+    QCOMPARE(other.evaluate(QStringLiteral("String(crossed.late.marker)")).toString(),
+             QStringLiteral("allocated late"));
+}
+
+void tst_qv4mm::ownedValueInForeignEngine_data()
+{
+    QTest::addColumn<QString>("accessExpression");
+    QTest::addColumn<bool>("refused");
+
+    // The "var" property holds a JavaScript object, which cannot leave its engine. The QML
+    // method is handed out as a plain method wrapper instead of its function object.
+    QTest::newRow("var property") << QStringLiteral("shared.payload") << true;
+    QTest::newRow("QML method") << QStringLiteral("shared.store") << false;
+}
+
+// The mirror image: a value living in the owning engine's heap becomes a GC root of another
+// engine, which then marks into chunks it does not own.
+void tst_qv4mm::ownedValueInForeignEngine()
+{
+    QFETCH(QString, accessExpression);
+    QFETCH(bool, refused);
+
+    QQmlEngine owner;
+    QJSEngine other;
+
+    QQmlComponent component(&owner, testFileUrl("sharedWithOtherEngine.qml"));
+    std::unique_ptr<QObject> shared(component.create());
+    QVERIFY2(shared.get(), qPrintable(component.errorString()));
+    owner.globalObject().setProperty(QStringLiteral("shared"), owner.newQObject(shared.get()));
+    other.globalObject().setProperty(QStringLiteral("shared"), other.newQObject(shared.get()));
+
+    if (refused)
+        QTest::ignoreMessage(QtWarningMsg, "JSValue can't be reassigned to another engine.");
+    const QJSValue escaped = other.evaluate(
+            QStringLiteral("var escaped = %1; true").arg(accessExpression));
+    QVERIFY2(!escaped.isError(), qPrintable(escaped.toString()));
+
+    gc(*other.handle());
+
+    const QJSValue allocated = owner.evaluate(
+            QStringLiteral("%1.late = { marker: 'allocated late' }; true").arg(accessExpression));
+    QVERIFY2(!allocated.isError(), qPrintable(allocated.toString()));
+
+    gc(owner);
+
+    QCOMPARE(owner.evaluate(QStringLiteral("String(%1.late.marker)").arg(accessExpression))
+                     .toString(),
+             QStringLiteral("allocated late"));
 }
 
 void tst_qv4mm::accessParentOnDestruction()

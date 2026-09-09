@@ -415,7 +415,7 @@ void QQmlConnections::connectSignalsToMethods()
             QV4::Scope scope(engine);
             QV4::ScopedContext global(scope, engine->rootContext());
 
-            if (QQmlVMEMetaObject *vmeMetaObject = QQmlVMEMetaObject::get(this)) {
+            if (QQmlVMEMetaObject *vmeMetaObject = QQmlVMEMetaObject::get(this, engine)) {
                 const int signalIndex = propPrivate->signalIndex();
                 auto *signal = new QQmlBoundSignal(target, signalIndex, this, qmlEngine(this));
                 signal->setEnabled(d->enabled);
