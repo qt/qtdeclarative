@@ -204,10 +204,27 @@ QQuickItem *QQuickItemGenerator::currentItem() const
     return m_itemStack.isEmpty() ? nullptr : m_itemStack.top();
 }
 
+QRectF QQuickItemGenerator::resolveBounds(const NodeInfo &info) const
+{
+    if (!info.bounds.isNull())
+        return info.bounds;
+
+    if (info.boundsReferenceId.isEmpty())
+        return {};
+
+    return m_bounds.value(info.boundsReferenceId);
+}
+
+void QQuickItemGenerator::registerBounds(const QString &id, const QRectF &bounds)
+{
+    if (id.isEmpty() || bounds.isNull())
+        return;
+
+    m_bounds.insert(id, bounds);
+}
+
 QString QQuickItemGenerator::generateNodeBase(const NodeInfo &info, const QString &idSuffix)
 {
-    Q_UNUSED(idSuffix)
-
     static qint64 maxNodes =
             qEnvironmentVariableIntegerValue("QT_QUICKVECTORIMAGE_MAX_NODES").value_or(10000);
     if (Q_UNLIKELY(!checkSanityLimit(++m_nodeCounter, maxNodes, "nodes"_L1)))
@@ -222,9 +239,11 @@ QString QQuickItemGenerator::generateNodeBase(const NodeInfo &info, const QStrin
 
     item->setTransformOrigin(QQuickItem::TopLeft);
 
-    if (!info.bounds.isNull()) {
-        item->setWidth(info.bounds.width());
-        item->setHeight(info.bounds.height());
+    const QRectF bounds = resolveBounds(info);
+    if (!bounds.isNull()) {
+        registerBounds(info.id + idSuffix, bounds);
+        item->setWidth(bounds.width());
+        item->setHeight(bounds.height());
     }
 
     if (info.filterId.isEmpty() && info.maskId.isEmpty()) {
@@ -965,6 +984,10 @@ void QQuickItemGenerator::generateDefsInstantiationNode(const StructureNodeInfo 
         return;
     }
 
+    const QRectF bounds = resolveBounds(info);
+    registerBounds(info.id, bounds);
+    registerBounds(info.defsId + "_defs"_L1, bounds);
+
     const qsizetype pendingStart = m_pendingLinkedTransforms.size();
     const QHash<QString, QQuickTransformSource *> outerSources = m_transformSourceItems;
 
@@ -1113,9 +1136,11 @@ void QQuickItemGenerator::generateMaskContainer(const MaskNodeInfo &info)
         popItem();
 
     auto *container = currentItem();
+    const bool hasBoundsReference = !info.boundsReferenceId.isEmpty();
+    const QRectF maskRect = hasBoundsReference ? resolveBounds(info) : info.maskRect;
     m_maskDefs[info.id] = { container,
-                            info.maskRect,
-                            info.isMaskRectRelativeCoordinates,
+                            maskRect,
+                            hasBoundsReference ? false : info.isMaskRectRelativeCoordinates,
                             info.isMaskContentRelativeCoordinates,
                             transformer,
                             transformerMatrix };
@@ -1135,8 +1160,9 @@ void QQuickItemGenerator::generateMask(QQuickItem *item, const NodeInfo &info,
     const qreal w = item->width();
     const qreal h = item->height();
 
+    const QRectF resolvedBounds = resolveBounds(info);
     const QRectF svgBounds =
-            info.bounds.isNull() ? QRectF(item->x(), item->y(), w, h) : info.bounds;
+            resolvedBounds.isNull() ? QRectF(item->x(), item->y(), w, h) : resolvedBounds;
     QRectF svgMaskRect;
     if (maskDef.isMaskRectRelativeCoordinates) {
         svgMaskRect = QRectF(maskDef.maskRect.x() * svgBounds.width() + svgBounds.x(),
@@ -1256,9 +1282,10 @@ QQuickItem *QQuickItemGenerator::generateFilter(QQuickItem *item, const NodeInfo
         return nullptr;
 
     QQuickItem *parentItem = item->parentItem();
-    const QRectF itemBounds = info.bounds.isNull()
+    const QRectF resolvedBounds = resolveBounds(info);
+    const QRectF itemBounds = resolvedBounds.isNull()
             ? QRectF(item->x(), item->y(), item->width(), item->height())
-            : info.bounds;
+            : resolvedBounds;
 
     QRectF filterRect = resolveRect(filterInfo.filterRect, filterInfo.csFilterRect, itemBounds);
     if (filterRect.isEmpty())

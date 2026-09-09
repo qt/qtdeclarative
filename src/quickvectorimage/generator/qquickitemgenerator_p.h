@@ -120,6 +120,7 @@ private:
     QHash<QString, PatternDef> m_patternDefs;
     QHash<QString, MarkerDef> m_markerDefs;
     QHash<QString, FilterNodeInfo> m_filterDefs;
+    QHash<QString, QRectF> m_bounds;
     QQuickItemSpy *m_topLevelScaleSpy = nullptr;
 
     QHash<QString, QQuickTransformSource *> m_transformSourceItems;
@@ -127,6 +128,9 @@ private:
     std::unique_ptr<QQuickGeneratorAnimationProvider> m_animationProvider;
     QStack<bool> m_scopePushed;
     QMap<std::array<qreal, 4>, QEasingCurve> m_easingCache;
+
+    QRectF resolveBounds(const NodeInfo &info) const;
+    void registerBounds(const QString &id, const QRectF &bounds);
 
     void beginDefsRecord(const QString &id);
     void endDefsRecord();
