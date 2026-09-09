@@ -2640,7 +2640,6 @@ QRect QStyleKitStyle::subElementRect(SubElement r, const QStyleOption *opt,
     Q_D(const QStyleKitStyle);
 
     switch (r) {
-    case SE_PushButtonLayoutItem:
     case SE_PushButtonBevel:
         if (const auto *btn = qstyleoption_cast<const QStyleOptionButton *>(opt)) {
             const auto controlType = btn->features & QStyleOptionButton::Flat
