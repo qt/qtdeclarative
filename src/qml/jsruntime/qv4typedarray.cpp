@@ -1753,7 +1753,7 @@ ReturnedValue IntrinsicTypedArrayCtor::method_from(const FunctionObject *f, cons
         if (!arrayLike)
             return scope.engine->throwTypeError(QString::fromLatin1("Cannot convert %1 to object").arg(argv[0].toQStringNoThrow()));
 
-        int len = arrayLike->getLength();
+        qint64 len = arrayLike->getLength();
         CHECK_EXCEPTION();
 
         // Getting the length may throw, and must do so before we check the constructor validity.
@@ -1761,7 +1761,7 @@ ReturnedValue IntrinsicTypedArrayCtor::method_from(const FunctionObject *f, cons
             return scope.engine->throwTypeError();
 
         ScopedObject a(scope, Value::undefinedValue());
-        ScopedValue ctorArgument(scope, Value::fromReturnedValue(QV4::Encode(len)));
+        ScopedValue ctorArgument(scope, Value::fromReturnedValue(QV4::Encode(double(len))));
         a = C->callAsConstructor(ctorArgument, 1);
         CHECK_EXCEPTION();
 
@@ -1771,7 +1771,7 @@ ReturnedValue IntrinsicTypedArrayCtor::method_from(const FunctionObject *f, cons
 
         ScopedValue mappedValue(scope, Value::undefinedValue());
         ScopedValue kValue(scope);
-        for (int k = 0; k < len; ++k) {
+        for (qint64 k = 0; k < len; ++k) {
             kValue = arrayLike->get(k);
             CHECK_EXCEPTION();
 

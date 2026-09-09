@@ -52,7 +52,6 @@ built-ins/Array/prototype/concat/create-species-poisoned.js fails
 built-ins/Array/prototype/concat/create-species.js fails
 built-ins/Array/prototype/concat/is-concat-spreadable-val-falsey.js fails
 built-ins/Array/prototype/copyWithin/return-abrupt-from-has-start.js fails
-built-ins/Array/prototype/every/15.4.4.16-3-29.js fails
 built-ins/Array/prototype/filter/create-ctor-non-object.js fails
 built-ins/Array/prototype/filter/create-ctor-poisoned.js fails
 built-ins/Array/prototype/filter/create-proxy.js fails
@@ -61,8 +60,6 @@ built-ins/Array/prototype/filter/create-species-non-ctor.js fails
 built-ins/Array/prototype/filter/create-species-poisoned.js fails
 built-ins/Array/prototype/filter/create-species.js fails
 built-ins/Array/prototype/includes/length-boundaries.js fails
-built-ins/Array/prototype/indexOf/15.4.4.14-3-28.js fails
-built-ins/Array/prototype/indexOf/15.4.4.14-3-29.js fails
 built-ins/Array/prototype/join/S15.4.4.5_A4_T3.js fails
 built-ins/Array/prototype/lastIndexOf/15.4.4.15-3-28.js fails
 built-ins/Array/prototype/map/create-ctor-non-object.js fails
@@ -72,22 +69,16 @@ built-ins/Array/prototype/map/create-species-abrupt.js fails
 built-ins/Array/prototype/map/create-species-non-ctor.js fails
 built-ins/Array/prototype/map/create-species-poisoned.js fails
 built-ins/Array/prototype/map/create-species.js fails
-built-ins/Array/prototype/pop/S15.4.4.6_A2_T2.js fails
 built-ins/Array/prototype/pop/S15.4.4.6_A3_T1.js fails
 built-ins/Array/prototype/pop/S15.4.4.6_A3_T2.js fails
-built-ins/Array/prototype/pop/clamps-to-integer-limit.js fails
 built-ins/Array/prototype/pop/length-near-integer-limit.js fails
 built-ins/Array/prototype/push/S15.4.4.7_A2_T2.js fails
 built-ins/Array/prototype/push/S15.4.4.7_A3.js fails
 built-ins/Array/prototype/push/throws-if-integer-limit-exceeded.js fails
 built-ins/Array/prototype/reverse/length-exceeding-integer-limit-with-object.js fails
 built-ins/Array/prototype/reverse/length-exceeding-integer-limit-with-proxy.js fails
-built-ins/Array/prototype/slice/S15.4.4.10_A3_T1.js fails
-built-ins/Array/prototype/slice/S15.4.4.10_A3_T2.js fails
 built-ins/Array/prototype/slice/create-ctor-non-object.js fails
 built-ins/Array/prototype/slice/create-ctor-poisoned.js fails
-built-ins/Array/prototype/slice/create-non-array-invalid-len.js fails
-built-ins/Array/prototype/slice/create-proxied-array-invalid-len.js fails
 built-ins/Array/prototype/slice/create-proxy.js fails
 built-ins/Array/prototype/slice/create-species-abrupt.js fails
 built-ins/Array/prototype/slice/create-species-neg-zero.js fails
@@ -96,8 +87,6 @@ built-ins/Array/prototype/slice/create-species-poisoned.js fails
 built-ins/Array/prototype/slice/create-species.js fails
 built-ins/Array/prototype/slice/length-exceeding-integer-limit-proxied-array.js fails
 built-ins/Array/prototype/slice/length-exceeding-integer-limit.js fails
-built-ins/Array/prototype/some/15.4.4.17-3-28.js fails
-built-ins/Array/prototype/some/15.4.4.17-3-29.js fails
 built-ins/Array/prototype/splice/S15.4.4.12_A3_T1.js fails
 built-ins/Array/prototype/splice/clamps-length-to-integer-limit.js fails
 built-ins/Array/prototype/splice/create-ctor-non-object.js fails
@@ -115,7 +104,6 @@ built-ins/Array/prototype/splice/length-near-integer-limit-grow-array.js fails
 built-ins/Array/prototype/toLocaleString/primitive_this_value.js strictFails
 built-ins/Array/prototype/toLocaleString/primitive_this_value_getter.js strictFails
 built-ins/String/prototype/toLocaleUpperCase/special_casing.js passesWithICU
-built-ins/Array/prototype/unshift/clamps-to-integer-limit.js fails
 built-ins/Array/prototype/unshift/length-near-integer-limit.js fails
 built-ins/Array/prototype/unshift/throws-if-integer-limit-exceeded.js fails
 built-ins/ArrayBuffer/data-allocation-after-object-creation.js fails
