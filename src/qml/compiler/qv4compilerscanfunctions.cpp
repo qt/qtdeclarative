@@ -642,6 +642,21 @@ void ScanFunctions::endVisit(WithStatement *)
     leaveEnvironment();
 }
 
+// Collects the names referenced anywhere within a formal parameter's default
+// value initializer. See Context::promoteFormalParameterForTDZ.
+struct FormalParameterInitializerNameCollector : public QQmlJS::AST::Visitor
+{
+    bool visit(QQmlJS::AST::IdentifierExpression *ast) override
+    {
+        referencedNames.insert(ast->name.toString());
+        return true;
+    }
+
+    void throwRecursionDepthError() override { }
+
+    QSet<QString> referencedNames;
+};
+
 bool ScanFunctions::enterFunction(
         Node *ast, const QString &name, FormalParameterList *formals, StatementList *body,
         FunctionNameContext nameContext)
@@ -714,6 +729,26 @@ bool ScanFunctions::enterFunction(
         if (!_context->arguments.contains(arg.id)) {
             _context->addLocalVar(arg.id, Context::VariableDefinition, VariableScope::Var, nullptr,
                                   QQmlJS::SourceLocation(), arg.isInjected());
+        }
+    }
+
+    if (formals) {
+        FormalParameterInitializerNameCollector collector;
+        for (FormalParameterList *it = formals; it; it = it->next) {
+            if (it->element && it->element->initializer)
+                it->element->initializer->accept(&collector);
+        }
+        if (!collector.referencedNames.isEmpty()) {
+            for (FormalParameterList *it = formals; it; it = it->next) {
+                PatternElement *e = it->element;
+                if (!e || e->bindingIdentifier.isEmpty())
+                    continue;
+                const QString name = e->bindingIdentifier.toString();
+                if (!collector.referencedNames.contains(name))
+                    continue;
+                const auto declLoc = combine(e->firstSourceLocation(), e->lastSourceLocation());
+                _context->promoteFormalParameterForTDZ(name, declLoc);
+            }
         }
     }
 

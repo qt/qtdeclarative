@@ -166,6 +166,7 @@ struct Context {
         QQmlJS::AST::VariableScope scope = QQmlJS::AST::VariableScope::Var;
         mutable bool canEscape = false;
         bool isInjected = false;
+        bool isFormalParameterTDZPromotion = false;
         QQmlJS::AST::FunctionExpression *function = nullptr;
         QQmlJS::SourceLocation declarationLocation;
 
@@ -328,6 +329,8 @@ struct Context {
             QQmlJS::AST::FunctionExpression *function = nullptr,
             const QQmlJS::SourceLocation &declarationLocation = QQmlJS::SourceLocation(),
             bool isInjected = false);
+
+    void promoteFormalParameterForTDZ(const QString &name, const QQmlJS::SourceLocation &loc);
 
     struct ResolvedName {
         enum Type {

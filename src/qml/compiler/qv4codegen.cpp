@@ -662,6 +662,18 @@ Codegen::Reference Codegen::targetForPatternElement(AST::PatternElement *p)
     return lhs;
 }
 
+// Returns a reference to the raw value passed positionally for the argIndex'th
+// formal parameter, independent of whatever the parameter's own name currently
+// resolves to. This is needed when a parameter is promoted to a real member for
+// TDZ tracking. See Context::promoteFormalParameterForTDZ.
+Codegen::Reference Codegen::referenceForFormalParameter(int argIndex)
+{
+    if (_context->argumentsCanEscape)
+        return Reference::fromScopedLocal(this, argIndex + _context->locals.size(), 0);
+    const int index = argIndex + int(sizeof(CallData) / sizeof(StaticValue)) - 1;
+    return Reference::fromStackSlot(this, index, true);
+}
+
 void Codegen::initializeAndDestructureBindingElement(AST::PatternElement *e, const Reference &base, bool isDefinition)
 {
     Q_ASSERT(e->type == AST::PatternElement::Binding || e->type == AST::PatternElement::RestElement);
@@ -3496,15 +3508,20 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast, AST::FormalPara
                 Q_UNREACHABLE();
             }
 
-            Reference arg = referenceForName(e->bindingIdentifier.toString(), true);
             if (e->type == PatternElement::RestElement) {
                 Q_ASSERT(!formals->next);
+                Reference arg = referenceForName(e->bindingIdentifier.toString(), true);
                 Instruction::CreateRestParameter rest;
                 rest.argIndex = argc;
                 bytecodeGenerator->addInstruction(rest);
                 arg.storeConsumeAccumulator();
             } else {
-                if (e->bindingTarget || e->initializer) {
+                // Copy the value of TDZ-promoted parameters into distinct slots to enable TDZ check
+                const auto memberIt = _context->members.constFind(e->bindingIdentifier.toString());
+                const bool promoted = memberIt != _context->members.constEnd()
+                        && memberIt->isFormalParameterTDZPromotion;
+                if (e->bindingTarget || e->initializer || promoted) {
+                    Reference arg = referenceForFormalParameter(argc);
                     initializeAndDestructureBindingElement(e, arg);
                     if (hasError())
                         break;

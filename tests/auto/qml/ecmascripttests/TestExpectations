@@ -334,8 +334,6 @@ language/eval-code/indirect/var-env-global-lex-non-strict.js fails
 language/eval-code/indirect/var-env-var-init-global-exstng.js strictFails
 language/eval-code/indirect/var-env-var-init-global-new.js strictFails
 language/eval-code/indirect/var-env-var-non-strict.js strictFails
-language/expressions/arrow-function/dflt-params-ref-later.js fails
-language/expressions/arrow-function/dflt-params-ref-self.js fails
 language/expressions/arrow-function/lexical-super-call-from-within-constructor.js fails
 language/expressions/arrow-function/lexical-supercall-from-immediately-invoked-arrow.js fails
 language/expressions/arrow-function/scope-body-lex-distinct.js sloppyFails
@@ -389,14 +387,6 @@ language/expressions/call/11.2.3-3_3.js fails
 language/expressions/call/eval-spread-empty-leading.js fails
 language/expressions/call/eval-spread-empty-trailing.js fails
 language/expressions/call/eval-spread.js fails
-language/expressions/class/gen-meth-dflt-params-ref-later.js fails
-language/expressions/class/gen-meth-dflt-params-ref-self.js fails
-language/expressions/class/gen-meth-static-dflt-params-ref-later.js fails
-language/expressions/class/gen-meth-static-dflt-params-ref-self.js fails
-language/expressions/class/meth-dflt-params-ref-later.js fails
-language/expressions/class/meth-dflt-params-ref-self.js fails
-language/expressions/class/meth-static-dflt-params-ref-later.js fails
-language/expressions/class/meth-static-dflt-params-ref-self.js fails
 language/expressions/class/name.js fails
 language/expressions/class/scope-gen-meth-paramsbody-var-open.js fails
 language/expressions/class/scope-meth-paramsbody-var-open.js fails
@@ -484,8 +474,6 @@ language/expressions/compound-assignment/S11.13.2_A7.9_T4.js fails
 language/expressions/delete/super-property.js fails
 language/expressions/function/arguments-with-arguments-fn.js sloppyFails
 language/expressions/function/arguments-with-arguments-lex.js sloppyFails
-language/expressions/function/dflt-params-ref-later.js fails
-language/expressions/function/dflt-params-ref-self.js fails
 language/expressions/function/name.js fails
 language/expressions/function/param-dflt-yield-non-strict.js sloppyFails
 language/expressions/function/scope-body-lex-distinct.js sloppyFails
@@ -499,8 +487,6 @@ language/expressions/function/scope-paramsbody-var-open.js fails
 language/expressions/generators/arguments-with-arguments-fn.js sloppyFails
 language/expressions/generators/arguments-with-arguments-lex.js sloppyFails
 language/expressions/generators/default-proto.js fails
-language/expressions/generators/dflt-params-ref-later.js fails
-language/expressions/generators/dflt-params-ref-self.js fails
 language/expressions/generators/name.js fails
 language/expressions/generators/named-yield-identifier-non-strict.js sloppyFails
 language/expressions/generators/scope-body-lex-distinct.js sloppyFails
@@ -518,11 +504,7 @@ language/expressions/generators/yield-as-property-name.js fails
 language/expressions/generators/yield-identifier-non-strict.js sloppyFails
 language/expressions/object/let-non-strict-access.js sloppyFails
 language/expressions/object/let-non-strict-syntax.js sloppyFails
-language/expressions/object/method-definition/gen-meth-dflt-params-ref-later.js fails
-language/expressions/object/method-definition/gen-meth-dflt-params-ref-self.js fails
 language/expressions/object/method-definition/gen-yield-identifier-non-strict.js sloppyFails
-language/expressions/object/method-definition/meth-dflt-params-ref-later.js fails
-language/expressions/object/method-definition/meth-dflt-params-ref-self.js fails
 language/expressions/object/method-definition/object-method-returns-promise.js fails
 language/expressions/object/method-definition/yield-as-function-expression-binding-identifier.js sloppyFails
 language/expressions/object/method-definition/yield-as-identifier-in-nested-function.js sloppyFails
@@ -603,14 +585,6 @@ language/statements/class/definition/setters-restricted-ids.js fails
 language/statements/class/definition/this-access-restriction-2.js fails
 language/statements/class/definition/this-access-restriction.js fails
 language/statements/class/definition/this-check-ordering.js fails
-language/statements/class/gen-meth-dflt-params-ref-later.js fails
-language/statements/class/gen-meth-dflt-params-ref-self.js fails
-language/statements/class/gen-meth-static-dflt-params-ref-later.js fails
-language/statements/class/gen-meth-static-dflt-params-ref-self.js fails
-language/statements/class/meth-dflt-params-ref-later.js fails
-language/statements/class/meth-dflt-params-ref-self.js fails
-language/statements/class/meth-static-dflt-params-ref-later.js fails
-language/statements/class/meth-static-dflt-params-ref-self.js fails
 language/statements/class/scope-gen-meth-paramsbody-var-open.js fails
 language/statements/class/scope-meth-paramsbody-var-open.js fails
 language/statements/class/scope-setter-paramsbody-var-open.js fails
@@ -650,8 +624,6 @@ language/statements/function/13.2-30-s.js fails
 language/statements/function/S13_A15_T4.js sloppyFails
 language/statements/function/arguments-with-arguments-fn.js sloppyFails
 language/statements/function/arguments-with-arguments-lex.js sloppyFails
-language/statements/function/dflt-params-ref-later.js fails
-language/statements/function/dflt-params-ref-self.js fails
 language/statements/function/param-dflt-yield-non-strict.js sloppyFails
 language/statements/function/scope-body-lex-distinct.js sloppyFails
 language/statements/function/scope-param-elem-var-close.js sloppyFails
@@ -662,8 +634,6 @@ language/statements/function/scope-paramsbody-var-open.js fails
 language/statements/generators/arguments-with-arguments-fn.js sloppyFails
 language/statements/generators/arguments-with-arguments-lex.js sloppyFails
 language/statements/generators/default-proto.js fails
-language/statements/generators/dflt-params-ref-later.js fails
-language/statements/generators/dflt-params-ref-self.js fails
 language/statements/generators/scope-body-lex-distinct.js sloppyFails
 language/statements/generators/scope-param-elem-var-close.js sloppyFails
 language/statements/generators/scope-param-elem-var-open.js sloppyFails
