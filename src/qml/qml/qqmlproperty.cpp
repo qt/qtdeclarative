@@ -962,11 +962,12 @@ void QQmlPropertyPrivate::findAliasTarget(QObject *object, QQmlPropertyIndex bin
         const QQmlPropertyData *propertyData =
             data->propertyCache?data->propertyCache->property(coreIndex):nullptr;
         if (propertyData && propertyData->isAlias()) {
-            QQmlVMEMetaObject *vme = QQmlVMEMetaObject::getForProperty(object, coreIndex);
 
             QObject *aObject = nullptr; int aCoreIndex = -1; int aValueTypeIndex = -1;
-            if (vme->aliasTarget(coreIndex, &aObject, &aCoreIndex, &aValueTypeIndex)) {
-                // This will either be a value type sub-reference or an alias to a value-type sub-reference not both
+            if (QQmlVMEMetaObject::aliasTarget(object, coreIndex, &aObject, &aCoreIndex,
+                                               &aValueTypeIndex)) {
+                // This will either be a value type sub-reference
+                // or an alias to a value-type sub-reference not both
                 Q_ASSERT(valueTypeIndex == -1 || aValueTypeIndex == -1);
 
                 QQmlPropertyIndex aBindingIndex(aCoreIndex);
@@ -1716,7 +1717,7 @@ static bool assignToQQmlListProperty(
     auto result = QQmlPropertyPrivate::convertToQQmlListProperty(&prop, propertyMetaType, value);
 
     if (useNonsignalingListOps && result == QQmlPropertyPrivate::ListCopyResult::Copied) {
-        Q_ASSERT(QQmlVMEMetaObject::get(object));
+        Q_ASSERT(QQmlData::get(object)->hasVMEMetaObject);
         QQmlVMEResolvedList(&prop).activateSignal();
     }
 
@@ -2290,12 +2291,8 @@ static inline void flush_vme_signal(const QObject *object, int index, bool index
                                                         : data->propertyCache->method(index);
 
         if (property && property->isVMESignal()) {
-            QQmlVMEMetaObject *vme;
-            if (indexInSignalRange)
-                vme = QQmlVMEMetaObject::getForSignal(const_cast<QObject *>(object), index);
-            else
-                vme = QQmlVMEMetaObject::getForMethod(const_cast<QObject *>(object), index);
-            vme->connectAliasSignal(index, indexInSignalRange);
+            QQmlVMEMetaObject::connectAlias(const_cast<QObject *>(object), index,
+                                            indexInSignalRange);
         }
     }
 }

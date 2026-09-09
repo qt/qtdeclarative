@@ -293,7 +293,7 @@ static ReturnedValue loadProperty(
         return QJSValuePrivate::convertToReturnedValue(v4, v);
     }
 
-    if (property.isQVariant()) {
+    if (property.isQVariant() || property.isVarProperty()) {
         // We have to read the property even if it's a lazy-loaded reference object.
         // Without reading it, we wouldn't know its inner type.
         QVariant v;
@@ -371,9 +371,11 @@ ReturnedValue QObjectWrapper::getProperty(
 
     if (property->isFunction() && !property->isVarProperty()) {
         if (property->isVMEFunction()) {
-            QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(object);
-            Q_ASSERT(vmemo);
-            return vmemo->vmeMethod(property->coreIndex());
+            if (QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(object, engine))
+                return vmemo->vmeMethod(property->coreIndex());
+
+            return QObjectMethod::create(
+                        engine, (flags & AttachMethods) ? wrapper : nullptr, property->coreIndex());
         } else if (property->isV4Function()) {
             return QObjectMethod::create(
                         engine, (flags & AttachMethods) ? wrapper : nullptr, property->coreIndex());
@@ -398,12 +400,11 @@ ReturnedValue QObjectWrapper::getProperty(
     }
 
     if (property->isVarProperty()) {
-        QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(object);
-        Q_ASSERT(vmemo);
-        return vmemo->vmeProperty(property->coreIndex());
-    } else {
-        return loadProperty(engine, wrapper, object, *property);
+        if (QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(object, engine))
+            return vmemo->vmeProperty(property->coreIndex());
     }
+
+    return loadProperty(engine, wrapper, object, *property);
 }
 
 static OptionalReturnedValue getDestroyOrToStringMethod(
@@ -726,10 +727,10 @@ void QObjectWrapper::setProperty(
 
     if (property->isVarProperty()) {
         // allow assignment of "special" values (null, undefined, function) to var properties
-        QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(object);
-        Q_ASSERT(vmemo);
-        vmemo->setVMEProperty(property->coreIndex(), value);
-        return;
+        if (QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(object, engine)) {
+            vmemo->setVMEProperty(property->coreIndex(), value);
+            return;
+        }
     }
 
 #define PROPERTY_STORE(cpptype, value) \
@@ -740,9 +741,11 @@ void QObjectWrapper::setProperty(
     QMetaObject::metacall(object, QMetaObject::WriteProperty, property->coreIndex(), argv);
 
     const QMetaType propType = property->propType();
-    // functions are already handled, except for the QJSValue case
+    // functions are already handled, except for the QJSValue case and for var properties of
+    // objects owned by another engine
     Q_ASSERT(!value.as<FunctionObject>()
              || value.as<QV4::QQmlTypeWrapper>()
+             || property->isVarProperty()
              || propType == QMetaType::fromType<QJSValue>());
 
     if (value.isNull() && property->isQObject()) {
@@ -774,10 +777,6 @@ void QObjectWrapper::setProperty(
         PROPERTY_STORE(double, double(value.asDouble()));
     } else if (propType == QMetaType::fromType<QString>() && value.isString()) {
         PROPERTY_STORE(QString, value.toQStringNoThrow());
-    } else if (property->isVarProperty()) {
-        QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(object);
-        Q_ASSERT(vmemo);
-        vmemo->setVMEProperty(property->coreIndex(), value);
     } else if (propType == QMetaType::fromType<QQmlScriptString>()
                && (value.isUndefined() || value.isPrimitive())) {
         QQmlScriptString ss(value.toQStringNoThrow(), nullptr /* context */, object);

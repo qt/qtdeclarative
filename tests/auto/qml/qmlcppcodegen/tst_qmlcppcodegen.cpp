@@ -1179,7 +1179,7 @@ void tst_QmlCppCodegen::collectGarbageAfterAotCodeReturned()
 
     const int coreIndex = o->metaObject()->indexOfMethod("takeHidden()");
     QVERIFY(coreIndex >= 0);
-    QQmlVMEMetaObject *vme = QQmlVMEMetaObject::getForMethod(o.get(), coreIndex);
+    QQmlVMEMetaObject *vme = QQmlVMEMetaObject::get(o.get(), engine.handle());
     QVERIFY(vme);
 
     QV4::ExecutionEngine *v4 = engine.handle();

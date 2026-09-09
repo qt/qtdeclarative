@@ -233,12 +233,11 @@ public:
     QV4::ReturnedValue vmeProperty(int index) const;
     void setVMEProperty(int index, const QV4::Value &v);
 
-    void connectAliasSignal(int index, bool indexInSignalRange);
+    static void connectAlias(QObject *o, int coreIndex, bool indexInSignalRange);
 
-    static inline QQmlVMEMetaObject *get(QObject *o);
-    static QQmlVMEMetaObject *getForProperty(QObject *o, int coreIndex);
-    static QQmlVMEMetaObject *getForMethod(QObject *o, int coreIndex);
-    static QQmlVMEMetaObject *getForSignal(QObject *o, int coreIndex);
+    static inline QQmlVMEMetaObject *get(QObject *o, QV4::ExecutionEngine *engine);
+    static bool aliasTarget(QObject *o, int coreIndex, QObject **aObject, int *aCoreIndex,
+                            int *aValueTypeIndex);
 
     static void list_append(QQmlListProperty<QObject> *prop, QObject *o);
     static void list_clear(QQmlListProperty<QObject> *prop);
@@ -336,6 +335,8 @@ private:
     friend class QQmlVMEResolvedList;
     friend class QQmlVMEVariantQObjectPtr;
 
+    static inline QQmlVMEMetaObject *get(QObject *o);
+
     const QV4::CompiledData::Object *findCompiledObject() const {
         // If the executable CU has been stripped of its engine, it has an empty base CU
         if (!m_compilationUnit || !m_compilationUnit->engine)
@@ -364,14 +365,20 @@ private:
 
 QQmlVMEMetaObject *QQmlVMEMetaObject::get(QObject *obj)
 {
-    if (obj) {
-        if (QQmlData *data = QQmlData::get(obj)) {
-            if (data->hasVMEMetaObject)
-                return static_cast<QQmlVMEMetaObject *>(QObjectPrivate::get(obj)->metaObject);
-        }
-    }
+    if (!obj)
+        return nullptr;
 
-    return nullptr;
+    QQmlData *ddata = QQmlData::get(obj);
+    if (!ddata || !ddata->hasVMEMetaObject)
+        return nullptr;
+
+    return static_cast<QQmlVMEMetaObject *>(QObjectPrivate::get(obj)->metaObject);
+}
+
+QQmlVMEMetaObject *QQmlVMEMetaObject::get(QObject *obj, QV4::ExecutionEngine *engine)
+{
+    QQmlVMEMetaObject *vme = get(obj);
+    return (vme && vme->engine() == engine) ? vme : nullptr;
 }
 
 int QQmlVMEMetaObject::propOffset() const

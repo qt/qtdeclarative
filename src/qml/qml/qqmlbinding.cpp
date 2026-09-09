@@ -440,9 +440,9 @@ bool QQmlBinding::slowWrite(
     const QMetaType metaType = valueTypeData.isValid() ? valueTypeData.propType() : core.propType();
     QQmlJavaScriptExpression::DeleteWatcher watcher(this);
 
-    if (core.isVarProperty()) {
-        QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(m_target.data());
-        Q_ASSERT(vmemo);
+    if (QQmlVMEMetaObject *vmemo = core.isVarProperty()
+                ? QQmlVMEMetaObject::get(m_target.data(), qmlEngine->handle())
+                : nullptr) {
         QV4::Scope scope(qmlEngine->handle());
         QV4::ScopedValue value(scope, qmlEngine->handle()->metaTypeToJS(resultType, result));
         vmemo->setVMEProperty(core.coreIndex(),
@@ -488,7 +488,11 @@ Q_NEVER_INLINE bool QQmlBinding::slowWrite(const QQmlPropertyData &core,
     QQmlJavaScriptExpression::DeleteWatcher watcher(this);
 
     QVariant value;
-    bool isVarProperty = core.isVarProperty();
+
+    // A "var" property of an object owned by another engine is an ordinary QVariant property to
+    // us. We must not store values from our own heap in its storage.
+    QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(m_target.data(), engine()->handle());
+    const bool isVarProperty = core.isVarProperty() && vmemo;
 
     if (isUndefined) {
     } else if (core.isQList()) {
@@ -519,7 +523,6 @@ Q_NEVER_INLINE bool QQmlBinding::slowWrite(const QQmlPropertyData &core,
             return false;
         }
 
-        QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(m_target.data());
         Q_ASSERT(vmemo);
         vmemo->setVMEProperty(core.coreIndex(), result);
     } else if (isUndefined

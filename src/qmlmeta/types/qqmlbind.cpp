@@ -1305,7 +1305,8 @@ bool QQmlBindPrivate::isCurrent(QQmlBindEntry *entry) const
     switch (entry->currentKind) {
     case QQmlBindEntryKind::V4Value: {
         auto propPriv = QQmlPropertyPrivate::get(entry->prop);
-        QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(propPriv->object);
+        QQmlVMEMetaObject *vmemo =
+                QQmlVMEMetaObject::get(propPriv->object, propPriv->engine->handle());
         Q_ASSERT(vmemo);
         return QV4::RuntimeHelpers::strictEqual(
                 // fromReturnedValue is OK here because strictEqual will not allocate
@@ -1387,7 +1388,8 @@ void QQmlBindPrivate::preEvalEntry(QQmlBindEntry *entry)
             if (restoreValue) {
                 QQmlAnyBinding::takeFrom(entry->prop); // we don't want to have a binding active
                 auto propPriv = QQmlPropertyPrivate::get(entry->prop);
-                QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(propPriv->object);
+                QQmlVMEMetaObject *vmemo =
+                        QQmlVMEMetaObject::get(propPriv->object, propPriv->engine->handle());
                 Q_ASSERT(vmemo);
                 vmemo->setVMEProperty(propPriv->core.coreIndex(),
                                       *entry->previous.v4Value.valueRef());
@@ -1420,7 +1422,8 @@ void QQmlBindPrivate::preEvalEntry(QQmlBindEntry *entry)
             auto propPriv = QQmlPropertyPrivate::get(entry->prop);
             auto propData = propPriv->core;
             if (!propPriv->valueTypeData.isValid() && propData.isVarProperty()) {
-                QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(propPriv->object);
+                QQmlVMEMetaObject *vmemo =
+                        QQmlVMEMetaObject::get(propPriv->object, propPriv->engine->handle());
                 Q_ASSERT(vmemo);
                 auto retVal = vmemo->vmeProperty(propData.coreIndex());
                 entry->previousKind = entry->previous.set(
@@ -1462,7 +1465,7 @@ void QQmlBindPrivate::postEvalEntry(QQmlBindEntry *entry)
         break;
     case QQmlBindEntryKind::V4Value: {
         auto propPriv = QQmlPropertyPrivate::get(entry->prop);
-        QQmlVMEMetaObject::get(propPriv->object)->setVMEProperty(
+        QQmlVMEMetaObject::get(propPriv->object, propPriv->engine->handle())->setVMEProperty(
                 propPriv->core.coreIndex(), *entry->current.v4Value.valueRef());
         break;
     }

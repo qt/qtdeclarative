@@ -244,10 +244,10 @@ bool QQmlAbstractBinding::setTarget(
     m_target = object;
 
     for (bool isAlias = coreIsAlias; isAlias;) {
-        QQmlVMEMetaObject *vme = QQmlVMEMetaObject::getForProperty(object, coreIndex);
 
         int aValueTypeIndex;
-        if (!vme->aliasTarget(coreIndex, &object, &coreIndex, &aValueTypeIndex)) {
+        if (!QQmlVMEMetaObject::aliasTarget(object, coreIndex, &object, &coreIndex,
+                                            &aValueTypeIndex)) {
             // can't resolve id (yet)
             return invalidate();
         }

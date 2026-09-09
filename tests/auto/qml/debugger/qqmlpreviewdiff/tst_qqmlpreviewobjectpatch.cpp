@@ -4907,7 +4907,7 @@ void tst_QQmlPreviewObjectPatch::crossCompilationUnitBaseTypeChange()
     QCOMPARE(inner->property("marker").toInt(), 1);
 
     // The inner instance's innermost VME belongs to CrossCuInner's own compilation unit.
-    const auto oldExecUnit = QQmlVMEMetaObject::get(inner)->compilationUnit();
+    const auto oldExecUnit = QQmlVMEMetaObject::get(inner, engine.handle())->compilationUnit();
     QVERIFY(oldExecUnit);
 
     QQmlComponent newComp(&engine, testFileUrl("CrossCuInnerNew.qml"));
@@ -4958,7 +4958,7 @@ void tst_QQmlPreviewObjectPatch::derivedTypeBaseTypeChangeFails()
     QVERIFY(root);
 
     // CrossCuInner's own compilation unit is the derived root's base level.
-    const auto oldExecUnit = QQmlVMEMetaObject::get(root.get())->compilationUnit();
+    const auto oldExecUnit = QQmlVMEMetaObject::get(root.get(), engine.handle())->compilationUnit();
     QVERIFY(oldExecUnit);
 
     QQmlComponent newComp(&engine, testFileUrl("CrossCuInnerNew.qml"));

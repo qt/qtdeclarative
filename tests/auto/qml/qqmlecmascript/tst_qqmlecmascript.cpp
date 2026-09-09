@@ -5924,8 +5924,8 @@ void tst_qqmlecmascript::propertyVarInheritance()
     QObject *ico5 = object->property("varProperty").value<QObject*>()->property("inheritanceVarProperty").value<QObject*>()->property("vp").value<QObject*>()->property("vp").value<QObject*>()->property("vp").value<QObject*>()->property("vp").value<QObject*>();
     QVERIFY(cco5);
     QVERIFY(ico5);
-    QQmlVMEMetaObject *icovmemo = QQmlVMEMetaObject::get(ico5);
-    QQmlVMEMetaObject *ccovmemo = QQmlVMEMetaObject::get(cco5);
+    QQmlVMEMetaObject *icovmemo = QQmlVMEMetaObject::get(ico5, engine.handle());
+    QQmlVMEMetaObject *ccovmemo = QQmlVMEMetaObject::get(cco5, engine.handle());
     QV4::WeakValue icoCanaryHandle;
     QV4::WeakValue ccoCanaryHandle;
     {
@@ -5973,8 +5973,10 @@ void tst_qqmlecmascript::propertyVarInheritance2()
     QCOMPARE(childObject->property("textCanary").toInt(), 10);
     QV4::WeakValue childObjectVarArrayValueHandle;
     {
-        childObjectVarArrayValueHandle.set(engine.handle(),
-                                           QQmlVMEMetaObject::get(childObject)->vmeProperty(childObject->metaObject()->indexOfProperty("vp")));
+        childObjectVarArrayValueHandle.set(
+                    engine.handle(),
+                    QQmlVMEMetaObject::get(childObject, engine.handle())
+                    ->vmeProperty(childObject->metaObject()->indexOfProperty("vp")));
         QVERIFY(!childObjectVarArrayValueHandle.isUndefined());
         gc(engine);
         QVERIFY(!childObjectVarArrayValueHandle.isUndefined()); // should not have been collected yet.
@@ -10949,7 +10951,7 @@ void tst_qqmlecmascript::vmeMetaObjectAccessors()
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(obj);
 
-    QQmlVMEMetaObject *vme = QQmlVMEMetaObject::get(obj.data());
+    QQmlVMEMetaObject *vme = QQmlVMEMetaObject::get(obj.data(), engine.handle());
     QVERIFY(vme);
 
     // qmlObjectId() should return a non-negative index for the root object.

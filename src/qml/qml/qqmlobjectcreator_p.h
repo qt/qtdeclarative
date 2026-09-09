@@ -321,7 +321,7 @@ private:
         QObject *bindingTarget = instance;
 
         QQmlPropertyCache::ConstPtr cache = declarativeData->propertyCache;
-        QQmlVMEMetaObject *vmeMetaObject = QQmlVMEMetaObject::get(instance);
+        QQmlVMEMetaObject *vmeMetaObject = QQmlVMEMetaObject::get(instance, v4);
 
         QObject *scopeObject = instance;
         qt_ptr_swap(_scopeObject, scopeObject);

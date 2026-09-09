@@ -136,6 +136,11 @@ private slots:
     void newQObjectRace();
     void newQObject_ownership();
     void newQObject_deletedEngine();
+    void qmlObjectInOtherEngine();
+    void qmlMethodCalledFromOtherEngine();
+    void qmlObjectSignalHandlerFromOtherEngine();
+    void newQObject_ownershipAcrossEngines();
+    void newQObject_deletedOwningEngine();
     void newQObjectPropertyCache();
     void newQMetaObject();
     void exceptionInSlot();
@@ -1115,6 +1120,159 @@ void tst_QJSEngine::newQObject_deletedEngine()
         engine.globalObject().setProperty("obj", object);
     }
     QTRY_VERIFY(spy.size());
+}
+
+// A QObject created by QML carries per-instance JavaScript state: its "var" properties and its
+// QML methods live in a QV4::MemberData owned by the engine that created it. Handing such an
+// object to a second engine wraps it a second time. See QTBUG-60984.
+static constexpr char sharedQmlObject[] = R"(
+import QtQml
+QtObject {
+    property var payload: ({ marker: "created in the owning engine" })
+    property var stored
+    function store(value) { stored = value }
+    signal ping(string message)
+}
+)";
+
+static std::unique_ptr<QObject> createSharedObject(QQmlComponent *component)
+{
+    component->setData(sharedQmlObject, QUrl());
+    return std::unique_ptr<QObject>(component->create());
+}
+
+void tst_QJSEngine::qmlObjectInOtherEngine()
+{
+    QQmlEngine owner;
+    QJSEngine other;
+
+    QQmlComponent component(&owner);
+    const std::unique_ptr<QObject> shared = createSharedObject(&component);
+    QVERIFY2(shared.get(), qPrintable(component.errorString()));
+
+    owner.globalObject().setProperty(u"shared"_s, owner.newQObject(shared.get()));
+    other.globalObject().setProperty(u"shared"_s, other.newQObject(shared.get()));
+
+    // Anything a QVariant can carry crosses between the engines ...
+    owner.evaluate("shared.stored = 42");
+    QCOMPARE(other.evaluate("shared.stored").toInt(), 42);
+    other.evaluate("shared.stored = 'from the other engine'");
+    QCOMPARE(owner.evaluate("shared.stored").toString(), u"from the other engine"_s);
+    other.evaluate("shared.stored = shared");
+    QVERIFY(owner.evaluate("shared.stored === shared").toBool());
+
+    // ... but a JavaScript object belongs to the engine that created it.
+    QTest::ignoreMessage(QtWarningMsg, "JSValue can't be reassigned to another engine.");
+    QCOMPARE(other.evaluate("typeof shared.payload").toString(), u"undefined"_s);
+
+    // The owning engine is unaffected.
+    QCOMPARE(owner.evaluate("String(shared.payload.marker)").toString(),
+             u"created in the owning engine"_s);
+}
+
+void tst_QJSEngine::qmlMethodCalledFromOtherEngine()
+{
+    QQmlEngine owner;
+    QJSEngine other;
+
+    QQmlComponent component(&owner);
+    const std::unique_ptr<QObject> shared = createSharedObject(&component);
+    QVERIFY2(shared.get(), qPrintable(component.errorString()));
+
+    owner.globalObject().setProperty(u"shared"_s, owner.newQObject(shared.get()));
+    other.globalObject().setProperty(u"shared"_s, other.newQObject(shared.get()));
+
+    // The other engine gets a plain method wrapper. Calling it converts the arguments and runs
+    // the function in the engine that owns it.
+    const QJSValue called = other.evaluate("shared.store({ tag: 'from the other engine' }); true");
+    QVERIFY2(!called.isError(), qPrintable(called.toString()));
+    QCOMPARE(owner.evaluate("JSON.stringify(shared.stored)").toString(),
+             u"{\"tag\":\"from the other engine\"}"_s);
+
+    // A function has no QVariant representation that could cross, so it does not.
+    QTest::ignoreMessage(QtWarningMsg, "JSValue can't be reassigned to another engine.");
+    const QJSValue callback = other.evaluate("shared.store(function(x) { return x + 1 }); true");
+    QVERIFY2(!callback.isError(), qPrintable(callback.toString()));
+    QCOMPARE(owner.evaluate("typeof shared.stored").toString(), u"undefined"_s);
+
+    gc(owner);
+    gc(*other.handle());
+}
+
+void tst_QJSEngine::qmlObjectSignalHandlerFromOtherEngine()
+{
+    QQmlEngine owner;
+    QJSEngine other;
+
+    QQmlComponent component(&owner);
+    const std::unique_ptr<QObject> shared = createSharedObject(&component);
+    QVERIFY2(shared.get(), qPrintable(component.errorString()));
+
+    other.globalObject().setProperty(u"shared"_s, other.newQObject(shared.get()));
+
+    // Unlike a value stored in a "var" property, a signal handler stays rooted in the engine
+    // that created it.
+    const QJSValue connected = other.evaluate(
+            "var received = ''; shared.ping.connect(function(m) { received = m }); true");
+    QVERIFY2(!connected.isError(), qPrintable(connected.toString()));
+
+    gc(owner);
+    gc(*other.handle());
+
+    QVERIFY(QMetaObject::invokeMethod(shared.get(), "ping", Q_ARG(QString, u"hi"_s)));
+    QCOMPARE(other.evaluate("received").toString(), u"hi"_s);
+}
+
+void tst_QJSEngine::newQObject_ownershipAcrossEngines()
+{
+    QQmlEngine owner;
+    QJSEngine other;
+
+    QQmlComponent component(&owner);
+    QPointer<QObject> shared(createSharedObject(&component).release());
+    QVERIFY2(shared, qPrintable(component.errorString()));
+    QQmlEngine::setObjectOwnership(shared, QQmlEngine::JavaScriptOwnership);
+
+    // The owning engine wraps the object without keeping a strong reference to the wrapper ...
+    owner.newQObject(shared);
+
+    // ... while the other engine does keep one.
+    other.globalObject().setProperty(u"shared"_s, other.newQObject(shared));
+
+    gc(owner);
+
+    // The owning engine's collector destroys the object although the other engine holds a
+    // strong reference to it. See QTBUG-60984.
+    QEXPECT_FAIL("", "The second wrapper has no say in the object's lifetime", Abort);
+    QVERIFY(!shared.isNull());
+    QCOMPARE(other.evaluate("String(shared.payload.marker)").toString(),
+             u"created in the owning engine"_s);
+
+    delete shared;
+}
+
+void tst_QJSEngine::newQObject_deletedOwningEngine()
+{
+    QJSEngine other;
+    std::unique_ptr<QObject> shared;
+
+    {
+        QQmlEngine owner;
+        QQmlComponent component(&owner);
+        shared = createSharedObject(&component);
+        QVERIFY2(shared.get(), qPrintable(component.errorString()));
+        other.globalObject().setProperty(u"shared"_s, other.newQObject(shared.get()));
+        QCOMPARE(other.evaluate("typeof shared.store").toString(), u"function"_s);
+    }
+
+    // The object is C++-owned and outlives the engine that created it, but its "var" properties
+    // and QML methods lived in that engine's heap.
+    QVERIFY(shared);
+    const QJSValue payload = other.evaluate("shared.payload");
+    QVERIFY2(!payload.isError(), qPrintable(payload.toString()));
+    QCOMPARE(other.evaluate("typeof shared.store").toString(), u"function"_s);
+
+    gc(*other.handle());
 }
 
 class TestQMetaObject : public QObject {

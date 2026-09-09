@@ -1550,16 +1550,21 @@ void QQmlVMEMetaObject::connectAlias(const QV4::CompiledData::Object *compiledOb
     endpoint->tryConnect();
 }
 
-void QQmlVMEMetaObject::connectAliasSignal(int index, bool indexInSignalRange)
+void QQmlVMEMetaObject::connectAlias(QObject *o, int coreIndex, bool indexInSignalRange)
 {
-    if (const QV4::CompiledData::Object *compiledObject = findCompiledObject()) {
-        const int aliasId = index
-                - (indexInSignalRange ? cache->signalOffset() : signalOffset())
-                - compiledObject->nProperties;
-        if (aliasId < 0 || aliasId >= int(compiledObject->nAliases))
-            return;
+    const auto offset = [indexInSignalRange](QQmlVMEMetaObject *vme) {
+        return indexInSignalRange ? vme->cache->signalOffset() : vme->cache->methodOffset();
+    };
 
-        connectAlias(compiledObject, aliasId);
+    QQmlVMEMetaObject *vme = QQmlVMEMetaObject::get(o);
+    while (vme && offset(vme) > coreIndex)
+        vme = vme->parentVMEMetaObject();
+
+    Q_ASSERT(vme);
+    if (const QV4::CompiledData::Object *compiledObject = vme->findCompiledObject()) {
+        const int aliasId = coreIndex - offset(vme) - compiledObject->nProperties;
+        if (aliasId >= 0 && aliasId < int(compiledObject->nAliases))
+            vme->connectAlias(compiledObject, aliasId);
     }
 }
 
@@ -1571,38 +1576,14 @@ void QQmlVMEMetaObject::activate(QObject *object, int index, void **args)
     QMetaObject::activate(object, cache->signalOffset(), index, args);
 }
 
-QQmlVMEMetaObject *QQmlVMEMetaObject::getForProperty(QObject *o, int coreIndex)
+bool QQmlVMEMetaObject::aliasTarget(QObject *o, int coreIndex, QObject **aObject, int *aCoreIndex,
+                                    int *aValueTypeIndex)
 {
     QQmlVMEMetaObject *vme = QQmlVMEMetaObject::get(o);
     while (vme && vme->cache->propertyOffset() > coreIndex)
         vme = vme->parentVMEMetaObject();
 
-    Q_ASSERT(vme);
-    return vme;
-}
-
-QQmlVMEMetaObject *QQmlVMEMetaObject::getForMethod(QObject *o, int coreIndex)
-{
-    QQmlVMEMetaObject *vme = QQmlVMEMetaObject::get(o);
-    while (vme && vme->cache->methodOffset() > coreIndex)
-        vme = vme->parentVMEMetaObject();
-
-    Q_ASSERT(vme);
-    return vme;
-}
-
-/*! \internal
-    \a coreIndex is in the signal index range (see QObjectPrivate::signalIndex()).
-    This is different from QMetaMethod::methodIndex().
-*/
-QQmlVMEMetaObject *QQmlVMEMetaObject::getForSignal(QObject *o, int coreIndex)
-{
-    QQmlVMEMetaObject *vme = QQmlVMEMetaObject::get(o);
-    while (vme && vme->cache->signalOffset() > coreIndex)
-        vme = vme->parentVMEMetaObject();
-
-    Q_ASSERT(vme);
-    return vme;
+    return vme && vme->aliasTarget(coreIndex, aObject, aCoreIndex, aValueTypeIndex);
 }
 
 QQmlVMEVariantQObjectPtr *QQmlVMEMetaObject::getQObjectGuardForProperty(int index) const

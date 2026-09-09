@@ -763,10 +763,10 @@ bool QQmlEngineDebugServiceImpl::setMethodBody(int objectId, const QString &meth
     const QString jsfunction = QLatin1String("(function ") + method + QLatin1Char('(') + paramStr +
             QLatin1String(") {") + body + QLatin1String("\n})");
 
-    QQmlVMEMetaObject *vmeMetaObject = QQmlVMEMetaObject::get(object);
+    QV4::ExecutionEngine *v4 = qmlEngine(object)->handle();
+    QQmlVMEMetaObject *vmeMetaObject = QQmlVMEMetaObject::get(object, v4);
     Q_ASSERT(vmeMetaObject); // the fact we found the property above should guarentee this
 
-    QV4::ExecutionEngine *v4 = qmlEngine(object)->handle();
     QV4::Scope scope(v4);
 
     int lineNumber = 0;
