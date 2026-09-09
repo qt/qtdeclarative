@@ -86,7 +86,8 @@ public:
     QString colorify(QStringView message, int color = -1) const;
 
     void flushBuffer();
-    void discardBuffer();
+    qsizetype bufferSize() const;
+    void truncateBuffer(qsizetype size);
 
 private:
     QScopedPointer<QColorOutputPrivate> d;

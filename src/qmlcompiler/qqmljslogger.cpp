@@ -382,6 +382,7 @@ void QQmlJSLogger::finalizeFunction()
 void QQmlJSLogger::startTransaction()
 {
     Q_ASSERT(!m_inTransaction);
+    m_transactionOutputMark = m_output.bufferSize();
     m_inTransaction = true;
 }
 
@@ -413,7 +414,7 @@ void QQmlJSLogger::rollback()
     Q_ASSERT(m_inTransaction);
     m_pendingMessages.clear();
     m_hasPendingCompileError = false;
-    m_output.discardBuffer();
+    m_output.truncateBuffer(m_transactionOutputMark);
     m_inTransaction = false;
 }
 

@@ -367,6 +367,7 @@ private:
 
     qsizetype m_numWarnings = 0;
     qsizetype m_numErrors = 0;
+    qsizetype m_transactionOutputMark = 0;
     bool m_inTransaction = false;
     bool m_hasCompileError = false;
     bool m_hasPendingCompileError = false;
