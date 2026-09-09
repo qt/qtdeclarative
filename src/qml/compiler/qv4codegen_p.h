@@ -582,6 +582,7 @@ protected:
     void variableDeclarationList(QQmlJS::AST::VariableDeclarationList *ast);
 
     Reference targetForPatternElement(QQmlJS::AST::PatternElement *p);
+    Reference referenceForFormalParameter(int argIndex);
     void initializeAndDestructureBindingElement(QQmlJS::AST::PatternElement *e, const Reference &baseRef = Reference(), bool isDefinition = false);
     void destructurePropertyList(const Reference &object, QQmlJS::AST::PatternPropertyList *bindingList, bool isDefinition = false);
     void destructureElementList(const Reference &array, QQmlJS::AST::PatternElementList *bindingList, bool isDefinition = false);

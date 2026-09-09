@@ -101,6 +101,30 @@ bool Context::addLocalVar(
     return true;
 }
 
+// A formal parameter whose default value initializer references a
+// parameter of the same formal parameter list (itself, or one that
+// hasn't been bound yet) can't be resolved as a plain argument: reading
+// it before its own initialization must throw, the same way it would
+// for a "let" binding used before declaration. Give such a parameter a
+// real lexically-scoped Member (bypassing addLocalVar()'s formal-name
+// collision guard) so it goes through the normal TDZ machinery instead of
+// the fast argument-register path.
+// Used to detect self- or forward-references to another
+// (possibly not-yet-bound) parameter of the same formal parameter list, e.g.
+// "(x = x) => {}" or "(a = b, b) => {}".
+void Context::promoteFormalParameterForTDZ(const QString &name, const QQmlJS::SourceLocation &loc)
+{
+    if (members.contains(name))
+        return;
+
+    Member m;
+    m.type = VariableDefinition;
+    m.scope = VariableScope::Let;
+    m.declarationLocation = loc;
+    m.isFormalParameterTDZPromotion = true;
+    members.insert(name, m);
+}
+
 Context::ResolvedName Context::resolveName(const QString &name, const QQmlJS::SourceLocation &accessLocation)
 {
     int scope = 0;
