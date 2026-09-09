@@ -332,7 +332,7 @@ ReturnedValue ArrayPrototype::method_toLocaleString(const FunctionObject *b, con
     if (!instance)
         return scope.engine->throwTypeError();
 
-    uint len = instance->getLength();
+    qint64 len = instance->getLength();
     const QString separator = QStringLiteral(",");
 
     QString R;
@@ -343,7 +343,7 @@ ReturnedValue ArrayPrototype::method_toLocaleString(const FunctionObject *b, con
     ScopedPropertyKey tolocaleString(scope, scope.engine->id_toLocaleString()->toPropertyKey());
     Q_ASSERT(!scope.engine->hasException);
 
-    for (uint k = 0; k < len; ++k) {
+    for (qint64 k = 0; k < len; ++k) {
         if (k)
             R += separator;
 
@@ -393,11 +393,11 @@ ReturnedValue ArrayPrototype::method_concat(const FunctionObject *b, const Value
             result->setArrayLengthUnchecked(newLen);
         } else if (eltAsObj && eltAsObj->isConcatSpreadable()) {
             const uint startIndex = result->getLength();
-            const uint len = eltAsObj->getLength();
+            const qint64 len = eltAsObj->getLength();
             if (scope.hasException())
                 return Encode::undefined();
 
-            for (uint i = 0; i < len; ++i) {
+            for (qint64 i = 0; i < len; ++i) {
                 bool hasProperty = false;
                 entry = eltAsObj->get(i, &hasProperty);
                 if (hasProperty) {
@@ -407,7 +407,7 @@ ReturnedValue ArrayPrototype::method_concat(const FunctionObject *b, const Value
             }
         } else if (eltAsObj && eltAsObj->isArrayLike()) {
             const uint startIndex = result->getLength();
-            for (int i = 0, len = eltAsObj->getLength(); i < len; ++i) {
+            for (qint64 i = 0, len = eltAsObj->getLength(); i < len; ++i) {
                 entry = eltAsObj->get(i);
                 // spec says not to throw if this fails
                 result->put(startIndex + i, entry);
@@ -509,7 +509,7 @@ ReturnedValue ArrayPrototype::method_find(const FunctionObject *b, const Value *
     if (!instance)
         RETURN_UNDEFINED();
 
-    uint len = instance->getLength();
+    qint64 len = instance->getLength();
 
     if (!argc || !argv[0].isFunctionObject())
         THROW_TYPE_ERROR();
@@ -520,7 +520,7 @@ ReturnedValue ArrayPrototype::method_find(const FunctionObject *b, const Value *
 
     ScopedValue that(scope, argc > 1 ? argv[1] : Value::undefinedValue());
 
-    for (uint k = 0; k < len; ++k) {
+    for (qint64 k = 0; k < len; ++k) {
         arguments[0] = instance->get(k);
         CHECK_EXCEPTION();
 
@@ -543,7 +543,7 @@ ReturnedValue ArrayPrototype::method_findIndex(const FunctionObject *b, const Va
     if (!instance)
         RETURN_UNDEFINED();
 
-    uint len = instance->getLength();
+    qint64 len = instance->getLength();
 
     if (!argc || !argv[0].isFunctionObject())
         THROW_TYPE_ERROR();
@@ -554,7 +554,7 @@ ReturnedValue ArrayPrototype::method_findIndex(const FunctionObject *b, const Va
 
     ScopedValue that(scope, argc > 1 ? argv[1] : Value::undefinedValue());
 
-    for (uint k = 0; k < len; ++k) {
+    for (qint64 k = 0; k < len; ++k) {
         arguments[0] = instance->get(k);
         CHECK_EXCEPTION();
 
@@ -564,7 +564,7 @@ ReturnedValue ArrayPrototype::method_findIndex(const FunctionObject *b, const Va
 
         CHECK_EXCEPTION();
         if (result->toBoolean())
-            return Encode(k);
+            return Encode(double(k));
     }
 
     return Encode(-1);
@@ -637,7 +637,7 @@ ReturnedValue ArrayPrototype::method_pop(const FunctionObject *b, const Value *t
     if (!instance)
         RETURN_UNDEFINED();
 
-    uint len = instance->getLength();
+    qint64 len = instance->getLength();
 
     if (!len) {
         if (!instance->isArrayObject())
@@ -762,7 +762,7 @@ ReturnedValue ArrayPrototype::method_shift(const FunctionObject *b, const Value 
     instance->arrayCreate();
     Q_ASSERT(instance->arrayData());
 
-    uint len = instance->getLength();
+    qint64 len = instance->getLength();
 
     if (!len) {
         if (!instance->isArrayObject())
@@ -779,7 +779,7 @@ ReturnedValue ArrayPrototype::method_shift(const FunctionObject *b, const Value 
         CHECK_EXCEPTION();
         ScopedValue v(scope);
         // do it the slow way
-        for (uint k = 1; k < len; ++k) {
+        for (qint64 k = 1; k < len; ++k) {
             bool exists;
             v = instance->get(k, &exists);
             CHECK_EXCEPTION();
@@ -815,29 +815,32 @@ ReturnedValue ArrayPrototype::method_slice(const FunctionObject *b, const Value 
         RETURN_UNDEFINED();
 
     ScopedArrayObject result(scope, scope.engine->newArrayObject());
-    uint len = o->getLength();
+    qint64 len = o->getLength();
     double s = (argc ? argv[0] : Value::undefinedValue()).toInteger();
-    uint start;
+    qint64 start;
     if (s < 0)
-        start = (uint)qMax(len + s, 0.);
+        start = static_cast<qint64>(qMax(double(len) + s, 0.));
     else if (s > len)
         start = len;
     else
-        start = (uint) s;
-    uint end = len;
+        start = qint64(s);
+    qint64 end = len;
     if (argc > 1 && !argv[1].isUndefined()) {
         double e = argv[1].toInteger();
         if (e < 0)
-            end = (uint)qMax(len + e, 0.);
+            end = static_cast<qint64>(qMax(double(len) + e, 0.));
         else if (e > len)
             end = len;
         else
-            end = (uint) e;
+            end = qint64(e);
     }
 
+    if (end > start && qint64(std::numeric_limits<quint32>::max()) < end - start)
+        return scope.engine->throwRangeError(QString::fromLatin1("Array length out of range."));
+
     ScopedValue v(scope);
-    uint n = 0;
-    for (uint i = start; i < end; ++i) {
+    qint64 n = 0;
+    for (qint64 i = start; i < end; ++i) {
         bool exists;
         v = o->get(i, &exists);
         CHECK_EXCEPTION();
@@ -866,7 +869,7 @@ ReturnedValue ArrayPrototype::method_sort(const FunctionObject *b, const Value *
         RETURN_UNDEFINED();
 
     // 3. Let len be ? LengthOfArrayLike(obj).
-    uint len = instance->getLength();
+    qint64 len = instance->getLength();
 
     if (instance->arrayData() && instance->arrayData()->length()) {
         ArrayData::sort(scope.engine, instance, comparefn, len);
@@ -1013,14 +1016,14 @@ ReturnedValue ArrayPrototype::method_unshift(const FunctionObject *b, const Valu
     instance->arrayCreate();
     Q_ASSERT(instance->arrayData());
 
-    uint len = instance->getLength();
+    qint64 len = instance->getLength();
 
     if (!instance->protoHasArray() && !instance->arrayData()->attrs && instance->arrayData()->length() <= len &&
         instance->arrayData()->type != Heap::ArrayData::Custom) {
         instance->arrayData()->vtable()->push_front(instance, argv, argc);
     } else {
         ScopedValue v(scope);
-        for (uint k = len; k > 0; --k) {
+        for (qint64 k = len; k > 0; --k) {
             bool exists;
             v = instance->get(k - 1, &exists);
             bool ok;
@@ -1038,7 +1041,7 @@ ReturnedValue ArrayPrototype::method_unshift(const FunctionObject *b, const Valu
         }
     }
 
-    uint newLen = len + argc;
+    qint64 newLen = len + argc;
     if (instance->isArrayObject())
         instance->setArrayLengthUnchecked(newLen);
     else {
@@ -1046,7 +1049,7 @@ ReturnedValue ArrayPrototype::method_unshift(const FunctionObject *b, const Valu
             return scope.engine->throwTypeError();
     }
 
-    return Encode(newLen);
+    return Encode(double(newLen));
 }
 
 ReturnedValue ArrayPrototype::method_includes(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
@@ -1095,12 +1098,12 @@ ReturnedValue ArrayPrototype::method_indexOf(const FunctionObject *b, const Valu
     if (!instance)
         RETURN_UNDEFINED();
 
-    uint len = instance->getLength();
+    qint64 len = instance->getLength();
     if (!len)
         return Encode(-1);
 
     ScopedValue searchValue(scope, argc ? argv[0] : Value::undefinedValue());
-    uint fromIndex = 0;
+    qint64 fromIndex = 0;
 
     if (argc >= 2) {
         double f = argv[1].toInteger();
@@ -1108,17 +1111,17 @@ ReturnedValue ArrayPrototype::method_indexOf(const FunctionObject *b, const Valu
         if (f >= len)
             return Encode(-1);
         if (f < 0)
-            f = qMax(len + f, 0.);
-        fromIndex = (uint) f;
+            f = qMax(double(len) + f, 0.);
+        fromIndex = qint64(f);
     }
 
     if (instance->isStringObject()) {
         ScopedValue v(scope);
-        for (uint k = fromIndex; k < len; ++k) {
+        for (qint64 k = fromIndex; k < len; ++k) {
             bool exists;
             v = instance->get(k, &exists);
             if (exists && RuntimeHelpers::strictEqual(v, searchValue))
-                return Encode(k);
+                return Encode(double(k));
         }
         return Encode(-1);
     }
@@ -1128,12 +1131,12 @@ ReturnedValue ArrayPrototype::method_indexOf(const FunctionObject *b, const Valu
     if (ArgumentsObject::isNonStrictArgumentsObject(instance) ||
         (instance->arrayType() >= Heap::ArrayData::Sparse) || instance->protoHasArray()) {
         // lets be safe and slow
-        for (uint i = fromIndex; i < len; ++i) {
+        for (qint64 i = fromIndex; i < len; ++i) {
             bool exists;
             value = instance->get(i, &exists);
             CHECK_EXCEPTION();
             if (exists && RuntimeHelpers::strictEqual(value, searchValue))
-                return Encode(i);
+                return Encode(double(i));
         }
     } else if (!instance->arrayData()) {
         return Encode(-1);
@@ -1173,12 +1176,12 @@ ReturnedValue ArrayPrototype::method_lastIndexOf(const FunctionObject *b, const 
     if (!instance)
         RETURN_UNDEFINED();
 
-    uint len = instance->getLength();
+    qint64 len = instance->getLength();
     if (!len)
         return Encode(-1);
 
     ScopedValue searchValue(scope);
-    uint fromIndex = len;
+    qint64 fromIndex = len;
 
     if (argc >= 1)
         searchValue = argv[0];
@@ -1189,23 +1192,23 @@ ReturnedValue ArrayPrototype::method_lastIndexOf(const FunctionObject *b, const 
         double f = argv[1].toInteger();
         CHECK_EXCEPTION();
         if (f > 0)
-            f = qMin(f, (double)(len - 1));
+            f = qMin(f, double(len - 1));
         else if (f < 0) {
-            f = len + f;
+            f = double(len) + f;
             if (f < 0)
                 return Encode(-1);
         }
-        fromIndex = (uint) f + 1;
+        fromIndex = qint64(f) + 1;
     }
 
     ScopedValue v(scope);
-    for (uint k = fromIndex; k > 0;) {
+    for (qint64 k = fromIndex; k > 0;) {
         --k;
         bool exists;
         v = instance->get(k, &exists);
         CHECK_EXCEPTION();
         if (exists && RuntimeHelpers::strictEqual(v, searchValue))
-            return Encode(k);
+            return Encode(double(k));
     }
     return Encode(-1);
 }
@@ -1217,7 +1220,7 @@ ReturnedValue ArrayPrototype::method_every(const FunctionObject *b, const Value 
     if (!instance)
         RETURN_UNDEFINED();
 
-    uint len = instance->getLength();
+    qint64 len = instance->getLength();
 
     if (!argc || !argv->isFunctionObject())
         THROW_TYPE_ERROR();
@@ -1228,7 +1231,7 @@ ReturnedValue ArrayPrototype::method_every(const FunctionObject *b, const Value 
     Value *arguments = scope.constructUndefined(3);
 
     bool ok = true;
-    for (uint k = 0; ok && k < len; ++k) {
+    for (qint64 k = 0; ok && k < len; ++k) {
         bool exists;
         arguments[0] = instance->get(k, &exists);
         if (!exists)
@@ -1293,7 +1296,7 @@ ReturnedValue ArrayPrototype::method_some(const FunctionObject *b, const Value *
     if (!instance)
         RETURN_UNDEFINED();
 
-    uint len = instance->getLength();
+    qint64 len = instance->getLength();
 
     if (!argc || !argv->isFunctionObject())
         THROW_TYPE_ERROR();
@@ -1303,7 +1306,7 @@ ReturnedValue ArrayPrototype::method_some(const FunctionObject *b, const Value *
     ScopedValue result(scope);
     Value *arguments = scope.constructUndefined(3);
 
-    for (uint k = 0; k < len; ++k) {
+    for (qint64 k = 0; k < len; ++k) {
         bool exists;
         arguments[0] = instance->get(k, &exists);
         if (!exists)
@@ -1326,7 +1329,7 @@ ReturnedValue ArrayPrototype::method_forEach(const FunctionObject *b, const Valu
     if (!instance)
         RETURN_UNDEFINED();
 
-    uint len = instance->getLength();
+    qint64 len = instance->getLength();
 
     if (!argc || !argv->isFunctionObject())
         THROW_TYPE_ERROR();
@@ -1335,7 +1338,7 @@ ReturnedValue ArrayPrototype::method_forEach(const FunctionObject *b, const Valu
     ScopedValue that(scope, argc > 1 ? argv[1] : Value::undefinedValue());
     Value *arguments = scope.constructUndefined(3);
 
-    for (uint k = 0; k < len; ++k) {
+    for (qint64 k = 0; k < len; ++k) {
         bool exists;
         arguments[0] = instance->get(k, &exists);
         if (!exists)
@@ -1395,7 +1398,7 @@ ReturnedValue ArrayPrototype::method_filter(const FunctionObject *b, const Value
     if (!instance)
         RETURN_UNDEFINED();
 
-    uint len = instance->getLength();
+    qint64 len = instance->getLength();
 
     if (!argc || !argv->isFunctionObject())
         THROW_TYPE_ERROR();
@@ -1409,7 +1412,7 @@ ReturnedValue ArrayPrototype::method_filter(const FunctionObject *b, const Value
     Value *arguments = scope.constructUndefined(3);
 
     uint to = 0;
-    for (uint k = 0; k < len; ++k) {
+    for (qint64 k = 0; k < len; ++k) {
         bool exists;
         arguments[0] = instance->get(k, &exists);
         if (!exists)
@@ -1434,13 +1437,13 @@ ReturnedValue ArrayPrototype::method_reduce(const FunctionObject *b, const Value
     if (!instance)
         RETURN_UNDEFINED();
 
-    uint len = instance->getLength();
+    qint64 len = instance->getLength();
 
     if (!argc || !argv->isFunctionObject())
         THROW_TYPE_ERROR();
     const FunctionObject *callback = static_cast<const FunctionObject *>(argv);
 
-    uint k = 0;
+    qint64 k = 0;
     ScopedValue acc(scope);
     ScopedValue v(scope);
 
@@ -1483,7 +1486,7 @@ ReturnedValue ArrayPrototype::method_reduceRight(const FunctionObject *b, const 
     if (!instance)
         RETURN_UNDEFINED();
 
-    uint len = instance->getLength();
+    qint64 len = instance->getLength();
 
     if (!argc || !argv->isFunctionObject())
         THROW_TYPE_ERROR();
@@ -1495,7 +1498,7 @@ ReturnedValue ArrayPrototype::method_reduceRight(const FunctionObject *b, const 
         return argv[1].asReturnedValue();
     }
 
-    uint k = len;
+    qint64 k = len;
     ScopedValue acc(scope);
     ScopedValue v(scope);
     if (argc > 1) {
