@@ -234,8 +234,6 @@ built-ins/SharedArrayBuffer/data-allocation-after-object-creation.js fails
 built-ins/SharedArrayBuffer/prototype-from-newtarget.js fails
 built-ins/String/prototype/endsWith/return-abrupt-from-searchstring-regexp-test.js fails
 built-ins/String/prototype/includes/return-abrupt-from-searchstring-regexp-test.js fails
-built-ins/String/prototype/indexOf/position-tointeger-toprimitive.js fails
-built-ins/String/prototype/indexOf/searchstring-tostring-toprimitive.js fails
 built-ins/String/prototype/replace/cstm-replace-get-err.js fails
 built-ins/String/prototype/replace/cstm-replace-invocation.js fails
 built-ins/String/prototype/replace/this-value-not-obj-coercible.js fails
@@ -291,8 +289,6 @@ built-ins/TypedArrays/internals/Set/detached-buffer.js fails
 built-ins/TypedArrays/internals/Set/tonumber-value-throws.js fails
 built-ins/global/global-object.js fails
 built-ins/global/property-descriptor.js fails
-built-ins/isFinite/toprimitive-not-callable-throws.js fails
-built-ins/isNaN/toprimitive-not-callable-throws.js fails
 language/computed-property-names/class/static/method-number.js fails
 language/computed-property-names/class/static/method-string.js fails
 language/computed-property-names/class/static/method-symbol.js fails
