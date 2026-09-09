@@ -939,7 +939,7 @@ bool QQuickPointerHandlerPrivate::dragOverThreshold(qreal d, Qt::Axis axis, cons
 {
     Q_Q(const QQuickPointerHandler);
     QStyleHints *styleHints = qApp->styleHints();
-    bool overThreshold = qAbs(d) > q->dragThreshold();
+    bool overThreshold = qRound(qAbs(d)) > q->dragThreshold();
     const bool dragVelocityLimitAvailable = (styleHints->startDragVelocity() > 0);
     if (!overThreshold && dragVelocityLimitAvailable) {
         qreal velocity = qreal(axis == Qt::XAxis ? p.velocity().x() : p.velocity().y());
@@ -957,8 +957,8 @@ bool QQuickPointerHandlerPrivate::dragOverThreshold(qreal d, Qt::Axis axis, cons
 bool QQuickPointerHandlerPrivate::dragOverThreshold(QVector2D delta) const
 {
     Q_Q(const QQuickPointerHandler);
-    const float threshold = q->dragThreshold();
-    return qAbs(delta.x()) > threshold || qAbs(delta.y()) > threshold;
+    const int threshold = q->dragThreshold();
+    return qRound(qAbs(delta.x())) > threshold || qRound(qAbs(delta.y())) > threshold;
 }
 
 /*!
