@@ -278,6 +278,7 @@ private Q_SLOTS:
     void environment();
 
     void maxWarnings();
+    void warningBeforeMultiPassFunction();
 
     void unrecognizedIniSection();
 
@@ -5099,6 +5100,15 @@ void TestQmllint::maxWarnings()
     runQmllint(testFile("badScript.qml"), false, {"--max-warnings", "0"});
     // only 2 warning => should exit normally
     runQmllint(testFile("badScript.qml"), true, {"--max-warnings", "2"});
+}
+
+void TestQmllint::warningBeforeMultiPassFunction()
+{
+    // Rolling back a function's messages must not drop the messages of the
+    // functions linted before it.
+    const QString output = runQmllint(testFile("warningBeforeMultiPassFunction.qml"), false,
+                                      warningsShouldFailArgs());
+    QVERIFY(output.contains(u"Member \"doesNotExist\" not found"_s));
 }
 
 void TestQmllint::ignoreSettingsNotCommandLineOptions()

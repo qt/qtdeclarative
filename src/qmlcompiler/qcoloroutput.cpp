@@ -61,10 +61,9 @@ public:
         m_buffer.clear();
     }
 
-    void discardBuffer()
-    {
-        m_buffer.clear();
-    }
+    qsizetype bufferSize() const { return m_buffer.size(); }
+
+    void truncateBuffer(qsizetype size) { m_buffer.truncate(size); }
 
 private:
     QByteArray                  m_buffer;
@@ -341,9 +340,14 @@ void QColorOutput::flushBuffer()
     d->flushBuffer();
 }
 
-void QColorOutput::discardBuffer()
+qsizetype QColorOutput::bufferSize() const
 {
-    d->discardBuffer();
+    return d->bufferSize();
+}
+
+void QColorOutput::truncateBuffer(qsizetype size)
+{
+    d->truncateBuffer(size);
 }
 
 /*!
