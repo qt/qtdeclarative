@@ -528,9 +528,13 @@ ReturnedValue RuntimeHelpers::objectDefaultValue(const Object *object, int typeH
     }
 
     Scope scope(engine);
-    ScopedFunctionObject toPrimitive(scope, object->get(engine->symbol_toPrimitive()));
-    if (engine->hasException)
+    Value v = Value::fromReturnedValue(object->get(engine->symbol_toPrimitive()));
+    if (engine->hasException || (!v.isNullOrUndefined() && !v.isFunctionObject())) {
+        engine->throwTypeError(QStringLiteral("Value for symbol toPrimitive is not a function"));
         return Encode::undefined();
+    }
+
+    ScopedFunctionObject toPrimitive(scope, v);
     if (toPrimitive) {
         ScopedValue result(scope, toPrimitive->call(object, hint, 1));
         if (engine->hasException)
