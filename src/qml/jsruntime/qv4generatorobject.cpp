@@ -62,9 +62,11 @@ ReturnedValue GeneratorFunction::virtualCall(const FunctionObject *f, const Valu
     Function *function = gf->function();
     ExecutionEngine *engine = gf->engine();
 
-    Scope scope(gf);
+    Scope scope(engine);
+    CHECK_STACK_LIMITS(engine)
+
     Scoped<GeneratorObject> g(scope, engine->memoryManager->allocManaged<GeneratorObject>(engine->classes[EngineBase::Class_GeneratorObject]));
-    g->setPrototypeOf(ScopedObject(scope, gf->get(scope.engine->id_prototype())));
+    g->setPrototypeOf(ScopedObject(scope, gf->get(engine->id_prototype())));
 
     // We need to set up a separate JSFrame for the generator, as it's being re-entered
     Heap::GeneratorObject *gp = g->d();
@@ -81,9 +83,9 @@ ReturnedValue GeneratorFunction::virtualCall(const FunctionObject *f, const Valu
                               thisObject ? *thisObject : Value::undefinedValue(),
                               Value::undefinedValue());
 
+
     gp->cppFrame.push(engine);
 
-    CHECK_STACK_LIMITS(scope.engine)
     Moth::VME::interpret(&gp->cppFrame, engine, function->codeData);
 
     gp->state = GeneratorState::SuspendedStart;
@@ -176,6 +178,9 @@ ReturnedValue GeneratorPrototype::method_throw(const FunctionObject *f, const Va
 
 ReturnedValue GeneratorObject::resume(ExecutionEngine *engine, const Value &arg, std::optional<Value> exception) const
 {
+    Scope scope(engine);
+    CHECK_STACK_LIMITS(scope.engine)
+
     Heap::GeneratorObject *gp = d();
     gp->state = GeneratorState::Executing;
     gp->cppFrame.setParentFrame(engine->currentStackFrame);
@@ -186,10 +191,6 @@ ReturnedValue GeneratorObject::resume(ExecutionEngine *engine, const Value &arg,
     gp->cppFrame.setYield(nullptr);
     gp->cppFrame.jsFrame->accumulator = arg;
     gp->cppFrame.setYieldIsIterator(false);
-
-    Scope scope(engine);
-
-    CHECK_STACK_LIMITS(scope.engine)
 
     // A value to be thrown will be passed in by `method_throw` or
     // `method_return` when they need to resume the generator.
