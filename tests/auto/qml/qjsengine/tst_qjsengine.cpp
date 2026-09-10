@@ -340,6 +340,8 @@ private slots:
 
     void generatorStackOverflow_data();
     void generatorStackOverflow();
+    void generatorStackOverflowRestoresFrame_data();
+    void generatorStackOverflowRestoresFrame();
     void generatorInfiniteRecursion();
 
     void setDeleteDuringForEach();
@@ -6684,6 +6686,59 @@ void tst_QJSEngine::generatorStackOverflow() {
     QVERIFY(result.isError());
     QCOMPARE(result.errorType(), QJSValue::RangeError);
     QCOMPARE(result.toString(), "RangeError: Maximum call stack size exceeded.");
+}
+
+void tst_QJSEngine::generatorStackOverflowRestoresFrame_data()
+{
+    QTest::addColumn<QString>("callee");
+    QTest::addColumn<bool>("resume");
+
+    QTest::addRow("call") << u"(function*(){ yield 1; })"_s << false;
+    QTest::addRow("resume") << u"(function*(){ yield 1; yield 2; })()"_s << true;
+}
+
+void tst_QJSEngine::generatorStackOverflowRestoresFrame()
+{
+    QFETCH(const QString, callee);
+    QFETCH(const bool, resume);
+
+    const auto guard = qScopeGuard([maxCallDepth = QV4::ExecutionEngine::maxCallDepth()]() {
+        QV4::ExecutionEngine::setMaxCallDepth(maxCallDepth);
+    });
+
+    QJSEngine engine;
+    QV4::ExecutionEngine *v4 = engine.handle();
+
+    // Compile the callee while the call depth is still unrestricted.
+    QJSValue object = engine.evaluate(callee);
+    QVERIFY(!object.isError());
+
+    QJSValue function = object;
+    if (resume) {
+        function = object.property(u"next"_s);
+        QVERIFY(function.isCallable());
+        QVERIFY(!object.property(u"next"_s).callWithInstance(object).isError());
+    }
+
+    // A maximum call depth of 0 makes the *outermost* JS call overflow. Only
+    // then is there no enclosing frame whose pop() would hide the leak.
+    QV4::ExecutionEngine::setMaxCallDepth(0);
+    v4->callDepth = 0;
+    const QJSValue result = resume ? function.callWithInstance(object) : function.call();
+    QV4::ExecutionEngine::setMaxCallDepth(-1);
+    v4->callDepth = 0;
+
+    QVERIFY(result.isError());
+    QCOMPARE(result.errorType(), QJSValue::RangeError);
+
+    // The generator's frame must not outlive the call that pushed it. If it
+    // does, engine->currentStackFrame dangles into the generator object, which
+    // is unreachable now, and the next garbage collection walks freed memory.
+    QCOMPARE(v4->currentStackFrame, nullptr);
+
+    object = QJSValue();
+    function = QJSValue();
+    engine.collectGarbage();
 }
 
 void tst_QJSEngine::generatorInfiniteRecursion() {
