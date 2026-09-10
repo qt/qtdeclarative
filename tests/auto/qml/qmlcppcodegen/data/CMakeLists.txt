@@ -130,6 +130,7 @@ set(qml_files
     callObjectLookupOnNull.qml
     callWithSpread.qml
     childobject.qml
+    aotLocalsGarbage.qml
     collector.qml
     colorAsVariant.qml
     colorString.qml

@@ -450,6 +450,13 @@ void VME::exec(MetaTypesStackFrame *frame, ExecutionEngine *engine)
         aotContext.engine = engine->jsEngine();
         aotContext.compilationUnit = function->executableCompilationUnit();
         function->aotCompiledCode(&aotContext, argv);
+
+        // The tracked-locals storage is a local variable of the AOT-compiled
+        // function. We should not be able to use it between here and the
+        // popping of the stack frame. However, nulling it is a cheap defense
+        // in depth that will make mistaken code crash with a clean null pointer
+        // dereference or skip rather than corrupt random stack values.
+        frame->setLocals(nullptr);
     });
 }
 

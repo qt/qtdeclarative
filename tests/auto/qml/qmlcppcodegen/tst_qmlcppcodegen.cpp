@@ -23,6 +23,10 @@
 #include <private/qqmlbind_p.h>
 #include <private/qqmlengine_p.h>
 #include <private/qqmlpropertycachecreator_p.h>
+#include <private/qqmlvmemetaobject_p.h>
+#include <private/qv4functionobject_p.h>
+#include <private/qv4mm_p.h>
+#include <private/qv4qobjectwrapper_p.h>
 
 #include <QtTest/qsignalspy.h>
 #include <QtTest/qtest.h>
@@ -84,6 +88,7 @@ private slots:
     void callObjectLookupOnNull();
     void callWithSpread();
     void collectGarbageDuringAotCode();
+    void collectGarbageAfterAotCodeReturned();
     void colorAsVariant();
     void colorString();
     void compareOriginals();
@@ -1156,6 +1161,58 @@ void tst_QmlCppCodegen::callWithSpread()
     QTest::ignoreMessage(QtCriticalMsg, "That is great!");
     std::unique_ptr<QObject> o(c.create());
     QVERIFY(o);
+}
+
+void tst_QmlCppCodegen::collectGarbageAfterAotCodeReturned()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/aotLocalsGarbage.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    std::unique_ptr<QObject> o(c.create());
+    QVERIFY(o);
+
+    QPointer<QObject> tracked = o->property("hidden").value<QObject *>();
+    QVERIFY(tracked);
+    QCOMPARE(tracked->objectName(), u"tracked"_s);
+
+    const int coreIndex = o->metaObject()->indexOfMethod("takeHidden()");
+    QVERIFY(coreIndex >= 0);
+    QQmlVMEMetaObject *vme = QQmlVMEMetaObject::getForMethod(o.get(), coreIndex);
+    QVERIFY(vme);
+
+    QV4::ExecutionEngine *v4 = engine.handle();
+    QV4::Scope scope(v4);
+
+    // Same handle the meta-object itself calls QML methods through
+    // (QQmlVMEMetaObject::metaCall), so this exercises the regular entry point.
+    QV4::Scoped<QV4::JavaScriptFunctionObject> take(scope, vme->method(0));
+    QVERIFY(take);
+    QCOMPARE(take->function()->name()->toQString(), u"takeHidden"_s);
+
+    // Ask for a return type the function does not produce. That is what makes
+    // coerceAndCall() coerce the result *after* the AOT-compiled function has
+    // returned -- the only point at which the engine allocates while the
+    // returned-from frame is still on engine->currentStackFrame.
+    //
+    // NB: This is not something that will happen organically. We do it here in
+    //     order to simulate possibly mistaken code elswhere in QtQml.
+    QStringList result;
+    void *args[] = { &result };
+    const QMetaType types[] = { QMetaType::fromType<QStringList>() };
+
+    // Collect on every allocation, so a collection is guaranteed to happen
+    // inside that coercion -- repeatedly, at every level of its recursion, by
+    // which point the coercion's own frames have overwritten the stack the AOT
+    // function's tracked-locals storage used to occupy.
+    v4->memoryManager->aggressiveGC = true;
+
+    take->call(o.get(), args, types, 0);
+
+    // Reaching this line is the test. If collectFromJSStack() marks through the
+    // storage the AOT function left behind, the coercion's own frames have
+    // overwritten that storage by now, so the virtual call goes through a
+    // clobbered vtable and likely results in a crash.
+    QVERIFY(tracked);
 }
 
 void tst_QmlCppCodegen::collectGarbageDuringAotCode()
