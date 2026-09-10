@@ -56,7 +56,7 @@ add_subdirectory(qquicktooltip)
 add_subdirectory(qquickuniversalstyle)
 add_subdirectory(qquickuniversalstyleconf)
 add_subdirectory(revisions)
-if(NOT ANDROID) # QTBUG-100191
+if(NOT ANDROID AND NOT OHOS) # QTBUG-100191 QTBUG-150190
 add_subdirectory(sanity)
 add_subdirectory(snippets)
 endif()
