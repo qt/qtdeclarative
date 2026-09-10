@@ -544,7 +544,8 @@ bool QQmlJSLinter::prepareFileForBatchLinting(const QString &dirtyFilename,
                                               const QStringList &qmlImportPaths,
                                               const QStringList &qmldirFiles,
                                               const QStringList &resourceFiles,
-                                              const QList<QQmlJS::LoggerCategory> &categories)
+                                              const QList<QQmlJS::LoggerCategory> &categories,
+                                              qsizetype maxWarnings)
 {
     QFileInfo info(dirtyFilename);
     const QString filenameFromUser =
@@ -556,6 +557,7 @@ bool QQmlJSLinter::prepareFileForBatchLinting(const QString &dirtyFilename,
     lintInfo.qmlImportPaths = qmlImportPaths;
     lintInfo.qmldirFiles = qmldirFiles;
     lintInfo.categories = categories;
+    lintInfo.maxWarnings = maxWarnings;
 
     const QString lowerSuffix = info.suffix().toLower();
     lintInfo.isESModule = lowerSuffix == QLatin1String("mjs");
@@ -757,6 +759,17 @@ void QQmlJSLinter::typeReader(const QString &filename)
     parser.rootNode()->accept(&*lintInfo.visitor);
 }
 
+static void checkMaxWarnings(QQmlJSLogger *logger, qsizetype maxWarnings)
+{
+    const qsizetype warnings = logger->numWarnings();
+    if (maxWarnings != -1 && maxWarnings < warnings) {
+        logger->log("Amount of warnings exceeded the limit set by MaxWarnings.\n"
+                    "Current limit: %1\nFound warnings: %2"_L1.arg(QString::number(maxWarnings),
+                                                                   QString::number(warnings)),
+                    qmlMaxWarningsExceeded, QQmlJS::SourceLocation(0, 0, 1, 1), false);
+    }
+}
+
 void QQmlJSLinter::lintFileImpl(const QString &filename)
 {
     Q_ASSERT(m_lintInfo.count(filename) == 1);
@@ -855,14 +868,16 @@ void QQmlJSLinter::lintFileImpl(const QString &filename)
         lintInfo.result.logger->processMessages(globalWarnings, qmlImport);
     }
 
+    checkMaxWarnings(lintInfo.result.logger.get(), lintInfo.maxWarnings);
     lintInfo.result.setStatusFromLogger();
 }
 
 QQmlJSLinter::Result QQmlJSLinter::lintModule(const QString &module, LintOptions options,
                                               const QStringList &qmlImportPaths,
-                                              const QStringList &resourceFiles)
+                                              const QStringList &resourceFiles,
+                                              qsizetype maxWarnings)
 {
-    Result lintResult = lintModuleImpl(module, options, qmlImportPaths, resourceFiles);
+    Result lintResult = lintModuleImpl(module, options, qmlImportPaths, resourceFiles, maxWarnings);
     if (!options.testFlag(GenerateJson))
         return lintResult;
 
@@ -878,7 +893,8 @@ QQmlJSLinter::Result QQmlJSLinter::lintModule(const QString &module, LintOptions
 
 QQmlJSLinter::Result QQmlJSLinter::lintModuleImpl(const QString &module, LintOptions options,
                                                   const QStringList &qmlImportPaths,
-                                                  const QStringList &resourceFiles)
+                                                  const QStringList &resourceFiles,
+                                                  qsizetype maxWarnings)
 {
     Result result;
     result.logger = std::make_unique<QQmlJSLogger>();
@@ -1021,6 +1037,7 @@ QQmlJSLinter::Result QQmlJSLinter::lintModuleImpl(const QString &module, LintOpt
         result.logger->log(message, qmlUnresolvedType, QQmlJS::SourceLocation());
     }
 
+    checkMaxWarnings(result.logger.get(), maxWarnings);
     result.status = (result.logger->hasWarnings() || result.logger->hasErrors()) ? HasWarnings
                                                                                  : LintSuccess;
     return result;

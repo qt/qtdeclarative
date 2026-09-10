@@ -1,0 +1,32 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qmllint-warnings-and-errors-max-warnings-exceeded.html
+\ingroup qmllint-warnings-and-errors
+
+\title Max warnings exceeded
+\brief [max-warnings-exceeded] A regression on qmllint warnings was detected.
+
+\qmllintwarningcategory max-warnings-exceeded
+
+\section1 Amount of warnings exceeded the limit set by MaxWarnings
+
+\section2 What happened?
+The number of qmllint warnings on a QML file exceeded the threshold set via the
+\c MaxWarnings value in the \l {qmllint#Settings}{qmllint settings file}.
+
+\section2 Why is that bad?
+\c MaxWarnings can be set to control or forbid the introduction of non-clean QML
+code to ensure a certain level of QML code quality. Introducing new qmllint
+warnings in a project decreases the code quality of the project.
+
+To fix this warning,
+\list
+\li Fix the new warnings to decrease the number of total warnings back to the
+    configured threshold.
+\li Increase the number of allowed max warnings via the \l {qmllint#Settings}
+    {qmllint settings file} if fixing the new warnings is not feasible.
+\endlist
+
+*/

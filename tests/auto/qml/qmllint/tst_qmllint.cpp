@@ -373,6 +373,7 @@ private:
         QStringList rootUrls = {};
         QHash<QString, QString> qrcToFilePaths = {};
         QStringList plugins;
+        qsizetype maxWarnings = -1;
     };
 
     QJsonArray callQmllintImpl(const QString &fileToLint, const QString &fileCpntent,
@@ -435,16 +436,17 @@ private:
                                       LintOptions options, const QStringList &qmlImportPaths,
                                       const QStringList &qmldirFiles,
                                       const QStringList &resourceFiles,
-                                      const QList<QQmlJS::LoggerCategory> &categories)
+                                      const QList<QQmlJS::LoggerCategory> &categories,
+                                      qsizetype maxWarnings = -1)
         {
             if (!prepareFileForBatchLinting(filename, fileContents, options, qmlImportPaths,
-                                            qmldirFiles, resourceFiles, categories)) {
+                                            qmldirFiles, resourceFiles, categories, maxWarnings)) {
                 // Calling clearCache for each linted file/snippet slows down the tests by a factor of 2.5.
                 // Therefore, only call it when scope re-using happens (prepareFileForBatchLinting returns false).
                 clearCache();
-                const bool result =
-                        prepareFileForBatchLinting(filename, fileContents, options, qmlImportPaths,
-                                                   qmldirFiles, resourceFiles, categories);
+                const bool result = prepareFileForBatchLinting(
+                        filename, fileContents, options, qmlImportPaths, qmldirFiles, resourceFiles,
+                        categories, maxWarnings);
                 Q_ASSERT(result);
             }
             return lintFileInBatch(filename);
@@ -2090,6 +2092,22 @@ void TestQmllint::dirtyQmlSnippet_data()
                    "qmllint directive on unknown category \"ThisCategoryDoesNotExist\""_L1, 1, 11)
             << defaultOptions;
 
+    {
+        CallQmllintOptions options = defaultOptions;
+        options.maxWarnings = 0;
+        QTest::newRow("maxWarnings=0")
+                << u"id: Bad"_s
+                << ResultBuilder()
+                           .addExpected(
+                                   "Amount of warnings exceeded the limit set by MaxWarnings.\nCurrent limit: 0\nFound warnings: 1"_L1,
+                                   0, 0, QtCriticalMsg)
+                           .build()
+                << options;
+        options.maxWarnings = 1;
+        QTest::newRow("maxWarnings=1")
+                << u"id: Bad"_s << ResultBuilder().addUnexpected("MaxWarnings"_L1).build()
+                << options;
+    }
     QTest::newRow("missingTypeAccessMethod")
             << u"MyThing { id: bad } Component.onCompleted: console.log(bad.asdf())"_s
             << ResultBuilder()
@@ -3631,7 +3649,7 @@ void TestQmllint::batches()
     for (const auto &element : std::as_const(batch.elements)) {
         QVERIFY(m_linter.prepareFileForBatchLinting(testFile("batches/" + element.file), nullptr,
                                                     options, m_defaultImportPaths, { }, { },
-                                                    m_categories));
+                                                    m_categories, -1));
     }
 
     for (const auto &element : std::as_const(batch.elements)) {
@@ -3654,7 +3672,7 @@ void TestQmllint::cycles_data()
         options.setFlag(QQmlJSLinter::Silent);
         options.setFlag(QQmlJSLinter::GenerateJson);
         m_linter.prepareFileForBatchLinting(file.filePath(), nullptr, options, m_defaultImportPaths,
-                                            { }, { }, m_categories);
+                                            { }, { }, m_categories, -1);
     }
 }
 
@@ -3673,7 +3691,7 @@ void TestQmllint::jsFileInBatch() {
     for (const auto& filename: filenames) {
         m_linter.prepareFileForBatchLinting(testFile(filename), nullptr, options,
                                             QLibraryInfo::paths(QLibraryInfo::QmlImportsPath), { },
-                                            { }, m_categories);
+                                            { }, m_categories, -1);
     }
 
     for (const auto& filename: filenames) {
@@ -3848,10 +3866,10 @@ QJsonArray TestQmllint::callQmllintImpl(const QString &fileToLint, const QString
         QTest::failOnWarning();
         lintResult = m_linter.lintFile(lintedFile, content.isEmpty() ? nullptr : &content,
                                        lintOptions, resolvedImportPaths, options.qmldirFiles,
-                                       resourceFiles, resolvedCategories);
+                                       resourceFiles, resolvedCategories, options.maxWarnings);
     } else {
         lintResult = m_linter.lintModule(fileToLint, lintOptions, resolvedImportPaths,
-                                         options.resources);
+                                         options.resources, options.maxWarnings);
     }
 
     [&]() {
@@ -5928,7 +5946,7 @@ void TestQmllint::weakPointers()
     // actual testing, prove that this bug does not happen anymore in linter:
     for (const auto &file : filesToLint) {
         m_linter.prepareFileForBatchLinting(file, nullptr, { }, m_defaultImportPaths, { }, { },
-                                            m_categories);
+                                            m_categories, -1);
     }
 
     for (const auto &file : filesToLint) {

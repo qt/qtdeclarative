@@ -527,24 +527,21 @@ All warnings can be set to four levels of severity:
 
         QQmlJSLinter::Result lintResult;
 
+        const qsizetype maxWarningsValue = parser.isSet(maxWarnings)
+                ? parser.value(maxWarnings).toInt()
+                : (settings.isSet(maxWarningsSetting)
+                           ? settings.value(maxWarningsSetting).toInt()
+                           : defaultSettings.value(maxWarningsSetting).toInt());
+
         if (parser.isSet(moduleOption)) {
             QQmlJSLinter::LintOptions options;
             options.setFlag(QQmlJSLinter::Silent, silent);
             options.setFlag(QQmlJSLinter::GenerateJson, useJson);
-            lintResult = linter.lintModule(filename, options, qmlImportPaths, resourceFiles);
+            lintResult = linter.lintModule(filename, options, qmlImportPaths, resourceFiles,
+                                           maxWarningsValue);
             jsonFiles.append(lintResult.json);
             success &= (lintResult.status == QQmlJSLinter::LintSuccess
                         || lintResult.status == QQmlJSLinter::HasWarnings);
-            if (success) {
-                const qsizetype value = parser.isSet(maxWarnings)
-                        ? parser.value(maxWarnings).toInt()
-                        : (settings.isSet(maxWarningsSetting)
-                                   ? settings.value(maxWarningsSetting).toInt()
-                                   : defaultSettings.value(maxWarningsSetting).toInt());
-                if (value != -1 && value < lintResult.logger->numWarnings())
-                    success = false;
-            }
-
             if (isFixing)
                 success &= applyFixes(lintResult, silent, parser.isSet(dryRun));
         } else {
@@ -552,8 +549,10 @@ All warnings can be set to four levels of severity:
             QQmlJSLinter::LintOptions options;
             options.setFlag(QQmlJSLinter::Silent, silent || isFixing);
             options.setFlag(QQmlJSLinter::GenerateJson, useJson);
+
             linter.prepareFileForBatchLinting(filename, nullptr, options, qmlImportPaths,
-                                              qmldirFiles, resourceFiles, categories);
+                                              qmldirFiles, resourceFiles, categories,
+                                              maxWarningsValue);
         }
     }
     if (!parser.isSet(moduleOption)) {
@@ -562,23 +561,6 @@ All warnings can be set to four levels of severity:
             jsonFiles.append(lintResult.json);
             success &= (lintResult.status == QQmlJSLinter::LintSuccess
                         || lintResult.status == QQmlJSLinter::HasWarnings);
-
-            if (success) {
-                QQmlLintSettings settings;
-                if (!parser.isSet(ignoreSettings)) {
-                    QQmlToolingSettings::SearchOptions options;
-                    options.isQmllintSilent = silent;
-                    settings.search(filename, options);
-                }
-
-                const qsizetype value = parser.isSet(maxWarnings)
-                        ? parser.value(maxWarnings).toInt()
-                        : (settings.isSet(maxWarningsSetting)
-                                   ? settings.value(maxWarningsSetting).toInt()
-                                   : defaultSettings.value(maxWarningsSetting).toInt());
-                if (value != -1 && value < lintResult.logger->numWarnings())
-                    success = false;
-            }
 
             if (isFixing)
                 success &= applyFixes(lintResult, silent, parser.isSet(dryRun));

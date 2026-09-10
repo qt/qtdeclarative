@@ -114,7 +114,7 @@ void tst_Sanity::qmllint_data()
         options.setFlag(QQmlJSLinter::Silent);
         options.setFlag(QQmlJSLinter::GenerateJson);
         m_linter.prepareFileForBatchLinting(it->absolutePath, nullptr, options, m_importPaths, { },
-                                            { }, m_categories);
+                                            { }, m_categories, -1);
     }
 }
 
@@ -127,7 +127,7 @@ void tst_Sanity::quickControlsSanityPlugin()
     options.setFlag(QQmlJSLinter::Silent);
     options.setFlag(QQmlJSLinter::GenerateJson);
     QVERIFY(m_linter.prepareFileForBatchLinting(testFile(filePath), nullptr, options, m_importPaths,
-                                                { }, { }, m_categories));
+                                                { }, { }, m_categories, -1));
     QQmlJSLinter::Result lintResult = m_linter.lintFileInBatch(testFile(filePath));
     QCOMPARE(lintResult.status, QQmlJSLinter::HasWarnings);
     const auto &warningsOutput = lintResult.json.value("warnings").toArray();

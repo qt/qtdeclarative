@@ -127,10 +127,11 @@ public:
                                     LintOptions options, const QStringList &qmlImportPaths,
                                     const QStringList &qmldirFiles,
                                     const QStringList &resourceFiles,
-                                    const QList<QQmlJS::LoggerCategory> &categories);
+                                    const QList<QQmlJS::LoggerCategory> &categories,
+                                    qsizetype maxWarnings);
 
     Result lintModule(const QString &uri, LintOptions options, const QStringList &qmlImportPaths,
-                      const QStringList &resourceFiles);
+                      const QStringList &resourceFiles, qsizetype maxWarnings);
 
     static FixResult applyFixes(const QQmlJSLogger *logger, QString *fixedCode, bool silent);
 
@@ -149,7 +150,8 @@ public:
 private:
     void lintFileImpl(const QString &filename);
     Result lintModuleImpl(const QString &uri, LintOptions options,
-                          const QStringList &qmlImportPaths, const QStringList &resourceFiles);
+                          const QStringList &qmlImportPaths, const QStringList &resourceFiles,
+                          qsizetype maxWarnings);
     void setupLoggingCategoriesInLogger(QQmlJSLogger *logger,
                                         const QList<QQmlJS::LoggerCategory> &categories);
     void parseComments(QQmlJSLogger *logger, const QList<QQmlJS::SourceLocation> &comments);
@@ -180,6 +182,7 @@ private:
 
         QQmlJS::Engine engine; // needs to outlive the lintFileInBatch() call.
 
+        qsizetype maxWarnings;
         bool isESModule;
         bool isJavaScript;
     };

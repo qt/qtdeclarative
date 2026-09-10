@@ -305,9 +305,9 @@ void QmlLintSuggestions::diagnoseHelper(const QByteArray &url,
     QQmlJSLinter::LintOptions lintOptions;
     lintOptions.setFlag(QQmlJSLinter::Silent);
 
-    const bool wasPrepared =
-            linter.prepareFileForBatchLinting(filename, &fileContents, lintOptions, imports,
-                                              qmltypesFiles, resourceFiles, categories);
+    const bool wasPrepared = linter.prepareFileForBatchLinting(
+            filename, &fileContents, lintOptions, imports, qmltypesFiles, resourceFiles, categories,
+            settings.maxWarnings());
     Q_ASSERT(wasPrepared);
     QQmlJSLinter::Result result = linter.lintFileInBatch(filename);
 

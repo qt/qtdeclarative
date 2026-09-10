@@ -147,7 +147,7 @@ void tst_qmllint_benchmark::runOnFile(const QString &fileName, PluginSelection a
     options.setFlag(QQmlJSLinter::Silent);
 
     QVERIFY(linter.prepareFileForBatchLinting(fileName, &content, options, imports, { }, { },
-                                              categories));
+                                              categories, -1));
     QBENCHMARK {
         results.push_back(linter.lintFileInBatch(fileName));
     }

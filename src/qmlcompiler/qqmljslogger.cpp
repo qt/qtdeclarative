@@ -115,6 +115,8 @@ warning levels.
     X(qmlLiteralConstructor, "literal-constructor", "LiteralConstructor",                          \
       "Warn about using literal constructors, like Boolean or String for example.", Warning,       \
       NonEssential)                                                                                \
+    X(qmlMaxWarningsExceeded, "max-warnings-exceeded", "MaxWarningsExceeded",                      \
+      "Warn when exceeding the allowed maximum number of warnings.", Error, Essential)             \
     X(qmlMissingEnumEntry, "missing-enum-entry", "MissingEnumEntry",                               \
       "Warn about using missing enum values.", Warning, NonEssential)                              \
     X(qmlMissingProperty, "missing-property", "MissingProperty", "Warn about missing properties",  \

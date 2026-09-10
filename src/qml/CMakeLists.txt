@@ -861,6 +861,7 @@ target_sources(Qml
         doc/src/qmllint/attached-property-reuse.qdoc
         doc/src/qmllint/compiler.qdoc
         doc/src/qmllint/deferred-property-id.qdoc
+        doc/src/qmllint/max-warnings-exceeded.qdoc
         doc/src/external-resources.qdoc
         doc/src/qmllanguageref/modules/cmake-module-integration.qdoc
         doc/src/qmllanguageref/modules/cppplugins.qdoc

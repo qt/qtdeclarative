@@ -25,6 +25,9 @@ class QQmlLintSettings : public QQmlToolingSettings
 {
 public:
     QQmlLintSettings(const QString &name = QLatin1String("qmllint"));
+
+    static const inline QLatin1StringView s_maxWarnings = QLatin1String("MaxWarnings");
+    qsizetype maxWarnings() const;
 };
 
 QT_END_NAMESPACE

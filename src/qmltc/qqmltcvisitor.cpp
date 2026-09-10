@@ -65,6 +65,7 @@ QSpan<const QmltcLoggingCategoryOverride> categoryOverrides()
         QmltcLoggingCategoryOverride{ qmlInlineComponentEnums, std::nullopt },
         QmltcLoggingCategoryOverride{ qmlInvalidLintDirective, std::nullopt },
         QmltcLoggingCategoryOverride{ qmlLiteralConstructor, Error },
+        QmltcLoggingCategoryOverride{ qmlMaxWarningsExceeded, std::nullopt },
         QmltcLoggingCategoryOverride{ qmlMissingEnumEntry, std::nullopt },
         QmltcLoggingCategoryOverride{ qmlMissingProperty, Error },
         QmltcLoggingCategoryOverride{ qmlMissingType, Error },
