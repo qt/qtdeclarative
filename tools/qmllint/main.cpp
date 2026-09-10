@@ -3,6 +3,7 @@
 
 #include <private/qqmljscompiler_p.h>
 #include <private/qqmljslinter_p.h>
+#include <private/qqmllintsettings_p.h>
 #include <private/qqmljsloggingutils_p.h>
 #include <private/qqmljsresourcefilemapper_p.h>
 #include <private/qqmljsutils_p.h>
@@ -141,8 +142,7 @@ int main(int argc, char *argv[])
     QCoreApplication::setApplicationName("qmllint");
     QCoreApplication::setApplicationVersion(QT_VERSION_STR);
     QCommandLineParser parser;
-    QQmlToolingSettings defaultSettings(QLatin1String("qmllint"),
-                                        { QLatin1String("General"), QLatin1String("Warnings") });
+    QQmlLintSettings defaultSettings;
     parser.setApplicationDescription(QLatin1String(R"(QML syntax verifier and analyzer
 
 All warnings can be set to four levels of severity:
@@ -434,8 +434,7 @@ All warnings can be set to four levels of severity:
     QJsonArray jsonFiles;
 
     for (const QString &filename : positionalArguments) {
-        QQmlToolingSettings settings(QLatin1String("qmllint"),
-                                     { QLatin1String("General"), QLatin1String("Warnings") });
+        QQmlLintSettings settings;
 
         QList<QQmlJS::LoggerCategory> categories = defaultCategories;
 
@@ -565,9 +564,7 @@ All warnings can be set to four levels of severity:
                         || lintResult.status == QQmlJSLinter::HasWarnings);
 
             if (success) {
-                QQmlToolingSettings settings(
-                        QLatin1String("qmllint"),
-                        { QLatin1String("General"), QLatin1String("Warnings") });
+                QQmlLintSettings settings;
                 if (!parser.isSet(ignoreSettings)) {
                     QQmlToolingSettings::SearchOptions options;
                     options.isQmllintSilent = silent;

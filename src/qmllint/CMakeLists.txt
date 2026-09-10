@@ -17,6 +17,7 @@ qt_internal_add_module(QmlLintPrivate
         qqmljsusercontextproperties_p.h qqmljsusercontextproperties.cpp
         qqmljslinterrenamedcomponents_p.h qqmljslinterrenamedcomponents.cpp
         qqmljslintercontext_p.h
+        qqmllintsettings_p.h qqmllintsettings.cpp
 
     PUBLIC_LIBRARIES
         Qt::CorePrivate

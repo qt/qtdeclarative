@@ -10,6 +10,7 @@
 #include <QtQmlDom/private/qqmldom_utils_p.h>
 #include <QtQmlDom/private/qqmldomtop_p.h>
 #include <QtQmlLint/private/qqmljslinter_p.h>
+#include <QtQmlLint/private/qqmllintsettings_p.h>
 #include <QtCore/qdebug.h>
 #include <QtCore/qdir.h>
 #include <QtCore/qfileinfo.h>
@@ -295,7 +296,7 @@ void QmlLintSuggestions::diagnoseHelper(const QByteArray &url,
             categories.append(category);
     }
 
-    QQmlToolingSettings settings(QLatin1String("qmllint"), { "General"_L1, "Warnings"_L1 });
+    QQmlLintSettings settings;
     if (settings.search(filename).isValid()) {
         QQmlJS::LoggingUtils::updateLogSeverities(categories, settings, nullptr);
     }
