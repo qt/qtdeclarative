@@ -329,15 +329,15 @@ bool QQuickItemGenerator::generateRootNode(const StructureNodeInfo &info)
     } else {
         for (const PendingLinkedTransform &pending : m_pendingLinkedTransforms) {
             Q_ASSERT(pending.item);
-            auto it = m_transformSourceItems.constFind(pending.transformReferenceId);
-            if (it == m_transformSourceItems.cend()) {
+            QQuickTransformSource *source = resolveTransformReference(pending.transformReferenceId);
+            if (!source) {
                 qCWarning(lcQuickVectorImage)
                         << "generateRootNode: transformReferenceId does not refer to a "
                            "transform source item:"
                         << pending.transformReferenceId;
                 continue;
             }
-            new TransformLinker(it.value(), pending.linkedMatrix, pending.item);
+            new TransformLinker(source, pending.linkedMatrix, pending.item);
         }
         m_pendingLinkedTransforms.clear();
 
@@ -902,6 +902,9 @@ bool QQuickItemGenerator::generateDefsNode(const StructureNodeInfo &info)
         return false;
 
     if (info.stage == StructureNodeStage::Start) {
+        if (!info.transformReferenceChildId.isEmpty())
+            m_transformReferenceChildIds.insert(info.id + ".item"_L1,
+                                                info.transformReferenceChildId);
         beginDefsRecord(info.id);
         return true;
     }
@@ -909,6 +912,24 @@ bool QQuickItemGenerator::generateDefsNode(const StructureNodeInfo &info)
     endDefsRecord();
 
     return true;
+}
+
+QQuickTransformSource *
+QQuickItemGenerator::resolveTransformReference(const QString &referenceId) const
+{
+    auto source = m_transformSourceItems.constFind(referenceId);
+    if (source != m_transformSourceItems.cend())
+        return source.value();
+
+    auto childId = m_transformReferenceChildIds.constFind(referenceId);
+    if (childId == m_transformReferenceChildIds.cend())
+        return nullptr;
+
+    source = m_transformSourceItems.constFind(childId.value());
+    if (source == m_transformSourceItems.cend())
+        return nullptr;
+
+    return source.value();
 }
 
 void QQuickItemGenerator::beginDefsRecord(const QString &id)
@@ -997,11 +1018,11 @@ void QQuickItemGenerator::generateDefsInstantiationNode(const StructureNodeInfo 
     QList<PendingLinkedTransform> unresolved;
     for (qsizetype i = pendingStart; i < m_pendingLinkedTransforms.size(); ++i) {
         const PendingLinkedTransform &pending = m_pendingLinkedTransforms.at(i);
-        auto source = m_transformSourceItems.constFind(pending.transformReferenceId);
-        if (source == m_transformSourceItems.cend())
+        QQuickTransformSource *source = resolveTransformReference(pending.transformReferenceId);
+        if (!source)
             unresolved.append(pending);
         else
-            new TransformLinker(source.value(), pending.linkedMatrix, pending.item);
+            new TransformLinker(source, pending.linkedMatrix, pending.item);
     }
     m_pendingLinkedTransforms.resize(pendingStart);
     m_pendingLinkedTransforms.append(unresolved);

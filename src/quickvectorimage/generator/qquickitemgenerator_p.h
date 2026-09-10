@@ -124,10 +124,13 @@ private:
     QQuickItemSpy *m_topLevelScaleSpy = nullptr;
 
     QHash<QString, QQuickTransformSource *> m_transformSourceItems;
+    QHash<QString, QString> m_transformReferenceChildIds;
     QList<PendingLinkedTransform> m_pendingLinkedTransforms;
     std::unique_ptr<QQuickGeneratorAnimationProvider> m_animationProvider;
     QStack<bool> m_scopePushed;
     QMap<std::array<qreal, 4>, QEasingCurve> m_easingCache;
+
+    QQuickTransformSource *resolveTransformReference(const QString &referenceId) const;
 
     QRectF resolveBounds(const NodeInfo &info) const;
     void registerBounds(const QString &id, const QRectF &bounds);
