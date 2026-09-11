@@ -171,17 +171,18 @@ void tst_PointHandler::tabletStylus()
     QCOMPARE(handler->translation(), QVector2D());
     QCOMPARE(translationSpy.size(), guiSynthMouse ? 2 : 1);
 
-    QPoint delta(10, 10);
-    QPoint deltaLocalDPI = QHighDpi::fromNativeLocalPosition(delta, &window);
+    const QPoint delta(10, 10);
+    const QVector2D deltaLocalDPIf(QHighDpi::fromNativeLocalPosition(QPointF(delta), &window));
     point += delta;
+    const QPoint movedPointLocalDPI = QHighDpi::fromNativeLocalPosition(point, &window);
     QWindowSystemInterface::handleTabletEvent(&window, timestamp++, point, window.mapToGlobal(point),
         int(QInputDevice::DeviceType::Stylus), int(QPointingDevice::PointerType::Pen),
         Qt::LeftButton, 0.45, 23, 33, 0.57, 15.6, 3, stylusId, Qt::NoModifier);
     QTRY_COMPARE(pointSpy.size(), guiSynthMouse ? 4 : 2);
     QCOMPARE(handler->active(), true);
     QCOMPARE(activeSpy.size(), 1);
-    QCOMPARE(handler->point().position().toPoint(), pointLocalDPI + deltaLocalDPI);
-    QCOMPARE(handler->point().scenePosition().toPoint(), pointLocalDPI + deltaLocalDPI);
+    QCOMPARE(handler->point().position().toPoint(), movedPointLocalDPI);
+    QCOMPARE(handler->point().scenePosition().toPoint(), movedPointLocalDPI);
     QCOMPARE(handler->point().pressPosition().toPoint(), pointLocalDPI);
     QCOMPARE(handler->point().scenePressPosition().toPoint(), pointLocalDPI);
     QCOMPARE(handler->point().pressedButtons(), Qt::LeftButton);
@@ -190,7 +191,7 @@ void tst_PointHandler::tabletStylus()
     QCOMPARE(handler->point().uniqueId().numericId(), stylusId);
     QCOMPARE_GT(handler->point().velocity().x(), 0);
     QCOMPARE_GT(handler->point().velocity().y(), 0);
-    QCOMPARE(handler->translation(), QVector2D(deltaLocalDPI));
+    QCOMPARE(handler->translation(), deltaLocalDPIf);
     QCOMPARE(translationSpy.size(), guiSynthMouse ? 4 : 2);
 
     QWindowSystemInterface::handleTabletEvent(&window, timestamp++, point, window.mapToGlobal(point),
