@@ -300,10 +300,10 @@ void tst_qquicktextdocument::sourceAndSave()
     qCDebug(lcTests) << source << "orig ->" << sf.fileName();
     QVERIFY(sf.exists());
     QString tmpPath = tmpDir.filePath(source);
-    QVERIFY(sf.copy(tmpPath));
-#ifdef Q_OS_ANDROID
-    QVERIFY(QFile::setPermissions(tmpPath, QFileDevice::ReadOwner | QFileDevice::WriteOwner));
-#endif
+    // The test data may be embedded as read-only qrc resources (e.g. on Android
+    // and HarmonyOS), and copy() preserves permissions; request writable
+    // permissions so that save() below can write the file back.
+    QVERIFY(sf.copy(tmpPath, QFileDevice::ReadOwner | QFileDevice::WriteOwner));
     qCDebug(lcTests) << source << "copy ->" << tmpDir.path() << ":" << tmpPath;
 
     QCOMPARE(statusChangedSpy.size(), 0);
