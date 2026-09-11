@@ -292,10 +292,8 @@ bool Chunk::sweep(ExecutionEngine *engine)
             const VTable *v = b->internalClass->vtable;
 //            if (Q_UNLIKELY(classCountPtr))
 //                classCountPtr(v->className);
-            if (v->destroy) {
+            if (v->destroy)
                 v->destroy(b);
-                b->_checkIsDestroyed();
-            }
 #ifdef V4_USE_HEAPTRACK
             heaptrack_report_free(itemToFree);
 #endif
@@ -338,10 +336,8 @@ void Chunk::freeAll(ExecutionEngine *engine)
 
             HeapItem *itemToFree = o + index;
             Heap::Base *b = *itemToFree;
-            if (b->internalClass->vtable->destroy) {
+            if (b->internalClass->vtable->destroy)
                 b->internalClass->vtable->destroy(b);
-                b->_checkIsDestroyed();
-            }
 #ifdef V4_USE_HEAPTRACK
             heaptrack_report_free(itemToFree);
 #endif
@@ -591,10 +587,8 @@ static void freeHugeChunk(ChunkAllocator *chunkAllocator, const HugeItemAllocato
     Heap::Base *b = *itemToFree;
     const VTable *v = b->internalClass->vtable;
 
-    if (v->destroy) {
+    if (v->destroy)
         v->destroy(b);
-        b->_checkIsDestroyed();
-    }
     if (c.segment) {
         // own memory segment
         c.segment->free(c.chunk, c.size);

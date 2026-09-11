@@ -246,12 +246,7 @@ public:
 
 struct ComplexString : String {
     typedef QV4::Heap::ComplexString Data;
-    QV4::Heap::ComplexString *d_unchecked() const { return static_cast<QV4::Heap::ComplexString *>(m()); }
-    QV4::Heap::ComplexString *d() const {
-        QV4::Heap::ComplexString *dptr = d_unchecked();
-        dptr->_checkIsInitialized();
-        return dptr;
-    }
+    QV4::Heap::ComplexString *d() const { return static_cast<QV4::Heap::ComplexString *>(m()); }
 };
 
 inline

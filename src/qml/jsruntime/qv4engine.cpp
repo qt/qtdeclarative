@@ -946,7 +946,7 @@ void ExecutionEngine::initRootContext()
 {
     Scope scope(this);
     Scoped<ExecutionContext> r(scope, memoryManager->allocManaged<ExecutionContext>());
-    r->d_unchecked()->init(Heap::ExecutionContext::Type_GlobalContext);
+    r->d()->init(Heap::ExecutionContext::Type_GlobalContext);
     r->d()->activation.set(this, globalObject->d());
     jsObjects[RootContext] = r;
     jsObjects[ScriptContext] = r;

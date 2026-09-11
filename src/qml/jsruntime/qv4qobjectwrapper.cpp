@@ -2887,7 +2887,7 @@ ReturnedValue QmlSignalHandler::call(const Value *thisObject, const Value *argv,
 
 void QmlSignalHandler::initProto(ExecutionEngine *engine)
 {
-    if (engine->signalHandlerPrototype()->d_unchecked())
+    if (engine->signalHandlerPrototype()->d())
         return;
 
     Scope scope(engine);

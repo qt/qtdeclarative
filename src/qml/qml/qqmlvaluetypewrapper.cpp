@@ -118,7 +118,7 @@ ReturnedValue QQmlValueTypeWrapper::create(
 
 void QQmlValueTypeWrapper::initProto(ExecutionEngine *v4)
 {
-    if (v4->valueTypeWrapperPrototype()->d_unchecked())
+    if (v4->valueTypeWrapperPrototype()->d())
         return;
 
     Scope scope(v4);

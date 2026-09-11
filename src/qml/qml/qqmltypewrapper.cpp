@@ -230,7 +230,7 @@ ReturnedValue QQmlTypeWrapper::method_toString(
 
 void QQmlTypeWrapper::initProto(ExecutionEngine *v4)
 {
-    if (v4->typeWrapperPrototype()->d_unchecked())
+    if (v4->typeWrapperPrototype()->d())
         return;
 
     Scope scope(v4);

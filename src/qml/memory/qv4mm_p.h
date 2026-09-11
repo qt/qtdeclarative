@@ -373,7 +373,7 @@ public:
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>());
-        t->d_unchecked()->init(std::forward<Args>(args)...);
+        t->d()->init(std::forward<Args>(args)...);
         return t->d();
     }
 
@@ -382,7 +382,7 @@ public:
     {
         Scope scope(engine);
         Scoped<ManagedType> t(scope, allocManaged<ManagedType>());
-        t->d_unchecked()->init(std::forward<Args>(args)...);
+        t->d()->init(std::forward<Args>(args)...);
         return t->d();
     }
 

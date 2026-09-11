@@ -21,10 +21,6 @@
 #include <private/qv4vtable_p.h>
 #include <QtCore/QSharedPointer>
 
-// To check if Heap::Base::init is called (meaning, all subclasses did their init and called their
-// parent's init all up the inheritance chain), define QML_CHECK_INIT_DESTROY_CALLS below.
-#undef QML_CHECK_INIT_DESTROY_CALLS
-
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
@@ -91,42 +87,8 @@ struct Q_QML_EXPORT Base {
     void *operator new(size_t, Base *m) { return m; }
     void operator delete(void *, Base *) {}
 
-    void init() { _setInitialized(); }
-    void destroy() { _setDestroyed(); }
-#ifdef QML_CHECK_INIT_DESTROY_CALLS
-    enum { Uninitialized = 0, Initialized, Destroyed } _livenessStatus;
-    void _checkIsInitialized() {
-        if (_livenessStatus == Uninitialized)
-            fprintf(stderr, "ERROR: use of object '%s' before call to init() !!\n",
-                    vtable()->className);
-        else if (_livenessStatus == Destroyed)
-            fprintf(stderr, "ERROR: use of object '%s' after call to destroy() !!\n",
-                    vtable()->className);
-        Q_ASSERT(_livenessStatus == Initialized);
-    }
-    void _checkIsDestroyed() {
-        if (_livenessStatus == Initialized)
-            fprintf(stderr, "ERROR: object '%s' was never destroyed completely !!\n",
-                    vtable()->className);
-        Q_ASSERT(_livenessStatus == Destroyed);
-    }
-    void _setInitialized() { Q_ASSERT(_livenessStatus == Uninitialized); _livenessStatus = Initialized; }
-    void _setDestroyed() {
-        if (_livenessStatus == Uninitialized)
-            fprintf(stderr, "ERROR: attempting to destroy an uninitialized object '%s' !!\n",
-                    vtable()->className);
-        else if (_livenessStatus == Destroyed)
-            fprintf(stderr, "ERROR: attempting to destroy repeatedly object '%s' !!\n",
-                    vtable()->className);
-        Q_ASSERT(_livenessStatus == Initialized);
-        _livenessStatus = Destroyed;
-    }
-#else
-    Q_ALWAYS_INLINE void _checkIsInitialized() {}
-    Q_ALWAYS_INLINE void _checkIsDestroyed() {}
-    Q_ALWAYS_INLINE void _setInitialized() {}
-    Q_ALWAYS_INLINE void _setDestroyed() {}
-#endif
+    void init() {}
+    void destroy() {}
 };
 static_assert(std::is_trivially_copyable_v<Base>);
 static_assert(std::is_trivially_default_constructible_v<Base>);

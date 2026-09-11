@@ -271,12 +271,7 @@ const QV4::VTable classname::static_vtbl = DEFINE_MANAGED_VTABLE_INT(classname, 
         static const QV4::VTable static_vtbl; \
         static inline const QV4::VTable *staticVTable() { return &static_vtbl; } \
         V4_MANAGED_SIZE_TEST \
-        QV4::Heap::DataClass *d_unchecked() const { return static_cast<QV4::Heap::DataClass *>(m()); } \
-        QV4::Heap::DataClass *d() const { \
-            QV4::Heap::DataClass *dptr = d_unchecked(); \
-            dptr->_checkIsInitialized(); \
-            return dptr; \
-        } \
+        QV4::Heap::DataClass *d() const { return static_cast<QV4::Heap::DataClass *>(m()); } \
         static_assert(std::is_trivially_copyable_v<QV4::Heap::DataClass>); \
         static_assert(std::is_trivially_default_constructible_v<QV4::Heap::DataClass>);
 
