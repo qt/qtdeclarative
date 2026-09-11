@@ -151,15 +151,9 @@ private:
 
     void bindTextureSize(QQuickShaderEffectSource *ses);
     void bindPatternTextureSize(QQuickShaderEffectSource *ses);
-    void bindPropertyAnimation(QObject *target, const QString &property,
-                               const QQuickAnimatedProperty::PropertyAnimation &anim,
-                               const std::function<QVariant(const QVariant &)> &extractor,
-                               int valueIndex = 0, const QVariant &resetValue = QVariant());
-    void bindAnimatedProperty(QObject *target, const QString &property,
-                              const QQuickAnimatedProperty &animatedProperty,
-                              const std::function<QVariant(const QVariant &)> &extractor,
-                              int valueIndex = 0);
-    void bindColorWithOpacity(QObject *target, const QString &colorProperty,
+    void bindAnimatedProperty(QObject *target, const QString &propertyName,
+                              const QQuickAnimatedProperty &property);
+    void bindColorWithOpacity(QObject *target, const QString &colorPropertyName,
                               const QQuickAnimatedProperty &color,
                               const QQuickAnimatedProperty &opacity,
                               std::function<void(const QColor &)> setter);

@@ -31,11 +31,12 @@ public:
     virtual ~QQuickGeneratorAnimationProvider();
 
     virtual QQuickAbstractAnimation *enterTimelineScope(QQuickItem *item,
-                                                        const TimelineInfo &info) = 0;
+                                                        const StructureNodeInfo &info) = 0;
+    virtual void enterTimelineScope(const QString &scopeId, const QString &referenceId) = 0;
     virtual void exitTimelineScope() = 0;
 
-    virtual void bindProperty(QObject *target, const QByteArray &property,
-                              const QQuickAnimatedProperty::PropertyAnimation &anim) = 0;
+    virtual void bindProperty(QObject *target, const QByteArray &propertyName,
+                              const QQuickAnimatedProperty &property) = 0;
 
     virtual QQuickItem *createCustomItem(const QString &type) = 0;
 };
