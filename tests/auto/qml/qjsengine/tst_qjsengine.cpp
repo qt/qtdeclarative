@@ -60,6 +60,48 @@ public:
     QString m_string;
 };
 
+class VariantAssociationHolder : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QVariant blob READ blob NOTIFY blobChanged)
+public:
+    QVariant blob() const { return m_blob; }
+
+    Q_INVOKABLE void useMap(int seed)
+    {
+        QVariantMap map;
+        for (int i = 0; i < 6; ++i)
+            map.insert(u"k%1"_s.arg(i), seed + i);
+        m_blob = map;
+        emit blobChanged();
+    }
+
+    Q_INVOKABLE void useHash(int seed)
+    {
+        QVariantHash hash;
+        for (int i = 0; i < 6; ++i)
+            hash.insert(u"k%1"_s.arg(i), seed + i);
+        m_blob = hash;
+        emit blobChanged();
+    }
+
+    Q_INVOKABLE void useInt(int seed) { setNonAssociative(seed); }
+    Q_INVOKABLE void useList(int seed) { setNonAssociative(QVariantList { seed, seed + 1 }); }
+    Q_INVOKABLE void useString(int seed) { setNonAssociative(u"s%1"_s.arg(seed)); }
+
+signals:
+    void blobChanged();
+
+private:
+    void setNonAssociative(const QVariant &value)
+    {
+        m_blob = value;
+        emit blobChanged();
+    }
+
+    QVariant m_blob;
+};
+
 class tst_QJSEngine : public QObject
 {
     Q_OBJECT
@@ -343,6 +385,8 @@ private slots:
     void generatorStackOverflowRestoresFrame_data();
     void generatorStackOverflowRestoresFrame();
     void generatorInfiniteRecursion();
+    void variantAssociationTypeChangeDuringPut_data();
+    void variantAssociationTypeChangeDuringPut();
 
     void setDeleteDuringForEach();
     void mapDeleteDuringForEach();
@@ -6739,6 +6783,60 @@ void tst_QJSEngine::generatorStackOverflowRestoresFrame()
     object = QJSValue();
     function = QJSValue();
     engine.collectGarbage();
+}
+
+void tst_QJSEngine::variantAssociationTypeChangeDuringPut_data()
+{
+    QTest::addColumn<QString>("initial");
+    QTest::addColumn<QString>("change");
+
+    // Swapping one associative container for the other makes setVariant() destroy the
+    // container and placement-new the other one over it.
+    QTest::newRow("map to hash") << u"useMap"_s << u"useHash"_s;
+    QTest::newRow("hash to map") << u"useHash"_s << u"useMap"_s;
+
+    // setVariant() refuses anything that is not an associative container, so the
+    // association keeps what it already has.
+    QTest::newRow("map to int") << u"useMap"_s << u"useInt"_s;
+    QTest::newRow("map to list") << u"useMap"_s << u"useList"_s;
+    QTest::newRow("hash to string") << u"useHash"_s << u"useString"_s;
+}
+
+void tst_QJSEngine::variantAssociationTypeChangeDuringPut()
+{
+    QFETCH(const QString, initial);
+    QFETCH(const QString, change);
+
+    QQmlEngine engine;
+    VariantAssociationHolder holder;
+    engine.globalObject().setProperty(u"holder"_s, engine.newQObject(&holder));
+
+    // Assigning to a key of a variant association converts the value first, and
+    // converting an object reads its properties, which runs its accessors. The accessor
+    // here reads the same association again, so the reference re-reads the property it
+    // came from. Whatever the assignment is still holding on to has to survive that.
+    QJSValue step = engine.evaluate(uR"JS(
+        (function (round) {
+            holder.%1(round);
+            var a = holder.blob;
+            holder.%2(round);
+            a.victim = {
+                get poke() { void a.k1; return 1; },
+                filler: "x"
+            };
+            return a.k2;
+        })
+    )JS"_s.arg(initial, change));
+    QVERIFY2(!step.isError(), qPrintable(step.toString()));
+
+    for (int round = 0; round < 20; ++round) {
+        const QJSValue result = step.call({ round });
+        QVERIFY2(!result.isError(), qPrintable(result.toString()));
+
+        // Either the association followed the property to the other container type, or
+        // it kept the one it had. Both of those hold the same value for "k2".
+        QCOMPARE(result.toInt(), round + 2);
+    }
 }
 
 void tst_QJSEngine::generatorInfiniteRecursion() {

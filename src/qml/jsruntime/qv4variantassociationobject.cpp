@@ -303,10 +303,16 @@ bool VariantAssociationObject::virtualPut(
     if (!heapAssociation->object())
         return ReferenceObject::virtualPut(that, id, value, that);
 
+    // Convert before dispatching on the association type. toVariant() reads the
+    // properties of the value, which runs any accessors it has, which can change
+    // the association object itself between QVariantMap and QVariantHash. We
+    // can't let that happen while we are holding a pointer to the the map or hash.
+    const QString key = id.toQString();
+    const QVariant converted
+            = heapAssociation->internalClass->engine->toVariant(value, QMetaType(), false);
+
     visitVariantAssociation<void>(heapAssociation, [&](auto *association) {
-        association->insert(
-                id.toQString(),
-                heapAssociation->internalClass->engine->toVariant(value, QMetaType(), false));
+        association->insert(key, converted);
     });
 
     QV4::ReferenceObject::writeBack(heapAssociation);
@@ -321,8 +327,9 @@ bool VariantAssociationObject::virtualDeleteProperty(Managed *that, PropertyKey 
     if (!heapAssociation->object())
         return ReferenceObject::virtualDeleteProperty(that, id);
 
+    const QString key = id.toQString();
     if (!visitVariantAssociation<bool>(heapAssociation, [&](auto *association) {
-        return association->remove(id.toQString());
+        return association->remove(key);
     })) {
         return false;
     }
