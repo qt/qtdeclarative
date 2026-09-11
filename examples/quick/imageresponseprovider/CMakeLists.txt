@@ -22,6 +22,7 @@ qt6_add_qml_module(qmlimageresponseproviderplugin
 
 target_sources(qmlimageresponseproviderplugin PRIVATE
     imageresponseprovider.cpp
+    imageresponseprovider.h
 )
 
 set_target_properties(qmlimageresponseproviderplugin PROPERTIES

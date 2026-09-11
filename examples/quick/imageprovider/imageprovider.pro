@@ -7,6 +7,7 @@ QML_IMPORT_MAJOR_VERSION = 1
 DESTDIR = ImageProviderCore
 TARGET  = qmlimageproviderplugin
 
+HEADERS += imageprovider.h
 SOURCES += imageprovider.cpp
 
 EXAMPLE_FILES = imageprovider-example.qml
