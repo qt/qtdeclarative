@@ -302,8 +302,6 @@ qt_internal_add_shaders(Quick "scenegraph_shaders"
         "scenegraph/shaders_ng/outlinedtext.frag"
         "scenegraph/shaders_ng/outlinedtext.vert"
         "scenegraph/shaders_ng/outlinedtext_a.frag"
-        "scenegraph/shaders_ng/shadereffect.frag"
-        "scenegraph/shaders_ng/shadereffect.vert"
         "scenegraph/shaders_ng/smoothcolor.frag"
         "scenegraph/shaders_ng/smoothcolor.vert"
         "scenegraph/shaders_ng/smoothtexture.frag"
@@ -323,6 +321,26 @@ qt_internal_add_shaders(Quick "scenegraph_shaders"
         "scenegraph/shaders_ng/vertexcolor.vert"
         "scenegraph/shaders_ng/visualization.frag"
         "scenegraph/shaders_ng/visualization.vert"
+)
+
+# As a special case, bake all GLSL ES versions for ShaderEffect's shaders that
+# are used when the item does not specify its own, application-provided shaders.
+# OpenGL ES may refuse to link together shaders with different GLSL ES versions;
+# this way we enable applications to provide any GLSL ES version fragment shader
+# and still use the default, built-in vertex shader.
+qt_internal_add_shaders(Quick "scenegraph_shadereffect_default_shaders"
+    SILENT
+    BATCHABLE
+    PRECOMPILE
+    OPTIMIZED
+    MULTIVIEW
+    GLSL
+        "150,120,100es,300es,310es,320es"
+    PREFIX
+        "/qt-project.org"
+    FILES
+        "scenegraph/shaders_ng/shadereffect.frag"
+        "scenegraph/shaders_ng/shadereffect.vert"
 )
 
 qt_internal_add_shaders(Quick "scenegraph_curve_shaders"
