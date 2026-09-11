@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 
-#include <qqmlextensionplugin.h>
+#include "imageresponseprovider.h"
 
 #include <qqmlengine.h>
 #include <qquickimageprovider.h>
@@ -81,17 +81,10 @@ private:
 };
 
 
-class ImageProviderExtensionPlugin : public QQmlEngineExtensionPlugin
+void ImageProviderExtensionPlugin::initializeEngine(QQmlEngine *engine, const char *uri)
 {
-    Q_OBJECT
-    Q_PLUGIN_METADATA(IID QQmlEngineExtensionInterface_iid)
-public:
-    void initializeEngine(QQmlEngine *engine, const char *uri) override
-    {
-        Q_UNUSED(uri);
-        engine->addImageProvider("async", new AsyncImageProvider);
-    }
-
-};
+    Q_UNUSED(uri);
+    engine->addImageProvider("async", new AsyncImageProvider);
+}
 
 #include "imageresponseprovider.moc"

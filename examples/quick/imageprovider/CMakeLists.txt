@@ -20,6 +20,7 @@ qt6_add_qml_module(qmlimageproviderplugin
     CLASS_NAME ImageProviderExtensionPlugin
     SOURCES
         imageprovider.cpp
+        imageprovider.h
 )
 
 target_link_libraries(qmlimageproviderplugin PUBLIC

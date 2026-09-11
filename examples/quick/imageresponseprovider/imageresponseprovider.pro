@@ -5,6 +5,7 @@ QT += qml quick
 DESTDIR = ImageResponseProviderCore
 TARGET  = qmlimageresponseproviderplugin
 
+HEADERS += imageresponseprovider.h
 SOURCES += imageresponseprovider.cpp
 
 EXAMPLE_FILES = imageresponseprovider-example.qml
