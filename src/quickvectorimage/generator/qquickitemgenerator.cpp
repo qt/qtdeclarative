@@ -1170,7 +1170,8 @@ void QQuickItemGenerator::generateMaskContainer(const MaskNodeInfo &info)
 void QQuickItemGenerator::generateMask(QQuickItem *item, const NodeInfo &info,
                                        const QPointF &sourceOrigin)
 {
-    auto it = resolveDef(m_maskDefs, info.maskId);
+    replayDefsRecord(info.maskId);
+    auto it = m_maskDefs.find(info.maskId);
     if (it == m_maskDefs.end()) {
         qCWarning(lcQuickVectorImage) << "generateMask: unknown mask id:" << info.maskId;
         return;
