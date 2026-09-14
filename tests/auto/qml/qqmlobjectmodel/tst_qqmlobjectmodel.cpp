@@ -15,6 +15,7 @@ class tst_QQmlObjectModel : public QObject
 private slots:
     void changes();
     void objectDestroyed();
+    void destroyWhileWrapped();
 };
 
 static bool compareItems(QQmlObjectModel *model, const QObjectList &items)
@@ -204,6 +205,65 @@ void tst_QQmlObjectModel::objectDestroyed()
     delete child;
     QCOMPARE(spy.count(), 1);
     QCOMPARE(children.at(&children, 0), nullptr);
+}
+
+void tst_QQmlObjectModel::destroyWhileWrapped()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine);
+    c.setData(R"(
+        import QtQml
+        import QtQml.Models
+
+        QtObject {
+            id: root
+
+            property Component modelFactory: Component { ObjectModel {} }
+            property var wrappers: []
+            property var churn: []
+            property int wrapperCount: 200
+            property string destroyMethodName: "destroy"
+            property bool done: false
+
+            property Timer afterDeletion: Timer {
+                interval: 50
+                onTriggered: root.collectTwice()
+            }
+
+            function createAndDeleteModels() {
+                for (let i = 0; i < wrapperCount; ++i) {
+                    const model = modelFactory.createObject(root)
+                    wrappers.push(model)       // the JS wrapper stays alive ...
+                    model[destroyMethodName]() // ... while the QObject is deleted on the next
+                                               //event-loop turn. Dynamic access on purpose:
+                                               // model.destroy() would leave a property lookup
+                                               // caching the wrapper's InternalClass, which
+                                               // keeps the class alive and hides the bug.
+                }
+                afterDeletion.start()
+            }
+
+            function collectTwice() {
+                gc()                // wrappers are marked, their classes are not -> classes swept
+                for (let i = 0; i < 10 * wrapperCount; ++i) {
+                    const o = {}    // reuse the freed class slots for other classes
+                    o["other" + i] = i
+                    churn.push(o)
+                }
+                wrappers = []
+                gc()                // destroys the wrappers via their (recycled) class slots
+                done = true;
+            }
+
+            Component.onCompleted: createAndDeleteModels()
+        }
+    )", QUrl());
+
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    std::unique_ptr<QObject> o(c.create());
+    QVERIFY(o);
+
+    QTRY_VERIFY(o->property("done").toBool());
 }
 
 QTEST_MAIN(tst_QQmlObjectModel)

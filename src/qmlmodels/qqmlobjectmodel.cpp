@@ -191,6 +191,8 @@ struct QQmlObjectModelWrapper : public QObjectWrapper {
     static void markObjects(Base *that, MarkStack *markStack)
     {
         Q_ASSERT(QV4::Value::fromHeapObject(that).as<QV4::QObjectWrapper>());
+        QObjectWrapper::markObjects(that, markStack);
+
         QObject *object = static_cast<QObjectWrapper *>(that)->object();
         if (!object)
             return;
@@ -198,8 +200,6 @@ struct QQmlObjectModelWrapper : public QObjectWrapper {
         Q_ASSERT(qobject_cast<QQmlObjectModel *>(object));
         QQmlObjectModelPrivate::get(static_cast<QQmlObjectModel *>(object))
                 ->markChildren(markStack);
-
-        QObjectWrapper::markObjects(that, markStack);
     }
 };
 } // namespace Heap
