@@ -52,8 +52,6 @@ class QStyleKitStylePrivate : public QCommonStylePrivate
         QSize bgImplicitSize;
         QSize indicatorImplicitSize;
         QMargins indicatorMargins;
-        QSize foregroundImplicitSize;
-        QMargins foregroundMargins;
         QSize handleImplicitSize;
         QMargins handleMargins;
         int spacing;

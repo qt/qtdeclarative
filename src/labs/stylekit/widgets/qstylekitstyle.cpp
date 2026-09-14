@@ -1570,8 +1570,6 @@ QStyleKitStylePrivate::metricsForReader(QQStyleKitReader *reader) const
     metrics.margins = QMargins(0, 0, 0, 0);
     metrics.indicatorImplicitSize = QSize(0, 0);
     metrics.indicatorMargins = QMargins(0, 0, 0, 0);
-    metrics.foregroundImplicitSize = QSize(0, 0);
-    metrics.foregroundMargins = QMargins(0, 0, 0, 0);
     const auto *background = props->background();
 
     // Note: scale is deliberately absent here as it should not affect layout
@@ -1595,22 +1593,6 @@ QStyleKitStylePrivate::metricsForReader(QQStyleKitReader *reader) const
     if (indicator) {
         metrics.indicatorMargins = elementMargins(indicator);
         metrics.indicatorImplicitSize = elementSize(indicator->width(), indicator->height());
-
-        const auto *foreground = indicator->foreground();
-        if (foreground) {
-            metrics.foregroundMargins = elementMargins(foreground);
-            const auto foregroundW = resolvedWidth(
-                foreground,
-                std::max(.0, qreal(metrics.indicatorImplicitSize.width()
-                                    - metrics.foregroundMargins.left()
-                                    - metrics.foregroundMargins.right())));
-            const auto foregroundH = resolvedHeight(
-                foreground,
-                std::max(.0, qreal(metrics.indicatorImplicitSize.height()
-                                    - metrics.foregroundMargins.top()
-                                    - metrics.foregroundMargins.bottom())));
-            metrics.foregroundImplicitSize = elementSize(foregroundW, foregroundH);
-        }
     }
     const auto *handle = props->handle();
     if (handle) {
@@ -3879,20 +3861,12 @@ QSize QStyleKitStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt,
             if (!resolved.isValid())
                 break;
             const auto &metrics = *resolved.metrics;
-            const auto indicatorW = std::max(
-                metrics.indicatorImplicitSize.width()
-                    + metrics.indicatorMargins.left()
-                    + metrics.indicatorMargins.right(),
-                metrics.foregroundImplicitSize.width()
-                    + metrics.foregroundMargins.left()
-                    + metrics.foregroundMargins.right());
-            const auto indicatorH = std::max(
-                metrics.indicatorImplicitSize.height()
-                    + metrics.indicatorMargins.top()
-                    + metrics.indicatorMargins.bottom(),
-                metrics.foregroundImplicitSize.height()
-                    + metrics.foregroundMargins.top()
-                    + metrics.foregroundMargins.bottom());
+            const auto indicatorW = metrics.indicatorImplicitSize.width()
+                + metrics.indicatorMargins.left()
+                + metrics.indicatorMargins.right();
+            const auto indicatorH = metrics.indicatorImplicitSize.height()
+                + metrics.indicatorMargins.top()
+                + metrics.indicatorMargins.bottom();
             const int bgW = metrics.bgImplicitSize.width()
                 + metrics.margins.left() + metrics.margins.right();
             const int bgH = metrics.bgImplicitSize.height()
