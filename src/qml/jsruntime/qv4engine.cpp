@@ -879,6 +879,12 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
 
 ExecutionEngine::~ExecutionEngine()
 {
+    // The public engine destructors set this before they get here, but an
+    // ExecutionEngine can also be used on its own. Everything below - the final sweep
+    // in ~MemoryManager in particular - runs destruction handlers against an engine
+    // that is already losing its parts, and those must not start a gc.
+    inShutdown = true;
+
 #if QT_CONFIG(qml_network)
     delete networkAccessManager;
 #endif
