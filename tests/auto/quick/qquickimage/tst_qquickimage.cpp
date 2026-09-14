@@ -21,6 +21,7 @@
 #include <QQuickView>
 #include <QQuickImageProvider>
 #include <QQmlAbstractUrlInterceptor>
+#include <QtQuick/QQuickItemGrabResult>
 
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/testhttpserver_p.h>
@@ -83,6 +84,7 @@ private slots:
     void multiFrame();
     void colorSpace();
     void devicePixelRatio();
+    void grabToImageDevicePixelRatio();
 
 private:
     QQmlEngine engine;
@@ -1342,6 +1344,31 @@ void tst_qquickimage::devicePixelRatio()
     QVERIFY(obj2 != nullptr);
     QTRY_COMPARE(obj2->status(), QQuickImageBase::Ready);
     QCOMPARE(obj2->sourceSize(), (devicePixelRatio * origSize).toSize());
+}
+
+void tst_qquickimage::grabToImageDevicePixelRatio()
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("grabToImageDevicePixelRatio.qml")));
+
+    if (window.effectiveDevicePixelRatio() <= 1)
+        QSKIP("This test only demonstrates the bug on a HiDPI (devicePixelRatio > 1) screen");
+
+    QQuickImage *sourceImage = qmlobject_cast<QQuickImage *>(window.rootObject());
+    QVERIFY(sourceImage);
+    QQuickImage *grabbedImage = sourceImage->findChild<QQuickImage *>("grabbedImage");
+    QVERIFY(grabbedImage);
+
+    auto grabResult = sourceImage->grabToImage();
+    QVERIFY(grabResult);
+    QSignalSpy readySpy(grabResult.data(), &QQuickItemGrabResult::ready);
+    QVERIFY(readySpy.wait());
+    grabbedImage->setSource(grabResult->url());
+    QTRY_COMPARE(grabbedImage->status(), QQuickImageBase::Ready);
+
+    // grabToImage() results loaded via Image.source ignore devicePixelRatio: on a HiDPI screen,
+    // grabbedImage ends up devicePixelRatio times too big instead of matching sourceImage.
+    QCOMPARE(grabbedImage->size(), sourceImage->size());
 }
 
 QTEST_MAIN(tst_qquickimage)

@@ -1709,7 +1709,8 @@ QQuickPixmap::QQuickPixmap(QQmlEngine *engine, const QUrl &url, const QRect &reg
 QQuickPixmap::QQuickPixmap(const QUrl &url, const QImage &image)
 {
     d = new QQuickPixmapData(url, new QQuickDefaultTextureFactory(image), image.size(), QRect(), QSize(),
-                             QQuickImageProviderOptions(), QQuickImageProviderOptions::UsePluginDefaultTransform);
+                             QQuickImageProviderOptions(), QQuickImageProviderOptions::UsePluginDefaultTransform,
+                             0, 1, image.devicePixelRatio());
     d->addToCache();
 }
 
@@ -1858,6 +1859,11 @@ int QQuickPixmap::height() const
         return d->textureFactory->textureSize().height();
     else
         return 0;
+}
+
+qreal QQuickPixmap::devicePixelRatio() const
+{
+    return d ? d->devicePixelRatio : 1.0;
 }
 
 QRect QQuickPixmap::rect() const

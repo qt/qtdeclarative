@@ -144,6 +144,7 @@ public:
     QRect rect() const;
     int width() const;
     int height() const;
+    qreal devicePixelRatio() const;
 
     void load(QQmlEngine *, const QUrl &);
     void load(QQmlEngine *, const QUrl &, QQuickPixmap::Options options);

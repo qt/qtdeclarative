@@ -377,6 +377,11 @@ void QQuickImageBase::requestFinished()
         d->status = Error;
         d->setProgress(0);
     } else {
+        // itemgrabber: images carry their own devicePixelRatio (set by whatever grabbed
+        // them), which isn't known ahead of load the way "@2x" and scalable-image-format
+        // ratios are, so pick it up here once the pixmap has actually loaded.
+        if (d->url.scheme() == QQuickPixmap::itemGrabberScheme)
+            d->devicePixelRatio = d->currentPix->devicePixelRatio();
         d->status = Ready; // do not emit statusChanged until after setImplicitSize
         d->setProgress(1);
     }
