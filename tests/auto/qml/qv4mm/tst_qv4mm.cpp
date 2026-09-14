@@ -24,6 +24,7 @@
 
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 
+#include <functional>
 #include <memory>
 
 #include <private/qqmlobjectcreator_p.h>
@@ -80,6 +81,8 @@ private slots:
     void findObjectsForCompilationUnit();
     void transitionWithExpiredDeadline();
     void redrainDuringSweepWhenRunningToCompletion();
+    void destroyOnEngineShutdown_data();
+    void destroyOnEngineShutdown();
 };
 
 tst_qv4mm::tst_qv4mm()
@@ -1672,6 +1675,89 @@ void tst_qv4mm::redrainDuringSweepWhenRunningToCompletion()
 
     // The referenced object has to survive the GC completion because it's on the stack.
     QVERIFY(referenced->heapObject()->inUse());
+}
+
+struct EngineShutdownState
+{
+    int destroyCount = 0;
+};
+
+using EngineShutdownFunction = std::function<void(EngineShutdownState *)>;
+
+QT_BEGIN_NAMESPACE
+
+namespace QV4 {
+
+namespace Heap {
+
+struct ShutdownProbe : Object {
+    void init(EngineShutdownState *state) {
+        Object::init();
+        m_state = state;
+    }
+    void destroy() {
+        // A nested sweep destroys us a second time. Don't trigger again then, or we
+        // recurse until the stack is exhausted.
+        if (m_state->destroyCount++ == 0) {
+            ExecutionEngine *v4 = internalClass->engine;
+            MemoryManager *mm = v4->memoryManager;
+
+            // Model a destruction handler that holds unmanaged memory and runs code in a
+            // critical section, the way Component.onDestruction reaches
+            // ExecutableCompilationUnit::populate().
+            mm->changeUnmanagedHeapSizeUsage(qptrdiff(2 * mm->unmanagedHeapSizeGCLimit));
+            GCCriticalSection criticalSection(v4);
+        }
+        Object::destroy();
+    }
+
+    EngineShutdownState *m_state;
+};
+
+} // Heap
+
+struct ShutdownProbe : Object {
+    V4_OBJECT2(ShutdownProbe, Object)
+    V4_NEEDS_DESTROY
+};
+
+DEFINE_OBJECT_VTABLE(ShutdownProbe);
+}
+
+QT_END_NAMESPACE
+
+void tst_qv4mm::destroyOnEngineShutdown_data()
+{
+    QTest::addColumn<EngineShutdownFunction>("createAndShutDownEngine");
+
+    QTest::addRow("QJSEngine") << EngineShutdownFunction{ [](EngineShutdownState *state) {
+        QJSEngine jsEngine;
+        QV4::ExecutionEngine *engine = jsEngine.handle();
+        QV4::PersistentValue keepAlive;
+        keepAlive.set(
+                engine,
+                engine->memoryManager->allocate<QV4::ShutdownProbe>(state)->asReturnedValue());
+    } };
+
+    QTest::addRow("ExecutionEngine") << EngineShutdownFunction{ [](EngineShutdownState *state) {
+        QV4::ExecutionEngine engine;
+        QV4::PersistentValue keepAlive;
+        keepAlive.set(&engine,
+                      engine.memoryManager->allocate<QV4::ShutdownProbe>(state)->asReturnedValue());
+    } };
+}
+
+void tst_qv4mm::destroyOnEngineShutdown()
+{
+    QFETCH(EngineShutdownFunction, createAndShutDownEngine);
+
+    // The final sweep in ~MemoryManager runs destruction handlers on an engine that has
+    // already deleted its identifier table and its persistent values. A gc started from
+    // such a handler marks through that freed state and sweeps the very objects the final
+    // sweep is in the middle of freeing, destroying them twice.
+    EngineShutdownState state;
+    createAndShutDownEngine(&state);
+    QCOMPARE(state.destroyCount, 1);
 }
 
 QTEST_MAIN(tst_qv4mm)
