@@ -292,10 +292,9 @@ Q_STATIC_LOGGING_CATEGORY(lcStyleKit, "qt.labs.stylekit")
     \brief the path to the QML \l Style file driving this style.
 
     The value is a path to a local file or to a file in the resource file
-    system (for example, \c{:/styles/MyStyle.qml}). QStyleKitStyle resolves a
-    relative path against the application's working directory. The file must
-    contain a QML component whose root object is a \l Style.
-
+    system, (for example, \c{:/styles/MyStyle.qml} or \c{qrc:/qt/qml/MyQmlModule/Style.qml}).
+    QStyleKitStyle resolves a relative path against the application's working directory.
+    The file must contain a QML component whose root object is a \l Style.
     Setting this property reloads the style. If the new file does not load,
     QStyleKitStyle emits a warning and keeps the previously loaded style
     and style path.
@@ -577,8 +576,11 @@ QStyleKitStylePrivate::QStyleKitStylePrivate()
 
 static QUrl urlFromStylePath(const QString &filePath)
 {
-    return filePath.startsWith(QLatin1Char(':')) ? QUrl(QLatin1String("qrc") + filePath)
-                                                 : QUrl::fromLocalFile(filePath);
+    if (filePath.startsWith(QLatin1Char(':')))
+        return QUrl(QLatin1String("qrc") + filePath);
+    if (filePath.startsWith(QLatin1String("qrc:")) || filePath.startsWith(QLatin1String("file:")))
+        return QUrl(filePath);
+    return QUrl::fromLocalFile(filePath);
 }
 
 bool QStyleKitStylePrivate::loadStyle()
