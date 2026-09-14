@@ -262,9 +262,16 @@ bool Chunk::sweep(ExecutionEngine *engine)
     HeapItem *o = realBase();
     bool lastSlotFree = false;
     for (uint i = 0; i < Chunk::EntriesInBitmap; ++i) {
-        quintptr toFree = objectBitmap[i] ^ blackBitmap[i];
+        // Snapshots. The destructors below may allocate, and setAllocatedSlots() then
+        // sets object and extends bits in this very word. We have to remember what we
+        // decided to free, so that we can clear exactly that further down rather than
+        // assigning the words wholesale and dropping those bits again.
+        const quintptr objectsToFree = objectBitmap[i] ^ blackBitmap[i];
+        const quintptr extendsBefore = extendsBitmap[i];
+
+        quintptr toFree = objectsToFree;
         Q_ASSERT((toFree & objectBitmap[i]) == toFree); // check all black objects are marked as being used
-        quintptr e = extendsBitmap[i];
+        quintptr e = extendsBefore;
         SDUMP() << "   index=" << i;
         SDUMP() << "        toFree      =" << binary(toFree);
         SDUMP() << "        black       =" << binary(blackBitmap[i]);
@@ -298,12 +305,13 @@ bool Chunk::sweep(ExecutionEngine *engine)
             heaptrack_report_free(itemToFree);
 #endif
         }
-        Q_V4_PROFILE_DEALLOC(engine, qPopulationCount((objectBitmap[i] | extendsBitmap[i])
-                                                      - (blackBitmap[i] | e)) * Chunk::SlotSize,
+        const quintptr extendsToFree = extendsBefore & ~e;
+        Q_V4_PROFILE_DEALLOC(engine,
+                             qPopulationCount(objectsToFree | extendsToFree) * Chunk::SlotSize,
                              Profiling::RegularItem);
-        objectBitmap[i] = blackBitmap[i];
-        hasUsedSlots |= (blackBitmap[i] != 0);
-        extendsBitmap[i] = e;
+        objectBitmap[i] &= ~objectsToFree;
+        extendsBitmap[i] &= ~extendsToFree;
+        hasUsedSlots |= (objectBitmap[i] != 0);
         lastSlotFree = !((objectBitmap[i]|extendsBitmap[i]) >> (sizeof(quintptr)*8 - 1));
         SDUMP() << "        new extends =" << binary(e);
         SDUMP() << "        lastSlotFree" << lastSlotFree;
