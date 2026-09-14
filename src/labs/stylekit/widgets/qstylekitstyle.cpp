@@ -1643,6 +1643,7 @@ QStyleKitStyle::QStyleKitStyle(const QString &filePath)
     Q_D(QStyleKitStyle);
     d->stylePath = filePath;
     if (!d->loadStyle()) {
+        d->stylePath.clear();
         qWarning("QStyleKitStyle: Failed to load style from %s", qPrintable(filePath));
     }
 }
@@ -1687,14 +1688,17 @@ void QStyleKitStyle::setStylePath(const QString &filePath)
     const QStringList oldThemeNames = availableThemeNames();
     const QStringList oldCustomThemeNames = customThemeNames();
 
+    const QString previousPath = d->stylePath;
     d->stylePath = filePath;
-    if (d->loadStyle()) {
-        d->updateStyle();
-        if (const QStringList names = availableThemeNames(); names != oldThemeNames)
-            emit availableThemeNamesChanged(names);
-        if (const QStringList names = customThemeNames(); names != oldCustomThemeNames)
-            emit customThemeNamesChanged(names);
+    if (!d->loadStyle()) {
+        d->stylePath = previousPath;
+        return;
     }
+    d->updateStyle();
+    if (const QStringList names = availableThemeNames(); names != oldThemeNames)
+        emit availableThemeNamesChanged(names);
+    if (const QStringList names = customThemeNames(); names != oldCustomThemeNames)
+        emit customThemeNamesChanged(names);
     emit stylePathChanged(d->stylePath);
 }
 
