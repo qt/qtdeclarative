@@ -652,15 +652,14 @@ BaseStyle {
             alignment: Qt.AlignLeft | Qt.AlignVCenter
             radius: style.indicatorSize / 2
             foreground {
+                visible: false
                 fillWidth: true
                 fillHeight: true
                 radius: style.indicatorSize / 2
-                color: __transparent
+                color: palette.accent
             }
         }
-        checked {
-            indicator.foreground.color: palette.accent
-        }
+        checked.indicator.foreground.visible: true
     }
 
     switchDelegate {
