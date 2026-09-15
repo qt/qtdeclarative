@@ -475,11 +475,6 @@ Style {
             background.color: Qt.darker("gainsboro", 1.05)
         }
 
-        switchControl {
-            indicator.foreground.color: "white"
-            checked.indicator.foreground.color: palette.accent
-        }
-
         textField {
             background {
                 shadow.scale: 0
@@ -657,11 +652,6 @@ Style {
 
         scrollBar {
             indicator.foreground.color: "white"
-        }
-
-        switchControl {
-            indicator.foreground.color: Qt.lighter("#8e848a", 1.3)
-            checked.indicator.foreground.color: palette.accent
         }
 
         slider {
