@@ -86,7 +86,7 @@ void tst_cursor::controls()
         QTest::mouseMove(&view, control->mapToScene(QPointF(-1, -1)).toPoint());
         QCOMPARE(view.cursor().shape(), Qt::ForbiddenCursor);
 
-        QTest::mouseMove(&view, control->mapToScene(QPointF(0, 0)).toPoint());
+        QTest::mouseMove(&view, control->mapToScene(QPointF(1, 1)).toPoint());
 #ifndef Q_OS_WEBOS
         //webOS cursor handling uses BitmapCursor for ArrowCursor
         QCOMPARE(view.cursor().shape(), Qt::ArrowCursor);
@@ -152,7 +152,7 @@ void tst_cursor::pageIndicator()
     QTest::mouseMove(&view, indicator->mapToScene(QPointF(-1, -1)).toPoint());
     QCOMPARE(view.cursor().shape(), Qt::ForbiddenCursor);
 
-    QTest::mouseMove(&view, indicator->mapToScene(QPointF(0, 0)).toPoint());
+    QTest::mouseMove(&view, indicator->mapToScene(QPointF(1, 1)).toPoint());
     QCOMPARE(view.cursor().shape(), Qt::ForbiddenCursor);
 
     indicator->setInteractive(true);
