@@ -467,6 +467,9 @@ public:
 
     int currentRow = -1;
     int currentColumn = -1;
+#if QT_CONFIG(accessibility)
+    QPointer<QQuickItem> accessibleFocusItem;
+#endif
 
     QHash<int, qreal> explicitColumnWidths;
     QHash<int, qreal> explicitRowHeights;
@@ -667,6 +670,9 @@ public:
     void currentChangedInSelectionModel(const QModelIndex &current, const QModelIndex &previous);
     void setCurrentOnDelegateItem(const QModelIndex &index, bool isCurrent);
     void updateCurrentRowAndColumn();
+#if QT_CONFIG(accessibility)
+    void updateAccessibleFocus();
+#endif
 
     void fetchMoreData();
 

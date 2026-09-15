@@ -10,10 +10,12 @@
 #include "qaccessiblequicktextinput_p.h"
 #include "qaccessiblequickflickable_p.h"
 #include "qaccessiblequicklistview_p.h"
+#include "qaccessiblequicktableview_p.h"
 #include "qaccessiblequickwindowcontainer_p.h"
 #include <QtQuick/private/qquickflickable_p.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquicklistview_p.h>
+#include <QtQuick/private/qquicktableview_p.h>
 #include <QtQuick/private/qquicktextedit_p.h>
 #include <QtQuick/private/qquicktextinput_p.h>
 #include <QtQuick/private/qquickwindowcontainer_p.h>
@@ -31,6 +33,8 @@ QAccessibleInterface *qQuickAccessibleFactory(const QString &classname, QObject 
         return new QAccessibleQuickTextInput(qobject_cast<QQuickTextInput *>(object));
     if (classname == QLatin1String("QQuickListView"))
         return new QAccessibleQuickListView(qobject_cast<QQuickListView *>(object));
+    if (classname == QLatin1String("QQuickTableView"))
+        return new QAccessibleQuickTableView(qobject_cast<QQuickTableView *>(object));
     if (classname == QLatin1String("QQuickFlickable"))
         return new QAccessibleQuickFlickable(qobject_cast<QQuickFlickable *>(object));
     if (classname == QLatin1String("QQuickWindowContainer"))

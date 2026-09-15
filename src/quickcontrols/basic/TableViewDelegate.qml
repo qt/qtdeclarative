@@ -17,6 +17,10 @@ T.TableViewDelegate {
 
     highlighted: control.selected
 
+    // The content item shows the same text, and stays out of the accessibility
+    // tree, so that the cell is not read twice.
+    Accessible.name: control.model.display ?? ""
+
     required property int column
     required property int row
     required property var model
@@ -31,6 +35,7 @@ T.TableViewDelegate {
     }
 
     contentItem: Label {
+        Accessible.ignored: true
         clip: false
         text: control.model.display ?? ""
         elide: Text.ElideRight

@@ -20,6 +20,10 @@
 #include <QtQuick/private/qquickitemviewfxitem_p_p.h>
 #include <QtQuick/private/qquicktaphandler_p.h>
 
+#if QT_CONFIG(accessibility)
+#include <QtGui/qaccessible.h>
+#endif
+
 #include <QtCore/qtyperevision.h>
 
 /*!
@@ -3023,6 +3027,12 @@ void QQuickTableViewPrivate::releaseItem(FxTableItem *fxTableItem, QQmlTableInst
     // the item is owned by the QML context rather than the model (e.g ObjectModel etc).
     auto item = fxTableItem->item;
 
+#if QT_CONFIG(accessibility)
+    // A released item can come back for another cell, which needs a new focus event.
+    if (item == accessibleFocusItem)
+        accessibleFocusItem = nullptr;
+#endif
+
     if (fxTableItem->ownItem) {
         Q_TABLEVIEW_ASSERT(item, fxTableItem->index);
         delete item;
@@ -3670,6 +3680,9 @@ void QQuickTableViewPrivate::processLoadRequest()
     syncLoadedTableFromLoadRequest();
     layoutTableEdgeFromLoadRequest();
     syncLoadedTableRectFromLoadedTable();
+#if QT_CONFIG(accessibility)
+    updateAccessibleFocus();
+#endif
 
     if (rebuildState == RebuildState::Done) {
         // Loading of this edge was not done as a part of a rebuild, but
@@ -4614,6 +4627,9 @@ void QQuickTableViewPrivate::currentChangedInSelectionModel(const QModelIndex &c
     updateCurrentRowAndColumn();
     setCurrentOnDelegateItem(previous, false);
     setCurrentOnDelegateItem(current, true);
+#if QT_CONFIG(accessibility)
+    updateAccessibleFocus();
+#endif
 }
 
 void QQuickTableViewPrivate::updateCurrentRowAndColumn()
@@ -4643,6 +4659,31 @@ void QQuickTableViewPrivate::setCurrentOnDelegateItem(const QModelIndex &index, 
     QQuickItem *item = loadedTableItem(cell)->item;
     setRequiredProperty(kRequiredProperty_current, QVariant::fromValue(isCurrent), cellIndex, item, false);
 }
+
+#if QT_CONFIG(accessibility)
+// Like the widget item views, send a focus event for the current item while the
+// view has focus. TableView is no accessible item itself, so without the event
+// assistive technology does not follow the current cell. The delegate of the
+// current cell can load after the current index changed, for instance when Tab
+// scrolls it into view.
+void QQuickTableViewPrivate::updateAccessibleFocus()
+{
+    Q_Q(QQuickTableView);
+    QQuickItem *item = nullptr;
+    if (QAccessible::isActive() && q->hasActiveFocus() && selectionModel) {
+        const int cellIndex = modelIndexToCellIndex(selectionModel->currentIndex());
+        if (loadedItems.contains(cellIndex))
+            item = loadedTableItem(cellAtModelIndex(cellIndex))->item;
+    }
+    if (item == accessibleFocusItem)
+        return;
+    accessibleFocusItem = item;
+    if (item && QQuickItemPrivate::get(item)->isAccessible) {
+        QAccessibleEvent event(item, QAccessible::Focus);
+        QAccessible::updateAccessibility(&event);
+    }
+}
+#endif
 
 void QQuickTableViewPrivate::itemCreatedCallback(int modelIndex, QObject*)
 {
@@ -5337,6 +5378,9 @@ void QQuickTableViewPrivate::init()
 
     q->setFlag(QQuickItem::ItemIsFocusScope);
     q->setActiveFocusOnTab(true);
+#if QT_CONFIG(accessibility)
+    QObject::connect(q, &QQuickItem::activeFocusChanged, q, [this] { updateAccessibleFocus(); });
+#endif
 
     positionXAnimation.setTargetObject(q);
     positionXAnimation.setProperty(QStringLiteral("contentX"));
@@ -7231,6 +7275,11 @@ void QQuickTableView::closeEditor()
         // have an editItem, if the model has changed (e.g been reset)!
         d->editIndex = QModelIndex();
     }
+#if QT_CONFIG(accessibility)
+    // Focus goes back to the view, which is no accessible item, so announce the current cell again.
+    d->accessibleFocusItem = nullptr;
+    d->updateAccessibleFocus();
+#endif
 }
 
 QQuickTableViewAttached *QQuickTableView::qmlAttachedProperties(QObject *obj)
