@@ -27,6 +27,11 @@ T.TreeViewDelegate {
 
     required property int row
     required property var model
+
+    // The content item shows the same text, and stays out of the accessibility
+    // tree, so that the item is not read twice.
+    Accessible.name: control.model.display ?? ""
+
     readonly property real __contentIndent: !isTreeNode ? 0 : (depth * indentation) + (indicator ? indicator.width + spacing : 0)
 
     indicator: Item {
@@ -59,6 +64,7 @@ T.TreeViewDelegate {
     }
 
     contentItem: Label {
+        Accessible.ignored: true
         clip: false
         text: control.model.display
         elide: Text.ElideRight
