@@ -168,18 +168,6 @@ void QLanguageServer::receiveData(const QByteArray &data, bool isEndOfMessage)
 
 void QLanguageServer::registerHandlers(QLanguageServerProtocol *protocol)
 {
-    QObject::connect(notifySignals(), &QLspNotifySignals::receivedCancelNotification, this,
-                     [this](const QLspSpecification::Notifications::CancelParamsType &params) {
-                         Q_D(QLanguageServer);
-                         QJsonValue id = QTypedJson::toJsonValue(params.id);
-                         QMutexLocker l(&d->mutex);
-                         if (d->requestsInProgress.contains(id))
-                             d->requestsInProgress[id].canceled = true;
-                         else
-                             qCWarning(lspServerLog)
-                                     << "Ignoring cancellation of non in progress request" << id;
-                     });
-
     protocol->registerInitializeRequestHandler(
             [this](const QByteArray &,
                    const QLspSpecification::Requests::InitializeParamsType &params,
