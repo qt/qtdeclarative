@@ -93,7 +93,7 @@ void tst_qqmlfileselector::qmldirCompatibility()
         QVERIFY(!engine.rootObjects().isEmpty());
         QObject *object = engine.rootObjects().at(0);
         auto color = object->property("color").value<QColor>();
-#if defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID)
+#if defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID) && !defined(Q_OS_HARMONY)
         QCOMPARE(object->objectName(), "linux");
         QCOMPARE(color, QColorConstants::Svg::blue);
 #elif defined(Q_OS_DARWIN)
