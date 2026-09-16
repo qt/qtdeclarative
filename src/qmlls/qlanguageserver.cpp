@@ -109,13 +109,9 @@ void QLanguageServer::registerMethods(QJsonRpc::TypedRpc &typedRpc)
                         }
                     }
                 }
-                if (!sendErrorResponse) {
-                    if (id.isString() || id.isDouble()) {
-                        QMutexLocker l(&d->mutex);
-                        d->requestsInProgress.insert(id, QRequestInProgress {});
-                    }
+                if (!sendErrorResponse)
                     return QJsonRpcProtocol::Processing::Continue;
-                }
+
                 if (rState == RunStatus::NotInitialized)
                     responder(QJsonRpcProtocol::MessageHandler::error(
                             int(QLspSpecification::ErrorCodes::ServerNotInitialized),
@@ -129,21 +125,6 @@ void QLanguageServer::registerMethods(QJsonRpc::TypedRpc &typedRpc)
                                     int(rState))));
                 return QJsonRpcProtocol::Processing::Stop;
             });
-    typedRpc.installOnCloseAction([this](QJsonRpc::TypedResponse::Status,
-                                         const QJsonRpc::IdType &id, QJsonRpc::TypedRpc &) {
-        Q_D(QLanguageServer);
-        QJsonValue idValue = QTypedJson::toJsonValue(id);
-        bool lastReq;
-        {
-            QMutexLocker l(&d->mutex);
-            d->requestsInProgress.remove(idValue);
-            lastReq = d->runStatus == RunStatus::WaitPending && d->requestsInProgress.size() <= 1;
-            if (lastReq)
-                d->runStatus = RunStatus::Stopping;
-        }
-        if (lastReq)
-            executeShutdown();
-    });
 }
 
 const QLspSpecification::InitializeParams &QLanguageServer::clientInfo() const
@@ -207,12 +188,8 @@ void QLanguageServer::registerHandlers(QLanguageServerProtocol *protocol)
                     rStatus = d->runStatus;
                     if (rStatus == RunStatus::Initialized) {
                         d->shutdownResponse = std::move(response);
-                        if (d->requestsInProgress.size() <= 1) {
-                            d->runStatus = RunStatus::Stopping;
-                            shouldExecuteShutdown = true;
-                        } else {
-                            d->runStatus = RunStatus::WaitPending;
-                        }
+                        d->runStatus = RunStatus::Stopping;
+                        shouldExecuteShutdown = true;
                     }
                 }
                 if (rStatus != RunStatus::Initialized)

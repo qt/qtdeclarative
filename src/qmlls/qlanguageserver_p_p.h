@@ -47,7 +47,6 @@ public:
     mutable QMutex mutex;
     // mutex gated, monotonically increasing
     QLanguageServer::RunStatus runStatus = QLanguageServer::RunStatus::NotInitialized;
-    QHash<QJsonValue, QRequestInProgress> requestsInProgress; // mutex gated
     QLspSpecification::InitializeParams clientInfo; // immutable after runStatus > Initialized
     QLspSpecification::InitializeResult serverInfo; // immutable after runStatus > Initialized
     QLspSpecification::Responses::ShutdownResponseType shutdownResponse;

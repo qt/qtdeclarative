@@ -8,5 +8,6 @@ if (TARGET Qt::QmlLSPrivate)
     add_subdirectory(qmlls)
     add_subdirectory(modules)
     add_subdirectory(cli)
+    add_subdirectory(qqmllanguageserver)
 endif()
 
