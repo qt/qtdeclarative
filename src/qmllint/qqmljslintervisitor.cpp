@@ -764,6 +764,10 @@ bool LinterVisitor::visit(UiProgram *ast)
 
 void LinterVisitor::checkUnusedImports()
 {
+    // skip warnings on unresolved types, the import might import unregistered types
+    if (m_hasMaybeUnresolvedTypes || m_unresolvedTypes.begin() != m_unresolvedTypes.end())
+        return;
+
     auto unusedImports = m_importLocations;
     for (const QString &type : std::as_const(m_usedTypes)) {
         const auto &importLocations = m_importTypeLocationMap.values(type);
@@ -1161,6 +1165,8 @@ bool LinterVisitor::visit(QQmlJS::AST::IdentifierExpression *idexp)
     const QString name = idexp->name.toString();
     if (m_importTypeLocationMap.contains(name)) {
         m_usedTypes.insert(name);
+    } else {
+        m_hasMaybeUnresolvedTypes = m_hasMaybeUnresolvedTypes || name.front().isUpper();
     }
 
     return true;
@@ -1179,6 +1185,8 @@ void LinterVisitor::endVisit(QQmlJS::AST::FieldMemberExpression *fieldMember)
         } else if (!type.scope->attachedTypeName().isEmpty()) {
             m_usedTypes.insert(name);
         }
+    } else {
+        m_hasMaybeUnresolvedTypes = m_hasMaybeUnresolvedTypes || name.front().isUpper();
     }
 }
 

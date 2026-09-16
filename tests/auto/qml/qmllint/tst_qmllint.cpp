@@ -4593,6 +4593,17 @@ Item {
                        .addUnexpected("Member \"hello\" not found on type"_L1)
                        .build()
             << defaultOptions;
+
+    QTest::newRow("unusedImport") << uR"(import MissingRegistration
+import QtQuick
+MyItem {})"_s << ResultBuilder().addUnexpected("Unused import"_L1).build()
+                                  << defaultOptions;
+    QTest::newRow("unusedImport2") << uR"(import MissingRegistration
+import QtQuick
+Item {
+    Component.onCompleted: console.log(MyItem.myProperty)
+})"_s << ResultBuilder().addUnexpected("Unused import"_L1).build()
+                                   << defaultOptions;
 }
 
 void TestQmllint::missingRegistration()

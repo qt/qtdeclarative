@@ -158,6 +158,7 @@ private:
     void checkSignalHandlerNameClashes();
 
     bool m_rootIsSingleton = false;
+    bool m_hasMaybeUnresolvedTypes = false;
 };
 
 } // namespace QQmlJS
