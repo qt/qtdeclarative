@@ -8765,6 +8765,10 @@ void QQuickItem::grabMouse()
         return;
     }
     auto epd = da->mousePointData();
+    if (!epd) {
+        qCDebug(lcPtr) << "cannot grab mouse: the event being delivered has no mouse point";
+        return;
+    }
     eventInDelivery->setExclusiveGrabber(epd->eventPoint, this);
 }
 
@@ -8792,9 +8796,9 @@ void QQuickItem::ungrabMouse()
         da->removeGrabber(this);
         return;
     }
-    const auto &eventPoint = da->mousePointData()->eventPoint;
-    if (eventInDelivery->exclusiveGrabber(eventPoint) == this)
-        eventInDelivery->setExclusiveGrabber(eventPoint, nullptr);
+    auto epd = da->mousePointData();
+    if (epd && eventInDelivery->exclusiveGrabber(epd->eventPoint) == this)
+        eventInDelivery->setExclusiveGrabber(epd->eventPoint, nullptr);
 }
 
 /*!

@@ -169,14 +169,15 @@ QPointerEvent *QQuickDeliveryAgentPrivate::eventInDelivery() const
 /*! \internal
     A helper function for the benefit of obsolete APIs like QQuickItem::grabMouse()
     that don't have the currently-being-delivered event in context.
-    Returns the device the currently-being-delivered event comse from.
+    Returns the point that acts as the mouse on the device of the currently-being-delivered
+    event, or \nullptr if there is no such event or the device has no such point.
 */
 QPointingDevicePrivate::EventPointData *QQuickDeliveryAgentPrivate::mousePointData()
 {
     if (eventsInDelivery.isEmpty())
         return nullptr;
     auto devPriv = QPointingDevicePrivate::get(const_cast<QPointingDevice*>(eventsInDelivery.top()->pointingDevice()));
-    return devPriv->pointById(isDeliveringTouchAsMouse() ? touchMouseId : 0);
+    return devPriv->queryPointById(isDeliveringTouchAsMouse() ? touchMouseId : 0);
 }
 
 void QQuickDeliveryAgentPrivate::cancelTouchMouseSynthesis()
