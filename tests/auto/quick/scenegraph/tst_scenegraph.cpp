@@ -1142,7 +1142,6 @@ public:
 
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
     {
-        Q_D(QQuickItem);
         delete oldNode;
 
         QSGTextNode *node = window()->createTextNode();
@@ -1178,7 +1177,7 @@ public:
     {
     }
 
-    bool visit(QSGTransformNode *node) override
+    bool visit(QSGTransformNode *) override
     {
         Q_UNREACHABLE();
         return false;
@@ -1188,7 +1187,7 @@ public:
     {
     }
 
-    bool visit(QSGClipNode *node) override
+    bool visit(QSGClipNode *) override
     {
         return false;
     }
