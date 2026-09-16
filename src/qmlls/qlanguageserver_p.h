@@ -44,7 +44,6 @@ public:
     enum class RunStatus {
         NotInitialized,
         Initialized, // normal state of execution
-        WaitPending,
         Stopping,
         WaitingForExit,
         Stopped
