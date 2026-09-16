@@ -52,6 +52,24 @@
 
     The \c id is what is referred to in the Kotlin or Java-coded MainActivity.
 
+    \section1 Keeping content clear of the system bars
+
+    Android 15 and newer lay out applications
+    \l{Android: Display content edge-to-edge}{edge to edge}, which means that
+    the activity's layout extends behind the status bar, the navigation bar,
+    and any display cutout. A \l QtQuickView is an ordinary Android view, so
+    keeping its content out of those areas is the host application's job.
+
+    The examples opt in to edge to edge explicitly with the AndroidX
+    \c EdgeToEdge helper, so that older Android versions lay out the same way,
+    and then install a window insets listener that pads the root layout with
+    the system bar and display cutout insets. The padding applies to the
+    \l QtQuickView instances and to the surrounding native controls alike.
+
+    \note The \l SafeArea attached property reports margins only for windows
+    that Qt itself owns. QML content embedded through a \l QtQuickView reports
+    zero margins, so apply the insets on the Android side.
+
     \section1 Importing automatically generated QML Type Java classes
 
     The Java classes for our QML types are generated when the Qt Quick project is
