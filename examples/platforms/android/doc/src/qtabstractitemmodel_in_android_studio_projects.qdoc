@@ -148,5 +148,4 @@
     The example sets the data model when the QML content is loaded, and the status is ready.
 
     \snippet android/models/qtabstractitemmodel_java/app/src/main/java/com/example/qtabstractitemmodel_java/MyDataModel.java 4
-
 */

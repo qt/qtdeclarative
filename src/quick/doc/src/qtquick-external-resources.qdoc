@@ -25,3 +25,8 @@
     \externalpage https://doc.qt.io/qt-6/qtquick/android/org/qtproject/qt/android/QtQmlStatusChangeListener.html
     \title QtQmlStatusChangeListener
 */
+
+/*!
+    \externalpage https://developer.android.com/develop/ui/views/layout/edge-to-edge
+    \title Android: Display content edge-to-edge
+*/

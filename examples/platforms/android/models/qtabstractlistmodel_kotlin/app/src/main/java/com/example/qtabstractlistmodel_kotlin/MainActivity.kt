@@ -7,7 +7,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.FrameLayout
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 
 import org.qtproject.example.qtabstractlistmodel.QmlModule.Main
 import org.qtproject.qt.android.QtQmlStatus
@@ -21,8 +24,17 @@ class MainActivity : AppCompatActivity(), QtQmlStatusChangeListener {
 //! [MainActivity definition]
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        // Qt is just another view here, so insetting it is the host app's job.
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { view, windowInsets ->
+            val insets = windowInsets.getInsets(
+                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+            view.setPadding(insets.left, insets.top, insets.right, insets.bottom)
+            windowInsets
+        }
 //! [Adding QtQuickView]
         val qtQuickView: QtQuickView = QtQuickView(this)
 
