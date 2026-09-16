@@ -21,6 +21,7 @@ Item {
 
             Loader {
                 anchors.fill: parent
+                anchors.topMargin: parent.contentHeight
                 sourceComponent: customComponent
             }
         }
@@ -32,6 +33,7 @@ Item {
 
             Loader {
                 anchors.fill: parent
+                anchors.topMargin: parent.contentHeight
                 sourceComponent: customComponent
                 onLoaded: item.custom.layer.enabled=true
             }
