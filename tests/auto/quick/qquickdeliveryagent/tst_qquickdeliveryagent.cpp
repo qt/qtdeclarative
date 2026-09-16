@@ -158,6 +158,7 @@ private slots:
     void compoundControlsFocusInSubscene();
     void hoverEventGlobalPosition();
     void layerEnabledHoverCrash();
+    void mouseGrabberQueryDuringTouchDoesNotStrandHover();
     void mouseMoveHoverEfficiency();
 
 private:
@@ -739,6 +740,38 @@ void tst_qquickdeliveryagent::layerEnabledHoverCrash() // QTBUG-139561
         QCOMPARE(layer->enabled(), false);
         QTest::qWait(50); // visually verify that it gets un-hovered
     }
+}
+
+void tst_qquickdeliveryagent::mouseGrabberQueryDuringTouchDoesNotStrandHover()
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("touchAreaInHoverArea.qml")));
+    auto *hoverArea = window.rootObject()->findChild<QQuickMouseArea *>("hoverArea");
+    QVERIFY(hoverArea);
+
+    auto *deliveryAgent = QQuickWindowPrivate::get(&window)->deliveryAgentPrivate();
+    deliveryAgent->frameSynchronousHoverInterval = 0;
+    const auto *devPriv = QPointingDevicePrivate::get(touchscreen.get());
+    QVERIFY(devPriv->activePoints.isEmpty());
+
+    // Park the cursor in the empty strip below the MouseArea, so that clearing fingertip
+    // hover cannot be skipped on the grounds that a cursor is resting on it.
+    QTest::mouseMove(&window, QPoint(100, 230));
+    QTRY_VERIFY(!hoverArea->hovered());
+
+    // The touch id must not be 0: the phantom point had id 0, and a real point with
+    // that id would hide it.
+    const QPoint center = hoverArea->mapToScene(hoverArea->boundingRect().center()).toPoint();
+    QTest::touchEvent(&window, touchscreen.get()).press(1, center);
+    deliveryAgent->flushFrameSynchronousEvents(&window);
+    QVERIFY(hoverArea->hovered());
+    QCOMPARE(devPriv->activePoints.size(), 1);
+    QVERIFY(devPriv->queryPointById(1));
+
+    QTest::touchEvent(&window, touchscreen.get()).release(1, center);
+    deliveryAgent->flushFrameSynchronousEvents(&window);
+    QVERIFY(!hoverArea->hovered());
+    QVERIFY(devPriv->activePoints.isEmpty());
 }
 
 // This test is more like a benchmark: it's important to
