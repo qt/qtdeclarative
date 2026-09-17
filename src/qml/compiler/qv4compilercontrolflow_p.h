@@ -315,9 +315,12 @@ struct ControlFlowCatch : public ControlFlowUnwind
 
         generator()->setUnwindHandler(&unwindLabel);
 
-        if (catchExpression->patternElement->bindingIdentifier.isEmpty())
+        if (catchExpression->patternElement->bindingIdentifier.isEmpty()) {
             // destructuring pattern
-            cg->initializeAndDestructureBindingElement(catchExpression->patternElement, Reference::fromName(cg, QStringLiteral("@caught")));
+            cg->initializeAndDestructureBindingElement(
+                    catchExpression->patternElement,
+                    Reference::fromName(cg, QStringLiteral("@caught")), true);
+        }
         // skip the additional block
         cg->statementList(catchExpression->statement->statements);
 

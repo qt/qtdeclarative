@@ -9480,6 +9480,22 @@ void tst_qqmlecmascript::temporaryDeadZone()
     QVERIFY(v.isError());
     v = engine.evaluate(QString::fromLatin1("class C { constructor() { super[x]; let x; } }; new C()"));
     QVERIFY(v.isError());
+
+    // A default parameter may reference an earlier parameter in the same list;
+    // that parameter has already left its TDZ by the time later defaults run,
+    // so this must not throw.
+    v = engine.evaluate("(function(x, y = x, z = y) { return x + '' + y + '' + z; })(3)"_L1);
+    QVERIFY2(!v.isError(), qPrintable(v.toString()));
+    QCOMPARE(v.toString(), QStringLiteral("333"));
+
+    // Referencing itself, or a later (not-yet-bound) sibling, from a default
+    // parameter initializer must still throw.
+    v = engine.evaluate(QString::fromLatin1("(function(x = x) {})()"));
+    QVERIFY(v.isError());
+    QCOMPARE(v.errorType(), QJSValue::ReferenceError);
+    v = engine.evaluate(QString::fromLatin1("(function(x = y, y) {})()"));
+    QVERIFY(v.isError());
+    QCOMPARE(v.errorType(), QJSValue::ReferenceError);
 }
 
 void tst_qqmlecmascript::importLexicalVariables_data()

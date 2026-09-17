@@ -342,7 +342,6 @@ language/expressions/assignment/destructuring/keyed-destructuring-property-refer
 language/expressions/assignment/dstr-array-elem-iter-rtrn-close-err.js fails
 language/expressions/assignment/dstr-array-elem-iter-thrw-close-err.js fails
 language/expressions/assignment/dstr-array-elem-iter-thrw-close.js fails
-language/expressions/assignment/dstr-array-elem-put-let.js fails
 language/expressions/assignment/dstr-array-elem-trlg-iter-list-thrw-close-err.js fails
 language/expressions/assignment/dstr-array-elem-trlg-iter-list-thrw-close.js fails
 language/expressions/assignment/dstr-array-elem-trlg-iter-rest-rtrn-close-err.js fails
@@ -356,9 +355,6 @@ language/expressions/assignment/dstr-array-rest-iter-rtrn-close.js fails
 language/expressions/assignment/dstr-array-rest-iter-thrw-close-err.js fails
 language/expressions/assignment/dstr-array-rest-iter-thrw-close.js fails
 language/expressions/assignment/dstr-array-rest-lref-err.js fails
-language/expressions/assignment/dstr-array-rest-put-let.js fails
-language/expressions/assignment/dstr-obj-id-put-let.js fails
-language/expressions/assignment/dstr-obj-prop-put-let.js fails
 language/expressions/assignment/fn-name-lhs-cover.js fails
 language/expressions/assignment/fn-name-lhs-member.js fails
 language/expressions/async-function/expression-returns-promise.js fails
@@ -583,7 +579,6 @@ language/statements/for-in/identifier-let-allowed-as-lefthandside-expression-not
 language/statements/for-of/dstr-array-elem-iter-rtrn-close-err.js fails
 language/statements/for-of/dstr-array-elem-iter-thrw-close-err.js fails
 language/statements/for-of/dstr-array-elem-iter-thrw-close.js fails
-language/statements/for-of/dstr-array-elem-put-let.js fails
 language/statements/for-of/dstr-array-elem-trlg-iter-list-thrw-close-err.js fails
 language/statements/for-of/dstr-array-elem-trlg-iter-list-thrw-close.js fails
 language/statements/for-of/dstr-array-elem-trlg-iter-rest-rtrn-close-err.js fails
@@ -597,9 +592,6 @@ language/statements/for-of/dstr-array-rest-iter-rtrn-close.js fails
 language/statements/for-of/dstr-array-rest-iter-thrw-close-err.js fails
 language/statements/for-of/dstr-array-rest-iter-thrw-close.js fails
 language/statements/for-of/dstr-array-rest-lref-err.js fails
-language/statements/for-of/dstr-array-rest-put-let.js fails
-language/statements/for-of/dstr-obj-id-put-let.js fails
-language/statements/for-of/dstr-obj-prop-put-let.js fails
 language/statements/for-of/head-var-bound-names-let.js sloppyFails
 language/statements/for-of/iterator-next-reference.js fails
 language/statements/for/head-lhs-let.js sloppyFails
@@ -629,9 +621,6 @@ language/statements/generators/yield-as-identifier-in-nested-function.js sloppyF
 language/statements/generators/yield-as-literal-property-name.js fails
 language/statements/generators/yield-as-property-name.js fails
 language/statements/generators/yield-identifier-non-strict.js sloppyFails
-language/statements/let/block-local-closure-set-before-initialization.js fails
-language/statements/let/function-local-closure-set-before-initialization.js fails
-language/statements/let/global-closure-set-before-initialization.js fails
 language/statements/try/scope-catch-block-lex-open.js fails
 language/statements/variable/binding-resolution.js sloppyFails
 language/statements/with/unscopables-inc-dec.js sloppyFails
