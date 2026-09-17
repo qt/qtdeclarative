@@ -50,6 +50,9 @@ private Q_SLOTS:
 
 void tst_qqmlextensionplugin::iidCheck_data()
 {
+    if (!QLibraryInfo::isSharedBuild())
+        QSKIP("A static Qt build has no dynamic QML extension plugins to check.");
+
     QList<QString> files;
     // On Android the plugins are located in the APK's libs subdir. They can
     // be distinguished by the name, which starts from "libqml_" and ends with
