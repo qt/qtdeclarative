@@ -197,6 +197,15 @@ void QQStyleKitTheme::updateThemeFonts()
     for (auto *fb = fonts; fb; fb = fb->fallbackFont())
         fbChain.append(fb);
 
+    // QFont::resolve() keeps only the left-hand operand's resolve mask.
+    // Restore the mask explicitly, or every attribute contributed by an
+    // earlier layer of the chain is dropped again by font resolution.
+    auto merge = [](const QFont &a, const QFont &b) {
+        QFont merged = a.resolve(b);
+        merged.setResolveMask(b.resolveMask() | a.resolveMask());
+        return merged;
+    };
+
     auto resolveFromFontChain = [&](QQuickTheme::Scope scope) -> QFont
     {
         QFont result;
@@ -206,10 +215,10 @@ void QQStyleKitTheme::updateThemeFonts()
             const QQStyleKitFont *fb = fbChain[i];
             // Apply system font first as a base, and override with scope-specific font
             if (scope != QQuickTheme::System && fb->isSet(QQuickTheme::System)) {
-                result = fb->fontForScope(QQuickTheme::System).resolve(result);
+                result = merge(fb->fontForScope(QQuickTheme::System), result);
             }
             if (fb->isSet(scope)) {
-                result = fb->fontForScope(scope).resolve(result);
+                result = merge(fb->fontForScope(scope), result);
             }
         }
 
