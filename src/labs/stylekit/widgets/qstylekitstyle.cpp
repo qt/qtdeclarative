@@ -729,7 +729,7 @@ void QStyleKitStylePrivate::unsetStyleFont(QWidget *widget)
 
     auto customFont = std::move(*it);
     customFontWidgets.erase(it);
-    widget->setFont(std::move(customFont).reverted(widget->font()));
+    widget->setFont(std::move(customFont).reverted(QWidgetPrivate::get(widget)->localFont()));
 }
 
 void QStyleKitStylePrivate::setStyleFont(QWidget *widget, const QFont &styleFont)
@@ -753,8 +753,7 @@ void QStyleKitStylePrivate::setStyleFont(QWidget *widget, const QFont &styleFont
     const QFont &baseline = it->oldWidgetValue;
     QFont merged = styleFont.resolve(baseline);
     merged.setResolveMask(baseline.resolveMask() | styleMask);
-    if (widget->font() != merged)
-        widget->setFont(merged);
+    widget->setFont(merged);
 }
 
 void QStyleKitStylePrivate::refreshStyleFont(QWidget *widget)
