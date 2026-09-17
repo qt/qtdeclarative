@@ -690,13 +690,23 @@ void Codegen::initializeAndDestructureBindingElement(AST::PatternElement *e, con
                          QLatin1String("Type annotations on default parameters are not supported."));
     }
 
+    const auto loadValueForStore = [&](const Reference &value) {
+        if (isDefinition || !varToStore.requiresTDZCheck) {
+            value.loadInAccumulator();
+            return;
+        }
+        Reference stashed = value.storeOnStack();
+        varToStore.checkTDZBeforeAssignment();
+        stashed.loadInAccumulator();
+    };
+
     if (e->initializer) {
         if (!baseRef.isValid()) {
             // assignment
             Reference expr = expression(e->initializer);
             if (hasError())
                 return;
-            expr.loadInAccumulator();
+            loadValueForStore(expr);
             varToStore.storeConsumeAccumulator();
         } else if (baseRef == varToStore) {
             baseRef.loadInAccumulator();
@@ -706,7 +716,7 @@ void Codegen::initializeAndDestructureBindingElement(AST::PatternElement *e, con
                 jump.link();
                 return;
             }
-            expr.loadInAccumulator();
+            loadValueForStore(expr);
             varToStore.storeConsumeAccumulator();
             jump.link();
         } else {
@@ -719,10 +729,11 @@ void Codegen::initializeAndDestructureBindingElement(AST::PatternElement *e, con
             }
             expr.loadInAccumulator();
             jump.link();
+            loadValueForStore(Reference::fromAccumulator(this));
             varToStore.storeConsumeAccumulator();
         }
     } else if (baseRef != varToStore && baseRef.isValid()) {
-        baseRef.loadInAccumulator();
+        loadValueForStore(baseRef);
         varToStore.storeConsumeAccumulator();
     }
     Pattern *p = e->destructuringPattern();
@@ -1550,6 +1561,10 @@ bool Codegen::visit(BinaryExpression *ast)
         Reference r = expression(ast->right);
         if (hasError())
             return false;
+        if (left.requiresTDZCheck) {
+            r = r.storeOnStack();
+            left.checkTDZBeforeAssignment();
+        }
         r.loadInAccumulator();
         // The location saved above may have been overwritten when evaluating the rhs expression
         bytecodeGenerator->setLocation(ast->left->firstSourceLocation());
@@ -3522,7 +3537,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast, AST::FormalPara
                         && memberIt->isFormalParameterTDZPromotion;
                 if (e->bindingTarget || e->initializer || promoted) {
                     Reference arg = referenceForFormalParameter(argc);
-                    initializeAndDestructureBindingElement(e, arg);
+                    initializeAndDestructureBindingElement(e, arg, /*isDefinition=*/true);
                     if (hasError())
                         break;
                 }
@@ -4647,6 +4662,20 @@ void Codegen::Reference::tdzCheckStackSlot(Moth::StackSlot slot, bool requiresCh
     load.reg = slot;
     codegen->bytecodeGenerator->addInstruction(load);
     tdzCheck(true, throwsReferenceError);
+}
+
+// Verifies, at run-time, that this reference is not currently in its temporal dead zone.
+// Only call this for references being *assigned to*, never for the store that performs a
+// binding's own initialization (that store is what ends the TDZ). Clobbers the accumulator.
+void Codegen::Reference::checkTDZBeforeAssignment() const
+{
+    if (!requiresTDZCheck)
+        return;
+
+    if (type != StackSlot && type != ScopedLocal)
+        return;
+
+    loadInAccumulator();
 }
 
 Codegen::Reference Codegen::Reference::storeRetainAccumulator() const

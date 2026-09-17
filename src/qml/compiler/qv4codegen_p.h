@@ -347,6 +347,8 @@ public:
                 tdzCheckStackSlot(stackSlot(), requiresTDZCheck, throwsReferenceError);
         }
 
+        void checkTDZBeforeAssignment() const;
+
         union {
             Moth::StackSlot theStackSlot;
             QV4::ReturnedValue constant;
