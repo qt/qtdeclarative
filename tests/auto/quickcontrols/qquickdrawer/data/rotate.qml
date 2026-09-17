@@ -16,7 +16,7 @@ ApplicationWindow {
         anchors.centerIn: parent
     }
     Overlay.overlay.anchors.fill: background
-    contentItem.anchors.fill: background
+    contentItem.parent.anchors.fill: background
     Overlay.overlay.parent.rotation: rotated ? 90 : 0
 
     property bool rotated: false
