@@ -64,6 +64,7 @@ public:
         Dial,
         Dialog,
         DialogButtonBox,
+        Drawer,
         FlatButton,
         ProgressBar,
         ScrollBar,

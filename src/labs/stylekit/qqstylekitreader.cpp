@@ -71,6 +71,7 @@ QT_BEGIN_NAMESPACE
     \value StyleReader.Dial             \l {Dial}
     \value StyleReader.Dialog           \l {Dialog}
     \value StyleReader.DialogButtonBox  \l {DialogButtonBox}
+    \value StyleReader.Drawer           \l {Drawer}
     \value StyleReader.Frame            \l {Frame}
     \value StyleReader.GroupBox         \l {GroupBox}
     \value StyleReader.ItemDelegate     \l {ItemDelegate}

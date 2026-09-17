@@ -43,6 +43,7 @@ class QQStyleKitControls : public QObject, public QQmlParserStatus
     Q_PROPERTY(QQStyleKitControl *dial READ dial WRITE set_dial NOTIFY dialChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *dialog READ dialog WRITE set_dialog NOTIFY dialogChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *dialogButtonBox READ dialogButtonBox WRITE set_dialogButtonBox NOTIFY dialogButtonBoxChanged FINAL)
+    Q_PROPERTY(QQStyleKitControl *drawer READ drawer WRITE set_drawer NOTIFY drawerChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *flatButton READ flatButton WRITE set_flatButton NOTIFY flatButtonChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *progressBar READ progressBar WRITE set_progressBar NOTIFY progressBarChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *scrollBar READ scrollBar WRITE set_scrollBar NOTIFY scrollBarChanged FINAL)
@@ -104,6 +105,7 @@ public:
     IMPLEMENT_ACCESSORS(dial)
     IMPLEMENT_ACCESSORS(dialog)
     IMPLEMENT_ACCESSORS(dialogButtonBox)
+    IMPLEMENT_ACCESSORS(drawer)
     IMPLEMENT_ACCESSORS(flatButton)
     IMPLEMENT_ACCESSORS(progressBar)
     IMPLEMENT_ACCESSORS(scrollBar)
@@ -162,6 +164,7 @@ signals:
     void dialChanged();
     void dialogChanged();
     void dialogButtonBoxChanged();
+    void drawerChanged();
     void flatButtonChanged();
     void progressBarChanged();
     void scrollBarChanged();

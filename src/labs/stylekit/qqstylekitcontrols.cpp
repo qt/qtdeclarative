@@ -186,6 +186,16 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \qmlproperty ControlStyle StylableControls::drawer
+
+    Grouped property for styling \l [QtQuickControls]{Drawer}.
+
+    Unset properties fall back to \l popup.
+
+    \snippet ControlsSnippets.qml drawer
+*/
+
+/*!
     \qmlproperty ControlStyle StylableControls::flatButton
 
     Grouped property for styling flat buttons (buttons with no visible
@@ -695,6 +705,7 @@ IMPLEMENT_ACCESSORS(delayButton, QQStyleKitReader::ControlType::DelayButton)
 IMPLEMENT_ACCESSORS(dial, QQStyleKitReader::ControlType::Dial)
 IMPLEMENT_ACCESSORS(dialog, QQStyleKitReader::ControlType::Dialog)
 IMPLEMENT_ACCESSORS(dialogButtonBox, QQStyleKitReader::ControlType::DialogButtonBox)
+IMPLEMENT_ACCESSORS(drawer, QQStyleKitReader::ControlType::Drawer)
 IMPLEMENT_ACCESSORS(progressBar, QQStyleKitReader::ControlType::ProgressBar)
 IMPLEMENT_ACCESSORS(scrollBar, QQStyleKitReader::ControlType::ScrollBar)
 IMPLEMENT_ACCESSORS(scrollIndicator, QQStyleKitReader::ControlType::ScrollIndicator)

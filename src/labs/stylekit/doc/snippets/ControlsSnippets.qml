@@ -247,6 +247,12 @@ ApplicationWindow {
         }
         //! [dialogButtonBox]
 
+        //! [drawer]
+        drawer {
+            background.color: "white"
+        }
+        //! [drawer]
+
         //! [flatButton]
         flatButton {
             // Hide background normally, show on hover

@@ -230,6 +230,10 @@ BaseStyle {
         }
     }
 
+    drawer {
+        background.color: __baseWhite
+    }
+
     flatButton {
         background.visible: false
         hovered.background.visible: true

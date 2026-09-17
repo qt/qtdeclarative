@@ -46,6 +46,7 @@ qt_internal_add_qml_module(LabsStyleKit
         Dial.qml
         Dialog.qml
         DialogButtonBox.qml
+        Drawer.qml
         Frame.qml
         ItemDelegate.qml
         Menu.qml
