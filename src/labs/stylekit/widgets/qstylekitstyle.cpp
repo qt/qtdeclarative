@@ -3804,7 +3804,7 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
                 const auto labelHeight = subControlRect(CC_GroupBox, opt, SC_GroupBoxLabel, w)
                     .height();
                 const auto offset = metrics.padding.top()
-                    + qMax(labelHeight, metrics.margins.top() + metrics.spacing);
+                    + qMax(metrics.margins.top(), labelHeight + metrics.spacing);
                 QRect contentsRect(
                     opt->rect.left() + metrics.padding.left(), opt->rect.top() + offset,
                     opt->rect.width() - metrics.padding.left() - metrics.padding.right(),
