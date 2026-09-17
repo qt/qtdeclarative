@@ -188,14 +188,20 @@ if(TARGET Qt::Quick)
             BINARY test_link_qml_module_without_target)
     endif()
     if(NOT QT6_IS_SHARED_LIBS_BUILD)
+        if(NOT CMAKE_CROSSCOMPILING)
+            set(static_shapes_run_args BINARY "${CMAKE_CTEST_COMMAND}" BINARY_ARGS "-V")
+            set(qis_run_args BINARY qis_test)
+        else()
+            set(static_shapes_run_args "")
+            set(qis_run_args "")
+        endif()
         _qt_internal_test_expect_pass(test_import_static_shapes_plugin_resources
-            BINARY "${CMAKE_CTEST_COMMAND}"
-            BINARY_ARGS "-V"
+            ${static_shapes_run_args}
         )
         if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.21")
             _qt_internal_test_expect_pass(qmlimportscanner
                 TESTNAME cmake_qmlimportscanner
-                BINARY qis_test
+                ${qis_run_args}
             )
         endif()
     endif()
