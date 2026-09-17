@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 
 /*!
-\page qmllint-warnings-and-errors-signal-handler-name-clash.html
 \ingroup qmllint-warnings-and-errors
 
 \title Signal handler name clash

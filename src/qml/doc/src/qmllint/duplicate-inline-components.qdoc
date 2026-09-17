@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 
 /*!
-\page qmllint-warnings-and-errors-duplicate-inline-components.html
 \ingroup qmllint-warnings-and-errors
 
 \title Duplicate inline components
