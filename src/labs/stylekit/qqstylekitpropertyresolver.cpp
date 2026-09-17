@@ -70,6 +70,7 @@ const QList<QQStyleKitExtendableControlType> QQStyleKitPropertyResolver::baseTyp
             { QQStyleKitReader::ItemDelegate, QQStyleKitReader::Control };
         return t; }
     case QQStyleKitReader::Dialog:
+    case QQStyleKitReader::Drawer:
     case QQStyleKitReader::Menu:
     case QQStyleKitReader::ToolTip: {
         static QList<QQStyleKitExtendableControlType> t =
