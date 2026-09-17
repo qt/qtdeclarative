@@ -410,11 +410,11 @@ static QQStyleKitReader::ControlType controlTypeForWidget(const QWidget *widget)
     if (qobject_cast<const QMenu *>(widget))
         return QQStyleKitReader::Menu;
 #endif
-    if (widget->windowType() & Qt::Popup)
+    if (widget->windowType() == Qt::Popup)
         return QQStyleKitReader::Popup;
-    if (widget->windowType() & Qt::Dialog)
+    if (widget->windowType() == Qt::Dialog)
         return QQStyleKitReader::Dialog;
-    if (widget->windowType() & Qt::Window)
+    if (widget->windowType() == Qt::Window)
         return QQStyleKitReader::ApplicationWindow;
 #ifndef QT_NO_FRAME
     if (qobject_cast<const QFrame *>(widget))
