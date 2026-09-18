@@ -90,7 +90,11 @@ void tst_qqmlsqldatabase::checkDatabasePath()
         QSKIP("offlineStoragePath is empty, skip this test.");
 
     // Check default storage path (we can't use it since we don't want to mess with user's data)
+    // Skip the application name check on HarmonyOS because AppDataLocation
+    // points to the sandbox files directory and does not contain the application name.
+#ifndef Q_OS_HARMONY
     QVERIFY(engine->offlineStoragePath().contains("tst_qqmlsqldatabase"));
+#endif
     QVERIFY(engine->offlineStoragePath().contains("OfflineStorage"));
 }
 
