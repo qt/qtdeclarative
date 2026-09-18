@@ -94,9 +94,9 @@ void tst_qquickfolderlistmodel::basicProperties()
     QVERIFY(folderChangedSpy.wait());
     QCOMPARE(flm->property("count").toInt(), 11);
     QCOMPARE(flm->property("folder").toUrl(), dataDirectoryUrl());
-#ifndef Q_OS_ANDROID
-    // On Android currentDir points to some dir in qrc://, which is not
-    // considered to be local file, so parentFolder is always
+#if !defined(Q_OS_ANDROID) && !defined(Q_OS_HARMONY)
+    // On Android and HarmonyOS currentDir points to some dir in qrc://,
+    // which is not considered to be local file, so parentFolder is always
     // default-constructed QUrl.
     QCOMPARE(flm->property("parentFolder").toUrl(),
              QUrl::fromLocalFile(QDir(directory()).canonicalPath()));
@@ -187,11 +187,13 @@ void tst_qquickfolderlistmodel::nameFilters()
     connect(flm, SIGNAL(rowsRemoved(QModelIndex,int,int)),
             this, SLOT(removed(QModelIndex,int,int)));
 
-#ifdef Q_OS_ANDROID
-    // On Android the default folder is application's "files" dir, which
-    // requires special rights for reading. The test works when started via
-    // androidtestrunner, but fails when launching the APK directly. Set the
-    // initial folder to resources root dir, because it is always readable.
+#if defined(Q_OS_ANDROID) || defined(Q_OS_HARMONY)
+    // The default folder is the application's "files" dir. On Android,
+    // reading it requires special rights: the test works when started via
+    // androidtestrunner, but fails when launching the APK directly. On
+    // HarmonyOS, its content depends on how the test is launched. Set the
+    // initial folder to the test data directory. It is embedded in the
+    // resources and holds files, so the model is not empty.
     flm->setProperty("folder", testFileUrl(""));
 #endif
 
@@ -360,7 +362,7 @@ void tst_qquickfolderlistmodel::showDotAndDotDot()
 
 void tst_qquickfolderlistmodel::showDotAndDotDot_data()
 {
-#ifdef Q_OS_ANDROID
+#if defined(Q_OS_ANDROID) || defined(Q_OS_HARMONY)
     QSKIP("Resource file system does not list '.' and '..' due to QDir::entryList() behavior");
 #endif
     QTest::addColumn<QUrl>("folder");
@@ -405,7 +407,7 @@ void tst_qquickfolderlistmodel::showDot()
 
 void tst_qquickfolderlistmodel::showDot_data()
 {
-#ifdef Q_OS_ANDROID
+#if defined(Q_OS_ANDROID) || defined(Q_OS_HARMONY)
     QSKIP("Resource file system does not list '.' and '..' due to QDir::entryList() behavior");
 #endif
     QTest::addColumn<QUrl>("folder");
@@ -453,7 +455,7 @@ void tst_qquickfolderlistmodel::showDotDot()
 
 void tst_qquickfolderlistmodel::showDotDot_data()
 {
-#ifdef Q_OS_ANDROID
+#if defined(Q_OS_ANDROID) || defined(Q_OS_HARMONY)
     QSKIP("Resource file system does not list '.' and '..' due to QDir::entryList() behavior");
 #endif
     QTest::addColumn<QUrl>("folder");
