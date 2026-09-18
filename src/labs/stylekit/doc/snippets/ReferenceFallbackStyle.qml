@@ -699,5 +699,14 @@ BaseStyle {
             color: __baseWhite
         }
     }
+
+    tumbler {
+        background {
+            height: 200
+            width: 60
+            color: __transparent
+            border.width: 0
+        }
+    }
 }
 //! [1]

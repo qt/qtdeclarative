@@ -929,6 +929,17 @@ ApplicationWindow {
         }
         //! [toolTip]
 
+        //! [tumbler]
+        tumbler {
+            background {
+                height: 200
+                width: 60
+                color: "transparent"
+                border.width: 0
+            }
+        }
+        //! [tumbler]
+
         //! [theme]
         light: Theme {
             applicationWindow.background.color: "#f0f0f0"
