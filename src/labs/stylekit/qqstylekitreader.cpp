@@ -105,6 +105,7 @@ QT_BEGIN_NAMESPACE
     \value StyleReader.ToolButton       \l {ToolButton}
     \value StyleReader.ToolSeparator    \l {ToolSeparator}
     \value StyleReader.ToolTip          \l {ToolTip}
+    \value StyleReader.Tumbler          \l {Tumbler}
 
     \sa {StyleVariation::controlType}{StyleVariation.controlType}
 */

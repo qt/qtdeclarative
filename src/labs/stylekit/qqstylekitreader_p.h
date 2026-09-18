@@ -85,6 +85,7 @@ public:
         ToolButton,
         ToolSeparator,
         ToolTip,
+        Tumbler,
         RadioButton,
         RadioDelegate,
         RoundButton,

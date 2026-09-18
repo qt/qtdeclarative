@@ -98,6 +98,8 @@ static QQuickTheme::Scope scopeForType(QQStyleKitExtendableControlType type)
         return QQuickTheme::ToolBar;
     case QQStyleKitReader::ControlType::ToolTip:
         return QQuickTheme::ToolTip;
+    case QQStyleKitReader::ControlType::Tumbler:
+        return QQuickTheme::Tumbler;
     default:
         return QQuickTheme::System;
     }
