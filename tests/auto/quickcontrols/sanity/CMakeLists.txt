@@ -28,6 +28,7 @@ qt_internal_add_test(tst_sanity
         tst_sanity.cpp
     DEFINES
         QQC2_IMPORT_PATH="${CMAKE_CURRENT_SOURCE_DIR}/../../../../src/quickcontrols"
+        QT_QML_INSTALL_IMPORT_PATH="${QT6_INSTALL_PREFIX}/${QT6_INSTALL_QML}"
     LIBRARIES
         Qt::CorePrivate
         Qt::Gui

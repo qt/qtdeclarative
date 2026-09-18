@@ -51,7 +51,8 @@ private:
 
 tst_Sanity::tst_Sanity()
     : QQmlDataTest(QT_QMLTEST_DATADIR, FailOnWarningsPolicy::DoNotFailOnWarnings),
-      m_importPaths({ QLibraryInfo::path(QLibraryInfo::QmlImportsPath) }),
+      m_importPaths({ QLibraryInfo::path(QLibraryInfo::QmlImportsPath),
+                      QStringLiteral(QT_QML_INSTALL_IMPORT_PATH) }),
       m_linter(m_importPaths, m_importPaths),
       m_categories(QQmlJSLogger::builtinCategories())
 {
