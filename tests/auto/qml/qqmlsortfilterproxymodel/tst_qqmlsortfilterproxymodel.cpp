@@ -58,6 +58,8 @@ private slots:
     void primarySorter();
 
     void primaryColumnWithoutSourceModel();
+    void queriesWithoutSourceModel();
+    void proxyOfProxyWithoutSourceModel();
 
     void anyOfFilter();
     void allOfFilter();
@@ -1173,6 +1175,57 @@ void tst_QQmlSortFilterProxyModel::primaryColumnWithoutSourceModel()
 
     // This used to assert in create_mapping() because no source model was set.
     sfpmModel->setPrimarySortColumn(1);
+}
+
+void tst_QQmlSortFilterProxyModel::queriesWithoutSourceModel()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("sfpmCommon.qml"));
+    QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    auto *sfpmModel = object->property("sfpmProxyModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(sfpmModel);
+    QVERIFY(!sfpmModel->sourceModel());
+
+    // These used to assert in create_mapping() because no source model was set.
+    QCOMPARE(sfpmModel->rowCount(), 0);
+    QCOMPARE(sfpmModel->columnCount(), 0);
+    QVERIFY(!sfpmModel->index(0, 0).isValid());
+    QVERIFY(!sfpmModel->headerData(0, Qt::Horizontal).isValid());
+    QVERIFY(!sfpmModel->setHeaderData(0, Qt::Horizontal, QStringLiteral("header")));
+    QVERIFY(!sfpmModel->insertRows(0, 1));
+    QVERIFY(!sfpmModel->insertColumns(0, 1));
+    QVERIFY(!sfpmModel->removeRows(0, 1));
+    QVERIFY(!sfpmModel->removeColumns(0, 1));
+}
+
+void tst_QQmlSortFilterProxyModel::proxyOfProxyWithoutSourceModel()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("sfpmProxyChain.qml"));
+    QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
+    // Setting the outer proxy's source used to assert in create_mapping(),
+    // because the inner proxy has no source model of its own.
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY2(!object.isNull(), qPrintable(component.errorString()));
+
+    auto *innerProxyModel = object->property("innerProxyModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(innerProxyModel);
+    QVERIFY(!innerProxyModel->sourceModel());
+    auto *outerProxyModel = object->property("outerProxyModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(outerProxyModel);
+    QCOMPARE(outerProxyModel->sourceModel(), innerProxyModel);
+    QCOMPARE(outerProxyModel->rowCount(), 0);
+
+    // Once the inner proxy gets a source, its rows should show up in the outer one.
+    QStandardItemModel sourceModel;
+    for (int rowIndex = 0; rowIndex < 3; ++rowIndex)
+        sourceModel.appendRow(new QStandardItem(QStringLiteral("item")));
+    innerProxyModel->setSourceModel(&sourceModel);
+    QCOMPARE(innerProxyModel->rowCount(), 3);
+    QCOMPARE(outerProxyModel->rowCount(), 3);
 }
 
 void tst_QQmlSortFilterProxyModel::anyOfFilter()

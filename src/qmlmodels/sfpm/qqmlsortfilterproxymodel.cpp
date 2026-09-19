@@ -446,7 +446,7 @@ QItemSelection QQmlSortFilterProxyModel::mapSelectionFromSource(const QItemSelec
 QModelIndex QQmlSortFilterProxyModel::index(int row, int column, const QModelIndex &parent) const
 {
     Q_D(const QQmlSortFilterProxyModel);
-    if (row < 0 || column < 0)
+    if (row < 0 || column < 0 || !sourceModel())
         return QModelIndex();
 
     QModelIndex source_parent = mapToSource(parent); // parent is already mapped at this point
@@ -510,7 +510,7 @@ bool QQmlSortFilterProxyModel::hasChildren(const QModelIndex &parent) const
 int QQmlSortFilterProxyModel::columnCount(const QModelIndex &parent) const
 {
     Q_D(const QQmlSortFilterProxyModel);
-    if (!d->model)
+    if (!sourceModel())
         return 0;
     QModelIndex source_parent = mapToSource(parent);
     if (parent.isValid() && !source_parent.isValid())
@@ -522,7 +522,7 @@ int QQmlSortFilterProxyModel::columnCount(const QModelIndex &parent) const
 int QQmlSortFilterProxyModel::rowCount(const QModelIndex &parent) const
 {
     Q_D(const QQmlSortFilterProxyModel);
-    if (!d->model)
+    if (!sourceModel())
         return 0;
     QModelIndex source_parent = mapToSource(parent);
     if (parent.isValid() && !source_parent.isValid())
@@ -555,6 +555,8 @@ bool QQmlSortFilterProxyModel::setData(const QModelIndex &index, const QVariant 
 QVariant QQmlSortFilterProxyModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
     Q_D(const QQmlSortFilterProxyModel);
+    if (!sourceModel())
+        return QVariant();
     QSortFilterProxyModelHelper::IndexMap::const_iterator it = d->create_mapping(QModelIndex());
     if (it.value()->source_rows.size() * it.value()->source_columns.size() > 0)
         return QAbstractProxyModel::headerData(section, orientation, role);
@@ -578,6 +580,8 @@ bool QQmlSortFilterProxyModel::setHeaderData(int section, Qt::Orientation orient
                                               const QVariant &value, int role)
 {
     Q_D(QQmlSortFilterProxyModel);
+    if (!sourceModel())
+        return false;
     QSortFilterProxyModelHelper::IndexMap::const_iterator it = d->create_mapping(QModelIndex());
     if (it.value()->source_rows.size() * it.value()->source_columns.size() > 0)
         return QAbstractProxyModel::setHeaderData(section, orientation, value, role);
@@ -600,7 +604,7 @@ bool QQmlSortFilterProxyModel::setHeaderData(int section, Qt::Orientation orient
 bool QQmlSortFilterProxyModel::insertRows(int row, int count, const QModelIndex &parent)
 {
     Q_D(QQmlSortFilterProxyModel);
-    if (row < 0 || count <= 0)
+    if (row < 0 || count <= 0 || !sourceModel())
         return false;
     QModelIndex source_parent = mapToSource(parent);
     if (parent.isValid() && !source_parent.isValid())
@@ -620,7 +624,7 @@ bool QQmlSortFilterProxyModel::insertRows(int row, int count, const QModelIndex 
 bool QQmlSortFilterProxyModel::insertColumns(int column, int count, const QModelIndex &parent)
 {
     Q_D(QQmlSortFilterProxyModel);
-    if (column < 0|| count <= 0)
+    if (column < 0 || count <= 0 || !sourceModel())
         return false;
     QModelIndex source_parent = mapToSource(parent);
     if (parent.isValid() && !source_parent.isValid())
@@ -640,7 +644,7 @@ bool QQmlSortFilterProxyModel::insertColumns(int column, int count, const QModel
 bool QQmlSortFilterProxyModel::removeRows(int row, int count, const QModelIndex &parent)
 {
     Q_D(QQmlSortFilterProxyModel);
-    if (row < 0 || count <= 0)
+    if (row < 0 || count <= 0 || !sourceModel())
         return false;
     QModelIndex source_parent = mapToSource(parent);
     if (parent.isValid() && !source_parent.isValid())
@@ -682,7 +686,7 @@ bool QQmlSortFilterProxyModel::removeRows(int row, int count, const QModelIndex 
 bool QQmlSortFilterProxyModel::removeColumns(int column, int count, const QModelIndex &parent)
 {
     Q_D(QQmlSortFilterProxyModel);
-    if (column < 0 || count <= 0)
+    if (column < 0 || count <= 0 || !sourceModel())
         return false;
     QModelIndex source_parent = mapToSource(parent);
     if (parent.isValid() && !source_parent.isValid())
