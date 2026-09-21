@@ -73,4 +73,37 @@ Item {
             verify(root.stringValue === newVal)
         }
     }
+
+    TestCase {
+        id: test_root_object_surface
+        name: "rootObjectSurface"
+        when: windowShown
+
+        readonly property int settleTime: 300
+
+        function test_generatedPropertyChangeListenerFires() {
+            communicator.connectGeneratedIntegerValueListener()
+            root.integerValue = root.integerValue + 7
+            wait(settleTime)
+            compare(communicator.listenerCalls(), 1)
+        }
+
+        function test_signalNamedWithoutArgumentListFires() {
+            communicator.connectRawListener("stringValueChanged")
+            root.stringValue = root.stringValue + "x"
+            wait(settleTime)
+            compare(communicator.listenerCalls(), 1)
+        }
+
+        // The generated wrappers cover inherited members too, so the whole
+        // root object stays reachable.
+        function test_inheritedPropertyIsReachable() {
+            verify(communicator.hasProperty("width"))
+            verify(communicator.hasProperty("objectName"))
+
+            communicator.setRawStringProperty("objectName", "reached")
+            wait(settleTime)
+            compare(root.objectName, "reached")
+        }
+    }
 }
