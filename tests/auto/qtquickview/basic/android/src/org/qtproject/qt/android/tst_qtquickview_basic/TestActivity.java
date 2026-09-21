@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.FrameLayout;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.qtproject.qt.android.QtQmlStatus;
 import org.qtproject.qt.android.QtQmlStatusChangeListener;
 import org.qtproject.qt.android.QtQuickView;
@@ -18,6 +19,7 @@ public class TestActivity extends Activity implements QtQmlStatusChangeListener
 {
     private final TestView m_testView = new TestView();
     private QtQuickView m_quickView;
+    private final AtomicInteger m_listenerCalls = new AtomicInteger();
     private static TestActivity m_instance;
 
     @Override
@@ -42,6 +44,27 @@ public class TestActivity extends Activity implements QtQmlStatusChangeListener
     }
 
     public TestView testView() { return m_testView; }
+
+    // Raw view access, for naming a member by string rather than through a
+    // generated wrapper.
+    public QtQuickView quickView() { return m_quickView; }
+
+    public int listenerCalls() { return m_listenerCalls.get(); }
+
+    public void connectRawListener(String signalName)
+    {
+        m_listenerCalls.set(0);
+        m_quickView.connectSignalListener(signalName, String.class,
+                                          (name, value) -> m_listenerCalls.incrementAndGet());
+    }
+
+    // The generated property change listener, i.e. the public API a host uses.
+    public void connectGeneratedIntegerValueListener()
+    {
+        m_listenerCalls.set(0);
+        m_testView.connectIntegerValueChangeListener(
+                (name, value) -> m_listenerCalls.incrementAndGet());
+    }
 
     public static TestActivity instance() { return m_instance; }
 }

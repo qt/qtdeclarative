@@ -8,7 +8,8 @@ using namespace QtJniTypes;
 TestActivityCommunicator::TestActivityCommunicator(QObject *parent)
     : QObject{ parent },
       m_activity(TestActivity::callStaticMethod<TestActivity>("instance")),
-      m_view(m_activity.callMethod<TestView>("testView"))
+      m_view(m_activity.callMethod<TestView>("testView")),
+      m_quickView(m_activity.callMethod<JQtQuickView>("quickView"))
 {
 }
 
@@ -50,6 +51,32 @@ void TestActivityCommunicator::setDoubleProperty(const QString &name, double val
 void TestActivityCommunicator::setStringProperty(const QString &name, const QString &value)
 {
     m_view.callMethod<void>(getPropertySetterName(name), value);
+}
+
+bool TestActivityCommunicator::hasProperty(const QString &name)
+{
+    return m_quickView.callMethod<JavaObject>("getProperty", name).isValid();
+}
+
+void TestActivityCommunicator::setRawStringProperty(const QString &name, const QString &value)
+{
+    m_quickView.callMethod<void>("setProperty", name,
+                                 JavaObject(String::construct(value).object()));
+}
+
+int TestActivityCommunicator::listenerCalls()
+{
+    return m_activity.callMethod<int>("listenerCalls");
+}
+
+void TestActivityCommunicator::connectGeneratedIntegerValueListener()
+{
+    m_activity.callMethod<void>("connectGeneratedIntegerValueListener");
+}
+
+void TestActivityCommunicator::connectRawListener(const QString &signalName)
+{
+    m_activity.callMethod<void>("connectRawListener", signalName);
 }
 
 QByteArray TestActivityCommunicator::getPropertyGetterName(const QString &name)

@@ -80,10 +80,20 @@ int indexOfSignal(const QMetaObject &metaObject, const QString &signalName,
                   const QJniArray<jclass> &javaArgClasses)
 {
     int signalIndex = metaObject.indexOfSignal(qmlSignalSignature(signalName, javaArgClasses));
-    if (signalIndex == -1) // Signal is maybe a parameterless property signal
-        signalIndex =
-                metaObject.indexOfSignal(QMetaObject::normalizedSignature(qPrintable(signalName)));
-    return signalIndex;
+    if (signalIndex != -1)
+        return signalIndex;
+
+    // A parameterless signal may be named without its empty argument list.
+    QString signature = signalName;
+    if (!signature.contains(u'('))
+        signature += QStringLiteral("()");
+    signalIndex = metaObject.indexOfSignal(QMetaObject::normalizedSignature(qPrintable(signature)));
+    if (signalIndex != -1)
+        return signalIndex;
+
+    // The generated change listeners name the property, not its notify signal.
+    const int propertyIndex = metaObject.indexOfProperty(qPrintable(signalName));
+    return propertyIndex == -1 ? -1 : metaObject.property(propertyIndex).notifySignalIndex();
 }
 
 std::optional<int> propertyIndexForSignal(const QMetaMethod &signal, const QMetaObject &object)
