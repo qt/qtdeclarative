@@ -115,6 +115,13 @@ namespace QtAndroidQuickViewEmbedding
             return;
         }
 
+        const QMetaProperty metaProperty = rootMetaObject->property(propertyIndex);
+        if (!metaProperty.isWritable()) {
+            qWarning("Property %s of the root QML object is not writable.",
+                     qPrintable(property));
+            return;
+        }
+
         const QJniObject propertyValue(value);
         const QVariant variantToWrite = QAndroidTypeConverter::toQVariant(propertyValue);
 
@@ -123,10 +130,11 @@ namespace QtAndroidQuickViewEmbedding
                      propertyValue.className().data());
         } else {
             QMetaObject::invokeMethod(rootObject,
-                [metaProperty = rootMetaObject->property(propertyIndex),
-                 rootObject = rootObject,
-                 variantToWrite] {
-                    metaProperty.write(rootObject, variantToWrite);
+                [metaProperty, rootObject = rootObject, variantToWrite, property] {
+                    if (!metaProperty.write(rootObject, variantToWrite)) {
+                        qWarning("Failed to write property %s of the root QML object.",
+                                 qPrintable(property));
+                    }
                 });
         }
     }
