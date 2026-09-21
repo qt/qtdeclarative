@@ -41,6 +41,9 @@ public:
 private:
     void updateMnemonic();
 
+    // True by default because it's the default for most types like Button:
+    // only ItemDelegate and its derived types set it to false. Note that underlining
+    // is controlled separately; see the docs for this property.
     bool m_mnemonicEnabled = true;
     QString m_fullText;
 };

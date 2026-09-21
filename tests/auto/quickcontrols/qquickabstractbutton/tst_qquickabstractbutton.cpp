@@ -90,28 +90,33 @@ void tst_QQuickAbstractButton::cleanupTestCase()
 
 void tst_QQuickAbstractButton::mnemonics_data()
 {
-    QTest::addColumn<bool>("expectedEnabledByDefault");
+    QTest::addColumn<bool>("expectEnabledByDefault");
+    QTest::addColumn<bool>("expectMnemonicStripped");
 
     // The data tag is used as the QML type to instantiate; see mnemonics().
-    QTest::newRow("Button") << platformSupportsMnemonics;
-    QTest::newRow("CheckBox") << platformSupportsMnemonics;
-    QTest::newRow("MenuItem") << platformSupportsMnemonics;
-    QTest::newRow("MenuBarItem") << platformSupportsMnemonics;
-    QTest::newRow("RadioButton") << platformSupportsMnemonics;
-    QTest::newRow("Switch") << platformSupportsMnemonics;
-    QTest::newRow("ToolButton") << platformSupportsMnemonics;
+    // The "&" should always be stripped from the displayed text for Button and its derived types,
+    // regardless of whether the platform supports mnemonics. For example, on Linux, the & is
+    // stripped and the next character underlined. On macOS, the & is just stripped.
+    QTest::newRow("Button") << platformSupportsMnemonics << true;
+    QTest::newRow("CheckBox") << platformSupportsMnemonics << true;
+    QTest::newRow("MenuItem") << platformSupportsMnemonics << true;
+    QTest::newRow("MenuBarItem") << platformSupportsMnemonics << true;
+    QTest::newRow("RadioButton") << platformSupportsMnemonics << true;
+    QTest::newRow("Switch") << platformSupportsMnemonics << true;
+    QTest::newRow("ToolButton") << platformSupportsMnemonics << true;
     // These types explicitly disable mnemonics regardless of platform.
-    QTest::newRow("ItemDelegate") << false;
-    QTest::newRow("CheckDelegate") << false;
-    QTest::newRow("RadioDelegate") << false;
-    QTest::newRow("SwipeDelegate") << false;
-    QTest::newRow("SwitchDelegate") << false;
-    QTest::newRow("DelayButton") << false;
+    QTest::newRow("ItemDelegate") << false << false;
+    QTest::newRow("CheckDelegate") << false << false;
+    QTest::newRow("RadioDelegate") << false << false;
+    QTest::newRow("SwipeDelegate") << false << false;
+    QTest::newRow("SwitchDelegate") << false << false;
+    QTest::newRow("DelayButton") << false << false;
 }
 
 void tst_QQuickAbstractButton::mnemonics()
 {
-    QFETCH(bool, expectedEnabledByDefault);
+    QFETCH(bool, expectEnabledByDefault);
+    QFETCH(bool, expectMnemonicStripped);
     const QString qmlType = QString::fromUtf8(QTest::currentDataTag());
 
     ensureViewVisible();
@@ -145,19 +150,15 @@ void tst_QQuickAbstractButton::mnemonics()
     QVERIFY(textItem);
     auto *textItemPrivate = QQuickTextPrivate::get(textItem);
 
-    // First, check the defaults.
-    const bool usesMnemonicLabel = qobject_cast<QQuickMnemonicLabel *>(textItem);
-    const bool mnemonicStripped = usesMnemonicLabel && expectedEnabledByDefault;
-    // Whether the mnemonic character is actually underlined additionally depends on
-    // QPlatformTheme::UnderlineShortcut (which is false for e.g. macOS).
-    const bool mnemonicUnderlined = mnemonicStripped && platformUnderlinesShortcuts;
-    // The "&" should always be stripped from the displayed text when mnemonics are enabled,
-    // even if the platform doesn't underline the shortcut.
-    QCOMPARE(textItemPrivate->text, mnemonicStripped ? "Mnemonic" : "M&nemonic");
+    // "&" is stripped for non-delegate types on every platform; whether the following
+    // character is underlined depends on QPlatformTheme::UnderlineShortcut.
+    const bool expectMnemonicUnderlined = expectMnemonicStripped && platformUnderlinesShortcuts;
+
+    QCOMPARE(textItemPrivate->text, expectMnemonicStripped ? "Mnemonic" : "M&nemonic");
     // There should only be one QTextLayout::FormatRange applied to the text: the one for the
     // underline.
-    QCOMPARE(textItemPrivate->layout.formats().size(), mnemonicUnderlined ? 1 : 0);
-    if (mnemonicUnderlined) {
+    QCOMPARE(textItemPrivate->layout.formats().size(), expectMnemonicUnderlined ? 1 : 0);
+    if (expectMnemonicUnderlined) {
         const QTextLayout::FormatRange underlineFormatRange
             = textItemPrivate->layout.formats().constFirst();
         QCOMPARE(underlineFormatRange.start, 1);
@@ -168,14 +169,14 @@ void tst_QQuickAbstractButton::mnemonics()
     // Set the text to something else to ensure that it picks up changes.
     control->setText(QStringLiteral("&Hello"));
     QCOMPARE(control->text(), QStringLiteral("&Hello"));
-    QCOMPARE(textItemPrivate->text, mnemonicStripped ? "Hello" : "&Hello");
+    QCOMPARE(textItemPrivate->text, expectMnemonicStripped ? "Hello" : "&Hello");
 
     const QSignalSpy clickSpy(control, SIGNAL(clicked()));
     QVERIFY(clickSpy.isValid());
     int expectedClickedCount = 0;
 
     // Pressing the shortcut while visible should click the button.
-    if (expectedEnabledByDefault)
+    if (expectEnabledByDefault)
         ++expectedClickedCount;
     QTest::keyClick(view.get(), Qt::Key_H, Qt::AltModifier);
     QCOMPARE(clickSpy.count(), expectedClickedCount);
@@ -186,7 +187,7 @@ void tst_QQuickAbstractButton::mnemonics()
     QCOMPARE(clickSpy.count(), expectedClickedCount);
 
     // Pressing the shortcut after showing should click the button.
-    if (expectedEnabledByDefault)
+    if (expectEnabledByDefault)
         ++expectedClickedCount;
     control->setVisible(true);
     QTest::keyClick(view.get(), Qt::Key_H, Qt::AltModifier);
@@ -201,7 +202,7 @@ void tst_QQuickAbstractButton::mnemonics()
     QCOMPARE(clickSpy.count(), expectedClickedCount);
 
     // The new shortcut should.
-    if (expectedEnabledByDefault)
+    if (expectEnabledByDefault)
         ++expectedClickedCount;
     QTest::keyClick(view.get(), Qt::Key_S, Qt::AltModifier);
     QCOMPARE(clickSpy.count(), expectedClickedCount);
@@ -213,7 +214,7 @@ void tst_QQuickAbstractButton::mnemonics()
     QCOMPARE(clickSpy.count(), expectedClickedCount);
 
     // Restore visibility; should click.
-    if (expectedEnabledByDefault)
+    if (expectEnabledByDefault)
         ++expectedClickedCount;
     control->setVisible(true);
     QTest::keyClick(view.get(), Qt::Key_H, Qt::AltModifier);
@@ -231,7 +232,7 @@ void tst_QQuickAbstractButton::mnemonics()
 
     // Mnemonics in Action text should behave the same as the button's text.
     int expectedActionTriggeredCount = 0;
-    if (expectedEnabledByDefault) {
+    if (expectEnabledByDefault) {
         ++expectedClickedCount;
         ++expectedActionTriggeredCount;
     }

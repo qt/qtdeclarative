@@ -13,8 +13,6 @@ QT_BEGIN_NAMESPACE
 QQuickMnemonicLabel::QQuickMnemonicLabel(QQuickItem *parent)
     : QQuickText(parent)
 {
-    m_mnemonicEnabled = QGuiApplicationPrivate::platformTheme()->themeHint(
-        QPlatformTheme::MnemonicsEnabled).toBool();
 }
 
 QString QQuickMnemonicLabel::text() const
@@ -53,8 +51,7 @@ void QQuickMnemonicLabel::setText(const QString &text)
     \li \c false: the displayed text is \c "M&nemonic" (unchanged).
     \endlist
 
-    The default value is \c true if the platform supports mnemonics
-    (\c QPlatformTheme::MnemonicsEnabled), otherwise \c false.
+    The default value is \c true.
 */
 bool QQuickMnemonicLabel::isMnemonicEnabled() const
 {
@@ -103,7 +100,7 @@ void QQuickMnemonicLabel::updateMnemonic()
     while (len) {
         if (m_fullText.at(pos) == QLatin1Char('&') && (len == 1 || m_fullText.at(pos + 1) != QLatin1Char('&'))) {
             // A plain mnemonic marker, e.g. "M&nemonic": drop the "&" and
-            // underline the character that follows it.
+            // underline the character that follows it (if the platform supports it).
             if (showUnderline && (pos == 0 || m_fullText.at(pos - 1) != QLatin1Char('&')))
                 formats += underlineRange(pos);
             ++pos;
@@ -116,8 +113,7 @@ void QQuickMnemonicLabel::updateMnemonic()
                    m_fullText.at(pos + 3) == QLatin1Char(')')) {
             // A mnemonic with format "\s*(&X)", used when the label itself has
             // no natural character to underline (e.g. non-Latin scripts). Keep
-            // "X" in the text, and underline it if the platform draws
-            // underlines for shortcuts.
+            // "X" in the text, and underline it if the platform supports it.
             if (showUnderline)
                 formats += underlineRange(pos + 1);
         }

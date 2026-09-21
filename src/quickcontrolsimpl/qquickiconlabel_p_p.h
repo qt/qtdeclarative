@@ -31,7 +31,6 @@ class Q_AUTOTEST_EXPORT QQuickIconLabelPrivate : public QQuickItemPrivate,
     Q_DECLARE_PUBLIC(QQuickIconLabel)
 
 public:
-    void init();
     ~QQuickIconLabelPrivate() override;
 
     bool hasIcon() const;
@@ -71,6 +70,10 @@ public:
         const QRectF &rectangle);
 
     bool mirrored = false;
+    // See QQuickMnemonicLabel::m_mnemonicEnabled for why this is true by default.
+    // We just act as an intermediary between types that require an Icon + Label, like Button,
+    // and the QQuickMnemonicLabel itself. Other types like CheckBox use QQuickCheckLabel directly,
+    // which derives from QQuickMnemonicLabel.
     bool mnemonicEnabled = true;
     QQuickIconLabel::Display display = QQuickIconLabel::TextBesideIcon;
     Qt::Alignment alignment = Qt::AlignCenter;

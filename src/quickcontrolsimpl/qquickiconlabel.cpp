@@ -8,7 +8,6 @@
 #include "qquickmnemoniclabel_p.h"
 
 #include <QtGui/private/qguiapplication_p.h>
-#include <QtGui/qpa/qplatformtheme.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquicktext_p.h>
 #include <QtQuickTemplates2/private/qquickicon_p.h>
@@ -26,12 +25,6 @@ void QQuickIconLabelPrivate::completeComponent(QQuickItem *item)
 {
     if (QQmlParserStatus *parserStatus = qobject_cast<QQmlParserStatus *>(item))
         parserStatus->componentComplete();
-}
-
-void QQuickIconLabelPrivate::init()
-{
-    mnemonicEnabled = QGuiApplicationPrivate::platformTheme()->themeHint(
-        QPlatformTheme::MnemonicsEnabled).toBool();
 }
 
 QQuickIconLabelPrivate::~QQuickIconLabelPrivate() = default;
@@ -366,13 +359,11 @@ void QQuickIconLabelPrivate::displayChange()
 QQuickIconLabel::QQuickIconLabel(QQuickItem *parent)
     : QQuickItem(*(new QQuickIconLabelPrivate), parent)
 {
-    d_func()->init();
 }
 
 QQuickIconLabel::QQuickIconLabel(QQuickIconLabelPrivate &dd, QQuickItem *parent)
     : QQuickItem(dd, parent)
 {
-    d_func()->init();
 }
 
 QQuickIconLabel::~QQuickIconLabel()
