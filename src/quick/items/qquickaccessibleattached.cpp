@@ -355,6 +355,53 @@ QMetaMethod QQuickAccessibleAttached::sigScrollRight;
 QMetaMethod QQuickAccessibleAttached::sigPreviousPage;
 QMetaMethod QQuickAccessibleAttached::sigNextPage;
 
+// Connects the change signals of the value and cursorPosition properties of the
+// parent, for the interfaces that its role provides. The role of an item often
+// comes after the attached object, from Accessible.role, so this runs again from
+// setRole().
+static void connectPropertyChangeSignals(QQuickAccessibleAttached *attached,
+                                         QAccessibleInterface *accessibleInterface)
+{
+    QObject *parent = attached->parent();
+    const QMetaObject *parentMetaObject = parent->metaObject();
+    if (!accessibleInterface || !parentMetaObject)
+        return;
+
+    auto connectPropertyChangeSignal = [parent, parentMetaObject, attached](
+            const char *propertyName, const char *signalName, int slotIndex)
+    {
+        // basically does this:
+        // if the parent has the property \a propertyName with the associated \a signalName:
+        //     connect(parent, signalName, attached, slotIndex)
+
+        // Note that we explicitly want to only connect to standard property/signal naming
+        // convention: "value" & "valueChanged"
+        // (e.g. avoid a compound property with e.g. a signal notifier named "updated()")
+        int propertyIndex = parentMetaObject->indexOfProperty(propertyName);
+        if (propertyIndex != -1) {
+            const QMetaProperty property = parentMetaObject->property(propertyIndex);
+            const QMetaMethod signal = property.notifySignal();
+            if (signal.name() == signalName) {
+                QMetaObject::connect(parent, signal.methodIndex(), attached, slotIndex,
+                                     Qt::UniqueConnection);
+            }
+        }
+    };
+    const QMetaObject &attachedMetaObject = QQuickAccessibleAttached::staticMetaObject;
+
+    if (accessibleInterface->valueInterface()) {
+        static const int valueChangedIndex = attachedMetaObject.indexOfSlot("valueChanged()");
+        connectPropertyChangeSignal("value", "valueChanged", valueChangedIndex);
+    }
+
+    if (accessibleInterface->textInterface()) {
+        static const int cursorPositionChangedIndex =
+                attachedMetaObject.indexOfSlot("cursorPositionChanged()");
+        connectPropertyChangeSignal("cursorPosition", "cursorPositionChanged",
+                                    cursorPositionChangedIndex);
+    }
+}
+
 QQuickAccessibleAttached::QQuickAccessibleAttached(QObject *parent)
     : QObject(parent), m_role(QAccessible::NoRole)
 {
@@ -374,41 +421,7 @@ QQuickAccessibleAttached::QQuickAccessibleAttached(QObject *parent)
     QAccessibleEvent ev(parent, QAccessible::ObjectCreated);
     QAccessible::updateAccessibility(&ev);
 
-    if (const QMetaObject *pmo = parent->metaObject()) {
-        auto connectPropertyChangeSignal = [parent, pmo, this](
-                const char *propertyName, const char *signalName, int slotIndex)
-        {
-            // basically does this:
-            // if the parent has the property \a propertyName with the associated \a signalName:
-            //     connect(parent, signalName, this, slotIndex)
-
-            // Note that we explicitly want to only connect to standard property/signal naming
-            // convention: "value" & "valueChanged"
-            // (e.g. avoid a compound property with e.g. a signal notifier named "updated()")
-            int idxProperty = pmo->indexOfProperty(propertyName);
-            if (idxProperty != -1) {
-                const QMetaProperty property = pmo->property(idxProperty);
-                const QMetaMethod signal = property.notifySignal();
-                if (signal.name() == signalName)
-                    QMetaObject::connect(parent, signal.methodIndex(), this, slotIndex);
-            }
-            return;
-        };
-        const QMetaObject &smo = staticMetaObject;
-
-        QAccessibleInterface *iface = ev.accessibleInterface();
-        if (iface && iface->valueInterface()) {
-            static const int valueChangedIndex = smo.indexOfSlot("valueChanged()");
-            connectPropertyChangeSignal("value", "valueChanged", valueChangedIndex);
-        }
-
-        if (iface && iface->textInterface()) {
-            static const int cursorPositionChangedIndex =
-                    smo.indexOfSlot("cursorPositionChanged()");
-            connectPropertyChangeSignal("cursorPosition", "cursorPositionChanged",
-                                        cursorPositionChangedIndex);
-        }
-    }
+    connectPropertyChangeSignals(this, ev.accessibleInterface());
 
     if (!sigPress.isValid()) {
         sigPress = QMetaMethod::fromSignal(&QQuickAccessibleAttached::pressAction);
@@ -471,6 +484,8 @@ void QQuickAccessibleAttached::setRole(QAccessible::Role role)
         default:
             break;
         }
+
+        connectPropertyChangeSignals(this, QAccessible::queryAccessibleInterface(parent()));
     }
 }
 
