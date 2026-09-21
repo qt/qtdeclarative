@@ -83,6 +83,8 @@ private slots:
     void relations();
     void controlsThatShouldSendObjectShow_data();
     void controlsThatShouldSendObjectShow();
+    void valueChangedEvent_data();
+    void valueChangedEvent();
 
     void editableTextInterface_data();
     void editableTextInterface();
@@ -1068,6 +1070,72 @@ Window { visible: true
     QAccessibleEvent ev(rootItem, QAccessible::ObjectShow);
     // Don't use QVERIFY_EVENT, because it gets very noisy when additional events are found
     QVERIFY(QTestAccessibility::containsEvent(&ev));
+}
+
+void tst_QQuickAccessible::valueChangedEvent_data()
+{
+    QTest::addColumn<QByteArray>("qmlSnippet");
+    QTest::addColumn<QVariant>("newValue");
+    QTest::addColumn<bool>("activateLater");
+
+    const QList<std::tuple<const char *, QByteArray, QVariant>> rows = {
+        { "Item", "Item { Accessible.role: Accessible.Slider; property real value: 50 }",
+          QVariant(30.0) },
+        { "Slider", "Slider { from: 0; to: 100; value: 50 }", QVariant(30.0) },
+        { "Dial", "Dial { from: 0; to: 100; value: 50 }", QVariant(30.0) },
+        { "ProgressBar", "ProgressBar { from: 0; to: 100; value: 50 }", QVariant(30.0) },
+        { "SpinBox", "SpinBox { from: 0; to: 100; value: 50 }", QVariant(30) },
+    };
+    for (const auto &[name, qmlSnippet, newValue] : rows) {
+        QTest::addRow("%s", name) << qmlSnippet << newValue << false;
+        // Assistive technology may start after the items exist, as on wasm
+        // where the user enables the screen reader support.
+        QTest::addRow("%s, activated later", name) << qmlSnippet << newValue << true;
+    }
+}
+
+void tst_QQuickAccessible::valueChangedEvent()
+{
+    QFETCH(QByteArray, qmlSnippet);
+    QFETCH(QVariant, newValue);
+    QFETCH(bool, activateLater);
+
+    QPlatformAccessibility *accessibility =
+            QGuiApplicationPrivate::platformIntegration()->accessibility();
+    auto cleanup = qScopeGuard([accessibility] {
+        accessibility->setActive(true);
+        QTestAccessibility::clearEvents();
+    });
+    if (activateLater)
+        accessibility->setActive(false);
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick\nimport QtQuick.Controls\n" + qmlSnippet, QUrl());
+    std::unique_ptr<QObject> object(component.create());
+    QVERIFY2(object, qPrintable(component.errorString()));
+
+    if (activateLater)
+        accessibility->setActive(true);
+
+    const auto valueChangedEvents = [&object] {
+        qsizetype count = 0;
+        for (const QAccessibleEvent *event : QTestAccessibility::events()) {
+            if (event->type() == QAccessible::ValueChanged && event->object() == object.get())
+                ++count;
+        }
+        return count;
+    };
+
+    QTestAccessibility::clearEvents();
+    QVERIFY(object->setProperty("value", newValue));
+    QAccessibleValueChangeEvent expected(object.get(), newValue);
+    QVERIFY(QTestAccessibility::containsEvent(&expected));
+    QCOMPARE(valueChangedEvents(), 1);
+
+    // Setting the same value again sends no event.
+    QVERIFY(object->setProperty("value", newValue));
+    QCOMPARE(valueChangedEvents(), 1);
 }
 
 void tst_QQuickAccessible::editableTextInterface_data()
