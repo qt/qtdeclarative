@@ -32,6 +32,7 @@
 #include <QtCore/qscopedvaluerollback.h>
 #include <QtCore/qxmlstream.h>
 
+#include <QtSvg/private/qsvgdocument_p.h>
 #include <QtSvg/private/qsvgstyle_p.h>
 #include <QtSvg/private/qsvgfilter_p.h>
 
@@ -819,8 +820,9 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
     QSvgFont *svgFont = nullptr;
     QString svgFontFamily;
     if (fontStyle) {
+        Q_ASSERT(m_doc);
         svgFontFamily = fontStyle->qfont().family();
-        svgFont = node->document()->svgFont(svgFontFamily);
+        svgFont = m_doc->svgFont(svgFontFamily);
     }
 
     QFontEngine *fontEngine = nullptr;
