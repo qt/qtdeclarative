@@ -108,6 +108,8 @@ private slots:
     void resizeTextureFromImage();
     void textureNativeInterface();
     void distanceFieldCacheInvalidation();
+    void pregeneratedDistanceFieldCache_data();
+    void pregeneratedDistanceFieldCache();
     void unexposeDuringPolish();
 
 #ifdef QT_BUILD_INTERNAL
@@ -907,6 +909,77 @@ void tst_SceneGraph::distanceFieldCacheInvalidation()
         cache->release(glyphIndexes);
         QVERIFY(!cache->isActive());
     }
+}
+
+void tst_SceneGraph::pregeneratedDistanceFieldCache_data()
+{
+    QTest::addColumn<QString>("fontFileName");
+    QTest::addColumn<bool>("expectLoaded");
+
+    // Various tests for
+    QTest::newRow("control, one 64x64 texture") << QStringLiteral("ok_single.ttf") << true;
+    QTest::newRow("control, two 64x64 textures") << QStringLiteral("ok_double.ttf") << true;
+    QTest::newRow("control, two 64x64 textures") << QStringLiteral("ok_double.ttf") << true;
+    QTest::newRow("allocatedWidth -1, height 256 -> size -256") << QStringLiteral("neg_single.ttf") << true;
+    QTest::newRow("allocatedWidth -1, height 1024 -> size -1024, pointer slides back 1 KB") << QStringLiteral("neg_double.ttf") << true;
+    QTest::newRow("allocatedWidth INT_MIN -> size -2147483648") << QStringLiteral("wild.ttf") << true;
+
+    // In the 5.12 version of the qtdf format, the texture size in the header
+    // is the slice height of the stacked area allocator, and the texture
+    // holding a glyph that crosses a slice boundary is taller than this.
+    QTest::newRow("multiple textures, version 5.12")
+            << QStringLiteral("qtdf_multitexture_5_12.ttf") << true;
+
+    // QTBUG-149508: an allocated height with the high bit set becomes
+    // negative when narrowed to int, defeating the payload bounds check.
+    // Such geometry must be rejected.
+    QTest::newRow("invalid geometry, version 5.12")
+            << QStringLiteral("qtdf_invalidgeometry_5_12.ttf") << false;
+}
+
+void tst_SceneGraph::pregeneratedDistanceFieldCache()
+{
+    if (!isRunningOnRhi())
+        QSKIP("Skipping complex rendering tests due to not running with QRhi");
+
+    QFETCH(QString, fontFileName);
+    QFETCH(bool, expectLoaded);
+
+    const int fontId = QFontDatabase::addApplicationFont(testFile(fontFileName));
+    QVERIFY(fontId >= 0);
+    const auto cleanup = qScopeGuard([fontId] { QFontDatabase::removeApplicationFont(fontId); });
+
+    const QStringList families = QFontDatabase::applicationFontFamilies(fontId);
+    QVERIFY(!families.isEmpty());
+
+    // Verify that the font resolves and carries a pregenerated cache, so that
+    // the text below cannot accidentally pass by using another font or by
+    // generating distance fields dynamically.
+    QCOMPARE(QFontInfo(QFont(families.first())).family(), families.first());
+    {
+        const QRawFont rawFont(testFile(fontFileName), 32.0);
+        QVERIFY(rawFont.isValid());
+        QVERIFY(!rawFont.fontTable("qtdf").isEmpty());
+    }
+
+    // The scene renders "ABC" with the given font. The pregenerated cache
+    // contains the glyphs for "A" and "B" in the first texture, where "B"
+    // crosses the boundary into the next slice, and "C" in the second
+    // texture. The distance field data marks the glyphs' texture rects as
+    // fully inside, so if (and only if) the pregenerated cache is loaded, the
+    // glyphs are rendered as solid boxes.
+    QQuickView view;
+    view.setInitialProperties({{ QStringLiteral("fontFamily"), families.first() }});
+    view.setSource(testFileUrl(QLatin1String("pregeneratedDistanceFieldCache.qml")));
+    view.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+
+    const QImage content = view.grabWindow();
+    QVERIFY(!content.isNull());
+    if (expectLoaded)
+        QVERIFY(containsSomethingOtherThanWhite(content));
+    else
+        QVERIFY(!containsSomethingOtherThanWhite(content));
 }
 
 class NotificationItem : public QQuickItem
