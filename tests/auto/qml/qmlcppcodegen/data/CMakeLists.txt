@@ -11,6 +11,7 @@ set(cpp_sources
     convertQJSPrimitiveValueToNumeric.h
     cppbaseclass.h
     cppobj.h
+    derivedgadget.h
     detachedreferences.h
     druggeljug.h
     dummyobjekt.h
@@ -68,6 +69,7 @@ set(qml_files
     Cycle3.qml
     CppMethodListReturnType.qml
     DeduplicateConversionOrigins.qml
+    derivedGadget.qml
     Dummy.qml
     Dummy2.qml
     EditConstraint.qml
