@@ -11,6 +11,7 @@
 #include <private/qqmlengine_p.h>
 #include <private/qqmlfinalizer_p.h>
 #include <private/qqmlloggingcategorybase_p.h>
+#include <private/qqmlmetaobject_p.h>
 #include <private/qqmlmetatype_p.h>
 #include <private/qqmlmetatypedata_p.h>
 #include <private/qqmltype_p_p.h>
@@ -1812,8 +1813,12 @@ static void initValueLookup(
 {
     Q_ASSERT(metaObject);
     const QByteArray name = compilationUnit->runtimeStrings[lookup->nameIndex]->toQString().toUtf8();
-    const int coreIndex = metaObject->indexOfProperty(name.constData());
+    int coreIndex = metaObject->indexOfProperty(name.constData());
     QMetaType lookupType = metaObject->property(coreIndex).metaType();
+
+    QQmlMetaObject::resolveGadgetMethodOrPropertyIndex(
+            QMetaObject::ReadProperty, &metaObject, &coreIndex);
+
     lookup->qgadgetLookup.metaObject = quintptr(metaObject) + 1;
     lookup->qgadgetLookup.coreIndex = coreIndex;
     lookup->qgadgetLookup.metaType = lookupType.iface();
@@ -3188,7 +3193,7 @@ void AOTCompiledContext::initCallValueLookup(
 
     const QMetaMethod method = metaObject->method(absoluteMethodIndex);
     lookup->qgadgetLookup.metaObject = quintptr(metaObject) + 1;
-    lookup->qgadgetLookup.coreIndex = absoluteMethodIndex;
+    lookup->qgadgetLookup.coreIndex = relativeMethodIndex;
     lookup->qgadgetLookup.metaType = method.returnMetaType().iface();
     lookup->qgadgetLookup.isFunction = true;
     lookup->call = QV4::Lookup::Call::GetterValueTypeProperty;

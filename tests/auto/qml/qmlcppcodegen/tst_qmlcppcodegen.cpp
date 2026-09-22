@@ -4,6 +4,7 @@
 #include "data/opaque.h"
 #include <data/birthdayparty.h>
 #include <data/cppbaseclass.h>
+#include <data/derivedgadget.h>
 #include <data/detachedreferences.h>
 #include <data/druggeljug.h>
 #include <data/enumProperty.h>
@@ -112,6 +113,7 @@ private slots:
     void deadContext();
     void deadShoeSize();
     void deduplicateConversionOrigins();
+    void derivedGadgetOwnMembers();
     void destroyAndToString();
     void detachOnAssignment();
     void detachedListAssignment();
@@ -1821,6 +1823,21 @@ void tst_QmlCppCodegen::deduplicateConversionOrigins()
     QVERIFY2(c.isReady(), qPrintable(c.errorString()));
     std::unique_ptr<QObject> o(c.create());
     QVERIFY(o);
+}
+
+void tst_QmlCppCodegen::derivedGadgetOwnMembers()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/derivedGadget.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    std::unique_ptr<QObject> o(c.create());
+    QVERIFY(o);
+
+    QCOMPARE(o->property("a").toInt(), 1);
+    QCOMPARE(o->property("b").toInt(), 2);
+    QCOMPARE(o->property("c").toString(), u"three"_s);
+    QCOMPARE(o->property("baseMethodResult").toInt(), 42);
+    QCOMPARE(o->property("derivedMethodResult").toInt(), 99);
 }
 
 void tst_QmlCppCodegen::destroyAndToString()
