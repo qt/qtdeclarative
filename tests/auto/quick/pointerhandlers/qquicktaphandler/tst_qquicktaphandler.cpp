@@ -609,7 +609,8 @@ void tst_TapHandler::mouseMultiTap()
     QCOMPARE(tapHandler->tapCount(), 3);
 
     // Click a fourth time, drifting farther away: treated as a separate click, regardless of timing
-    p1 += QPoint(dragThreshold, dragThreshold);
+    p1 += QPoint(qMax(dragThreshold,
+                        QGuiApplication::styleHints()->mouseDoubleClickDistance() + 1), 0);
     QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, p1); // default delay to prevent double-click
     QCOMPARE(tappedSpy.size(), 4);
     QCOMPARE(tapHandler->tapCount(), 1);
