@@ -1797,6 +1797,18 @@ void TestQmllint::dirtyQmlSnippet_data()
                .addUnexpected("Cannot resolve alias \"b\"")
                .build()
             << defaultOptions;
+    QTest::newRow("aliasCycle")
+            << u"id: root\n"_s
+               u"property int myP: 42\n"_s
+               u"property alias badId: rot.myP\n"_s
+               u"property alias aliasToAlias: root.badId\n"_s
+            << ResultBuilder()
+                       .addExpected("Cannot resolve alias \"badId\"")
+                       .addUnexpected("Alias \"badId\" is part of an alias cycle")
+                       .addUnexpected("Cannot resolve alias \"aliasToAlias\"")
+                       .addExpected("Alias \"aliasToAlias\" is part of an alias cycle")
+                       .build()
+            << defaultOptions;
     QTest::newRow("assignLhsLocation")
             << u"id: root; property int i; Item { Component.onCompleted: i = root.i + 5 }"_s
             << ResultBuilder()

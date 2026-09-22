@@ -379,6 +379,7 @@ void QQmlJSImportVisitor::resolveAliases()
 
     qsizetype lastRequeueLength = std::numeric_limits<qsizetype>::max();
     QQueue<QQmlJSScope::Ptr> requeue;
+    QDuplicateTracker<std::pair<QQmlJSScope::Ptr, QQmlJSMetaProperty>> alreadyResolvedAliases;
 
     while (!objects.isEmpty()) {
         const QQmlJSScope::Ptr object = objects.dequeue();
@@ -386,9 +387,15 @@ void QQmlJSImportVisitor::resolveAliases()
 
         bool doRequeue = false;
         for (const auto &property : properties) {
-            if (!property.isAlias() || !property.type().isNull())
+            if (!property.isAlias() || !property.type().isNull()
+                || alreadyResolvedAliases.contains({ object, property })) {
                 continue;
-            doRequeue |= resolveAliasProperty(object, property);
+            }
+            if (!resolveAliasProperty(object, property)) {
+                Q_UNUSED(alreadyResolvedAliases.hasSeen({ object, property }));
+            } else {
+                doRequeue = true;
+            }
         }
 
         const auto childScopes = object->childScopes();
@@ -408,8 +415,10 @@ void QQmlJSImportVisitor::resolveAliases()
         const QQmlJSScope::Ptr object = requeue.dequeue();
         const auto properties = object->ownProperties();
         for (const auto &property : properties) {
-            if (!property.isAlias() || property.type())
+            if (!property.isAlias() || !property.type().isNull()
+                || alreadyResolvedAliases.contains({ object, property })) {
                 continue;
+            }
             m_logger->log(QStringLiteral("Alias \"%1\" is part of an alias cycle")
                                   .arg(property.propertyName()),
                           qmlAliasCycle, property.sourceLocation());
