@@ -166,13 +166,17 @@ public abstract class QtQuickViewContent
      * and loaded by a QtQuickView instance. Otherwise, the connection is executed once the
      * component is attached to a view.
      *
+     * A signal supports a single listener. Connecting to a signal that
+     * already has one keeps the existing listener, and the returned ID
+     * refers to no connection.
+     *
      * @param signalName the name of the root object signal
      * @param argType    the Class type of the signal argument
      * @param listener   an instance of the QtSignalListener interface
-     * @return a connection ID between signal and listener or the existing connection ID if there is
-     *         an existing connection between the same signal and listener. Return a negative value
-     *         if the signal does not exist on the QML root object. Always returns
-     *         <code>true</code> if the component is not yet attached to a QtQuickView instance.
+     * @return a connection ID between signal and listener, or a negative value
+     *         if the signal does not exist on the QML root object. A valid ID
+     *         is also returned when the component is not yet attached to a
+     *         QtQuickView instance, as the connection is queued until it is.
      **/
     protected <T> int connectSignalListener(String signalName, Class<T> argType,
                                             QtSignalListener<T> listener)
@@ -185,20 +189,25 @@ public abstract class QtQuickViewContent
      * and loaded by a QtQuickView instance. Otherwise, the connection is executed once the
      * component is attached to a view.
      *
+     * A signal supports a single listener. Connecting to a signal that
+     * already has one keeps the existing listener, and the returned ID
+     * refers to no connection.
+     *
      * @param signalName the name of the root object signal
      * @param argTypes   the Class types of the signal arguments
      * @param listener   an instance of the QtSignalListener interface
-     * @return a connection ID between signal and listener or the existing connection ID if there is
-     *         an existing connection between the same signal and listener. Return a negative value
-     *         if the signal does not exist on the QML root object. Always returns
-     *         <code>true</code> if the component is not yet attached to a QtQuickView instance.
+     * @return a connection ID between signal and listener, or a negative value
+     *         if the signal does not exist on the QML root object. A valid ID
+     *         is also returned when the component is not yet attached to a
+     *         QtQuickView instance, as the connection is queued until it is.
      **/
     protected int connectSignalListener(String signalName, Class<?>[] argTypes, Object listener)
     {
         final int id = QtQuickViewContent.generateSignalId();
         if (isViewAttached()) {
             QtQuickView view = getQuickView();
-            view.connectSignalListener(signalName, argTypes, listener, id);
+            if (!view.connectSignalListener(signalName, argTypes, listener, id))
+                return -1;
             m_signalListenerIds.add(id);
         } else {
             m_signalQueue.add(signalName, argTypes, listener, id);

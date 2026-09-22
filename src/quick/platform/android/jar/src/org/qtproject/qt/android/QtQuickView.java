@@ -226,14 +226,17 @@ public class QtQuickView extends QtView {
      * Connects a SignalListener to a signal of the QML root object. This will delay forming a
      * connection until the root object is ready.
      *
+     * A signal supports a single listener. Connecting to a signal that
+     * already has one keeps the existing listener, and the returned id
+     * refers to no connection.
+     *
      * @param signalName the name of the root object signal
      * @param argType    the Class type of the signal argument
      * @param listener   an instance of the QtSignalListener interface
-     * @return a connection id between signal and listener or the existing connection id if there is
-     *         an existing connection between the same signal and listener. Return a negative value
-     *         if the signal does not exists on the QML root object. Always returns
-     *         <code>true</code> if the root object is not ready, as the connection is queued until
-     *         the root object is ready.
+     * @return a connection id between signal and listener, or a negative value
+     *         if the signal does not exist on the QML root object. A valid id
+     *         is also returned when the root object is not ready, as the
+     *         connection is queued until it is.
      **/
     public <T> int connectSignalListener(String signalName, Class<T> argType,
                                          QtSignalListener<T> listener)
@@ -245,19 +248,22 @@ public class QtQuickView extends QtView {
      * Connects a SignalListener to a signal of the QML root object. Will delay forming a
      * connection until the root object is ready.
      *
+     * A signal supports a single listener. Connecting to a signal that
+     * already has one keeps the existing listener, and the returned id
+     * refers to no connection.
+     *
      * @param signalName the name of the root object's signal
      * @param argTypes   the Class types of the signal arguments
      * @param listener   an instance of the {@link QtSignalListener} interface
-     * @return a connection id between signal and listener or the existing connection id if there
-     *         is an existing connection between the same signal and listener. Otherwise, a
-     *         negative value is returned if the signal does not exist on the QML root object.
-     *         Always returns <code>true</code> if the root object is not ready.
+     * @return a connection id between signal and listener, or a negative value
+     *         if the signal does not exist on the QML root object. A valid id
+     *         is also returned when the root object is not ready, as the
+     *         connection is queued until it is.
      **/
     public int connectSignalListener(String signalName, Class<?>[] argTypes, Object listener)
     {
         final int id = QtQuickViewContent.generateSignalId();
-        connectSignalListener(signalName, argTypes, listener, id);
-        return id;
+        return connectSignalListener(signalName, argTypes, listener, id) ? id : -1;
     }
 
     /**
@@ -272,12 +278,14 @@ public class QtQuickView extends QtView {
      * providing a pre-generated ID. The regular public API generates its own ID, which is not
      * desired for queued signal connections.
      */
-    void connectSignalListener(String signalName, Class<?>[] argTypes, Object listener, int id)
+    boolean connectSignalListener(String signalName, Class<?>[] argTypes, Object listener, int id)
     {
-        if (hasUnderlyingView())
-            addRootObjectSignalListener(getWindowReference(), signalName, argTypes, listener, id);
-        else
-            m_signalQueue.add(signalName, argTypes, listener, id);
+        if (hasUnderlyingView()) {
+            return addRootObjectSignalListener(getWindowReference(), signalName, argTypes,
+                                               listener, id);
+        }
+        m_signalQueue.add(signalName, argTypes, listener, id);
+        return true;
     }
 
     /**
