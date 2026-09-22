@@ -15,8 +15,10 @@ class TestQtQuickView extends QtQuickView
     }
 
     @Override
-    void connectSignalListener(String signalName, Class<?>[] argTypes, Object listener, int id)
+    boolean connectSignalListener(String signalName, Class<?>[] argTypes, Object listener,
+                                  int id)
     {
         onConnectSignalListenerCalled(signalName, argTypes, listener, id);
+        return true;
     }
 }
