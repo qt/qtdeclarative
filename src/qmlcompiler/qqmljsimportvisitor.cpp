@@ -271,10 +271,11 @@ static bool mayBeUnresolvedGroupedProperty(const QQmlJSScope::ConstPtr &scope)
     return scope->scopeType() == QQmlSA::ScopeType::GroupedPropertyScope && !scope->baseType();
 }
 
-bool QQmlJSImportVisitor::resolveAliasProperty(const QQmlJSScope::Ptr &object,
-                                               const QQmlJSMetaProperty &property)
+QQmlJSImportVisitor::AliasPropertyResolution
+QQmlJSImportVisitor::resolveAliasProperty(const QQmlJSScope::Ptr &object,
+                                          const QQmlJSMetaProperty &property)
 {
-    bool doRequeue = false;
+    AliasPropertyResolution result = Resolved;
     QStringList components = property.aliasExpression().split(u'.');
     QQmlJSMetaProperty targetProperty;
 
@@ -310,7 +311,7 @@ bool QQmlJSImportVisitor::resolveAliasProperty(const QQmlJSScope::Ptr &object,
             const auto target = type->property(name);
             if (!target.type()) {
                 if (target.isAlias()) {
-                    doRequeue = true;
+                    result = NeedsRequeue;
                 } else {
                     // We already warned about the missing type in the property definition if
                     // the type is defined in this QML file.
@@ -325,8 +326,8 @@ bool QQmlJSImportVisitor::resolveAliasProperty(const QQmlJSScope::Ptr &object,
     }
 
     if (type.isNull()) {
-        if (doRequeue)
-            return doRequeue;
+        if (result == NeedsRequeue)
+            return result;
         if (!hasWarnedAlready) {
             if (foundProperty) {
                 m_logger->log(QStringLiteral("Cannot deduce type of alias \"%1\"")
@@ -369,7 +370,7 @@ bool QQmlJSImportVisitor::resolveAliasProperty(const QQmlJSScope::Ptr &object,
         object->addOwnProperty(newProperty);
         m_aliasDefinitions.append({ object, property.propertyName() });
     }
-    return doRequeue;
+    return result;
 }
 
 void QQmlJSImportVisitor::resolveAliases()
@@ -391,10 +392,10 @@ void QQmlJSImportVisitor::resolveAliases()
                 || alreadyResolvedAliases.contains({ object, property })) {
                 continue;
             }
-            if (!resolveAliasProperty(object, property)) {
-                Q_UNUSED(alreadyResolvedAliases.hasSeen({ object, property }));
-            } else {
+            if (resolveAliasProperty(object, property) == NeedsRequeue) {
                 doRequeue = true;
+            } else {
+                Q_UNUSED(alreadyResolvedAliases.hasSeen({ object, property }));
             }
         }
 

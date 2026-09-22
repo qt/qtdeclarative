@@ -389,7 +389,9 @@ private:
             const QString &handlerName, const QStringList &handlerParameters);
     void importBaseModules();
     void resolveAliases();
-    bool resolveAliasProperty(const QQmlJSScope::Ptr &object, const QQmlJSMetaProperty &property);
+    enum AliasPropertyResolution : quint8 { Resolved, NeedsRequeue };
+    AliasPropertyResolution resolveAliasProperty(const QQmlJSScope::Ptr &object,
+                                                 const QQmlJSMetaProperty &property);
     void populatePropertyAliases();
     void resolveGroupedProperties();
     void handleIdDeclaration(QQmlJS::AST::UiScriptBinding *scriptBinding);
