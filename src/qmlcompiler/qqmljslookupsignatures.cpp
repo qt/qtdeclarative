@@ -94,20 +94,14 @@ bool QQmlJSLookupSignaturesRecorder::isUnnamedCompositeType(const QQmlJSScope::C
     return type->isComposite() && !type->isFileRootComponent() && !type->isInlineComponent();
 }
 
-static QQmlJSMetaMethod::RelativeFunctionIndex methodIndex(const QQmlJSMetaMethod &m)
-{
-    return m.otherMethodIndex() == QQmlJSMetaMethod::RelativeFunctionIndex::Invalid
-            ? m.methodIndex() : m.otherMethodIndex();
-}
-
 // On the MetaObject, signals come before regular functions
 static int ownRegularMethodCountBeforeIndex(const QQmlJSScope::ConstPtr &type, int index)
 {
     const auto &ms = type->ownMethods();
     return std::count_if(ms.cbegin(), ms.cend(), [&](const QQmlJSMetaMethod &m) {
-        Q_ASSERT(m.isConstructor() || methodIndex(m) != QQmlJSMetaMethod::RelativeFunctionIndex::Invalid);
+        Q_ASSERT(m.isConstructor() || m.methodIndex() != QQmlJSMetaMethod::RelativeFunctionIndex::Invalid);
         return m.methodType() != QQmlSA::MethodType::Signal && !m.isConstructor()
-                && int(methodIndex(m)) < index;
+                && int(m.methodIndex()) < index;
     });
 }
 
@@ -116,8 +110,8 @@ static int ownSignalCountAfterIndex(const QQmlJSScope::ConstPtr &type, int index
 {
     const auto &ms = type->ownMethods();
     return std::count_if(ms.cbegin(), ms.cend(), [&](const QQmlJSMetaMethod &m) {
-        Q_ASSERT(m.isConstructor() || methodIndex(m) != QQmlJSMetaMethod::RelativeFunctionIndex::Invalid);
-        return m.methodType() == QQmlSA::MethodType::Signal && int(methodIndex(m)) > index;
+        Q_ASSERT(m.isConstructor() || m.methodIndex() != QQmlJSMetaMethod::RelativeFunctionIndex::Invalid);
+        return m.methodType() == QQmlSA::MethodType::Signal && int(m.methodIndex()) > index;
     });
 }
 
@@ -198,11 +192,11 @@ bool QQmlJSLookupSignaturesRecorder::recordMethodLookup(const QQmlJSScope::Const
 
     if (method.methodType() == QQmlSA::MethodType::Signal) {
         methodSignature.isSignal = IsSignal::Yes;
-        int index = int(methodIndex(method));
+        int index = int(method.methodIndex());
         methodSignature.relativeIndex = index - ownRegularMethodCountBeforeIndex(owner, index);
     } else {
         methodSignature.isSignal = IsSignal::No;
-        int index = int(methodIndex(method));
+        int index = int(method.methodIndex());
         methodSignature.relativeIndex = index + ownSignalCountAfterIndex(owner, index);
     }
 

@@ -646,7 +646,7 @@ void tst_qqmljsscope::scriptIndices()
                 if (method.methodType() == QQmlJSMetaMethodType::Signal)
                     continue;
                 QString name = method.methodName();
-                auto relativeIndex = method.jsFunctionIndex();
+                auto relativeIndex = method.compiledFunctionIndex();
                 QVERIFY2(static_cast<int>(relativeIndex) >= 0,
                          qPrintable(QStringLiteral("Method %1 from %2 has no index")
                                             .arg(name, getScopeName(current))));
