@@ -589,7 +589,6 @@ struct Binding
         InitializerForReadOnlyDeclaration = 0x8,
         IsResolvedEnum = 0x10,
         IsListItem = 0x20,
-        IsBindingToAlias = 0x40,
         IsFunctionExpression = 0x200,
         IsPropertyObserver = 0x400
     };
@@ -640,9 +639,6 @@ struct Binding
             return !hasSignalHandlerBindingFlag();
         }
     }
-
-    bool isValueBindingNoAlias() const { return isValueBinding() && !hasFlag(IsBindingToAlias); }
-    bool isValueBindingToAlias() const { return isValueBinding() && hasFlag(IsBindingToAlias); }
 
     bool isSignalHandler() const
     {
@@ -1414,6 +1410,7 @@ struct RuntimeBinding
     enum Flag : quint32 {
         IsDeferredBinding = 0x1,
         IsCustomParserBinding = 0x2,
+        IsBindingToAlias = 0x4,
     };
 
     quint32_le flags;

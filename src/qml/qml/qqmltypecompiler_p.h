@@ -230,18 +230,6 @@ private:
     const QHash<int, QQmlCustomParser*> &customParsers;
 };
 
-// Annotate properties bound to aliases with a flag
-class QQmlAliasAnnotator : public QQmlCompilePass
-{
-public:
-    QQmlAliasAnnotator(QQmlTypeCompiler *typeCompiler);
-
-    void annotateBindingsToAliases();
-private:
-    const QList<QmlIR::Object*> &qmlObjects;
-    const QQmlPropertyCacheVector * const propertyCaches;
-};
-
 class QQmlScriptStringScanner : public QQmlCompilePass
 {
 public:

@@ -100,11 +100,6 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> QQmlTypeCompiler::compile()
         cpi.annotateBindingsWithScriptStrings();
     }
 
-    {
-        QQmlAliasAnnotator annotator(this);
-        annotator.annotateBindingsToAliases();
-    }
-
     if (!document->javaScriptCompilationUnit || !document->javaScriptCompilationUnit->unitData()) {
         // Compile JS binding expressions and signal handlers if necessary
         {
@@ -683,36 +678,6 @@ void QQmlCustomParserScriptIndexer::scanObjectRecursively(int objectIndex, bool 
     }
 }
 
-QQmlAliasAnnotator::QQmlAliasAnnotator(QQmlTypeCompiler *typeCompiler)
-    : QQmlCompilePass(typeCompiler)
-    , qmlObjects(*typeCompiler->qmlObjects())
-    , propertyCaches(typeCompiler->propertyCaches())
-{
-}
-
-void QQmlAliasAnnotator::annotateBindingsToAliases()
-{
-    for (int i = 0; i < qmlObjects.size(); ++i) {
-        QQmlPropertyCache::ConstPtr propertyCache = propertyCaches->at(i);
-        if (!propertyCache)
-            continue;
-
-        const QmlIR::Object *obj = qmlObjects.at(i);
-
-        QQmlPropertyResolver resolver(propertyCache);
-        const QQmlPropertyData *defaultProperty = obj->indexOfDefaultPropertyOrAlias != -1 ? propertyCache->parent()->defaultProperty() : propertyCache->defaultProperty();
-
-        for (QmlIR::Binding *binding = obj->firstBinding(); binding; binding = binding->next) {
-            if (!binding->isValueBinding())
-                continue;
-            bool notInRevision = false;
-            const QQmlPropertyData *pd = binding->propertyNameIndex != quint32(0) ? resolver.property(stringAt(binding->propertyNameIndex), &notInRevision) : defaultProperty;
-            if (pd && pd->isAlias())
-                binding->setFlag(QV4::CompiledData::Binding::IsBindingToAlias);
-        }
-    }
-}
-
 QQmlScriptStringScanner::QQmlScriptStringScanner(QQmlTypeCompiler *typeCompiler)
     : QQmlCompilePass(typeCompiler)
     , qmlObjects(*typeCompiler->qmlObjects())
@@ -1041,33 +1006,68 @@ public:
         if (!errors.isEmpty())
             return errors;
 
-        for (int i = 0, count = unit->objectCount(); i < count; ++i)
+        for (int i = 0, count = unit->objectCount(); i < count; ++i) {
+            classifyBindingsToAliases(i);
             computeBindingOrder(i);
+        }
         return errors;
     }
 
 private:
     enum class ScopeDeferred : bool { False, True };
 
+    void classifyBindingsToAliases(int objectIndex)
+    {
+        using namespace QV4::CompiledData;
+        const QQmlPropertyCache::ConstPtr propertyCache = unit->propertyCaches.at(objectIndex);
+        if (!propertyCache)
+            return;
+
+        const Object *obj = unit->objectAt(objectIndex);
+        RuntimeBinding *runtimeBindings
+                = unit->runtimeDataForWrite()->objectAt(objectIndex)->bindingTable();
+        QQmlPropertyResolver resolver(propertyCache);
+        const QQmlPropertyData *defaultProperty = obj->indexOfDefaultPropertyOrAlias != -1
+                ? propertyCache->parent()->defaultProperty()
+                : propertyCache->defaultProperty();
+
+        const Binding *binding = obj->bindingTable();
+        for (quint32 i = 0; i < obj->nBindings; ++i, ++binding) {
+            if (!binding->isValueBinding())
+                continue;
+            bool notInRevision = false;
+            const QQmlPropertyData *pd = binding->propertyNameIndex != 0
+                    ? resolver.property(unit->stringAt(binding->propertyNameIndex), &notInRevision)
+                    : defaultProperty;
+            if (pd && pd->isAlias())
+                runtimeBindings[i].flags |= RuntimeBinding::IsBindingToAlias;
+        }
+    }
+
     void computeBindingOrder(int objectIndex)
     {
         using namespace QV4::CompiledData;
         const Object *obj = unit->objectAt(objectIndex);
         const Binding *bindings = obj->bindingTable();
-        RuntimeBindingIndex *order =
-                unit->runtimeDataForWrite()->objectAt(objectIndex)->bindingOrder();
+        RuntimeObject *runtimeObject = unit->runtimeDataForWrite()->objectAt(objectIndex);
+        const RuntimeBinding *runtimeBindings = runtimeObject->bindingTable();
+        const auto isAlias = [&](quint32 b) {
+            return runtimeBindings[b].flags & RuntimeBinding::IsBindingToAlias;
+        };
+
+        RuntimeBindingIndex *order = runtimeObject->bindingOrder();
         uint n = 0;
-        const auto collect = [&](bool (Binding::*filter)() const) {
+        const auto collect = [&](auto predicate) {
             for (quint16 b = 0; b < obj->nBindings; ++b) {
-                if ((bindings[b].*filter)())
+                if (predicate(b))
                     order[n++] = b;
             }
         };
-        collect(&Binding::isValueBindingNoAlias);
-        collect(&Binding::isSignalHandler);
-        collect(&Binding::isAttachedProperty);
-        collect(&Binding::isGroupedProperty);
-        collect(&Binding::isValueBindingToAlias);
+        collect([&](quint16 b) { return bindings[b].isValueBinding() && !isAlias(b); });
+        collect([&](quint16 b) { return bindings[b].isSignalHandler(); });
+        collect([&](quint16 b) { return bindings[b].isAttachedProperty(); });
+        collect([&](quint16 b) { return bindings[b].isGroupedProperty(); });
+        collect([&](quint16 b) { return bindings[b].isValueBinding() && isAlias(b); });
         Q_ASSERT(n == obj->nBindings);
     }
 
