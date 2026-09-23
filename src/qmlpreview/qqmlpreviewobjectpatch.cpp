@@ -419,6 +419,15 @@ static void rebuildObject(QObject *object, int cuIndex,
 
     ddata->clear();
 
+    // clear() forgets where the object is declared, which only creating an object sets. The
+    // engine debug service finds objects by it and reports it: take it from the declaration in
+    // the unit the object is rebuilt from.
+    if (const QV4::CompiledData::Object *declaration =
+                instanceLevel.newCu->objectAt(instanceLevel.objectIndex)) {
+        ddata->lineNumber = declaration->location.line();
+        ddata->columnNumber = declaration->location.column();
+    }
+
     QObjectPrivate *objectPrivate = QObjectPrivate::get(object);
     delete std::exchange(objectPrivate->metaObject, nullptr);
 

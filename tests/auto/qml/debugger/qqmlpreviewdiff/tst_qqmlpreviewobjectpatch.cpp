@@ -282,6 +282,8 @@ private slots:
     void compositeVMERebuildFromPlain();
     void compositeVMERebuildICChange();
     void compositeVMERebuildExternal();
+    // A rebuilt object keeps the location of its declaration, which the debugger finds it by
+    void rebuildKeepsDeclarationLocation();
 
     // Composite base type binding evaluation: script bindings (dependent
     // on other properties) must also be installed as live bindings.
@@ -2426,6 +2428,53 @@ void tst_QQmlPreviewObjectPatch::compositeVMERebuildExternal()
     // The property has correct default values (VME built from the external composite's root).
     QCOMPARE(child->property("value").toInt(), 100);
     QCOMPARE(child->property("label").toString(), QString("external"));
+}
+
+// QQmlData::clear() resets the location that only creating an object sets. The engine debug
+// service finds objects by it (FETCH_OBJECTS_FOR_LOCATION) and reports it, so an instance of a
+// changed composite type that is rebuilt in place has to get it back from its declaration.
+void tst_QQmlPreviewObjectPatch::rebuildKeepsDeclarationLocation()
+{
+    const QString moduleDir = dataDirectory() + QStringLiteral("/RebuildKeepsLocation");
+    const QString patchedDir = moduleDir + QStringLiteral("Patched");
+
+    QQmlComponent pad(&engine, QUrl::fromLocalFile(moduleDir + "/Pad.qml"));
+    QVERIFY2(pad.isReady(), qPrintable(pad.errorString()));
+    std::unique_ptr<QObject> root(pad.create());
+    QVERIFY(root);
+
+    // Where Pad.qml declares the widgets
+    const QList<std::pair<QString, quint16>> declarations = { { "w1", 7 }, { "w2", 9 } };
+    QHash<QString, QPointer<QObject>> widgets;
+    for (const auto &[name, line] : declarations) {
+        QObject *widget = root->findChild<QObject *>(name);
+        QVERIFY2(widget, qPrintable(name));
+        QCOMPARE(QQmlData::get(widget)->lineNumber, line);
+        widgets.insert(name, widget);
+    }
+
+    QQmlComponent widgetOld(&engine, QUrl::fromLocalFile(moduleDir + "/Widget.qml"));
+    QVERIFY2(widgetOld.isReady(), qPrintable(widgetOld.errorString()));
+    QQmlComponent widgetNew(&engine, QUrl::fromLocalFile(patchedDir + "/Widget.qml"));
+    QVERIFY2(widgetNew.isReady(), qPrintable(widgetNew.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&widgetOld)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&widgetNew)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QVERIFY(!objects.empty());
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+
+    for (const auto &[name, line] : declarations) {
+        QObject *widget = widgets.value(name);
+        // The new child shows that the instance was rebuilt, in place
+        QVERIFY2(widget, qPrintable(name + " was deleted"));
+        QVERIFY(widget->findChild<QObject *>(QStringLiteral("added")));
+        QCOMPARE(QQmlData::get(widget)->lineNumber, line);
+        QCOMPARE(QQmlData::get(widget)->columnNumber, quint16(name == "w1" ? 5 : 9));
+    }
 }
 
 // Script binding evaluation: transition from plain Item to IC instance with
