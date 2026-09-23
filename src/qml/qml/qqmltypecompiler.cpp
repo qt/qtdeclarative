@@ -947,8 +947,9 @@ QQmlComponentAndAliasResolver<QQmlTypeCompiler>::resolveAliasesInObject(
                     if (resolvedAliases.contains(targetAlias)) {
                         // Target already resolved. We can set the alias right away.
                         if (!appendAliasToPropertyCache(
-                                    &component, alias, objectIndex, aliasIndex, -1,
-                                    resolvedTargetObjectId, aliasCacheCreator, error)) {
+                                    alias, objectIndex, aliasIndex, -1,
+                                    resolvedTargetObjectId, targetObjectIndex, aliasCacheCreator,
+                                    error)) {
                             break;
                         }
                         continue;
@@ -1011,8 +1012,8 @@ QQmlComponentAndAliasResolver<QQmlTypeCompiler>::resolveAliasesInObject(
         }
 
         if (!appendAliasToPropertyCache(
-                    &component, alias, objectIndex, aliasIndex, propIdx.toEncoded(),
-                    resolvedTargetObjectId, aliasCacheCreator, error)) {
+                    alias, objectIndex, aliasIndex, propIdx.toEncoded(),
+                    resolvedTargetObjectId, targetObjectIndex, aliasCacheCreator, error)) {
             break;
         }
     }

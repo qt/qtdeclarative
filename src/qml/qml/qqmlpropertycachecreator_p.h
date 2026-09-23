@@ -947,18 +947,6 @@ inline QQmlPropertyData::Flags QQmlPropertyCacheCreator<ObjectContainer>::proper
     return flags;
 }
 
-template <typename ObjectContainer, typename CompiledObject>
-int objectForId(const ObjectContainer *objectContainer, const CompiledObject &component, int id)
-{
-    for (quint32 i = 0, count = component.namedObjectsInComponentCount(); i < count; ++i) {
-        const int candidateIndex = component.namedObjectsInComponentTable()[i];
-        const CompiledObject &candidate = *objectContainer->objectAt(candidateIndex);
-        if (candidate.objectId() == id)
-            return candidateIndex;
-    }
-    return -1;
-}
-
 template <typename ObjectContainer>
 class QQmlPropertyCacheAliasCreator
 {
@@ -968,14 +956,13 @@ public:
     QQmlPropertyCacheAliasCreator(
             QQmlPropertyCacheVector *propertyCaches, const ObjectContainer *objectContainer);
     QQmlError appendAliasToPropertyCache(
-            const CompiledObject &component, const QV4::CompiledData::Alias &alias, int objectIndex,
-            int aliasIndex, int encodedMetaPropertyIndex, int resolvedTargetObjectId);
+            const QV4::CompiledData::Alias &alias, int objectIndex, int aliasIndex,
+            int encodedMetaPropertyIndex, int resolvedTargetObjectId, int targetObjectIndex);
 
 private:
     QQmlError propertyDataForAlias(
-            const CompiledObject &component, const QV4::CompiledData::Alias &alias, QMetaType *type,
-            QTypeRevision *version, QQmlPropertyData::Flags *propertyFlags,
-            int targetPropertyIndex, int resolvedTargetObjectId);
+            const QV4::CompiledData::Alias &alias, QMetaType *type, QTypeRevision *version,
+            QQmlPropertyData::Flags *propertyFlags, int targetPropertyIndex, int targetObjectIndex);
 
     QQmlPropertyCacheVector *propertyCaches;
     const ObjectContainer *objectContainer;
@@ -991,9 +978,8 @@ inline QQmlPropertyCacheAliasCreator<ObjectContainer>::QQmlPropertyCacheAliasCre
 
 template <typename ObjectContainer>
 inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataForAlias(
-        const CompiledObject &component, const QV4::CompiledData::Alias &alias, QMetaType *type,
-        QTypeRevision *version, QQmlPropertyData::Flags *propertyFlags,
-        int targetPropertyIndex, int resolvedTargetObjectId)
+        const QV4::CompiledData::Alias &alias, QMetaType *type, QTypeRevision *version,
+        QQmlPropertyData::Flags *propertyFlags, int targetPropertyIndex, int targetObjectIndex)
 {
     *type = QMetaType();
     bool writable = false;
@@ -1002,7 +988,6 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataFor
 
     propertyFlags->setIsAlias(true);
 
-    const int targetObjectIndex = objectForId(objectContainer, component, resolvedTargetObjectId);
     Q_ASSERT(targetObjectIndex >= 0);
     const CompiledObject &targetObject = *objectContainer->objectAt(targetObjectIndex);
 
@@ -1107,8 +1092,8 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataFor
 
 template <typename ObjectContainer>
 inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAliasToPropertyCache(
-        const CompiledObject &component, const QV4::CompiledData::Alias &alias, int objectIndex,
-        int aliasIndex, int encodedMetaPropertyIndex, int resolvedTargetObjectId)
+        const QV4::CompiledData::Alias &alias, int objectIndex, int aliasIndex,
+        int encodedMetaPropertyIndex, int resolvedTargetObjectId, int targetObjectIndex)
 {
     const CompiledObject &object = *objectContainer->objectAt(objectIndex);
 
@@ -1117,8 +1102,7 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAliasToPr
     QTypeRevision version = QTypeRevision::zero();
     QQmlPropertyData::Flags propertyFlags;
     QQmlError error = propertyDataForAlias(
-            component, alias, &type, &version, &propertyFlags, encodedMetaPropertyIndex,
-            resolvedTargetObjectId);
+            alias, &type, &version, &propertyFlags, encodedMetaPropertyIndex, targetObjectIndex);
     if (error.isValid())
         return error;
 

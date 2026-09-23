@@ -209,15 +209,15 @@ QQmlComponentAndAliasResolver<QV4::CompiledData::CompilationUnit>::resolveAliase
     const CompiledObject *obj = m_compiler->objectAt(objectIndex);
     int aliasIndex = 0;
     const auto doAppendAlias = [&](const QV4::CompiledData::Alias *alias, int encodedIndex,
-                                   int resolvedTargetObjectId) {
+                                   int resolvedTargetObjectId, int targetObjectIndex) {
         return appendAliasToPropertyCache(
-                &component, alias, objectIndex, aliasIndex++, encodedIndex,
-                resolvedTargetObjectId, aliasCacheCreator, error);
+                alias, objectIndex, aliasIndex++, encodedIndex,
+                resolvedTargetObjectId, targetObjectIndex, aliasCacheCreator, error);
     };
 
     const auto handleDeepAlias = [&](
         const QV4::CompiledData::Alias *alias, const QQmlPropertyCache::ConstPtr &propertyCache,
-        int coreIndex, QStringView subProperty, int resolvedTargetObjectId)
+        int coreIndex, QStringView subProperty, int resolvedTargetObjectId, int targetObjectIndex)
     {
         const QQmlPropertyResolver resolver = QQmlPropertyResolver(propertyCache);
         const QQmlPropertyData *actualProperty = resolver.property(subProperty.toString());
@@ -226,7 +226,7 @@ QQmlComponentAndAliasResolver<QV4::CompiledData::CompilationUnit>::resolveAliase
 
         if (doAppendAlias(
                 alias, QQmlPropertyIndex(coreIndex, actualProperty->coreIndex()).toEncoded(),
-                resolvedTargetObjectId)) {
+                resolvedTargetObjectId, targetObjectIndex)) {
             return DeepAliasResult::Success;
         }
 
@@ -270,7 +270,7 @@ QQmlComponentAndAliasResolver<QV4::CompiledData::CompilationUnit>::resolveAliase
         }
 
         if (property.isEmpty()) {
-            if (doAppendAlias(alias, -1, resolvedTargetObjectId))
+            if (doAppendAlias(alias, -1, resolvedTargetObjectId, targetObjectIndex))
                 continue;
             return SomeAliasesResolved;
         }
@@ -287,7 +287,8 @@ QQmlComponentAndAliasResolver<QV4::CompiledData::CompilationUnit>::resolveAliase
         const int coreIndex = targetProperty->coreIndex();
         if (subProperty.isEmpty()) {
             if (doAppendAlias(
-                        alias, QQmlPropertyIndex(coreIndex).toEncoded(), resolvedTargetObjectId)) {
+                        alias, QQmlPropertyIndex(coreIndex).toEncoded(), resolvedTargetObjectId,
+                        targetObjectIndex)) {
                 continue;
             }
             return SomeAliasesResolved;
@@ -302,7 +303,7 @@ QQmlComponentAndAliasResolver<QV4::CompiledData::CompilationUnit>::resolveAliase
 
             if (doAppendAlias(
                         alias, QQmlPropertyIndex(coreIndex, valueTypeIndex).toEncoded(),
-                        resolvedTargetObjectId)) {
+                        resolvedTargetObjectId, targetObjectIndex)) {
                 continue;
             }
 
@@ -322,7 +323,8 @@ QQmlComponentAndAliasResolver<QV4::CompiledData::CompilationUnit>::resolveAliase
                 continue;
 
             switch (handleDeepAlias(
-                    alias, bindingCache, coreIndex, subProperty, resolvedTargetObjectId)) {
+                    alias, bindingCache, coreIndex, subProperty, resolvedTargetObjectId,
+                    targetObjectIndex)) {
             case DeepAliasResult::NoProperty:
                 continue;
             case DeepAliasResult::CannotAppend:
@@ -343,7 +345,8 @@ QQmlComponentAndAliasResolver<QV4::CompiledData::CompilationUnit>::resolveAliase
         if (!typeCache)
             return SomeAliasesResolved;
 
-        switch (handleDeepAlias(alias, typeCache, coreIndex, subProperty, resolvedTargetObjectId)) {
+        switch (handleDeepAlias(alias, typeCache, coreIndex, subProperty, resolvedTargetObjectId,
+                                targetObjectIndex)) {
         case DeepAliasResult::NoProperty:
         case DeepAliasResult::CannotAppend:
             return SomeAliasesResolved;

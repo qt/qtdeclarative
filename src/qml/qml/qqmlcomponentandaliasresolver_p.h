@@ -69,13 +69,13 @@ private:
             const CompiledObject &component, int objectIndex,
             QQmlPropertyCacheAliasCreator<ObjectContainer> *aliasCacheCreator, QQmlError *error);
     [[nodiscard]] bool appendAliasToPropertyCache(
-            const CompiledObject *component, const QV4::CompiledData::Alias *alias, int objectIndex,
-            int aliasIndex, int encodedPropertyIndex, int resolvedTargetObjectId,
+            const QV4::CompiledData::Alias *alias, int objectIndex, int aliasIndex,
+            int encodedPropertyIndex, int resolvedTargetObjectId, int targetObjectIndex,
             QQmlPropertyCacheAliasCreator<ObjectContainer> *aliasCacheCreator, QQmlError *error)
     {
         *error = aliasCacheCreator->appendAliasToPropertyCache(
-                *component, *alias, objectIndex, aliasIndex, encodedPropertyIndex,
-                resolvedTargetObjectId);
+                *alias, objectIndex, aliasIndex, encodedPropertyIndex, resolvedTargetObjectId,
+                targetObjectIndex);
         resolvedAliases.insert(alias);
         return !error->isValid();
     }
