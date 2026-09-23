@@ -133,6 +133,13 @@ QString CompilationUnit::localCacheFilePath(const QUrl &url)
             + QLatin1Char('.') + cacheFileSuffix;
 }
 
+template<typename Target>
+static quint32 alignedTo(quint32 size)
+{
+    static constexpr quint32 Mask = alignof(Target) - 1u;
+    return (size + Mask) & ~Mask;
+}
+
 bool CompilationUnit::loadFromDisk(
         const QUrl &url, const QDateTime &sourceTimeStamp,
         qxp::function_ref<QByteArray() const> sourceChecksum, QString *errorString)
@@ -187,6 +194,11 @@ bool CompilationUnit::loadFromDisk(
 
         dataPtrRevert.dismiss();
         free(const_cast<Unit*>(oldDataPtr));
+        if (const RuntimeDataBlock *mappedRuntimeData = mappedUnit->runtimeData()) {
+            runtimeData = mappedRuntimeData;
+            runtimeDataStorage.clear();
+        }
+
         backingFile = std::move(cacheFile);
         return true;
     }
@@ -203,38 +215,47 @@ bool CompilationUnit::saveToDisk(
         return false;
     }
 
-    Unit *mutableUnit = const_cast<Unit *>(unitData());
+    const Unit *base = unitData();
     const QByteArray checksum = sourceChecksum();
-    if (checksum.size() != sizeof(mutableUnit->sourceChecksum)) {
+    if (checksum.size() != sizeof(base->sourceChecksum)) {
         *errorString = QStringLiteral("Failed to compute source code checksum");
         return false;
     }
 
-    // Switch the unit to content-hash mode for the duration of the write. sourceTimeStamp and
+    // Runtime-generated cache files are validated by content hash. sourceTimeStamp and
     // sourceChecksum live before md5Checksum and are therefore not covered by it, so we can patch
-    // them without recomputing the integrity checksum. Restore them afterwards because the
-    // in-memory unit is kept around and may still be used with its original time stamp.
-    const qint64 oldTimeStamp = mutableUnit->sourceTimeStamp;
-    char oldChecksum[sizeof(mutableUnit->sourceChecksum)];
-    memcpy(oldChecksum, mutableUnit->sourceChecksum, sizeof(oldChecksum));
-    mutableUnit->sourceTimeStamp = -1;
-    memcpy(mutableUnit->sourceChecksum, checksum.constData(), sizeof(mutableUnit->sourceChecksum));
-    const auto restore = qScopeGuard([&]() {
-        mutableUnit->sourceTimeStamp = oldTimeStamp;
-        memcpy(mutableUnit->sourceChecksum, oldChecksum, sizeof(oldChecksum));
-    });
+    // them without recomputing the integrity checksum. We only patch a copy of the header and
+    // leave the in-memory unit alone. We also keep the md5Checksum: It identifies the base unit
+    // and other units depend on it.
+    Q_ASSERT(!base->runtimeDataSize);
+    const quint32 baseSize = base->unitSize;
 
-    return SaveableUnitPointer(unitData()).saveToDisk<char>(
-            [&unitUrl, errorString](const char *data, quint32 size) {
-                const QString cachePath = localCacheFilePath(unitUrl);
-                if (SaveableUnitPointer::writeDataToFile(
-                            cachePath, data, size, errorString)) {
-                    CompilationUnitMapper::invalidate(cachePath);
-                    return true;
-                }
+    Unit header;
+    memcpy(&header, base, sizeof(Unit));
+    header.sourceTimeStamp = -1;
+    memcpy(header.sourceChecksum, checksum.constData(), sizeof(header.sourceChecksum));
+    header.flags |= quint32(Unit::StaticData);
 
-                return false;
-            });
+    // The runtime data is appended after the base unit.
+    const quint32 runtimeDataOffset = alignedTo<RuntimeDataBlock>(baseSize);
+    const quint32 runtimeDataSize = quint32(runtimeDataStorage.size());
+    if (runtimeDataSize > 0) {
+        header.offsetToRuntimeData = runtimeDataOffset;
+        header.runtimeDataSize = runtimeDataSize;
+        header.unitSize = runtimeDataOffset + runtimeDataSize;
+    }
+
+    const QString cachePath = localCacheFilePath(unitUrl);
+    if (!SaveableUnitPointer::writeDataToFile(
+                cachePath, reinterpret_cast<const char *>(&header), sizeof(Unit),
+                reinterpret_cast<const char *>(base) + sizeof(Unit), sizeof(Unit),
+                baseSize - sizeof(Unit), runtimeDataStorage.constData(), runtimeDataOffset,
+                runtimeDataSize, errorString)) {
+        return false;
+    }
+
+    CompilationUnitMapper::invalidate(cachePath);
+    return true;
 }
 
 QStringList CompilationUnit::moduleRequests() const
@@ -306,12 +327,10 @@ void CompilationUnit::allocateRuntimeData()
     Q_ASSERT(qmlData);
     const uint nObjects = qmlData->nObjects;
 
-    const auto align4 = [](quint32 n) -> quint32 { return (n + 3u) & ~3u; };
-
     // An offset table for the objects, followed by each object, its bindings and its binding
     // order. We pad each object so that the next one is aligned.
     const auto objectSpan = [&](uint nBindings) -> quint32 {
-        return align4(sizeof(RuntimeObject) + nBindings * sizeof(RuntimeBinding)
+        return alignedTo<RuntimeObject>(sizeof(RuntimeObject) + nBindings * sizeof(RuntimeBinding)
                       + nBindings * sizeof(RuntimeBindingIndex));
     };
 

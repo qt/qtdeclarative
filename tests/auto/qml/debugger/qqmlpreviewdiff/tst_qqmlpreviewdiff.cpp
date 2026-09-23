@@ -32,6 +32,13 @@ class tst_QQmlPreviewDiff : public QQmlDataTest
 public:
     tst_QQmlPreviewDiff();
 
+    static void initMain()
+    {
+        // Diffs and patches cover the base unit. Units mapped from the disk cache additionally
+        // carry their runtime data, which would get in the way of byte-wise comparisons.
+        qputenv("QML_DISABLE_DISK_CACHE", "1");
+    }
+
 private:
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> loadUnit(const QString &fileName);
     CompilationUnitDiff diffFiles(const QString &oldFile, const QString &newFile);

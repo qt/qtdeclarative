@@ -109,6 +109,7 @@ private slots:
     void localAliases();
     void aliasToAlias();
     void implicitComponentForHandlerNamedProperty();
+    void runtimeDataReused();
     void deepAliasThroughGroupedAliasFromCache();
     void listPropertyReplaceIfNotDefaultFromCache();
     void cacheResources();
@@ -878,6 +879,53 @@ void tst_qmldiskcache::aliasToAlias()
         QScopedPointer<QObject> obj(component.create());
         QVERIFY(!obj.isNull());
         QCOMPARE(obj->property("myAlias").toInt(), 100);
+    }
+}
+
+void tst_qmldiskcache::runtimeDataReused()
+{
+    QQmlEngine engine;
+
+    TestCompiler testCompiler(&engine);
+    QVERIFY(testCompiler.tempDir.isValid());
+
+    const QByteArray contents = QByteArrayLiteral(R"(
+        import QtQml
+        QtObject {
+            id: root
+            property QtObject child: QtObject {
+                id: inner
+                objectName: "inner"
+                onObjectNameChanged: root.changes++
+            }
+            property alias innerName: inner.objectName
+            property int changes: 0
+        }
+    )");
+
+    {
+        testCompiler.clearCache();
+        QVERIFY2(testCompiler.compile(contents), qPrintable(testCompiler.lastErrorString));
+        QVERIFY2(testCompiler.verify(), qPrintable(testCompiler.lastErrorString));
+
+        // The cache file is written in one go, including the runtime data, and then used right
+        // away. It is not replaced after the fact.
+        CleanlyLoadingComponent component(&engine, testCompiler.testFilePath);
+        QVERIFY(QQmlComponentPrivate::get(&component)->compilationUnit()->baseCompilationUnit()
+                        ->hasImmutableRuntimeData());
+    }
+
+    engine.clearComponentCache();
+
+    {
+        CleanlyLoadingComponent component(&engine, testCompiler.testFilePath);
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY2(!obj.isNull(), qPrintable(component.errorString()));
+        QVERIFY(QQmlComponentPrivate::get(&component)->compilationUnit()->baseCompilationUnit()
+                        ->hasImmutableRuntimeData());
+        QCOMPARE(obj->property("innerName").toString(), QStringLiteral("inner"));
+        obj->setProperty("innerName", QStringLiteral("changed"));
+        QCOMPARE(obj->property("changes").toInt(), 1);
     }
 }
 

@@ -86,6 +86,7 @@ private:
             QQmlRefPointer<QQmlTypeNameCache> *typeNameCache,
             QV4::CompiledData::ResolvedTypeReferenceMap *resolvedTypeCache
             ) const;
+    void saveToDiskCache();
     void compile(QV4::CompiledData::ResolvedTypeReferenceMap *resolvedTypeCache,
                  const QV4::CompiledData::DependentTypesHasher &dependencyHasher);
     QQmlError createTypeAndPropertyCaches(

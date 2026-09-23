@@ -164,6 +164,12 @@ template<>
 void QQmlComponentAndAliasResolver<QV4::CompiledData::CompilationUnit>::allocateNamedObjects(
         int componentRoot) const
 {
+    // If we have immutable runtime data, this information already exists since it has been loaded
+    // from the .qmlc file.
+    // TODO: Split QQmlComponentAndAliasResolver so that we don't have to check this all the time.
+    if (m_compiler->hasImmutableRuntimeData())
+        return;
+
     quint32_le *namedObjects
             = m_compiler->allocateNamedObjectsInComponent(componentRoot, m_idToObjectIndex.size());
     for (const int objectIndex : m_idToObjectIndex)
@@ -173,8 +179,8 @@ void QQmlComponentAndAliasResolver<QV4::CompiledData::CompilationUnit>::allocate
 template<>
 bool QQmlComponentAndAliasResolver<QV4::CompiledData::CompilationUnit>::markAsComponent(int index) const
 {
-    m_compiler->runtimeDataForWrite()->objectAt(index)->flags
-            |= QV4::CompiledData::RuntimeObject::IsComponent;
+    if (auto *runtimeData = m_compiler->runtimeDataForWrite())
+        runtimeData->objectAt(index)->flags |= QV4::CompiledData::RuntimeObject::IsComponent;
     return true;
 }
 
@@ -188,7 +194,8 @@ bool QQmlComponentAndAliasResolver<QV4::CompiledData::CompilationUnit>::isCompon
 template<>
 void QQmlComponentAndAliasResolver<QV4::CompiledData::CompilationUnit>::setObjectId(int index) const
 {
-    m_compiler->runtimeDataForWrite()->objectAt(index)->objectId = m_idToObjectIndex.size();
+    if (auto *runtimeData = m_compiler->runtimeDataForWrite())
+        runtimeData->objectAt(index)->objectId = m_idToObjectIndex.size();
 }
 
 template<>
@@ -213,7 +220,8 @@ QQmlError QQmlTypeData::createTypeAndPropertyCaches(
     m_compiledData->inlineComponentData = m_inlineComponentData;
     m_compiledData->qmlType = m_qmlType;
 
-    m_compiledData->allocateRuntimeData();
+    if (!m_compiledData->hasImmutableRuntimeData())
+        m_compiledData->allocateRuntimeData();
 
     QQmlPendingGroupedPropertyBindings pendingGroupedPropertyBindings;
 
@@ -526,11 +534,16 @@ void QQmlTypeData::done()
     {
         m_compiledData->inlineComponentData = m_inlineComponentData;
 
-        if (QList<QQmlError> errors = QQmlTypeCompiler::computeRuntimeData(
-                    m_compiledData.data(), typeLoader(), m_importCache.data());
-                !errors.isEmpty()) {
-            setError(errors);
-            return;
+        if (!m_compiledData->hasImmutableRuntimeData()) {
+            if (QList<QQmlError> errors = QQmlTypeCompiler::computeRuntimeData(
+                        m_compiledData.data(), typeLoader(), m_importCache.data());
+                    !errors.isEmpty()) {
+                setError(errors);
+                return;
+            }
+
+            if (!m_document.isNull())
+                saveToDiskCache();
         }
 
         {
@@ -782,6 +795,33 @@ QString QQmlTypeData::stringAt(int index) const
     return m_document->jsGenerator.stringTable.stringForIndex(index);
 }
 
+void QQmlTypeData::saveToDiskCache()
+{
+    if (!m_backupSourceCode.isCacheable() || !m_typeLoader->writeCacheFile())
+        return;
+
+    QByteArray cachedChecksum;
+    const auto sourceChecksum = [&]() {
+        if (cachedChecksum.isEmpty())
+            cachedChecksum = m_backupSourceCode.checksum();
+        return cachedChecksum;
+    };
+
+    QString errorString;
+    if (!m_compiledData->saveToDisk(url(), sourceChecksum, &errorString)) {
+        qCDebug(DBG_DISK_CACHE) << "Error saving cached version of"
+                                << m_compiledData->fileName() << "to disk:" << errorString;
+        return;
+    }
+
+    if (!m_compiledData->loadFromDisk(url(), m_backupSourceCode.sourceTimeStamp(), sourceChecksum,
+                                      &errorString)) {
+        // log but ignore error, keep using the in-memory compilation unit.
+        qCDebug(DBG_DISK_CACHE) << "Error re-loading cached version of"
+                                << m_compiledData->fileName() << "from disk:" << errorString;
+    }
+}
+
 void QQmlTypeData::compile(QV4::CompiledData::ResolvedTypeReferenceMap *resolvedTypeCache,
                            const QV4::CompiledData::DependentTypesHasher &dependencyHasher)
 {
@@ -796,31 +836,6 @@ void QQmlTypeData::compile(QV4::CompiledData::ResolvedTypeReferenceMap *resolved
         resolvedTypeCache->clear();
         setError(compiler.compilationErrors());
         return;
-    }
-
-    if (m_backupSourceCode.isCacheable() && m_typeLoader->writeCacheFile()) {
-        QString errorString;
-
-        QByteArray cachedChecksum;
-        const auto sourceChecksum = [&]() {
-            if (cachedChecksum.isEmpty())
-                cachedChecksum = m_backupSourceCode.checksum();
-            return cachedChecksum;
-        };
-
-        if (compilationUnit->saveToDisk(url(), sourceChecksum, &errorString)) {
-            QString error;
-            if (!compilationUnit->loadFromDisk(url(), m_backupSourceCode.sourceTimeStamp(),
-                                               sourceChecksum, &error)) {
-                // log but ignore error, keep using the in-memory compilation unit.
-                qCDebug(DBG_DISK_CACHE)
-                        << "Error re-loading cached version of" << compilationUnit->fileName()
-                        << "from disk:" << errorString;
-            }
-        } else {
-            qCDebug(DBG_DISK_CACHE) << "Error saving cached version of"
-                                    << compilationUnit->fileName() << "to disk:" << errorString;
-        }
     }
 
     m_compiledData = std::move(compilationUnit);
