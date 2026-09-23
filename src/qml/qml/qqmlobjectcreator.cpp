@@ -815,23 +815,24 @@ void QQmlObjectCreator::setupBindings(BindingSetupFlags mode)
     };
 
     // Explicit default property bindings (propertyNameIndex != 0 but resolving
-    // to the default property) are deferred during iteration over the prepended
-    // section of the binding list and applied in file-offset order once we reach
-    // the appended implicit default bindings (propertyNameIndex == 0).
-    // NB: They have to be contiguous, so we can flush them all in a row.
-    const QV4::CompiledData::Binding *explicitDefaultPropertyBindings = nullptr;
-    quint32 numExplicitDefaultPropertyBindings = 0;
+    // to the default property) are deferred during iteration and applied in file-offset order once
+    // we reach the implicit default bindings (propertyNameIndex == 0).
+    QVarLengthArray<const QV4::CompiledData::Binding *, 8> explicitDefaultPropertyBindings;
 
     const auto applyExplicitDefaultPropertyBindings = [&]() -> bool {
-        for (; numExplicitDefaultPropertyBindings > 0; --numExplicitDefaultPropertyBindings) {
-            if (!applyBinding(defaultProperty, explicitDefaultPropertyBindings++))
+        for (const QV4::CompiledData::Binding *b : std::as_const(explicitDefaultPropertyBindings)) {
+            if (!applyBinding(defaultProperty, b))
                 return false;
         }
+        explicitDefaultPropertyBindings.clear();
         return true;
     };
 
-    const QV4::CompiledData::Binding *binding = _compiledObject->bindingTable();
-    for (quint32 i = 0; i < _compiledObject->nBindings; ++i, ++binding) {
+    const QV4::CompiledData::RuntimeBindingIndex *bindingOrder =
+            compilationUnit->bindingApplicationOrder(_compiledObjectIndex);
+    for (quint32 k = 0; k < _compiledObject->nBindings; ++k) {
+        const quint32 i = bindingOrder[k];
+        const QV4::CompiledData::Binding *binding = _compiledObject->bindingTable() + i;
         const QQmlPropertyData *const property = propertyData->at(i);
         if (property) {
             const QQmlPropertyData *targetProperty = property;
@@ -865,16 +866,15 @@ void QQmlObjectCreator::setupBindings(BindingSetupFlags mode)
         if (binding->propertyNameIndex != quint32(0)
                 && defaultProperty
                 && property == defaultProperty) {
-            if (++numExplicitDefaultPropertyBindings == 1)
-                explicitDefaultPropertyBindings = binding;
+            explicitDefaultPropertyBindings.append(binding);
             continue;
         }
 
         // Flush deferred explicit default bindings if file offset is <= the
         // current implicit default binding's offset.
         if (binding->propertyNameIndex == quint32(0)
-                && numExplicitDefaultPropertyBindings > 0
-                && !(binding->location < explicitDefaultPropertyBindings->location)) {
+                && !explicitDefaultPropertyBindings.isEmpty()
+                && !(binding->location < explicitDefaultPropertyBindings.first()->location)) {
             if (!applyExplicitDefaultPropertyBindings())
                 return;
         }
@@ -1632,10 +1632,12 @@ QObject *QQmlObjectCreator::initializeNonComposite(
 
         QList<const QV4::CompiledData::Binding *> bindings;
         const QV4::CompiledData::Object *obj = compilationUnit->objectAt(index);
-        const QV4::CompiledData::Binding *binding = obj->bindingTable();
-        for (quint32 i = 0; i < obj->nBindings; ++i, ++binding) {
+        const QV4::CompiledData::RuntimeBindingIndex *bindingOrder =
+                compilationUnit->bindingApplicationOrder(index);
+        for (quint32 k = 0; k < obj->nBindings; ++k) {
+            const quint32 i = bindingOrder[k];
             if (compilationUnit->bindingIsCustomParser(index, i))
-                bindings << binding;
+                bindings << obj->bindingTable() + i;
         }
         customParser->applyBindings(instance, compilationUnit, bindings);
 

@@ -1038,11 +1038,38 @@ public:
             }
         }
         scanObject(/*root object*/0, ScopeDeferred::False);
+        if (!errors.isEmpty())
+            return errors;
+
+        for (int i = 0, count = unit->objectCount(); i < count; ++i)
+            computeBindingOrder(i);
         return errors;
     }
 
 private:
     enum class ScopeDeferred : bool { False, True };
+
+    void computeBindingOrder(int objectIndex)
+    {
+        using namespace QV4::CompiledData;
+        const Object *obj = unit->objectAt(objectIndex);
+        const Binding *bindings = obj->bindingTable();
+        RuntimeBindingIndex *order =
+                unit->runtimeDataForWrite()->objectAt(objectIndex)->bindingOrder();
+        uint n = 0;
+        const auto collect = [&](bool (Binding::*filter)() const) {
+            for (quint16 b = 0; b < obj->nBindings; ++b) {
+                if ((bindings[b].*filter)())
+                    order[n++] = b;
+            }
+        };
+        collect(&Binding::isValueBindingNoAlias);
+        collect(&Binding::isSignalHandler);
+        collect(&Binding::isAttachedProperty);
+        collect(&Binding::isGroupedProperty);
+        collect(&Binding::isValueBindingToAlias);
+        Q_ASSERT(n == obj->nBindings);
+    }
 
     bool recordError(const QV4::CompiledData::Location &location, const QString &description)
     {

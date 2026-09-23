@@ -2073,11 +2073,7 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
         }
 
         char *bindingPtr = objectPtr + objectToWrite->offsetToBindings;
-        bindingPtr = writeBindings(bindingPtr, o, &QV4::CompiledData::Binding::isValueBindingNoAlias);
-        bindingPtr = writeBindings(bindingPtr, o, &QV4::CompiledData::Binding::isSignalHandler);
-        bindingPtr = writeBindings(bindingPtr, o, &QV4::CompiledData::Binding::isAttachedProperty);
-        bindingPtr = writeBindings(bindingPtr, o, &QV4::CompiledData::Binding::isGroupedProperty);
-        bindingPtr = writeBindings(bindingPtr, o, &QV4::CompiledData::Binding::isValueBindingToAlias);
+        bindingPtr = writeBindings(bindingPtr, o);
         Q_ASSERT((bindingPtr - objectToWrite->offsetToBindings - objectPtr) / sizeof(QV4::CompiledData::Binding) == unsigned(o->bindingCount()));
 
         quint32_le *signalOffsetTable = reinterpret_cast<quint32_le *>(objectPtr + objectToWrite->offsetToSignals);
@@ -2178,11 +2174,9 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
             jsUnit, qmlUnit, output.jsModule.fileName, output.jsModule.finalUrl);
 }
 
-char *QmlUnitGenerator::writeBindings(char *bindingPtr, const Object *o, BindingFilter filter) const
+char *QmlUnitGenerator::writeBindings(char *bindingPtr, const Object *o) const
 {
     for (const Binding *b = o->firstBinding(); b; b = b->next) {
-        if (!(b->*(filter))())
-            continue;
         QV4::CompiledData::Binding *bindingToWrite = reinterpret_cast<QV4::CompiledData::Binding*>(bindingPtr);
         *bindingToWrite = *b;
         if (b->type() == QV4::CompiledData::Binding::Type_Script)

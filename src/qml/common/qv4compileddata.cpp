@@ -306,10 +306,18 @@ void CompilationUnit::allocateRuntimeData()
     Q_ASSERT(qmlData);
     const uint nObjects = qmlData->nObjects;
 
-    // An offset table for the objects, followed by each object and its bindings.
+    const auto align4 = [](quint32 n) -> quint32 { return (n + 3u) & ~3u; };
+
+    // An offset table for the objects, followed by each object, its bindings and its binding
+    // order. We pad each object so that the next one is aligned.
+    const auto objectSpan = [&](uint nBindings) -> quint32 {
+        return align4(sizeof(RuntimeObject) + nBindings * sizeof(RuntimeBinding)
+                      + nBindings * sizeof(RuntimeBindingIndex));
+    };
+
     quint32 size = sizeof(RuntimeDataBlock) + nObjects * sizeof(quint32_le);
     for (uint i = 0; i < nObjects; ++i)
-        size += sizeof(RuntimeObject) + qmlData->objectAt(i)->nBindings * sizeof(RuntimeBinding);
+        size += objectSpan(qmlData->objectAt(i)->nBindings);
 
     runtimeDataStorage = QByteArray(size, 0);
     char *base = runtimeDataStorage.data();
@@ -322,8 +330,13 @@ void CompilationUnit::allocateRuntimeData()
 
     for (uint i = 0; i < nObjects; ++i) {
         const Object *object = qmlData->objectAt(i);
+        const uint nBindings = object->nBindings;
         objectOffsetTable[i] = nextOffset;
-        nextOffset += sizeof(RuntimeObject) + object->nBindings * sizeof(RuntimeBinding);
+
+        RuntimeObject *runtimeObject = reinterpret_cast<RuntimeObject *>(base + nextOffset);
+        runtimeObject->offsetToBindingOrder
+                = sizeof(RuntimeObject) + nBindings * sizeof(RuntimeBinding);
+        nextOffset += objectSpan(nBindings);
     }
 
     runtimeData = block;

@@ -635,8 +635,7 @@ struct Q_QML_COMPILER_EXPORT QmlUnitGenerator
     void generate(Document &output, const QV4::CompiledData::DependentTypesHasher &dependencyHasher = QV4::CompiledData::DependentTypesHasher());
 
 private:
-    typedef bool (Binding::*BindingFilter)() const;
-    char *writeBindings(char *bindingPtr, const Object *o, BindingFilter filter) const;
+    char *writeBindings(char *bindingPtr, const Object *o) const;
 };
 
 struct Q_QML_COMPILER_EXPORT JSCodeGen : public QV4::Compiler::Codegen

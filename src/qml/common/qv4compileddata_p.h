@@ -54,7 +54,7 @@ QT_BEGIN_NAMESPACE
 // benefit that if another patch changes the version too, it will result in a merge conflict, and
 // not get removed silently.
 // Also update the comparison functions in qqmlpreviewdiff.cpp when you change the data structures.
-#define QV4_DATA_STRUCTURE_VERSION 0x51 // Signal handler names are not rewritten anymore
+#define QV4_DATA_STRUCTURE_VERSION 0x52 // Serialize bindings in natural order
 
 class QIODevice;
 class QQmlTypeNameCache;
@@ -1419,6 +1419,8 @@ struct RuntimeBinding
     quint32_le flags;
 };
 
+using RuntimeBindingIndex = quint16_le;
+
 struct RuntimeObject
 {
     enum Flag : quint32 {
@@ -1428,6 +1430,7 @@ struct RuntimeObject
     };
 
     quint32_le flags;
+    quint32_le offsetToBindingOrder;
 
     const RuntimeBinding *bindingTable() const
     {
@@ -1439,6 +1442,18 @@ struct RuntimeObject
     {
         return reinterpret_cast<RuntimeBinding *>(
                 reinterpret_cast<char *>(this) + sizeof(RuntimeObject));
+    }
+
+    const RuntimeBindingIndex *bindingOrder() const
+    {
+        return reinterpret_cast<const RuntimeBindingIndex *>(
+                reinterpret_cast<const char *>(this) + offsetToBindingOrder);
+    }
+
+    RuntimeBindingIndex *bindingOrder()
+    {
+        return reinterpret_cast<RuntimeBindingIndex *>(
+                reinterpret_cast<char *>(this) + offsetToBindingOrder);
     }
 };
 
@@ -1786,6 +1801,11 @@ public:
     {
         return runtimeObjectAt(objectIndex)->bindingTable()[bindingIndex].flags
                 & RuntimeBinding::IsCustomParserBinding;
+    }
+
+    const RuntimeBindingIndex *bindingApplicationOrder(int objectIndex) const
+    {
+        return runtimeObjectAt(objectIndex)->bindingOrder();
     }
 
     void allocateRuntimeData();

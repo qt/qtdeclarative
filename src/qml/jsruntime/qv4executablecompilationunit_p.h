@@ -166,6 +166,10 @@ public:
     {
         return m_compilationUnit->bindingIsCustomParser(objectIndex, bindingIndex);
     }
+    const CompiledData::RuntimeBindingIndex *bindingApplicationOrder(int objectIndex) const
+    {
+        return m_compilationUnit->bindingApplicationOrder(objectIndex);
+    }
 
     Heap::Object *templateObjectAt(int index) const;
 
