@@ -41,6 +41,7 @@ private slots:
     void createObject();
     void moveObject();
     void destroyObject();
+    void selectAfterDestroyingSelected();
 };
 
 QQmlEngineDebugObjectReference tst_QQmlEngineDebugInspectorIntegration::findRootObject()
@@ -216,6 +217,34 @@ void tst_QQmlEngineDebugInspectorIntegration::destroyObject()
     QVERIFY(success);
     QVERIFY(QQmlDebugTest::waitForSignal(m_engineDebugClient, SIGNAL(result())));
     QCOMPARE(m_engineDebugClient->object().children.size(), 0);
+}
+
+// The inspector forgets a selected item when the item is destroyed. It used to keep it, and the
+// next change of the selection disconnected from the destroyed item.
+void tst_QQmlEngineDebugInspectorIntegration::selectAfterDestroyingSelected()
+{
+    QCOMPARE(runAndConnect(true), ConnectSuccess);
+
+    QQmlEngineDebugObjectReference rootObject = findRootObject();
+    QVERIFY(rootObject.debugId != -1);
+    QCOMPARE(rootObject.children.size(), 2);
+    const int destroyedId = rootObject.children[0].debugId;
+    const int remainingId = rootObject.children[1].debugId;
+
+    int requestId = m_inspectorClient->select({ destroyedId });
+    QTRY_COMPARE(m_recipient->lastResponseId, requestId);
+    QVERIFY(m_recipient->lastResult);
+
+    requestId = m_inspectorClient->destroyObject(destroyedId);
+    QTRY_COMPARE(m_recipient->lastResponseId, requestId);
+    QVERIFY(m_recipient->lastResult);
+
+    // A crash would leave these unanswered
+    for (const QList<int> &selection : { QList<int>{ remainingId }, QList<int>{} }) {
+        requestId = m_inspectorClient->select(selection);
+        QTRY_COMPARE(m_recipient->lastResponseId, requestId);
+        QVERIFY(m_recipient->lastResult);
+    }
 }
 
 QTEST_MAIN(tst_QQmlEngineDebugInspectorIntegration)

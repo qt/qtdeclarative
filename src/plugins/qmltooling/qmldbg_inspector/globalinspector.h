@@ -40,7 +40,7 @@ Q_SIGNALS:
 private:
     void sendResult(int requestId, bool success);
     void sendCurrentObjects(const QList<QObject *> &objects);
-    void removeFromSelectedItems(QObject *object);
+    void removeFromSelectedItems(QQuickItem *item);
     QString titleForItem(QQuickItem *item) const;
     QString idStringForObject(QObject *obj) const;
     bool createQmlObject(int requestId, const QString &qml, QObject *parent,

@@ -47,12 +47,10 @@ const char MOVE_OBJECT[] = "moveObject";
 
 namespace QmlJSDebugger {
 
-void GlobalInspector::removeFromSelectedItems(QObject *object)
+void GlobalInspector::removeFromSelectedItems(QQuickItem *item)
 {
-    if (QQuickItem *item = qobject_cast<QQuickItem*>(object)) {
-        if (m_selectedItems.removeOne(item))
-            delete m_highlightItems.take(item);
-    }
+    if (m_selectedItems.removeOne(item))
+        delete m_highlightItems.take(item);
 }
 
 void GlobalInspector::setSelectedItems(const QList<QQuickItem *> &items)
@@ -221,7 +219,9 @@ bool GlobalInspector::syncSelectedItems(const QList<QQuickItem *> &items)
             continue;
 
         selectionChanged = true;
-        connect(item, &QObject::destroyed, this, &GlobalInspector::removeFromSelectedItems);
+        // When destroyed is emitted, the QQuickItem part of the object is gone already, and
+        // qobject_cast<QQuickItem *>() on the object fails. Only the pointer is compared.
+        connect(item, &QObject::destroyed, this, [this, item]() { removeFromSelectedItems(item); });
         m_selectedItems.append(item);
         for (QQuickWindowInspector *inspector : std::as_const(m_windowInspectors)) {
             if (inspector->isEnabled() && inspector->quickWindow() == item->window()) {
