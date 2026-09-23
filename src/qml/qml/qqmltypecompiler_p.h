@@ -74,6 +74,7 @@ public:
     int objectCount() const { return document->objects.size(); }
     int resolvedIndex(int index) const;
     int implicitComponentForObject(int childIndex) const;
+    int objectId(int index) const { return objectAt(index)->objectId(); }
     bool objectIsComponent(int index) const { return document->objects.at(index)->isComponent; }
     QString stringAt(int idx) const;
     QmlIR::PoolList<QmlIR::Function>::Iterator objectFunctionsBegin(const QmlIR::Object *object) const { return object->functionsBegin(); }
