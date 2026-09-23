@@ -1905,7 +1905,7 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
         method.setMethodName(signalName);
         method.setSourceLocation(combine(publicMember->firstSourceLocation(),
                                          publicMember->lastSourceLocation()));
-        method.setOtherMethodIndex(
+        method.setMethodIndex(
                 QQmlJSMetaMethod::RelativeFunctionIndex(m_currentScope->ownMethods().size()));
         while (param) {
             method.addParameter(
@@ -1995,7 +1995,7 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
                 QQmlSignalNames::propertyNameToChangedSignalName(propertyName), u"void"_s);
         method.setMethodType(QQmlJSMetaMethodType::Signal);
         method.setIsImplicitQmlPropertyChangeSignal(true);
-        method.setOtherMethodIndex(
+        method.setMethodIndex(
                 QQmlJSMetaMethod::RelativeFunctionIndex(m_currentScope->ownMethods().size()));
         m_currentScope->addOwnMethod(method);
 
@@ -2120,8 +2120,8 @@ void QQmlJSImportVisitor::visitFunctionExpressionHelper(QQmlJS::AST::FunctionExp
         if (std::any_of(locs.cbegin(), locs.cend(), [](const auto &loc) { return loc.isValid(); }))
             m_pendingMethodTypeAnnotations << pending;
 
-        method.setJsFunctionIndex(addFunctionOrExpression(m_currentScope, method.methodName()));
-        method.setOtherMethodIndex(
+        method.setCompiledFunctionIndex(addFunctionOrExpression(m_currentScope, method.methodName()));
+        method.setMethodIndex(
                 QQmlJSMetaMethod::RelativeFunctionIndex(m_currentScope->ownMethods().size()));
 
         if (m_currentScope->scopeType() != QQmlSA::ScopeType::QMLScope) {

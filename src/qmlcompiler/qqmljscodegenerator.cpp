@@ -1962,9 +1962,7 @@ QString QQmlJSCodeGenerator::initAndCall(
         const QQmlJSMetaMethod method = m_state.accumulatorOut().methodCall();
         Q_ASSERT(!method.isConstructor());
 
-        const QQmlJSMetaMethod::RelativeFunctionIndex relativeMethodIndex =
-                method.isJavaScriptFunction() ? method.jsFunctionIndex() : method.methodIndex();
-        initMethod = initMethodTemplate.arg(int(relativeMethodIndex));
+        initMethod = initMethodTemplate.arg(int(method.methodIndex()));
     }
 
     return u"const auto doCall = [&]() {\n"_s

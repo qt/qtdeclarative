@@ -714,7 +714,7 @@ void Compiler::compileMethod(Type &current, const QQmlJSMetaMethod &m,
         CodeGenerator urlGenerator { m_url, m_visitor };
         CodeGenerator::generate_callExecuteRuntimeFunction(
                 &code, urlGenerator.urlMethodName() + u"()",
-                owner->ownRuntimeFunctionIndex(m.jsFunctionIndex()), u"this"_s, returnType,
+                owner->ownRuntimeFunctionIndex(m.compiledFunctionIndex()), u"this"_s, returnType,
                 compiledParams);
     }
 
