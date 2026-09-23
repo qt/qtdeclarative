@@ -44,6 +44,11 @@ public:
 
     static std::optional<QString> handlerNameToSignalName(QStringView handler);
     static std::optional<QString> changedHandlerNameToSignalName(QStringView changedHandler);
+    static std::optional<QString> anyHandlerNameToSignalName(QStringView handler)
+    {
+        return isChangedHandlerName(handler) ? changedHandlerNameToSignalName(handler)
+                                             : handlerNameToSignalName(handler);
+    }
 
     static bool isChangedHandlerName(QStringView signalName);
     static bool isChangedSignalName(QStringView signalName);

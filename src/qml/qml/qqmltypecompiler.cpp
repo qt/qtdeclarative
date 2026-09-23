@@ -319,6 +319,10 @@ bool SignalHandlerResolver::resolveSignalHandlerExpressions(
     QHash<QString, QStringList> customSignals;
 
     for (QmlIR::Binding *binding = obj->firstBinding(); binding; binding = binding->next) {
+        // Attached objects are visited twice: Once via the attached property and once on their own.
+        if (binding->hasSignalHandlerBindingFlag())
+            continue;
+
         const QString bindingPropertyName = stringAt(binding->propertyNameIndex);
         // Attached property?
         const QV4::CompiledData::Binding::Type bindingType = binding->type();
@@ -367,7 +371,6 @@ bool SignalHandlerResolver::resolveSignalHandlerExpressions(
         const QQmlPropertyData *const qPropertyData = !qPropertyName.isEmpty()
                 ? resolver.property(qPropertyName, nullptr, checkRevision)
                 : nullptr;
-        QString finalSignalHandlerPropertyName = signalName;
         QV4::CompiledData::Binding::Flag flag
                 = QV4::CompiledData::Binding::IsSignalHandlerExpression;
 
@@ -391,7 +394,6 @@ bool SignalHandlerResolver::resolveSignalHandlerExpressions(
                 }
             }
         } else if (isPropertyObserver) {
-            finalSignalHandlerPropertyName = qPropertyName;
             flag = QV4::CompiledData::Binding::IsPropertyObserver;
         } else {
             if (notInRevision) {
@@ -456,7 +458,6 @@ bool SignalHandlerResolver::resolveSignalHandlerExpressions(
             }
         }
 
-        binding->propertyNameIndex = compiler->registerString(finalSignalHandlerPropertyName);
         binding->setFlag(flag);
     }
     return true;

@@ -54,7 +54,7 @@ QT_BEGIN_NAMESPACE
 // benefit that if another patch changes the version too, it will result in a merge conflict, and
 // not get removed silently.
 // Also update the comparison functions in qqmlpreviewdiff.cpp when you change the data structures.
-#define QV4_DATA_STRUCTURE_VERSION 0x50 // Record import versions in AOT lookup signatures
+#define QV4_DATA_STRUCTURE_VERSION 0x51 // Signal handler names are not rewritten anymore
 
 class QIODevice;
 class QQmlTypeNameCache;

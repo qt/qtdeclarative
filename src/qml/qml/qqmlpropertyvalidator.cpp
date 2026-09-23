@@ -175,7 +175,13 @@ QList<QQmlError> QQmlPropertyValidator::validateObject(
         if (!name.isEmpty()) {
             if (bindingFlags & QV4::CompiledData::Binding::IsSignalHandlerExpression
                     || bindingFlags & QV4::CompiledData::Binding::IsSignalHandlerObject) {
-                pd = propertyResolver.signal(name, &notInRevision, checkRevision);
+                pd = propertyResolver.signal(
+                        *QQmlSignalNames::anyHandlerNameToSignalName(name), &notInRevision,
+                        checkRevision);
+            } else if (bindingFlags & QV4::CompiledData::Binding::IsPropertyObserver) {
+                pd = propertyResolver.property(
+                        *QQmlSignalNames::changedHandlerNameToPropertyName(name), &notInRevision,
+                        checkRevision);
             } else {
                 pd = propertyResolver.property(name, &notInRevision, checkRevision);
             }

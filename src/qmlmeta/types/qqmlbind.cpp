@@ -24,6 +24,7 @@
 #include <QtQml/qqmlpropertymap.h>
 #include <QtQml/private/qqmllist_p.h>
 #include <QtQml/private/qqmllistwrapper_p.h>
+#include <QtQml/private/qqmlsignalnames_p.h>
 
 #include <QtCore/private/qobject_p.h>
 
@@ -1008,7 +1009,13 @@ void QQmlBindPrivate::decodeBinding(
 {
     const QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit
             = deferredData->compilationUnit;
-    const QString propertySuffix = compilationUnit->stringAt(binding->propertyNameIndex);
+    QString propertySuffix = compilationUnit->stringAt(binding->propertyNameIndex);
+    if (binding->hasFlag(QV4::CompiledData::Binding::IsSignalHandlerExpression)
+            || binding->hasFlag(QV4::CompiledData::Binding::IsSignalHandlerObject)) {
+        propertySuffix = *QQmlSignalNames::anyHandlerNameToSignalName(propertySuffix);
+    } else if (binding->hasFlag(QV4::CompiledData::Binding::IsPropertyObserver)) {
+        propertySuffix = *QQmlSignalNames::changedHandlerNameToPropertyName(propertySuffix);
+    }
     const QString propertyName = propertyPrefix + propertySuffix;
 
     switch (binding->type()) {
