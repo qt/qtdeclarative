@@ -78,7 +78,14 @@ void QQmlPreviewServiceImpl::messageReceived(const QByteArray &data)
                 ? QUrl(QLatin1String("qrc") + path)
                 : QUrl::fromLocalFile(path);
 
-        emit drop(url);
+        // Only a re-serve of a URL we already saw is an actual edit that needs relinking. The
+        // first time any file is served (e.g. while the whole app is still starting up) isn't
+        // dropping anything; treating it as such piles up the entire type registry as "dropped"
+        // and causes a mass relink storm on the first Load.
+        if (m_servedUrls.contains(url))
+            emit drop(url);
+        else
+            m_servedUrls.insert(url);
         emit file(path, contents);
 
         // Remember the first .qml file as the current URL, so that a Load command
