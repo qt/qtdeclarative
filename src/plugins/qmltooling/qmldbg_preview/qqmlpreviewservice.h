@@ -20,6 +20,7 @@
 #include "qqmlpreviewfileengine.h"
 #include <private/qqmldebugserviceinterfaces_p.h>
 
+#include <QtCore/qset.h>
 #include <memory>
 
 QT_BEGIN_NAMESPACE
@@ -82,6 +83,7 @@ private:
     QScopedPointer<QQmlPreviewFileLoader> m_loader;
     std::unique_ptr<QQmlPreviewHandler> m_handler;
     QUrl m_currentUrl;
+    QSet<QUrl> m_servedUrls;
 };
 
 QT_END_NAMESPACE
