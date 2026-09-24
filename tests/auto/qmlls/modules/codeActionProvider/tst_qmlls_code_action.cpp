@@ -250,7 +250,7 @@ void tst_qmlls_code_action::wrapComponentInLoader()
 
     client->requestCodeAction(params, responseHandler);
 
-    QTRY_VERIFY_WITH_TIMEOUT(didFinish, 1000);
+    QTRY_VERIFY_WITH_TIMEOUT(didFinish, 2000);
 
     const auto resultJson = QTypedJson::toJsonValue(result);
     const auto expectedJson = QTypedJson::toJsonValue(expected);

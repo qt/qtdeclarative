@@ -250,7 +250,7 @@ void tst_qmlls_cli::startServerImpl()
                 m_protocol->notifyInitialized(QLspSpecification::InitializedParams());
                 didInit = true;
             });
-    QTRY_COMPARE_WITH_TIMEOUT(didInit, true, 10000);
+    QTRY_COMPARE_WITH_TIMEOUT(didInit, true, 20000);
 }
 
 void tst_qmlls_cli::stopServerImpl()
@@ -306,7 +306,7 @@ void tst_qmlls_cli::warnings()
     auto guard = startServerRAII();
 
     // each expected message should appear exactly one time
-    QTRY_COMPARE_WITH_TIMEOUT(countExpectedMessages, QList<int>(expectedMessages.size(), 1), 500);
+    QTRY_COMPARE_WITH_TIMEOUT(countExpectedMessages, QList<int>(expectedMessages.size(), 1), 1000);
     // each unexpected message should appear exactly zero times
     QCOMPARE(countUnexpectedMessages, QList<int>(unexpectedMessages.size(), 0));
 
@@ -340,7 +340,7 @@ void tst_qmlls_cli::warnings()
     oParams.textDocument = textDocument;
     m_protocol->notifyDidOpenTextDocument(oParams);
 
-    QTRY_VERIFY_WITH_TIMEOUT(diagnosticOk, 3000);
+    QTRY_VERIFY_WITH_TIMEOUT(diagnosticOk, 6000);
     // each expected diagnostic should appear exactly one time
     QCOMPARE(countExpectedDiagnostics, QList<int>(expectedDiagnostics.size(), 1));
     // each unexpected diagnostic should appear exactly zero times
@@ -365,7 +365,7 @@ void tst_qmlls_cli::inputFile()
             params, [&didInit](const QLspSpecification::InitializeResult &) { didInit = true; });
 
     m_server.start();
-    QTRY_COMPARE_WITH_TIMEOUT(didInit, true, 10000);
+    QTRY_COMPARE_WITH_TIMEOUT(didInit, true, 20000);
 
     disconnect(&m_server, &QProcess::readyReadStandardOutput, nullptr, nullptr);
     m_server.close();

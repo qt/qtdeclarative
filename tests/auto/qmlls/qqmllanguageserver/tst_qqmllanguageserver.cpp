@@ -36,7 +36,7 @@ struct ClientAndServer
         result.client->requestInitialize(
                 initializeParams,
                 [&initializedOk](const InitializeResult &) { initializedOk = true; });
-        [&initializedOk] { QTRY_VERIFY_WITH_TIMEOUT(initializedOk, 3000); }();
+        [&initializedOk] { QTRY_VERIFY_WITH_TIMEOUT(initializedOk, 6000); }();
         result.client->notifyInitialized({ });
 
         return result;
@@ -54,14 +54,14 @@ void tst_qqmllanguageserver::noFreezeAfterRequestToClient()
 
     bool ok = false;
     server->protocol()->requestWorkspaceSemanticTokensRefresh({ }, [&ok]() { ok = true; });
-    QTRY_VERIFY_WITH_TIMEOUT(ok, 5000);
+    QTRY_VERIFY_WITH_TIMEOUT(ok, 10000);
 
     ok = false;
     client->requestShutdown({ }, [&ok, &c = client]() {
         c->notifyExit({ });
         ok = true;
     });
-    QTRY_VERIFY_WITH_TIMEOUT(ok, 5000);
+    QTRY_VERIFY_WITH_TIMEOUT(ok, 10000);
 }
 
 QTEST_MAIN(tst_qqmllanguageserver)

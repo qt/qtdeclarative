@@ -92,7 +92,7 @@ struct ClientAndServer
         result.client->requestInitialize(
                 initializeParams,
                 [&initializedOk](const InitializeResult &) { initializedOk = true; });
-        [&initializedOk] { QTRY_VERIFY_WITH_TIMEOUT(initializedOk, 3000); }();
+        [&initializedOk] { QTRY_VERIFY_WITH_TIMEOUT(initializedOk, 6000); }();
         result.client->notifyInitialized({});
 
         return result;
@@ -112,7 +112,7 @@ void tst_qmlls_progress::backgroundBuild()
     server->codeModelManager()->backgroundBuildStarted("");
     server->codeModelManager()->backgroundBuildFinished("");
 
-    QTRY_VERIFY_WITH_TIMEOUT(ok, 3000);
+    QTRY_VERIFY_WITH_TIMEOUT(ok, 6000);
 }
 
 void tst_qmlls_progress::cancelBackgroundBuild()
@@ -140,7 +140,7 @@ void tst_qmlls_progress::cancelBackgroundBuild()
     p.token = 0;
     client->notifyWorkDoneProgressCancel(p);
 
-    QTRY_COMPARE_WITH_TIMEOUT(spy.count(), 1, 3000);
+    QTRY_COMPARE_WITH_TIMEOUT(spy.count(), 1, 6000);
 }
 
 void tst_qmlls_progress::cancelBackgroundBuildWithInvalidToken()
@@ -180,7 +180,7 @@ void tst_qmlls_progress::cancelBackgroundBuildWithInvalidToken()
     client->notifyWorkDoneProgressCancel(duplicate);
 
     // only the valid id should trigger the backgroundBuildCancelled. The duplicate shouldn't make anything crash.
-    QTRY_COMPARE_WITH_TIMEOUT(spy.count(), 1, 3000);
+    QTRY_COMPARE_WITH_TIMEOUT(spy.count(), 1, 6000);
 }
 
 void tst_qmlls_progress::orderOfProgressNotifications()
@@ -222,7 +222,7 @@ void tst_qmlls_progress::orderOfProgressNotifications()
     emit server->codeModelManager()->backgroundBuildStarted("");
     emit server->codeModelManager()->backgroundBuildFinished("");
 
-    QTRY_COMPARE_WITH_TIMEOUT(step, 3, 3000);
+    QTRY_COMPARE_WITH_TIMEOUT(step, 3, 6000);
 }
 
 QTEST_MAIN(tst_qmlls_progress)

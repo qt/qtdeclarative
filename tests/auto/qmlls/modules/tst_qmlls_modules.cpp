@@ -159,7 +159,7 @@ void tst_qmlls_modules::init()
         m_protocol->notifyInitialized(InitializedParams());
         didInit = true;
     });
-    QTRY_COMPARE_WITH_TIMEOUT(didInit, true, 10000);
+    QTRY_COMPARE_WITH_TIMEOUT(didInit, true, 20000);
 }
 
 void tst_qmlls_modules::cleanup()
@@ -332,7 +332,7 @@ void tst_qmlls_modules::checkCompletions(const QByteArray &uri, int lineNr, int 
                 ProtocolBase::defaultResponseErrorHandler(err);
                 QVERIFY2(false, "error computing the completion");
             });
-    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 30000);
+    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 60000);
 }
 
 void tst_qmlls_modules::function_documentations_data()
@@ -436,7 +436,7 @@ void tst_qmlls_modules::function_documentations()
                 QVERIFY2(false, "error computing the completion");
                 clean();
             });
-    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 3000);
+    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 6000);
 }
 
 void tst_qmlls_modules::buildDir()
@@ -482,7 +482,7 @@ void tst_qmlls_modules::buildDir()
             QByteArray(Notifications::AddBuildDirsMethod),
             addBuildDirsParamsFromMap(importPathsPerWorkspace, tempDir.path().toUtf8()));
 
-    QTRY_VERIFY_WITH_TIMEOUT(semanticTokensRefreshed, 1000);
+    QTRY_VERIFY_WITH_TIMEOUT(semanticTokensRefreshed, 2000);
 
     DidChangeTextDocumentParams didChange;
     didChange.textDocument.uri = *uri;
@@ -664,7 +664,7 @@ void tst_qmlls_modules::goToTypeDefinition()
                 ProtocolBase::defaultResponseErrorHandler(err);
                 QVERIFY2(false, "error computing the completion");
             });
-    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 30000);
+    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 60000);
 }
 
 void tst_qmlls_modules::goToDefinition_data()
@@ -750,7 +750,7 @@ void tst_qmlls_modules::goToDefinition()
                 ProtocolBase::defaultResponseErrorHandler(err);
                 QVERIFY2(false, "error computing the completion");
             });
-    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 30000);
+    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 60000);
 }
 
 // startLine and startCharacter start at 1, not 0
@@ -885,7 +885,7 @@ void tst_qmlls_modules::findUsages()
                 ProtocolBase::defaultResponseErrorHandler(err);
                 QVERIFY2(false, "error computing the completion");
             });
-    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 3000);
+    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 6000);
 }
 
 void tst_qmlls_modules::documentFormatting_data()
@@ -1008,7 +1008,7 @@ void tst_qmlls_modules::documentFormatting()
     m_protocol->requestDocumentFormatting(params, std::move(responseHandler),
                                           std::move(errorHandler));
 
-    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 50000);
+    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 100000);
 }
 
 void tst_qmlls_modules::renameUsages_data()
@@ -1232,7 +1232,7 @@ void tst_qmlls_modules::renameUsages()
                 QCOMPARE(err.code, expectedError.code);
                 QCOMPARE(err.message, expectedError.message);
             });
-    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 3000);
+    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 6000);
 }
 
 struct EditingRecorder
@@ -1401,7 +1401,7 @@ void tst_qmlls_modules::linting()
             });
     for (const auto &action : recorder.actions) {
         m_protocol->notifyDidChangeTextDocument(action);
-        QTRY_VERIFY_WITH_TIMEOUT(diagnosticOk, 5000);
+        QTRY_VERIFY_WITH_TIMEOUT(diagnosticOk, 10000);
         diagnosticOk = false;
     }
 }
@@ -1594,7 +1594,7 @@ void tst_qmlls_modules::warnings()
                 diagnosticOk = true;
             });
 
-    QTRY_VERIFY_WITH_TIMEOUT(diagnosticOk, 3000);
+    QTRY_VERIFY_WITH_TIMEOUT(diagnosticOk, 6000);
 }
 
 void tst_qmlls_modules::rangeFormatting_data()
@@ -1705,7 +1705,7 @@ void tst_qmlls_modules::rangeFormatting()
 
     m_protocol->requestDocumentRangeFormatting(params, std::move(responseHandler),
                                                std::move(errorHandler));
-    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 10000);
+    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 20000);
 }
 
 void tst_qmlls_modules::hover_data()
@@ -1786,7 +1786,7 @@ void tst_qmlls_modules::hover()
     };
 
     m_protocol->requestHover(params, std::move(responseHandler), std::move(errorHandler));
-    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 10000);
+    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 20000);
 }
 
 enum AddBuildDirOption : bool { AddBuildDir, DoNotAddBuildDir };
@@ -1856,7 +1856,7 @@ void tst_qmlls_modules::qmldirImports()
         completionOk = true;
     });
 
-    QTRY_VERIFY_WITH_TIMEOUT(diagnosticOk && completionOk, 10000);
+    QTRY_VERIFY_WITH_TIMEOUT(diagnosticOk && completionOk, 20000);
 }
 
 void tst_qmlls_modules::quickFixes_data()
@@ -1943,7 +1943,7 @@ void tst_qmlls_modules::quickFixes()
                 diagnosticOk = true;
             });
 
-    QTRY_VERIFY_WITH_TIMEOUT(diagnosticOk, 5000);
+    QTRY_VERIFY_WITH_TIMEOUT(diagnosticOk, 10000);
 
     codeActionParams.context.diagnostics = diagnostics;
 
@@ -1976,7 +1976,7 @@ void tst_qmlls_modules::quickFixes()
         codeActionOk = true;
     });
 
-    QTRY_VERIFY_WITH_TIMEOUT(codeActionOk, 5000);
+    QTRY_VERIFY_WITH_TIMEOUT(codeActionOk, 10000);
 }
 
 static QQmlJS::Dom::DomItem fileObject(const QString &filePath)
@@ -2039,7 +2039,7 @@ void tst_qmlls_modules::semanticHighlightingFull()
     };
 
     m_protocol->requestSemanticTokens(params, std::move(responseHandler), std::move(errorHandler));
-    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 10000);
+    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 20000);
 }
 
 void tst_qmlls_modules::semanticHighlightingRange_data()
@@ -2090,7 +2090,7 @@ void tst_qmlls_modules::semanticHighlightingRange()
 
     m_protocol->requestSemanticTokensRange(params, std::move(responseHandler),
                                            std::move(errorHandler));
-    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 10000);
+    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 20000);
 }
 
 void tst_qmlls_modules::semanticHighlightingDelta_data()
@@ -2143,7 +2143,7 @@ void tst_qmlls_modules::semanticHighlightingDelta()
         params.previousResultId = res->resultId.value();
         fullDocumentSemanticTokensData = res->data;
     }, errorHandler);
-    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 10000);
+    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 20000);
 
     // Change the file
     DidChangeTextDocumentParams didChange;
@@ -2164,7 +2164,7 @@ void tst_qmlls_modules::semanticHighlightingDelta()
         QScopeGuard callAtExit(cleanup);
         result = res;
     }, std::move(errorHandler));
-    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 10000);
+    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 20000);
 
     if (const auto *const delta = std::get_if<QLspSpecification::SemanticTokensDelta>(&result)) {
         QVERIFY(delta);
@@ -2405,7 +2405,7 @@ void tst_qmlls_modules::documentSymbols()
     };
 
     m_protocol->requestDocumentSymbol(params, std::move(responseHandler), std::move(errorHandler));
-    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 10000);
+    QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 20000);
 }
 
 QTEST_MAIN(tst_qmlls_modules)

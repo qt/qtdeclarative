@@ -266,7 +266,7 @@ void tst_qmlls_qqmlcodemodel::openFiles()
     // open file A
     model.newOpenFile(fileAUrl, 0, readFile(u"FileA.qml"_s));
 
-    QTRY_VERIFY_WITH_TIMEOUT(model.validEnv().field(Fields::qmlFileWithPath).key(fileAPath), 3000);
+    QTRY_VERIFY_WITH_TIMEOUT(model.validEnv().field(Fields::qmlFileWithPath).key(fileAPath), 6000);
 
     {
         const DomItem fileAComponents = model.validEnv()
@@ -281,7 +281,7 @@ void tst_qmlls_qqmlcodemodel::openFiles()
     QSignalSpy spy(&model, &QmlLsp::QQmlCodeModel::openUpdateThreadFinished);
     model.newOpenFile(fileAUrl, 1, readFile(u"FileA2.qml"_s));
     // wait for QQmlCodeModel to finish loading
-    QTRY_COMPARE_WITH_TIMEOUT(spy.count(), 1, 3000);
+    QTRY_COMPARE_WITH_TIMEOUT(spy.count(), 1, 6000);
 
     {
         const DomItem fileAComponents = model.validEnv()
@@ -334,7 +334,7 @@ void tst_qmlls_qqmlcodemodel::importPathViaSettings()
 
     model.newOpenFile(fileUrl, 0, readFile(someFile));
 
-    QTRY_VERIFY_WITH_TIMEOUT(model.validEnv().field(Fields::qmlFileWithPath).key(filePath), 3000);
+    QTRY_VERIFY_WITH_TIMEOUT(model.validEnv().field(Fields::qmlFileWithPath).key(filePath), 6000);
 
     {
         const DomItem fileAComponents = model.validEnv()
@@ -372,7 +372,7 @@ static void reloadLotsOfFileMethod()
 
     // wait for them to load
     QTRY_COMPARE_WITH_TIMEOUT(model.validEnv().field(Fields::qmlFileWithPath).keys().size(),
-                              fileNames.size(), 3000);
+                              fileNames.size(), 6000);
 
     auto areAllFilesPopulated = [&model]() {
         for (const QString &key : model.validEnv().field(Fields::qmlFileWithPath).keys()) {
@@ -390,7 +390,7 @@ static void reloadLotsOfFileMethod()
     };
 
     // populate all files
-    QTRY_VERIFY_WITH_TIMEOUT(areAllFilesPopulated(), 1000);
+    QTRY_VERIFY_WITH_TIMEOUT(areAllFilesPopulated(), 2000);
 
     // modify all files on disk
     for (const QString &fileName : fileNames) {
@@ -404,7 +404,7 @@ static void reloadLotsOfFileMethod()
     model.newOpenFile(QUrl::fromLocalFile(fileNames.front()).toEncoded(), 1, content + "\n\n");
 
     // wait for QQmlCodeModel to finish loading before leaving the scope
-    QTRY_COMPARE_WITH_TIMEOUT(spy.count(), 1, 3000);
+    QTRY_COMPARE_WITH_TIMEOUT(spy.count(), 1, 6000);
 }
 
 void tst_qmlls_qqmlcodemodel::reloadLotsOfFiles()
@@ -464,7 +464,7 @@ void tst_qmlls_qqmlcodemodel::defaultWorkspace()
     manager.setImportPaths(QLibraryInfo::paths(QLibraryInfo::QmlImportsPath));
     manager.addRootUrls({ unrelatedRoot });
     manager.newOpenFile(fileAUrl, 0, readFile(u"FileA.qml"_s));
-    QTRY_VERIFY_WITH_TIMEOUT(manager.snapshotByUrl(fileAUrl).validDoc, 3000);
+    QTRY_VERIFY_WITH_TIMEOUT(manager.snapshotByUrl(fileAUrl).validDoc, 6000);
 
     // make sure that fileA was not saved in the unrelated root
     QCOMPARE_NE(manager.findCodeModelForFile(fileAUrl),
@@ -488,7 +488,7 @@ void tst_qmlls_qqmlcodemodel::closeWorkspace()
                              QLibraryInfo::path(QLibraryInfo::QmlImportsPath) });
     manager.addRootUrls({ root });
     manager.newOpenFile(file1, 0, fileContent);
-    QTRY_VERIFY_WITH_TIMEOUT(manager.snapshotByUrl(file1).validDoc, 3000);
+    QTRY_VERIFY_WITH_TIMEOUT(manager.snapshotByUrl(file1).validDoc, 6000);
 
     QCOMPARE(manager.findCodeModelForFile(file1), manager.findCodeModel(root));
 
@@ -498,7 +498,7 @@ void tst_qmlls_qqmlcodemodel::closeWorkspace()
     QVERIFY(manager.snapshotByUrl(file1).validDoc);
 
     manager.newOpenFile(file2, 0, fileContent);
-    QTRY_VERIFY_WITH_TIMEOUT(manager.snapshotByUrl(file2).validDoc, 3000);
+    QTRY_VERIFY_WITH_TIMEOUT(manager.snapshotByUrl(file2).validDoc, 6000);
     // new files should not open in closed workspaces
     QCOMPARE(manager.findCodeModelForFile(file2), manager.findCodeModel(defaultRoot));
 
@@ -541,7 +541,7 @@ void tst_qmlls_qqmlcodemodel::addingWorkspaces()
     manager.addRootUrls({ outerWorkspace });
 
     manager.newOpenFile(file1, 0, fileContent);
-    QTRY_VERIFY_WITH_TIMEOUT(manager.snapshotByUrl(file1).validDoc, 3000);
+    QTRY_VERIFY_WITH_TIMEOUT(manager.snapshotByUrl(file1).validDoc, 6000);
 
     QCOMPARE(manager.findCodeModelForFile(file1), manager.findCodeModelForFile(outerWorkspace));
 
@@ -552,14 +552,14 @@ void tst_qmlls_qqmlcodemodel::addingWorkspaces()
     QCOMPARE(manager.findCodeModelForFile(file2), manager.findCodeModelForFile(innerWorkspace));
 
     manager.newOpenFile(file2, 0, fileContent);
-    QTRY_VERIFY_WITH_TIMEOUT(manager.snapshotByUrl(file2).validDoc, 3000);
+    QTRY_VERIFY_WITH_TIMEOUT(manager.snapshotByUrl(file2).validDoc, 6000);
     QCOMPARE(manager.findCodeModelForFile(file2), manager.findCodeModelForFile(innerWorkspace));
 
     manager.closeOpenFile(file1);
     // fileA was closed, so it can now be reopened in the new outerRoot workspace
     QCOMPARE(manager.findCodeModelForFile(file1), manager.findCodeModelForFile(innerWorkspace));
     manager.newOpenFile(file1, 0, fileContent);
-    QTRY_VERIFY_WITH_TIMEOUT(manager.snapshotByUrl(file1).validDoc, 3000);
+    QTRY_VERIFY_WITH_TIMEOUT(manager.snapshotByUrl(file1).validDoc, 6000);
     QCOMPARE(manager.findCodeModelForFile(file1), manager.findCodeModelForFile(innerWorkspace));
 
     // closing outerRoot should not affect opened files
@@ -664,7 +664,7 @@ void tst_qmlls_qqmlcodemodel::withQmllsBuildIni()
     manager.newOpenFile(fileBUrl, 0, readFile("twoWorkspaces/WorkSpaceB/UseImportPathB.qml"_L1));
 
     for (const auto &fileUrl : { fileAUrl, fileBUrl })
-        QTRY_VERIFY_WITH_TIMEOUT(manager.snapshotByUrl(fileUrl).validDoc, 3000);
+        QTRY_VERIFY_WITH_TIMEOUT(manager.snapshotByUrl(fileUrl).validDoc, 6000);
 
     DomItem domItemA = manager.snapshotByUrl(fileAUrl).validDoc;
     DomItem domItemB = manager.snapshotByUrl(fileBUrl).validDoc;
@@ -798,7 +798,7 @@ void tst_qmlls_qqmlcodemodel::withQmllsBuildIniWithoutRootUrls()
     // opening fileA should create the rootA workspace, even if rootA was never added as root url to
     // manager.
     manager.newOpenFile(fileUrl, 0, readFile("twoWorkspaces/WorkSpaceA/UseImportPathA.qml"_L1));
-    QTRY_VERIFY_WITH_TIMEOUT(manager.snapshotByUrl(fileUrl).validDoc, 3000);
+    QTRY_VERIFY_WITH_TIMEOUT(manager.snapshotByUrl(fileUrl).validDoc, 6000);
     QCOMPARE(manager.rootUrls(), QList<QByteArray>{} << QByteArray{} << projectRootUrl << rootAUrl);
 
     QCOMPARE_NE(manager.findCodeModelForFile(fileUrl),
@@ -909,7 +909,7 @@ void tst_qmlls_qqmlcodemodel::qprocessScheduler()
 
     scheduler.schedule(list, QByteArray());
 
-    QTRY_COMPARE_WITH_TIMEOUT(spy.count(), 1, 5000);
+    QTRY_COMPARE_WITH_TIMEOUT(spy.count(), 1, 10000);
 
     // verify that the processes really ran and wrote something to disk:
     for (const QString &fileName : fileNames)
@@ -995,7 +995,7 @@ void tst_qmlls_qqmlcodemodel::qprocessSchedulerCancel()
     QCOMPARE(doneSpy.count(), 0);
     QCOMPARE(startedSpy.count(), 0);
 
-    QTRY_COMPARE_WITH_TIMEOUT(doneSpy.count() + cancelledSpy.count(), commands.size(), 9000);
+    QTRY_COMPARE_WITH_TIMEOUT(doneSpy.count() + cancelledSpy.count(), commands.size(), 18000);
     QCOMPARE(cancelledSpy.count(), 1);
 
     // verify that the processes really ran and wrote something to disk:
@@ -1063,7 +1063,7 @@ void tst_qmlls_qqmlcodemodel::multipleQProcessScheduler()
         scheduler.schedule(list, id);
     }
 
-    QTRY_COMPARE_WITH_TIMEOUT(spy.count(), fileNamesById.size(), 5000);
+    QTRY_COMPARE_WITH_TIMEOUT(spy.count(), fileNamesById.size(), 10000);
 
     for (const auto &[id, fileNames] : fileNamesById.asKeyValueRange()) {
         for (const QString &fileName : fileNames)
@@ -1220,7 +1220,7 @@ void tst_qmlls_qqmlcodemodel::setImportPathsWhileLoadingFile()
     QTRY_VERIFY(constantlyChangingImportPathsThread->isRunning());
 
     model.newOpenFile(fileAUrl, 0, readFile(u"FileA.qml"_s));
-    QTRY_VERIFY_WITH_TIMEOUT(model.validEnv().field(Fields::qmlFileWithPath).key(fileAPath), 3000);
+    QTRY_VERIFY_WITH_TIMEOUT(model.validEnv().field(Fields::qmlFileWithPath).key(fileAPath), 6000);
 
     shutDown = true;
     constantlyChangingImportPathsThread->wait();

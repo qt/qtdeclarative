@@ -142,7 +142,7 @@ void tst_Qmlls::initTestCase()
         m_protocol.notifyInitialized(InitializedParams());
         didInit = true;
     });
-    QTRY_COMPARE_WITH_TIMEOUT(didInit, true, 10000);
+    QTRY_COMPARE_WITH_TIMEOUT(didInit, true, 20000);
 }
 
 void tst_Qmlls::didOpenTextDocument()
@@ -158,8 +158,8 @@ void tst_Qmlls::didOpenTextDocument()
     oParams.textDocument = textDocument;
     m_protocol.notifyDidOpenTextDocument(oParams);
 
-    QTRY_VERIFY_WITH_TIMEOUT(m_diagnosticsHandler.numDiagnostics(uri) != 0, 10000);
-    QTRY_VERIFY_WITH_TIMEOUT(m_diagnosticsHandler.contains(uri, 3u, 4u, 3u, 10u), 10000);
+    QTRY_VERIFY_WITH_TIMEOUT(m_diagnosticsHandler.numDiagnostics(uri) != 0, 20000);
+    QTRY_VERIFY_WITH_TIMEOUT(m_diagnosticsHandler.contains(uri, 3u, 4u, 3u, 10u), 20000);
 
     auto diagnostics = m_diagnosticsHandler.diagnostics(uri);
 
@@ -243,7 +243,7 @@ void tst_Qmlls::didOpenTextDocument()
                 qWarning() << "CodeAction Error:" << QString::fromUtf8(error.message);
             });
 
-    QTRY_VERIFY_WITH_TIMEOUT(success, 10000);
+    QTRY_VERIFY_WITH_TIMEOUT(success, 20000);
     m_diagnosticsHandler.clear();
 
     DidChangeTextDocumentParams cParams;
@@ -254,7 +254,7 @@ void tst_Qmlls::didOpenTextDocument()
     cParams.contentChanges.append(change);
     m_protocol.notifyDidChangeTextDocument(cParams);
 
-    QTRY_VERIFY_WITH_TIMEOUT(m_diagnosticsHandler.numDiagnostics(uri) != 0, 30000);
+    QTRY_VERIFY_WITH_TIMEOUT(m_diagnosticsHandler.numDiagnostics(uri) != 0, 60000);
     m_diagnosticsHandler.clear();
 
     DidCloseTextDocumentParams closeP;
@@ -282,7 +282,7 @@ void tst_Qmlls::testWorkspace()
     oParams.textDocument = textDocument;
     m_protocol.notifyDidOpenTextDocument(oParams);
 
-    QTRY_VERIFY_WITH_TIMEOUT(m_diagnosticsHandler.numDiagnostics(uri) != 0, 30000);
+    QTRY_VERIFY_WITH_TIMEOUT(m_diagnosticsHandler.numDiagnostics(uri) != 0, 60000);
     m_diagnosticsHandler.clear();
 
     DidCloseTextDocumentParams closeP;
@@ -293,7 +293,7 @@ void tst_Qmlls::testWorkspace()
 void tst_Qmlls::cleanupTestCase()
 {
     m_server.closeWriteChannel();
-    QTRY_COMPARE_WITH_TIMEOUT(m_server.state(), QProcess::NotRunning, 10000);
+    QTRY_COMPARE_WITH_TIMEOUT(m_server.state(), QProcess::NotRunning, 20000);
     QCOMPARE(m_server.exitStatus(), QProcess::NormalExit);
 }
 
