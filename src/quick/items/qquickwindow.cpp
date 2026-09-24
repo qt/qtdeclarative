@@ -363,7 +363,10 @@ void QQuickWindowPrivate::polishItems()
 #endif
 
     if (needsChildWindowStackingOrderUpdate) {
-        updateChildWindowStackingOrder();
+        // Restacking walks the whole item tree, so skip it when there are
+        // no child windows to restack.
+        if (q_func()->findChild<QWindow *>(Qt::FindDirectChildrenOnly))
+            updateChildWindowStackingOrder();
         needsChildWindowStackingOrderUpdate = false;
     }
 }

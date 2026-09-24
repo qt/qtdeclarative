@@ -17,6 +17,9 @@
 #include <QtQuick/private/qquickwindow_p.h>
 #include <QtQuick/private/qquickwindowcontainer_p.h>
 
+#include <QtCore/qloggingcategory.h>
+#include <QtCore/qscopeguard.h>
+
 #define TEST_WINDOW_PARENT 0
 
 class tst_QQuickWindowContainer : public QQmlDataTest
@@ -48,6 +51,7 @@ private slots:
     void invisibleChildWindowFocus();
 
     void updateStackingOrderPerformance();
+    void skipStackingOrderUpdateWithoutChildWindows();
 
 private:
     std::unique_ptr<QQmlApplicationEngine> m_engine;
@@ -291,6 +295,71 @@ void tst_QQuickWindowContainer::updateStackingOrderPerformance()
         contentItem->polish();
         windowPrivate->polishItems();
     }
+}
+
+static int stackingOrderUpdateCount = 0;
+static QtMessageHandler previousMessageHandler = nullptr;
+
+static void countStackingOrderUpdates(QtMsgType type, const QMessageLogContext &context,
+                                      const QString &message)
+{
+    if (qstrcmp(context.category, "qt.quick.window") == 0) {
+        if (message.startsWith(QLatin1String("Updating child window stacking order")))
+            ++stackingOrderUpdateCount;
+        return;
+    }
+    previousMessageHandler(type, context, message);
+}
+
+void tst_QQuickWindowContainer::skipStackingOrderUpdateWithoutChildWindows()
+{
+    QLoggingCategory::setFilterRules(QStringLiteral("qt.quick.window.debug=true"));
+    previousMessageHandler = qInstallMessageHandler(countStackingOrderUpdates);
+    auto restore = qScopeGuard([]{
+        qInstallMessageHandler(previousMessageHandler);
+        QLoggingCategory::setFilterRules(QString());
+    });
+    if (!QLoggingCategory("qt.quick.window").isDebugEnabled())
+        QSKIP("Debug output for qt.quick.window can not be enabled");
+
+    QQuickWindow quickWindow;
+    auto *windowPrivate = QQuickWindowPrivate::get(&quickWindow);
+
+    // Changes the z of a new item's child, which requests a (deferred)
+    // stacking order update, and runs the polish pass that handles it.
+    auto changeStackingAndPolish = [&] {
+        auto *child = new QQuickItem(new QQuickItem(quickWindow.contentItem()));
+        child->setZ(1);
+        QVERIFY(windowPrivate->needsChildWindowStackingOrderUpdate);
+        stackingOrderUpdateCount = 0;
+        windowPrivate->polishItems();
+        QVERIFY(!windowPrivate->needsChildWindowStackingOrderUpdate);
+    };
+
+    // No child windows, nothing to restack
+    changeStackingAndPolish();
+    if (QTest::currentTestFailed())
+        return;
+    QCOMPARE(stackingOrderUpdateCount, 0);
+
+    // Child window added by the window container during the same polish pass
+    QWindow containedWindow;
+    auto container = std::make_unique<QQuickWindowContainer>();
+    container->setContainedWindow(&containedWindow);
+    container->setParentItem(quickWindow.contentItem());
+    changeStackingAndPolish();
+    if (QTest::currentTestFailed())
+        return;
+    QCOMPARE(containedWindow.parent(), &quickWindow);
+    QCOMPARE(stackingOrderUpdateCount, 1);
+
+    // The child window is removed along with its container
+    container.reset();
+    QCOMPARE(containedWindow.parent(), nullptr);
+    changeStackingAndPolish();
+    if (QTest::currentTestFailed())
+        return;
+    QCOMPARE(stackingOrderUpdateCount, 0);
 }
 
 QTEST_MAIN(tst_QQuickWindowContainer)
