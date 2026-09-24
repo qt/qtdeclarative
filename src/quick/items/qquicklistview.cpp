@@ -699,8 +699,12 @@ void QQuickListViewPrivate::initializeViewItem(FxViewItem *item)
     item->trackGeometry(true);
 
     if (sectionCriteria && sectionCriteria->delegate()) {
-        if (QString::compare(item->attached->m_prevSection, item->attached->m_section, Qt::CaseInsensitive))
-            updateInlineSection(static_cast<FxListItemSG*>(item));
+        auto *listItem = static_cast<FxListItemSG*>(item);
+        // QTBUG-146169: Try to update if exists. Due to a timing issue, an item may already have
+        // a (stale) section item it no longer needs
+        if (QString::compare(item->attached->m_prevSection, item->attached->m_section, Qt::CaseInsensitive)
+                || listItem->section())
+            updateInlineSection(listItem);
     }
 }
 

@@ -121,6 +121,7 @@ private slots:
     void sectionsDragOutsideBounds_data();
     void sectionsDragOutsideBounds();
     void sectionsDelegate_headerVisibility();
+    void sectionsNoDuplicateWithManualCurrentIndex_qtbug146169();
     void sectionPropertyChange();
     void sectionDelegateChange();
     void sectionsItemInsertion();
@@ -2403,6 +2404,32 @@ void tst_QQuickListView::sectionsDelegate_headerVisibility()
     QTRY_VERIFY(!listview->isMoving());
     listview->setCurrentIndex(0);
     QTRY_VERIFY(qFuzzyIsNull(listview->contentY()));
+}
+
+void tst_QQuickListView::sectionsNoDuplicateWithManualCurrentIndex_qtbug146169()
+{
+    QScopedPointer<QQuickView> window(createView());
+
+    window->setSource(testFileUrl("listview-sections-currentindex.qml"));
+
+    QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
+    QVERIFY(listview != nullptr);
+    // The ListView is deliberately left unsized on QML side.
+    QVERIFY(listview->width() == 0.0);
+    listview->setWidth(240);
+    listview->setHeight(320);
+
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QQuickItem *contentItem = listview->contentItem();
+    QTRY_VERIFY(contentItem != nullptr);
+
+    QVERIFY(QQuickTest::qWaitForPolish(listview));
+
+    QCOMPARE(findItems<QQuickItem>(contentItem, "sect_A").size(), 1);
+    QCOMPARE(findItems<QQuickItem>(contentItem, "sect_B").size(), 1);
+    QCOMPARE(findItems<QQuickItem>(contentItem, "sect_C").size(), 1);
 }
 
 void tst_QQuickListView::sectionsPositioning()
