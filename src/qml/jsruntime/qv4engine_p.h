@@ -549,6 +549,7 @@ public:
     void setDebugger(Debugging::Debugger *) {}
     void setProfiler(Profiling::Profiler *) {}
     static void setPreviewing(bool) {}
+    static bool isPreviewing() { return false; }
 #else
     QV4::Debugging::Debugger *debugger() const { return m_debugger.data(); }
     QV4::Profiling::Profiler *profiler() const { return m_profiler.data(); }
@@ -556,6 +557,7 @@ public:
     void setDebugger(Debugging::Debugger *debugger);
     void setProfiler(Profiling::Profiler *profiler);
     static void setPreviewing(bool enabled);
+    static bool isPreviewing();
 #endif // QT_CONFIG(qml_debug)
 
     // We don't want to #include <private/qv4stackframe_p.h> here, but we still want

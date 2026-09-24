@@ -26,6 +26,7 @@
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickwindow.h>
 #include <private/qquickitem_p.h>
+#include <private/qquickanimation_p.h>
 
 #include <QtGui/qfont.h>
 #include <QtGui/qcolor.h>
@@ -36,6 +37,7 @@
 #include <functional>
 
 using namespace QV4::CompiledData;
+using namespace Qt::StringLiterals;
 
 // A single observable value of a reloaded widget: how to read it, and what it should be
 // before the reload, after the reload, and after mutating the source property (to prove the
@@ -207,6 +209,11 @@ private slots:
     // Granular live-object update tests
     void granularConstantUpdate();
     void granularConstantUpdatePreservesUserOverride();
+
+    // A running looping animation picks up an edited duration on its next loop, just like when
+    // the duration is changed at run time (QTBUG-150561).
+    void inPlacePatchLoopingAnimationDuration_data();
+    void inPlacePatchLoopingAnimationDuration();
     void granularPropertyAdditionWithStash();
     void granularPropertyRemovalWithStash();
     void updateObjectsFunctionAdd();
@@ -595,6 +602,56 @@ void tst_QQmlPreviewObjectPatch::granularConstantUpdatePreservesUserOverride()
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
     QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
     QCOMPARE(object->property("count").toInt(), 99); // preserved
+}
+
+void tst_QQmlPreviewObjectPatch::inPlacePatchLoopingAnimationDuration_data()
+{
+    QTest::addColumn<QString>("oldFile");
+    QTest::addColumn<QString>("newFile");
+
+    QTest::newRow("script") << u"LoopingAnimationDurationOld.qml"_s
+                            << u"LoopingAnimationDurationScript.qml"_s;
+    QTest::newRow("literal") << u"LoopingAnimationDurationLiteralOld.qml"_s
+                             << u"LoopingAnimationDurationLiteral.qml"_s;
+}
+
+void tst_QQmlPreviewObjectPatch::inPlacePatchLoopingAnimationDuration()
+{
+    QFETCH(QString, oldFile);
+    QFETCH(QString, newFile);
+
+    QQmlComponent oldComponent(&engine, testFileUrl(oldFile));
+    QVERIFY2(oldComponent.isReady(), qPrintable(oldComponent.errorString()));
+    QScopedPointer<QObject> object(oldComponent.create());
+    QVERIFY(object);
+
+    auto *animation = object->property("animation").value<QQuickPropertyAnimation *>();
+    QVERIFY(animation);
+    // QQuickAbstractAnimation::duration() is the duration of the running animation job.
+    QQuickAbstractAnimation *running = animation;
+    QVERIFY(animation->isRunning());
+    QCOMPARE(animation->duration(), 1000);
+    QCOMPARE(running->duration(), 1000);
+
+    QQmlComponent newComponent(&engine, testFileUrl(newFile));
+    QVERIFY2(newComponent.isReady(), qPrintable(newComponent.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldComponent)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComponent)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QCOMPARE(updateObjects(objects, oldExecUnit, newExecUnit),
+             QQmlPreview::PatchResult::PatchedInPlace);
+
+    QCOMPARE(animation->duration(), 100);
+    QVERIFY(animation->isRunning());
+
+    // The next loop starts with the new duration, and the animation keeps going.
+    QTRY_COMPARE_WITH_TIMEOUT(running->duration(), 100, 5s);
+    QVERIFY(animation->isRunning());
+    const int currentTime = running->currentTime();
+    QTRY_VERIFY(running->currentTime() != currentTime);
 }
 
 void tst_QQmlPreviewObjectPatch::granularPropertyAdditionWithStash()
