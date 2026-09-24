@@ -111,6 +111,7 @@ private slots:
     // (coffee example theme-toggle crash).
     void inPlaceValueTypeSingletonBindingReload();
     void inPlaceLazyComponentUpdateBeforeInstantiation();
+    void inPlaceUpdateWithLazilyLoadedModule();
     void inPlaceRequiredPropertyDelegateCrash();
 
     // samegame hot-reload trace regressions.
@@ -1598,6 +1599,38 @@ void tst_QQmlPreview::inPlaceLazyComponentUpdateBeforeInstantiation()
     m_process->stop();
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::NotConnected);
     QVERIFY(m_serviceErrors.isEmpty());
+}
+
+// QTBUG-150558: Files requested by the app after the in-place handler was installed are reported
+// as dropped. A JavaScript module among them must not be reloaded as a QML component.
+void tst_QQmlPreview::inPlaceUpdateWithLazilyLoadedModule()
+{
+    const QString file("inplace_lazy_module_test/Main.qml");
+    QCOMPARE(startQmlProcess(file), ConnectSuccess);
+    QVERIFY(m_client);
+    QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
+
+    enableInPlaceUpdates();
+    verifyProcessOutputContains("lazy_module_test scale=1 answer=none");
+
+    QByteArray contents = readAndModify(file, {{"active: false", "active: true"}});
+    QVERIFY(!contents.isEmpty());
+    serveFile(testFile(file), contents);
+    m_client->triggerLoad(testFileUrl(file));
+    QTRY_VERIFY(m_files.contains(testFile("inplace_lazy_module_test/Constants.mjs")));
+    verifyProcessOutputContains("lazy_module_test scale=1 answer=42");
+
+    contents = readAndModify(file, {{"active: false", "active: true"}, {"scale: 1", "scale: 2"}});
+    QVERIFY(!contents.isEmpty());
+    serveFile(testFile(file), contents);
+    m_client->triggerLoad(testFileUrl(file));
+    verifyProcessOutputContains("lazy_module_test scale=2 answer=42");
+
+    QVERIFY(m_process->state() != QProcess::NotRunning);
+    QVERIFY2(m_serviceErrors.isEmpty(), qPrintable(m_serviceErrors.join(u'\n')));
+
+    m_process->stop();
+    QTRY_COMPARE(m_client->state(), QQmlDebugClient::NotConnected);
 }
 
 // Reproduces a use-after-free crash: when rebuilding a ListView that has an
