@@ -299,9 +299,10 @@ void BaselineJIT::generate_SetLookup(int index, int base)
     as->passJSSlotAsArg(base, 1);
     as->passFunctionAsArg(0);
     if (function->isStrict())
-        BASELINEJIT_GENERATE_RUNTIME_CALL(SetLookupStrict, CallResultDestination::InAccumulator)
+        BASELINEJIT_GENERATE_RUNTIME_CALL(SetLookupStrict, CallResultDestination::Ignore)
     else
-        BASELINEJIT_GENERATE_RUNTIME_CALL(SetLookupSloppy, CallResultDestination::InAccumulator)
+        BASELINEJIT_GENERATE_RUNTIME_CALL(SetLookupSloppy, CallResultDestination::Ignore)
+    LOAD_ACC();
 }
 
 void BaselineJIT::generate_LoadSuperProperty(int property)
