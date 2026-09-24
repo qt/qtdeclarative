@@ -200,10 +200,16 @@ void updateEngine(std::shared_ptr<InplaceUpdate> inplaceUpdate, const QList<QUrl
 {
     QV4::ExecutionEngine *v4 = inplaceUpdate->engine->handle();
     std::vector<QQmlComponent *> components;
+    QQmlTypeLoader *typeLoader = v4->typeLoader();
     for (const QUrl &url : urls) {
+        // Any file the application requests from the preview client is reported as dropped.
+        // Only QML documents can be recompiled as components. Scripts and qmldir files are merely
+        // evicted from the cache.
+        const bool isQmlDocument = typeLoader->isTypeLoaded(QQmlMetaType::normalizedUrl(url));
+
         // First remove any cached instance of the CU
         // NB: Don't remove from the ExecutionEngine's list of CUs. We need those for the GC.
-        if (!v4->typeLoader()->removeFromCache(url))
+        if (!typeLoader->removeFromCache(url) || !isQmlDocument)
             continue;
 
         // Hold on to the old unit.
