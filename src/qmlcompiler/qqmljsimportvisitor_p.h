@@ -314,6 +314,8 @@ protected:
     // Used to temporarily store annotations for functions and generators wrapped in UiSourceElements
     QList<QQmlJSAnnotation> m_pendingMethodAnnotations;
 
+    QList<QQmlJS::SourceLocation> m_groupedObjectDefinitions;
+
     struct PendingPropertyType
     {
         QQmlJSScope::Ptr scope;
@@ -394,6 +396,8 @@ private:
                                                  const QQmlJSMetaProperty &property);
     void populatePropertyAliases();
     void resolveGroupedProperties();
+    bool isInSameGroupedPropertyDefinition(const QQmlJS::SourceLocation &first,
+                                           const QQmlJS::SourceLocation &second) const;
     void handleIdDeclaration(QQmlJS::AST::UiScriptBinding *scriptBinding);
     virtual void handleLiteralBinding(const QQmlJSMetaPropertyBinding &,
                                       const QQmlJS::AST::UiPublicMember *);

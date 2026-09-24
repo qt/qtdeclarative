@@ -978,7 +978,8 @@ void TestQmllint::dirtyQmlCode_data()
             << defaultOptions;
     QTest::newRow("Invalid_id_expression")
             << QStringLiteral("invalidId1.qml")
-            << ResultBuilder::singleExpected("Failed to parse id"_L1)
+            << ResultBuilder::singleExpected(
+                       "IDs must contain only letters, numbers, and underscores"_L1)
             << defaultOptions;
     QTest::newRow("Invalid_syntax_JS")
             << QStringLiteral("failure1.js")
@@ -1108,7 +1109,14 @@ void TestQmllint::dirtyQmlCode_data()
             << defaultOptions;
     QTest::newRow("anchors3")
             << QStringLiteral("anchors3.qml")
-            << ResultBuilder::singleExpected("Cannot assign binding of type QQuickItem to QQuickAnchorLine"_L1)
+            << ResultBuilder()
+                       .addExpected(
+                               "Cannot assign binding of type QQuickItem to QQuickAnchorLine"_L1, 4,
+                               31)
+                       .addExpected(
+                               "Cannot assign binding of type QQuickItem to QQuickAnchorLine"_L1, 5,
+                               29)
+                       .build()
             << defaultOptions;
     QTest::newRow("annotatedDefaultParameter")
             << QStringLiteral("annotatedDefaultParameter.qml")
@@ -1159,13 +1167,17 @@ void TestQmllint::dirtyQmlCode_data()
             << defaultOptions;
     QTest::newRow("badAliasExpression")
             << QStringLiteral("badAliasExpression.qml")
-            << ResultBuilder::singleExpected("Invalid alias expression. Only IDs and field member "
-                                             "expressions can be aliased"_L1, 5, 26)
+            << ResultBuilder::singleExpected(
+                       "Invalid alias reference. An alias reference must be specified as <id>, "_L1
+                       "<id>.<property> or <id>.<value property>.<property>"_L1,
+                       5, 26)
             << defaultOptions;
     QTest::newRow("badAliasNotAnExpression")
             << QStringLiteral("badAliasNotAnExpression.qml")
-            << ResultBuilder::singleExpected("Invalid alias expression. Only IDs and field member "
-                                             "expressions can be aliased"_L1, 4, 30)
+            << ResultBuilder::singleExpected(
+                       "Invalid alias reference. An alias reference must be "_L1
+                       "specified as <id>, <id>.<property> or <id>.<value property>.<property>"_L1,
+                       4, 30)
             << defaultOptions;
     QTest::newRow("badAliasObject")
             << QStringLiteral("badAliasObject.qml")
@@ -1362,6 +1374,7 @@ void TestQmllint::dirtyQmlCode_data()
             << ResultBuilder()
                .addExpected("Duplicated property name \"cat\", \"cat\" is already a property."_L1, 5, 21)
                .addExpected("Duplicated signal name \"clicked\", \"clicked\" is already a signal"_L1, 8, 12)
+               .addExpected("Cannot assign literal of type double to QString"_L1, 4, 23)
                .build()
             << defaultOptions;
     QTest::newRow("enumInvalid")
@@ -1425,12 +1438,18 @@ void TestQmllint::dirtyQmlCode_data()
     QTest::newRow("invalidAliasTarget1")
             << QStringLiteral("invalidAliasTarget.qml")
             << ResultBuilder()
-               .addExpected("Invalid alias expression - an initializer is needed."_L1, 6, 18)
-               .addExpected("Invalid alias expression. Only IDs and field member expressions can "
-                            "be aliased"_L1, 7, 30)
-               .addExpected("Invalid alias expression. Only IDs and field member expressions can be "
-                            "aliased"_L1, 9, 34)
-               .build()
+                       .addExpected("Invalid alias expression - an initializer is needed."_L1, 6,
+                                    18)
+                       .addExpected("No property alias location"_L1, 6, 9)
+                       .addExpected(
+                               "Invalid alias reference. An alias reference must be specified as <id>, "_L1
+                               "<id>.<property> or <id>.<value property>.<property>"_L1,
+                               7, 30)
+                       .addExpected(
+                               "Invalid alias reference. An alias reference must be specified as <id>, "_L1
+                               "<id>.<property> or <id>.<value property>.<property>"_L1,
+                               9, 34)
+                       .build()
             << defaultOptions;
     QTest::newRow("invalidInterceptor")
             << QStringLiteral("invalidInterceptor.qml")
@@ -1462,7 +1481,7 @@ void TestQmllint::dirtyQmlCode_data()
     QTest::newRow("lowerCaseQualifiedImport")
             << QStringLiteral("lowerCaseQualifiedImport.qml")
             << ResultBuilder()
-               .addExpected("Import qualifier 'test' must start with a capital letter."_L1)
+               .addExpected("Invalid import qualifier 'test': must start with an uppercase letter"_L1)
                .addExpected("Namespace 'test' of 'test.Rectangle' must start with an upper case "
                             "letter."_L1)
                .build()
@@ -1470,7 +1489,7 @@ void TestQmllint::dirtyQmlCode_data()
     QTest::newRow("lowerCaseQualifiedImport2")
             << QStringLiteral("lowerCaseQualifiedImport2.qml")
             << ResultBuilder()
-               .addExpected("Import qualifier 'test' must start with a capital letter."_L1)
+               .addExpected("Invalid import qualifier 'test': must start with an uppercase letter"_L1)
                .addExpected("Namespace 'test' of 'test.Item' must start with an upper case letter."_L1)
                .addExpected("Namespace 'test' of 'test.Rectangle' must start with an upper case letter."_L1)
                .addExpected("Namespace 'test' of 'test.color' must start with an upper case letter."_L1)
@@ -1675,8 +1694,12 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)"_L1,
             << defaultOptions;
     QTest::newRow("unresolvedArrayBinding")
             << QStringLiteral("unresolvedArrayBinding.qml")
-            << ResultBuilder::singleExpected(
-                   "Declaring an object which is not a Qml object as a list member."_L1)
+            << ResultBuilder()
+                       .addExpected("Declaring an object which is not a Qml object as a list member."_L1)
+                       .addExpected("Expected type name"_L1, 5, 9)
+                       .addExpected("Expected type name"_L1, 6, 9)
+                       .addExpected("Expected type name"_L1, 8, 9)
+                       .build()
             << defaultOptions;
     QTest::newRow("unresolvedAttachedType")
             << QStringLiteral("unresolvedAttachedType.qml")
@@ -1716,8 +1739,8 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)"_L1,
 
     QTest::newRow("jsdeclInQmlScope")
             << QStringLiteral("jsdeclInQmlScope.qml")
-            << ResultBuilder::singleExpected(
-                   "JavaScript declarations are not allowed in QML elements"_L1, 4, 13)
+            << ResultBuilder::singleExpected("JavaScript declaration outside Script element"_L1, 4,
+                                             9)
             << defaultOptions;
 
     QTest::newRow("contextPropertiesFromUser")
@@ -1812,12 +1835,7 @@ void TestQmllint::dirtyQmlSnippet_data()
                u"property alias a: inner.checked\n"_s
                u"property alias b: root.a\n"_s
                u"NoSuchType { id: inner }\n"_s
-            << ResultBuilder()
-               .addExpected("NoSuchType was not found")
-               .addUnexpected("Cannot resolve alias \"a\"")
-               .addUnexpected("Cannot resolve alias \"b\"")
-               .build()
-            << defaultOptions;
+            << ResultBuilder::singleExpected("NoSuchType was not found") << defaultOptions;
     QTest::newRow("aliasCycle")
             << u"id: root\n"_s
                u"property int myP: 42\n"_s
@@ -1827,7 +1845,7 @@ void TestQmllint::dirtyQmlSnippet_data()
                        .addExpected("Cannot resolve alias \"badId\"")
                        .addUnexpected("Alias \"badId\" is part of an alias cycle")
                        .addUnexpected("Cannot resolve alias \"aliasToAlias\"")
-                       .addExpected("Alias \"aliasToAlias\" is part of an alias cycle")
+                       .addUnexpected("Alias \"aliasToAlias\" is part of an alias cycle")
                        .build()
             << defaultOptions;
     QTest::newRow("aliasCycleWithChild")
@@ -1842,8 +1860,8 @@ void TestQmllint::dirtyQmlSnippet_data()
             << ResultBuilder()
                        .addExpected("Cannot resolve alias \"badId\"")
                        .addExpected("Cannot resolve alias \"badIdInChild\"")
-                       .addExpected("Alias \"aliasToAlias\" is part of an alias cycle")
-                       .addExpected("Alias \"badAlias\" is part of an alias cycle")
+                       .addUnexpected("Alias \"badAlias\" is part of an alias cycle")
+                       .addUnexpected("Alias \"aliasToAlias\" is part of an alias cycle")
                        .build()
             << defaultOptions;
     QTest::newRow("assignLhsLocation")
@@ -2035,23 +2053,23 @@ void TestQmllint::dirtyQmlSnippet_data()
     QTest::newRow("duplicateBinding")
             << u"property int i; i: 42; i: 43;"_s
             << ResultBuilder()
-               .addExpected("Duplicate binding on property 'i'"_L1, 1, 27)
-               .addExpected("Note: previous binding on 'i' here"_L1, 1, 20)
-               .build()
+                       .addExpected("Duplicate binding on property 'i'"_L1, 1, 24)
+                       .addExpected("Note: previous binding on 'i' here"_L1, 1, 20)
+                       .build()
             << defaultOptions;
     QTest::newRow("duplicateBinding2")
             << u"property int i: 42; i: 43;"_s
             << ResultBuilder()
-               .addExpected("Duplicate binding on property 'i'"_L1, 1, 24)
-               .addExpected("Note: previous binding on 'i' here"_L1, 1, 17)
-               .build()
+                       .addExpected("Duplicate binding on property 'i'"_L1, 1, 21)
+                       .addExpected("Note: previous binding on 'i' here"_L1, 1, 17)
+                       .build()
             << defaultOptions;
     QTest::newRow("duplicateGrouped")
             << u"Text { font.pixelSize: 5; font.pixelSize: 10; }"_s
             << ResultBuilder()
-               .addExpected("Duplicate binding on property 'pixelSize'"_L1, 1, 43)
-               .addExpected("Note: previous binding on 'pixelSize' here"_L1, 1, 24)
-               .build()
+                       .addExpected("Duplicate binding on property 'pixelSize'"_L1, 1, 27)
+                       .addExpected("Note: previous binding on 'pixelSize' here"_L1, 1, 24)
+                       .build()
             << defaultOptions;
     QTest::newRow("duplicateGrouped2")
             << u"Text { font.pixelSize: 5; font { pixelSize: 10 } }"_s
@@ -2063,17 +2081,21 @@ void TestQmllint::dirtyQmlSnippet_data()
     QTest::newRow("duplicateGrouped3")
             << u"Text { font { pixelSize: 5; pixelSize: 10 } }"_s
             << ResultBuilder()
-               .addExpected("Duplicate binding on property 'pixelSize'"_L1, 1, 40)
-               .addExpected("Note: previous binding on 'pixelSize' here"_L1, 1, 26)
-               .build()
+                       .addExpected("Duplicate binding on property 'pixelSize'"_L1, 1, 29)
+                       .addExpected("Note: previous binding on 'pixelSize' here"_L1, 1, 26)
+                       .build()
+            << defaultOptions;
+    QTest::newRow("duplicateList")
+            << u"property list<Item> myList; myList: Item {} myList: Item {}"_s
+            << ResultBuilder::singleExpected("Duplicate binding on property 'myList'", 1, 45)
             << defaultOptions;
     QTest::newRow("duplicateInlineComponent")
             << u"component A: QtObject {}\n"_s
                u"Item { component A: Item {} }\n"_s
             << ResultBuilder()
-               .addExpected("Duplicate inline component 'A'"_L1, 2, 8)
-               .addExpected("Note: previous component named 'A' here"_L1, 1, 1)
-               .build()
+                       .addExpected("Inline component names must be unique per file"_L1, 2, 8)
+                       .addExpected("Note: previous component named 'A' here"_L1, 1, 1)
+                       .build()
             << defaultOptions;
     QTest::newRow("enumsAreNotTypes")
             << u"function f(a: enum) {}"_s
@@ -2115,10 +2137,10 @@ void TestQmllint::dirtyQmlSnippet_data()
     QTest::newRow("enum")
             << u"enum Hello { World, Kitty, World, dlrow }"_s
             << ResultBuilder()
-               .addExpected("Enum key 'World' has already been declared"_L1, 1, 28)
-               .addExpected("Note: previous declaration of 'World' here"_L1, 1, 14)
-               .addExpected("Enum keys should start with an uppercase"_L1, 1, 35)
-               .build()
+                       .addExpected("Enum key 'World' has already been declared"_L1, 1, 28)
+                       .addExpected("Note: previous declaration of 'World' here"_L1, 1, 14)
+                       .addExpected("Enum names must begin with an upper case letter"_L1, 1, 35)
+                       .build()
             << defaultOptions;
     QTest::newRow("enumEntryMatchesEnum")
             << u"enum A { A, B, C }"_s
@@ -2387,11 +2409,11 @@ void TestQmllint::dirtyQmlSnippet_data()
             << ResultBuilder::singleExpected("list was not found. list is not a type. It requires an "
                                              "element type argument (eg. list<int>)"_L1, 1, 1)
             << defaultOptions;
-    QTest::newRow("upperCaseId")
-            << u"id: Root"_s
-            << ResultBuilder::singleExpected("Id must start with a lower case letter or an '_'"_L1,
-                                             1, 5)
-            << defaultOptions;
+    QTest::newRow("upperCaseId") << u"id: Root"_s
+                                 << ResultBuilder::singleExpected(
+                                            "Id must start with a lower case letter or an '_'"_L1,
+                                            1, 5)
+                                 << defaultOptions;
 }
 
 void TestQmllint::dirtyQmlSnippet()
@@ -2451,8 +2473,6 @@ void TestQmllint::cleanQmlSnippet_data()
             << u" // qmllint disable ThisCategoryDoesNotExist invalid-lint-directive\n"_s
             << defaultOptions;
     QTest::newRow("duplicateList") << u"Item {} Item {}"_s << defaultOptions;
-    QTest::newRow("duplicateList2")
-            << u"property list<Item> myList; myList: Item {} myList: Item {}"_s << defaultOptions;
     QTest::newRow("enum") << u"enum Hello { World, Kitty, DlroW }"_s << defaultOptions;
     QTest::newRow("equality-with-coercion")
             << u"function f(a:int, b: int): bool { return a == b; }"_s << defaultOptions;
@@ -3676,10 +3696,12 @@ void TestQmllint::batches_data()
 
     QTest::addRow("BadRecursiveConstruction")
             << Batch().addCleanFile("BadRecursiveConstruction/A.qml"_L1)
-                       .addDirtyFile("BadRecursiveConstruction/B.qml"_L1,
-                                     ResultBuilder()
-                                             .addExpected("Could not find property \"hello\""_L1)
-                                             .build());
+                       .addDirtyFile(
+                               "BadRecursiveConstruction/B.qml"_L1,
+                               ResultBuilder()
+                                       .addExpected("Could not find property \"hello\""_L1, 9, 9)
+                                       .addExpected("Could not find property \"hello\""_L1, 11, 16)
+                                       .build());
 
     QTest::addRow("RecursiveGroupedProperties")
             << Batch().addCleanFile("RecursiveGroupedProperties/A.qml"_L1)

@@ -298,10 +298,6 @@ bool LinterVisitor::visit(QQmlJS::AST::UiEnumDeclaration *uied)
     QHash<QStringView, const QQmlJS::AST::UiEnumMemberList *> seen;
     for (const auto *member = uied->members; member; member = member->next) {
         QStringView key = member->member;
-        if (!key.front().isUpper()) {
-            m_logger->log(u"Enum keys should start with an uppercase."_s, qmlEnumKeyCase,
-                          member->memberToken);
-        }
 
         if (seen.contains(key))
             handleDuplicateEnums(uied->members, key, member->memberToken);
@@ -682,13 +678,7 @@ bool LinterVisitor::safeInsertJSIdentifier(QQmlJSScope::Ptr &scope, const QStrin
                           qmlBlockScopeVarDeclaration, identifier.location);
         }
     } else if (scope->scopeType() == QQmlSA::ScopeType::QMLScope) {
-        const QQmlJSScope *scopePtr = scope.get();
-        std::pair<const QQmlJSScope*, QString> misplaced { scopePtr, name };
-        if (misplacedJSIdentifiers.contains(misplaced))
-            return false; // we only want to warn once
-        misplacedJSIdentifiers.insert(misplaced);
-        m_logger->log(u"JavaScript declarations are not allowed in QML elements"_s, qmlSyntax,
-                      identifier.location);
+        // we already warn in IRBuilder
         return false;
     }
     return QQmlJSImportVisitor::safeInsertJSIdentifier(scope, name, identifier);
@@ -878,13 +868,16 @@ static void warnForDuplicates(const QQmlJSScope::ConstPtr &scope, const QString 
     static constexpr QLatin1String duplicateMessage =
             "Duplicated %1 name \"%2\", \"%2\" is already a %3."_L1;
     if (const auto methods = scope->ownMethods(name); !methods.isEmpty()) {
-        logger->log(duplicateMessage.arg(type, name,
-                                         methods.front().methodType() == QQmlSA::MethodType::Signal
-                                                 ? s_signal
-                                                 : s_method),
-                    qmlDuplicatedName, location);
+        const bool isSignal = methods.front().methodType() == QQmlSA::MethodType::Signal;
+        const bool alreadyWarnedByIrBuilder =
+                (type == s_signal && isSignal) || (type == s_method && !isSignal);
+        if (!alreadyWarnedByIrBuilder) {
+            logger->log(duplicateMessage.arg(type, name, isSignal ? s_signal : s_method),
+                        qmlDuplicatedName, location);
+        }
     }
-    if (scope->hasOwnProperty(name))
+    // note: IRBuilder already warns about property name duplicating others property name
+    if (type != s_property && scope->hasOwnProperty(name))
         logger->log(duplicateMessage.arg(type, name, s_property), qmlDuplicatedName, location);
 
     const QQmlJSScope::ConstPtr base = scope->baseType();

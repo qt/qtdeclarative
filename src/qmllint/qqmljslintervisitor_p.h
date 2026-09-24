@@ -114,7 +114,6 @@ private:
     };
     QQmlJS::Engine *m_engine = nullptr;
     QSet<SeenImport> m_seenImports;
-    QSet<std::pair<const QQmlJSScope *, QString>> misplacedJSIdentifiers;
     std::vector<QQmlJS::AST::Node *> m_ancestryIncludingCurrentNode;
     QQmlJS::LinterRenamedComponents m_renamedComponents;
 

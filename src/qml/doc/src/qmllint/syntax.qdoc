@@ -172,7 +172,7 @@ Item {
 
 \endqml
 
-\section1 Failed to parse id
+\section1 IDs must contain only letters, numbers, and underscores
 
 \section2 What happened?
 You bound an \l{qtqml-syntax-objectattributes.html#the-id-attribute}{id} to an

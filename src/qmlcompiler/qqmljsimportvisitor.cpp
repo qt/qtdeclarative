@@ -416,20 +416,6 @@ void QQmlJSImportVisitor::resolveAliases()
             objects.swap(requeue);
         }
     }
-
-    while (!requeue.isEmpty()) {
-        const QQmlJSScope::Ptr object = requeue.dequeue();
-        const auto properties = object->ownProperties();
-        for (const auto &property : properties) {
-            if (!property.isAlias() || !property.type().isNull()
-                || alreadyResolvedAliases.contains({ object, property })) {
-                continue;
-            }
-            m_logger->log(QStringLiteral("Alias \"%1\" is part of an alias cycle")
-                                  .arg(property.propertyName()),
-                          qmlAliasCycle, property.sourceLocation());
-        }
-    }
 }
 
 void QQmlJSImportVisitor::resolveGroupedProperties()
@@ -660,6 +646,24 @@ QList<QQmlJSAnnotation> QQmlJSImportVisitor::parseAnnotations(QQmlJS::AST::UiAnn
     return annotationList;
 }
 
+static bool groupedPropertiesInSameGroupedObjectDefinition(
+        const QQmlJS::SourceLocation &first, const QQmlJS::SourceLocation &second,
+        const QList<QQmlJS::SourceLocation> &groupedObjectDefinitions)
+{
+    const auto innermostDefinitionOffset =
+            [groupedObjectDefinitions](const QQmlJS::SourceLocation &location) {
+                quint32 innermostOffset = 0;
+                for (const QQmlJS::SourceLocation &definition : groupedObjectDefinitions) {
+                    const bool contains = definition.offset <= location.offset
+                            && location.offset < definition.offset + definition.length;
+                    if (contains && definition.offset > innermostOffset)
+                        innermostOffset = definition.offset;
+                }
+                return innermostOffset;
+            };
+    return innermostDefinitionOffset(first) == innermostDefinitionOffset(second);
+}
+
 void QQmlJSImportVisitor::setAllBindings()
 {
     using Key = std::pair<QQmlJSScope::ConstPtr, QString>;
@@ -711,8 +715,18 @@ void QQmlJSImportVisitor::setAllBindings()
         }
 
         const QQmlJS::SourceLocation location = binding.sourceLocation();
-        m_logger->log("Duplicate binding on property '%1'"_L1.arg(propertyName),
-                      qmlDuplicatePropertyBinding, location);
+        // IRBuilder only warns on duplicate grouped properties that are in the same
+        // grouped object definition, for example:
+        //     font.pixelSize: 42; font.pixelSize: 43
+        //     font { pixelSize: 42; pixelSize: 43 }
+        // IRBuilder does not warn for:
+        //     font.pixelSize: 42; font { pixelSize: 43; }
+        const bool irBuilderAlreadyWarned = groupedPropertiesInSameGroupedObjectDefinition(
+                *sourceLocationIt, location, m_groupedObjectDefinitions);
+        if (!irBuilderAlreadyWarned) {
+            m_logger->log("Duplicate binding on property '%1'"_L1.arg(propertyName),
+                          qmlDuplicatePropertyBinding, location);
+        }
         m_logger->log("Note: previous binding on '%1' here"_L1.arg(propertyName),
                       qmlDuplicatePropertyBinding, *sourceLocationIt, true, true, {},
                       location.startLine);
@@ -1860,6 +1874,8 @@ bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
 
         m_objectDefinitionScopes << m_currentScope;
     } else {
+        m_groupedObjectDefinitions.append(
+                combine(definition->firstSourceLocation(), definition->lastSourceLocation()));
         enterEnvironmentNonUnique(QQmlSA::ScopeType::GroupedPropertyScope, superType,
                                   definition->firstSourceLocation());
         m_bindings.append(createNonUniqueScopeBinding(m_currentScope, superType,
@@ -1882,15 +1898,12 @@ void QQmlJSImportVisitor::endVisit(UiObjectDefinition *)
 bool QQmlJSImportVisitor::visit(UiInlineComponent *component)
 {
     if (!std::holds_alternative<RootDocumentNameType>(m_currentRootName)) {
-        m_logger->log(u"Nested inline components are not supported"_s, qmlSyntax,
-                      component->firstSourceLocation());
+        // we already warn in IRBuilder
         return true;
     }
 
     const auto it = m_seenInlineComponents.constFind(component->name);
     if (it != m_seenInlineComponents.cend()) {
-        m_logger->log("Duplicate inline component '%1'"_L1.arg(it.key()),
-                      qmlDuplicateInlineComponent, component->firstSourceLocation());
         m_logger->log("Note: previous component named '%1' here"_L1.arg(it.key()),
                       qmlDuplicateInlineComponent, it.value(), true, true, {},
                       component->firstSourceLocation().startLine);
@@ -1966,12 +1979,6 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
 
             if (const auto idExpression = cast<IdentifierExpression *>(node)) {
                 aliasExpr.prepend(idExpression->name.toString());
-            } else {
-                // cast to expression might have failed above, so use publicMember->statement
-                // to obtain the source location
-                m_logger->log(QStringLiteral("Invalid alias expression. Only IDs and field "
-                                             "member expressions can be aliased."),
-                              qmlSyntax, publicMember->statement->firstSourceLocation());
             }
             };
             tryParseAlias();
@@ -2382,8 +2389,7 @@ void QQmlJSImportVisitor::handleIdDeclaration(QQmlJS::AST::UiScriptBinding *scri
     }
     const auto *statement = cast<ExpressionStatement *>(scriptBinding->statement);
     if (!statement) {
-        m_logger->log(u"id must be followed by an identifier"_s, qmlSyntax,
-                      scriptBinding->statement->firstSourceLocation());
+        // We already warn in IRBuilder
         return;
     }
     const QString name = [&]() {
@@ -2394,15 +2400,9 @@ void QQmlJSImportVisitor::handleIdDeclaration(QQmlJS::AST::UiScriptBinding *scri
                           idString->firstSourceLocation());
             return idString->value.toString();
         }
-        m_logger->log(u"Failed to parse id"_s, qmlSyntax,
-                      statement->expression->firstSourceLocation());
+        // we already warn in IRBuilder about the unparseable ID
         return QString();
     }();
-
-    if (!name.isEmpty() && !name.front().isLower() && name.front() != u'_') {
-        m_logger->log(u"Id must start with a lower case letter or an '_'"_s, qmlSyntax,
-                      statement->expression->firstSourceLocation());
-    }
 
     m_currentScope->setIdSourceLocation(combine(scriptBinding->statement->firstSourceLocation(),
                                                 scriptBinding->statement->lastSourceLocation()));
@@ -2775,11 +2775,6 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiImport *import)
     QString prefix = QLatin1String("");
     if (import->asToken.isValid()) {
         prefix += import->importId;
-        if (!import->importId.isEmpty() && !import->importId.front().isUpper()) {
-            m_logger->log(u"Import qualifier '%1' must start with a capital letter."_s.arg(
-                                  import->importId),
-                          qmlImport, import->importIdToken, true, true);
-        }
         m_seenModuleQualifiers.append(prefix);
     }
 

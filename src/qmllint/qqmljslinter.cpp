@@ -140,6 +140,39 @@ public:
         // need to report them again here.
     }
 
+private:
+    static QQmlJS::LoggerWarningId toLoggerWarningId(QQmlJS::MsgTypeOrDiagnosticCategory type)
+    {
+        if (type.m_isQtMsgType)
+            return qmlSyntax;
+
+        switch (static_cast<QQmlJS::DiagnosticCategory>(type.m_data)) {
+        case QQmlJS::DiagnosticCategory::AliasCycle:
+            return qmlAliasCycle;
+        case QQmlJS::DiagnosticCategory::DuplicatePropertyBinding:
+            return qmlDuplicatePropertyBinding;
+        case QQmlJS::DiagnosticCategory::SyntaxDuplicateIds:
+            return qmlSyntaxDuplicateIds;
+        case QQmlJS::DiagnosticCategory::DuplicateInlineComponent:
+            return qmlDuplicateInlineComponent;
+        case QQmlJS::DiagnosticCategory::DuplicatedName:
+            return qmlDuplicatedName;
+        case QQmlJS::DiagnosticCategory::Import:
+            return qmlImport;
+        case QQmlJS::DiagnosticCategory::Syntax:
+            return qmlSyntax;
+        }
+        Q_UNREACHABLE_RETURN(qmlSyntax);
+    }
+
+public:
+    void reportSyntaxWarnings(QSpan<const QQmlJS::DiagnosticMessage> warnings) override
+    {
+        for (const QQmlJS::DiagnosticMessage &warning : warnings) {
+            m_logger->log(warning.message, toLoggerWarningId(warning.type), warning.loc);
+        }
+    }
+
     UnreachableVisitor *unreachableVisitor() override { return &m_unreachableVisitor; }
 
 private:

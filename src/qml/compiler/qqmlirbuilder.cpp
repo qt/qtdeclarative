@@ -1658,19 +1658,27 @@ bool IRBuilder::appendAlias(QQmlJS::AST::UiPublicMember *node)
 
     QStringList aliasReference;
 
-    if (QQmlJS::AST::ExpressionStatement *stmt = QQmlJS::AST::cast<QQmlJS::AST::ExpressionStatement*>(node->statement)) {
-        aliasReference = astNodeToStringList(stmt->expression);
-        if (aliasReference.isEmpty()) {
-            if (isStatementNodeScript(node->statement)) {
-                COMPILE_EXCEPTION(rhsLoc, tr("Invalid alias reference. An alias reference must be specified as <id>, <id>.<property> or <id>.<value property>.<property>"));
-            } else {
-                COMPILE_EXCEPTION(rhsLoc, tr("Invalid alias location"));
+    if (isValid) {
+        if (QQmlJS::AST::ExpressionStatement *stmt =
+                    QQmlJS::AST::cast<QQmlJS::AST::ExpressionStatement *>(node->statement)) {
+            aliasReference = astNodeToStringList(stmt->expression);
+            if (aliasReference.isEmpty()) {
+                if (isStatementNodeScript(node->statement)) {
+                    COMPILE_EXCEPTION(
+                            rhsLoc,
+                            tr("Invalid alias reference. An alias reference must be specified as "
+                               "<id>, <id>.<property> or <id>.<value property>.<property>"));
+                } else {
+                    COMPILE_EXCEPTION(rhsLoc, tr("Invalid alias location"));
+                }
+                isValid = false;
             }
+        } else {
+            COMPILE_EXCEPTION(rhsLoc,
+                              tr("Invalid alias reference. An alias reference must be specified as "
+                                 "<id>, <id>.<property> or <id>.<value property>.<property>"));
             isValid = false;
         }
-    } else {
-        COMPILE_EXCEPTION(rhsLoc, tr("Invalid alias reference. An alias reference must be specified as <id>, <id>.<property> or <id>.<value property>.<property>"));
-        isValid = false;
     }
 
     if (isValid && (aliasReference.size() < 1 || aliasReference.size() > 3)) {
