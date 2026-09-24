@@ -1,6 +1,6 @@
 import QtQuick
 
 Item {
-    property string qtTrIdNoop: QT_TRID_NOOP("Hello")
-    property string qsTrId: qsTrId("hello_id")
+    property string qtTrIdNoopTest: QT_TRID_NOOP("Hello")
+    property string qsTrIdTest: qsTrId("hello_id")
 }

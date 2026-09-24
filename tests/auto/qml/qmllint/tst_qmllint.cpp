@@ -2948,7 +2948,8 @@ void TestQmllint::cleanJsSnippet_data()
     QTest::newRow("codeAfterThrow") << u"for (;;) { if (x) throw 1; return 1;}"_s << defaultOptions;
     QTest::newRow("comma") << u"let i, end; for (i = 0, end = 42; i < end; ++i) {}"_s
                            << defaultOptions;
-    QTest::newRow("constructor") << u"function F() {}; return new F();"_s << defaultOptions;
+    QTest::newRow("constructor") << u"class C { constructor() {} }; return new C();"_s
+                                 << defaultOptions;
     QTest::newRow("constructorArray") << u"return new Array();"_s << defaultOptions;
     QTest::newRow("constructorArray2") << u"return new Array(42);"_s << defaultOptions;
     QTest::newRow("doubleInDifferentScopes")

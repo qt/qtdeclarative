@@ -1,8 +1,8 @@
 import QtQml
 
 QtObject {
-    component outer : QtObject {
-        component inner : QtObject {
+    component Outer : QtObject {
+        component Inner : QtObject {
 
         }
     }
