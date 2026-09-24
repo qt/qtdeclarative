@@ -1054,6 +1054,7 @@ private slots:
     void enumWarnings();
 
     void lowercaseEnumWarning();
+    void lowercaseNamespaceEnumNoWarning();
 
     void relatedAddedInVersion();
     void longNumberTypes();

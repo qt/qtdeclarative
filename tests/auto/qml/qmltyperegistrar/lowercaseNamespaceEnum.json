@@ -1,0 +1,28 @@
+[
+    {
+        "classes": [
+            {
+
+                "className": "UppercaseWithEnum",
+                "qualifiedClassName": "lowercasenamespace::UppercaseWithEnum",
+                "object": true,
+                "classInfos": [
+                    {
+                        "name": "QML.Element",
+                        "value": "auto"
+                    }
+                ],
+                "enums": [
+                    {
+                        "name": "Status",
+                        "values": [
+                            "Active",
+                            "Inactive"
+                        ]
+                    }
+                ]
+            }
+        ],
+        "inputFile": "lowercaseNamespaceEnum.h"
+    }
+]

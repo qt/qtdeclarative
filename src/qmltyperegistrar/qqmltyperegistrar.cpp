@@ -327,8 +327,9 @@ void QmlTypeRegistrar::write(QTextStream &output, QAnyStringView outFileName) co
             if (qmlElementName == S_ANONYMOUS)
                 continue;
 
-            if (qmlElementName == S_AUTO)
-                qmlElementName = className;
+            if (qmlElementName == S_AUTO) {
+                qmlElementName = classDef.className().toString();
+            }
 
             if (!qmlElementName.isEmpty()
                 && qmlElementName.front().isLower()
