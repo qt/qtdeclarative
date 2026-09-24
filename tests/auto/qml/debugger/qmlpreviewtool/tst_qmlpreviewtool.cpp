@@ -35,6 +35,7 @@ private slots:
     void inputNotReplayedOnHotReload();
     void hotReloadFailure();
     void interactiveCommands();
+    void restartKeepsArguments();
     void saveAndReplayRoundTrip();
     void classicModeReplaysRecordedInput();
 
@@ -582,6 +583,51 @@ void tst_QmlPreviewTool::interactiveCommands()
     QVERIFY2(m_process.waitForFinished(10000),
              qPrintable(QLatin1String("quit did not terminate the tool. Output:\n") + m_output));
     QCOMPARE(m_process.exitCode(), 0);
+}
+
+// Restarting the target must launch it with the same arguments as the first
+// time. Before the fix, every (re)start appended another -qmljsdebugger option
+// to the stored arguments, so they piled up with each restart.
+void tst_QmlPreviewTool::restartKeepsArguments()
+{
+    m_tempDir = std::make_unique<QTemporaryDir>();
+    QVERIFY(m_tempDir->isValid());
+
+    const QString qmlFile = m_tempDir->filePath(QLatin1String("test.qml"));
+    QVERIFY(writeFile(qmlFile, makeQmlContent(QLatin1String("RESTART_OK"))));
+
+    startPreview({ QLatin1String("--interactive"), QLatin1String("--verbose"), m_qmlRuntimePath,
+                   qmlFile });
+    QVERIFY2(waitForOutput(QLatin1String("RESTART_OK")),
+             qPrintable(QLatin1String("Initial load failed. Output:\n") + m_output));
+
+    const QLatin1String starting("Starting '");
+    for (int restarts = 1; restarts <= 2; ++restarts) {
+        sendCommand(QLatin1String("restart"));
+
+        // Wait for the restarted target to be up, so that the next restart
+        // doesn't overtake this one.
+        const bool restarted = QTest::qWaitFor([this, &starting, restarts]() {
+            readProcessOutput();
+            if (m_output.count(starting) != restarts + 1)
+                return false;
+            return m_output.indexOf(QLatin1String("RESTART_OK"), m_output.lastIndexOf(starting))
+                    != -1;
+        }, 30000);
+        QVERIFY2(restarted,
+                 qPrintable(QLatin1String("Target was not restarted. Output:\n") + m_output));
+    }
+
+    const QStringList lines = m_output.split(QLatin1Char('\n'));
+    qsizetype launches = 0;
+    for (const QString &line : lines) {
+        if (!line.startsWith(starting))
+            continue;
+        ++launches;
+        QVERIFY2(line.contains(qmlFile), qPrintable(line));
+        QCOMPARE(line.count(QLatin1String("-qmljsdebugger=")), 1);
+    }
+    QCOMPARE(launches, 3);
 }
 
 // End-to-end round trip: record the input event stream of one session to a .qtd

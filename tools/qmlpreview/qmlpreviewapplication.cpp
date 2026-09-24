@@ -401,10 +401,11 @@ void QmlPreviewApplication::startProcess()
             this, &QmlPreviewApplication::processHasOutput);
     connect(m_process.data(), QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
             this, [this](int){ processFinished(); });
-    m_arguments.append(makeQmlPreviewArgument(m_socketFile));
+    QStringList arguments = m_arguments;
+    arguments.append(makeQmlPreviewArgument(m_socketFile));
     logStatus(QString("Starting '%1 %2' ...")
-                      .arg(m_executablePath, m_arguments.join(QLatin1Char(' '))));
-    m_process->start(m_executablePath, m_arguments);
+                      .arg(m_executablePath, arguments.join(QLatin1Char(' '))));
+    m_process->start(m_executablePath, arguments);
     if (!m_process->waitForStarted()) {
         logError(QString("Could not run '%1': %2").arg(m_executablePath, m_process->errorString()));
         exit(1);
