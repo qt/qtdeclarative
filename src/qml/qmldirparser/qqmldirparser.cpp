@@ -181,7 +181,9 @@ bool QQmlDirParser::parse(const QString &source)
                 return false;
             }
 
-            _exports.append(QTypeRevision::fromMajorVersion(major));
+            // For PAST_MAJOR_VERSION entries we add the maximum minor version.
+            // Any minor version of that major can be imported.
+            _exports.append(QTypeRevision::fromVersion(major, 254));
         }
 
         return true;

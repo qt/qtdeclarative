@@ -1,4 +1,5 @@
 module Things
+export 2.0 1
 Something 1.0 SomethingElse.qml
 typeinfo plugins.qmltypes
 depends QtQuick 2.0

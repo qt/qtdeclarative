@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 add_subdirectory(Confused)
+add_subdirectory(CppAuto)
 add_subdirectory(WithSubDir)
 add_subdirectory(CppShadowsQml)
 
@@ -118,6 +119,14 @@ set(qml_files
     arrayCtor.qml
     asCast.qml
     attachedBaseEnum.qml
+    autoImportDirect.qml
+    autoImportDirect2.qml
+    autoImportDirect20.qml
+    autoImportDirect25.qml
+    autoImportIndirect.qml
+    autoImportIndirect2.qml
+    autoImportIndirect20.qml
+    autoImportIndirect25.qml
     badSequence.qml
     basicBlocksWithBackJump.qml
     basicBlocksWithBackJump_infinite.qml
@@ -399,8 +408,28 @@ endif()
 
 set(resource_files
     ProgressBar/built-with-Qt_Large.png
+    imports/AutoImport/Dummy.qml
+    imports/AutoImport/qmldir
+    imports/AutoImportTarget/Thing20.qml
+    imports/AutoImportTarget/Thing25.qml
+    imports/AutoImportTarget/qmldir
+    imports/CppAutoTarget/Thing20.qml
+    imports/CppAutoTarget/Thing27.qml
+    imports/CppAutoTarget/qmldir
     imports/QmlBench/qmldir
 )
+
+if(NOT OHOS)
+    # Cannot have multiple modules of same URI in version-decorated subdirs on HarmonyOS
+    list(APPEND resource_files
+        imports/AutoImportTarget.2/Thing20.qml
+        imports/AutoImportTarget.2/Thing25.qml
+        imports/AutoImportTarget.2/Thing26.qml
+        imports/AutoImportTarget.2/qmldir
+        imports/AutoImportTarget.2.5/Thing25.qml
+        imports/AutoImportTarget.2.5/qmldir
+    )
+endif()
 
 set_source_files_properties("shared/Slider.qml"
     PROPERTIES QT_RESOURCE_ALIAS "Slider.qml"

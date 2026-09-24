@@ -1,0 +1,4 @@
+module AutoImport
+import AutoImportTarget auto
+Dummy 2.0 Dummy.qml
+Dummy 2.5 Dummy.qml

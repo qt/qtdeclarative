@@ -754,7 +754,7 @@ bool QQmlTypeData::loadImplicitImport()
         const QList<QQmlDirParser::Import> moduleImports
                 = QQmlMetaType::moduleImports(qmldir.typeNamespace(), QTypeRevision())
                 + qmldir.imports();
-        if (!loadDependentImports(moduleImports, QString(), QTypeRevision(),
+        if (!loadDependentImports(moduleImports, QString(), QTypeRevision(), QTypeRevision(),
                                   QQmlImportInstance::Implicit + 1, QQmlImports::ImportNoFlag,
                                   &implicitImportErrors)) {
             hasError = true;

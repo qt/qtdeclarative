@@ -46,6 +46,8 @@ using namespace Qt::StringLiterals;
 Q_IMPORT_QML_PLUGIN(TestTypesPlugin)
 Q_IMPORT_QML_PLUGIN(ConfusedPlugin)
 Q_IMPORT_QML_PLUGIN(CppShadowsQmlPlugin)
+Q_IMPORT_QML_PLUGIN(CppAutoPlugin)
+Q_IMPORT_QML_PLUGIN(CppAutoConsumerPlugin)
 
 class tst_QmlCppCodegen : public QObject
 {
@@ -69,6 +71,10 @@ private slots:
     void attachedBaseEnum();
     void attachedSelf();
     void attachedType();
+    void autoImportVersion_data();
+    void autoImportVersion();
+    void autoImportCppModuleVersion_data();
+    void autoImportCppModuleVersion();
     void badSequence();
     void basicBlocksWithBackJump();
     void basicBlocksWithBackJump_infinite();
@@ -862,6 +868,107 @@ void tst_QmlCppCodegen::attachedType()
     QCOMPARE(party->property("eee").toInt(), 21);
     QCOMPARE(party->property("fff").toInt(), 33);
     QCOMPARE(object->property("ggg").toInt(), 37);
+}
+
+void tst_QmlCppCodegen::autoImportVersion_data()
+{
+    QTest::addColumn<QUrl>("url");
+    QTest::addColumn<QString>("which");
+    QTest::addColumn<QVariant>("value");
+
+    // The version-decorated directories hold the highest versions of Thing. If they are searched
+    // where they shouldn't be, we can't end up in the undecorated directory by accident.
+    // "Indirect" imports go through an "import AutoImportTarget auto" in AutoImport's qmldir.
+    // AutoImport resolves to version 2.5 if no minor version is given. That version is passed on,
+    // but only the version-decorated directories AutoImport itself was searched in are searched.
+
+    const auto row = [](const char *name, const QString &file, const QString &which,
+                        const QVariant &value) {
+        QTest::addRow("%s", name) << QUrl(u"qrc:/qt/qml/TestTypes/"_s + file) << which << value;
+    };
+
+    row("direct", u"autoImportDirect.qml"_s, u"AutoImportTarget/2.5"_s, 2.5);
+    row("direct 2", u"autoImportDirect2.qml"_s, u"AutoImportTarget.2/2.6"_s, 2.5);
+    row("direct 2.0", u"autoImportDirect20.qml"_s, u"AutoImportTarget.2/2.0"_s, 2);
+    row("direct 2.5", u"autoImportDirect25.qml"_s, u"AutoImportTarget.2.5/2.5"_s, 2);
+
+    row("indirect", u"autoImportIndirect.qml"_s, u"AutoImportTarget/2.5"_s, 2.5);
+    row("indirect 2", u"autoImportIndirect2.qml"_s, u"AutoImportTarget.2/2.5"_s, u"2.5"_s);
+    row("indirect 2.0", u"autoImportIndirect20.qml"_s, u"AutoImportTarget.2/2.0"_s, 2);
+    row("indirect 2.5", u"autoImportIndirect25.qml"_s, u"AutoImportTarget.2.5/2.5"_s, 2);
+}
+
+void tst_QmlCppCodegen::autoImportVersion()
+{
+    QFETCH(QUrl, url);
+    QFETCH(QString, which);
+    QFETCH(QVariant, value);
+
+#ifdef Q_OS_HARMONY
+    if (!which.startsWith(u"AutoImportTarget/"))
+        QSKIP("Version-decorated directories are not deployed on HarmonyOS");
+#endif
+
+    QQmlEngine engine;
+    engine.addImportPath(u":/qt/qml/TestTypes/imports/"_s);
+    QQmlComponent component(&engine, url);
+    QVERIFY2(!component.isError(), component.errorString().toUtf8());
+    std::unique_ptr<QObject> o(component.create());
+    QVERIFY(o);
+
+    QObject *thing = o->property("thing").value<QObject *>();
+    QVERIFY(thing);
+
+    QCOMPARE(thing->property("which").toString(), which);
+
+    const QVariant actual = thing->property("value");
+    QCOMPARE(actual.metaType(), value.metaType());
+    QCOMPARE(actual, value);
+}
+
+void tst_QmlCppCodegen::autoImportCppModuleVersion_data()
+{
+    QTest::addColumn<QUrl>("url");
+    QTest::addColumn<QString>("which");
+    QTest::addColumn<QVariant>("value");
+
+    // CppAuto consists of C++ types exported in version 2.0, but it is registered in version 2.7.
+    // If no minor version is given, it resolves to 2.7 and its "import CppAutoTarget auto"
+    // therefore has to import Thing in version 2.7.
+
+    const auto row = [](const char *name, const QString &file, const QString &which,
+                        const QVariant &value) {
+        QTest::addRow("%s", name)
+                << QUrl(u"qrc:/qt/qml/CppAutoConsumer/"_s + file) << which << value;
+    };
+
+    row("unversioned", u"cppAuto.qml"_s, u"CppAutoTarget/2.7"_s, 2.5);
+    row("2", u"cppAuto2.qml"_s, u"CppAutoTarget/2.7"_s, 2.5);
+    row("2.0", u"cppAuto20.qml"_s, u"CppAutoTarget/2.0"_s, 2);
+    row("2.7", u"cppAuto27.qml"_s, u"CppAutoTarget/2.7"_s, 2.5);
+}
+
+void tst_QmlCppCodegen::autoImportCppModuleVersion()
+{
+    QFETCH(QUrl, url);
+    QFETCH(QString, which);
+    QFETCH(QVariant, value);
+
+    QQmlEngine engine;
+    engine.addImportPath(u":/qt/qml/TestTypes/imports/"_s);
+    QQmlComponent component(&engine, url);
+    QVERIFY2(!component.isError(), component.errorString().toUtf8());
+    std::unique_ptr<QObject> o(component.create());
+    QVERIFY(o);
+
+    QObject *thing = o->property("thing").value<QObject *>();
+    QVERIFY(thing);
+
+    QCOMPARE(thing->property("which").toString(), which);
+
+    const QVariant actual = thing->property("value");
+    QCOMPARE(actual.metaType(), value.metaType());
+    QCOMPARE(actual, value);
 }
 
 void tst_QmlCppCodegen::badSequence()

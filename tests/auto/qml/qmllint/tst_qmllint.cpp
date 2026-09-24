@@ -801,6 +801,11 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("defaultPropertyWithDoubleAssignment.qml")
             << Result{ { { "Cannot assign multiple objects to a default non-list property"_L1 } } }
             << defaultOptions;
+    QTest::newRow("defaultImport")
+            << QStringLiteral("defaultImportDirty.qml")
+            << Result{ { { "Failed to import Things 6.0. Is that version available?"_L1 } } }
+            << defaultOptions;
+
     CallQmllintOptions withFileSelectorResourceFile = defaultOptions;
     withFileSelectorResourceFile.resources.append(testFile("FileSelector3/resources.qrc"));
     QTest::newRow("fileSelectorIncompatibleType")
@@ -854,6 +859,10 @@ void TestQmllint::dirtyQmlCode_data()
             << Result{ {
                        { "FooInternal was not found"_L1, 3, 1 },
                } }
+            << defaultOptions;
+    QTest::newRow("ignoreWarnings")
+            << QStringLiteral("ignoreWarningsDirty.qml")
+            << Result{ { {  "Failed to import QtTest 2.0. Is that version available?"_L1 } } }
             << defaultOptions;
     QTest::newRow(("ImportModuleWithFileSelector"))
             << QStringLiteral("FileSelector/main.qml") << Result::cleanWithSettings()
@@ -1367,7 +1376,10 @@ void TestQmllint::dirtyQmlCode_data()
             << defaultOptions;
     QTest::newRow("missingQmltypes")
             << QStringLiteral("missingQmltypes.qml")
-            << Result{ { { "QML types file does not exist"_L1 } } } << defaultOptions;
+            << Result{ { {
+                   "Failed to import Fake5Compat.GraphicalEffects.private. "
+                   "Are your import paths set up properly?"_L1 } } }
+            << defaultOptions;
     QTest::newRow("missingRequiredAlias")
             << QStringLiteral("missingRequiredAlias.qml")
             << Result{ { { "Component is missing required property foo from Item"_L1 } } }
@@ -3002,7 +3014,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::addRow("deceptiveLayout") << u"deceptiveLayout.qml"_s << defaultOptions;
     QTest::newRow("declared property of JS object")
             << QStringLiteral("bareQt.qml") << defaultOptions;
-    QTest::newRow("defaultImport") << QStringLiteral("defaultImport.qml") << defaultOptions;
+    QTest::newRow("defaultImport") << QStringLiteral("defaultImportClean.qml") << defaultOptions;
     QTest::newRow("defaultProperty") << QStringLiteral("defaultProperty.qml") << defaultOptions;
     QTest::newRow("defaultPropertyComponent")
             << QStringLiteral("defaultPropertyComponent.qml") << defaultOptions;
@@ -3058,7 +3070,7 @@ void TestQmllint::cleanQmlCode_data()
             << QStringLiteral("groupedProperty_valueSource_interceptor.qml") << defaultOptions;
     QTest::newRow("groupedPropertyAssignments")
             << QStringLiteral("groupedPropertyAssignments.qml") << defaultOptions;
-    QTest::newRow("ignoreWarnings") << QStringLiteral("ignoreWarnings.qml") << defaultOptions;
+    QTest::newRow("ignoreWarnings") << QStringLiteral("ignoreWarningsClean.qml") << defaultOptions;
     QTest::newRow("importWithPrefix") << QStringLiteral("ImportWithPrefix.qml") << defaultOptions;
     QTest::newRow("initReadonly") << QStringLiteral("initReadonly.qml") << defaultOptions;
     QTest::newRow("interceptor") << QStringLiteral("interceptor.qml") << defaultOptions;
@@ -4088,8 +4100,9 @@ void TestQmllint::lintModule_data()
             << u"Fake5Compat.GraphicalEffects.private"_s
             << QStringList()
             << QStringList()
-            << Result { { Message { u"QML types file does not exist"_s } } };
-
+            << Result { { Message {
+                   "Failed to import Fake5Compat.GraphicalEffects.private. "
+                   "Are your import paths set up properly?"_L1 } } };
     QTest::addRow("moduleWithQrc")
             << u"moduleWithQrc"_s
             << QStringList({ testFile("hidden") })

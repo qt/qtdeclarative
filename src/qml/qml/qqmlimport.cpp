@@ -1055,6 +1055,14 @@ static QTypeRevision matchingQmldirVersion(
     typedef QQmlDirComponents::const_iterator ConstIterator;
     const QQmlDirComponents &components = qmldir.components();
 
+    const QQmlDirExports exports = qmldir.exports();
+    for (QQmlDirParser::Export exp : exports) {
+        Q_ASSERT(exp.hasMajorVersion()); // Can't specify a minor-only version in qmldir
+        addVersion(QTypeRevision::fromVersion(exp.majorVersion(), 0));
+        addVersion(exp.hasMinorVersion() ? exp
+                                         : QTypeRevision::fromVersion(exp.majorVersion(), 254));
+    }
+
     ConstIterator cend = components.constEnd();
     for (ConstIterator cit = components.constBegin(); cit != cend; ++cit) {
         for (ConstIterator cit2 = components.constBegin(); cit2 != cit; ++cit2) {

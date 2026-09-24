@@ -712,6 +712,7 @@ QQmlTypeLoader::Blob::PendingImport::PendingImport(
     , location(import->location)
     , flags(flags)
     , version(import->version)
+    , searchVersion(import->version)
 {
 }
 
@@ -1011,7 +1012,7 @@ bool QQmlTypeLoader::Blob::addLibraryImport(const QQmlTypeLoader::Blob::PendingI
         // Probe for all possible locations
         int priority = 0;
         const QStringList qmlDirPaths = QQmlImports::completeQmldirPaths(
-                    import->uri, remotePathList, import->version);
+                    import->uri, remotePathList, import->searchVersion);
         for (const QString &qmldirPath : qmlDirPaths) {
             if (hasInterceptors) {
                 QUrl url = m_typeLoader->interceptUrl(
@@ -1098,8 +1099,8 @@ void QQmlTypeLoader::Blob::dependencyComplete(const QQmlDataBlob::Ptr &blob)
 
 bool QQmlTypeLoader::Blob::loadDependentImports(
         const QList<QQmlDirParser::Import> &imports, const QString &qualifier,
-        QTypeRevision version, quint8 precedence, QQmlImports::ImportFlags flags,
-        QList<QQmlError> *errors)
+        QTypeRevision version, QTypeRevision searchVersion, quint8 precedence,
+        QQmlImports::ImportFlags flags, QList<QQmlError> *errors)
 {
     assertTypeLoaderThread();
 
@@ -1109,8 +1110,13 @@ bool QQmlTypeLoader::Blob::loadDependentImports(
         auto dependencyImport = std::make_shared<PendingImport>();
         dependencyImport->uri = import.module;
         dependencyImport->qualifier = qualifier;
-        dependencyImport->version = (import.flags & QQmlDirParser::Import::Auto)
-                ? version : import.version;
+        if (import.flags & QQmlDirParser::Import::Auto) {
+            dependencyImport->version = version;
+            dependencyImport->searchVersion = searchVersion;
+        } else {
+            dependencyImport->version = import.version;
+            dependencyImport->searchVersion = import.version;
+        }
         dependencyImport->flags = flags;
         dependencyImport->precedence = precedence;
 
@@ -1164,7 +1170,7 @@ bool QQmlTypeLoader::Blob::loadImportDependencies(
 
     if (!loadDependentImports(
                 implicitImports, currentImport->qualifier, currentImport->version,
-                currentImport->precedence + 1, flags, errors)) {
+                currentImport->searchVersion, currentImport->precedence + 1, flags, errors)) {
         QQmlError error;
         error.setDescription(
                     QString::fromLatin1(
@@ -1975,7 +1981,7 @@ QQmlTypeLoader::LocalQmldirResult QQmlTypeLoader::locateLocalQmldir(
     if (cacheHead) {
         cacheTail = cacheHead;
         do {
-            if (cacheTail->version == import->version) {
+            if (cacheTail->version == import->searchVersion) {
                 if (cacheTail->qmldirFilePath.isEmpty()) {
                     return cacheTail->qmldirPathUrl.isEmpty()
                     ? QmldirNotFound
@@ -2006,7 +2012,7 @@ QQmlTypeLoader::LocalQmldirResult QQmlTypeLoader::locateLocalQmldir(
 
     // Search local import paths for a matching version
     const QStringList qmlDirPaths = QQmlImports::completeQmldirPaths(
-            import->uri, localImportPaths, import->version);
+            import->uri, localImportPaths, import->searchVersion);
 
     QString qmldirCleanFilePath;
     for (QString qmldirPath : qmlDirPaths) {
@@ -2044,7 +2050,7 @@ QQmlTypeLoader::LocalQmldirResult QQmlTypeLoader::locateLocalQmldir(
                 sanitizeUNCPath(&qmldirCleanFilePath);
 
             QQmlTypeLoaderThreadData::QmldirInfo *cache = new QQmlTypeLoaderThreadData::QmldirInfo;
-            cache->version = import->version;
+            cache->version = import->searchVersion;
             cache->qmldirFilePath = qmldirCleanFilePath;
             cache->qmldirPathUrl = url;
             cache->next = nullptr;
@@ -2068,7 +2074,7 @@ QQmlTypeLoader::LocalQmldirResult QQmlTypeLoader::locateLocalQmldir(
     // Nothing found? Add an empty cache entry to signal that for further requests.
     if (result == QmldirNotFound || result == QmldirInterceptedToRemote) {
         QQmlTypeLoaderThreadData::QmldirInfo *cache = new QQmlTypeLoaderThreadData::QmldirInfo;
-        cache->version = import->version;
+        cache->version = import->searchVersion;
         cache->next = cacheHead;
         if (result == QmldirInterceptedToRemote) {
             // The actual value doesn't matter as long as it's not empty.
