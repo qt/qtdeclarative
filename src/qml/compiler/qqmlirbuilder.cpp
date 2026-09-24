@@ -4,6 +4,7 @@
 
 #include "qqmlirbuilder_p.h"
 
+#include <private/qduplicatetracker_p.h>
 #include <private/qv4staticvalue_p.h>
 #include <private/qv4compileddata_p.h>
 #include <private/qqmljsparser_p.h>
@@ -129,14 +130,20 @@ void Object::sortAliasDependencies(const Document *doc, QList<QQmlJS::Diagnostic
                 continue;
             }
 
-            const QV4::CompiledData::Location &location = nodes[j]->location();
-            QQmlJS::DiagnosticMessage error;
-            error.loc.startLine = location.line();
-            error.loc.startColumn = location.column();
-            error.loc.offset = QQmlJS::SourceLocation::offsetFrom(
-                    doc->code, location.line(), location.column());
-            error.message = QCoreApplication::translate("QQmlParser", "Cyclic alias");
-            errors->append(std::move(error));
+            QDuplicateTracker<QString> aliasNames;
+            for (qsizetype duplicate : chain) {
+                const QString name = doc->stringAt(nodes[duplicate]->nameIndex());
+                if (aliasNames.hasSeen(name))
+                    continue;
+                const QV4::CompiledData::Location &location = nodes[duplicate]->location();
+                QQmlJS::DiagnosticMessage error;
+                error.loc.startLine = location.line();
+                error.loc.startColumn = location.column();
+                error.loc.offset = QQmlJS::SourceLocation::offsetFrom(doc->code, location.line(),
+                                                                      location.column());
+                error.message = QStringLiteral("Alias \"%1\" is part of an alias cycle").arg(name);
+                errors->append(std::move(error));
+            }
             return;
         }
 
@@ -243,19 +250,19 @@ QString IRBuilder::sanityCheckFunctionNames(Object *obj, QQmlJS::SourceLocation 
         Function *f = functionit.ptr;
         errorLocation->startLine = f->location.line();
         errorLocation->startColumn = f->location.column();
+        const QString name = stringAt(f->nameIndex);
         if (f->isQmlFunction) {
             if (functionNames.contains(f->nameIndex))
-                return tr("Duplicate method name");
+                return tr("Duplicated method name \"%1\", \"%1\" is already a method.").arg(name);
             functionNames.insert(f->nameIndex);
         }
 
         for (auto signalit = obj->signalsBegin(); signalit != obj->signalsEnd(); ++signalit) {
             QmlIR::Signal *s = signalit.ptr;
             if (s->nameIndex == f->nameIndex)
-                return tr("Duplicate method name");
+                return tr("Duplicated method name \"%1\", \"%1\" is already a signal.").arg(name);
         }
 
-        const QString name = stringAt(f->nameIndex);
         Q_ASSERT(!f->isQmlFunction || !name.isEmpty());
         if (!name.isEmpty() && name.at(0).isUpper())
             return tr("Method names cannot begin with an upper case letter");
@@ -288,7 +295,7 @@ QString Object::appendSignal(Signal *signal)
 
     for (Signal *s = qmlSignals->first; s; s = s->next) {
         if (s->nameIndex == signal->nameIndex)
-            return tr("Duplicate signal name");
+            return tr("Duplicated signal name \"%1\", \"%1\" is already a signal.");
     }
 
     target->qmlSignals->append(signal);
@@ -302,12 +309,16 @@ QString Object::appendProperty(Property *prop, const QString &propertyName, bool
         target = this;
 
     for (Property *p = target->properties->first; p; p = p->next)
-        if (p->nameIndex() == prop->nameIndex())
-            return tr("Duplicate property name");
+        if (p->nameIndex() == prop->nameIndex()) {
+            return tr("Duplicated property name \"%1\", \"%1\" is already a property.")
+                    .arg(propertyName);
+        }
 
     for (Alias *a = target->aliases->first; a; a = a->next)
-        if (a->nameIndex() == prop->nameIndex())
-            return tr("Property duplicates alias name");
+        if (a->nameIndex() == prop->nameIndex()) {
+            return tr("Duplicated property name \"%1\", \"%1\" is already an alias")
+                    .arg(propertyName);
+        }
 
     if (propertyName.constData()->isUpper())
         return tr("Property names cannot begin with an upper case letter");
@@ -391,7 +402,7 @@ QString Object::appendBinding(Binding *b, bool isListBinding)
                 && existing->type() != QV4::CompiledData::Binding::Type_GroupedProperty
                 && existing->type() != QV4::CompiledData::Binding::Type_AttachedProperty
                 && !existing->hasFlag(QV4::CompiledData::Binding::IsOnAssignment)) {
-            return tr("Property value set multiple times");
+            return tr("Duplicate binding on property '%1'");
         }
     }
     if (bindingToDefaultProperty)
@@ -521,6 +532,9 @@ bool IRBuilder::generateFromQml(const QString &code, const QString &url, Documen
 
     sourceCode = code;
 
+    auto reportErrors = qScopeGuard([parserWarnings = errors.size(), this, wInterface] {
+        wInterface->reportSyntaxWarnings(QSpan(errors.begin() + parserWarnings, errors.end()));
+    });
     accept(program->headers);
 
     if (program->members->next) {
@@ -657,7 +671,8 @@ bool IRBuilder::visit(QQmlJS::AST::UiArrayBinding *node)
     const int propertyNameIndex = registerString(name->name.toString());
 
     if (bindingsTarget()->findBinding(propertyNameIndex) != nullptr) {
-        recordError(name->identifierToken, tr("Property value set multiple times"));
+        recordError(name->identifierToken,
+                    "Duplicate binding on property '%1'"_L1.arg(stringAt(propertyNameIndex)));
         if (!shouldContinue())
             return false;
     }
@@ -1208,7 +1223,7 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
         if (isValid)
             error = _object->appendSignal(signal);
         if (!error.isEmpty()) {
-            recordError(node->identifierToken, error);
+            recordError(node->identifierToken, error.arg(stringAt(signal->nameIndex)));
             if (!shouldContinue())
                 return false;
         }
@@ -1534,7 +1549,7 @@ void IRBuilder::appendBinding(const QQmlJS::SourceLocation &qualifiedNameLocatio
     setBindingValue(binding, value, parentNode);
     QString error = bindingsTarget()->appendBinding(binding, /*isListBinding*/false);
     if (!error.isEmpty()) {
-        recordError(qualifiedNameLocation, error);
+        recordError(qualifiedNameLocation, error.arg(stringAt(propertyNameIndex)));
     }
 }
 
@@ -1572,7 +1587,7 @@ void IRBuilder::appendBinding(const QQmlJS::SourceLocation &qualifiedNameLocatio
         binding->value.objectIndex = objectIndex;
         QString error = bindingsTarget()->appendBinding(binding, isListItem);
         if (!error.isEmpty())
-            recordError(qualifiedNameLocation, error);
+            recordError(qualifiedNameLocation, error.arg(stringAt(propertyNameIndex)));
     }
 }
 
@@ -1675,6 +1690,9 @@ bool IRBuilder::setId(const QQmlJS::SourceLocation &idLocation, QQmlJS::AST::Sta
             node = nullptr;
         } else
             node = stmt->expression;
+    } else {
+        COMPILE_EXCEPTION(loc, tr("id must be followed by an identifier"));
+        return false; // don't emit more warnings about the id being not an id
     }
 
     if (node && str.isEmpty())
@@ -1686,7 +1704,9 @@ bool IRBuilder::setId(const QQmlJS::SourceLocation &idLocation, QQmlJS::AST::Sta
     } else {
         QChar ch = str.at(0);
         if (ch.isLetter() && !ch.isLower()) {
-            COMPILE_EXCEPTION(loc, tr( "IDs cannot start with an uppercase letter"));
+            recordError(loc, tr("Id must start with a lower case letter or an '_'"));
+            if (!shouldContinue())
+                return false;
             isValid = false;
         }
 
@@ -1712,7 +1732,12 @@ bool IRBuilder::setId(const QQmlJS::SourceLocation &idLocation, QQmlJS::AST::Sta
         }
 
         if (_object->idNameIndex != emptyStringIndex) {
-            COMPILE_EXCEPTION(idLocation, tr("Property value set multiple times"));
+            recordError(idLocation,
+                        u"Found a duplicated id. id %1 was first declared at %2:%3"_s.arg(
+                                str, QString::number(_object->locationOfIdProperty.line()),
+                                QString::number(_object->locationOfIdProperty.column())));
+            if (!shouldContinue())
+                return false;
             isValid = false;
         }
 
@@ -1787,7 +1812,8 @@ bool IRBuilder::resolveQualifiedId(QQmlJS::AST::UiQualifiedId **nameToResolve, O
 
             QString error = (*object)->appendBinding(binding, /*isListBinding*/false);
             if (!error.isEmpty()) {
-                recordError(qualifiedIdElement->identifierToken, error);
+                recordError(qualifiedIdElement->identifierToken,
+                            error.arg(stringAt(propertyNameIndex)));
                 if (!shouldContinue())
                     return false;
             }

@@ -7451,7 +7451,9 @@ void tst_qqmllanguage::propertyAndAliasMustHaveDistinctNames_data()
     QTest::addColumn<QString>("fileName");
     QTest::addColumn<QString>("error");
 
-    QTest::addRow("sameNamePropertyAlias") << "sameNamePropertyAlias.qml" << "Property duplicates alias name";
+    QTest::addRow("sameNamePropertyAlias")
+            << "sameNamePropertyAlias.qml"
+            << "Duplicated property name \"a\", \"a\" is already an alias";
     QTest::addRow("sameNameAliasProperty") << "sameNameAliasProperty.qml" << "Alias has same name as existing property";
 }
 

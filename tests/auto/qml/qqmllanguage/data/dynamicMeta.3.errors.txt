@@ -1,1 +1,1 @@
-5:12:Duplicate signal name
+5:12:Duplicated signal name "a", "a" is already a signal.

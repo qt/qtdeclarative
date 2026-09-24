@@ -1,1 +1,1 @@
-6:9:Property value set multiple times
+6:9:Found a duplicated id. id myId2 was first declared at 5:9

@@ -64,6 +64,8 @@ public:
         qWarning("%s:%d : %s", qPrintable(fileName), location.startLine, qPrintable(message));
     }
 
+    virtual void reportSyntaxWarnings(QSpan<const QQmlJS::DiagnosticMessage>) { }
+
     virtual QQmlJS::AST::Visitor *unreachableVisitor() { return nullptr; }
     virtual ~CodegenWarningInterface() = default;
 };

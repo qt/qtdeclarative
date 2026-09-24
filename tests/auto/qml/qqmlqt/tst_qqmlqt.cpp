@@ -773,7 +773,10 @@ void tst_qqmlqt::createQmlObject()
 
     QString warning1 = "createQmlObject.qml:7: Error: Unable to determine callable overload";
     QString warning2 = component.url().toString()+ ":10: Error: Qt.createQmlObject(): failed to create object: \n    " + testFileUrl("inline").toString() + ":2:10: Blah is not a type";
-    QString warning3 = component.url().toString()+ ":11: Error: Qt.createQmlObject(): failed to create object: \n    " + testFileUrl("main.qml").toString() + ":4:14: Duplicate property name";
+    QString warning3 = component.url().toString()
+            + ":11: Error: Qt.createQmlObject(): failed to create object: \n    "
+            + testFileUrl("main.qml").toString()
+            + ":4:14: Duplicated property name \"test\", \"test\" is already a property.";
     QString warning4 = component.url().toString()+ ":9: TypeError: Passing incompatible arguments to C++ functions from JavaScript is not allowed.";
     QString warning5 = component.url().toString()+ ":8: Error: Too many arguments";
     QString warning6 = "RunTimeError:  Qt.createQmlObject(): failed to create object: \n    " + testFileUrl("inline").toString() + ":3:16: Cannot assign object type QObject with no default method";

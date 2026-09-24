@@ -1,1 +1,1 @@
-5:14:Duplicate method name
+5:14:Duplicated method name "a", "a" is already a method.

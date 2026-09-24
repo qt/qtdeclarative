@@ -1,1 +1,1 @@
-3:9:IDs cannot start with an uppercase letter
+3:9:Id must start with a lower case letter or an '_'
