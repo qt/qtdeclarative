@@ -1678,6 +1678,31 @@ void tst_qmltyperegistrar::lowercaseEnumWarning()
     r.write(output, "tst_qmltyperegistrar_qmltyperegistrations.cpp");
 }
 
+void tst_qmltyperegistrar::lowercaseNamespaceEnumNoWarning()
+{
+    // The class lives in a lowercase C++ namespace, but its own name (and thus the
+    // auto-derived QML element name) starts with an uppercase letter. The namespace
+    // casing must not trigger the "starts with a lowercase letter" warning.
+    QTest::failOnWarning();
+
+    QmlTypeRegistrar r;
+    QString moduleName = "tstmodule";
+    QString targetNamespace = "tstnamespace";
+    r.setModuleNameAndNamespace(moduleName, targetNamespace);
+
+    MetaTypesJsonProcessor processor(true);
+    QVERIFY(processor.processTypes({ ":/lowercaseNamespaceEnum.json" }));
+    processor.postProcessTypes();
+
+    QList<MetaType> types = processor.types();
+    QList<MetaType> typesforeign = processor.foreignTypes();
+    r.setTypes(types, typesforeign, { });
+
+    QString outputData;
+    QTextStream output(&outputData, QIODeviceBase::ReadWrite);
+    r.write(output, "tst_qmltyperegistrar_qmltyperegistrations.cpp");
+}
+
 #ifdef QT_QMLJSROOTGEN_PRESENT
 void tst_qmltyperegistrar::verifyJsRoot()
 {
