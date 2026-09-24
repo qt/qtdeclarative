@@ -82,6 +82,9 @@ private slots:
     void containsAllQtConfEntries();
     void sanitizeUNCPath();
     void implicitImportOfModuleDependingOnPlugin();
+    void autoImportImplicitDirectory();
+    void autoImportMoreSpecificVersion_data();
+    void autoImportMoreSpecificVersion();
 
 private:
     QQmlModuleRegistration noimportRegistration;
@@ -720,6 +723,70 @@ void tst_QQmlImport::importFromNamespacedDirctoryResolvesCorrectly()
     QVERIFY(root->property("success").toBool());
 }
 
+
+void tst_QQmlImport::autoImportImplicitDirectory()
+{
+    // The "import ImplicitTarget auto" in the qmldir of the implicitly imported directory is not
+    // given any version, even though the components in that qmldir are versioned.
+    // ImplicitTarget only provides a type in version 1.0.
+
+    QQmlEngine engine;
+    engine.addImportPath(testFile("autoImportImplicit/imports"));
+    QQmlComponent component(&engine, testFileUrl("autoImportImplicit/main.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+    QVERIFY(o->property("other").value<QObject *>());
+}
+
+void tst_QQmlImport::autoImportMoreSpecificVersion_data()
+{
+    QTest::addColumn<QByteArray>("importLine");
+    QTest::addColumn<QString>("objectName");
+
+    // Importer resolves to version 2.5 and passes that on to its "import Target auto". Target
+    // is only searched in the undecorated directory, though, since Importer was, and that directory
+    // only provides Thing in 2.0. The more specific Target.2.5 directory is not searched.
+    // Since we can't import Target 2.0 as 2.5, this means the import fails.
+    QTest::addRow("Importer") << QByteArray("import Importer") << QString();
+    QTest::addRow("Importer 2") << QByteArray("import Importer 2") << QString();
+
+    // 2.2, however, succeeds because Target has a version 2.2 and Explicit declares it in the
+    // "export" entry in qmldir.
+    QTest::addRow("Importer 2.2") << QByteArray("import Importer 2.2") << QStringLiteral("2.1");
+
+    // Likewise various imports of Explicit, if both the qmldir version matches and Thing is
+    // available.
+    QTest::addRow("Explicit 0.2") << QByteArray("import Explicit 0.2") << QString();
+    QTest::addRow("Explicit 1.7") << QByteArray("import Explicit 1.7") << QStringLiteral("1.4");
+    QTest::addRow("Explicit 2.0") << QByteArray("import Explicit 2.0") << QString();
+    QTest::addRow("Explicit 2.1") << QByteArray("import Explicit 2.1") << QStringLiteral("2.1");
+    QTest::addRow("Explicit 2.2") << QByteArray("import Explicit 2.2") << QStringLiteral("2.1");
+    QTest::addRow("Explicit 2.3") << QByteArray("import Explicit 2.3") << QStringLiteral("2.1");
+}
+
+void tst_QQmlImport::autoImportMoreSpecificVersion()
+{
+    QFETCH(QByteArray, importLine);
+    QFETCH(QString, objectName);
+
+    QQmlEngine engine;
+    engine.addImportPath(testFile("autoImportMinor/imports"));
+    QQmlComponent component(&engine);
+    component.setData("import QtQml\n" + importLine + "\n"
+                      "QtObject { property QtObject thing: Thing {} }",
+                      testFileUrl("autoImportMinor/main.qml"));
+    if (objectName.isEmpty()) {
+        QVERIFY(component.isError());
+    } else {
+        QScopedPointer<QObject> o(component.create());
+        QVERIFY(!o.isNull());
+        QObject *thing = o->property("thing").value<QObject *>();
+        QVERIFY(thing);
+        QCOMPARE(thing->objectName(), objectName);
+    }
+
+}
 
 QTEST_MAIN(tst_QQmlImport)
 

@@ -303,9 +303,35 @@ private:
         QList<QQmlJS::DiagnosticMessage> warnings;
     };
 
+    struct CachedImportKey
+    {
+        QQmlJS::Import import;
+
+        // The version-decorated directories searched can be less specific than the import version.
+        QTypeRevision searchVersion;
+
+    private:
+        friend size_t qHash(const CachedImportKey &key, size_t seed = 0) noexcept
+        {
+            return qHashMulti(seed, key.import, key.searchVersion);
+        }
+
+        friend bool operator==(const CachedImportKey &a, const CachedImportKey &b)
+        {
+            return a.import == b.import && a.searchVersion == b.searchVersion;
+        }
+
+        friend bool operator!=(const CachedImportKey &a, const CachedImportKey &b)
+        {
+            return !(a == b);
+        }
+    };
+
     AvailableTypes builtinImportHelper();
+    bool getTypesFromCache(AvailableTypes *types, const CachedImportKey &cacheKey,
+                           bool isDependency);
     bool importHelper(const QString &module, AvailableTypes *types, quint8 precedence,
-                      const QString &prefix = QString(), QTypeRevision version = QTypeRevision(),
+                      const QString &prefix, QTypeRevision version, QTypeRevision searchVersion,
                       bool isDependency = false, bool isFile = false);
     void processImport(const QQmlJS::Import &importDescription, const Import &import,
                        quint8 precedence, AvailableTypes *types);
@@ -335,9 +361,10 @@ private:
                        const QString &cppName, quint8 precedence,
                        QHash<QString, QList<QQmlJSScope::Export>> *seenExports,
                        QQmlJSImporter::AvailableTypes *types);
+    static QTypeRevision resolveImportVersion(const Import &import, QTypeRevision version);
     void importDependencies(const Import &import, quint8 precedence, AvailableTypes *types,
-                            const QString &prefix = QString(),
-                            QTypeRevision version = QTypeRevision(), bool isDependency = false);
+                            const QString &prefix, QTypeRevision resolvedVersion,
+                            QTypeRevision searchVersion, bool isDependency);
     QQmlDirParser createQmldirParserForFile(const QString &filename, Import *import);
     void readQmltypes(const QString &filename, Import *result);
     Import readQmldir(const QString &dirname);
@@ -349,7 +376,8 @@ private:
     QStringList m_importPaths;
 
     QHash<std::pair<QString, QTypeRevision>, QString> m_seenImports;
-    QHash<QQmlJS::Import, QSharedPointer<AvailableTypes>> m_cachedImportTypes;
+
+    QHash<CachedImportKey, QSharedPointer<AvailableTypes>> m_cachedImportTypes;
     QHash<QString, Import> m_seenQmldirFilesAndDirectories;
 
     QHash<QString, QQmlJSScope::Ptr> m_importedFiles;

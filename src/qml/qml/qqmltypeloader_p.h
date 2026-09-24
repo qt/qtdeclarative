@@ -73,7 +73,17 @@ public:
             quint8 precedence = 0;
             int priority = 0;
 
+            // The version to actually import. When searching the directories dictated by
+            // searchVersion, this is the version we match for. A qmldir-imported module with
+            // "auto" has to match the same version the importing module has _resolved_ to,
+            // but it searches a set of directories determined by the import version given in
+            // the original .qml file.
             QTypeRevision version;
+
+            // The version to search version-decorated module directories with. qmldir "auto"
+            // imports inherit the version the importing module has resolved to, but they must
+            // not search any more version-decorated directories than the importing module did.
+            QTypeRevision searchVersion;
 
             PendingImport() = default;
             PendingImport(const QQmlRefPointer<Blob> &blob, const QV4::CompiledData::Import *import,
@@ -122,8 +132,8 @@ public:
 
         bool loadDependentImports(
                 const QList<QQmlDirParser::Import> &imports, const QString &qualifier,
-                QTypeRevision version, quint8 precedence, QQmlImports::ImportFlags flags,
-                QList<QQmlError> *errors);
+                QTypeRevision version, QTypeRevision searchVersion, quint8 precedence,
+                QQmlImports::ImportFlags flags, QList<QQmlError> *errors);
         virtual QString stringAt(int) const { return QString(); }
 
         QQmlRefPointer<QQmlImports> m_importCache;

@@ -1,0 +1,4 @@
+module Importer
+import Target auto
+ImporterThing 2.0 Dummy.qml
+ImporterThing 2.5 Dummy.qml

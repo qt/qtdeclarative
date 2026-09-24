@@ -23,6 +23,10 @@ qt_internal_add_test(tst_qmlcppcodegen
         codegen_test_stringbuilderplugin
         confused_test_module
         confused_test_moduleplugin
+        cppauto_test_module
+        cppauto_test_moduleplugin
+        cppauto_consumer_test_module
+        cppauto_consumer_test_moduleplugin
         with_subdir_test_module
         with_subdir_test_moduleplugin
         cpp_shadows_qml_test_module
@@ -46,6 +50,10 @@ qt_internal_add_test(tst_qmlcppcodegen_interpreted
         codegen_test_stringbuilderplugin
         confused_test_module
         confused_test_moduleplugin
+        cppauto_test_module
+        cppauto_test_moduleplugin
+        cppauto_consumer_test_module
+        cppauto_consumer_test_moduleplugin
         with_subdir_test_module
         with_subdir_test_moduleplugin
         cpp_shadows_qml_test_module

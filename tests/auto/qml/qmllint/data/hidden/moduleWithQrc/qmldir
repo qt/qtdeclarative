@@ -1,3 +1,4 @@
 module moduleWithQrc
+export 1.0
 prefer :/qt/qml/moduleWithQrc/
 

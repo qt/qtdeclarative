@@ -134,6 +134,10 @@ private Q_SLOTS:
     void ensureModuleName();
     void sourceAndBuildTypeAreTheSame();
     void importMissingModule();
+    void autoImportVersion_data();
+    void autoImportVersion();
+    void autoImportImplicitDirectory();
+    void autoImportMoreSpecificVersion();
     void weakPointers();
     void importDirectoryCreatesUnreachableScopes();
 
@@ -1289,6 +1293,79 @@ void tst_qqmljsscope::importMissingModule()
             m_importer.importModule("DoesNotExist"_L1, quint8(QQmlJS::PrecedenceValues::Default),
                                     "DNE"_L1, QTypeRevision(), nullptr);
     QVERIFY(qualified.types().contains("DNE"_L1));
+}
+
+void tst_qqmljsscope::autoImportVersion_data()
+{
+    QTest::addColumn<QString>("module");
+    QTest::addColumn<QTypeRevision>("version");
+    QTest::addColumn<QString>("expectedFile");
+
+    // Importer resolves to version 2.5 if no minor version is given and passes that on to its
+    // "import Target auto". Target is only searched in the version-decorated directories Importer
+    // was searched in. The version-decorated directories hold the highest versions of Thing so
+    // that an undue search can't be hidden by the undecorated directory.
+
+    const QTypeRevision none;
+    const QTypeRevision major = QTypeRevision::fromMajorVersion(2);
+    const QTypeRevision v20 = QTypeRevision::fromVersion(2, 0);
+    const QTypeRevision v25 = QTypeRevision::fromVersion(2, 5);
+
+    QTest::addRow("direct") << u"Target"_s << none << u"Target/Thing25.qml"_s;
+    QTest::addRow("direct 2") << u"Target"_s << major << u"Target.2/Thing26.qml"_s;
+    QTest::addRow("direct 2.0") << u"Target"_s << v20 << u"Target.2/Thing20.qml"_s;
+    QTest::addRow("direct 2.5") << u"Target"_s << v25 << u"Target.2.5/Thing25.qml"_s;
+
+    QTest::addRow("indirect") << u"Importer"_s << none << u"Target/Thing25.qml"_s;
+    QTest::addRow("indirect 2") << u"Importer"_s << major << u"Target.2/Thing25.qml"_s;
+    QTest::addRow("indirect 2.0") << u"Importer"_s << v20 << u"Target.2/Thing20.qml"_s;
+    QTest::addRow("indirect 2.5") << u"Importer"_s << v25 << u"Target.2.5/Thing25.qml"_s;
+}
+
+void tst_qqmljsscope::autoImportVersion()
+{
+    QFETCH(const QString, module);
+    QFETCH(const QTypeRevision, version);
+    QFETCH(const QString, expectedFile);
+
+    const QString importPath = testFile(u"autoImport"_s);
+    QQmlJSImporter importer({ importPath }, nullptr);
+    const auto imported = importer.importModule(
+            module, quint8(QQmlJS::PrecedenceValues::Default), QString(), version);
+    const QQmlJSScope::ConstPtr thing = imported.type(u"Thing"_s).scope;
+    QVERIFY(thing);
+    QCOMPARE(thing->filePath(), importPath + u'/' + expectedFile);
+}
+
+void tst_qqmljsscope::autoImportImplicitDirectory()
+{
+    // The engine doesn't pass any version on to the "import ImplicitTarget auto" in the qmldir of
+    // an implicitly imported directory, even if the components in that qmldir are versioned.
+    // ImplicitTarget only provides a type in version 1.0.
+
+    const QString importPath = testFile(u"autoImportImplicit/imports"_s);
+    QQmlJSImporter importer({ importPath }, nullptr);
+    const auto imported = importer.importDirectory(
+            QDir::cleanPath(testFile(u"autoImportImplicit"_s)),
+            quint8(QQmlJS::PrecedenceValues::Default));
+    QVERIFY(imported.hasType(u"Local"_s));
+    QVERIFY(imported.hasType(u"Other"_s));
+}
+
+void tst_qqmljsscope::autoImportMoreSpecificVersion()
+{
+    // Importer resolves to version 2.5 and passes that on to its "import Target auto". Target
+    // is only searched in the undecorated directory, though, since Importer was, and that directory
+    // only provides Thing in 2.0. The engine does not load the more specific Target.2.5 directory.
+
+    const QString importPath = testFile(u"autoImportMinor"_s);
+    QQmlJSImporter importer({ importPath }, nullptr);
+    const auto imported = importer.importModule(
+            u"Importer"_s, quint8(QQmlJS::PrecedenceValues::Default));
+    QVERIFY(imported.hasType(u"ImporterThing"_s));
+    const QQmlJSScope::ConstPtr thing = imported.type(u"Thing"_s).scope;
+    QVERIFY(thing);
+    QCOMPARE(thing->filePath(), importPath + u"/Target/Thing20.qml"_s);
 }
 
 void tst_qqmljsscope::weakPointers()
