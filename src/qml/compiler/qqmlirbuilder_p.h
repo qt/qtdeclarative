@@ -508,7 +508,12 @@ struct Q_QML_COMPILER_EXPORT IRBuilder : public QQmlJS::AST::Visitor
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlCodeGenerator)
 public:
-    IRBuilder();
+    enum FailureMode {
+        StopAfterFirstFailure,
+        ContinueAfterFailure,
+    };
+
+    explicit IRBuilder(FailureMode failureMode = StopAfterFirstFailure);
     bool generateFromQml(const QString &code, const QString &url, Document *output,
                          QV4::Compiler::CodegenWarningInterface *wInterface =
                                  QV4::Compiler::defaultCodegenWarningInterface());
@@ -590,6 +595,7 @@ public:
     bool resolveQualifiedId(QQmlJS::AST::UiQualifiedId **nameToResolve, Object **object, bool onAssignment = false);
 
     void recordError(const QQmlJS::SourceLocation &location, const QString &description);
+    bool shouldContinue() const { return m_failureMode == ContinueAfterFailure; }
 
     quint32 registerString(const QString &str) const { return jsGenerator->registerString(str); }
     template <typename _Tp> _Tp *New() { return pool->New<_Tp>(); }
@@ -619,6 +625,9 @@ public:
     QV4::Compiler::JSUnitGenerator *jsGenerator;
 
     bool insideInlineComponent = false;
+
+private:
+    FailureMode m_failureMode = StopAfterFirstFailure;
 };
 
 struct Q_QML_COMPILER_EXPORT QmlUnitGenerator

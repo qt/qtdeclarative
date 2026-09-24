@@ -6,6 +6,11 @@
 
 QT_BEGIN_NAMESPACE
 
+QQmlJSAOTIRBuilder::QQmlJSAOTIRBuilder(QmlIR::IRBuilder::FailureMode failureMode)
+    : QmlIR::IRBuilder(failureMode)
+{
+}
+
 bool QQmlJSAOTIRBuilder::visit(QQmlJS::AST::FunctionExpression *ast)
 {
     registerFunctionExpr(ast, IsQmlFunction::No);

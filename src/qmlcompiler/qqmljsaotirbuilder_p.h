@@ -25,6 +25,8 @@ struct Q_QMLCOMPILER_EXPORT QQmlJSAOTIRBuilder : public QmlIR::IRBuilder
 {
     using QmlIR::IRBuilder::visit;
 
+    explicit QQmlJSAOTIRBuilder(FailureMode failureMode = QmlIR::IRBuilder::StopAfterFirstFailure);
+
     bool visit(QQmlJS::AST::FunctionExpression *ast) override;
     bool visit(QQmlJS::AST::FunctionDeclaration *ast) override;
 

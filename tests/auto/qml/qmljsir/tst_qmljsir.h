@@ -7,6 +7,7 @@ class tst_qmljsir : public QObject
 {
     Q_OBJECT
 private slots:
+    void failureMode();
     void propertyVirtSpecifiers_data();
     void propertyVirtSpecifiers();
 };

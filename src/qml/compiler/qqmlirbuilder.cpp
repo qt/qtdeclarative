@@ -25,9 +25,10 @@ using namespace QmlIR;
 using namespace QQmlJS;
 
 #define COMPILE_EXCEPTION(location, desc) \
-    { \
-        recordError(location, desc); \
-        return false; \
+    {                                     \
+        recordError(location, desc);      \
+        if (!shouldContinue())            \
+            return false;                 \
     }
 
 void Object::simplifyRequiredProperties() {
@@ -467,11 +468,12 @@ void ScriptDirectivesCollector::importModule(const QString &uri, const QString &
     document->imports << import;
 }
 
-IRBuilder::IRBuilder()
+IRBuilder::IRBuilder(FailureMode failureMode)
     : _object(nullptr)
     , _propertyDeclaration(nullptr)
     , pool(nullptr)
     , jsGenerator(nullptr)
+    , m_failureMode(failureMode)
 {
 }
 
@@ -523,7 +525,8 @@ bool IRBuilder::generateFromQml(const QString &code, const QString &url, Documen
     if (program->members->next) {
         QQmlJS::SourceLocation loc = program->members->next->firstSourceLocation();
         recordError(loc, QCoreApplication::translate("QQmlParser", "Unexpected object definition"));
-        return false;
+        if (!shouldContinue())
+            return false;
     }
 
     QQmlJS::AST::UiObjectDefinition *rootObject = QQmlJS::AST::cast<QQmlJS::AST::UiObjectDefinition*>(program->members->member);
@@ -594,11 +597,13 @@ bool IRBuilder::visit(QQmlJS::AST::UiInlineComponent *ast)
     int idx = -1;
     if (insideInlineComponent) {
         recordError(ast->firstSourceLocation(), QLatin1String("Nested inline components are not supported"));
-        return false;
+        if (!shouldContinue())
+            return false;
     }
     if (inlineComponentsNames.contains(ast->name.toString())) {
         recordError(ast->firstSourceLocation(), QLatin1String("Inline component names must be unique per file"));
-        return false;
+        if (!shouldContinue())
+            return false;
     } else {
         inlineComponentsNames.insert(ast->name.toString());
     }
@@ -652,7 +657,8 @@ bool IRBuilder::visit(QQmlJS::AST::UiArrayBinding *node)
 
     if (bindingsTarget()->findBinding(propertyNameIndex) != nullptr) {
         recordError(name->identifierToken, tr("Property value set multiple times"));
-        return false;
+        if (!shouldContinue())
+            return false;
     }
 
     QVarLengthArray<QQmlJS::AST::UiArrayMemberList *, 16> memberList;
@@ -690,7 +696,8 @@ bool IRBuilder::defineQMLObject(
             lastName = lastName->next;
         if (!lastName->name.constData()->isUpper()) {
             recordError(lastName->identifierToken, tr("Expected type name"));
-            return false;
+            if (!shouldContinue())
+                return false;
         }
     }
 
@@ -716,14 +723,15 @@ bool IRBuilder::defineQMLObject(
 
     qSwap(_object, obj);
 
-    if (!errors.isEmpty())
+    if (!errors.isEmpty() && !shouldContinue())
         return false;
 
     QQmlJS::SourceLocation loc;
     QString error = sanityCheckFunctionNames(obj, &loc);
     if (!error.isEmpty()) {
         recordError(loc, error);
-        return false;
+        if (!shouldContinue())
+            return false;
     }
 
     return true;
@@ -754,11 +762,13 @@ bool IRBuilder::visit(QQmlJS::AST::UiImport *node)
         QString qualifier = node->importId.toString();
         if (!qualifier.at(0).isUpper()) {
             recordError(node->importIdToken, QCoreApplication::translate("QQmlParser","Invalid import qualifier '%1': must start with an uppercase letter").arg(qualifier));
-            return false;
+            if (!shouldContinue())
+                return false;
         }
         if (qualifier == QLatin1String("Qt")) {
             recordError(node->importIdToken, QCoreApplication::translate("QQmlParser","Reserved name \"Qt\" cannot be used as an qualifier"));
-            return false;
+            if (!shouldContinue())
+                return false;
         }
         import->qualifierIndex = registerString(qualifier);
 
@@ -770,13 +780,15 @@ bool IRBuilder::visit(QQmlJS::AST::UiImport *node)
 
             if ((isScript || otherIsScript) && qualifier == jsGenerator->stringForIndex(other->qualifierIndex)) {
                 recordError(node->importIdToken, QCoreApplication::translate("QQmlParser","Script import qualifiers must be unique."));
-                return false;
+                if (!shouldContinue())
+                    return false;
             }
         }
 
     } else if (import->type == QV4::CompiledData::Import::ImportScript) {
         recordError(node->fileNameToken, QCoreApplication::translate("QQmlParser","Script import requires a qualifier"));
-        return false;
+        if (!shouldContinue())
+            return false;
     }
 
     if (node->version) {
@@ -805,11 +817,14 @@ struct PragmaParser
         Q_ASSERT(node);
         Q_ASSERT(pragma);
 
+        bool isValid = true;
         if (!isUnique(builder)) {
             builder->recordError(
                         node->pragmaToken, QCoreApplication::translate(
                             "QQmlParser", "Multiple %1 pragmas found").arg(name()));
-            return false;
+            if (!builder->shouldContinue())
+                return false;
+            isValid = false;
         }
 
         pragma->type = type();
@@ -818,10 +833,12 @@ struct PragmaParser
             builder->recordError(
                         node->pragmaToken, QCoreApplication::translate(
                             "QQmlParser", "Unknown %1 '%2' in pragma").arg(name(), bad->value));
-            return false;
+            if (!builder->shouldContinue())
+                return false;
+            isValid = false;
         }
 
-        return true;
+        return isValid;
     }
 
 private:
@@ -986,6 +1003,7 @@ private:
 bool IRBuilder::visit(QQmlJS::AST::UiPragma *node)
 {
     Pragma *pragma = New<Pragma>();
+    bool isValid = true;
 
     if (!node->name.isNull()) {
         if (node->name == "Singleton"_L1) {
@@ -993,20 +1011,35 @@ bool IRBuilder::visit(QQmlJS::AST::UiPragma *node)
         } else if (node->name == "Strict"_L1) {
             pragma->type = Pragma::Strict;
         } else if (node->name == "ComponentBehavior"_L1) {
-            if (!PragmaParser<Pragma::ComponentBehaviorValue>::run(this, node, pragma))
-                return false;
+            if (!PragmaParser<Pragma::ComponentBehaviorValue>::run(this, node, pragma)) {
+                if (!shouldContinue())
+                    return false;
+                isValid = false;
+            }
         } else if (node->name == "ListPropertyAssignBehavior"_L1) {
-            if (!PragmaParser<Pragma::ListPropertyAssignBehaviorValue>::run(this, node, pragma))
-                return false;
+            if (!PragmaParser<Pragma::ListPropertyAssignBehaviorValue>::run(this, node, pragma)) {
+                if (!shouldContinue())
+                    return false;
+                isValid = false;
+            }
         } else if (node->name == "FunctionSignatureBehavior"_L1) {
-            if (!PragmaParser<Pragma::FunctionSignatureBehaviorValue>::run(this, node, pragma))
-                return false;
+            if (!PragmaParser<Pragma::FunctionSignatureBehaviorValue>::run(this, node, pragma)) {
+                if (!shouldContinue())
+                    return false;
+                isValid = false;
+            }
         } else if (node->name == "NativeMethodBehavior"_L1) {
-            if (!PragmaParser<Pragma::NativeMethodBehaviorValue>::run(this, node, pragma))
-                return false;
+            if (!PragmaParser<Pragma::NativeMethodBehaviorValue>::run(this, node, pragma)) {
+                if (!shouldContinue())
+                    return false;
+                isValid = false;
+            }
         } else if (node->name == "ValueTypeBehavior"_L1) {
-            if (!PragmaParser<Pragma::ValueTypeBehaviorValue>::run(this, node, pragma))
-                return false;
+            if (!PragmaParser<Pragma::ValueTypeBehaviorValue>::run(this, node, pragma)) {
+                if (!shouldContinue())
+                    return false;
+                isValid = false;
+            }
         } else if (node->name == "Translator"_L1) {
             pragma->type = Pragma::Translator;
             pragma->translationContextIndex = registerString(node->values->value.toString());
@@ -1014,16 +1047,22 @@ bool IRBuilder::visit(QQmlJS::AST::UiPragma *node)
         } else {
             recordError(node->pragmaToken, QCoreApplication::translate(
                             "QQmlParser", "Unknown pragma '%1'").arg(node->name));
-            return false;
+            if (!shouldContinue())
+                return false;
+            isValid = false;
         }
     } else {
         recordError(node->pragmaToken, QCoreApplication::translate(
                         "QQmlParser", "Empty pragma found"));
-        return false;
+        if (!shouldContinue())
+            return false;
+        isValid = false;
     }
 
-    pragma->location.set(node->pragmaToken.startLine, node->pragmaToken.startColumn);
-    _pragmas.append(pragma);
+    if (isValid) {
+        pragma->location.set(node->pragmaToken.startLine, node->pragmaToken.startColumn);
+        _pragmas.append(pragma);
+    }
 
     return false;
 }
@@ -1049,11 +1088,14 @@ static QStringList astNodeToStringList(QQmlJS::AST::Node *node)
 bool IRBuilder::visit(QQmlJS::AST::UiEnumDeclaration *node)
 {
     Enum *enumeration = New<Enum>();
+    bool isValid = true;
     QString enumName = node->name.toString();
     enumeration->nameIndex = registerString(enumName);
 
-    if (enumName.at(0).isLower())
+    if (enumName.at(0).isLower()) {
         COMPILE_EXCEPTION(node->enumToken, tr("Scoped enum names must begin with an upper case letter"));
+        isValid = false;
+    }
 
     enumeration->location.set(node->enumToken.startLine, node->enumToken.startColumn);
 
@@ -1064,24 +1106,39 @@ bool IRBuilder::visit(QQmlJS::AST::UiEnumDeclaration *node)
         EnumValue *enumValue = New<EnumValue>();
         QString member = e->member.toString();
         enumValue->nameIndex = registerString(member);
-        if (member.at(0).isLower())
+        bool isValueValid = true;
+        if (member.at(0).isLower()) {
             COMPILE_EXCEPTION(e->memberToken, tr("Enum names must begin with an upper case letter"));
+            isValueValid = false;
+        }
 
         double part;
-        if (std::modf(e->value, &part) != 0.0)
+        if (std::modf(e->value, &part) != 0.0) {
             COMPILE_EXCEPTION(e->valueToken, tr("Enum value must be an integer"));
-        if (e->value > std::numeric_limits<qint32>::max() || e->value < std::numeric_limits<qint32>::min())
+            isValueValid = false;
+        }
+        if (e->value > std::numeric_limits<qint32>::max()
+                || e->value < std::numeric_limits<qint32>::min()) {
             COMPILE_EXCEPTION(e->valueToken, tr("Enum value out of range"));
-        enumValue->value = e->value;
-        enumeration->enumValues->append(enumValue);
+            isValueValid = false;
+        }
+        if (isValueValid) {
+            enumValue->value = e->value;
+            enumeration->enumValues->append(enumValue);
+        } else {
+            isValid = false;
+        }
 
         e = e->next;
     }
 
-    QString error = _object->appendEnum(enumeration);
+    QString error;
+    if (isValid)
+        error = _object->appendEnum(enumeration);
     if (!error.isEmpty()) {
         recordError(node->enumToken, error);
-        return false;
+        if (!shouldContinue())
+            return false;
     }
 
     return false;
@@ -1092,6 +1149,7 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
 {
     if (node->type == QQmlJS::AST::UiPublicMember::Signal) {
         Signal *signal = New<Signal>();
+        bool isValid = true;
         const QString signalName = node->name.toString();
         signal->nameIndex = registerString(signalName);
 
@@ -1104,7 +1162,11 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
         while (p) {
             if (!p->type) {
                 recordError(node->typeToken, QCoreApplication::translate("QQmlParser","Expected parameter type"));
-                return false;
+                if (!shouldContinue())
+                    return false;
+                isValid = false;
+                p = p->next;
+                continue;
             }
 
             Parameter *param = New<Parameter>();
@@ -1115,7 +1177,11 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
                 QString errStr = QCoreApplication::translate("QQmlParser","Invalid signal parameter type: ");
                 errStr.append(p->type->toString());
                 recordError(node->typeToken, errStr);
-                return false;
+                if (!shouldContinue())
+                    return false;
+                isValid = false;
+                p = p->next;
+                continue;
             }
             signal->parameters->append(param);
             p = p->next;
@@ -1127,16 +1193,23 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
             if (ch.isUpper()) {
                 COMPILE_EXCEPTION(node->identifierToken,
                                   tr("Signal names cannot begin with an upper case letter"));
+                isValid = false;
+                break;
             }
         }
 
-        if (QV4::Compiler::Codegen::isNameGlobal(signalName))
+        if (QV4::Compiler::Codegen::isNameGlobal(signalName)) {
             COMPILE_EXCEPTION(node->identifierToken, tr("Illegal signal name"));
+            isValid = false;
+        }
 
-        QString error = _object->appendSignal(signal);
+        QString error;
+        if (isValid)
+            error = _object->appendSignal(signal);
         if (!error.isEmpty()) {
             recordError(node->identifierToken, error);
-            return false;
+            if (!shouldContinue())
+                return false;
         }
     } else {
         QString memberType = asString(node->memberType);
@@ -1144,6 +1217,7 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
             return appendAlias(node);
         } else {
             QStringView name = node->name;
+            bool isValid = true;
 
             Property *property = New<Property>();
             property->setIsReadOnly(node->isReadonly());
@@ -1164,7 +1238,9 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
                 property->setIsList(true);
             } else if (!typeModifier.isEmpty()) {
                 recordError(node->typeModifierToken, QCoreApplication::translate("QQmlParser","Invalid property type modifier"));
-                return false;
+                if (!shouldContinue())
+                    return false;
+                isValid = false;
             }
 
             const QString propName = name.toString();
@@ -1178,7 +1254,7 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
 
             if (QV4::Compiler::Codegen::isNameGlobal(propName))
                 error = tr("Illegal property name");
-            else
+            else if (isValid)
                 error = _object->appendProperty(property, propName, node->isDefaultMember(), node->defaultToken(), &errorLocation);
 
             if (!error.isEmpty()) {
@@ -1186,18 +1262,25 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
                     errorLocation = node->identifierToken;
 
                 recordError(errorLocation, error);
-                return false;
+                if (!shouldContinue())
+                    return false;
+                isValid = false;
             }
 
-            qSwap(_propertyDeclaration, property);
-            if (node->binding) {
-                // process QML-like initializers (e.g. property Object o: Object {})
-                QQmlJS::AST::Node::accept(node->binding, this);
-            } else if (node->statement) {
-                if (!isRedundantNullInitializerForPropertyDeclaration(_propertyDeclaration, node->statement))
-                    appendBinding(node->identifierToken, node->identifierToken, _propertyDeclaration->nameIndex(), node->statement, node);
+            if (isValid) {
+                qSwap(_propertyDeclaration, property);
+                if (node->binding) {
+                    // process QML-like initializers (e.g. property Object o: Object {})
+                    QQmlJS::AST::Node::accept(node->binding, this);
+                } else if (node->statement) {
+                    if (!isRedundantNullInitializerForPropertyDeclaration(_propertyDeclaration,
+                                                                           node->statement)) {
+                        appendBinding(node->identifierToken, node->identifierToken,
+                                      _propertyDeclaration->nameIndex(), node->statement, node);
+                    }
+                }
+                qSwap(_propertyDeclaration, property);
             }
-            qSwap(_propertyDeclaration, property);
         }
     }
 
@@ -1251,9 +1334,11 @@ bool IRBuilder::visit(QQmlJS::AST::UiSourceElement *node)
             recordError(node->firstSourceLocation(),
                         QCoreApplication::translate(
                                 "QQmlParser", "Function declaration inside grouped property"));
-            return false;
+            if (!shouldContinue())
+                return false;
+        } else {
+            registerFunctionExpr(funDecl, IsQmlFunction::Yes);
         }
-        registerFunctionExpr(funDecl, IsQmlFunction::Yes);
     } else {
         recordError(node->firstSourceLocation(), QCoreApplication::translate("QQmlParser","JavaScript declaration outside Script element"));
     }
@@ -1456,43 +1541,44 @@ void IRBuilder::appendBinding(const QQmlJS::SourceLocation &qualifiedNameLocatio
 {
     if (stringAt(propertyNameIndex) == QLatin1String("id")) {
         recordError(nameLocation, tr("Invalid component id specification"));
-        return;
-    }
+        if (!shouldContinue())
+            return;
+    } else {
+        Binding *binding = New<Binding>();
+        binding->propertyNameIndex = propertyNameIndex;
+        binding->offset = nameLocation.offset;
+        binding->location.set(nameLocation.startLine, nameLocation.startColumn);
 
-    Binding *binding = New<Binding>();
-    binding->propertyNameIndex = propertyNameIndex;
-    binding->offset = nameLocation.offset;
-    binding->location.set(nameLocation.startLine, nameLocation.startColumn);
+        const Object *obj = _objects.at(objectIndex);
+        binding->valueLocation = obj->location;
 
-    const Object *obj = _objects.at(objectIndex);
-    binding->valueLocation = obj->location;
+        binding->clearFlags();
 
-    binding->clearFlags();
+        if (_propertyDeclaration && _propertyDeclaration->isReadOnly())
+            binding->setFlag(Binding::InitializerForReadOnlyDeclaration);
 
-    if (_propertyDeclaration && _propertyDeclaration->isReadOnly())
-        binding->setFlag(Binding::InitializerForReadOnlyDeclaration);
+        // No type name on the initializer means it must be a grouped property
+        if (_objects.at(objectIndex)->inheritedTypeNameIndex == emptyStringIndex)
+            binding->setType(Binding::Type_GroupedProperty);
+        else
+            binding->setType(Binding::Type_Object);
 
-    // No type name on the initializer means it must be a grouped property
-    if (_objects.at(objectIndex)->inheritedTypeNameIndex == emptyStringIndex)
-        binding->setType(Binding::Type_GroupedProperty);
-    else
-        binding->setType(Binding::Type_Object);
+        if (isOnAssignment)
+            binding->setFlag(Binding::IsOnAssignment);
+        if (isListItem)
+            binding->setFlag(Binding::IsListItem);
 
-    if (isOnAssignment)
-        binding->setFlag(Binding::IsOnAssignment);
-    if (isListItem)
-        binding->setFlag(Binding::IsListItem);
-
-    binding->value.objectIndex = objectIndex;
-    QString error = bindingsTarget()->appendBinding(binding, isListItem);
-    if (!error.isEmpty()) {
-        recordError(qualifiedNameLocation, error);
+        binding->value.objectIndex = objectIndex;
+        QString error = bindingsTarget()->appendBinding(binding, isListItem);
+        if (!error.isEmpty())
+            recordError(qualifiedNameLocation, error);
     }
 }
 
 bool IRBuilder::appendAlias(QQmlJS::AST::UiPublicMember *node)
 {
     Alias *alias = New<Alias>();
+    bool isValid = true;
     alias->setIsReadOnly(node->isReadonly());
 
     const QString propName = node->name.toString();
@@ -1503,8 +1589,10 @@ bool IRBuilder::appendAlias(QQmlJS::AST::UiPublicMember *node)
 
     alias->setPropertyNameIndex(emptyStringIndex);
 
-    if (!node->statement && !node->binding)
+    if (!node->statement && !node->binding) {
         COMPILE_EXCEPTION(loc, tr("No property alias location"));
+        isValid = false;
+    }
 
     QQmlJS::SourceLocation rhsLoc;
     if (node->binding)
@@ -1525,15 +1613,20 @@ bool IRBuilder::appendAlias(QQmlJS::AST::UiPublicMember *node)
             } else {
                 COMPILE_EXCEPTION(rhsLoc, tr("Invalid alias location"));
             }
+            isValid = false;
         }
     } else {
         COMPILE_EXCEPTION(rhsLoc, tr("Invalid alias reference. An alias reference must be specified as <id>, <id>.<property> or <id>.<value property>.<property>"));
+        isValid = false;
     }
 
-    if (aliasReference.size() < 1 || aliasReference.size() > 3)
+    if (isValid && (aliasReference.size() < 1 || aliasReference.size() > 3)) {
         COMPILE_EXCEPTION(rhsLoc, tr("Invalid alias reference. An alias reference must be specified as <id>, <id>.<property> or <id>.<value property>.<property>"));
+        isValid = false;
+    }
 
-     alias->setIdIndex(registerString(aliasReference.first()));
+    if (isValid)
+        alias->setIdIndex(registerString(aliasReference.first()));
 
      QString propertyValue = aliasReference.value(1);
      if (aliasReference.size() == 3)
@@ -1543,17 +1636,20 @@ bool IRBuilder::appendAlias(QQmlJS::AST::UiPublicMember *node)
      QQmlJS::SourceLocation errorLocation;
      QString error;
 
-     if (QV4::Compiler::Codegen::isNameGlobal(propName))
-         error = tr("Illegal property name");
-     else
-         error = _object->appendAlias(alias, propName, node->isDefaultMember(), node->defaultToken(), &errorLocation);
+    if (QV4::Compiler::Codegen::isNameGlobal(propName)) {
+        error = tr("Illegal property name");
+    } else if (isValid) {
+        error = _object->appendAlias(alias, propName, node->isDefaultMember(), node->defaultToken(),
+                                     &errorLocation);
+    }
 
      if (!error.isEmpty()) {
          if (errorLocation.startLine == 0)
              errorLocation = node->identifierToken;
 
          recordError(errorLocation, error);
-         return false;
+         if (!shouldContinue())
+             return false;
      }
 
      return false;
@@ -1583,34 +1679,49 @@ bool IRBuilder::setId(const QQmlJS::SourceLocation &idLocation, QQmlJS::AST::Sta
     if (node && str.isEmpty())
         str = asStringRef(node);
 
-    if (str.isEmpty())
+    bool isValid = !str.isEmpty();
+    if (!isValid) {
         COMPILE_EXCEPTION(loc, tr( "Invalid empty ID"));
+    } else {
+        QChar ch = str.at(0);
+        if (ch.isLetter() && !ch.isLower()) {
+            COMPILE_EXCEPTION(loc, tr( "IDs cannot start with an uppercase letter"));
+            isValid = false;
+        }
 
-    QChar ch = str.at(0);
-    if (ch.isLetter() && !ch.isLower())
-        COMPILE_EXCEPTION(loc, tr( "IDs cannot start with an uppercase letter"));
+        QChar u(QLatin1Char('_'));
+        if (!ch.isLetter() && ch != u) {
+            COMPILE_EXCEPTION(loc, tr( "IDs must start with a letter or underscore"));
+            isValid = false;
+        }
 
-    QChar u(QLatin1Char('_'));
-    if (!ch.isLetter() && ch != u)
-        COMPILE_EXCEPTION(loc, tr( "IDs must start with a letter or underscore"));
+        for (int ii = 1; ii < str.size(); ++ii) {
+            ch = str.at(ii);
+            if (!ch.isLetterOrNumber() && ch != u) {
+                COMPILE_EXCEPTION(loc, tr( "IDs must contain only letters, numbers, and underscores"));
+                isValid = false;
+                break;
+            }
+        }
 
-    for (int ii = 1; ii < str.size(); ++ii) {
-        ch = str.at(ii);
-        if (!ch.isLetterOrNumber() && ch != u)
-            COMPILE_EXCEPTION(loc, tr( "IDs must contain only letters, numbers, and underscores"));
+        QString idQString(str.toString());
+        if (QV4::Compiler::Codegen::isNameGlobal(idQString)) {
+            COMPILE_EXCEPTION(loc, tr( "ID illegally masks global JavaScript property"));
+            isValid = false;
+        }
+
+        if (_object->idNameIndex != emptyStringIndex) {
+            COMPILE_EXCEPTION(idLocation, tr("Property value set multiple times"));
+            isValid = false;
+        }
+
+        if (isValid) {
+            _object->idNameIndex = registerString(idQString);
+            _object->locationOfIdProperty.set(idLocation.startLine, idLocation.startColumn);
+        }
     }
 
-    QString idQString(str.toString());
-    if (QV4::Compiler::Codegen::isNameGlobal(idQString))
-        COMPILE_EXCEPTION(loc, tr( "ID illegally masks global JavaScript property"));
-
-    if (_object->idNameIndex != emptyStringIndex)
-        COMPILE_EXCEPTION(idLocation, tr("Property value set multiple times"));
-
-    _object->idNameIndex = registerString(idQString);
-    _object->locationOfIdProperty.set(idLocation.startLine, idLocation.startColumn);
-
-    return true;
+    return isValid;
 }
 
 bool IRBuilder::resolveQualifiedId(QQmlJS::AST::UiQualifiedId **nameToResolve, Object **object, bool onAssignment)
@@ -1676,7 +1787,8 @@ bool IRBuilder::resolveQualifiedId(QQmlJS::AST::UiQualifiedId **nameToResolve, O
             QString error = (*object)->appendBinding(binding, /*isListBinding*/false);
             if (!error.isEmpty()) {
                 recordError(qualifiedIdElement->identifierToken, error);
-                return false;
+                if (!shouldContinue())
+                    return false;
             }
             *object = _objects.at(objIndex);
         } else {

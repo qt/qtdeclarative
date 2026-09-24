@@ -9,6 +9,21 @@
 using namespace QmlIR;
 using namespace Syntax;
 
+void tst_qmljsir::failureMode()
+{
+    const QString source = QStringLiteral("QtObject { signal Array() }");
+
+    Document stopDocument(QString(), QString(), true);
+    IRBuilder stopBuilder;
+    QVERIFY(!stopBuilder.generateFromQml(source, QString(), &stopDocument));
+    QCOMPARE(stopBuilder.errors.size(), 1);
+
+    Document continueDocument(QString(), QString(), true);
+    IRBuilder continueBuilder{ IRBuilder::ContinueAfterFailure };
+    QVERIFY(!continueBuilder.generateFromQml(source, QString(), &continueDocument));
+    QCOMPARE(continueBuilder.errors.size(), 2);
+}
+
 void tst_qmljsir::propertyVirtSpecifiers_data()
 {
     QTest::addColumn<Phrase>("virtSpecifiers");
