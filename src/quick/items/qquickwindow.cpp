@@ -673,14 +673,27 @@ void QQuickWindowPrivate::renderSceneGraph()
 
     const qreal devicePixelRatio = q->effectiveDevicePixelRatio();
     QSize pixelSize;
-    if (redirect.rt.rt.renderTarget)
-        pixelSize = redirect.rt.rt.renderTarget->pixelSize();
-    else if (redirect.rt.sw.paintDevice)
+    if (QRhiRenderTarget *rt = redirect.rt.rt.renderTarget) {
+        pixelSize = rt->pixelSize();
+        // With a shading rate map attached, viewports and scissors are
+        // specified in the logical coordinate space of the map, which can be
+        // larger than the physical size of the texture. (Foveated rendering on
+        // visionOS works like this.) The scene graph must lay out and clip in
+        // that space, not in texture pixels.
+        if (rt->resourceType() == QRhiResource::TextureRenderTarget) {
+            if (QRhiShadingRateMap *srm = static_cast<QRhiTextureRenderTarget *>(rt)->description().shadingRateMap()) {
+                const QSize logicalSize = srm->logicalSize();
+                if (logicalSize.isValid())
+                    pixelSize = logicalSize;
+            }
+        }
+    } else if (redirect.rt.sw.paintDevice) {
         pixelSize = QSize(redirect.rt.sw.paintDevice->width(), redirect.rt.sw.paintDevice->height());
-    else if (rhi)
+    } else if (rhi) {
         pixelSize = swapchain->currentPixelSize();
-    else // software or other backend
+    } else { // software or other backend
         pixelSize = q->size() * devicePixelRatio;
+    }
 
     renderer->setDevicePixelRatio(devicePixelRatio);
     renderer->setDeviceRect(QRect(QPoint(0, 0), pixelSize));
