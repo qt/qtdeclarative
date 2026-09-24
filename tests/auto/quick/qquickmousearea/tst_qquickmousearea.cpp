@@ -983,7 +983,9 @@ void tst_QQuickMouseArea::doubleTap() // QTBUG-112434
     QTest::qWait(QGuiApplication::styleHints()->mouseDoubleClickInterval());
 
     // now tap with two fingers simultaneously: only one of them generates synth-mouse
-    QPoint p2 = p1 + QPoint(50, 5);
+    // Keep the second touchpoint far enough away to interrupt double-tap detection.
+    QPoint p2 = p1 + QPoint(QGuiApplication::styleHints()->touchDoubleTapDistance() + 1, 5);
+
     QTest::touchEvent(&window, touchscreen.get()).press(2, p1).press(3, p2);
     QQuickTouchUtils::flush(&window);
     QCOMPARE(mouseArea->isPressed(), true);
