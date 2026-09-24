@@ -266,6 +266,7 @@ private slots:
     void QTBUG_66163_setModelViewPortSizeChange();
     void itemFiltered();
     void releaseItems();
+    void destroyWithInvalidatedContexts();
 
     void QTBUG_34576_velocityZero();
     void QTBUG_61537_modelChangesAsync();
@@ -9787,6 +9788,17 @@ void tst_QQuickListView::releaseItems()
 
     // don't crash (QTBUG-61294)
     listview->setModel(123);
+}
+
+void tst_QQuickListView::destroyWithInvalidatedContexts()
+{
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("destroyWithInvalidatedContexts.qml"));
+
+    // Wait for the deactivated Loader subtree's deferred delete to be delivered.
+    // Once the ListView is gone its ~QQuickItemView has run; it must not have
+    // dereferenced a freed delegate left in unrequestedItems (don't crash).
+    QTRY_VERIFY(window->rootObject()->property("viewDestroyed").toBool());
 }
 
 void tst_QQuickListView::QTBUG_34576_velocityZero()
