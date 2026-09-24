@@ -87,13 +87,6 @@ void tst_Baseline_Controls::initTestCase()
         QSKIP("Test suite data directory missing or unreadable: " + fi.canonicalFilePath().toLatin1());
     testSuitePath = fi.canonicalFilePath();
 
-#if defined(Q_OS_WIN)
-    grabberPath = QFINDTESTDATA("qmlscenegrabber.exe");
-#elif defined(Q_OS_DARWIN)
-    grabberPath = QFINDTESTDATA("qmlscenegrabber.app/Contents/MacOS/qmlscenegrabber");
-#else
-    grabberPath = QFINDTESTDATA("qmlscenegrabber");
-#endif
     if (grabberPath.isEmpty())
         grabberPath = QCoreApplication::applicationDirPath() + "/../scenegraph/qmlscenegrabber";
 
