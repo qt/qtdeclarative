@@ -1693,7 +1693,9 @@ bool QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interrupt)
          captured)?
        If the answer to all of those questions is "no", it is safe to remove the binding, as there is no
        way for it to change its value afterwards from that point on.
+       The QML preview, however, needs to re-evaluate the binding if its code is changed.
     */
+    const bool removeConstantBindings = !QV4::ExecutionEngine::isPreviewing();
 
     while (!sharedState->allCreatedBindings.empty()) {
         QQmlAbstractBinding::Ptr b = sharedState->allCreatedBindings.back();
@@ -1707,7 +1709,7 @@ bool QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interrupt)
         data->clearPendingBindingBit(b->targetPropertyIndex().coreIndex());
         b->setEnabled(true, QQmlPropertyData::BypassInterceptor |
                       QQmlPropertyData::DontRemoveBinding);
-        if (b->kind() == QQmlAbstractBinding::QmlBinding) {
+        if (removeConstantBindings && b->kind() == QQmlAbstractBinding::QmlBinding) {
             QQmlBinding *binding = static_cast<QQmlBinding*>(b.data());
             if (!binding->hasError() && !binding->hasDependencies()
                     && !binding->hasUnresolvedNames()) {
@@ -1741,7 +1743,7 @@ bool QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interrupt)
         sharedState->allQPropertyBindings.pop_front();
 
         // If the binding was actually not set, it's deleted now.
-        if (success && bindingPrivateRefCount > 1) {
+        if (removeConstantBindings && success && bindingPrivateRefCount > 1) {
             if (auto priv = QPropertyBindingPrivate::get(qmlBinding); priv->isQmlBinding()) {
                 const auto qmlBindingBase = static_cast<const QQmlPropertyBindingBase *>(priv);
                 if (qmlBindingBase->bindingKind()

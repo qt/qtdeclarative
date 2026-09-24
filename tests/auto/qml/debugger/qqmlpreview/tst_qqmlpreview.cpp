@@ -79,6 +79,7 @@ private slots:
     void inPlaceUpdateConstant();
     void inPlaceUpdateColor();
     void inPlaceUpdateBindingChange();
+    void inPlaceUpdateConstantScriptBinding();
     void inPlaceUpdatePropertyAdd();
     void inPlaceUpdateBrokenFile();
     void rerunAfterInPlaceUpdate();
@@ -862,6 +863,30 @@ void tst_QQmlPreview::inPlaceUpdateBindingChange()
 
     // After the in-place binding change, the computed value should update.
     verifyProcessOutputContains("binding computed=50");
+
+    m_process->stop();
+    QTRY_COMPARE(m_client->state(), QQmlDebugClient::NotConnected);
+    QVERIFY(m_serviceErrors.isEmpty());
+}
+
+// In-place update of a script binding without dependencies. Such a binding is usually dropped after
+// its first evaluation. Then there is nothing left to re-evaluate when its code changes
+// (QTBUG-150561).
+void tst_QQmlPreview::inPlaceUpdateConstantScriptBinding()
+{
+    const QString file("inplace_animation.qml");
+    QCOMPARE(startQmlProcess(file), ConnectSuccess);
+    QVERIFY(m_client);
+    QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
+
+    enableInPlaceUpdates();
+    verifyProcessOutputContains("animation duration=1000 running=true");
+
+    QByteArray contents = readAndModify(file, {{"Math.abs(1000)", "Math.abs(100)"}});
+    serveFile(testFile(file), contents);
+    m_client->triggerLoad(testFileUrl(file));
+
+    verifyProcessOutputContains("animation duration=100 running=true");
 
     m_process->stop();
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::NotConnected);

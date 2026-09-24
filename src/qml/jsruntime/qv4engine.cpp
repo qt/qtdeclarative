@@ -946,6 +946,11 @@ void ExecutionEngine::setPreviewing(bool enabled)
     hasPreview.storeRelease(enabled);
 }
 
+bool ExecutionEngine::isPreviewing()
+{
+    return hasPreview.loadAcquire();
+}
+
 #endif // QT_CONFIG(qml_debug)
 
 void ExecutionEngine::initRootContext()
