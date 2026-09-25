@@ -1993,7 +1993,6 @@ static QQmlJS::Dom::DomItem fileObject(const QString &filePath)
             QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
                     | QQmlJS::Dom::DomEnvironment::Option::NoDependencies,
             QQmlJS::Dom::Extended);
-    envPtr->loadBuiltins();
     envPtr->loadFile(QQmlJS::Dom::FileToLoad::fromMemory(envPtr, filePath, code),
                         [&file](QQmlJS::Dom::Path, const QQmlJS::Dom::DomItem &, const QQmlJS::Dom::DomItem &newIt) {
                             file = newIt.fileObject();

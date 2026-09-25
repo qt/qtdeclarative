@@ -188,7 +188,6 @@ void tst_qmlls_highlighting::highlights_data()
         QStringList dirs = {QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath)};
         auto envPtr = DomEnvironment::create(
                 dirs, QQmlJS::Dom::DomEnvironment::Option::SingleThreaded, Extended);
-        envPtr->loadBuiltins();
         envPtr->loadFile(FileToLoad::fromMemory(envPtr, filePath, code),
                          [&file](Path, const DomItem &, const DomItem &newIt) {
                              file = newIt.fileObject();
@@ -1050,7 +1049,6 @@ static QQmlJS::Dom::DomItem fileObject(const QString &filePath)
     QStringList dirs = { QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath) };
     auto envPtr = DomEnvironment::create(dirs, QQmlJS::Dom::DomEnvironment::Option::SingleThreaded,
                                          Extended);
-    envPtr->loadBuiltins();
     envPtr->loadFile(
             FileToLoad::fromMemory(envPtr, filePath, code),
             [&file](Path, const DomItem &, const DomItem &newIt) { file = newIt.fileObject(); });

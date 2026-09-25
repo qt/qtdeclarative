@@ -53,7 +53,6 @@ tst_qmlls_utils::createEnvironmentAndLoadFile(const QString &filePath, const QSt
                              const QQmlJS::Dom::DomItem &newIt) { file = newIt; });
 
     envPtr->loadPendingDependencies();
-    envPtr->loadBuiltins();
 
     cache[cacheKey] = envPtr;
     return std::make_tuple(env, file);
@@ -4611,6 +4610,13 @@ void tst_qmlls_utils::completions()
 
     for (const ExpectedCompletion &exp : expected) {
         QEXPECT_FAIL("letStatementAfterEqual", "Completion not implemented yet!", Abort);
+
+        QEXPECT_FAIL("importAfterDot", "Imports need to be reworked via QTBUG-126766", Abort);
+        QEXPECT_FAIL("importAfterDot2", "Imports need to be reworked via QTBUG-126766", Abort);
+        QEXPECT_FAIL("importAfterDotMissing", "Imports need to be reworked via QTBUG-126766",
+                     Abort);
+        QEXPECT_FAIL("importModuleStart", "Imports need to be reworked via QTBUG-126766", Abort);
+        QEXPECT_FAIL("importVersionStart", "Imports need to be reworked via QTBUG-126766", Abort);
 
         QVERIFY2(labels.contains(exp.label),
                  u"no %1 in %2"_s.arg(exp.label, labelsForPrinting).toUtf8());

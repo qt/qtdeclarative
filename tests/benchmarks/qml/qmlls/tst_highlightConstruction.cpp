@@ -20,7 +20,6 @@ static std::pair<QQmlJS::Dom::DomItem, QString> fileObject(QLatin1StringView pat
     QStringList dirs = { QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath) };
     auto envPtr = DomEnvironment::create(dirs, QQmlJS::Dom::DomEnvironment::Option::SingleThreaded,
                                          Extended);
-    envPtr->loadBuiltins();
     envPtr->loadFile(
             FileToLoad::fromMemory(envPtr, path, code),
             [&file](Path, const DomItem &, const DomItem &newIt) { file = newIt.fileObject(); });

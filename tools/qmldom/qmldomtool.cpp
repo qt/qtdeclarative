@@ -189,8 +189,6 @@ int main(int argc, char *argv[])
     std::shared_ptr<DomEnvironment> envPtr(new DomEnvironment(qmltypeDirs, options));
     DomItem env(envPtr);
     qDebug() << "will load\n";
-    if (dep != Dependencies::None)
-        envPtr->loadBuiltins();
     QList<DomItem> loadedFiles(positionalArguments.size());
     qsizetype iPos = 0;
     for (const QString &s : std::as_const(positionalArguments)) {

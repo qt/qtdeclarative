@@ -400,10 +400,6 @@ bool QQmlDomAstCreatorBase::visit(UiImport *el)
                 Import::fromUriString(toString(el->importUri), v, el->importId.toString());
         fileLocation = createMap(DomType::Import, qmlFilePtr->addImport(import), el);
 
-        if (loadDependencies) {
-            envPtr->loadModuleDependency(import.uri.moduleUri(), import.version,
-                                         DomItem::Callback());
-        }
         FileLocations::addRegion(fileLocation, ImportUriRegion, combineLocations(el->importUri));
     } else {
         const Import import =

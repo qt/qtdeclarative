@@ -765,9 +765,6 @@ public:
     void loadFile(const FileToLoad &file, const Callback &callback,
                   std::optional<DomType> fileType = std::optional<DomType>(),
                   const ErrorHandler &h = nullptr /* used only in loadPendingDependencies*/);
-    void loadBuiltins(const Callback &callback = nullptr, const ErrorHandler &h = nullptr);
-    void loadModuleDependency(const QString &uri, Version v, const Callback &callback = nullptr,
-                              const ErrorHandler & = nullptr);
 
     void removePath(const QString &path);
 
@@ -956,10 +953,6 @@ private:
     void loadFile(const FileToLoad &file, const Callback &loadCallback, const Callback &endCallback,
                   std::optional<DomType> fileType = std::optional<DomType>(),
                   const ErrorHandler &h = nullptr);
-
-    void loadModuleDependency(
-            const DomItem &self, const QString &uri, Version v, const Callback &loadCallback = nullptr,
-            const Callback &endCallback = nullptr, const ErrorHandler & = nullptr);
 
     template <typename T>
     QSet<QString> getStrings(function_ref<QSet<QString>()> getBase, const QMap<QString, T> &selfMap,

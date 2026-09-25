@@ -493,7 +493,6 @@ private slots:
         QVERIFY(env);
         QString testFile1 = baseDir + QLatin1String("/test1.qml");
         DomItem tFile;
-        envPtr->loadBuiltins();
         envPtr->loadFile(FileToLoad::fromFileSystem(envPtr, testFile1),
                          [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; });
         envPtr->loadFile(FileToLoad::fromFileSystem(envPtr, baseDir), {});

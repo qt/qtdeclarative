@@ -185,7 +185,6 @@ private slots:
         QString testFilePath = baseDir + QLatin1Char('/') + inFile;
         QVERIFY(QFile(testFilePath).exists());
         DomItem tFile;
-        envPtr->loadBuiltins();
         envPtr->loadFile(FileToLoad::fromFileSystem(envPtr, testFilePath),
                          [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; });
         envPtr->loadPendingDependencies();
@@ -288,7 +287,6 @@ private slots:
         QString testFilePath = baseDir + QLatin1Char('/') + inFile;
         QVERIFY(QFile(testFilePath).exists());
         DomItem tFile;
-        envPtr->loadBuiltins();
         envPtr->loadFile(FileToLoad::fromFileSystem(envPtr, testFilePath),
                          [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; });
         envPtr->loadPendingDependencies();
