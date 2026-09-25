@@ -359,9 +359,7 @@ QString QQmlJSUtils::qmlBuildPathFromSourcePath(const QQmlJSResourceFileMapper *
         if (!moduleBuildEntry.isValid())
             continue;
 
-        const auto qrcFolderPath = qrcPath.first(qrcPath.lastIndexOf(u'/'));
-        return moduleBuildEntry.filePath + qrcFolderPath.sliced(moduleBuildEntry.resourcePath.size())
-                + pathInSourceFolder.sliced(pathInSourceFolder.lastIndexOf(u'/'));
+        return moduleBuildEntry.filePath + qrcPath.sliced(moduleBuildEntry.resourcePath.size());
     }
 
     return pathInSourceFolder;
