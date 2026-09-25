@@ -1132,6 +1132,10 @@ std::shared_ptr<OwningItem> DomEnvironment::doCopy(const DomItem &) const
     return res;
 }
 
+bool DomEnvironment::hasFile(const QString &filePath) const
+{
+    return m_qmlFileWithPath.contains(filePath);
+}
 void DomEnvironment::loadFile(const FileToLoad &file, const Callback &callback,
                               std::optional<DomType> fileType, const ErrorHandler &h)
 {

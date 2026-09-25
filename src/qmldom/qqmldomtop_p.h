@@ -761,6 +761,7 @@ public:
 
     std::shared_ptr<DomEnvironment> makeCopy(const DomItem &self) const;
 
+    bool hasFile(const QString &filePath) const;
     void loadFile(const FileToLoad &file, const Callback &callback,
                   std::optional<DomType> fileType = std::optional<DomType>(),
                   const ErrorHandler &h = nullptr /* used only in loadPendingDependencies*/);

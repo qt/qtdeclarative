@@ -337,40 +337,6 @@ bool QQmlDomAstCreatorBase::visit(UiProgram *program)
     auto envPtr = qmlFile.environment().ownerAs<DomEnvironment>();
     const bool loadDependencies =
             !envPtr->options().testFlag(DomEnvironment::Option::NoDependencies);
-    // add implicit directory import and load them in the Dom
-    if (!fInfo.canonicalPath().isEmpty()) {
-        Import selfDirImport(QmlUri::fromDirectoryString(fInfo.canonicalPath()));
-        selfDirImport.implicit = true;
-        qmlFilePtr->addImport(selfDirImport);
-
-        if (loadDependencies) {
-            const QString currentFile = envPtr->domCreationOption() == Extended
-                    ? QQmlJSUtils::qmlBuildPathFromSourcePath(
-                              envPtr->semanticAnalysis().m_mapper.get(),
-                              qmlFile.canonicalFilePath())
-                    : qmlFile.canonicalFilePath();
-
-            const QDir implicitImportDir = QFileInfo(currentFile).dir();
-            const QString implicitImportDirPath = implicitImportDir.canonicalPath();
-            envPtr->loadFile(FileToLoad::fromFileSystem(envPtr, implicitImportDirPath),
-                             DomItem::Callback(), DomType::QmlDirectory);
-
-            // also load the qmldir from the implicit directory, if existing
-            if (implicitImportDir.exists(u"qmldir"_s)) {
-                const QString implicitImportQmldir = implicitImportDirPath + u"/qmldir"_s;
-                envPtr->loadFile(FileToLoad::fromFileSystem(envPtr, implicitImportQmldir),
-                                 DomItem::Callback(), DomType::QmldirFile);
-            }
-        }
-    }
-    // add implicit imports from the environment (QML, QtQml for example) and load them in the Dom
-    for (Import i : qmlFile.environment().ownerAs<DomEnvironment>()->implicitImports()) {
-        i.implicit = true;
-        qmlFilePtr->addImport(i);
-
-        if (loadDependencies)
-            envPtr->loadModuleDependency(i.uri.moduleUri(), i.version, DomItem::Callback());
-    }
     if (m_loadFileLazily && loadDependencies) {
         envPtr->loadPendingDependencies();
         envPtr->commitToBase(qmlFile.environment().item());
@@ -3416,6 +3382,25 @@ void QQmlDomAstCreatorWithQQmlJSScope::setScopeInDomBeforeEndvisit()
 
 void QQmlDomAstCreatorWithQQmlJSScope::throwRecursionDepthError()
 {
+}
+
+void QQmlDomAstCreatorWithQQmlJSScope::loadQmlDependenciesInDom()
+{
+    const auto types = m_scopeCreator.imports().types();
+    auto environment = m_domCreator.currentEnvironment();
+    for (auto it = types.begin(), end = types.end(); it != end; ++it) {
+        auto scope = it->scope;
+        if (!scope)
+            continue;
+        auto factory = scope.factory();
+        if (!factory && !scope->isComposite())
+            continue;
+        const QString filePath = QQmlJSUtils::qmlSourcePathFromBuildPath(
+                m_importer->resourceFileMapper(),
+                factory ? factory->filePath() : scope->filePath());
+        if (!environment->hasFile(filePath))
+            environment->loadFile(FileToLoad::fromFileSystem(environment, filePath), { });
+    }
 }
 
 #define X(name)                                                                              \

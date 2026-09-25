@@ -485,8 +485,10 @@ private slots:
 #endif
         auto univPtr = std::shared_ptr<QQmlJS::Dom::DomUniverse>(
                 new QQmlJS::Dom::DomUniverse(QLatin1String("univ1")));
+        // Dependency loading now happens via QQmlJSImporter, which only runs for Extended.
         auto envPtr = std::shared_ptr<QQmlJS::Dom::DomEnvironment>(new QQmlJS::Dom::DomEnvironment(
-                qmltypeDirs, QQmlJS::Dom::DomEnvironment::Option::SingleThreaded, {}, univPtr));
+                qmltypeDirs, QQmlJS::Dom::DomEnvironment::Option::SingleThreaded, Extended,
+                univPtr));
         QQmlJS::Dom::DomItem env(envPtr);
         QVERIFY(env);
         QString testFile1 = baseDir + QLatin1String("/test1.qml");

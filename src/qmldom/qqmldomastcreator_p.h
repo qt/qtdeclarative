@@ -19,6 +19,7 @@
 #include "qqmldomelements_p.h"
 #include "qqmldomitem_p.h"
 #include "qqmldompath_p.h"
+#include "qqmldomtop_p.h"
 #include "qqmldomscriptelements_p.h"
 
 #include <QtQmlCompiler/private/qqmljsimportvisitor_p.h>
@@ -129,6 +130,10 @@ private:
 public:
     void enableScriptExpressions(bool enable = true) { m_enableScriptExpressions = enable; }
     void enableLoadFileLazily(bool enable = true) { m_loadFileLazily = enable; }
+    std::shared_ptr<DomEnvironment> currentEnvironment()
+    {
+        return qmlFile.environment().ownerAs<DomEnvironment>();
+    }
 
 private:
 
@@ -721,9 +726,16 @@ private:
         Q_UNREACHABLE();
     }
 
+    void loadQmlDependenciesInDom();
+
     template<typename T>
     void endVisitT(T *t)
     {
+        if constexpr (std::is_same_v<T, AST::UiHeaderItemList>) {
+            const bool allImportsVisited = !static_cast<AST::UiHeaderItemList *>(t)->next;
+            if (allImportsVisited)
+                loadQmlDependenciesInDom();
+        }
         if (m_inactiveVisitorMarker && m_inactiveVisitorMarker->nodeKind == t->kind) {
             m_inactiveVisitorMarker->count -= 1;
             if (m_inactiveVisitorMarker->count == 0)
