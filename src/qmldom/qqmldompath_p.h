@@ -438,8 +438,6 @@ QMLDOM_FIELD(regExpFlags);
 QMLDOM_FIELD(forStatement);
 QMLDOM_FIELD(fullRegion);
 QMLDOM_FIELD(get);
-QMLDOM_FIELD(globalScopeName);
-QMLDOM_FIELD(globalScopeWithName);
 QMLDOM_FIELD(hasCallback);
 QMLDOM_FIELD(hasCustomParser);
 QMLDOM_FIELD(idStr);

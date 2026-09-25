@@ -792,26 +792,24 @@ using ElementT =
                      SimpleObjectWrap, const AstComments *, const FileLocations::Node *,
                      const DomEnvironment *, const DomUniverse *, const EnumDecl *,
                      const ExternalItemInfoBase *, const ExternalItemPairBase *,
-                     const GlobalComponent *, const GlobalScope *, const JsFile *,
-                     const JsResource *, const LoadInfo *, const MockObject *, const MockOwner *,
-                     const QmlComponent *, const QmlDirectory *, const QmlFile *, const QmlObject *,
-                     const QmldirFile *, const QmltypesComponent *, const QmltypesFile *,
-                     const ScriptExpression *>;
+                     const GlobalComponent *, const JsFile *, const JsResource *, const LoadInfo *,
+                     const MockObject *, const MockOwner *, const QmlComponent *,
+                     const QmlDirectory *, const QmlFile *, const QmlObject *, const QmldirFile *,
+                     const QmltypesComponent *, const QmltypesFile *, const ScriptExpression *>;
 
 using TopT = std::variant<
         std::monostate,
         std::shared_ptr<DomEnvironment>,
         std::shared_ptr<DomUniverse>>;
 
-using OwnerT =
-        std::variant<std::monostate, std::shared_ptr<MockOwner>,
-                     std::shared_ptr<ExternalItemInfoBase>, std::shared_ptr<ExternalItemPairBase>,
-                     std::shared_ptr<QmlDirectory>, std::shared_ptr<QmldirFile>,
-                     std::shared_ptr<JsFile>, std::shared_ptr<QmlFile>,
-                     std::shared_ptr<QmltypesFile>, std::shared_ptr<GlobalScope>,
-                     std::shared_ptr<ScriptExpression>, std::shared_ptr<AstComments>,
-                     std::shared_ptr<LoadInfo>, std::shared_ptr<FileLocations::Node>,
-                     std::shared_ptr<DomEnvironment>, std::shared_ptr<DomUniverse>>;
+using OwnerT = std::variant<std::monostate, std::shared_ptr<MockOwner>,
+                            std::shared_ptr<ExternalItemInfoBase>,
+                            std::shared_ptr<ExternalItemPairBase>, std::shared_ptr<QmlDirectory>,
+                            std::shared_ptr<QmldirFile>, std::shared_ptr<JsFile>,
+                            std::shared_ptr<QmlFile>, std::shared_ptr<QmltypesFile>,
+                            std::shared_ptr<ScriptExpression>, std::shared_ptr<AstComments>,
+                            std::shared_ptr<LoadInfo>, std::shared_ptr<FileLocations::Node>,
+                            std::shared_ptr<DomEnvironment>, std::shared_ptr<DomUniverse>>;
 
 inline bool emptyChildrenVisitor(Path, const DomItem &, bool)
 {
@@ -906,7 +904,6 @@ public:
                       FilterUpOptions options = FilterUpOptions::ReturnOuter) const;
     DomItem fileObject(GoTo option = GoTo::Strict) const;
     DomItem rootQmlObject(GoTo option = GoTo::Strict) const;
-    DomItem globalScope() const;
     DomItem component(GoTo option = GoTo::Strict) const;
     DomItem scope(FilterUpOptions options = FilterUpOptions::ReturnOuter) const;
     QQmlJSScope::ConstPtr nearestSemanticScope() const;
@@ -1562,7 +1559,6 @@ public:
     {
         return MutableDomItem(item().rootQmlObject(option));
     }
-    MutableDomItem globalScope() { return MutableDomItem(item().globalScope()); }
     MutableDomItem scope() { return MutableDomItem(item().scope()); }
 
     MutableDomItem component(GoTo option = GoTo::Strict)
@@ -1888,7 +1884,6 @@ constexpr bool domTypeIsOwningItem(DomType k)
     case DomType::JsFile:
     case DomType::QmlFile:
     case DomType::QmltypesFile:
-    case DomType::GlobalScope:
 
     case DomType::ScriptExpression:
     case DomType::AstComments:

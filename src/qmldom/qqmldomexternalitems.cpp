@@ -509,19 +509,6 @@ void QmlFile::writeOut(const DomItem &self, OutWriter &ow) const
     mainC.writeOut(ow);
 }
 
-std::shared_ptr<OwningItem> GlobalScope::doCopy(const DomItem &self) const
-{
-    auto res = std::make_shared<GlobalScope>(
-                canonicalFilePath(self), lastDataUpdateAt(), revision());
-    return res;
-}
-
-bool GlobalScope::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const
-{
-    bool cont = ExternalOwningItem::iterateDirectSubpaths(self, visitor);
-    return cont;
-}
-
 bool QmltypesFile::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const
 {
     bool cont = ExternalOwningItem::iterateDirectSubpaths(self, visitor);

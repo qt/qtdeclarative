@@ -154,15 +154,6 @@ bool DomUniverse::iterateDirectSubpaths(const DomItem &self, DirectVisitor visit
     bool cont = true;
     cont = cont && DomTop::iterateDirectSubpaths(self, visitor);
     cont = cont && self.invokeVisitorOnValue(visitor, PathEls::Field(Fields::name), name());
-    cont = cont && visitor(PathEls::Field(Fields::globalScopeWithName), [this, &self]() {
-                   return self.subMapItem(Map(
-                           Path::fromField(Fields::globalScopeWithName),
-                           [this](const DomItem &map, const QString &key) {
-                               return map.copy(globalScopeWithName(key));
-                           },
-                           [this](const DomItem &) { return globalScopeNames(); },
-                           QLatin1String("GlobalScope")));
-               });
     cont = cont && visitor(PathEls::Field(Fields::qmlDirectoryWithPath), [this, &self]() {
                    return self.subMapItem(Map(
                            Path::fromField(Fields::qmlDirectoryWithPath),
@@ -883,17 +874,6 @@ bool DomEnvironment::iterateDirectSubpaths(const DomItem &self, DirectVisitor vi
     cont = cont && self.invokeVisitorOnLazyField(visitor, Fields::loadPaths, [this]() {
         return loadPaths();
     });
-    cont = cont && self.invokeVisitorOnValue(visitor, PathEls::Field(Fields::globalScopeName),
-                                         globalScopeName());
-    cont = cont && visitor(PathEls::Field(Fields::globalScopeWithName), [this, &self]() {
-                   return self.subMapItem(Map(
-                           Path::fromField(Fields::globalScopeWithName),
-                           [&self, this](const DomItem &map, const QString &key) {
-                               return map.copy(globalScopeWithName(self, key));
-                           },
-                           [&self, this](const DomItem &) { return globalScopeNames(self); },
-                           QLatin1String("GlobalScope")));
-               });
     cont = cont && visitor(PathEls::Field(Fields::qmlDirectoryWithPath), [this, &self]() {
                    return self.subMapItem(Map(
                            Path::fromField(Fields::qmlDirectoryWithPath),
@@ -1363,61 +1343,6 @@ QSet<QString> DomEnvironment::qmltypesFilePaths(const DomItem &, EnvLookup looku
             m_qmltypesFileWithPath, lookup);
 }
 
-std::shared_ptr<ExternalItemInfo<GlobalScope>>
-DomEnvironment::globalScopeWithName(const DomItem &, const QString &name,
-                                    EnvLookup lookupOptions) const
-{
-    return lookup<GlobalScope>(name, lookupOptions);
-}
-
-std::shared_ptr<ExternalItemInfo<GlobalScope>>
-DomEnvironment::ensureGlobalScopeWithName(const DomItem &self, const QString &name, EnvLookup lookupOptions)
-{
-    if (auto current = globalScopeWithName(self, name, lookupOptions))
-        return current;
-    if (auto u = universe()) {
-        if (auto newVal = u->ensureGlobalScopeWithName(name)) {
-            if (auto current = newVal->current) {
-                DomItem currentObj = DomItem(u).copy(current);
-                auto newScope = current->makeCopy(currentObj);
-                auto newCopy = std::make_shared<ExternalItemInfo<GlobalScope>>(
-                        newScope);
-                QMutexLocker l(mutex());
-                if (auto oldVal = m_globalScopeWithName.value(name))
-                    return oldVal;
-                m_globalScopeWithName.insert(name, newCopy);
-                return newCopy;
-            }
-        }
-    }
-    Q_ASSERT_X(false, "DomEnvironment::ensureGlobalScopeWithName", "could not ensure globalScope");
-    return {};
-}
-
-QSet<QString> DomEnvironment::globalScopeNames(const DomItem &, EnvLookup lookupOptions) const
-{
-    QSet<QString> res;
-    if (lookupOptions != EnvLookup::NoBase && m_base) {
-        if (m_base) {
-            DomItem baseObj(m_base);
-            res = m_base->globalScopeNames(baseObj, EnvLookup::Normal);
-        }
-    }
-    if (lookupOptions != EnvLookup::BaseOnly) {
-        QMap<QString, std::shared_ptr<ExternalItemInfo<GlobalScope>>> map;
-        {
-            QMutexLocker l(mutex());
-            map = m_globalScopeWithName;
-        }
-        auto it = map.keyBegin();
-        auto end = map.keyEnd();
-        while (it != end) {
-            res += *it;
-            ++it;
-        }
-    }
-    return res;
-}
 
 /*!
     \internal
@@ -1625,11 +1550,6 @@ void DomEnvironment::addJsFile(const std::shared_ptr<JsFile> &file, AddOption op
     addExternalItem(file, file->canonicalFilePath(), options);
 }
 
-void DomEnvironment::addGlobalScope(const std::shared_ptr<GlobalScope> &scope, AddOption options)
-{
-    addExternalItem(scope, scope->name(), options);
-}
-
 void DomEnvironment::TypeReader::operator()(QQmlJSImporter *importer, const QString &filePath,
                                             const QSharedPointer<QQmlJSScope> &scopeToPopulate)
 {
@@ -1660,7 +1580,6 @@ bool DomEnvironment::commitToBase(const DomItem &, const shared_ptr<DomEnvironme
 {
     if (!base())
         return false;
-    QMap<QString, std::shared_ptr<ExternalItemInfo<GlobalScope>>> my_globalScopeWithName;
     QMap<QString, std::shared_ptr<ExternalItemInfo<QmlDirectory>>> my_qmlDirectoryWithPath;
     QMap<QString, std::shared_ptr<ExternalItemInfo<QmldirFile>>> my_qmldirFileWithPath;
     QMap<QString, std::shared_ptr<ExternalItemInfo<QmlFile>>> my_qmlFileWithPath;
@@ -1670,7 +1589,6 @@ bool DomEnvironment::commitToBase(const DomItem &, const shared_ptr<DomEnvironme
     std::optional<SemanticAnalysis> my_semanticAnalysis;
     {
         QMutexLocker l(mutex());
-        my_globalScopeWithName = m_globalScopeWithName;
         my_qmlDirectoryWithPath = m_qmlDirectoryWithPath;
         my_qmldirFileWithPath = m_qmldirFileWithPath;
         my_qmlFileWithPath = m_qmlFileWithPath;
@@ -1682,7 +1600,6 @@ bool DomEnvironment::commitToBase(const DomItem &, const shared_ptr<DomEnvironme
     {
         QMutexLocker lBase(base()->mutex()); // be more careful about makeCopy calls with lock?
         m_base->m_semanticAnalysis = my_semanticAnalysis;
-        m_base->m_globalScopeWithName.insert(my_globalScopeWithName);
         m_base->m_qmlDirectoryWithPath.insert(my_qmlDirectoryWithPath);
         m_base->m_qmldirFileWithPath.insert(my_qmldirFileWithPath);
         m_base->m_qmlFileWithPath.insert(my_qmlFileWithPath);
@@ -1696,7 +1613,6 @@ bool DomEnvironment::commitToBase(const DomItem &, const shared_ptr<DomEnvironme
         QMutexLocker lValid(
                 m_lastValidBase->mutex()); // be more careful about makeCopy calls with lock?
         m_lastValidBase->m_semanticAnalysis = std::move(my_semanticAnalysis);
-        m_lastValidBase->m_globalScopeWithName.insert(my_globalScopeWithName);
         m_lastValidBase->m_qmlDirectoryWithPath.insert(my_qmlDirectoryWithPath);
         m_lastValidBase->m_qmldirFileWithPath.insert(my_qmldirFileWithPath);
         for (auto it = my_qmlFileWithPath.cbegin(), end = my_qmlFileWithPath.cend(); it != end;
@@ -1843,11 +1759,6 @@ QStringList DomEnvironment::qmldirFiles() const
 {
     QMutexLocker l(mutex());
     return m_qmldirFileWithPath.keys();
-}
-
-QString DomEnvironment::globalScopeName() const
-{
-    return m_globalScopeName;
 }
 
 QList<Import> DomEnvironment::defaultImplicitImports()

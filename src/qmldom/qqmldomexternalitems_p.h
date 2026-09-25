@@ -539,47 +539,6 @@ private:
     QMap<QString, QSet<int>> m_uris;
 };
 
-class QMLDOM_EXPORT GlobalScope final : public ExternalOwningItem
-{
-protected:
-    std::shared_ptr<OwningItem> doCopy(const DomItem &) const override;
-
-public:
-    constexpr static DomType kindValue = DomType::GlobalScope;
-    DomType kind() const override { return kindValue; }
-
-    GlobalScope(
-            const QString &filePath = QString(),
-            const QDateTime &lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC),
-            int derivedFrom = 0)
-        : ExternalOwningItem(filePath, lastDataUpdateAt, Paths::globalScopePath(filePath),
-                             derivedFrom)
-    {
-        setIsValid(true);
-    }
-
-    bool iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const override;
-    std::shared_ptr<GlobalScope> makeCopy(const DomItem &self) const
-    {
-        return std::static_pointer_cast<GlobalScope>(doCopy(self));
-    }
-    QString name() const { return m_name; }
-    Language language() const { return m_language; }
-    GlobalComponent rootComponent() const { return m_rootComponent; }
-    void setName(const QString &name) { m_name = name; }
-    void setLanguage(Language language) { m_language = language; }
-    void setRootComponent(const GlobalComponent &ob)
-    {
-        m_rootComponent = ob;
-        m_rootComponent.updatePathFromOwner(Path::fromField(Fields::rootComponent));
-    }
-
-private:
-    QString m_name;
-    Language m_language;
-    GlobalComponent m_rootComponent;
-};
-
 } // end namespace Dom
 } // end namespace QQmlJS
 QT_END_NAMESPACE

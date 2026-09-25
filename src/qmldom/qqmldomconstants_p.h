@@ -114,7 +114,6 @@ enum class DomType {
     JsFile, // file
     QmlFile, // file
     QmltypesFile, // qmltypes
-    GlobalScope, // language dependent (currently no difference)
     /* enum A {  B, C }
                  *  *
     EnumItem  is marked with * */

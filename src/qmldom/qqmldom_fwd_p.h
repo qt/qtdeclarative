@@ -46,7 +46,6 @@ class ExternalOwningItem;
 enum FileLocationRegion : int;
 class FileWriter;
 class GlobalComponent;
-class GlobalScope;
 class MockObject;
 class MockOwner;
 class Id;

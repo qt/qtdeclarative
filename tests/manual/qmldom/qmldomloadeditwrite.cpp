@@ -343,8 +343,6 @@ int main()
         // .propertyInfoNames() gives the names  of the properties
         Q_ASSERT(propertyInfos.keys() == mCompObj.propertyInfoNames());
 
-        // .globalScope() goes to the globa scope object
-        Q_ASSERT(qmlObj.globalScope().internalKind() == DomType::GlobalScope);
         // and scope to the containing scope
         Q_ASSERT(bindings.scope() == qmlObj);
     }

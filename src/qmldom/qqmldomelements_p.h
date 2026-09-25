@@ -112,14 +112,6 @@ inline Path qmlDirectoryPath(const QString &path)
 {
     return qmlDirectoryInfoPath(path).withField(Fields::currentItem);
 }
-inline Path globalScopeInfoPath(const QString &name)
-{
-    return Path::fromRoot(PathRoot::Top).withField(Fields::globalScopeWithName).withKey(name);
-}
-inline Path globalScopePath(const QString &name)
-{
-    return globalScopeInfoPath(name).withField(Fields::currentItem);
-}
 inline Path lookupCppTypePath(const QString &name)
 {
     return Path::fromCurrent(PathCurrent::Lookup).withField(Fields::cppType).withKey(name);

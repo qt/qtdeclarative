@@ -213,36 +213,6 @@ public:
 
     void removePath(const QString &dir);
 
-    std::shared_ptr<ExternalItemPair<GlobalScope>> globalScopeWithName(const QString &name) const
-    {
-        QMutexLocker l(mutex());
-        return m_globalScopeWithName.value(name);
-    }
-
-    std::shared_ptr<ExternalItemPair<GlobalScope>> ensureGlobalScopeWithName(const QString &name)
-    {
-        if (auto current = globalScopeWithName(name))
-            return current;
-        auto newScope = std::make_shared<GlobalScope>(name);
-        auto newValue = std::make_shared<ExternalItemPair<GlobalScope>>(
-                newScope, newScope);
-        QMutexLocker l(mutex());
-        if (auto current = m_globalScopeWithName.value(name))
-            return current;
-        m_globalScopeWithName.insert(name, newValue);
-        return newValue;
-    }
-
-    QSet<QString> globalScopeNames() const
-    {
-        QMap<QString, std::shared_ptr<ExternalItemPair<GlobalScope>>> map;
-        {
-            QMutexLocker l(mutex());
-            map = m_globalScopeWithName;
-        }
-        return QSet<QString>(map.keyBegin(), map.keyEnd());
-    }
-
     std::shared_ptr<ExternalItemPair<QmlDirectory>> qmlDirectoryWithPath(const QString &path) const
     {
         QMutexLocker l(mutex());
@@ -375,9 +345,6 @@ private:
         if constexpr (std::is_same_v<T, QmltypesFile>) {
             return m_qmltypesFileWithPath;
         }
-        if constexpr (std::is_same_v<T, GlobalScope>) {
-            return m_globalScopeWithName;
-        }
         Q_UNREACHABLE();
     }
 
@@ -442,7 +409,6 @@ private:
 
 private:
     QString m_name;
-    QMap<QString, std::shared_ptr<ExternalItemPair<GlobalScope>>> m_globalScopeWithName;
     QMap<QString, std::shared_ptr<ExternalItemPair<QmlDirectory>>> m_qmlDirectoryWithPath;
     QMap<QString, std::shared_ptr<ExternalItemPair<QmldirFile>>> m_qmldirFileWithPath;
     QMap<QString, std::shared_ptr<ExternalItemPair<QmlFile>>> m_qmlFileWithPath;
@@ -791,11 +757,6 @@ public:
     std::shared_ptr<ExternalItemInfo<QmltypesFile>>
     qmltypesFileWithPath(const DomItem &self, const QString &path, EnvLookup options = EnvLookup::Normal) const;
     QSet<QString> qmltypesFilePaths(const DomItem &self, EnvLookup lookup = EnvLookup::Normal) const;
-    std::shared_ptr<ExternalItemInfo<GlobalScope>>
-    globalScopeWithName(const DomItem &self, const QString &name, EnvLookup lookup = EnvLookup::Normal) const;
-    std::shared_ptr<ExternalItemInfo<GlobalScope>>
-    ensureGlobalScopeWithName(const DomItem &self, const QString &name, EnvLookup lookup = EnvLookup::Normal);
-    QSet<QString> globalScopeNames(const DomItem &self, EnvLookup lookup = EnvLookup::Normal) const;
 
     explicit DomEnvironment(const QStringList &loadPaths, Options options = Option::SingleThreaded,
                             DomCreationOption domCreationOption = Default,
@@ -820,8 +781,6 @@ public:
     void addQmltypesFile(const std::shared_ptr<QmltypesFile> &file,
                          AddOption option = AddOption::KeepExisting);
     void addJsFile(const std::shared_ptr<JsFile> &file, AddOption option = AddOption::KeepExisting);
-    void addGlobalScope(const std::shared_ptr<GlobalScope> &file,
-                        AddOption option = AddOption::KeepExisting);
 
     bool commitToBase(
             const DomItem &self, const std::shared_ptr<DomEnvironment> &validEnv = nullptr);
@@ -842,8 +801,6 @@ public:
 
     QStringList loadPaths() const;
     QStringList qmldirFiles() const;
-
-    QString globalScopeName() const;
 
     static QList<Import> defaultImplicitImports();
     QList<Import> implicitImports() const;
@@ -957,9 +914,6 @@ private:
     const QMap<QString, std::shared_ptr<ExternalItemInfo<T>>> &getConstRefToMap() const
     {
         Q_ASSERT(!mutex()->tryLock());
-        if constexpr (std::is_same_v<T, GlobalScope>) {
-            return m_globalScopeWithName;
-        }
         if constexpr (std::is_same_v<T, QmlDirectory>) {
             return m_qmlDirectoryWithPath;
         }
@@ -1011,9 +965,6 @@ private:
         }
         if constexpr (std::is_same_v<T, QmltypesFile>) {
             return m_qmltypesFileWithPath;
-        }
-        if constexpr (std::is_same_v<T, GlobalScope>) {
-            return m_globalScopeWithName;
         }
         Q_UNREACHABLE();
     }
@@ -1101,8 +1052,6 @@ private:
     const std::shared_ptr<DomUniverse> m_universe;
     QStringList m_loadPaths; // paths for qml
     QStringList m_resourcePaths;
-    QString m_globalScopeName;
-    QMap<QString, std::shared_ptr<ExternalItemInfo<GlobalScope>>> m_globalScopeWithName;
     QMap<QString, std::shared_ptr<ExternalItemInfo<QmlDirectory>>> m_qmlDirectoryWithPath;
     QMap<QString, std::shared_ptr<ExternalItemInfo<QmldirFile>>> m_qmldirFileWithPath;
     QMap<QString, std::shared_ptr<ExternalItemInfo<QmlFile>>> m_qmlFileWithPath;

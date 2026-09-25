@@ -180,7 +180,6 @@ bool domTypeIsExternalItem(DomType k)
     case DomType::JsFile:
     case DomType::QmlFile:
     case DomType::QmltypesFile:
-    case DomType::GlobalScope:
         return true;
     default:
         return false;
@@ -470,18 +469,6 @@ DomItem DomItem::container() const
     if (s.pathFromSource.length() > 1)
         return containingObject().path(s.pathFromSource.dropTail());
     return containingObject();
-}
-
-DomItem DomItem::globalScope() const
-{
-    if (internalKind() == DomType::GlobalScope)
-        return *this;
-    DomItem env = environment();
-    if (shared_ptr<DomEnvironment> envPtr = env.ownerAs<DomEnvironment>()) {
-        return env.copy(envPtr->ensureGlobalScopeWithName(env, envPtr->globalScopeName())->current,
-                        Path());
-    }
-    return DomItem();
 }
 
 /*!
@@ -2069,9 +2056,6 @@ MutableDomItem DomItem::makeCopy(DomItem::CopyOption option) const
     case DomType::QmltypesFile:
         newEnvPtr->addQmltypesFile(newItem.ownerAs<QmltypesFile>(), AddOption::Overwrite);
         break;
-    case DomType::GlobalScope: {
-        newEnvPtr->addGlobalScope(newItem.ownerAs<GlobalScope>(), AddOption::Overwrite);
-    } break;
     case DomType::MockOwner:
     case DomType::ScriptExpression:
     case DomType::AstComments:
