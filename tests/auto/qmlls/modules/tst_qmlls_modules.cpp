@@ -605,13 +605,13 @@ void tst_qmlls_modules::goToTypeDefinition_data()
     const QString zzzPath = u"completions/Zzz.qml"_s;
     const QString someBasePath = u"completions/SomeBase.qml"_s;
 
-    QTest::newRow("BaseOfYyy") << yyyPath << 3 << 1 << zzzPath << 2 << 0 << 9 << 1;
-    QTest::newRow("BaseOfIC") << yyyPath << 29 << 19 << zzzPath << 2 << 0 << 9 << 1;
+    QTest::newRow("BaseOfYyy") << yyyPath << 3 << 1 << zzzPath << 2 << 0 << 2 << 4;
+    QTest::newRow("BaseOfIC") << yyyPath << 29 << 19 << zzzPath << 2 << 0 << 2 << 4;
 
-    QTest::newRow("PropertyType") << yyyPath << 30 << 14 << someBasePath << 2 << 0 << 4 << 1;
+    QTest::newRow("PropertyType") << yyyPath << 30 << 14 << someBasePath << 2 << 0 << 2 << 4;
 
-    QTest::newRow("TypeInIC") << yyyPath << 29 << 36 << someBasePath << 2 << 0 << 4 << 1;
-    QTest::newRow("ICTypeDefinition") << yyyPath << 29 << 15 << yyyPath << 29 << 14 << 29 << 16;
+    QTest::newRow("TypeInIC") << yyyPath << 29 << 36 << someBasePath << 2 << 0 << 2 << 4;
+    QTest::newRow("ICTypeDefinition") << yyyPath << 29 << 15 << yyyPath << 29 << 18 << 29 << 21;
 }
 
 void tst_qmlls_modules::goToTypeDefinition()

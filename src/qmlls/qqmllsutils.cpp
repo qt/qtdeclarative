@@ -446,104 +446,56 @@ static std::optional<Location> locationFromDomItem(const DomItem &item, FileLoca
  */
 std::optional<Location> findTypeDefinitionOf(const DomItem &object)
 {
-    DomItem typeDefinition;
+    auto expressionType = resolveExpressionType(object, ResolveOptions::ResolveOwnerType);
 
-    switch (object.internalKind()) {
-    case QQmlJS::Dom::DomType::QmlComponent:
-        typeDefinition = object.field(Fields::objects).index(0);
-        break;
-    case QQmlJS::Dom::DomType::QmlObject:
-        typeDefinition = baseObject(object);
-        break;
-    case QQmlJS::Dom::DomType::Binding: {
-        auto binding = object.as<Binding>();
-        Q_ASSERT(binding);
+    if (!expressionType)
+        return { };
 
-        // try to grab the type from the bound object
-        if (binding->valueKind() == BindingValueKind::Object) {
-            typeDefinition = baseObject(object.field(Fields::value));
-            break;
-        } else {
-            // use the type of the property it is bound on for scriptexpression etc.
-            DomItem propertyDefinition;
-            const QString bindingName = binding->name();
-            object.containingObject().visitLookup(
-                    bindingName,
-                    [&propertyDefinition](const DomItem &item) {
-                        if (item.internalKind() == QQmlJS::Dom::DomType::PropertyDefinition) {
-                            propertyDefinition = item;
-                            return false;
-                        }
-                        return true;
-                    },
-                    LookupType::PropertyDef);
-            typeDefinition = propertyDefinition.field(Fields::type).proceedToScope();
-            break;
-        }
-        Q_UNREACHABLE();
+    QQmlJSScope::ConstPtr scope = expressionType->semanticScope;
+    if (!scope)
+        return { };
+    switch (expressionType->type) {
+    case PropertyIdentifier: {
+        if (!expressionType->name)
+            return { };
+        QQmlJSScope::ConstPtr propertyType = scope->property(*expressionType->name).type();
+        if (!propertyType)
+            return { };
+        return Location::tryFrom(propertyType->filePath(), propertyType->sourceLocation(), object);
     }
-    case QQmlJS::Dom::DomType::Id:
-        typeDefinition = object.field(Fields::referredObject).proceedToScope();
-        break;
-    case QQmlJS::Dom::DomType::PropertyDefinition:
-    case QQmlJS::Dom::DomType::MethodParameter:
-    case QQmlJS::Dom::DomType::MethodInfo:
-        typeDefinition = object.field(Fields::type).proceedToScope();
-        break;
-    case QQmlJS::Dom::DomType::ScriptIdentifierExpression: {
-        if (DomItem type = object.filterUp(
-                    [](DomType k, const DomItem &) { return k == DomType::ScriptType; },
-                    FilterUpOptions::ReturnOuter)) {
-
-            const QString name = fieldMemberExpressionBits(type.field(Fields::typeName)).join(u'.');
-            switch (type.directParent().internalKind()) {
-            case DomType::QmlObject:
-                // is the type name of a QmlObject, like Item in `Item {...}`
-                typeDefinition = baseObject(type.directParent());
-                break;
-            case DomType::QmlComponent:
-                typeDefinition = type.directParent();
-                return locationFromDomItem(typeDefinition, FileLocationRegion::IdentifierRegion);
-                break;
-            default:
-                // is a type annotation, like Item in `function f(x: Item) { ... }`
-                typeDefinition = object.path(Paths::lookupTypePath(name));
-                if (typeDefinition.internalKind() == DomType::Export) {
-                    typeDefinition = typeDefinition.field(Fields::type).get();
-                }
-            }
-            break;
-        }
-        if (DomItem id = object.filterUp(
-                    [](DomType k, const DomItem &) { return k == DomType::Id; },
-                    FilterUpOptions::ReturnOuter)) {
-
-            typeDefinition = id.field(Fields::referredObject).proceedToScope();
-            break;
-        }
-
-        auto scope = resolveExpressionType(
-                object, ResolveOptions::ResolveActualTypeForFieldMemberExpression);
-        if (!scope || !scope->semanticScope)
-            return {};
-
-        if (scope->type == QmlObjectIdIdentifier) {
-            return Location::tryFrom(scope->semanticScope->filePath(),
-                                     scope->semanticScope->sourceLocation(), object);
-        }
-
-        typeDefinition = sourceLocationToDomItem(object.containingFile(),
-                                                 scope->semanticScope->sourceLocation());
-        return locationFromDomItem(typeDefinition.component(),
-                                   FileLocationRegion::IdentifierRegion);
+    case JavaScriptIdentifier: {
+        if (!expressionType->name)
+            return { };
+        auto jsIdentifier = scope->jsIdentifier(*expressionType->name);
+        if (!jsIdentifier || !jsIdentifier->typeName)
+            return { };
+        auto qmlFile = object.fileObject().as<QmlFile>();
+        if (!qmlFile)
+            return { };
+        auto definition = qmlFile->typeResolver()->typeForName(*jsIdentifier->typeName);
+        if (!definition)
+            return { };
+        return Location::tryFrom(definition->filePath(), definition->sourceLocation(), object);
     }
-    default:
-        qDebug() << "QQmlLSUtils::findTypeDefinitionOf: Found unimplemented Type"
-                 << object.internalKindStr();
-        return {};
+    case PropertyChangedSignalIdentifier:
+    case PropertyChangedHandlerIdentifier:
+    case AttachedTypeIdentifier:
+    case AttachedTypeIdentifierInBindingTarget:
+    case GroupedPropertyIdentifier:
+    case QmlObjectIdIdentifier:
+    case NotAnIdentifier:
+    case SignalIdentifier:
+    case SignalHandlerIdentifier:
+    case MethodIdentifier:
+    case LambdaMethodIdentifier:
+    case SingletonIdentifier:
+    case QualifiedModuleIdentifier:
+    case EnumeratorIdentifier:
+    case EnumeratorValueIdentifier:
+    case QmlComponentIdentifier:
+        return Location::tryFrom(scope->filePath(), scope->sourceLocation(), object);
     }
-
-    return locationFromDomItem(typeDefinition, FileLocationRegion::MainRegion);
+    Q_UNREACHABLE_RETURN({ });
 }
 
 static bool findDefinitionFromItem(const DomItem &item, const QString &name)

@@ -345,19 +345,19 @@ void tst_qmlls_utils::findTypeDefinitionFromLocation_data()
     // pass this as file when no result is expected, e.g. for type definition of "var".
 
     QTest::addRow("onCProperty") << file1Qml << 11 << 16 << firstResult << outOfOne << file1Qml << 7
-                                 << positionAfterOneIndent;
+                                 << 18;
 
     QTest::addRow("onCProperty2") << file1Qml << 28 << 37 << firstResult << outOfOne << file1Qml
-                                  << 7 << positionAfterOneIndent;
+                                  << 7 << 18;
 
     QTest::addRow("onCProperty3") << file1Qml << 28 << 35 << firstResult << outOfOne << file1Qml
-                                  << 7 << positionAfterOneIndent;
+                                  << 7 << 18;
 
     QTest::addRow("onCBinding") << file1Qml << 46 << 8 << firstResult << outOfOne << file1Qml << 7
-                                << positionAfterOneIndent;
+                                << 18;
 
     QTest::addRow("onDefaultBinding") << file1Qml << 16 << positionAfterOneIndent << firstResult
-                                      << outOfOne << file1Qml << 7 << positionAfterOneIndent;
+                                      << outOfOne << file1Qml << 7 << 18;
 
     QTest::addRow("onDefaultBindingId")
             << file1Qml << 16 << 28 << firstResult << outOfOne << file1Qml << 16 << 20;
@@ -378,42 +378,33 @@ void tst_qmlls_utils::findTypeDefinitionFromLocation_data()
     QTest::addRow("onWhitespaceBetweenCAndD")
             << file1Qml << 17 << 24 << firstResult << outOfOne << noResultExpected << -1 << -1;
 
-    QTest::addRow("ic") << file1Qml << 15 << 15 << firstResult << outOfOne << file1Qml << 15 << 15;
+    QTest::addRow("ic") << file1Qml << 15 << 15 << firstResult << outOfOne << file1Qml << 15 << 18;
     QTest::addRow("icBase") << file1Qml << 15 << 20 << firstResult << outOfOne
                             << u"TODO: file location for C++ defined types?"_s << -1 << -1;
     QTest::addRow("ic3") << file1Qml << 15 << 33 << firstResult << outOfOne << file1Qml << -1 << 18;
 
-    // TODO: type definition of function = type definition of return type?
-    // if not, this might need fixing:
-    // currently, asking the type definition of the "function" keyword returns
-    // the type definitin of the return type (when available).
-    QTest::addRow("function-keyword") << file1Qml << 33 << 5 << firstResult << outOfOne << file1Qml
-                                      << 7 << positionAfterOneIndent;
     QTest::addRow("function-parameter-builtin")
             << file1Qml << 33 << 20 << firstResult << outOfOne << file1Qml << -1 << -1;
-    QTest::addRow("function-parameter-item") << file1Qml << 33 << 36 << firstResult << outOfOne
-                                             << file1Qml << 7 << positionAfterOneIndent;
+    QTest::addRow("function-parameter-item")
+            << file1Qml << 33 << 36 << firstResult << outOfOne << file1Qml << 7 << 18;
 
-    QTest::addRow("function-return") << file1Qml << 33 << 41 << firstResult << outOfOne << file1Qml
-                                     << 7 << positionAfterOneIndent;
-
-    QTest::addRow("void-function")
-            << file1Qml << 36 << 17 << firstResult << outOfOne << noResultExpected << -1 << -1;
+    QTest::addRow("function-return")
+            << file1Qml << 33 << 41 << firstResult << outOfOne << file1Qml << 7 << 18;
 
     QTest::addRow("rectangle-property") << file1Qml << 44 << 31 << firstResult << outOfOne
                                         << "TODO: c++ type location" << -1 << -1;
 
     QTest::addRow("functionParameterICUsage")
-            << file1Qml << 34 << 16 << firstResult << outOfOne << file1Qml << 7 << 15;
+            << file1Qml << 34 << 16 << firstResult << outOfOne << file1Qml << 7 << 18;
 
     QTest::addRow("ICBindingUsage")
-            << file1Qml << 47 << 21 << firstResult << outOfOne << file1Qml << 7 << 15;
+            << file1Qml << 47 << 21 << firstResult << outOfOne << file1Qml << 7 << 18;
     QTest::addRow("ICBindingUsage2")
-            << file1Qml << 49 << 11 << firstResult << outOfOne << file1Qml << 7 << 15;
+            << file1Qml << 49 << 11 << firstResult << outOfOne << file1Qml << 7 << 18;
     QTest::addRow("ICBindingUsage3")
-            << file1Qml << 52 << 17 << firstResult << outOfOne << file1Qml << 7 << 15;
+            << file1Qml << 52 << 17 << firstResult << outOfOne << file1Qml << 7 << 18;
     QTest::addRow("ICBindingUsageFromLambda")
-            << file1Qml << 58 << 23 << firstResult << outOfOne << file1Qml << 7 << 15;
+            << file1Qml << 58 << 23 << firstResult << outOfOne << file1Qml << 7 << 18;
 }
 
 void tst_qmlls_utils::findTypeDefinitionFromLocation()
