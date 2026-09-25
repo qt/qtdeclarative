@@ -176,7 +176,6 @@ QString domKindToString(DomKind k)
 bool domTypeIsExternalItem(DomType k)
 {
     switch (k) {
-    case DomType::QmlDirectory:
     case DomType::JsFile:
     case DomType::QmlFile:
         return true;
@@ -2003,9 +2002,6 @@ MutableDomItem DomItem::makeCopy(DomItem::CopyOption option) const
             m_owner);
 
     switch (o.internalKind()) {
-    case DomType::QmlDirectory:
-        newEnvPtr->addQmlDirectory(newItem.ownerAs<QmlDirectory>(), AddOption::Overwrite);
-        break;
     case DomType::JsFile:
         newEnvPtr->addJsFile(newItem.ownerAs<JsFile>(), AddOption::Overwrite);
         break;

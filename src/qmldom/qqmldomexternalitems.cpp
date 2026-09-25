@@ -297,67 +297,6 @@ void QmlFile::writeOut(const DomItem &self, OutWriter &ow) const
     mainC.writeOut(ow);
 }
 
-QmlDirectory::QmlDirectory(
-        const QString &filePath, const QStringList &dirList, const QDateTime &lastDataUpdateAt,
-        int derivedFrom)
-    : ExternalOwningItem(filePath, lastDataUpdateAt, Paths::qmlDirectoryPath(filePath), derivedFrom,
-                         dirList.join(QLatin1Char('\n')))
-{
-    for (const QString &f : dirList) {
-        addQmlFilePath(f);
-    }
-}
-
-bool QmlDirectory::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const
-{
-    bool cont = ExternalOwningItem::iterateDirectSubpaths(self, visitor);
-    cont = cont && self.invokeVisitorOnField(visitor, Fields::exports, m_exports);
-    cont = cont && visitor(PathEls::Field(Fields::qmlFiles), [this, &self]() -> DomItem {
-                   QDir baseDir(canonicalFilePath());
-                   return self.subMapItem(Map(
-                           self.pathFromOwner().withField(Fields::qmlFiles),
-                           [this, baseDir](const DomItem &map, const QString &key) -> DomItem {
-                               QList<Path> res;
-                               auto it = m_qmlFiles.find(key);
-                               while (it != m_qmlFiles.end() && it.key() == key) {
-                                   res.append(Paths::qmlFilePath(
-                                           QFileInfo(baseDir.filePath(it.value()))
-                                                   .canonicalFilePath()));
-                                   ++it;
-                               }
-                               return map.subReferencesItem(PathEls::Key(key), res);
-                           },
-                           [this](const DomItem &) {
-                               auto keys = m_qmlFiles.keys();
-                               return QSet<QString>(keys.begin(), keys.end());
-                           },
-                           u"List<Reference>"_s));
-               });
-    return cont;
-}
-
-bool QmlDirectory::addQmlFilePath(const QString &relativePath)
-{
-    static const QRegularExpression qmlFileRegularExpression{
-        QRegularExpression::anchoredPattern(
-                uR"((?<compName>[a-zA-z0-9_]+)\.(?:qml|qmlannotation|ui\.qml))")
-    };
-    QRegularExpressionMatch m = qmlFileRegularExpression.match(relativePath);
-    if (m.hasMatch() && !m_qmlFiles.values(m.captured(u"compName")).contains(relativePath)) {
-        m_qmlFiles.insert(m.captured(u"compName"), relativePath);
-        Export e;
-        QDir dir(canonicalFilePath());
-        QFileInfo fInfo(dir.filePath(relativePath));
-        e.exportSourcePath = canonicalPath();
-        e.typeName = m.captured(u"compName");
-        e.typePath = Paths::qmlFileObjectPath(fInfo.canonicalFilePath());
-        e.uri = QLatin1String("file://") + canonicalFilePath();
-        m_exports.insert(e.typeName, e);
-        return true;
-    }
-    return false;
-}
-
 } // end namespace Dom
 } // end namespace QQmlJS
 

@@ -109,7 +109,6 @@ enum class DomType {
     ExternalItemInfo, // base class for anything represented by an actual file
     ExternalItemPair, // pair of newest version of item, and latest valid update ### REVISIT
     // ExternalOwningItems refer to an external path and can be shared between environments
-    QmlDirectory, // dir e.g. used for implicit import
     JsFile, // file
     QmlFile, // file
     /* enum A {  B, C }

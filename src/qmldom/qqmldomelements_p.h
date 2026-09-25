@@ -80,14 +80,6 @@ inline Path jsFilePath(const QString &path)
 {
     return jsFileInfoPath(path).withField(Fields::currentItem);
 }
-inline Path qmlDirectoryInfoPath(const QString &path)
-{
-    return Path::fromRoot(PathRoot::Top).withField(Fields::qmlDirectoryWithPath).withKey(path);
-}
-inline Path qmlDirectoryPath(const QString &path)
-{
-    return qmlDirectoryInfoPath(path).withField(Fields::currentItem);
-}
 inline Path lookupCppTypePath(const QString &name)
 {
     return Path::fromCurrent(PathCurrent::Lookup).withField(Fields::cppType).withKey(name);

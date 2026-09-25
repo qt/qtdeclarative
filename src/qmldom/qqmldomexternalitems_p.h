@@ -107,41 +107,6 @@ protected:
     bool m_isValid = false;
 };
 
-class QMLDOM_EXPORT QmlDirectory final : public ExternalOwningItem
-{
-protected:
-    std::shared_ptr<OwningItem> doCopy(const DomItem &) const override
-    {
-        return std::make_shared<QmlDirectory>(*this);
-    }
-
-public:
-    constexpr static DomType kindValue = DomType::QmlDirectory;
-    DomType kind() const override { return kindValue; }
-    QmlDirectory(
-            const QString &filePath = QString(), const QStringList &dirList = QStringList(),
-            const QDateTime &lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC),
-            int derivedFrom = 0);
-    QmlDirectory(const QmlDirectory &o) = default;
-
-    std::shared_ptr<QmlDirectory> makeCopy(const DomItem &self) const
-    {
-        return std::static_pointer_cast<QmlDirectory>(doCopy(self));
-    }
-
-    bool iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const override;
-
-    const QMultiMap<QString, Export> &exports() const & { return m_exports; }
-
-    const QMultiMap<QString, QString> &qmlFiles() const & { return m_qmlFiles; }
-
-    bool addQmlFilePath(const QString &relativePath);
-
-private:
-    QMultiMap<QString, Export> m_exports;
-    QMultiMap<QString, QString> m_qmlFiles;
-};
-
 class QMLDOM_EXPORT JsFile final : public ExternalOwningItem
 {
 protected:

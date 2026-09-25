@@ -67,7 +67,6 @@ class PropertyDefinition;
 class PropertyInfo;
 class QQmlDomAstCreator;
 class QmlComponent;
-class QmlDirectory;
 class QmlFile;
 class QmlObject;
 class Reference;

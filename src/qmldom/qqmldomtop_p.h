@@ -213,21 +213,6 @@ public:
 
     void removePath(const QString &dir);
 
-    std::shared_ptr<ExternalItemPair<QmlDirectory>> qmlDirectoryWithPath(const QString &path) const
-    {
-        QMutexLocker l(mutex());
-        return m_qmlDirectoryWithPath.value(path);
-    }
-    QSet<QString> qmlDirectoryPaths() const
-    {
-        QMap<QString, std::shared_ptr<ExternalItemPair<QmlDirectory>>> map;
-        {
-            QMutexLocker l(mutex());
-            map = m_qmlDirectoryWithPath;
-        }
-        return QSet<QString>(map.keyBegin(), map.keyEnd());
-    }
-
     std::shared_ptr<ExternalItemPair<QmlFile>> qmlFileWithPath(const QString &path) const
     {
         QMutexLocker l(mutex());
@@ -300,9 +285,6 @@ private:
     QMap<QString, std::shared_ptr<ExternalItemPair<T>>> &getMutableRefToMap()
     {
         Q_ASSERT(!mutex()->tryLock());
-        if constexpr (std::is_same_v<T, QmlDirectory>) {
-            return m_qmlDirectoryWithPath;
-        }
         if constexpr (std::is_same_v<T, QmlFile>) {
             return m_qmlFileWithPath;
         }
@@ -373,7 +355,6 @@ private:
 
 private:
     QString m_name;
-    QMap<QString, std::shared_ptr<ExternalItemPair<QmlDirectory>>> m_qmlDirectoryWithPath;
     QMap<QString, std::shared_ptr<ExternalItemPair<QmlFile>>> m_qmlFileWithPath;
     QMap<QString, std::shared_ptr<ExternalItemPair<JsFile>>> m_jsFileWithPath;
 };
@@ -701,12 +682,8 @@ public:
     QSet<QString> moduleIndexUris(const DomItem &self, EnvLookup lookup = EnvLookup::Normal) const;
     QSet<int> moduleIndexMajorVersions(const DomItem &self, const QString &uri,
                                        EnvLookup lookup = EnvLookup::Normal) const;
-    std::shared_ptr<ExternalItemInfo<QmlDirectory>>
-    qmlDirectoryWithPath(const DomItem &self, const QString &path, EnvLookup options = EnvLookup::Normal) const;
-    QSet<QString> qmlDirectoryPaths(const DomItem &self, EnvLookup options = EnvLookup::Normal) const;
     std::shared_ptr<ExternalItemInfoBase>
     qmlDirWithPath(const DomItem &self, const QString &path, EnvLookup options = EnvLookup::Normal) const;
-    QSet<QString> qmlDirPaths(const DomItem &self, EnvLookup options = EnvLookup::Normal) const;
     std::shared_ptr<ExternalItemInfo<QmlFile>>
     qmlFileWithPath(const DomItem &self, const QString &path, EnvLookup options = EnvLookup::Normal) const;
     QSet<QString> qmlFilePaths(const DomItem &self, EnvLookup lookup = EnvLookup::Normal) const;
@@ -730,8 +707,6 @@ public:
     // place which will be removed in https://codereview.qt-project.org/c/qt/qtdeclarative/+/523217
     void addQmlFile(const std::shared_ptr<QmlFile> &file,
                     AddOption option = AddOption::KeepExisting);
-    void addQmlDirectory(const std::shared_ptr<QmlDirectory> &file,
-                         AddOption option = AddOption::KeepExisting);
     void addJsFile(const std::shared_ptr<JsFile> &file, AddOption option = AddOption::KeepExisting);
 
     bool commitToBase(
@@ -865,9 +840,6 @@ private:
     const QMap<QString, std::shared_ptr<ExternalItemInfo<T>>> &getConstRefToMap() const
     {
         Q_ASSERT(!mutex()->tryLock());
-        if constexpr (std::is_same_v<T, QmlDirectory>) {
-            return m_qmlDirectoryWithPath;
-        }
         if constexpr (std::is_same_v<T, QmlFile>) {
             return m_qmlFileWithPath;
         }
@@ -896,9 +868,6 @@ private:
     QMap<QString, std::shared_ptr<ExternalItemInfo<T>>> &getMutableRefToMap()
     {
         Q_ASSERT(!mutex()->tryLock());
-        if constexpr (std::is_same_v<T, QmlDirectory>) {
-            return m_qmlDirectoryWithPath;
-        }
         if constexpr (std::is_same_v<T, QmlFile>) {
             return m_qmlFileWithPath;
         }
@@ -989,7 +958,6 @@ private:
     const std::shared_ptr<DomUniverse> m_universe;
     QStringList m_loadPaths; // paths for qml
     QStringList m_resourcePaths;
-    QMap<QString, std::shared_ptr<ExternalItemInfo<QmlDirectory>>> m_qmlDirectoryWithPath;
     QMap<QString, std::shared_ptr<ExternalItemInfo<QmlFile>>> m_qmlFileWithPath;
     QMap<QString, std::shared_ptr<ExternalItemInfo<JsFile>>> m_jsFileWithPath;
     QQueue<Path> m_loadsWithWork;

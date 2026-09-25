@@ -787,26 +787,27 @@ private:
 };
 
 // TODO: create more "groups" to simplify this variant? Maybe into Internal, ScriptExpression, ???
-using ElementT = std::variant<
-        ConstantData, Empty, List, ListP, Map, Reference, ScriptElementDomWrapper, SimpleObjectWrap,
-        const AstComments *, const FileLocations::Node *, const DomEnvironment *,
-        const DomUniverse *, const EnumDecl *, const ExternalItemInfoBase *,
-        const ExternalItemPairBase *, const GlobalComponent *, const JsFile *, const JsResource *,
-        const LoadInfo *, const MockObject *, const MockOwner *, const QmlComponent *,
-        const QmlDirectory *, const QmlFile *, const QmlObject *, const ScriptExpression *>;
+using ElementT =
+        std::variant<ConstantData, Empty, List, ListP, Map, Reference, ScriptElementDomWrapper,
+                     SimpleObjectWrap, const AstComments *, const FileLocations::Node *,
+                     const DomEnvironment *, const DomUniverse *, const EnumDecl *,
+                     const ExternalItemInfoBase *, const ExternalItemPairBase *,
+                     const GlobalComponent *, const JsFile *, const JsResource *, const LoadInfo *,
+                     const MockObject *, const MockOwner *, const QmlComponent *, const QmlFile *,
+                     const QmlObject *, const ScriptExpression *>;
 
 using TopT = std::variant<
         std::monostate,
         std::shared_ptr<DomEnvironment>,
         std::shared_ptr<DomUniverse>>;
 
-using OwnerT = std::variant<std::monostate, std::shared_ptr<MockOwner>,
-                            std::shared_ptr<ExternalItemInfoBase>,
-                            std::shared_ptr<ExternalItemPairBase>, std::shared_ptr<QmlDirectory>,
-                            std::shared_ptr<JsFile>, std::shared_ptr<QmlFile>,
-                            std::shared_ptr<ScriptExpression>, std::shared_ptr<AstComments>,
-                            std::shared_ptr<LoadInfo>, std::shared_ptr<FileLocations::Node>,
-                            std::shared_ptr<DomEnvironment>, std::shared_ptr<DomUniverse>>;
+using OwnerT =
+        std::variant<std::monostate, std::shared_ptr<MockOwner>,
+                     std::shared_ptr<ExternalItemInfoBase>, std::shared_ptr<ExternalItemPairBase>,
+                     std::shared_ptr<JsFile>, std::shared_ptr<QmlFile>,
+                     std::shared_ptr<ScriptExpression>, std::shared_ptr<AstComments>,
+                     std::shared_ptr<LoadInfo>, std::shared_ptr<FileLocations::Node>,
+                     std::shared_ptr<DomEnvironment>, std::shared_ptr<DomUniverse>>;
 
 inline bool emptyChildrenVisitor(Path, const DomItem &, bool)
 {
@@ -1875,7 +1876,6 @@ constexpr bool domTypeIsOwningItem(DomType k)
     case DomType::ExternalItemInfo:
     case DomType::ExternalItemPair:
 
-    case DomType::QmlDirectory:
     case DomType::JsFile:
     case DomType::QmlFile:
 

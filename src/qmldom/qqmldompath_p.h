@@ -525,7 +525,6 @@ QMLDOM_FIELD(propertyDefs);
 QMLDOM_FIELD(propertyInfos);
 QMLDOM_FIELD(propertyName);
 QMLDOM_FIELD(prototypes);
-QMLDOM_FIELD(qmlDirectoryWithPath);
 QMLDOM_FIELD(qmlFileWithPath);
 QMLDOM_FIELD(qmlFiles);
 QMLDOM_FIELD(qualifiedImports);
