@@ -95,6 +95,11 @@ const QList<QQStyleKitExtendableControlType> QQStyleKitPropertyResolver::baseTyp
         static QList<QQStyleKitExtendableControlType> t =
             { QQStyleKitReader::TextInput, QQStyleKitReader::Control };
         return t; }
+    case QQStyleKitReader::VerticalHeaderViewDelegate: {
+        static QList<QQStyleKitExtendableControlType> t =
+            { QQStyleKitReader::TableViewDelegate, QQStyleKitReader::ItemDelegate, QQStyleKitReader::Control };
+            return t;
+    }
     default: {
         static QList<QQStyleKitExtendableControlType> t =
             { QQStyleKitReader::Control };

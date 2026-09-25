@@ -781,4 +781,11 @@ BaseStyle {
             border.width: 0
         }
     }
+
+    verticalHeaderViewDelegate {
+        background {
+            border.width: 1
+            color: Qt.darker(__baseWhite, 1.05)
+        }
+    }
 }

@@ -82,6 +82,7 @@ class QQStyleKitControls : public QObject, public QQmlParserStatus
     Q_PROPERTY(QQStyleKitControl *menuBarItem READ menuBarItem WRITE set_menuBarItem NOTIFY menuBarItemChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *menuItem READ menuItem WRITE set_menuItem NOTIFY menuItemChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *menuSeparator READ menuSeparator WRITE set_menuSeparator NOTIFY menuSeparatorChanged FINAL)
+    Q_PROPERTY(QQStyleKitControl *verticalHeaderViewDelegate READ verticalHeaderViewDelegate WRITE set_verticalHeaderViewDelegate NOTIFY verticalHeaderViewDelegateChanged FINAL)
     QML_UNCREATABLE("This component is abstract, and cannot be instantiated")
     QML_NAMED_ELEMENT(StylableControls)
 
@@ -146,6 +147,7 @@ public:
     IMPLEMENT_ACCESSORS(menuBarItem)
     IMPLEMENT_ACCESSORS(menuItem)
     IMPLEMENT_ACCESSORS(menuSeparator)
+    IMPLEMENT_ACCESSORS(verticalHeaderViewDelegate)
 
 #undef IMPLEMENT_ACCESSORS
 
@@ -207,6 +209,7 @@ signals:
     void menuBarItemChanged();
     void menuItemChanged();
     void menuSeparatorChanged();
+    void verticalHeaderViewDelegateChanged();
 
 protected:
     void classBegin() override {}

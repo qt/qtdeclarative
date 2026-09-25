@@ -86,6 +86,8 @@ qt_internal_add_qml_module(LabsStyleKit
         Label.qml
         GroupBox.qml
         TextArea.qml
+        VerticalHeaderView.qml
+        VerticalHeaderViewDelegate.qml
     LIBRARIES
         Qt6::GuiPrivate
         Qt6::Qml

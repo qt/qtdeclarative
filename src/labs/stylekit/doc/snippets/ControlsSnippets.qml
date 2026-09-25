@@ -957,6 +957,15 @@ ApplicationWindow {
         }
         //! [tumbler]
 
+        //! [verticalHeaderViewDelegate]
+        verticalHeaderViewDelegate {
+            background {
+                border.width: 1
+                color: "#fafafa"
+            }
+        }
+        //! [verticalHeaderViewDelegate]
+
         //! [theme]
         light: Theme {
             applicationWindow.background.color: "#f0f0f0"

@@ -639,6 +639,16 @@ QT_BEGIN_NAMESPACE
     \snippet ControlsSnippets.qml tumbler
 */
 
+/*
+    \qmlproperty ControlStyle StylableControls::verticalHeaderViewDelegate
+
+    Grouped property for styling \l [QtQuickControls]{VerticalHeaderViewDelegate}.
+
+    Unset properties fall back to \l tableViewDelegate.
+
+    \snippet ControlsSnippets.qml verticalHeaderViewDelegate
+*/
+
 using namespace Qt::StringLiterals;
 
 QQStyleKitControls::QQStyleKitControls(QObject *parent)
@@ -763,6 +773,7 @@ IMPLEMENT_ACCESSORS(menuBar, QQStyleKitReader::ControlType::MenuBar)
 IMPLEMENT_ACCESSORS(menuBarItem, QQStyleKitReader::ControlType::MenuBarItem)
 IMPLEMENT_ACCESSORS(menuItem, QQStyleKitReader::ControlType::MenuItem)
 IMPLEMENT_ACCESSORS(menuSeparator, QQStyleKitReader::ControlType::MenuSeparator)
+IMPLEMENT_ACCESSORS(verticalHeaderViewDelegate, QQStyleKitReader::ControlType::VerticalHeaderViewDelegate)
 
 #undef IMPLEMENT_ACCESSORS
 

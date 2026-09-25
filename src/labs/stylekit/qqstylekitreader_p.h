@@ -102,7 +102,8 @@ public:
         PageIndicator,
         Frame,
         Label,
-        GroupBox
+        GroupBox,
+        VerticalHeaderViewDelegate
     };
     Q_ENUM(ControlType)
 
