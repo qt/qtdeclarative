@@ -544,6 +544,16 @@ QT_BEGIN_NAMESPACE
     \snippet ControlsSnippets.qml tabButton
 */
 
+/*
+    \qmlproperty ControlStyle StylableControls::tableViewDelegate
+
+    Grouped property for styling \l [QtQuickControls]{TableViewDelegate}.
+
+    Unset properties fall back to \l itemDelegate.
+
+    \snippet ControlsSnippets.qml tableViewDelegate
+*/
+
 /*!
     \qmlproperty ControlStyle StylableControls::textArea
 
@@ -728,6 +738,7 @@ IMPLEMENT_ACCESSORS(switchControl, QQStyleKitReader::ControlType::SwitchControl)
 IMPLEMENT_ACCESSORS(switchDelegate, QQStyleKitReader::ControlType::SwitchDelegate)
 IMPLEMENT_ACCESSORS(tabBar, QQStyleKitReader::ControlType::TabBar)
 IMPLEMENT_ACCESSORS(tabButton, QQStyleKitReader::ControlType::TabButton)
+IMPLEMENT_ACCESSORS(tableViewDelegate, QQStyleKitReader::ControlType::TableViewDelegate)
 IMPLEMENT_ACCESSORS(textField, QQStyleKitReader::ControlType::TextField)
 IMPLEMENT_ACCESSORS(textInput, QQStyleKitReader::ControlType::TextInput)
 IMPLEMENT_ACCESSORS(toolBar, QQStyleKitReader::ControlType::ToolBar)

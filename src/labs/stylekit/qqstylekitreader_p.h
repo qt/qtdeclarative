@@ -78,6 +78,7 @@ public:
         SearchField,
         TabBar,
         TabButton,
+        TableViewDelegate,
         TextArea,
         TextField,
         TextInput,
