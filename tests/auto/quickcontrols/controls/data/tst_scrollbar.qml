@@ -53,6 +53,49 @@ TestCase {
         }
     }
 
+    component SalmonRect: Rectangle { color: "salmon" }
+    component SteelBlueRect: Rectangle { color: "steelblue" }
+
+    // The reproducer from QTBUG-130890.
+    Component {
+        id: variableSizeDelegatesListView
+        ListView {
+            id: objectModelList
+            objectName: "variableSizeDelegatesListView"
+            width: 400
+            height: 400
+            ScrollBar.vertical: ScrollBar {
+                // The iOS style leaves the implicit width at 0, so give the bar a width of
+                // its own, or there is nothing to press.
+                width: 20
+            }
+            model: ObjectModel {
+                SalmonRect { width: objectModelList.width; height: 400 }
+                SteelBlueRect { width: objectModelList.width; height: 100 }
+                SalmonRect { width: objectModelList.width; height: 600 }
+                SteelBlueRect { width: objectModelList.width; height: 40 }
+                SalmonRect { width: objectModelList.width; height: 50 }
+                SteelBlueRect { width: objectModelList.width; height: 10 }
+                SalmonRect { width: objectModelList.width; height: 50 }
+                SteelBlueRect { width: objectModelList.width; height: 30 }
+                SalmonRect { width: objectModelList.width; height: 50 }
+                SteelBlueRect { width: objectModelList.width; height: 100 }
+                SalmonRect { width: objectModelList.width; height: 200 }
+                SteelBlueRect { width: objectModelList.width; height: 30 }
+                SalmonRect { width: objectModelList.width; height: 300 }
+                SteelBlueRect { width: objectModelList.width; height: 30 }
+                SalmonRect { width: objectModelList.width; height: 600 }
+                SteelBlueRect { width: objectModelList.width; height: 40 }
+                SalmonRect { width: objectModelList.width; height: 50 }
+                SteelBlueRect { width: objectModelList.width; height: 10 }
+                SalmonRect { width: objectModelList.width; height: 50 }
+                SteelBlueRect { width: objectModelList.width; height: 30 }
+                SalmonRect { width: objectModelList.width; height: 50 }
+                SteelBlueRect { width: objectModelList.width; height: 100 }
+            }
+        }
+    }
+
     function init() {
         failOnWarning(/.?/)
     }
@@ -1003,5 +1046,68 @@ TestCase {
 
         compare(spy.count, 1)
         compare(control.visualSize, 0.5)
+    }
+
+    function test_dragHandleWithVariableSizeDelegates_data() {
+        return [
+            { tag: "TopToBottom", verticalLayoutDirection: ListView.TopToBottom },
+            { tag: "BottomToTop", verticalLayoutDirection: ListView.BottomToTop },
+        ]
+    }
+
+    // Dragged slowly, one pixel at a time, the way it was reported: the content must follow the
+    // pointer even though the drag keeps changing the contentHeight estimate, and with it the
+    // mapping from position to contentY. The handle itself may move and resize as the estimate
+    // is refined (QTBUG-130890).
+    function test_dragHandleWithVariableSizeDelegates(data) {
+        let listView = createTemporaryObject(variableSizeDelegatesListView, testCase,
+            { verticalLayoutDirection: data.verticalLayoutDirection })
+        verify(listView)
+        let control = listView.ScrollBar.vertical
+        verify(control)
+        waitForRendering(listView)
+
+        // A re-estimation can legitimately nudge contentY by a fraction of a pixel.
+        const tolerance = 1.0
+        const steps = 80
+        const x = control.width / 2
+        // Drag away from whichever end the view starts at, so that there is room to move.
+        const direction = control.position < 0.5 ? 1 : -1
+        const yStart = control.topPadding + control.position * control.availableHeight + 2
+        const contentHeightAtPress = listView.contentHeight
+
+        mousePress(control, x, yStart)
+        verify(control.pressed)
+
+        let contentHeightChanged = false
+        let previousContentY = listView.contentY
+
+        function verifyContentYFollowsDrag(i, sign) {
+            if (listView.contentHeight !== contentHeightAtPress)
+                contentHeightChanged = true
+            verify((listView.contentY - previousContentY) * sign >= -tolerance,
+                   "step " + i + ": expected contentY to follow the drag, but it went from "
+                   + previousContentY + " to " + listView.contentY
+                   + " while contentHeight is " + listView.contentHeight
+                   + " and originY is " + listView.originY)
+            previousContentY = listView.contentY
+        }
+
+        for (let i = 1; i <= steps; ++i) {
+            mouseMove(control, x, yStart + direction * i)
+            verifyContentYFollowsDrag(i, direction)
+        }
+
+        verify(contentHeightChanged,
+               "the test is inconclusive: contentHeight was never re-estimated during the drag")
+
+        // Reverse the drag without releasing.
+        for (let i = steps - 1; i >= 0; --i) {
+            mouseMove(control, x, yStart + direction * i)
+            verifyContentYFollowsDrag(i, -direction)
+        }
+
+        mouseRelease(control, x, yStart)
+        verify(!control.pressed)
     }
 }
