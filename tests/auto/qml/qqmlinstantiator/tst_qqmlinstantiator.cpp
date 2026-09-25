@@ -262,7 +262,8 @@ void tst_qqmlinstantiator::asynchronous()
     component.create(incubator);
     while (!incubator.isReady())
         incubationController.incubateFor(10);
-    QQmlInstantiator *instantiator = qobject_cast<QQmlInstantiator *>(incubator.object());
+    std::unique_ptr<QObject> root(incubator.object());
+    QQmlInstantiator *instantiator = qobject_cast<QQmlInstantiator *>(root.get());
     while (incubationController.incubatingObjectCount() > 0)
         incubationController.incubateFor(10);
     QVERIFY(instantiator != nullptr);
