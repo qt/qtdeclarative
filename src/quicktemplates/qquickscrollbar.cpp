@@ -285,13 +285,13 @@ bool QQuickScrollBarPrivate::handlePress(const QPointF &point, ulong timestamp)
     qreal sz = qMax(size, logicalPosition(minimumSize));
     if (offset < 0 || offset > sz)
         offset = sz / 2;
+    dragPoint = point;
     q->setPressed(true);
     return true;
 }
 
 bool QQuickScrollBarPrivate::handleMove(const QPointF &point, ulong timestamp)
 {
-    Q_Q(QQuickScrollBar);
     QQuickControlPrivate::handleMove(point, timestamp);
 
     /*
@@ -307,7 +307,7 @@ bool QQuickScrollBarPrivate::handleMove(const QPointF &point, ulong timestamp)
     qreal pos = qMax<qreal>(0.0, qMin<qreal>(positionAt(point) - offset, 1.0 - size));
     if (snapMode == QQuickScrollBar::SnapAlways)
         pos = snapPosition(pos);
-    q->setPosition(pos);
+    setPositionFromDrag(pos, point);
     return true;
 }
 
@@ -327,8 +327,9 @@ bool QQuickScrollBarPrivate::handleRelease(const QPointF &point, ulong timestamp
     qreal pos = qMax<qreal>(0.0, qMin<qreal>(positionAt(point) - offset, 1.0 - size));
     if (snapMode != QQuickScrollBar::NoSnap)
         pos = snapPosition(pos);
-    q->setPosition(pos);
+    setPositionFromDrag(pos, point);
     offset = 0.0;
+    dragPoint = {};
     q->setPressed(false);
     return true;
 }
@@ -338,6 +339,7 @@ void QQuickScrollBarPrivate::handleUngrab()
     Q_Q(QQuickScrollBar);
     QQuickControlPrivate::handleUngrab();
     offset = 0.0;
+    dragPoint = {};
     q->setPressed(false);
 }
 
@@ -421,6 +423,8 @@ void QQuickScrollBar::setSize(qreal size)
     if (d->size + d->position > 1.0) {
         d->setPosition(1.0 - d->size, false);
     }
+    // positionAt() depends on the size.
+    d->reanchorDragOffset(d->position);
 
     if (isComponentComplete())
         d->resizeContent();
@@ -459,6 +463,23 @@ void QQuickScrollBar::setPosition(qreal position)
 
 void QQuickScrollBarPrivate::setPosition(qreal newPosition, bool notifyVisualChange)
 {
+    // An attached Flickable writes the drag's own position back here unchanged, and those
+    // writes must not touch offset - see setPositionFromDrag().
+    if (qt_is_finite(newPosition) && !qFuzzyCompare(position, newPosition))
+        reanchorDragOffset(newPosition);
+    updatePosition(newPosition, notifyVisualChange);
+}
+
+void QQuickScrollBarPrivate::setPositionFromDrag(qreal newPosition, const QPointF &point)
+{
+    dragPoint = point;
+    // Bypass setPosition(): offset is already accounted for in newPosition, so re-anchoring it
+    // would fold the clamping and the snapping applied by the caller back into it.
+    updatePosition(newPosition, true /*notifyVisualChange*/);
+}
+
+void QQuickScrollBarPrivate::updatePosition(qreal newPosition, bool notifyVisualChange)
+{
     Q_Q(QQuickScrollBar);
     if (!qt_is_finite(newPosition) || qFuzzyCompare(position, newPosition))
         return;
@@ -481,6 +502,15 @@ void QQuickScrollBarPrivate::setPosition(qreal newPosition, bool notifyVisualCha
         }
     }
 #endif
+}
+
+void QQuickScrollBarPrivate::reanchorDragOffset(qreal newPosition)
+{
+    // offset is the distance between the handle and the pointer holding it. Moving the handle,
+    // or changing what positionAt() returns, makes that distance stale: measure it again, or
+    // the next handleMove() would put the handle back where it was (QTBUG-130890).
+    if (pressed)
+        offset = positionAt(dragPoint) - newPosition;
 }
 
 /*!

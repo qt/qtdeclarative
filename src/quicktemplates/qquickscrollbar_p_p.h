@@ -47,6 +47,9 @@ public:
     qreal logicalPosition(qreal position) const;
 
     void setPosition(qreal position, bool notifyVisualChange = true);
+    void setPositionFromDrag(qreal position, const QPointF &point);
+    void updatePosition(qreal position, bool notifyVisualChange);
+    void reanchorDragOffset(qreal position);
     qreal snapPosition(qreal position) const;
     qreal positionAt(const QPointF &point) const;
     void setInteractive(bool interactive);
@@ -71,6 +74,7 @@ public:
     qreal stepSize = 0;
     qreal offset = 0;
     qreal minimumSize = 0;
+    QPointF dragPoint;
     bool active = false;
     bool pressed = false;
     bool moving = false;
