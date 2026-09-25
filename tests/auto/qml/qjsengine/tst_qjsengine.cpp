@@ -374,6 +374,8 @@ private slots:
     void garbageCollectedObjectMethodBase();
 
     void optionalChainWithElementLookup();
+    void jittedLookupOnNullOrUndefined_data();
+    void jittedLookupOnNullOrUndefined();
 
     void deleteDefineCycle();
     void deleteFromSparseArray();
@@ -6727,6 +6729,54 @@ void tst_QJSEngine::optionalChainWithElementLookup()
     QVERIFY(engine.hasError());
     QCOMPARE(engine.catchError().toString(), "TypeError: Cannot read property 'en' of undefined");
     QVERIFY(!engine.hasError());
+}
+
+void tst_QJSEngine::jittedLookupOnNullOrUndefined_data()
+{
+    QTest::addColumn<QString>("code");
+    QTest::addColumn<QVariant>("inner");
+    QTest::addColumn<QString>("error");
+
+    // A function created this way does not inherit the context of the evaluate() call.
+    const QString get = u"new Function(\"o\", \"return o.inner.x;\")"_s;
+    const QString call = u"new Function(\"o\", \"return o.inner.x();\")"_s;
+
+    QTest::newRow("get undefined")
+            << get << QVariant() << u"TypeError: Cannot read property 'x' of undefined"_s;
+    QTest::newRow("get null")
+            << get << QVariant::fromValue(nullptr)
+            << u"TypeError: Cannot read property 'x' of null"_s;
+    QTest::newRow("call undefined")
+            << call << QVariant() << u"TypeError: Cannot call method 'x' of undefined"_s;
+    QTest::newRow("call null")
+            << call << QVariant::fromValue(nullptr)
+            << u"TypeError: Cannot call method 'x' of null"_s;
+}
+
+void tst_QJSEngine::jittedLookupOnNullOrUndefined()
+{
+    QFETCH(QString, code);
+    QFETCH(QVariant, inner);
+    QFETCH(QString, error);
+
+    QJSEngine engine;
+    QJSManagedValue function(engine.evaluate(code), &engine);
+    QVERIFY(function.isFunction());
+
+    // Call it often enough to get it JIT-compiled, if the JIT is available. The lookups on the
+    // inner map then don't handle null or undefined themselves.
+    const QJSValue good = engine.toScriptValue(
+            QVariantMap { { u"inner"_s, QVariantMap { { u"x"_s, 5 } } } });
+    for (int i = 0; i < 10; ++i)
+        function.call({good});
+    engine.catchError();
+
+    QVariantMap bad;
+    if (inner.isValid())
+        bad.insert(u"inner"_s, inner);
+    QVERIFY(function.call({engine.toScriptValue(bad)}).isUndefined());
+    QVERIFY(engine.hasError());
+    QCOMPARE(engine.catchError().toString(), error);
 }
 
 void tst_QJSEngine::deleteDefineCycle()
