@@ -8,7 +8,6 @@
 #include "qqmldommock_p.h"
 #include "qqmldomelements_p.h"
 #include "qqmldomastcreator_p.h"
-#include "qqmldomtypesreader_p.h"
 #include "qqmldom_utils_p.h"
 
 #include <QtQml/private/qqmljslexer_p.h>
@@ -285,12 +284,6 @@ DomUniverse::LoadResult DomUniverse::load(const ContentWithDate &codeWithDate,
     if (fType == DomType::QmlFile) {
         auto qmlFile = parseQmlFile(codeWithDate.content, file, codeWithDate.date, creationOption);
         return insertOrUpdateExternalItem(std::move(qmlFile));
-    } else if (fType == DomType::QmltypesFile) {
-        auto qmltypesFile = std::make_shared<QmltypesFile>(canonicalPath, codeWithDate.content,
-                                                           codeWithDate.date);
-        QmltypesReader reader(qmltypesFile);
-        reader.parse();
-        return insertOrUpdateExternalItem(std::move(qmltypesFile));
     } else if (fType == DomType::QmldirFile) {
         shared_ptr<QmldirFile> qmldirFile =
                 QmldirFile::fromPathAndCode(canonicalPath, codeWithDate.content);

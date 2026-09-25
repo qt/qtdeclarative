@@ -39,7 +39,7 @@ qt_internal_add_module(QmlDomPrivate
         qqmldomreformatter.cpp qqmldomreformatter_p.h
         qqmldomscanner.cpp qqmldomscanner_p.h
         qqmldomtop.cpp qqmldomtop_p.h
-        qqmldomtypesreader.cpp qqmldomtypesreader_p.h
+
         qqmldomscriptelements_p.h qqmldomscriptelements.cpp
         qqmldomlinewriterfactory_p.h
     DEFINES
