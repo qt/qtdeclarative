@@ -31,6 +31,17 @@ void tst_qqmljsutils::qmlFileSourcePathFromBuildPath_data()
             << testFile(u"mymodule-build-without-qmldir-prefer"_s)
             << testFile(u"mymodule-build-without-qmldir-prefer/MyModule/X/Y/Z/MyComponent.qml"_s)
             << testFile(u"mymodule-source/MyModule/X/Y/Z/MyComponent.qml"_s);
+
+    // The alias in the qrc may rename the file: the build path has to follow the alias instead of
+    // reusing the file name of the source file.
+    QTest::addRow("RenamedInRcc")
+            << testFile(u"mymodule-build-renamed-in-rcc"_s)
+            << testFile(u"mymodule-build-renamed-in-rcc/MyModule/Renamed.qml"_s)
+            << testFile(u"mymodule-source/MyModule/Main.qml"_s);
+    QTest::addRow("NestedRenamedInRcc")
+            << testFile(u"mymodule-build-renamed-in-rcc"_s)
+            << testFile(u"mymodule-build-renamed-in-rcc/MyModule/X/Y/Z/RenamedComponent.qml"_s)
+            << testFile(u"mymodule-source/MyModule/X/Y/Z/MyComponent.qml"_s);
 }
 
 void tst_qqmljsutils::qmlFileSourcePathFromBuildPath()

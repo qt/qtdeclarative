@@ -1,0 +1,4 @@
+module MyModule
+prefer :/qt/qml/MyModule/
+Main 254.0 Renamed.qml
+MyComponent 254.0 X/Y/Z/RenamedComponent.qml
