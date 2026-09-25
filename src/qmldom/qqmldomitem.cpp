@@ -921,40 +921,10 @@ bool DomItem::resolve(const Path &path, DomItem::Visitor visitor, const ErrorHan
                 it = it.index(cNow.headIndex());
                 break;
             case Path::Kind::Empty:
-            {
-                // immediate expansion, might use extra memory, but simplifies code (no suspended evaluation)
-                Path toFind;
-                do {
-                    if (iPath >= path.length()) {
-                        myResolveErrors().warning(tr("Resolve with path ending with empty path, matches nothing."))
-                                .handle(errorHandler);
-                        branchExhausted = true; // allow and visit all?
-                        break;
-                    }
-                    toFind = path[iPath++];
-                } while (toFind.headKind() == Path::Kind::Empty);
-                QList<Path::Kind> validFind({Path::Kind::Key, Path::Kind::Field, Path::Kind::Field, Path::Kind::Index});
-                if (!validFind.contains(toFind.headKind())) {
-                    myResolveErrors().error(tr("After an empty path only key, field or indexes are supported, not %1.").arg(toFind.toString()))
-                            .handle(errorHandler);
-                    branchExhausted = true; // allow and visit all?
-                    return false;
-                }
-                if (!branchExhausted)
-                    visitTree(
-                            Path(),
-                            [&toFind, &toDos, iPath](Path, const DomItem &item, bool) {
-                                // avoid non directly attached?
-                                DomItem newItem = item[toFind];
-                                if (newItem)
-                                    toDos.append({ std::move(newItem), iPath });
-                                return true;
-                            },
-                            VisitOption::VisitSelf | VisitOption::Recurse
-                                    | VisitOption::VisitAdopted | VisitOption::NoPath);
-                branchExhausted = true;
-                break;
-            }
+                myResolveErrors()
+                        .error(tr("Empty is not supported inside paths"))
+                        .handle(errorHandler);
+                return false;
             case Path::Kind::Root:
                 myResolveErrors().error(tr("Root path is supported only at the beginning, and only once, found %1 at %2 in %3")
                                         .arg(cNow.toString()).arg(iPath -1).arg(path.toString())).handle(errorHandler);
