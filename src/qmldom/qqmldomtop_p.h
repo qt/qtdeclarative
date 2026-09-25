@@ -228,21 +228,6 @@ public:
         return QSet<QString>(map.keyBegin(), map.keyEnd());
     }
 
-    std::shared_ptr<ExternalItemPair<QmldirFile>> qmldirFileWithPath(const QString &path) const
-    {
-        QMutexLocker l(mutex());
-        return m_qmldirFileWithPath.value(path);
-    }
-    QSet<QString> qmldirFilePaths() const
-    {
-        QMap<QString, std::shared_ptr<ExternalItemPair<QmldirFile>>> map;
-        {
-            QMutexLocker l(mutex());
-            map = m_qmldirFileWithPath;
-        }
-        return QSet<QString>(map.keyBegin(), map.keyEnd());
-    }
-
     std::shared_ptr<ExternalItemPair<QmlFile>> qmlFileWithPath(const QString &path) const
     {
         QMutexLocker l(mutex());
@@ -269,21 +254,6 @@ public:
         {
             QMutexLocker l(mutex());
             map = m_jsFileWithPath;
-        }
-        return QSet<QString>(map.keyBegin(), map.keyEnd());
-    }
-
-    std::shared_ptr<ExternalItemPair<QmltypesFile>> qmltypesFileWithPath(const QString &path) const
-    {
-        QMutexLocker l(mutex());
-        return m_qmltypesFileWithPath.value(path);
-    }
-    QSet<QString> qmltypesFilePaths() const
-    {
-        QMap<QString, std::shared_ptr<ExternalItemPair<QmltypesFile>>> map;
-        {
-            QMutexLocker l(mutex());
-            map = m_qmltypesFileWithPath;
         }
         return QSet<QString>(map.keyBegin(), map.keyEnd());
     }
@@ -333,17 +303,11 @@ private:
         if constexpr (std::is_same_v<T, QmlDirectory>) {
             return m_qmlDirectoryWithPath;
         }
-        if constexpr (std::is_same_v<T, QmldirFile>) {
-            return m_qmldirFileWithPath;
-        }
         if constexpr (std::is_same_v<T, QmlFile>) {
             return m_qmlFileWithPath;
         }
         if constexpr (std::is_same_v<T, JsFile>) {
             return m_jsFileWithPath;
-        }
-        if constexpr (std::is_same_v<T, QmltypesFile>) {
-            return m_qmltypesFileWithPath;
         }
         Q_UNREACHABLE();
     }
@@ -410,10 +374,8 @@ private:
 private:
     QString m_name;
     QMap<QString, std::shared_ptr<ExternalItemPair<QmlDirectory>>> m_qmlDirectoryWithPath;
-    QMap<QString, std::shared_ptr<ExternalItemPair<QmldirFile>>> m_qmldirFileWithPath;
     QMap<QString, std::shared_ptr<ExternalItemPair<QmlFile>>> m_qmlFileWithPath;
     QMap<QString, std::shared_ptr<ExternalItemPair<JsFile>>> m_jsFileWithPath;
-    QMap<QString, std::shared_ptr<ExternalItemPair<QmltypesFile>>> m_qmltypesFileWithPath;
 };
 
 class QMLDOM_EXPORT ExternalItemInfoBase: public OwningItem {
@@ -742,9 +704,6 @@ public:
     std::shared_ptr<ExternalItemInfo<QmlDirectory>>
     qmlDirectoryWithPath(const DomItem &self, const QString &path, EnvLookup options = EnvLookup::Normal) const;
     QSet<QString> qmlDirectoryPaths(const DomItem &self, EnvLookup options = EnvLookup::Normal) const;
-    std::shared_ptr<ExternalItemInfo<QmldirFile>>
-    qmldirFileWithPath(const DomItem &self, const QString &path, EnvLookup options = EnvLookup::Normal) const;
-    QSet<QString> qmldirFilePaths(const DomItem &self, EnvLookup options = EnvLookup::Normal) const;
     std::shared_ptr<ExternalItemInfoBase>
     qmlDirWithPath(const DomItem &self, const QString &path, EnvLookup options = EnvLookup::Normal) const;
     QSet<QString> qmlDirPaths(const DomItem &self, EnvLookup options = EnvLookup::Normal) const;
@@ -754,9 +713,6 @@ public:
     std::shared_ptr<ExternalItemInfo<JsFile>>
     jsFileWithPath(const DomItem &self, const QString &path, EnvLookup options = EnvLookup::Normal) const;
     QSet<QString> jsFilePaths(const DomItem &self, EnvLookup lookup = EnvLookup::Normal) const;
-    std::shared_ptr<ExternalItemInfo<QmltypesFile>>
-    qmltypesFileWithPath(const DomItem &self, const QString &path, EnvLookup options = EnvLookup::Normal) const;
-    QSet<QString> qmltypesFilePaths(const DomItem &self, EnvLookup lookup = EnvLookup::Normal) const;
 
     explicit DomEnvironment(const QStringList &loadPaths, Options options = Option::SingleThreaded,
                             DomCreationOption domCreationOption = Default,
@@ -775,10 +731,6 @@ public:
     void addQmlFile(const std::shared_ptr<QmlFile> &file,
                     AddOption option = AddOption::KeepExisting);
     void addQmlDirectory(const std::shared_ptr<QmlDirectory> &file,
-                         AddOption option = AddOption::KeepExisting);
-    void addQmldirFile(const std::shared_ptr<QmldirFile> &file,
-                       AddOption option = AddOption::KeepExisting);
-    void addQmltypesFile(const std::shared_ptr<QmltypesFile> &file,
                          AddOption option = AddOption::KeepExisting);
     void addJsFile(const std::shared_ptr<JsFile> &file, AddOption option = AddOption::KeepExisting);
 
@@ -800,7 +752,6 @@ public:
     std::shared_ptr<DomEnvironment> base() const;
 
     QStringList loadPaths() const;
-    QStringList qmldirFiles() const;
 
     static QList<Import> defaultImplicitImports();
     QList<Import> implicitImports() const;
@@ -917,17 +868,11 @@ private:
         if constexpr (std::is_same_v<T, QmlDirectory>) {
             return m_qmlDirectoryWithPath;
         }
-        if constexpr (std::is_same_v<T, QmldirFile>) {
-            return m_qmldirFileWithPath;
-        }
         if constexpr (std::is_same_v<T, QmlFile>) {
             return m_qmlFileWithPath;
         }
         if constexpr (std::is_same_v<T, JsFile>) {
             return m_jsFileWithPath;
-        }
-        if constexpr (std::is_same_v<T, QmltypesFile>) {
-            return m_qmltypesFileWithPath;
         }
         Q_UNREACHABLE();
     }
@@ -954,17 +899,11 @@ private:
         if constexpr (std::is_same_v<T, QmlDirectory>) {
             return m_qmlDirectoryWithPath;
         }
-        if constexpr (std::is_same_v<T, QmldirFile>) {
-            return m_qmldirFileWithPath;
-        }
         if constexpr (std::is_same_v<T, QmlFile>) {
             return m_qmlFileWithPath;
         }
         if constexpr (std::is_same_v<T, JsFile>) {
             return m_jsFileWithPath;
-        }
-        if constexpr (std::is_same_v<T, QmltypesFile>) {
-            return m_qmltypesFileWithPath;
         }
         Q_UNREACHABLE();
     }
@@ -1026,8 +965,6 @@ private:
         return std::make_pair(nullptr, nullptr);
     }
 
-    Callback getLoadCallbackFor(DomType fileType, const Callback &loadCallback);
-
     struct SemanticAnalysis
     {
         SemanticAnalysis(const QStringList &loadPaths);
@@ -1053,10 +990,8 @@ private:
     QStringList m_loadPaths; // paths for qml
     QStringList m_resourcePaths;
     QMap<QString, std::shared_ptr<ExternalItemInfo<QmlDirectory>>> m_qmlDirectoryWithPath;
-    QMap<QString, std::shared_ptr<ExternalItemInfo<QmldirFile>>> m_qmldirFileWithPath;
     QMap<QString, std::shared_ptr<ExternalItemInfo<QmlFile>>> m_qmlFileWithPath;
     QMap<QString, std::shared_ptr<ExternalItemInfo<JsFile>>> m_jsFileWithPath;
-    QMap<QString, std::shared_ptr<ExternalItemInfo<QmltypesFile>>> m_qmltypesFileWithPath;
     QQueue<Path> m_loadsWithWork;
     QQueue<Path> m_inProgress;
     QHash<Path, std::shared_ptr<LoadInfo>> m_loadInfos;

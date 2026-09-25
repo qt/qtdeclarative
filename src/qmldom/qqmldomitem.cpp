@@ -179,7 +179,6 @@ bool domTypeIsExternalItem(DomType k)
     case DomType::QmlDirectory:
     case DomType::JsFile:
     case DomType::QmlFile:
-    case DomType::QmltypesFile:
         return true;
     default:
         return false;
@@ -220,7 +219,6 @@ bool domTypeIsScope(DomType k)
     case DomType::MethodInfo: // method arguments
     case DomType::GlobalComponent: // global scope (enums -> qmlObj)
     case DomType::JsResource: // js resurce (enums -> qmlObj)
-    case DomType::QmltypesComponent: // qmltypes component (enums -> qmlObj)
         return true;
     default:
         return false;
@@ -445,8 +443,7 @@ DomItem DomItem::fileObject(GoTo options) const
     res = owner();
     k = res.internalKind();
     while (k != DomType::Empty) {
-        if (k == DomType::QmlFile || k == DomType::QmldirFile || k == DomType::QmltypesFile
-            || k == DomType::JsFile)
+        if (k == DomType::QmlFile || k == DomType::JsFile)
             break;
         res = res.containingObject();
         res = res.owner();
@@ -643,8 +640,6 @@ QQmlJSScope::ConstPtr DomItem::semanticScope() const
                     return e->semanticScope();
                 } else if constexpr (std::is_same_v<T, const QmlComponent *>) {
                     return e->semanticScope();
-                } else if constexpr (std::is_same_v<T, const QmltypesComponent *>) {
-                    return e->semanticScope();
                 } else if constexpr (std::is_same_v<T, SimpleObjectWrap>) {
                     if (const MethodInfo *mi = e->template as<MethodInfo>()) {
                         return mi->semanticScope();
@@ -711,8 +706,7 @@ DomItem DomItem::component(GoTo options) const
 {
     if (DomItem res = filterUp(
                 [](DomType kind, const DomItem &) {
-                    return kind == DomType::QmlComponent || kind == DomType::QmltypesComponent
-                            || kind == DomType::GlobalComponent;
+                    return kind == DomType::QmlComponent || kind == DomType::GlobalComponent;
                 },
                 FilterUpOptions::ReturnInner))
         return res;
@@ -760,8 +754,6 @@ static DomItem rootFromContext(const DomItem &root, PathRoot contextId)
     switch (contextId) {
     case PathRoot::Modules:
         return root.environment().field(Fields::moduleIndexWithUri);
-    case PathRoot::Cpp:
-        return root.environment()[Fields::qmltypesFileWithPath];
     case PathRoot::Libs:
         return root.environment()[Fields::plugins];
     case PathRoot::Top:
@@ -1697,9 +1689,6 @@ bool DomItem::visitScopeChain(
             if (DomItem next = current.field(Fields::objects).index(0))
                 toDo.append(next);
             break;
-        case DomType::QmltypesComponent:
-            first = false;
-            break;
         default:
             first = false;
             myResolveErrors()
@@ -1885,38 +1874,8 @@ bool DomItem::visitLookup(
         }
         break;
     }
-    case LookupType::CppType: {
-        QString baseTarget = CppTypeInfo::fromString(target, errorHandler).baseType;
-        DomItem localQmltypes = owner();
-        while (localQmltypes && localQmltypes.internalKind() != DomType::QmltypesFile) {
-            localQmltypes = localQmltypes.containingObject();
-            localQmltypes = localQmltypes.owner();
-        }
-        if (localQmltypes) {
-            if (DomItem localTypes = localQmltypes.field(Fields::components).key(baseTarget)) {
-                bool cont = localTypes.visitIndexes([&visitor](const DomItem &els) {
-                    return els.visitIndexes([&visitor](const DomItem &el) {
-                        if (DomItem obj = el.field(Fields::objects).index(0))
-                            return visitor(obj);
-                        return true;
-                    });
-                });
-                if (!cont)
-                    return false;
-            }
-        }
-        DomItem qmltypes = environment().field(Fields::qmltypesFileWithPath);
-        return qmltypes.visitKeys([baseTarget, &visitor](const QString &, const DomItem &els) {
-            DomItem comps =
-                    els.field(Fields::currentItem).field(Fields::components).key(baseTarget);
-            return comps.visitIndexes([&visitor](const DomItem &el) {
-                if (DomItem obj = el.field(Fields::objects).index(0))
-                    return visitor(obj);
-                return true;
-            });
-        });
-        break;
-    }
+    case LookupType::CppType:
+        return true;
     }
     Q_ASSERT(false);
     return true;
@@ -2053,9 +2012,6 @@ MutableDomItem DomItem::makeCopy(DomItem::CopyOption option) const
     case DomType::QmlFile:
         newEnvPtr->addQmlFile(newItem.ownerAs<QmlFile>(), AddOption::Overwrite);
         break;
-    case DomType::QmltypesFile:
-        newEnvPtr->addQmltypesFile(newItem.ownerAs<QmltypesFile>(), AddOption::Overwrite);
-        break;
     case DomType::MockOwner:
     case DomType::ScriptExpression:
     case DomType::AstComments:
@@ -2122,12 +2078,6 @@ bool DomItem::visitLocalSymbolsNamed(const QString &name, function_ref<bool(cons
         Q_FALLTHROUGH();
     case DomType::JsResource:
     case DomType::GlobalComponent:
-    case DomType::QmltypesComponent:
-        f = field(Fields::enumerations);
-        v = f.key(name);
-        if (!v.visitIndexes(visitor))
-            return false;
-        break;
     case DomType::MethodInfo: {
         DomItem params = field(Fields::parameters);
         if (!params.visitIndexes([name, visitor](const DomItem &p) {

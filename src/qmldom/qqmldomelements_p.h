@@ -55,22 +55,6 @@ inline Path moduleScopePath(
 {
     return moduleScopePath(uri, QString(), errorHandler);
 }
-inline Path qmlDirInfoPath(const QString &path)
-{
-    return Path::fromRoot(PathRoot::Top).withField(Fields::qmldirWithPath).withKey(path);
-}
-inline Path qmlDirPath(const QString &path)
-{
-    return qmlDirInfoPath(path).withField(Fields::currentItem);
-}
-inline Path qmldirFileInfoPath(const QString &path)
-{
-    return Path::fromRoot(PathRoot::Top).withField(Fields::qmldirFileWithPath).withKey(path);
-}
-inline Path qmldirFilePath(const QString &path)
-{
-    return qmldirFileInfoPath(path).withField(Fields::currentItem);
-}
 inline Path qmlFileInfoPath(const QString &canonicalFilePath)
 {
     return Path::fromRoot(PathRoot::Top).withField(Fields::qmlFileWithPath).withKey(canonicalFilePath);
@@ -87,14 +71,6 @@ inline Path qmlFileObjectPath(const QString &canonicalFilePath)
             .withIndex(0)
             .withField(Fields::objects)
             .withIndex(0);
-}
-inline Path qmltypesFileInfoPath(const QString &path)
-{
-    return Path::fromRoot(PathRoot::Top).withField(Fields::qmltypesFileWithPath).withKey(path);
-}
-inline Path qmltypesFilePath(const QString &path)
-{
-    return qmltypesFileInfoPath(path).withField(Fields::currentItem);
 }
 inline Path jsFileInfoPath(const QString &path)
 {
@@ -273,20 +249,6 @@ public:
     }
 
     bool iterateDirectSubpaths(const DomItem &self, DirectVisitor) const;
-    Path importedPath() const
-    {
-        if (uri.isDirectory()) {
-            QString path = uri.absoluteLocalPath();
-            if (!path.isEmpty()) {
-                return Paths::qmlDirPath(path);
-            } else {
-                Q_ASSERT_X(false, "Import", "url imports not supported");
-                return Paths::qmldirFilePath(uri.directoryString());
-            }
-        } else {
-            return Paths::moduleScopePath(uri.moduleUri(), version);
-        }
-    }
     Import baseImport() const { return Import { uri, version }; }
 
     friend bool operator==(const Import &i1, const Import &i2)
@@ -1046,53 +1008,6 @@ public:
         return true;
     }
     // globalSymbols defined/exported, required/used
-};
-
-class QMLDOM_EXPORT QmltypesComponent final : public Component
-{
-public:
-    constexpr static DomType kindValue = DomType::QmltypesComponent;
-    DomType kind() const override { return kindValue; }
-
-    QmltypesComponent(const Path &pathFromOwner = Path()) : Component(pathFromOwner) { }
-    bool iterateDirectSubpaths(const DomItem &, DirectVisitor) const override;
-    const QList<Export> &exports() const & { return m_exports; }
-    QString fileName() const { return m_fileName; }
-    void setExports(const QList<Export> &exports) { m_exports = exports; }
-    void addExport(const Export &exportedEntry) { m_exports.append(exportedEntry); }
-    void setFileName(const QString &fileName) { m_fileName = fileName; }
-    const QList<int> &metaRevisions() const & { return m_metaRevisions; }
-    void setMetaRevisions(const QList<int> &metaRevisions) { m_metaRevisions = metaRevisions; }
-    void setInterfaceNames(const QStringList& interfaces) { m_interfaceNames = interfaces; }
-    const QStringList &interfaceNames() const & { return m_interfaceNames; }
-    QString extensionTypeName() const { return m_extensionTypeName; }
-    void setExtensionTypeName(const QString &name) { m_extensionTypeName =  name; }
-    QString elementTypeName() const { return m_elementTypeName; }
-    void setElementTypeName(const QString &name) { m_elementTypeName = name; }
-    bool hasCustomParser() const { return m_hasCustomParser; }
-    void setHasCustomParser(bool v) { m_hasCustomParser = v; }
-    bool extensionIsJavaScript() const { return m_extensionIsJavaScript; }
-    void setExtensionIsJavaScript(bool v) { m_extensionIsJavaScript = v; }
-    bool extensionIsNamespace() const { return m_extensionIsNamespace; }
-    void setExtensionIsNamespace(bool v) { m_extensionIsNamespace = v; }
-    QQmlJSScope::AccessSemantics accessSemantics() const { return m_accessSemantics; }
-    void setAccessSemantics(QQmlJSScope::AccessSemantics v) { m_accessSemantics = v; }
-
-    void setSemanticScope(const QQmlJSScope::ConstPtr &scope) { m_semanticScope = scope; }
-    QQmlJSScope::ConstPtr semanticScope() const { return m_semanticScope; }
-
-private:
-    QList<Export> m_exports;
-    QList<int> m_metaRevisions;
-    QString m_fileName; // remove?
-    QStringList m_interfaceNames;
-    bool m_hasCustomParser = false;
-    bool m_extensionIsJavaScript = false;
-    bool m_extensionIsNamespace = false;
-    QString m_elementTypeName;
-    QString m_extensionTypeName;
-    QQmlJSScope::AccessSemantics m_accessSemantics = QQmlJSScope::AccessSemantics::None;
-    QQmlJSScope::ConstPtr m_semanticScope;
 };
 
 class QMLDOM_EXPORT QmlComponent final : public Component

@@ -3216,27 +3216,6 @@ void QQmlDomAstCreatorBase::endVisit(AST::PreDecrementExpression *statement)
     pushScriptElement(current);
 }
 
-static const DomEnvironment *environmentFrom(MutableDomItem &qmlFile)
-{
-    auto top = qmlFile.top();
-    if (!top) {
-        return {};
-    }
-    auto domEnvironment = top.as<DomEnvironment>();
-    if (!domEnvironment) {
-        return {};
-    }
-    return domEnvironment;
-}
-
-static QStringList qmldirFilesFrom(MutableDomItem &qmlFile)
-{
-    if (auto env = environmentFrom(qmlFile))
-        return env->qmldirFiles();
-
-    return {};
-}
-
 QQmlDomAstCreatorWithQQmlJSScope::QQmlDomAstCreatorWithQQmlJSScope(MutableDomItem &qmlFile,
                                                                    QQmlJSLogger *logger,
                                                                    QQmlJSImporter *importer)
@@ -3244,7 +3223,7 @@ QQmlDomAstCreatorWithQQmlJSScope::QQmlDomAstCreatorWithQQmlJSScope(MutableDomIte
       m_importer(importer),
       m_implicitImportDirectory(QQmlJSImportVisitor::implicitImportDirectory(
               m_logger->filePath(), m_importer->resourceFileMapper())),
-      m_scopeCreator(m_importer, m_logger, m_implicitImportDirectory, qmldirFilesFrom(qmlFile)),
+      m_scopeCreator(m_importer, m_logger, m_implicitImportDirectory, { }),
       m_domCreator(qmlFile)
 {
 }

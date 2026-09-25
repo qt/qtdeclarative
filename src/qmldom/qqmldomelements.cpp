@@ -1373,29 +1373,6 @@ void Binding::writeOutValue(const DomItem &self, OutWriter &lw) const
     }
 }
 
-bool QmltypesComponent::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const
-{
-    bool cont = Component::iterateDirectSubpaths(self, visitor);
-    cont = cont && self.invokeVisitorOnField(visitor, Fields::exports, m_exports);
-    cont = cont && self.invokeVisitorOnValue(visitor, PathEls::Field(Fields::metaRevisions),
-                                         m_metaRevisions);
-    if (!fileName().isEmpty()) {
-        cont = cont && self.invokeVisitorOnValue(visitor, PathEls::Field(Fields::fileName),
-                                             fileName()); // remove?
-    }
-    cont = cont && self.invokeVisitorOnValue(visitor, PathEls::Field(Fields::interfaceNames),
-                                         m_interfaceNames);
-    cont = cont && self.invokeVisitorOnValue(visitor, PathEls::Field(Fields::hasCustomParser),
-                                         m_hasCustomParser);
-    cont = cont && self.invokeVisitorOnValue(visitor, PathEls::Field(Fields::elementTypeName),
-                                         m_elementTypeName);
-    cont = cont && self.invokeVisitorOnValue(visitor, PathEls::Field(Fields::extensionTypeName),
-                                         m_extensionTypeName);
-    cont = cont && self.invokeVisitorOnValue(visitor, PathEls::Field(Fields::accessSemantics),
-                                         int(m_accessSemantics));
-    return cont;
-}
-
 Export Export::fromString(
         const Path &source, QStringView exp, const Path &typePath, const ErrorHandler &h)
 {

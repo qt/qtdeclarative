@@ -110,10 +110,8 @@ enum class DomType {
     ExternalItemPair, // pair of newest version of item, and latest valid update ### REVISIT
     // ExternalOwningItems refer to an external path and can be shared between environments
     QmlDirectory, // dir e.g. used for implicit import
-    QmldirFile, // qmldir
     JsFile, // file
     QmlFile, // file
-    QmltypesFile, // qmltypes
     /* enum A {  B, C }
                  *  *
     EnumItem  is marked with * */
@@ -122,8 +120,6 @@ enum class DomType {
     // types
     EnumDecl, // A in above example
     JsResource, // QML file contains QML object, JSFile contains JsResource
-    QmltypesComponent, // Component inside a qmltypes fles; compared to component it has exported
-                       // meta-object revisions; singleton flag; can export multiple names
     QmlComponent, // "normal" QML file based Component; also can represent inline components
     GlobalComponent, // component of global object ### REVISIT, try to replace with one of the above
 
