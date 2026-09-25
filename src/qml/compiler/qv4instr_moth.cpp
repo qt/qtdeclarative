@@ -112,6 +112,8 @@ QString dumpBytecode(
     return dumpBytecode(code, len, nLocals, nFormals, 0, len - 1, lineAndStatementNumberMapping);
 }
 
+QT_WARNING_PUSH
+QT_WARNING_DISABLE_LARGE_STACK_FRAME // unclear how this can be shrunk...
 QString dumpBytecode(
         const char *code, int len, int nLocals, int nFormals, int beginOffset, int endOffset,
         const QList<CompiledData::CodeOffsetToLineAndStatement> &lineAndStatementNumberMapping)
@@ -668,6 +670,7 @@ QString dumpBytecode(
     }
     return output;
 }
+QT_WARNING_POP // DISABLE_LARGE_STACK_FRAME
 
 }
 }
