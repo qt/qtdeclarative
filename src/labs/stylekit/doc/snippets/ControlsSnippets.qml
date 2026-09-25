@@ -835,6 +835,23 @@ ApplicationWindow {
         }
         //! [tabButton]
 
+        //! [tableViewDelegate]
+        tableViewDelegate {
+            text.alignment: Qt.AlignVCenter | Qt.AlignLeft
+            background {
+                radius: 0
+                color: "white"
+                border.width: 0
+            }
+            hovered.background.color: "white"
+            highlighted.background.color: "darkslategray"
+            highlighted.hovered.background.color: "darkslategray"
+            focused {
+                background.border.width: 2
+            }
+        }
+        //! [tableViewDelegate]
+
         //! [textArea]
         textArea {
             // Add some space between the text and the border of the text area

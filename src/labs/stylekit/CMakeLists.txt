@@ -74,6 +74,7 @@ qt_internal_add_qml_module(LabsStyleKit
         TextField.qml
         TabBar.qml
         TabButton.qml
+        TableViewDelegate.qml
         ToolBar.qml
         ToolButton.qml
         ToolSeparator.qml

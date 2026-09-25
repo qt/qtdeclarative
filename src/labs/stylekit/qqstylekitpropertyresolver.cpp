@@ -65,7 +65,8 @@ const QList<QQStyleKitExtendableControlType> QQStyleKitPropertyResolver::baseTyp
     case QQStyleKitReader::CheckDelegate:
     case QQStyleKitReader::RadioDelegate:
     case QQStyleKitReader::SwipeDelegate:
-    case QQStyleKitReader::SwitchDelegate: {
+    case QQStyleKitReader::SwitchDelegate:
+    case QQStyleKitReader::TableViewDelegate: {
         static QList<QQStyleKitExtendableControlType> t =
             { QQStyleKitReader::ItemDelegate, QQStyleKitReader::Control };
         return t; }

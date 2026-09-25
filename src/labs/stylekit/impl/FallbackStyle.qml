@@ -705,6 +705,19 @@ BaseStyle {
         }
     }
 
+    tableViewDelegate {
+        text.alignment: Qt.AlignVCenter | Qt.AlignLeft
+        background {
+            radius: 0
+            color: __baseWhite
+            border.width: 0
+        }
+        hovered.background.color: __baseWhite
+        highlighted.background.color: __strokeStrong
+        highlighted.hovered.background.color: __strokeStrong
+        focused.background.border.width: 2
+    }
+
     textField {
         text.alignment: Qt.AlignVCenter
         background {
