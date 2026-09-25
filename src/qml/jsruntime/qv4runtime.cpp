@@ -1210,6 +1210,14 @@ ReturnedValue Runtime::LoadQmlContextPropertyLookup::call(ExecutionEngine *engin
 ReturnedValue Runtime::GetLookup::call(ExecutionEngine *engine, Function *f, const Value &base, int index)
 {
     Lookup *l = runtimeLookup(f, index);
+
+    if (base.isNullOrUndefined()) {
+        const QString message = QStringLiteral("Cannot read property '%1' of %2")
+                .arg(f->compilationUnit->runtimeStrings[l->nameIndex]->toQString(),
+                     base.toQStringNoThrow());
+        return engine->throwTypeError(message);
+    }
+
     return l->getter(engine, base);
 }
 
@@ -1563,6 +1571,15 @@ ReturnedValue Runtime::CallProperty::call(ExecutionEngine *engine, const Value &
 ReturnedValue Runtime::CallPropertyLookup::call(ExecutionEngine *engine, const Value &base, uint index, Value *argv, int argc)
 {
     Lookup *l = runtimeLookup(engine->currentStackFrame->v4Function, index);
+
+    if (base.isNullOrUndefined()) {
+        const QString message = QStringLiteral("Cannot call method '%1' of %2")
+                .arg(engine->currentStackFrame->v4Function->compilationUnit
+                             ->runtimeStrings[l->nameIndex]->toQString(),
+                     base.toQStringNoThrow());
+        return engine->throwTypeError(message);
+    }
+
     // ok to have the value on the stack here
     Value f = Value::fromReturnedValue(l->getter(engine, base));
 
