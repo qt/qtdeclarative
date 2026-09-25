@@ -969,18 +969,6 @@ bool DomItem::resolve(const Path &path, DomItem::Visitor visitor, const ErrorHan
                     if (domKind() != DomKind::Object)
                         it = it.containingObject();
                     break;
-                case PathCurrent::ScopeChain: {
-                    bool cont = it.visitScopeChain(
-                            [&toDos, iPath](const DomItem &subEl) {
-                                toDos.append({ subEl, iPath });
-                                return true;
-                            },
-                            LookupOption::Normal, errorHandler);
-                    if (!cont)
-                        return false;
-                    branchExhausted = true;
-                    break;
-                }
                 case PathCurrent::Component:
                     it = it.component();
                     break;
@@ -2763,7 +2751,6 @@ bool Reference::shouldCache() const
             case PathCurrent::Lookup:
             case PathCurrent::LookupDynamic:
             case PathCurrent::LookupStrict:
-            case PathCurrent::ScopeChain:
                 return true;
             default:
                 break;

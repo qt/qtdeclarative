@@ -197,8 +197,6 @@ public:
             return QString::fromUtf8("@").append(contextName.toString());
         case PathCurrent::Obj:
             return QStringLiteral(u"@obj");
-        case PathCurrent::ScopeChain:
-            return QStringLiteral(u"@scopeChain");
         case PathCurrent::Component:
             return QStringLiteral(u"@component");
         case PathCurrent::Module:

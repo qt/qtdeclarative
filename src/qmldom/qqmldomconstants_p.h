@@ -43,7 +43,6 @@ Q_ENUM_NS(PathRoot)
 enum class PathCurrent {
     Other,
     Obj,
-    ScopeChain,
     Component,
     Module,
     Ids,
