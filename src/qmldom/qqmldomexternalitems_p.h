@@ -18,7 +18,6 @@
 
 #include "qqmldomitem_p.h"
 #include "qqmldomelements_p.h"
-#include "qqmldommoduleindex_p.h"
 #include "qqmldomcomments_p.h"
 
 #include <QtQml/private/qqmljsast_p.h>
@@ -196,8 +195,6 @@ public:
 
     QList<ModuleAutoExport> autoExports() const;
     void setAutoExports(const QList<ModuleAutoExport> &autoExport);
-
-    void ensureInModuleIndex(const DomItem &self, const QString &uri) const;
 
 private:
     void parse();
@@ -494,8 +491,6 @@ public:
     }
 
     QmltypesFile(const QmltypesFile &o) = default;
-
-    void ensureInModuleIndex(const DomItem &self) const;
 
     bool iterateDirectSubpaths(const DomItem &self, DirectVisitor) const override;
     std::shared_ptr<QmltypesFile> makeCopy(const DomItem &self) const

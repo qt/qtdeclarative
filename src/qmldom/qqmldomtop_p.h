@@ -773,11 +773,6 @@ public:
     QSet<QString> moduleIndexUris(const DomItem &self, EnvLookup lookup = EnvLookup::Normal) const;
     QSet<int> moduleIndexMajorVersions(const DomItem &self, const QString &uri,
                                        EnvLookup lookup = EnvLookup::Normal) const;
-    std::shared_ptr<ModuleIndex> moduleIndexWithUri(const DomItem &self, const QString &uri, int majorVersion,
-                                                    EnvLookup lookup, Changeable changeable,
-                                                    const ErrorHandler &errorHandler = nullptr);
-    std::shared_ptr<ModuleIndex> moduleIndexWithUri(const DomItem &self, const QString &uri, int majorVersion,
-                                                    EnvLookup lookup = EnvLookup::Normal) const;
     std::shared_ptr<ExternalItemInfo<QmlDirectory>>
     qmlDirectoryWithPath(const DomItem &self, const QString &path, EnvLookup options = EnvLookup::Normal) const;
     QSet<QString> qmlDirectoryPaths(const DomItem &self, EnvLookup options = EnvLookup::Normal) const;
@@ -1082,18 +1077,6 @@ private:
 
     Callback getLoadCallbackFor(DomType fileType, const Callback &loadCallback);
 
-    std::shared_ptr<ModuleIndex> lookupModuleInEnv(const QString &uri, int majorVersion) const;
-    // ModuleLookupResult contains the ModuleIndex pointer, and an indicator whether it was found
-    // in m_base or in m_moduleIndexWithUri
-    struct ModuleLookupResult {
-        enum Origin :  bool {FromBase, FromGlobal};
-        std::shared_ptr<ModuleIndex> module;
-        Origin fromBase = FromGlobal;
-    };
-    // helper function used by the moduleIndexWithUri methods
-    ModuleLookupResult moduleIndexWithUriHelper(const DomItem &self, const QString &uri, int majorVersion,
-                                                    EnvLookup lookup = EnvLookup::Normal) const;
-
     struct SemanticAnalysis
     {
         SemanticAnalysis(const QStringList &loadPaths);
@@ -1119,7 +1102,6 @@ private:
     QStringList m_loadPaths; // paths for qml
     QStringList m_resourcePaths;
     QString m_globalScopeName;
-    QMap<QString, QMap<int, std::shared_ptr<ModuleIndex>>> m_moduleIndexWithUri;
     QMap<QString, std::shared_ptr<ExternalItemInfo<GlobalScope>>> m_globalScopeWithName;
     QMap<QString, std::shared_ptr<ExternalItemInfo<QmlDirectory>>> m_qmlDirectoryWithPath;
     QMap<QString, std::shared_ptr<ExternalItemInfo<QmldirFile>>> m_qmldirFileWithPath;

@@ -214,22 +214,6 @@ void QmldirFile::setAutoExports(const QList<ModuleAutoExport> &autoExport)
     m_autoExports = autoExport;
 }
 
-void QmldirFile::ensureInModuleIndex(const DomItem &self, const QString &uri) const
-{
-    // ModuleIndex keeps the various sources of types from a given module uri import
-    // this method ensures that all major versions that are contained in this qmldir
-    // file actually have a ModuleIndex. This is required so that when importing the
-    // latest version the correct "lastest major version" is found, for example for
-    // qml only modules (qmltypes files also register their versions)
-    DomItem env = self.environment();
-    if (std::shared_ptr<DomEnvironment> envPtr = env.ownerAs<DomEnvironment>()) {
-        for (int majorV : m_majorVersions) {
-            auto mIndex = envPtr->moduleIndexWithUri(env, uri, majorV, EnvLookup::Normal,
-                                                     Changeable::Writable);
-        }
-    }
-}
-
 QCborValue pluginData(const QQmlDirParser::Plugin &pl, const QStringList &cNames)
 {
     QCborArray names;
@@ -536,24 +520,6 @@ bool GlobalScope::iterateDirectSubpaths(const DomItem &self, DirectVisitor visit
 {
     bool cont = ExternalOwningItem::iterateDirectSubpaths(self, visitor);
     return cont;
-}
-
-void QmltypesFile::ensureInModuleIndex(const DomItem &self) const
-{
-    auto it = m_uris.begin();
-    auto end = m_uris.end();
-    DomItem env = self.environment();
-    if (std::shared_ptr<DomEnvironment> envPtr = env.ownerAs<DomEnvironment>()) {
-        while (it != end) {
-            QString uri = it.key();
-            for (int majorV : it.value()) {
-                auto mIndex = envPtr->moduleIndexWithUri(env, uri, majorV, EnvLookup::Normal,
-                                                         Changeable::Writable);
-                mIndex->addQmltypeFilePath(self.canonicalPath());
-            }
-            ++it;
-        }
-    }
 }
 
 bool QmltypesFile::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const

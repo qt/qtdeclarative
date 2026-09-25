@@ -33,7 +33,6 @@ qt_internal_add_module(QmlDomPrivate
         qqmldomitem.cpp qqmldomitem_p.h
         qqmldommock.cpp qqmldommock_p.h
         qqmldomlinewriter.cpp qqmldomlinewriter_p.h
-        qqmldommoduleindex.cpp qqmldommoduleindex_p.h
         qqmldomoutwriter.cpp qqmldomoutwriter_p.h
         qqmldompath.cpp qqmldompath_p.h
         qqmldomstringdumper.cpp qqmldomstringdumper_p.h

@@ -794,9 +794,9 @@ using ElementT =
                      const ExternalItemInfoBase *, const ExternalItemPairBase *,
                      const GlobalComponent *, const GlobalScope *, const JsFile *,
                      const JsResource *, const LoadInfo *, const MockObject *, const MockOwner *,
-                     const ModuleIndex *, const ModuleScope *, const QmlComponent *,
-                     const QmlDirectory *, const QmlFile *, const QmlObject *, const QmldirFile *,
-                     const QmltypesComponent *, const QmltypesFile *, const ScriptExpression *>;
+                     const QmlComponent *, const QmlDirectory *, const QmlFile *, const QmlObject *,
+                     const QmldirFile *, const QmltypesComponent *, const QmltypesFile *,
+                     const ScriptExpression *>;
 
 using TopT = std::variant<
         std::monostate,
@@ -804,7 +804,7 @@ using TopT = std::variant<
         std::shared_ptr<DomUniverse>>;
 
 using OwnerT =
-        std::variant<std::monostate, std::shared_ptr<ModuleIndex>, std::shared_ptr<MockOwner>,
+        std::variant<std::monostate, std::shared_ptr<MockOwner>,
                      std::shared_ptr<ExternalItemInfoBase>, std::shared_ptr<ExternalItemPairBase>,
                      std::shared_ptr<QmlDirectory>, std::shared_ptr<QmldirFile>,
                      std::shared_ptr<JsFile>, std::shared_ptr<QmlFile>,
@@ -1856,7 +1856,6 @@ constexpr bool domTypeIsValueWrap(DomType k)
 constexpr bool domTypeIsDomElement(DomType k)
 {
     switch (k) {
-    case DomType::ModuleScope:
     case DomType::QmlObject:
     case DomType::ConstantData:
     case DomType::SimpleObjectWrap:
@@ -1879,8 +1878,6 @@ constexpr bool domTypeIsDomElement(DomType k)
 constexpr bool domTypeIsOwningItem(DomType k)
 {
     switch (k) {
-    case DomType::ModuleIndex:
-
     case DomType::MockOwner:
 
     case DomType::ExternalItemInfo:

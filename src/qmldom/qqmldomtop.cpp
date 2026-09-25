@@ -8,7 +8,6 @@
 #include "qqmldommock_p.h"
 #include "qqmldomelements_p.h"
 #include "qqmldomastcreator_p.h"
-#include "qqmldommoduleindex_p.h"
 #include "qqmldomtypesreader_p.h"
 #include "qqmldom_utils_p.h"
 
@@ -822,24 +821,6 @@ void LoadInfo::doAddDependencies(const DomItem &self)
                 });
             });
         }
-    } else if (shared_ptr<ModuleIndex> elPtr = el.ownerAs<ModuleIndex>()) {
-        const auto qmldirs = elPtr->qmldirsToLoad(el);
-        for (const Path &qmldirPath : qmldirs) {
-            Path canonicalPath = qmldirPath[2];
-            if (canonicalPath && !canonicalPath.headName().isEmpty())
-                addDependency(self,
-                              Dependency { QString(), Version(), canonicalPath.headName(),
-                                           DomType::QmldirFile });
-        }
-        QString uri = elPtr->uri();
-        addEndCallback(self, [uri, qmldirs](Path, const DomItem &, const DomItem &newV) {
-            for (const Path &p : qmldirs) {
-                DomItem qmldir = newV.path(p);
-                if (std::shared_ptr<QmldirFile> qmldirFilePtr = qmldir.ownerAs<QmldirFile>()) {
-                    qmldirFilePtr->ensureInModuleIndex(qmldir, uri);
-                }
-            }
-        });
     } else if (!el) {
         self.addError(DomEnvironment::myErrors().error(
                 tr("Ignoring dependencies for empty (invalid) type %1")
@@ -974,51 +955,6 @@ bool DomEnvironment::iterateDirectSubpaths(const DomItem &self, DirectVisitor vi
                                return qmltypesFilePaths(mapOw);
                            },
                            QLatin1String("QmltypesFile")));
-               });
-    cont = cont && visitor(PathEls::Field(Fields::moduleIndexWithUri), [this, &self]() {
-                   return self.subMapItem(Map(
-                           Path::fromField(Fields::moduleIndexWithUri),
-                           [this](const DomItem &map, const QString &key) {
-                               return map.subMapItem(Map(
-                                       map.pathFromOwner().withKey(key),
-                                       [this, key](const DomItem &submap, const QString &subKey) {
-                                           bool ok;
-                                           int i = subKey.toInt(&ok);
-                                           if (!ok) {
-                                               if (subKey.isEmpty())
-                                                   i = Version::Undefined;
-                                               else if (subKey.compare(u"Latest",
-                                                                       Qt::CaseInsensitive)
-                                                        == 0)
-                                                   i = Version::Latest;
-                                               else
-                                                   return DomItem();
-                                           }
-                                           DomItem subMapOw = submap.owner();
-                                           std::shared_ptr<ModuleIndex> mIndex =
-                                                   moduleIndexWithUri(subMapOw, key, i);
-                                           return submap.copy(mIndex);
-                                       },
-                                       [this, key](const DomItem &subMap) {
-                                           QSet<QString> res;
-                                           DomItem subMapOw = subMap.owner();
-                                           for (int mVersion : moduleIndexMajorVersions(
-                                                        subMapOw, key, EnvLookup::Normal))
-                                               if (mVersion == Version::Undefined)
-                                                   res.insert(QString());
-                                               else
-                                                   res.insert(QString::number(mVersion));
-                                           if (!res.isEmpty())
-                                               res.insert(QLatin1String("Latest"));
-                                           return res;
-                                       },
-                                       QLatin1String("ModuleIndex")));
-                           },
-                           [this](const DomItem &map) {
-                               DomItem mapOw = map.owner();
-                               return moduleIndexUris(mapOw);
-                           },
-                           QLatin1String("Map<ModuleIndex>")));
                });
     bool loadedLoadInfo = false;
     QQueue<Path> loadsWithWork;
@@ -1322,149 +1258,6 @@ QSet<QString> DomEnvironment::getStrings(function_ref<QSet<QString>()> getBase,
     return res;
 }
 
-QSet<QString> DomEnvironment::moduleIndexUris(const DomItem &, EnvLookup lookup) const
-{
-    DomItem baseObj = DomItem(m_base);
-    return this->getStrings<QMap<int, std::shared_ptr<ModuleIndex>>>(
-            [this, &baseObj] { return m_base->moduleIndexUris(baseObj, EnvLookup::Normal); },
-            m_moduleIndexWithUri, lookup);
-}
-
-QSet<int> DomEnvironment::moduleIndexMajorVersions(const DomItem &, const QString &uri, EnvLookup lookup) const
-{
-    QSet<int> res;
-    if (lookup != EnvLookup::NoBase && m_base) {
-        DomItem baseObj(m_base);
-        res = m_base->moduleIndexMajorVersions(baseObj, uri, EnvLookup::Normal);
-    }
-    if (lookup != EnvLookup::BaseOnly) {
-        QMap<int, std::shared_ptr<ModuleIndex>> map;
-        {
-            QMutexLocker l(mutex());
-            map = m_moduleIndexWithUri.value(uri);
-        }
-        auto it = map.keyBegin();
-        auto end = map.keyEnd();
-        while (it != end) {
-            res += *it;
-            ++it;
-        }
-    }
-    return res;
-}
-
-std::shared_ptr<ModuleIndex> DomEnvironment::lookupModuleInEnv(const QString &uri, int majorVersion) const
-{
-    QMutexLocker l(mutex());
-    auto it = m_moduleIndexWithUri.find(uri);
-    if (it == m_moduleIndexWithUri.end())
-        return {}; // we haven't seen the module yet
-    if (it->empty())
-        return {}; // module contains nothing
-    if (majorVersion == Version::Latest)
-        return it->last(); // map is ordered by version, so last == Latest
-    else
-        return it->value(majorVersion); // null shared_ptr is fine if no match
-}
-
-DomEnvironment::ModuleLookupResult DomEnvironment::moduleIndexWithUriHelper(const DomItem &self, const QString &uri, int majorVersion, EnvLookup options) const
-{
-    std::shared_ptr<ModuleIndex> res;
-    if (options != EnvLookup::BaseOnly)
-        res = lookupModuleInEnv(uri, majorVersion);
-    // if there is no base, or if we should not consider it
-    // then the only result we can end up with is the module we looked up above
-    if (options == EnvLookup::NoBase || !m_base)
-        return {std::move(res), ModuleLookupResult::FromGlobal };
-    const std::shared_ptr existingMod =
-            m_base->moduleIndexWithUri(self, uri, majorVersion, options, Changeable::ReadOnly);
-    if (!res)  // the only module we can find at all is the one in base (might be null, too, though)
-        return { std::move(existingMod), ModuleLookupResult::FromBase };
-    if (!existingMod) // on the other hand, if there was nothing in base, we can only return what was in the larger env
-        return {std::move(res), ModuleLookupResult::FromGlobal };
-
-    // if we have  both res and existingMod, res and existingMod should be the same
-    // _unless_ we looked for the latest version. Then one might have a higher version than the other
-    // and we have to check it
-
-    if (majorVersion == Version::Latest) {
-        if (res->majorVersion() >= existingMod->majorVersion())
-            return { std::move(res), ModuleLookupResult::FromGlobal };
-        else
-            return { std::move(existingMod), ModuleLookupResult::FromBase };
-    } else {
-        // doesn't really matter which we return, but the other overload benefits from using the
-        // version from m_moduleIndexWithUri
-        return { std::move(res), ModuleLookupResult::FromGlobal };
-    }
-}
-
-std::shared_ptr<ModuleIndex> DomEnvironment::moduleIndexWithUri(
-        const DomItem &self, const QString &uri, int majorVersion, EnvLookup options,
-        Changeable changeable, const ErrorHandler &errorHandler)
-{
-    // sanity checks
-    Q_ASSERT((changeable == Changeable::ReadOnly
-              || (majorVersion >= 0 || majorVersion == Version::Undefined))
-             && "A writeable moduleIndexWithUri call should have a version (not with "
-                "Version::Latest)");
-    if (changeable == Changeable::Writable && (m_options & Option::Exported))
-        myErrors().error(tr("A mutable module was requested in a multithreaded environment")).handle(errorHandler);
-
-
-    // use the overload which does not care about changing m_moduleIndexWithUri to find a candidate
-    auto candidate = moduleIndexWithUriHelper(self, uri, majorVersion, options);
-
-    // A ModuleIndex from m_moduleIndexWithUri can always be returned
-    if (candidate.module && candidate.fromBase == ModuleLookupResult::FromGlobal)
-        return std::move(candidate.module);
-
-    // If we don't want to modify anything, return the candidate that we have found (if any)
-    if (changeable == Changeable::ReadOnly)
-        return std::move(candidate.module);
-
-    // Else we want to create a modifyable version
-    std::shared_ptr<ModuleIndex> newModulePtr = [&] {
-        // which is a completely new module in case we don't have candidate
-        if (!candidate.module)
-            return std::make_shared<ModuleIndex>(uri, majorVersion);
-        // or a copy of the candidate otherwise
-        DomItem existingModObj = self.copy(candidate.module);
-        return candidate.module->makeCopy(existingModObj);
-    }();
-
-    DomItem newModule = self.copy(newModulePtr);
-    Path p = newModule.canonicalPath();
-    {
-        QMutexLocker l(mutex());
-        auto &modsNow = m_moduleIndexWithUri[uri];
-        // As we do not hold the lock for the whole operation, some other thread
-        // might have created the module already
-        if (auto it = modsNow.constFind(majorVersion); it != modsNow.cend())
-            return *it;
-        modsNow.insert(majorVersion, newModulePtr);
-    }
-    if (p) {
-        auto lInfo = std::make_shared<LoadInfo>(p);
-        addLoadInfo(self, lInfo);
-    } else {
-        myErrors()
-                .error(tr("Could not get path for newly created ModuleIndex %1 %2")
-                               .arg(uri)
-                               .arg(majorVersion))
-                .handle(errorHandler);
-    }
-
-    return newModulePtr;
-}
-
-std::shared_ptr<ModuleIndex> DomEnvironment::moduleIndexWithUri(const DomItem &self, const QString &uri,
-                                                                int majorVersion,
-                                                                EnvLookup options) const
-{
-    return moduleIndexWithUriHelper(self, uri, majorVersion, options).module;
-}
-
 std::shared_ptr<ExternalItemInfo<QmlDirectory>>
 DomEnvironment::qmlDirectoryWithPath(const DomItem &, const QString &path, EnvLookup options) const
 {
@@ -1690,8 +1483,6 @@ DomItem::Callback DomEnvironment::getLoadCallbackFor(DomType fileType, const Cal
     if (fileType == DomType::QmltypesFile) {
         return [loadCallback](const Path &p, const DomItem &oldV, const DomItem &newV) {
             DomItem newFile = newV.field(Fields::currentItem);
-            if (std::shared_ptr<QmltypesFile> newFilePtr = newFile.ownerAs<QmltypesFile>())
-                newFilePtr->ensureInModuleIndex(newFile);
             if (loadCallback)
                 loadCallback(p, oldV, newV);
         };
@@ -1865,13 +1656,10 @@ void DomEnvironment::TypeReader::operator()(QQmlJSImporter *importer, const QStr
     envPtr->setLoadPaths(oldImportPaths);
 }
 
-
-bool DomEnvironment::commitToBase(
-        const DomItem &self, const shared_ptr<DomEnvironment> &validEnvPtr)
+bool DomEnvironment::commitToBase(const DomItem &, const shared_ptr<DomEnvironment> &validEnvPtr)
 {
     if (!base())
         return false;
-    QMap<QString, QMap<int, std::shared_ptr<ModuleIndex>>> my_moduleIndexWithUri;
     QMap<QString, std::shared_ptr<ExternalItemInfo<GlobalScope>>> my_globalScopeWithName;
     QMap<QString, std::shared_ptr<ExternalItemInfo<QmlDirectory>>> my_qmlDirectoryWithPath;
     QMap<QString, std::shared_ptr<ExternalItemInfo<QmldirFile>>> my_qmldirFileWithPath;
@@ -1882,7 +1670,6 @@ bool DomEnvironment::commitToBase(
     std::optional<SemanticAnalysis> my_semanticAnalysis;
     {
         QMutexLocker l(mutex());
-        my_moduleIndexWithUri = m_moduleIndexWithUri;
         my_globalScopeWithName = m_globalScopeWithName;
         my_qmlDirectoryWithPath = m_qmlDirectoryWithPath;
         my_qmldirFileWithPath = m_qmldirFileWithPath;
@@ -1902,25 +1689,6 @@ bool DomEnvironment::commitToBase(
         m_base->m_jsFileWithPath.insert(my_jsFileWithPath);
         m_base->m_qmltypesFileWithPath.insert(my_qmltypesFileWithPath);
         m_base->m_loadInfos.insert(my_loadInfos);
-        {
-            auto it = my_moduleIndexWithUri.cbegin();
-            auto end = my_moduleIndexWithUri.cend();
-            while (it != end) {
-                QMap<int, shared_ptr<ModuleIndex>> &myVersions =
-                        m_base->m_moduleIndexWithUri[it.key()];
-                auto it2 = it.value().cbegin();
-                auto end2 = it.value().cend();
-                while (it2 != end2) {
-                    auto oldV = myVersions.value(it2.key());
-                    DomItem it2Obj = self.copy(it2.value());
-                    auto newV = it2.value()->makeCopy(it2Obj);
-                    newV->mergeWith(oldV);
-                    myVersions.insert(it2.key(), newV);
-                    ++it2;
-                }
-                ++it;
-            }
-        }
     }
     if (validEnvPtr)
         m_lastValidBase = validEnvPtr;
@@ -1943,18 +1711,6 @@ bool DomEnvironment::commitToBase(
         }
         m_lastValidBase->m_qmltypesFileWithPath.insert(my_qmltypesFileWithPath);
         m_lastValidBase->m_loadInfos.insert(my_loadInfos);
-        for (auto it = my_moduleIndexWithUri.cbegin(), end = my_moduleIndexWithUri.cend();
-             it != end; ++it) {
-            QMap<int, shared_ptr<ModuleIndex>> &myVersions =
-                    m_lastValidBase->m_moduleIndexWithUri[it.key()];
-            for (auto it2 = it.value().cbegin(), end2 = it.value().cend(); it2 != end2; ++it2) {
-                auto oldV = myVersions.value(it2.key());
-                DomItem it2Obj = self.copy(it2.value());
-                auto newV = it2.value()->makeCopy(it2Obj);
-                newV->mergeWith(oldV);
-                myVersions.insert(it2.key(), newV);
-            }
-        }
     }
 
     auto newBaseForPopulation =

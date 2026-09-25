@@ -2072,7 +2072,6 @@ MutableDomItem DomItem::makeCopy(DomItem::CopyOption option) const
     case DomType::GlobalScope: {
         newEnvPtr->addGlobalScope(newItem.ownerAs<GlobalScope>(), AddOption::Overwrite);
     } break;
-    case DomType::ModuleIndex:
     case DomType::MockOwner:
     case DomType::ScriptExpression:
     case DomType::AstComments:

@@ -204,51 +204,9 @@ void QQmlLSCompletion::insideImportCompletionHelper(const DomItem &file,
         case ImportCompletionType::None:
             break;
         case ImportCompletionType::Module: {
-            QDuplicateTracker<QString> modulesSeen;
-            for (const QString &uri : envPtr->moduleIndexUris(env)) {
-                QStringView base = ctx.base(); // if we allow spaces we should get rid of them
-                if (uri.startsWith(base)) {
-                    QStringList rest = uri.mid(base.size()).split(u'.');
-                    if (rest.isEmpty())
-                        continue;
-
-                    const QString label = rest.first();
-                    if (!modulesSeen.hasSeen(label)) {
-                        CompletionItem comp;
-                        comp.label = label.toUtf8();
-                        comp.kind = CompletionItemKind::Module;
-                        it = comp;
-                    }
-                }
-            }
             break;
         }
         case ImportCompletionType::Version:
-            if (ctx.base().isEmpty()) {
-                for (int majorV :
-                     envPtr->moduleIndexMajorVersions(env, linePieces.at(1).toString())) {
-                    CompletionItem comp;
-                    comp.label = QString::number(majorV).toUtf8();
-                    comp.kind = CompletionItemKind::Constant;
-                    it = comp;
-                }
-            } else {
-                bool hasMajorVersion = ctx.base().endsWith(u'.');
-                int majorV = -1;
-                if (hasMajorVersion)
-                    majorV = ctx.base().mid(0, ctx.base().size() - 1).toInt(&hasMajorVersion);
-                if (!hasMajorVersion)
-                    break;
-                if (std::shared_ptr<ModuleIndex> mIndex =
-                            envPtr->moduleIndexWithUri(env, linePieces.at(1).toString(), majorV)) {
-                    for (int minorV : mIndex->minorVersions()) {
-                        CompletionItem comp;
-                        comp.label = QString::number(minorV).toUtf8();
-                        comp.kind = CompletionItemKind::Constant;
-                        it = comp;
-                    }
-                }
-            }
             break;
         }
     }

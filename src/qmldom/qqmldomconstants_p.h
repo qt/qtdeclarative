@@ -129,8 +129,6 @@ enum class DomType {
     GlobalComponent, // component of global object ### REVISIT, try to replace with one of the above
 
     ModuleAutoExport, // dependent imports to automatically load when a module is imported
-    ModuleIndex, // index for all the imports of a major version
-    ModuleScope, // a specific import with full version
     Export, // An exported type
 
     // header stuff

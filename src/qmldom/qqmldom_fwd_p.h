@@ -57,8 +57,6 @@ class List;
 class LoadInfo;
 class Map;
 class MethodInfo;
-class ModuleIndex;
-class ModuleScope;
 class MutableDomItem;
 class ObserversTrie;
 class OutWriter;
