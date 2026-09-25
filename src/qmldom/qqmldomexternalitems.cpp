@@ -479,7 +479,6 @@ bool QmlFile::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) 
     cont = cont && self.invokeVisitorOnField(visitor, Fields::components, members.m_components);
     cont = cont && self.invokeVisitorOnField(visitor, Fields::pragmas, members.m_pragmas);
     cont = cont && self.invokeVisitorOnField(visitor, Fields::imports, members.m_imports);
-    cont = cont && self.invokeVisitorOnField(visitor, Fields::importScope, members.m_importScope);
     cont = cont && self.invokeVisitorOnField(visitor, Fields::fileLocationsTree,
                                              members.m_fileLocationsTree);
     cont = cont && self.invokeVisitorOnField(visitor, Fields::comments, members.m_comments);

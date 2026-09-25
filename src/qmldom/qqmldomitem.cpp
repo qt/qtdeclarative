@@ -219,7 +219,6 @@ bool domTypeIsScope(DomType k)
     case DomType::QmlComponent: // (ids, enums -> qmlObj)
     case DomType::QmlFile: // (components ->importScope)
     case DomType::MethodInfo: // method arguments
-    case DomType::ImportScope: // (types, qualifiedImports)
     case DomType::GlobalComponent: // global scope (enums -> qmlObj)
     case DomType::JsResource: // js resurce (enums -> qmlObj)
     case DomType::QmltypesComponent: // qmltypes component (enums -> qmlObj)
@@ -1760,11 +1759,6 @@ bool DomItem::visitScopeChain(
             if (DomItem next = current.scope(FilterUpOptions::ReturnOuterNoSelf))
                 toDo.append(next);
             break;
-        case DomType::ImportScope: // types
-            first = false;
-            if (auto globalC = globalScope().field(Fields::rootComponent))
-                toDo.append(globalC);
-            break;
         case DomType::JsResource:
         case DomType::GlobalComponent:
             first = false;
@@ -2224,20 +2218,9 @@ bool DomItem::visitLocalSymbolsNamed(const QString &name, function_ref<bool(cons
             return false;
         break;
     }
-    case DomType::ImportScope: {
-        f = field(Fields::imported);
-        v = f.key(name);
-        if (!v.visitIndexes(visitor))
-            return false;
-        f = field(Fields::qualifiedImports);
-        v = f.key(name);
-        if (v && !visitor(v))
-            return false;
-        break;
     default:
         Q_ASSERT(!isScope());
         break;
-    }
     }
     return true;
 }

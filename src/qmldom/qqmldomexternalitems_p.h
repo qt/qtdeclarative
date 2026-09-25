@@ -379,19 +379,6 @@ public:
         auto &members = lazyMembers();
         index_type idx = index_type(members.m_imports.size());
         members.m_imports.append(i);
-        if (i.uri.isModule()) {
-            members.m_importScope.addImport((i.importId.isEmpty()
-                                                     ? QStringList()
-                                                     : i.importId.split(QChar::fromLatin1('.'))),
-                                            i.importedPath());
-        } else {
-            QString path = i.uri.absoluteLocalPath(canonicalFilePath());
-            if (!path.isEmpty())
-                members.m_importScope.addImport(
-                        (i.importId.isEmpty() ? QStringList()
-                                              : i.importId.split(QChar::fromLatin1('.'))),
-                        Paths::qmlDirPath(path));
-        }
         return Path::fromField(Fields::imports).withIndex(idx);
     }
     std::shared_ptr<QQmlJS::Engine> engine() const { return m_engine; }
@@ -409,8 +396,6 @@ public:
         members.m_pragmas.append(pragma);
         return Path::fromField(Fields::pragmas).withIndex(idx);
     }
-    ImportScope &importScope() { return lazyMembers().m_importScope; }
-    const ImportScope &importScope() const { return lazyMembers().m_importScope; }
 
     std::shared_ptr<QQmlJSTypeResolver> typeResolver() const
     {
@@ -449,7 +434,6 @@ private:
         QMultiMap<QString, QmlComponent> m_components;
         QList<Pragma> m_pragmas;
         QList<Import> m_imports;
-        ImportScope m_importScope;
         FileLocations::Tree m_fileLocationsTree;
         std::shared_ptr<AstComments> m_astComments;
         DomCreationOption m_creationOption;

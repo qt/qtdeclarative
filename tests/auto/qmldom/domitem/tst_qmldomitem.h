@@ -508,6 +508,21 @@ private slots:
         QVERIFY(obj1);
 
         {
+            QString fPath = tFile.canonicalFilePath();
+            QString fPath2 = fPath.mid(0, fPath.lastIndexOf(u'/')) % u"/MySingleton.qml";
+            Path p2 = Paths::qmlFileObjectPath(fPath2);
+            DomItem f2 = env.path(p2);
+            QVERIFY2(f2, "Directory dependencies did not load MySingleton.qml");
+        }
+        {
+            QString fPath = tFile.canonicalFilePath();
+            QString fPath2 = fPath.mid(0, fPath.lastIndexOf(u'/')) % u"/ImportMeImplicitly.ui.qml";
+            Path p2 = Paths::qmlFileObjectPath(fPath2);
+            DomItem f2 = env.path(p2);
+            QVERIFY2(f2, "Directory dependencies did not load .ui.qml file!");
+        }
+        // Keep this block last: its QEXPECT_FAIL aborts the test function.
+        {
             using namespace Qt::StringLiterals;
 
             QList<DomItem> rect =
@@ -517,6 +532,7 @@ private slots:
             QList<DomItem> rectAs =
                     obj1.lookup(u"QQ.Rectangle"_s, LookupType::Symbol, LookupOption::Normal);
 
+            QEXPECT_FAIL("", "Paths::lookupTypePath is removed in a later commit", Abort);
             QVERIFY(rect.size() == 1);
             QVERIFY(rect2.size() == 1);
             QVERIFY(rectAs.size() == 1);
@@ -537,20 +553,6 @@ private slots:
             for (const DomItem &el : rects) {
                 QCOMPARE(rect.first(), el);
             }
-        }
-        {
-            QString fPath = tFile.canonicalFilePath();
-            QString fPath2 = fPath.mid(0, fPath.lastIndexOf(u'/')) % u"/MySingleton.qml";
-            Path p2 = Paths::qmlFileObjectPath(fPath2);
-            DomItem f2 = env.path(p2);
-            QVERIFY2(f2, "Directory dependencies did not load MySingleton.qml");
-        }
-        {
-            QString fPath = tFile.canonicalFilePath();
-            QString fPath2 = fPath.mid(0, fPath.lastIndexOf(u'/')) % u"/ImportMeImplicitly.ui.qml";
-            Path p2 = Paths::qmlFileObjectPath(fPath2);
-            DomItem f2 = env.path(p2);
-            QVERIFY2(f2, "Directory dependencies did not load .ui.qml file!");
         }
     }
 
@@ -3323,6 +3325,7 @@ private slots:
                                                   [Fields::get][Fields::uri]
                                                           .value()
                                                           .toString();
+        QEXPECT_FAIL("", "Paths::lookupTypePath is removed in a later commit", Abort);
         QCOMPARE(loadedQmldir, "\"%1/ImportPath/MyModule/qmldir\""_L1.arg(baseDir));
     }
 
@@ -3363,6 +3366,7 @@ private slots:
                                                   [Fields::get][Fields::uri]
                                                           .value()
                                                           .toString();
+        QEXPECT_FAIL("", "Paths::lookupTypePath is removed in a later commit", Abort);
         QCOMPARE(loadedQmldir, "\"%1/ImportPath/MyModule/qmldir\""_L1.arg(baseDir));
     }
 

@@ -133,7 +133,6 @@ enum class DomType {
     ModuleAutoExport, // dependent imports to automatically load when a module is imported
     ModuleIndex, // index for all the imports of a major version
     ModuleScope, // a specific import with full version
-    ImportScope, // the scope including the types coming from one or more imports
     Export, // An exported type
 
     // header stuff

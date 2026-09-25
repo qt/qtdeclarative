@@ -1827,7 +1827,6 @@ constexpr bool domTypeIsObjWrap(DomType k)
     case DomType::Export:
     case DomType::Id:
     case DomType::Import:
-    case DomType::ImportScope:
     case DomType::MethodInfo:
     case DomType::MethodParameter:
     case DomType::ModuleAutoExport:

@@ -616,7 +616,6 @@ bool AstRangesVisitor::shouldSkipRegion(const DomItem &item, FileLocationRegion 
 {
     switch (item.internalKind()) {
     case DomType::Import:
-    case DomType::ImportScope:
         return region == FileLocationRegion::IdentifierRegion;
     default:
         return false;
