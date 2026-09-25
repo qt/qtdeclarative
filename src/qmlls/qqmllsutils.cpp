@@ -391,47 +391,6 @@ QList<ItemLocation> itemsFromTextLocation(const DomItem &file, int line, int cha
     return filtered;
 }
 
-DomItem baseObject(const DomItem &object)
-{
-    DomItem prototypes;
-    DomItem qmlObject = object.qmlObject();
-    // object is (or is inside) an inline component definition
-    if (object.internalKind() == DomType::QmlComponent || !qmlObject) {
-        prototypes = object.component()
-                             .field(Fields::objects)
-                             .index(0)
-                             .field(QQmlJS::Dom::Fields::prototypes);
-    } else {
-        // object is (or is inside) a QmlObject
-        prototypes = qmlObject.field(QQmlJS::Dom::Fields::prototypes);
-    }
-    switch (prototypes.indexes()) {
-    case 0:
-        return {};
-    case 1:
-        break;
-    default:
-        qDebug() << "Multiple prototypes found for " << object.name() << ", taking the first one.";
-        break;
-    }
-    QQmlJS::Dom::DomItem base = prototypes.index(0).proceedToScope();
-    return base;
-}
-
-static std::optional<Location> locationFromDomItem(const DomItem &item, FileLocationRegion region)
-{
-    auto tree = FileLocations::treeOf(item);
-    // tree is null for C++ defined types, for example
-    if (!tree)
-        return {};
-
-    QQmlJS::SourceLocation sourceLocation = FileLocations::region(tree, region);
-    if (!sourceLocation.isValid() && region != QQmlJS::Dom::MainRegion)
-        sourceLocation = FileLocations::region(tree, QQmlJS::Dom::MainRegion);
-
-    return Location::tryFrom(item.canonicalFilePath(), sourceLocation, item);
-}
-
 /*!
    \internal
    \brief Returns the location of the type definition pointed by object.

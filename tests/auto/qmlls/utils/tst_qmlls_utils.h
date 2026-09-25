@@ -64,9 +64,6 @@ private slots:
     void findLocationOfItem_data();
     void findLocationOfItem();
 
-    void findBaseObject();
-    void findBaseObject_data();
-
     void findUsages();
     void findUsages_data();
 

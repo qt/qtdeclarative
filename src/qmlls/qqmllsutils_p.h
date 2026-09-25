@@ -265,7 +265,6 @@ DomItem sourceLocationToDomItem(const DomItem &file, const QQmlJS::SourceLocatio
 QByteArray lspUriToQmlUrl(const QByteArray &uri);
 QByteArray qmlUrlToLspUri(const QByteArray &url);
 QLspSpecification::Range qmlLocationToLspLocation(Location qmlLocation);
-DomItem baseObject(const DomItem &qmlObject);
 std::optional<Location> findTypeDefinitionOf(const DomItem &item);
 QList<Location> findDefinitionOf(const DomItem &item, const QStringList &headerDirectories);
 Usages findUsagesOf(const DomItem &item);
