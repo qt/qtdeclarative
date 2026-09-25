@@ -969,19 +969,6 @@ bool DomItem::resolve(const Path &path, DomItem::Visitor visitor, const ErrorHan
                     if (domKind() != DomKind::Object)
                         it = it.containingObject();
                     break;
-                case PathCurrent::ObjChain: {
-                    bool cont = it.visitPrototypeChain(
-                            [&toDos, iPath](const DomItem &subEl) {
-                                toDos.append({ subEl, iPath });
-                                return true;
-                            },
-                            VisitPrototypesOption::Normal, errorHandler, nullptr,
-                            visitedRefs); // avoid passing visitedRefs?
-                    if (!cont)
-                        return false;
-                    branchExhausted = true;
-                    break;
-                }
                 case PathCurrent::ScopeChain: {
                     bool cont = it.visitScopeChain(
                             [&toDos, iPath](const DomItem &subEl) {
@@ -2776,7 +2763,6 @@ bool Reference::shouldCache() const
             case PathCurrent::Lookup:
             case PathCurrent::LookupDynamic:
             case PathCurrent::LookupStrict:
-            case PathCurrent::ObjChain:
             case PathCurrent::ScopeChain:
                 return true;
             default:
