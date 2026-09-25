@@ -1818,8 +1818,6 @@ bool MethodInfo::iterateDirectSubpaths(const DomItem &self, DirectVisitor visito
     cont = cont && self.invokeVisitorOnField(visitor, Fields::parameters, parameters);
     cont = cont && self.invokeVisitorOnValue(visitor, PathEls::Field(Fields::methodType),
                                          int(methodType));
-    if (!typeName.isEmpty())
-        cont = cont && self.invokeVisitorOnReference(visitor, Fields::type, typePath(self));
     if (methodType == MethodType::Method) {
         cont = cont && self.invokeVisitorOnValue(visitor, PathEls::Field(Fields::isConstructor),
                                              isConstructor);
@@ -1920,8 +1918,6 @@ bool MethodParameter::iterateDirectSubpaths(const DomItem &self, DirectVisitor v
     bool cont = true;
     cont = cont && self.invokeVisitorOnValue(visitor, PathEls::Field(Fields::name), name);
     if (!typeName.isEmpty()) {
-        cont = cont && self.invokeVisitorOnReference(visitor, Fields::type,
-                                                 Paths::lookupTypePath(typeName));
         cont = cont && self.invokeVisitorOnValue(visitor, PathEls::Field(Fields::typeName), typeName);
     }
     cont = cont && self.invokeVisitorOnValue(visitor, PathEls::Field(Fields::isPointer), isPointer);

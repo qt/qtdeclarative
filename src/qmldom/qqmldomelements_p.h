@@ -636,7 +636,6 @@ public:
         cont = cont && self.invokeVisitorOnValue(visitor, PathEls::Field(Fields::write), write);
         cont = cont && self.invokeVisitorOnValue(visitor, PathEls::Field(Fields::bindable), bindable);
         cont = cont && self.invokeVisitorOnValue(visitor, PathEls::Field(Fields::notify), notify);
-        cont = cont && self.invokeVisitorOnReference(visitor, Fields::type, typePath());
         if (m_nameIdentifiers) {
             cont = cont && visitor(PathEls::Field(Fields::nameIdentifiers), [this, &self]() {
                        return self.subScriptElementWrapperItem(m_nameIdentifiers);
@@ -644,8 +643,6 @@ public:
         }
         return cont;
     }
-
-    Path typePath() const { return Paths::lookupTypePath(typeName); }
 
     bool isAlias() const { return typeName == u"alias"; }
     bool isParametricType() const;
@@ -720,11 +717,6 @@ public:
     Q_ENUM(MethodType)
 
     constexpr static DomType kindValue = DomType::MethodInfo;
-
-    Path typePath(const DomItem &) const
-    {
-        return (typeName.isEmpty() ? Path() : Paths::lookupTypePath(typeName));
-    }
 
     bool iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const;
     void writePre(const DomItem &self, OutWriter &ow) const;
