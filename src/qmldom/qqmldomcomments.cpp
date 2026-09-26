@@ -535,7 +535,7 @@ public:
 
     bool visit(CallExpression *call) override
     {
-        addSourceLocations(call, call->lparenToken);
+        addSourceLocations(call, call->optionalToken);
         addSourceLocations(call, call->lparenToken);
         addSourceLocations(call, call->rparenToken);
         return true;
