@@ -45,11 +45,6 @@ public:
 
     QStringView comment() const { return rawComment.mid(commentBegin, commentEnd - commentBegin); }
 
-    QStringView commentContent() const
-    {
-        return rawComment.mid(commentContentBegin, commentContentEnd - commentContentEnd);
-    }
-
     QStringView postWhitespace() const
     {
         return rawComment.mid(commentEnd, rawComment.size() - commentEnd);
