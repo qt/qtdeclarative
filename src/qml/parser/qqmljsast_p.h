@@ -132,10 +132,9 @@ public:
         Kind_DefaultClause,
         Kind_DeleteExpression,
         Kind_DoWhileStatement,
-        Kind_ElementList,
         Kind_Elision,
         Kind_EmptyStatement,
-        Kind_Expression,
+        Kind_CommaExpression,
         Kind_ExpressionStatement,
         Kind_FalseLiteral,
         Kind_SuperLiteral,
@@ -144,7 +143,6 @@ public:
         Kind_ForEachStatement,
         Kind_ForStatement,
         Kind_FormalParameterList,
-        Kind_FunctionBody,
         Kind_FunctionDeclaration,
         Kind_FunctionExpression,
         Kind_ClassExpression,
@@ -162,7 +160,7 @@ public:
         Kind_ImportClause,
         Kind_FromClause,
         Kind_ImportDeclaration,
-        Kind_Module,
+        Kind_ESModule,
         Kind_ExportSpecifier,
         Kind_ExportsList,
         Kind_ExportClause,
@@ -180,10 +178,7 @@ public:
         Kind_PreDecrementExpression,
         Kind_PreIncrementExpression,
         Kind_Program,
-        Kind_PropertyDefinitionList,
-        Kind_PropertyGetterSetter,
         Kind_PropertyName,
-        Kind_PropertyNameAndValue,
         Kind_RegExpLiteral,
         Kind_ReturnStatement,
         Kind_StatementList,
@@ -214,7 +209,6 @@ public:
         Kind_PatternProperty,
         Kind_PatternPropertyList,
         Kind_Type,
-        Kind_TypeArgument,
         Kind_TypeAnnotation,
 
         Kind_UiArrayBinding,
@@ -1675,7 +1669,7 @@ public:
 class QML_PARSER_EXPORT CommaExpression: public ExpressionNode
 {
 public:
-    QQMLJS_DECLARE_AST_NODE(Expression)
+    QQMLJS_DECLARE_AST_NODE(CommaExpression)
 
     CommaExpression(ExpressionNode *l, ExpressionNode *r):
         left (l), right (r) { kind = K; }
@@ -3036,7 +3030,7 @@ public:
 class QML_PARSER_EXPORT ESModule: public Node
 {
 public:
-    QQMLJS_DECLARE_AST_NODE(Module)
+    QQMLJS_DECLARE_AST_NODE(ESModule)
 
     ESModule(StatementList *body)
         : body(body)

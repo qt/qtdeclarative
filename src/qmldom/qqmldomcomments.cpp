@@ -596,17 +596,14 @@ const QSet<int> AstRangesVisitor::kindsToSkip()
 {
     static QSet<int> res = QSet<int>({
                                              AST::Node::Kind_ArgumentList,
-                                             AST::Node::Kind_ElementList,
                                              AST::Node::Kind_FormalParameterList,
                                              AST::Node::Kind_ImportsList,
                                              AST::Node::Kind_ExportsList,
-                                             AST::Node::Kind_PropertyDefinitionList,
                                              AST::Node::Kind_StatementList,
                                              AST::Node::Kind_VariableDeclarationList,
                                              AST::Node::Kind_ClassElementList,
                                              AST::Node::Kind_PatternElementList,
                                              AST::Node::Kind_PatternPropertyList,
-                                             AST::Node::Kind_TypeArgument,
                                      })
                                    .unite(VisitAll::uiKinds());
     return res;
