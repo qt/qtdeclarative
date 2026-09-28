@@ -208,9 +208,15 @@ void tst_QQuickLoader::sourceOrComponent_data()
 
     QTest::newRow("source") << "source" << "source: 'Rect120x60.qml'\n" << QUrl("Rect120x60.qml") << "";
     QTest::newRow("source with subdir") << "source" << "source: 'subdir/Test.qml'\n" << QUrl("subdir/Test.qml") << "";
-    QTest::newRow("source with encoded subdir literal") << "source" << "source: 'subdir%2fTest.qml'\n" << QUrl("subdir%2FTest.qml") << "";
-    QTest::newRow("source with encoded subdir optimized binding") << "source" << "source: 'subdir' + '%2fTest.qml'\n" << QUrl("subdir%2FTest.qml") << "";
-    QTest::newRow("source with encoded subdir binding") << "source" << "source: encodeURIComponent('subdir/Test.qml')\n" << QUrl("subdir%2FTest.qml") << "";
+
+    // An encoded slash is not a directory separator and can't be part of a local file name.
+    const QString encodedSubdirError = dataDirectoryUrl().resolved(QUrl("subdir%2FTest.qml")).toString()
+            + QLatin1String(": URL cannot be represented as a local file: "
+                            "unexpected NUL or percent-encoded directory separator "
+                            "(%2F, or %5C on Windows).");
+    QTest::newRow("source with encoded subdir literal") << "source" << "source: 'subdir%2fTest.qml'\n" << QUrl("subdir%2FTest.qml") << encodedSubdirError;
+    QTest::newRow("source with encoded subdir optimized binding") << "source" << "source: 'subdir' + '%2fTest.qml'\n" << QUrl("subdir%2FTest.qml") << encodedSubdirError;
+    QTest::newRow("source with encoded subdir binding") << "source" << "source: encodeURIComponent('subdir/Test.qml')\n" << QUrl("subdir%2FTest.qml") << encodedSubdirError;
     QTest::newRow("sourceComponent") << "component" << "Component { id: comp; Rectangle { width: 100; height: 50 } }\n sourceComponent: comp\n" << QUrl() << "";
     QTest::newRow("invalid source") << "source" << "source: 'IDontExist.qml'\n" << QUrl("IDontExist.qml")
             << QString(testFileUrl("IDontExist.qml").toString() + ": No such file or directory");

@@ -68,6 +68,8 @@ private slots:
     void removeFromCache();
     void addImportPathDuringAsyncLoad();
     void addImportPathFromStatusChanged();
+    void urlNotRepresentableAsLocalFile_data();
+    void urlNotRepresentableAsLocalFile();
 
 private:
     void checkSingleton(const QString & dataDirectory);
@@ -1118,6 +1120,29 @@ void tst_QQMLTypeLoader::addImportPathFromStatusChanged()
     QTRY_VERIFY(callbackInvoked);
     QCOMPARE(comp.status(), QQmlComponent::Ready);
     QVERIFY(engine.importPathList().contains(extraPath));
+}
+
+void tst_QQMLTypeLoader::urlNotRepresentableAsLocalFile_data()
+{
+    QTest::addColumn<QUrl>("url");
+
+    QTest::newRow("encoded slash") << dataDirectoryUrl().resolved(QUrl("subdir%2FSimple.qml"));
+    QTest::newRow("encoded NUL at end") << dataDirectoryUrl().resolved(QUrl("Simple.qml%00"));
+    QTest::newRow("encoded NUL within") << dataDirectoryUrl().resolved(QUrl("Embed%00ded.qml"));
+}
+
+void tst_QQMLTypeLoader::urlNotRepresentableAsLocalFile()
+{
+    QFETCH(QUrl, url);
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine, url);
+    QVERIFY(component.isError());
+    QCOMPARE(component.errors().size(), 1);
+    QCOMPARE(component.errors().first().description(),
+             QLatin1String("URL cannot be represented as a local file: "
+                           "unexpected NUL or percent-encoded directory separator "
+                           "(%2F, or %5C on Windows)."));
 }
 
 QTEST_MAIN(tst_QQMLTypeLoader)

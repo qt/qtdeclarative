@@ -316,21 +316,34 @@ property is only invoked when the property is reassigned to a different object v
     The individual elements that use URLs have to resolve them themselves.
 
     \note When referring to files stored with the \l{resources.html}{Qt Resource System}
-    from within QML, you should use "qrc:///" instead of ":/" as QML requires URL paths.
-    Relative URLs resolved from within that file will use the same protocol.
+    from within QML, you should use "qrc:///" instead of ":/" as QML requires
+    URLs rather than paths. Relative URLs resolved from within that file will
+    use the same scheme.
 
-    Additionally, URLs may contain encoded characters using the 'percent-encoding' scheme
-    specified by \l {https://datatracker.ietf.org/doc/html/rfc3986}{RFC 3986}.  These characters
-    will be preserved within properties of type \c url, to allow QML code to
-    construct precise URL values.
+    \note Additionally, URLs may contain encoded characters using the
+    'percent-encoding' scheme specified by
+    \l {https://datatracker.ietf.org/doc/html/rfc3986}{RFC 3986}. These
+    characters will be preserved within properties of type \c url, to allow QML
+    code to construct precise URL values.
 
     For example, a local file containing a '#' character, which would normally be
     interpreted as the beginning of the URL 'fragment' element, can be accessed by
     encoding the characters of the file name:
 
     \qml
-    Image { source: encodeURIComponent("/tmp/test#1.png") }
+    Image { source: "file:///tmp/" + encodeURIComponent("test#1.png") }
     \endqml
+
+    However, this also holds for slashes, backslashes, and \c nul characters.
+    If you do \c{encodeURIComponent("/tmp/test#1.png")} you get
+    \c{%2Ftmp%2Ftest%231.png}. This is generally not what you want and in
+    particular it is \e not a local file \e path. The encoded slashes are now
+    part of the file \e name and resolving this URL in the context of, say,
+    \c{qrc:/qt/qml/MyModule/Main.qml} results in the following URL:
+    \c{qrc:/qt/qml/MyModule/%2Ftmp%2Ftest%231.png}.
+
+    If you need more control over the construction of URLs, you can use a JavaScript
+    \l{https://developer.mozilla.org/en-US/docs/Web/API/URL}{URL} object.
 
     This value type is provided by the QML language.
 

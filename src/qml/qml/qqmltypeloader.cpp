@@ -303,6 +303,12 @@ void QQmlTypeLoader::loadThread(const QQmlDataBlob::Ptr &blob)
 
     if (QQmlFile::isSynchronous(blob->m_url)) {
         const QString fileName = QQmlFile::urlToLocalFileOrQrc(blob->m_url);
+        if (fileName.isEmpty()) {
+            blob->setError(QLatin1String("URL cannot be represented as a local file: "
+                                         "unexpected NUL or percent-encoded directory separator "
+                                         "(%2F, or %5C on Windows)."));
+            return;
+        }
 
         const bool exists = fileExists(fileName);
         if (!exists && !isResource(fileName) && QFileInfo::exists(fileName)) {
