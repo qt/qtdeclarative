@@ -63,6 +63,8 @@ private slots:
     void implicitWidthRespectsMaximumLineCount();
     void multilineElide_data();
     void multilineElide();
+    void multilineElideAtHardLineBreak_data();
+    void multilineElideAtHardLineBreak();
     void implicitElide_data();
     void implicitElide();
     void textFormat();
@@ -762,6 +764,48 @@ void tst_qquicktext::multilineElide()
     // change line height
     myText->setLineHeight(1.1);
     QCOMPARE(myText->lineCount(), 1);
+}
+
+void tst_qquicktext::multilineElideAtHardLineBreak_data()
+{
+    QTest::addColumn<QQuickText::TextFormat>("format");
+    QTest::addColumn<QString>("text");
+    QTest::addColumn<bool>("limitHeight");
+
+    const QString plain = QStringLiteral("one\ntwo\nthree\nfour\nfive");
+    const QString styled = QStringLiteral("one<br>two<br>three<br>four<br>five");
+    QTest::newRow("plain, maximumLineCount") << QQuickText::PlainText << plain << false;
+    QTest::newRow("styled, maximumLineCount") << QQuickText::StyledText << styled << false;
+    QTest::newRow("plain, height") << QQuickText::PlainText << plain << true;
+    QTest::newRow("styled, height") << QQuickText::StyledText << styled << true;
+}
+
+void tst_qquicktext::multilineElideAtHardLineBreak()
+{
+    // QTBUG-150879: The remaining text fits the width, but it's on following lines.
+    QFETCH(QQuickText::TextFormat, format);
+    QFETCH(QString, text);
+    QFETCH(bool, limitHeight);
+
+    QQuickText item;
+    item.setTextFormat(format);
+    item.setText(text);
+    item.setElideMode(QQuickText::ElideRight);
+    item.setWidth(300);
+    item.componentComplete();
+
+    const qreal lineHeight = item.contentHeight() / 5;
+    if (limitHeight)
+        item.setHeight(lineHeight * 3.5);
+    else
+        item.setMaximumLineCount(3);
+
+    QCOMPARE(item.lineCount(), 3);
+    QVERIFY(item.truncated());
+
+    QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(&item);
+    QVERIFY(textPrivate->elideLayout);
+    QCOMPARE(textPrivate->elideLayout->text(), u"three"_s + QQuickTextPrivate::elideChar);
 }
 
 void tst_qquicktext::implicitElide_data()
