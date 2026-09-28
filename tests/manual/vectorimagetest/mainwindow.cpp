@@ -59,6 +59,7 @@ MainWindow::MainWindow(QWidget *parent)
     m_settings = new QSettings(QStringLiteral("org.qtproject"), QStringLiteral("svg-test"), this);
 
     connect(ui->cbCurrentDir, &QComboBox::currentTextChanged, this, &MainWindow::loadDirectory);
+    connect(ui->cbCurrentDir, &QComboBox::textActivated, this, &MainWindow::updateCurrentDir);
     QStringList list = m_settings->value(QStringLiteral("directories")).toString().split(QLatin1Char(','));
     setDirList(list);
 

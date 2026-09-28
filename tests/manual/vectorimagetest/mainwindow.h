@@ -39,9 +39,9 @@ private slots:
     void vectorImageSizeUpdated();
     void updatePlayButton();
     void togglePlaying();
+    void updateCurrentDir(const QString &newDir);
 
 private:
-    void updateCurrentDir(const QString &newDir);
     void setDirList(const QStringList &list);
     void setScale(const int scale);
 
