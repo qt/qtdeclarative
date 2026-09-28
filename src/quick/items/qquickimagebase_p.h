@@ -126,6 +126,7 @@ protected:
     virtual void load();
     void componentComplete() override;
     virtual void pixmapChange();
+    void reloadIfTransientImageDropped();
     void itemChange(ItemChange change, const ItemChangeData &value) override;
     void updatePolish() override;
     QQuickImageBase(QQuickImageBasePrivate &dd, QQuickItem *parent);

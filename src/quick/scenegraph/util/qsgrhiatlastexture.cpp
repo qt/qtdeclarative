@@ -80,6 +80,8 @@ void Manager::invalidate()
 QSGTexture *Manager::create(const QImage &image, bool hasAlphaChannel)
 {
     Texture *t = nullptr;
+    if (image.isNull())
+        return t;
     if (image.width() < m_atlas_size_limit && image.height() < m_atlas_size_limit) {
         if (!m_atlas)
             m_atlas = new Atlas(m_rc, m_atlas_size);

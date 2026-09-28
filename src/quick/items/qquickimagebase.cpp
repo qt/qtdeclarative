@@ -374,6 +374,31 @@ void QQuickImageBase::load()
     }
 }
 
+// Optional, but needs to be called from updatePaintNode() for full
+// QSG_TRANSIENT_IMAGES support, when no texture could be created for the
+// current pixmap. With QSG_TRANSIENT_IMAGES set, the image data is released
+// after uploading it into a texture once. When the texture is needed again, for
+// example because the item is shown in another window, or because the scene
+// graph got invalidated, the image must be loaded again.
+void QQuickImageBase::reloadIfTransientImageDropped()
+{
+    Q_D(QQuickImageBase);
+    if (d->status == Loading
+        || !d->currentPix->hasDroppedTransientImage()
+        || d->url.scheme() == QQuickPixmap::itemGrabberScheme)
+    {
+        return;
+    }
+
+    QMetaObject::invokeMethod(this, [this] {
+        Q_D(QQuickImageBase);
+        if (d->status == Loading || !d->currentPix->hasDroppedTransientImage())
+            return;
+        d->currentPix->removeDroppedTransientImageFromCache();
+        load();
+    }, Qt::QueuedConnection);
+}
+
 void QQuickImageBase::requestFinished()
 {
     Q_D(QQuickImageBase);

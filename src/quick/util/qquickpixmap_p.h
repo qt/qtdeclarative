@@ -39,11 +39,15 @@ public:
     QSGTexture *createTexture(QQuickWindow *window) const override;
     QSize textureSize() const override { return size; }
     int textureByteCount() const override { return size.width() * size.height() * 4; }
-    QImage image() const override { return im; }
+    QImage image() const override;
+
+    bool isImageDropped() const;
 
 private:
-    QImage im;
+    mutable QMutex mutex;
+    mutable QImage im;
     QSize size;
+    mutable bool imageDropped = false;
 };
 
 class QQuickImageProviderPrivate
@@ -140,6 +144,8 @@ public:
     QColorSpace colorSpace() const;
 
     QQuickTextureFactory *textureFactory() const;
+    bool hasDroppedTransientImage() const;
+    void removeDroppedTransientImageFromCache();
 
     QRect rect() const;
     int width() const;

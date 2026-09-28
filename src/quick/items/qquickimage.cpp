@@ -702,7 +702,10 @@ QSGTextureProvider *QQuickImage::textureProvider() const
         dd->provider = new QQuickImageTextureProvider;
         dd->provider->m_smooth = d->smooth;
         dd->provider->m_mipmap = d->mipmap;
-        dd->provider->updateTexture(d->sceneGraphRenderContext()->textureForFactory(d->currentPix->textureFactory(), window()));
+        QSGTexture *texture = d->sceneGraphRenderContext()->textureForFactory(d->currentPix->textureFactory(), window());
+        if (!texture)
+            const_cast<QQuickImage *>(this)->reloadIfTransientImageDropped();
+        dd->provider->updateTexture(texture);
     }
 
     return d->provider;
@@ -729,6 +732,8 @@ QSGNode *QQuickImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
     Q_D(QQuickImage);
 
     QSGTexture *texture = d->sceneGraphRenderContext()->textureForFactory(d->currentPix->textureFactory(), window());
+    if (!texture)
+        reloadIfTransientImageDropped();
 
     // Copy over the current texture state into the texture provider...
     if (d->provider) {

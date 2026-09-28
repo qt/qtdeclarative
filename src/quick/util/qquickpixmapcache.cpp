@@ -137,11 +137,28 @@ QQuickDefaultTextureFactory::QQuickDefaultTextureFactory(const QImage &image)
 
 QSGTexture *QQuickDefaultTextureFactory::createTexture(QQuickWindow *window) const
 {
-    QSGTexture *t = window->createTextureFromImage(im, QQuickWindow::TextureCanUseAtlas);
     static bool transient = qEnvironmentVariableIsSet("QSG_TRANSIENT_IMAGES");
-    if (transient)
-        const_cast<QQuickDefaultTextureFactory *>(this)->im = QImage();
+    QMutexLocker locker(&mutex);
+    if (imageDropped) // due to QSG_TRANSIENT_IMAGES
+        return nullptr;
+    QSGTexture *t = window->createTextureFromImage(im, QQuickWindow::TextureCanUseAtlas);
+    if (transient && t) {
+        im = QImage();
+        imageDropped = true;
+    }
     return t;
+}
+
+QImage QQuickDefaultTextureFactory::image() const
+{
+    QMutexLocker locker(&mutex);
+    return im;
+}
+
+bool QQuickDefaultTextureFactory::isImageDropped() const
+{
+    QMutexLocker locker(&mutex);
+    return imageDropped;
 }
 
 class QQuickPixmapReader;
@@ -372,6 +389,12 @@ public:
     void release(QQuickPixmapCache *store = nullptr);
     void addToCache();
     void removeFromCache(QQuickPixmapCache *store = nullptr);
+
+    bool hasDroppedTransientImage() const
+    {
+        auto *factory = qobject_cast<QQuickDefaultTextureFactory *>(textureFactory);
+        return factory && factory->isImageDropped();
+    }
 
     uint refCount;
     int frameCount;
@@ -1805,6 +1828,19 @@ QQuickTextureFactory *QQuickPixmap::textureFactory() const
         return d->textureFactory;
 
     return nullptr;
+}
+
+bool QQuickPixmap::hasDroppedTransientImage() const
+{
+    return d && d->hasDroppedTransientImage();
+}
+
+void QQuickPixmap::removeDroppedTransientImageFromCache()
+{
+    if (d && d->hasDroppedTransientImage()) {
+        qCDebug(lcImg) << "removing pixmap with transient image data released from cache" << d->url;
+        d->removeFromCache();
+    }
 }
 
 QImage QQuickPixmap::image() const

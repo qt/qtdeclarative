@@ -556,6 +556,8 @@ QSGTexture *QSGRenderContext::textureForFactory(QQuickTextureFactory *factory, Q
 
     if (!texture) {
         texture = factory->createTexture(window);
+        if (!texture)
+            return nullptr;
 
         m_mutex.lock();
         m_textures.insert(factory, texture);
