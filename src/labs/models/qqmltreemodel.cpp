@@ -683,19 +683,47 @@ int QQmlTreeModel::columnCount(const QModelIndex &parent) const
 bool QQmlTreeModel::validateNewRow(QLatin1StringView functionName, const QVariant &row,
                                    NewRowOperationFlag operation) const
 {
-    const bool isVariantMap = (row.userType() == QMetaType::QVariantMap);
-    const QVariant rowAsVariant = operation == SetRowsOperation || isVariantMap
-        ? row : row.value<QJSValue>().toVariant();
-    const QVariantMap rowAsMap = rowAsVariant.toMap();
-    if (rowAsMap.contains(ROWS_PROPERTY_NAME) && rowAsMap[ROWS_PROPERTY_NAME].userType() == QMetaType::Type::QVariantList)
-    {
-        const QList<QVariant> variantList = rowAsMap[ROWS_PROPERTY_NAME].toList();
-        for (const QVariant &rowAsVariant : variantList)
-            if (!validateNewRow(functionName, rowAsVariant))
-                return false;
-    }
+    // Validates the row and all its descendants, children before their parent,
+    // in the same order as a recursive traversal would, but without recursing
+    // once per level of the nested rows, which can be arbitrarily deep.
+    struct Frame
+     {
+        QVariant row;
+        NewRowOperationFlag operation;
+        QVariantList children;
+        qsizetype nextChild = 0;
+    };
 
-    return QQmlAbstractColumnModel::validateNewRow(functionName, row, operation);
+    std::vector<Frame> pending;
+    const auto push = [&pending](const QVariant &newRow, NewRowOperationFlag newRowOperation) {
+        const bool isVariantMap = (newRow.userType() == QMetaType::QVariantMap);
+        const QVariant rowAsVariant = newRowOperation == SetRowsOperation || isVariantMap
+            ? newRow : newRow.value<QJSValue>().toVariant();
+        const QVariantMap rowAsMap = rowAsVariant.toMap();
+
+        QVariantList children;
+        const auto it = rowAsMap.constFind(ROWS_PROPERTY_NAME);
+        if (it != rowAsMap.cend() && it->userType() == QMetaType::Type::QVariantList)
+            children = it->toList();
+
+        pending.push_back({ newRow, newRowOperation, std::move(children) });
+    };
+
+    push(row, operation);
+    while (!pending.empty()) {
+        Frame &top = pending.back();
+        if (top.nextChild < top.children.size()) {
+            const QVariant child = top.children.at(top.nextChild++);
+            push(child, OtherOperation); // invalidates top
+            continue;
+        }
+
+        if (!QQmlAbstractColumnModel::validateNewRow(functionName, top.row, top.operation))
+            return false;
+        pending.pop_back();
+     }
+
+    return true;
 }
 
 int QQmlTreeModel::treeSize() const

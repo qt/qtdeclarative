@@ -46,6 +46,7 @@ private slots:
     void destroyDeepTree();
     void buildNestedRows();
     void exportNestedRows();
+    void validateNestedRows();
 };
 
 void tst_QQmlTreeModel::appendToEmptyModel()
@@ -1791,9 +1792,11 @@ static QVariantMap nestedFruitRows(int levels)
 }
 
 // Nested row data comes as a nested QVariant. QtCore copies, compares and
-// destroys nested QVariants recursively, so tests using them stay well within
-// what QtCore itself handles on small stacks.
-static constexpr int NestedRowsDepth = 1'000;
+// destroys nested QVariants recursively, and rows set from JavaScript are
+// converted by QJSValue::toVariant(), which stops at the engine's stack
+// limit (about 370 levels on QNX). So tests using them stay well within
+// both limits.
+static constexpr int NestedRowsDepth = 100;
 
 void tst_QQmlTreeModel::buildNestedRows()
 {
@@ -1834,6 +1837,37 @@ void tst_QQmlTreeModel::exportNestedRows()
     const QVariantList rows = model->rows().toList();
     QCOMPARE(rows.size(), initialRowCount + 1);
     QCOMPARE(rows.first(), QVariant(nested));
+}
+
+void tst_QQmlTreeModel::validateNestedRows()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("deepNesting.qml"));
+    std::unique_ptr<QObject> root(component.create());
+    QVERIFY2(root, qPrintable(component.errorString()));
+    auto *model = root->property("testModel").value<QQmlTreeModel *>();
+    QVERIFY(model);
+    QSignalSpy rowsChangedSpy(model, SIGNAL(rowsChanged()));
+    QVERIFY(rowsChangedSpy.isValid());
+
+    // The model already has rows, so these are validated, from JavaScript.
+    QVERIFY(QMetaObject::invokeMethod(root.get(), "setRowsWithDepth",
+                                      Q_ARG(QVariant, NestedRowsDepth)));
+    QCOMPARE(rowsChangedSpy.size(), 1);
+    QCOMPARE(model->treeSize(), NestedRowsDepth);
+
+    // An invalid row at the bottom is still found, and the rows are rejected.
+    QVariantMap invalid = fruitRow(NestedRowsDepth);
+    invalid.insert(u"fruitName"_s, QVariantList{}); // not convertible to a string
+    for (int level = NestedRowsDepth - 1; level > 0; --level) {
+        QVariantMap parent = fruitRow(level);
+        parent.insert(u"rows"_s, QVariantList{ invalid });
+        invalid = std::move(parent);
+    }
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".* expected the property named"));
+    model->insertRow(0, QVariant(invalid));
+    QCOMPARE(rowsChangedSpy.size(), 1);
+    QCOMPARE(model->treeSize(), NestedRowsDepth);
 }
 
 QTEST_MAIN(tst_QQmlTreeModel)
