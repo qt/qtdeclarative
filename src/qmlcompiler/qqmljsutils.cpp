@@ -276,10 +276,12 @@ enum FilterType {
 
 /*!
 \internal
-Obtain a QML module qrc entry from its qmldir entry.
+Finds the qrc folder that contains the "root" qmldir file of a QML Module.
 
 Contains a heuristic for QML modules without nested-qml-module-with-prefer-feature
 that tries to find a parent directory that contains a qmldir entry in the qrc.
+
+\note This assumes that the build folder structure follows the qrc folder structure.
 */
 static QQmlJSResourceFileMapper::Entry
 qmlModuleEntryFromBuildPath(const QQmlJSResourceFileMapper *mapper,
@@ -311,7 +313,20 @@ qmlModuleEntryFromBuildPath(const QQmlJSResourceFileMapper *mapper,
 
 /*!
 \internal
-Obtains the source folder path from a build folder QML file path via the passed \c mapper.
+Obtains the source path from a build path for a QML file via the passed \c mapper.
+
+We assume here that the QML Module file-structure in the build folder follows the qrc-structure.
+The build folder contains two qrc mappings:
+\list
+    \li A mapping from build folder qmldirs to their qrc paths
+    \li A mapping from source folder .qml files to their qrc paths
+\endlist
+The build folder path is traveled up until a parent folder was found that contains a qmldir file.
+The relative path from the parent folder with the qmldir file to the QML file's build path
+is resolved from the the qrc path of the qmldir obtained from the mapper to obtain the
+absolute qrc path.
+The QML file's source path is obtained by mapping the constructed qrc path back to a
+file system path.
 
 This works on proper QML modules when using the nested-qml-module-with-prefer-feature
 from 6.8 and uses a heuristic when the qmldir with the prefer entry is missing.
@@ -338,6 +353,16 @@ QString qmlSourcePathFromBuildPath(const QQmlJSResourceFileMapper *mapper,
 \internal
 Obtains the source folder path from a build folder QML file path via the passed \c mapper, see also
 \l QQmlJSUtils::qmlSourcePathFromBuildPath.
+
+We assume here that the QML Module file-structure in the build folder follows the qrc-structure.
+The build folder contains two qrc mappings:
+\list
+    \li A mapping from build folder qmldirs to their qrc paths
+    \li A mapping from source folder .qml files to their qrc paths
+\endlist
+The source folder path is first mapped to the .qrc path via the mapper. The .qrc path
+is traveled up until a parent folder containing a qmldir file was found. The build path
+is constructed from the qmldir's build path and the relative qrc path of the QML file.
 */
 QString qmlBuildPathFromSourcePath(const QQmlJSResourceFileMapper *mapper,
                                    const QString &pathInSourceFolder)
