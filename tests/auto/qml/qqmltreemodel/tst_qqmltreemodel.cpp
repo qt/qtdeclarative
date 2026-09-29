@@ -45,6 +45,7 @@ private slots:
     void moveRowsAcrossNodes();
     void destroyDeepTree();
     void buildNestedRows();
+    void exportNestedRows();
 };
 
 void tst_QQmlTreeModel::appendToEmptyModel()
@@ -1811,6 +1812,25 @@ void tst_QQmlTreeModel::buildNestedRows()
     QCOMPARE(model->data(deepest.siblingAtColumn(1), displayRole).toInt(), NestedRowsDepth);
     QCOMPARE(model->data(model->parent(deepest).siblingAtColumn(1), displayRole).toInt(),
              NestedRowsDepth - 1);
+}
+
+void tst_QQmlTreeModel::exportNestedRows()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("deepNesting.qml"));
+    std::unique_ptr<QObject> root(component.create());
+    QVERIFY2(root, qPrintable(component.errorString()));
+    auto *model = root->property("testModel").value<QQmlTreeModel *>();
+    QVERIFY(model);
+    const int initialRowCount = model->rowCount();
+
+    const QVariantMap nested = nestedFruitRows(NestedRowsDepth);
+    model->insertRow(0, QVariant(nested));
+
+    QCOMPARE(model->getRow(model->index(0, 0)), QVariant(nested));
+    const QVariantList rows = model->rows().toList();
+    QCOMPARE(rows.size(), initialRowCount + 1);
+    QCOMPARE(rows.first(), QVariant(nested));
 }
 
 QTEST_MAIN(tst_QQmlTreeModel)

@@ -129,17 +129,40 @@ void QQmlTreeRow::setField(const QString &key, const QVariant &value)
 
 QVariant QQmlTreeRow::toVariant() const
 {
-    QVariantMap variantMap(dataMap);
+    // Recursing into the children would recurse once per level of the tree,
+    // which can be arbitrarily deep. Use an explicit stack instead, in
+    // post-order: a row's variant is complete once the variants of all its
+    // children have been collected.
+    struct Frame
+    {
+        const QQmlTreeRow *row;
+        size_t nextChild = 0;
+        QVariantList children = {};
+    };
 
-    if (!m_children.empty()) {
-        QVariantList children;
-        for (const auto &child : m_children)
-            children.append(child->toVariant());
+    std::vector<Frame> pending;
+    pending.push_back({ this });
 
-        variantMap[ROWS_PROPERTY_NAME] = children;
+    QVariant result;
+    while (!pending.empty()) {
+        Frame &top = pending.back();
+        if (top.nextChild < top.row->m_children.size()) {
+            const QQmlTreeRow *child = top.row->m_children[top.nextChild++].get();
+            pending.push_back({ child }); // invalidates top
+            continue;
+        }
+
+        QVariantMap variantMap(top.row->dataMap);
+        if (!top.row->m_children.empty())
+            variantMap[ROWS_PROPERTY_NAME] = top.children;
+        pending.pop_back(); // invalidates top
+        if (pending.empty())
+            result = variantMap;
+        else
+            pending.back().children.append(QVariant(variantMap));
     }
 
-    return variantMap;
+    return result;
 }
 
 int QQmlTreeRow::subTreeSize() const
