@@ -2113,6 +2113,10 @@ bool QQuickListViewPrivate::flick(AxisData &data, qreal minExtent, qreal maxExte
 
 void QQuickListViewPrivate::setSectionHelper(QQmlContext *context, QQuickItem *sectionItem, const QString &section)
 {
+    // The section item can outlive its context
+    // Skip the update rather than dereference the null context
+    if (!context)
+        return;
     if (!QQmlContextData::get(context)->isInternal() && context->contextProperty(QLatin1String("section")).isValid())
         context->setContextProperty(QLatin1String("section"), section);
     else

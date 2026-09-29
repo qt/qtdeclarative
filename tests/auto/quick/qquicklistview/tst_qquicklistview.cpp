@@ -126,6 +126,7 @@ private slots:
     void sectionsItemInsertion();
     void sectionsFocusChain();
     void removeSectionsOnNonvisibleItems();
+    void orphanedSectionContext();
     void cacheBuffer();
     void positionViewAtBeginningEnd();
     void positionViewAtBeginningWithSections_data();
@@ -2885,6 +2886,49 @@ void tst_QQuickListView::removeSectionsOnNonvisibleItems()
     QMetaObject::invokeMethod(listView, "reloadModel");
     QVERIFY(QQuickTest::qWaitForPolish(listView));
     verifySectionData(listView, ++verifySectionId);
+}
+
+void tst_QQuickListView::orphanedSectionContext()
+{
+    // QTBUG-130819: when the section delegate is bound, section items reuse
+    // the ListView's own context. If that context's parent context is
+    // destroyed, the section items are left with a null parent context, and
+    // setSectionHelper() must not dereference it.
+    QQmlEngine engine;
+    QQmlContext *outerContext = new QQmlContext(engine.rootContext());
+    QQmlContext *innerContext = new QQmlContext(outerContext);
+
+    QQmlComponent component(&engine, testFileUrl("orphanedSectionContext.qml"));
+    QScopedPointer<QObject> root(component.create(innerContext));
+    QVERIFY2(root, qPrintable(component.errorString()));
+    auto *listView = qobject_cast<QQuickListView *>(root.data());
+    QVERIFY(listView != nullptr);
+
+    QQuickWindow window;
+    window.resize(listView->width(), listView->height());
+    listView->setParentItem(window.contentItem());
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+    QTRY_COMPARE_GT(listView->property("sectionCount").toInt(), 0);
+
+    delete outerContext;
+
+    // Any relayout after the context was destroyed calls setSectionHelper()
+    // with a null parent context.
+    QQuickItem *firstSection = nullptr;
+    const QList<QQuickItem *> children = listView->contentItem()->childItems();
+    for (QQuickItem *child : children) {
+        if (qFuzzyCompare(child->y(), qreal(70.0)) && qFuzzyCompare(child->height(), qreal(30.0))
+            && child->isVisible()) {
+            firstSection = child;
+            break;
+        }
+    }
+    QVERIFY(firstSection != nullptr);
+
+    listView->setContentY(800);
+    QTRY_COMPARE(firstSection->isVisible(), false);
 }
 
 void tst_QQuickListView::currentIndex_delayedItemCreation()
