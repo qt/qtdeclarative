@@ -36,6 +36,7 @@ public:
     explicit QQmlTreeRow(QQmlTreeRow *parentItem = nullptr);
     explicit QQmlTreeRow(const QVariant &data, QQmlTreeRow *parentItem = nullptr);
     explicit QQmlTreeRow(const QVariantMap &data, QQmlTreeRow *parentItem = nullptr);
+    ~QQmlTreeRow();
 
     QQmlTreeRow *parent() const { return m_parent; }
     void setParent(QQmlTreeRow *parent) { m_parent = parent; }

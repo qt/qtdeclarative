@@ -29,6 +29,24 @@ QQmlTreeRow::QQmlTreeRow(const QVariantMap &data, QQmlTreeRow *parentItem)
     unpackVariantMap(data);
 }
 
+QQmlTreeRow::~QQmlTreeRow()
+{
+    // Letting m_children destroy the subtree would recurse once per level of
+    // the tree, which can be arbitrarily deep. Detach the children level by
+    // level instead, so that every row is destroyed without any children left.
+    std::vector<std::unique_ptr<QQmlTreeRow>> pending = std::move(m_children);
+    m_children.clear();
+
+    while (!pending.empty()) {
+        std::unique_ptr<QQmlTreeRow> row = std::move(pending.back());
+        pending.pop_back();
+
+        for (auto &child : row->m_children)
+            pending.push_back(std::move(child));
+        row->m_children.clear();
+    }
+}
+
 void QQmlTreeRow::addChild(QQmlTreeRow *child)
 {
     m_children.push_back(std::unique_ptr<QQmlTreeRow>(child));

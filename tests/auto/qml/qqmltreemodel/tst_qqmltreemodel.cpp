@@ -43,6 +43,7 @@ private slots:
     void insertRowEmptyModel();
     void moveRows();
     void moveRowsAcrossNodes();
+    void destroyDeepTree();
 };
 
 void tst_QQmlTreeModel::appendToEmptyModel()
@@ -1718,6 +1719,58 @@ void tst_QQmlTreeModel::moveRowsAcrossNodes()
     QCOMPARE(model->treeSize(), 28);
     QCOMPARE(model->data(model->index({0, 0}, 0), roleNames.key("display")).toString(), "[0,0]");
     QCOMPARE(model->data(model->index({0, 1}, 0), roleNames.key("display")).toString(), "[0,1]");
+}
+
+static QVariantMap fruitRow(int level)
+{
+    return {
+        { u"checked"_s, false },
+        { u"amount"_s, level },
+        { u"fruitType"_s, u"Fruit"_s },
+        { u"fruitName"_s, u"Level %1"_s.arg(level) },
+        { u"fruitPrice"_s, 1.5 },
+        { u"color"_s, u"green"_s },
+    };
+}
+
+// Inserts a chain of `depth` rows at the top of the model, one shallow row at
+// a time, so that no deeply nested QVariant is involved. Returns the deepest row.
+static QModelIndex insertChain(QQmlTreeModel *model, int depth)
+{
+    model->insertRow(0, QVariant(fruitRow(1)));
+    QModelIndex deepest = model->index(0, 0);
+    for (int level = 2; level <= depth; ++level) {
+        model->insertRow(0, deepest, QVariant(fruitRow(level)));
+        deepest = model->index(0, 0, deepest);
+    }
+    return deepest;
+}
+
+// Deep enough to exhaust the default stack of any platform if a function
+// walking the whole tree recursed once per level.
+static constexpr int DeepTreeDepth = 200'000;
+
+void tst_QQmlTreeModel::destroyDeepTree()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("deepNesting.qml"));
+    std::unique_ptr<QObject> root(component.create());
+    QVERIFY2(root, qPrintable(component.errorString()));
+    auto *model = root->property("testModel").value<QQmlTreeModel *>();
+    QVERIFY(model);
+    const int initialRowCount = model->rowCount();
+
+    const QModelIndex deepest = insertChain(model, DeepTreeDepth);
+    QVERIFY(deepest.isValid());
+    QCOMPARE(model->index(std::vector<int>(DeepTreeDepth, 0), 0), deepest);
+
+    // Removing the top of the chain destroys the whole subtree.
+    model->removeRow(model->index(0, 0));
+    QCOMPARE(model->rowCount(), initialRowCount);
+
+    // Build it again and leave it for the destructor of the model.
+    QVERIFY(insertChain(model, DeepTreeDepth).isValid());
+    root.reset();
 }
 
 QTEST_MAIN(tst_QQmlTreeModel)
