@@ -422,7 +422,8 @@ void QQmlTreeModel::doInsert(const QModelIndex &parent, int rowIndex, const QVar
 
     qCDebug(lcTreeModel).nospace() << "inserted the following row to the row "
         << parent << " at index "
-        << rowIndex << ":\n" << data.toMap();
+        << rowIndex << " (child rows omitted):\n"
+        << [&data] { QVariantMap map = data.toMap(); map.remove(ROWS_PROPERTY_NAME); return map; }();
 
     // Gather metadata the first time a row is added.
     if (mColumnMetadata.isEmpty())
