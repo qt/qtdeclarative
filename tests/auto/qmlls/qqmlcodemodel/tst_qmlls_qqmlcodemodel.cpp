@@ -672,17 +672,19 @@ void tst_qmlls_qqmlcodemodel::withQmllsBuildIni()
     // sanity check
     QCOMPARE_NE(domItemA, domItemB);
 
-    auto loadedQmldir = [](const DomItem &item) {
-        return item[Fields::components]
-                .key(QString())
-                .index(0)[Fields::objects]
-                .index(0)[Fields::prototypes]
-                .index(0)[Fields::get][Fields::uri]
-                .value()
-                .toString();
+    auto compareBaseTypePath = [](const DomItem &item, const QString &baseTypePath) {
+        auto scope = item[Fields::components]
+                             .key(QString())
+                             .index(0)[Fields::objects]
+                             .index(0)
+                             .nearestSemanticScope();
+        QVERIFY(scope);
+        auto base = scope->baseType();
+        QVERIFY(base);
+        QCOMPARE(base->filePath(), baseTypePath);
     };
-    QCOMPARE(loadedQmldir(domItemA), "\"%1\""_L1.arg(importPathA + "MyModule/qmldir"_L1));
-    QCOMPARE(loadedQmldir(domItemB), "\"%1\""_L1.arg(importPathB + "MyModule/qmldir"_L1));
+    compareBaseTypePath(domItemA, importPathA + "MyModule/MyItem.qml"_L1);
+    compareBaseTypePath(domItemB, importPathB + "MyModule/MyItem.qml"_L1);
 }
 
 void tst_qmlls_qqmlcodemodel::updateQmllsBuildIni()
@@ -810,17 +812,18 @@ void tst_qmlls_qqmlcodemodel::withQmllsBuildIniWithoutRootUrls()
 
     DomItem domItemA = manager.snapshotByUrl(fileUrl).validDoc;
 
-    auto loadedQmldir = [](const DomItem &item) {
-        return item[Fields::components]
-                .key(QString())
-                .index(0)[Fields::objects]
-                .index(0)[Fields::prototypes]
-                .index(0)[Fields::get][Fields::uri]
-                .value()
-                .toString();
+    auto compareBaseTypePath = [](const DomItem &item, const QString &baseTypePath) {
+        auto scope = item[Fields::components]
+                             .key(QString())
+                             .index(0)[Fields::objects]
+                             .index(0)
+                             .nearestSemanticScope();
+        QVERIFY(scope);
+        auto base = scope->baseType();
+        QVERIFY(base);
+        QCOMPARE(base->filePath(), baseTypePath);
     };
-    QCOMPARE(loadedQmldir(domItemA),
-             "\"%1\""_L1.arg(testFile("twoWorkspaces/ImportPathA/MyModule/qmldir")));
+    compareBaseTypePath(domItemA, testFile("twoWorkspaces/ImportPathA/MyModule/MyItem.qml"));
 }
 
 void tst_qmlls_qqmlcodemodel::shortestRootUrlForFile()
