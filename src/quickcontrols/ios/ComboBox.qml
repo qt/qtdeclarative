@@ -28,6 +28,8 @@ T.ComboBox {
     rightPadding: padding + (control.mirrored || !indicator || !indicator.visible ? 0 : indicator.width + spacing)
 
     delegate: MenuItem {
+        id: menuItem
+
         width: ListView.view.width
         text: model[control.textRole]
         palette.text: control.palette.text
@@ -45,19 +47,19 @@ T.ComboBox {
         background: Item {
             implicitHeight: 44
             NinePatchImage {
-                y: isLastItem ? -1 : 0
+                y: menuItem.isLastItem ? -1 : 0
                 width: parent.width
-                height: isLastItem ? parent.height + 1 : parent.height
-                rotation: isLastItem ? 180 : 0
-                visible: !(isSingleItem && !control.delegate.pressed)
+                height: menuItem.isLastItem ? parent.height + 1 : parent.height
+                rotation: menuItem.isLastItem ? 180 : 0
+                visible: !(menuItem.isSingleItem && !control.delegate.pressed)
                 source: IOS.url + "menuitem-background"
                 NinePatchImageSelector on source {
                     states: [
-                        {"edge": isFirstItem || isLastItem },
-                        {"single": isSingleItem},
+                        {"edge": menuItem.isFirstItem || menuItem.isLastItem },
+                        {"single": menuItem.isSingleItem},
                         {"light": Application.styleHints.colorScheme === Qt.Light},
                         {"dark": Application.styleHints.colorScheme === Qt.Dark},
-                        {"pressed": down}
+                        {"pressed": menuItem.down}
                     ]
                 }
             }
