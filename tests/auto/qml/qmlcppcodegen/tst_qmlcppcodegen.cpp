@@ -207,6 +207,8 @@ private slots:
     void listOfInlineComponent();
     void listPropertyAsModel();
     void listToString();
+    void lostContextObject_data();
+    void lostContextObject();
     void lotsOfRegisters();
     void math();
     void mathMinMax();
@@ -3947,6 +3949,47 @@ void tst_QmlCppCodegen::listToString()
     QTest::ignoreMessage(QtDebugMsg, "[a,b]");
 
     std::unique_ptr<QObject> o(c.create());
+}
+
+void tst_QmlCppCodegen::lostContextObject_data()
+{
+    QTest::addColumn<bool>("onScopeObject");
+    QTest::newRow("scope object") << true;
+    QTest::newRow("context object") << false;
+}
+
+void tst_QmlCppCodegen::lostContextObject()
+{
+    QFETCH(bool, onScopeObject);
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/lostContextObject.qml"_s));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    std::unique_ptr<QObject> root(component.create());
+    QVERIFY(root);
+
+    QObject *inner = root->property("inner").value<QObject *>();
+    QVERIFY(inner);
+    QObject *child = inner->property("child").value<QObject *>();
+    QVERIFY(child);
+
+    // The child outlives its context object, like a control's background.
+    child->setParent(root.get());
+
+    QJSValue read = engine.newQObject(onScopeObject ? inner : child).property(u"read"_s);
+    QVERIFY(read.isCallable());
+
+    // Populate the lookups.
+    QTest::ignoreMessage(QtWarningMsg, "continued");
+    QCOMPARE(read.call().toInt(), 5);
+
+    delete inner;
+
+    // Reading the value of the lost object throws. The function must not continue.
+    QTest::failOnWarning("continued");
+    const QJSValue result = read.call();
+    QVERIFY(result.isError());
+    QCOMPARE(result.errorType(), QJSValue::ReferenceError);
 }
 
 void tst_QmlCppCodegen::lotsOfRegisters()

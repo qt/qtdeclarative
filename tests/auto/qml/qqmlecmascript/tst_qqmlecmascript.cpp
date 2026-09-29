@@ -451,6 +451,8 @@ private slots:
     void namedFunctionExpressionOwnNameIsShadowable();
     void cuObjectIndex();
     void vmeMetaObjectAccessors();
+    void deletedContextObjectProperty_data();
+    void deletedContextObjectProperty();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -10979,6 +10981,61 @@ void tst_qqmlecmascript::vmeMetaObjectAccessors()
 
     // Verify parentVMEMetaObject accessor is available.
     vme->parentVMEMetaObject();
+}
+
+void tst_qqmlecmascript::deletedContextObjectProperty_data()
+{
+    QTest::addColumn<bool>("onScopeObject");
+    QTest::addColumn<QString>("function");
+    QTest::addColumn<QVariant>("expected");
+    QTest::addColumn<bool>("cached");
+
+    for (const bool cached : { false, true }) {
+        const char *suffix = cached ? " cached" : "";
+        QTest::addRow("scope object property%s", suffix)
+                << true << u"readValue"_s << QVariant(5) << cached;
+        QTest::addRow("scope object method%s", suffix)
+                << true << u"callMethod"_s << QVariant(7) << cached;
+        QTest::addRow("context object property%s", suffix)
+                << false << u"readValue"_s << QVariant(5) << cached;
+        QTest::addRow("context object method%s", suffix)
+                << false << u"callMethod"_s << QVariant(7) << cached;
+    }
+}
+
+void tst_qqmlecmascript::deletedContextObjectProperty()
+{
+    QFETCH(bool, onScopeObject);
+    QFETCH(QString, function);
+    QFETCH(QVariant, expected);
+    QFETCH(bool, cached);
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("deletedContextObjectProperty.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY(root);
+
+    QObject *inner = root->property("inner").value<QObject *>();
+    QVERIFY(inner);
+    QObject *child = inner->property("child").value<QObject *>();
+    QVERIFY(child);
+
+    // Like a control's background, the child is not a QObject child of its context object. It is
+    // not marked as deleted along with it, and its functions can still run after the context has
+    // lost its context object.
+    child->setParent(root.data());
+
+    QJSValue fn = engine.newQObject(onScopeObject ? inner : child).property(function);
+    QVERIFY(fn.isCallable());
+    if (cached)
+        QCOMPARE(fn.call().toVariant(), expected);
+
+    // No matter whether the lookup was cached before, the name is not defined anymore.
+    QQmlData::markAsDeleted(inner);
+    const QJSValue result = fn.call();
+    QVERIFY(result.isError());
+    QCOMPARE(result.errorType(), QJSValue::ReferenceError);
 }
 
 QTEST_MAIN(tst_qqmlecmascript)
