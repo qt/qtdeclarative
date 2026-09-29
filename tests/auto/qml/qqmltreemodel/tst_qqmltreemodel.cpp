@@ -44,6 +44,7 @@ private slots:
     void moveRows();
     void moveRowsAcrossNodes();
     void destroyDeepTree();
+    void buildNestedRows();
 };
 
 void tst_QQmlTreeModel::appendToEmptyModel()
@@ -1771,6 +1772,45 @@ void tst_QQmlTreeModel::destroyDeepTree()
     // Build it again and leave it for the destructor of the model.
     QVERIFY(insertChain(model, DeepTreeDepth).isValid());
     root.reset();
+}
+
+// Builds the chain from the innermost row outwards, so no recursion is needed.
+static QVariantMap nestedFruitRows(int levels)
+{
+    QVariantMap row = fruitRow(levels);
+    for (int level = levels - 1; level > 0; --level) {
+        QVariantMap parent = fruitRow(level);
+        parent.insert(u"rows"_s, QVariantList{ row });
+        row = std::move(parent);
+    }
+    return row;
+}
+
+// Nested row data comes as a nested QVariant. QtCore copies, compares and
+// destroys nested QVariants recursively, so tests using them stay well within
+// what QtCore itself handles on small stacks.
+static constexpr int NestedRowsDepth = 1'000;
+
+void tst_QQmlTreeModel::buildNestedRows()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("deepNesting.qml"));
+    std::unique_ptr<QObject> root(component.create());
+    QVERIFY2(root, qPrintable(component.errorString()));
+    auto *model = root->property("testModel").value<QQmlTreeModel *>();
+    QVERIFY(model);
+    const int initialRowCount = model->rowCount();
+
+    model->insertRow(0, QVariant(nestedFruitRows(NestedRowsDepth)));
+    QCOMPARE(model->rowCount(), initialRowCount + 1);
+
+    const QModelIndex deepest = model->index(std::vector<int>(NestedRowsDepth, 0), 0);
+    QVERIFY(deepest.isValid());
+    QCOMPARE(model->rowCount(deepest), 0);
+    const int displayRole = model->roleNames().key("display");
+    QCOMPARE(model->data(deepest.siblingAtColumn(1), displayRole).toInt(), NestedRowsDepth);
+    QCOMPARE(model->data(model->parent(deepest).siblingAtColumn(1), displayRole).toInt(),
+             NestedRowsDepth - 1);
 }
 
 QTEST_MAIN(tst_QQmlTreeModel)
