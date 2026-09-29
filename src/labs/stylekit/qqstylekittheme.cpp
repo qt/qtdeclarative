@@ -67,6 +67,7 @@ static QQuickTheme::Scope scopeForType(QQStyleKitExtendableControlType type)
         return QQuickTheme::ComboBox;
     case QQStyleKitReader::ControlType::GroupBox:
         return QQuickTheme::GroupBox;
+    case QQStyleKitReader::ControlType::HorizontalHeaderViewDelegate:
     case QQStyleKitReader::ControlType::ItemDelegate:
     case QQStyleKitReader::ControlType::TableViewDelegate:
     case QQStyleKitReader::ControlType::VerticalHeaderViewDelegate:

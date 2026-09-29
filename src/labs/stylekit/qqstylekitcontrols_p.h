@@ -45,6 +45,7 @@ class QQStyleKitControls : public QObject, public QQmlParserStatus
     Q_PROPERTY(QQStyleKitControl *dialogButtonBox READ dialogButtonBox WRITE set_dialogButtonBox NOTIFY dialogButtonBoxChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *drawer READ drawer WRITE set_drawer NOTIFY drawerChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *flatButton READ flatButton WRITE set_flatButton NOTIFY flatButtonChanged FINAL)
+    Q_PROPERTY(QQStyleKitControl *horizontalHeaderViewDelegate READ horizontalHeaderViewDelegate WRITE set_horizontalHeaderViewDelegate NOTIFY horizontalHeaderViewDelegateChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *progressBar READ progressBar WRITE set_progressBar NOTIFY progressBarChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *scrollBar READ scrollBar WRITE set_scrollBar NOTIFY scrollBarChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *scrollIndicator READ scrollIndicator WRITE set_scrollIndicator NOTIFY scrollIndicatorChanged FINAL)
@@ -110,6 +111,7 @@ public:
     IMPLEMENT_ACCESSORS(dialogButtonBox)
     IMPLEMENT_ACCESSORS(drawer)
     IMPLEMENT_ACCESSORS(flatButton)
+    IMPLEMENT_ACCESSORS(horizontalHeaderViewDelegate)
     IMPLEMENT_ACCESSORS(progressBar)
     IMPLEMENT_ACCESSORS(scrollBar)
     IMPLEMENT_ACCESSORS(scrollIndicator)
@@ -172,6 +174,7 @@ signals:
     void dialogButtonBoxChanged();
     void drawerChanged();
     void flatButtonChanged();
+    void horizontalHeaderViewDelegateChanged();
     void progressBarChanged();
     void scrollBarChanged();
     void scrollIndicatorChanged();

@@ -291,6 +291,33 @@ ApplicationWindow {
         }
         //! [groupBox]
 
+        //! [horizontalHeaderViewDelegate]
+        horizontalHeaderViewDelegate {
+            text.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+            background {
+                border.width: 1
+                color: "#fafafa"
+            }
+            indicator {
+                color: "transparent"
+                border.width: 0
+                alignment: Qt.AlignRight | Qt.AlignVCenter
+                foreground {
+                    fillWidth: true
+                    fillHeight: true
+                    color: "transparent"
+                    image.color: palette.accent
+                }
+                first {
+                    foreground.image.source: "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/sort-ascending.png"
+                }
+                second {
+                    foreground.image.source: "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/sort-descending.png"
+                }
+            }
+        }
+        //! [horizontalHeaderViewDelegate]
+
         //! [itemDelegate]
         itemDelegate {
             text.alignment: Qt.AlignVCenter | Qt.AlignLeft

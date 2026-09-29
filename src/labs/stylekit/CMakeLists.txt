@@ -49,6 +49,8 @@ qt_internal_add_qml_module(LabsStyleKit
         DialogButtonBox.qml
         Drawer.qml
         Frame.qml
+        HorizontalHeaderView.qml
+        HorizontalHeaderViewDelegate.qml
         ItemDelegate.qml
         Menu.qml
         MenuBar.qml

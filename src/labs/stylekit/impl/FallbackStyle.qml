@@ -242,6 +242,35 @@ BaseStyle {
         hovered.background.visible: true
     }
 
+    horizontalHeaderViewDelegate {
+        text.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+        text.padding: 5
+        background {
+            border.width: 1
+            color: Qt.darker(__baseWhite, 1.05)
+        }
+        indicator {
+            width: 16
+            height: 16
+            color: __transparent
+            border.width: 0
+            alignment: Qt.AlignRight | Qt.AlignVCenter
+            foreground {
+                fillWidth: true
+                fillHeight: true
+                color: __transparent
+                image.color: __textDefault
+                image.fillMode: Image.PreserveAspectFit
+            }
+            first {
+                foreground.image.source: "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/sort-ascending.png"
+            }
+            second {
+                foreground.image.source: "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/sort-descending.png"
+            }
+        }
+    }
+
     toolButton {
         background.width: 40
         background.height: 40

@@ -66,6 +66,7 @@ public:
         DialogButtonBox,
         Drawer,
         FlatButton,
+        HorizontalHeaderViewDelegate,
         ProgressBar,
         ScrollBar,
         ScrollIndicator,

@@ -228,6 +228,22 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \qmlproperty ControlStyle StylableControls::horizontalHeaderViewDelegate
+
+    Grouped property for styling \l [QtQuickControls]{HorizontalHeaderViewDelegate}.
+
+    For a horizontal header view delegate, the sort indicator is styled through
+    the indicator. \l {IndicatorStyle::first}{indicator.first} is shown when the
+    column is sorted in ascending order, and \l {IndicatorStyle::second}{indicator.second}
+    when it is sorted in descending order. Only one of them is visible at a
+    time, and only on the header of the column the view is currently sorted by.
+
+    Unset properties fall back to \l tableViewDelegate.
+
+    \snippet ControlsSnippets.qml horizontalHeaderViewDelegate
+*/
+
+/*!
     \qmlproperty ControlStyle StylableControls::itemDelegate
 
     Grouped property for styling \l [QtQuickControls]{ItemDelegate}.
@@ -736,6 +752,7 @@ IMPLEMENT_ACCESSORS(dial, QQStyleKitReader::ControlType::Dial)
 IMPLEMENT_ACCESSORS(dialog, QQStyleKitReader::ControlType::Dialog)
 IMPLEMENT_ACCESSORS(dialogButtonBox, QQStyleKitReader::ControlType::DialogButtonBox)
 IMPLEMENT_ACCESSORS(drawer, QQStyleKitReader::ControlType::Drawer)
+IMPLEMENT_ACCESSORS(horizontalHeaderViewDelegate, QQStyleKitReader::ControlType::HorizontalHeaderViewDelegate)
 IMPLEMENT_ACCESSORS(progressBar, QQStyleKitReader::ControlType::ProgressBar)
 IMPLEMENT_ACCESSORS(scrollBar, QQStyleKitReader::ControlType::ScrollBar)
 IMPLEMENT_ACCESSORS(scrollIndicator, QQStyleKitReader::ControlType::ScrollIndicator)
