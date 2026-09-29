@@ -167,10 +167,19 @@ QVariant QQmlTreeRow::toVariant() const
 
 int QQmlTreeRow::subTreeSize() const
 {
-    int size = 1;
+    // Recursing into the children would recurse once per level of the tree,
+    // which can be arbitrarily deep. Count the rows using an explicit stack.
+    int size = 0;
 
-    for (const auto &child : m_children)
-        size += child->subTreeSize();
+    std::vector<const QQmlTreeRow *> pending{ this };
+    while (!pending.empty()) {
+        const QQmlTreeRow *row = pending.back();
+        pending.pop_back();
+
+        ++size;
+        for (const auto &child : row->m_children)
+            pending.push_back(child.get());
+    }
 
     return size;
 }

@@ -1761,14 +1761,17 @@ void tst_QQmlTreeModel::destroyDeepTree()
     auto *model = root->property("testModel").value<QQmlTreeModel *>();
     QVERIFY(model);
     const int initialRowCount = model->rowCount();
+    const int initialTreeSize = model->treeSize();
 
     const QModelIndex deepest = insertChain(model, DeepTreeDepth);
     QVERIFY(deepest.isValid());
     QCOMPARE(model->index(std::vector<int>(DeepTreeDepth, 0), 0), deepest);
+    QCOMPARE(model->treeSize(), initialTreeSize + DeepTreeDepth);
 
     // Removing the top of the chain destroys the whole subtree.
     model->removeRow(model->index(0, 0));
     QCOMPARE(model->rowCount(), initialRowCount);
+    QCOMPARE(model->treeSize(), initialTreeSize);
 
     // Build it again and leave it for the destructor of the model.
     QVERIFY(insertChain(model, DeepTreeDepth).isValid());
