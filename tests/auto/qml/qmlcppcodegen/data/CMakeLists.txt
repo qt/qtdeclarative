@@ -248,6 +248,7 @@ set(qml_files
     listPropertyAsModel.qml
     listToString.qml
     listlength.qml
+    lostContextObject.qml
     markJSValue.qml
     markRecursive.qml
     math.qml

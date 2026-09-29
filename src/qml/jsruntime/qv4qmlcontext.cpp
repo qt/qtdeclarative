@@ -632,8 +632,17 @@ static ReturnedValue revertObjectMethodLookup(Lookup *l, ExecutionEngine *engine
     return QQmlContextWrapper::resolveQmlContextPropertyLookupGetter(l, engine, base);
 }
 
+// The object may be gone once it is being destroyed. Its name is not defined then, just like
+// when resolving the name anew.
+static ReturnedValue throwLostObjectReferenceError(Lookup *l, ExecutionEngine *engine)
+{
+    return engine->throwReferenceError(
+            engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[l->nameIndex]
+                    ->toQString());
+}
+
 template<typename Call>
-ReturnedValue callWithScopeObject(ExecutionEngine *engine, Value *base, Call c)
+ReturnedValue callWithScopeObject(Lookup *l, ExecutionEngine *engine, Value *base, Call c)
 {
     Scope scope(engine);
     Scoped<QmlContext> qmlContext(scope, engine->qmlContext());
@@ -641,11 +650,8 @@ ReturnedValue callWithScopeObject(ExecutionEngine *engine, Value *base, Call c)
         return QV4::Encode::undefined();
 
     QObject *scopeObject = qmlContext->qmlScope();
-    if (!scopeObject)
-        return QV4::Encode::undefined();
-
-    if (QQmlData::wasDeleted(scopeObject))
-        return QV4::Encode::undefined();
+    if (!scopeObject || QQmlData::wasDeleted(scopeObject))
+        return throwLostObjectReferenceError(l, engine);
 
     ScopedValue obj(scope, QV4::QObjectWrapper::wrap(engine, scopeObject));
 
@@ -657,7 +663,7 @@ ReturnedValue callWithScopeObject(ExecutionEngine *engine, Value *base, Call c)
 
 ReturnedValue QQmlContextWrapper::lookupScopeObjectProperty(Lookup *l, ExecutionEngine *engine, Value *base)
 {
-    return callWithScopeObject(engine, base, [l, engine, base](const Value &obj) {
+    return callWithScopeObject(l, engine, base, [l, engine, base](const Value &obj) {
         const QObjectWrapper::Flags flags = l->forCall
                 ? QObjectWrapper::NoFlag
                 : QObjectWrapper::AttachMethods;
@@ -669,7 +675,7 @@ ReturnedValue QQmlContextWrapper::lookupScopeObjectProperty(Lookup *l, Execution
 
 ReturnedValue QQmlContextWrapper::lookupScopeObjectMethod(Lookup *l, ExecutionEngine *engine, Value *base)
 {
-    return callWithScopeObject(engine, base, [l, engine, base](const Value &obj) {
+    return callWithScopeObject(l, engine, base, [l, engine, base](const Value &obj) {
         const QObjectWrapper::Flags flags = l->forCall
                 ? QObjectWrapper::NoFlag
                 : QObjectWrapper::AttachMethods;
@@ -680,7 +686,7 @@ ReturnedValue QQmlContextWrapper::lookupScopeObjectMethod(Lookup *l, ExecutionEn
 }
 
 template<typename Call>
-ReturnedValue callWithContextObject(ExecutionEngine *engine, Value *base, Call c)
+ReturnedValue callWithContextObject(Lookup *l, ExecutionEngine *engine, Value *base, Call c)
 {
     Scope scope(engine);
     Scoped<QmlContext> qmlContext(scope, engine->qmlContext());
@@ -692,11 +698,8 @@ ReturnedValue callWithContextObject(ExecutionEngine *engine, Value *base, Call c
         return QV4::Encode::undefined();
 
     QObject *contextObject = context->contextObject();
-    if (!contextObject)
-        return QV4::Encode::undefined();
-
-    if (QQmlData::wasDeleted(contextObject))
-        return QV4::Encode::undefined();
+    if (!contextObject || QQmlData::wasDeleted(contextObject))
+        return throwLostObjectReferenceError(l, engine);
 
     ScopedValue obj(scope, QV4::QObjectWrapper::wrap(engine, contextObject));
 
@@ -709,7 +712,7 @@ ReturnedValue callWithContextObject(ExecutionEngine *engine, Value *base, Call c
 ReturnedValue QQmlContextWrapper::lookupContextObjectProperty(
         Lookup *l, ExecutionEngine *engine, Value *base)
 {
-    return callWithContextObject(engine, base, [l, engine, base](const Value &obj) {
+    return callWithContextObject(l, engine, base, [l, engine, base](const Value &obj) {
         const QObjectWrapper::Flags flags = l->forCall
                 ? QObjectWrapper::NoFlag
                 : QObjectWrapper::AttachMethods;
@@ -722,7 +725,7 @@ ReturnedValue QQmlContextWrapper::lookupContextObjectProperty(
 ReturnedValue QQmlContextWrapper::lookupContextObjectMethod(
         Lookup *l, ExecutionEngine *engine, Value *base)
 {
-    return callWithContextObject(engine, base, [l, engine, base](const Value &obj) {
+    return callWithContextObject(l, engine, base, [l, engine, base](const Value &obj) {
         const QObjectWrapper::Flags flags = l->forCall
                 ? QObjectWrapper::NoFlag
                 : QObjectWrapper::AttachMethods;
