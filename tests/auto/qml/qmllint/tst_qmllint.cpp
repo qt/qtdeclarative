@@ -1809,6 +1809,22 @@ void TestQmllint::dirtyQmlSnippet_data()
                        .addExpected("Alias \"aliasToAlias\" is part of an alias cycle")
                        .build()
             << defaultOptions;
+    QTest::newRow("aliasCycleWithChild")
+            << u"id: root\n"_s
+               u"property int myP: 42\n"_s
+               u"property alias badId: rot.myP\n"_s
+               u"property alias aliasToAlias: root.badId\n"_s
+               u"Item {\n"_s
+               u"   property alias badAlias: root.aliasToAlias\n"_s
+               u"   property alias badIdInChild: rot.myP\n"_s
+               u"}\n"_s
+            << ResultBuilder()
+                       .addExpected("Cannot resolve alias \"badId\"")
+                       .addExpected("Cannot resolve alias \"badIdInChild\"")
+                       .addExpected("Alias \"aliasToAlias\" is part of an alias cycle")
+                       .addExpected("Alias \"badAlias\" is part of an alias cycle")
+                       .build()
+            << defaultOptions;
     QTest::newRow("assignLhsLocation")
             << u"id: root; property int i; Item { Component.onCompleted: i = root.i + 5 }"_s
             << ResultBuilder()

@@ -382,6 +382,8 @@ void QQmlJSImportVisitor::resolveAliases()
     QQueue<QQmlJSScope::Ptr> requeue;
     QDuplicateTracker<std::pair<QQmlJSScope::Ptr, QQmlJSMetaProperty>> alreadyResolvedAliases;
 
+    bool processingRequeue = false;
+
     while (!objects.isEmpty()) {
         const QQmlJSScope::Ptr object = objects.dequeue();
         const auto properties = object->ownProperties();
@@ -399,14 +401,17 @@ void QQmlJSImportVisitor::resolveAliases()
             }
         }
 
-        const auto childScopes = object->childScopes();
-        for (const auto &childScope : childScopes)
-            objects.enqueue(childScope);
+        if (!processingRequeue) {
+            const auto childScopes = object->childScopes();
+            for (const auto &childScope : childScopes)
+                objects.enqueue(childScope);
+        }
 
         if (doRequeue)
             requeue.enqueue(object);
 
         if (objects.isEmpty() && requeue.size() < lastRequeueLength) {
+            processingRequeue = true;
             lastRequeueLength = requeue.size();
             objects.swap(requeue);
         }
