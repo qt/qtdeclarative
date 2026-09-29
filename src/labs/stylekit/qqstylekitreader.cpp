@@ -291,7 +291,6 @@ QQStyleKitReader::QQStyleKitReader(QObject *parent)
     , m_completed(false)
     , m_global(QQStyleKitControlProperties(QQSK::PropertyGroup::GlobalFlag, this))
 {
-    s_allReaders.append(this);
 }
 
 QQStyleKitReader::~QQStyleKitReader()
@@ -808,6 +807,24 @@ void QQStyleKitReader::setTarget(QObject *target)
 
 void QQStyleKitReader::setCompleted(bool completed)
 {
+    const QQStyleKitStyle *currentStyle = style();
+    if (currentStyle && currentStyle->loaded()) {
+        clearLocalStorage();
+        rebuildEffectiveFont();
+        rebuildEffectivePalette();
+
+        /* Some style properties were read (e.g. by a Qt Quick Control) before this
+         * StyleReader was completed. Those reads were premature: the values depend not
+         * only on the style and theme, but also on the StyleReader's own state (such as
+         * its controlType, checked state, and so on), which may not have been fully
+         * initialized at that time. Now that all of it is in place, emit change signals
+         * for all properties to force the bindings to re-read them. */
+        emitChangedForAllStyleProperties(EmitFlag::AllProperties);
+    }
+
+    // From now on, we need to be notified when the style or theme changes
+    s_allReaders.append(this);
+
     m_completed = completed;
 }
 
@@ -880,7 +897,7 @@ QPalette QQStyleKitReader::effectivePalette() const
 void QQStyleKitReader::onPaletteChanged()
 {
     const QQStyleKitStyle *currentStyle = style();
-    if (!currentStyle || !currentStyle->loaded())
+    if (!m_completed || !currentStyle || !currentStyle->loaded())
         return;
 
     if (rebuildEffectivePalette()) {
