@@ -61,16 +61,31 @@ void QQmlTreeRow::insertChild(int index, std::unique_ptr<QQmlTreeRow> child)
 
 void QQmlTreeRow::unpackVariantMap(const QVariantMap &variantMap)
 {
-    for (auto it = variantMap.begin(); it != variantMap.end(); ++it) {
-        const QString& key = it.key();
-        const QVariant& value = it.value();
+    // Building the children through the constructor would recurse once per
+    // level of the nested rows, which can be arbitrarily deep. Use an explicit
+    // stack instead: each entry is a row whose data and children still have to
+    // be filled in from the given map.
+    std::vector<std::pair<QQmlTreeRow *, QVariantMap>> pending;
+    pending.emplace_back(this, variantMap);
 
-        if ((value.typeId() == QMetaType::Type::QVariantList) && (key == ROWS_PROPERTY_NAME)) {
-            const QList<QVariant> variantList = value.toList();
-            for (const QVariant &rowAsVariant : variantList)
-                m_children.push_back(std::make_unique<QQmlTreeRow>(rowAsVariant, this));
-        } else {
-            dataMap.insert(key, value);
+    while (!pending.empty()) {
+        auto [row, map] = std::move(pending.back());
+        pending.pop_back();
+
+        for (auto it = map.cbegin(); it != map.cend(); ++it) {
+            const QString& key = it.key();
+            const QVariant& value = it.value();
+
+            if ((value.typeId() == QMetaType::Type::QVariantList) && (key == ROWS_PROPERTY_NAME)) {
+                const QList<QVariant> variantList = value.toList();
+                for (const QVariant &rowAsVariant : variantList) {
+                    auto child = std::make_unique<QQmlTreeRow>(row);
+                    pending.emplace_back(child.get(), rowAsVariant.toMap());
+                    row->m_children.push_back(std::move(child));
+                }
+            } else {
+                row->dataMap.insert(key, value);
+            }
         }
     }
 }
