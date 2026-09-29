@@ -8,4 +8,31 @@ QtObject {
     id: root
 
     property TestModel testModel: TestModel {}
+
+    function leaf(level) {
+        return {
+            checked: false,
+            amount: level,
+            fruitType: "Fruit",
+            fruitName: "Level " + level,
+            fruitPrice: 1.5,
+            color: "green"
+        }
+    }
+
+    // Returns a row that spans `levels` levels (1 = a row without children).
+    // Built iteratively, so the test itself does not depend on stack depth.
+    function chain(levels, makeRow) {
+        let row = makeRow(levels)
+        for (let level = levels - 1; level > 0; --level) {
+            const parent = makeRow(level)
+            parent.rows = [ row ]
+            row = parent
+        }
+        return row
+    }
+
+    function setRowsWithDepth(levels) {
+        testModel.rows = [ chain(levels, leaf) ]
+    }
 }
