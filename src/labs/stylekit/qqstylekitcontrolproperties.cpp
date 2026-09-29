@@ -1895,7 +1895,7 @@ void QQStyleKitTextProperties::setItalic(bool italic)
 
 qreal QQStyleKitTextProperties::pointSize() const
 {
-    return styleProperty<qreal>(QQSK::Property::PointSize);
+    return styleProperty<qreal>(QQSK::Property::PointSize, QFont().pointSize());
 }
 
 void QQStyleKitTextProperties::setPointSize(qreal pointSize)
