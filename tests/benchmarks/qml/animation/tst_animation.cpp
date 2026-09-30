@@ -87,7 +87,8 @@ void tst_animation::animationelements_data()
 {
     QTest::addColumn<QString>("type");
 
-    const QSet<QString> types = QQmlMetaType::qmlTypeNames().toSet();
+    const QList<QString> typeNames = QQmlMetaType::qmlTypeNames();
+    const QSet<QString> types(typeNames.begin(), typeNames.end());
     for (const QString &type : types) {
         if (type.contains(QLatin1String("Animation")))
             QTest::newRow(type.toLatin1()) << type;
@@ -100,7 +101,7 @@ void tst_animation::animationelements_data()
 void tst_animation::animationelements()
 {
     QFETCH(QString, type);
-    QQmlType t = QQmlMetaType::qmlType(type, 2, 0);
+    QQmlType t = QQmlMetaType::qmlType(type, QTypeRevision::fromVersion(2, 0));
     if (!t.isValid() || !t.isCreatable())
         QSKIP("Non-creatable type");
 
