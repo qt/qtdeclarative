@@ -170,8 +170,11 @@ bool ScriptFormatter::visit(PatternElementList *ast)
         if (isObjectInitializer)
             ensureNewline();
 
-        if (it->elision)
+        if (it->elision) {
             accept(it->elision);
+            if (it->element)
+                ensureSpaceIfNoComment();
+        }
         if (it->element)
             accept(it->element);
         if (it->next) {
@@ -897,10 +900,11 @@ bool ScriptFormatter::visit(FunctionExpression *ast)
 bool ScriptFormatter::visit(Elision *ast)
 {
     for (Elision *it = ast; it; it = it->next) {
-        if (it->commaToken.isValid()) {
-            outWithComments(it->commaToken, it);
+        if (!it->commaToken.isValid())
+            continue;
+        outWithComments(it->commaToken, it);
+        if (it->next)
             ensureSpaceIfNoComment();
-        }
     }
     return false;
 }

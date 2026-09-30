@@ -119,6 +119,8 @@ void TestQmlformat::plainJS_data()
                                        << "longStatementList.formatted.js";
     QTest::newRow("elisionCommaConfusion") << "elisionCommaConfusion.js"
                                            << "elisionCommaConfusion.formatted.js";
+    QTest::newRow("holedArrayExtraCommas") << "holedArrayExtraCommas.js"
+                                           << "holedArrayExtraCommas.formatted.js";
 }
 
 void TestQmlformat::plainJS()

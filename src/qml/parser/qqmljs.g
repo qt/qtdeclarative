@@ -2115,7 +2115,8 @@ ArrayLiteral: T_LBRACKET ElementList T_COMMA ElisionOpt T_RBRACKET;
         }
         AST::ArrayPattern *node = new (pool) AST::ArrayPattern(list->finish());
         node->lbracketToken = loc(1);
-        node->commaToken = loc(3);
+        if (!sym(4).Elision)
+            node->commaToken = loc(3);
         node->rbracketToken = loc(5);
         sym(1).Node = node;
         Q_ASSERT(node->isValidArrayLiteral());
