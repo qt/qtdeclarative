@@ -99,7 +99,7 @@ QT_BEGIN_NAMESPACE
     initialized, and all QQuickRhiItem instances in the scene will render using
     the same 3D API.
 
-    \section2 A simple example
+    \section1 A simple example
 
     Take the following subclass of QQuickRhiItem. It is shown here in complete
     form. It renders a single triangle with a perspective projection, where the

@@ -33,7 +33,7 @@ QT_BEGIN_NAMESPACE
     explicitly. The simplest way to ensure this is to give the QQmlContext a
     \l{QObject::setParent()}{parent}.
 
-    \section2 The Context Hierarchy
+    \section1 The Context Hierarchy
 
     Contexts form a hierarchy. The root of this hierarchy is the QML engine's
     \l {QQmlEngine::rootContext()}{root context}. Each QML component creates its
@@ -44,7 +44,7 @@ QT_BEGIN_NAMESPACE
     context, their bindings are.  If a context is destroyed, the property bindings of
     outstanding QML objects will stop evaluating.
 
-    \section2 Context Properties
+    \section1 Context Properties
 
     Contexts also allow data to be exposed to the QML components instantiated
     by the QML engine. Such data is invisible to any tooling, including the

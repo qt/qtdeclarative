@@ -115,7 +115,7 @@ V4_DEFINE_EXTENSION(QQmlComponentExtension, componentExtension);
     constructor of a QObject subclass, as the instance will not yet have
     a context nor engine.
 
-    \section2 Network Components
+    \section1 Network Components
 
     If the URL passed to QQmlComponent is a network resource, or if the QML document references a
     network resource, the QQmlComponent has to fetch the network data before it is able to create
@@ -202,7 +202,7 @@ V4_DEFINE_EXTENSION(QQmlComponentExtension, componentExtension);
     property or use it in a type annotation. If you need this, prefer using
     \l{Defining Object Types through QML Documents#Inline Components}{inline components}.
 
-    \section2 Creation Context
+    \section1 Creation Context
 
     The creation context of a Component corresponds to the context where the Component was declared.
     This context is used as the parent context (creating a \l{qtqml-documents-scope.html#component-instance-hierarchy}{context hierarchy})
