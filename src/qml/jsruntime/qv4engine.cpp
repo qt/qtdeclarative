@@ -1632,14 +1632,10 @@ static QVariant toVariant(const QV4::Value &value, QMetaType metaType, JSToQVari
         if (metaType == QMetaType::fromType<QList<QObject *>>()) {
             QList<QObject *> list;
             uint length = a->getLength();
-            QV4::Scoped<QV4::QObjectWrapper> qobjectWrapper(scope);
+            QV4::Scoped<QV4::Object> qobjectLike(scope);
             for (uint ii = 0; ii < length; ++ii) {
-                qobjectWrapper = a->get(ii);
-                if (!!qobjectWrapper) {
-                    list << qobjectWrapper->object();
-                } else {
-                    list << 0;
-                }
+                qobjectLike = a->get(ii);
+                list << qtObjectFromJS(qobjectLike);
             }
 
             return QVariant::fromValue<QList<QObject*> >(list);
