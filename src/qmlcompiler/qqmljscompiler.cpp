@@ -232,7 +232,25 @@ bool qCompileQmlFile(QmlIR::Document &irDocument, const QString &inputFileName,
             std::sort(bindingsAndFunctions.begin(), bindingsAndFunctions.end());
             std::for_each(bindingsAndFunctions.begin(), bindingsAndFunctions.end(),
                           [&](const BindingOrFunction &bindingOrFunction) {
-                std::variant<QQmlJSAotFunction, QList<QQmlJS::DiagnosticMessage>> result;
+                using Result = std::variant<QQmlJSAotFunction, QList<QQmlJS::DiagnosticMessage>>;
+                const auto processResult = [&](const Result &result) {
+                    if (auto *errors = std::get_if<QList<QQmlJS::DiagnosticMessage>>(&result)) {
+                        for (const auto &error : *errors) {
+                            qCDebug(lcAotCompiler) << "Compilation failed:"
+                                                   << diagnosticErrorMessage(inputFileName, error);
+                        }
+                    } else if (auto *func = std::get_if<QQmlJSAotFunction>(&result)) {
+                        if (func->skipReason.has_value()) {
+                            qCDebug(lcAotCompiler) << "Compilation skipped:"
+                                                   << func->skipReason.value();
+                        } else {
+                            qCDebug(lcAotCompiler) << "Generated code:" << func->code;
+                            auto index = object->runtimeFunctionIndices[bindingOrFunction.index()];
+                            aotFunctionsByIndex[index] = *func;
+                        }
+                    }
+                };
+
                 if (const auto *binding = bindingOrFunction.binding()) {
                     switch (binding->type()) {
                     case QmlIR::Binding::Type_AttachedProperty:
@@ -288,7 +306,7 @@ bool qCompileQmlFile(QmlIR::Document &irDocument, const QString &inputFileName,
 
                     qCDebug(lcAotCompiler) << "Compiling binding for property"
                                            << irDocument.stringAt(binding->propertyNameIndex);
-                    result = aotCompiler->compileBinding(context, *binding, node);
+                    processResult(aotCompiler->compileBinding(context, *binding, node));
                 } else if (const auto *function = bindingOrFunction.function()) {
                     if (!aotCompiler->isLintCompiler() && !function->isQmlFunction)
                         return;
@@ -302,24 +320,9 @@ bool qCompileQmlFile(QmlIR::Document &irDocument, const QString &inputFileName,
 
                     const QString functionName = irDocument.stringAt(function->nameIndex);
                     qCDebug(lcAotCompiler) << "Compiling function" << functionName;
-                    result = aotCompiler->compileFunction(context, functionName, node);
+                    processResult(aotCompiler->compileFunction(context, functionName, node));
                 } else {
                     Q_UNREACHABLE();
-                }
-
-                if (auto *errors = std::get_if<QList<QQmlJS::DiagnosticMessage>>(&result)) {
-                    for (const auto &error : std::as_const(*errors)) {
-                        qCDebug(lcAotCompiler) << "Compilation failed:"
-                                               << diagnosticErrorMessage(inputFileName, error);
-                    }
-                } else if (auto *func = std::get_if<QQmlJSAotFunction>(&result)) {
-                    if (func->skipReason.has_value()) {
-                        qCDebug(lcAotCompiler) << "Compilation skipped:" << func->skipReason.value();
-                    } else {
-                        qCDebug(lcAotCompiler) << "Generated code:" << func->code;
-                        auto index = object->runtimeFunctionIndices[bindingOrFunction.index()];
-                        aotFunctionsByIndex[index] = *func;
-                    }
                 }
             });
         }
