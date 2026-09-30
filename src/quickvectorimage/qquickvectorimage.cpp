@@ -16,6 +16,16 @@
 
 QT_BEGIN_NAMESPACE
 
+using namespace Qt::StringLiterals;
+
+bool QQuickVectorImagePrivate::useQmlGenerator()
+{
+    Q_Q(QQuickVectorImage);
+    static const bool val = !qEnvironmentVariableIsSet("QT_QUICKVECTORIMAGE_USE_ITEM_GENERATOR");
+    const bool useNonDefaultGenerator = q->property("_qt_usenondefaultgenerator").toBool();
+    return useNonDefaultGenerator ? !val : val;
+}
+
 /*!
     \qmlmodule QtQuick.VectorImage
     \title Qt Quick Vector Image QML Types
