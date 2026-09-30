@@ -23,6 +23,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickVectorImageIncubator;
+class QQuickAsyncItemBuilder;
 
 class Q_QUICKVECTORIMAGE_EXPORT QQuickVectorImagePrivate : public QQuickItemPrivate
 {
@@ -34,6 +35,7 @@ public:
     void setSourceData(const QByteArray &data);
     void loadFile();
     bool useQmlGenerator();
+    bool cancelAsyncBuilder();
 
     static QQuickVectorImagePrivate *get(QQuickVectorImage *q)
     {
@@ -51,6 +53,7 @@ public:
     std::unique_ptr<QQmlContext> context;
     QQuickVectorImageAnimations *animations = nullptr;
     QQuickVectorImageIncubator *incubator = nullptr;
+    QQuickAsyncItemBuilder *asyncBuilder = nullptr;
     QQuickItem *pendingRootItem = nullptr;
 };
 

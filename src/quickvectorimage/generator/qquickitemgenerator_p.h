@@ -26,6 +26,7 @@
 #include <QtCore/qstack.h>
 
 #include <array>
+#include <atomic>
 #include <functional>
 #include <memory>
 
@@ -52,6 +53,16 @@ public:
     ~QQuickItemGenerator() override;
 
     QQuickItem *takeRootItem();
+
+    // When enabled, calls which have to be made on the GUI thread (such as setting the QML
+    // context, completing QML objects and starting animations) are queued instead of being made
+    // immediately. This allows running the generator on a worker thread: once the item tree has
+    // been moved to the GUI thread, the queued calls are executed there, in order.
+    void setDeferGuiThreadCalls(bool enabled);
+    QList<std::function<void()>> takeDeferredCalls();
+
+    // Generation stops with the Cancelled error state when the flag is set
+    void setCancellationFlag(const std::atomic<bool> *cancelled);
 
     QString generateNodeBase(const NodeInfo &info, const QString &idSuffix = QString{}) override;
     bool generateRootNode(const StructureNodeInfo &info) override;
@@ -129,6 +140,15 @@ private:
     std::unique_ptr<QQuickGeneratorAnimationProvider> m_animationProvider;
     QStack<bool> m_scopePushed;
     QMap<std::array<qreal, 4>, QEasingCurve> m_easingCache;
+
+    bool m_deferGuiThreadCalls = false;
+    QList<std::function<void()>> m_deferredCalls;
+    const std::atomic<bool> *m_cancelled = nullptr;
+
+    bool isStopped();
+    void deferToGuiThread(std::function<void()> call);
+    void initializeQmlObject(QObject *object, std::function<void()> setup);
+    void startMasterAnimation(QQuickAbstractAnimation *animation);
 
     QQuickTransformSource *resolveTransformReference(const QString &referenceId) const;
 

@@ -20,6 +20,8 @@
 
 #include <QtCore/qstring.h>
 
+#include <functional>
+
 QT_BEGIN_NAMESPACE
 
 class QQuickAbstractAnimation;
@@ -39,6 +41,23 @@ public:
                               const QQuickAnimatedProperty &property) = 0;
 
     virtual QQuickItem *createCustomItem(const QString &type) = 0;
+
+    // Set by the generator. Calls which have to be made on the GUI thread (such as completing
+    // QML objects or starting animations) must be passed to deferToGuiThread().
+    using DeferFunction = std::function<void(std::function<void()>)>;
+    void setDeferFunction(DeferFunction deferFunction) { m_deferFunction = std::move(deferFunction); }
+
+protected:
+    void deferToGuiThread(std::function<void()> call)
+    {
+        if (m_deferFunction)
+            m_deferFunction(std::move(call));
+        else
+            call();
+    }
+
+private:
+    DeferFunction m_deferFunction;
 };
 
 QT_END_NAMESPACE

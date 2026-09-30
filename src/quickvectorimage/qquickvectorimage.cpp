@@ -9,6 +9,7 @@
 #include "qquickvectorimageincubator_p_p.h"
 #include "qquickvectorimageplugin_p.h"
 #include <QtQuickVectorImageGenerator/private/qquickitemgenerator_p.h>
+#include <QtQuickVectorImageGenerator/private/qquickasyncitembuilder_p.h>
 #include <QtQuickVectorImageGenerator/private/qquickvectorimageglobal_p.h>
 #include <QtQuickVectorImageGenerator/private/qquickanimationrootitem_p.h>
 #include <QtCore/private/qfactoryloader_p.h>
@@ -31,6 +32,30 @@ bool QQuickVectorImagePrivate::useQmlGenerator()
     static const bool val = !qEnvironmentVariableIsSet("QT_QUICKVECTORIMAGE_USE_ITEM_GENERATOR");
     const bool useNonDefaultGenerator = q->property("_qt_usenondefaultgenerator").toBool();
     return useNonDefaultGenerator ? !val : val;
+}
+
+static std::vector<std::unique_ptr<QQuickVectorImagePluginGenerator>>
+createPluginGenerators(const QQuickVectorImageSource &source,
+                       QQuickVectorImageGenerator::GeneratorFlags flags)
+{
+    std::vector<std::unique_ptr<QQuickVectorImagePluginGenerator>> ret;
+    if (!flags.testFlag(QQuickVectorImageGenerator::AssumeTrustedSource))
+        return ret;
+
+    QFactoryLoader *loader = itemGenPluginLoader();
+    const qsizetype count = loader->keyMap().size();
+    for (qsizetype i = 0; i < count; ++i) {
+        QQuickVectorImagePlugin *plugin =
+                qobject_cast<QQuickVectorImagePlugin *>(loader->instance(i));
+        if (plugin != nullptr) {
+            std::unique_ptr<QQuickVectorImagePluginGenerator> pluginGen(
+                    plugin->createGenerator(source));
+            if (pluginGen != nullptr)
+                ret.push_back(std::move(pluginGen));
+        }
+    }
+
+    return ret;
 }
 
 /*!
@@ -77,6 +102,21 @@ void QQuickVectorImagePrivate::setSourceData(const QByteArray &data)
     loadFile();
 }
 
+// Stops a running asynchronous build of the item tree without waiting for the worker thread.
+// Returns true if a build was cancelled.
+bool QQuickVectorImagePrivate::cancelAsyncBuilder()
+{
+    Q_Q(QQuickVectorImage);
+    if (asyncBuilder == nullptr)
+        return false;
+
+    asyncBuilder->disconnect(q);
+    asyncBuilder->cancel();
+    asyncBuilder->deleteLater();
+    asyncBuilder = nullptr;
+    return true;
+}
+
 void QQuickVectorImagePrivate::loadFile()
 {
     Q_Q(QQuickVectorImage);
@@ -87,12 +127,18 @@ void QQuickVectorImagePrivate::loadFile()
     QQmlContext *ctx = qmlContext(q);
     imageSource.resolveLocalFileName(ctx);
 
+    const bool asyncBuilderCancelled = cancelAsyncBuilder();
+    const bool startsAsyncBuilder = !useQmlGenerator() && asynchronous && !imageSource.isEmpty();
+
     if (rootItem && (!retainWhileLoading || imageSource.isEmpty())) {
         rootItem->deleteLater();
         rootItem = nullptr;
         emit q->generatedItemChanged();
-        if (incubator == nullptr)
+        // When starting the async builder, the status goes directly to Loading below
+        if (incubator == nullptr && !startsAsyncBuilder)
             emit q->statusChanged();
+    } else if (asyncBuilderCancelled && imageSource.isEmpty()) {
+        emit q->statusChanged();
     }
 
     if (imageSource.isEmpty())
@@ -134,23 +180,20 @@ void QQuickVectorImagePrivate::loadFile()
         QObject::connect(incubator, &QQuickVectorImageIncubator::statusUpdated, q,
                          &QQuickVectorImage::updateItem);
         incubator->start(imageSource, flags);
+    } else if (startsAsyncBuilder) {
+        asyncBuilder = new QQuickAsyncItemBuilder(imageSource, flags, qmlContext(q), q);
+        QObject::connect(asyncBuilder, &QQuickAsyncItemBuilder::finished, q,
+                         &QQuickVectorImage::updateItem);
+        asyncBuilder->start(createPluginGenerators(imageSource, flags));
+        emit q->statusChanged();
     } else {
         QQuickItemGenerator gen(imageSource, flags, qmlContext(q));
 
         bool generatedWithPlugin = false;
-        if (flags.testFlag(QQuickVectorImageGenerator::AssumeTrustedSource)) {
-            QFactoryLoader *loader = itemGenPluginLoader();
-            const qsizetype count = loader->keyMap().size();
-            for (qsizetype i = 0; i < count && !generatedWithPlugin; ++i) {
-                QQuickVectorImagePlugin *plugin =
-                        qobject_cast<QQuickVectorImagePlugin *>(loader->instance(i));
-                if (plugin != nullptr) {
-                    std::unique_ptr<QQuickVectorImagePluginGenerator> pluginGen(
-                            plugin->createGenerator(imageSource));
-                    if (pluginGen != nullptr)
-                        generatedWithPlugin = pluginGen->generate(&gen);
-                }
-            }
+        const auto pluginGenerators = createPluginGenerators(imageSource, flags);
+        for (const auto &pluginGen : pluginGenerators) {
+            if ((generatedWithPlugin = pluginGen->generate(&gen)))
+                break;
         }
 
         if (!generatedWithPlugin)
@@ -189,6 +232,15 @@ void QQuickVectorImage::updateItem()
                     << d->incubator->errors();
             return;
         }
+    } else if (d->asyncBuilder != nullptr) {
+        if (d->asyncBuilder->state() != QQuickAsyncItemBuilder::State::Finished)
+            return;
+        item = d->asyncBuilder->takeRootItem();
+        d->asyncBuilder->disconnect(this);
+        d->asyncBuilder->deleteLater(); // We are called from within the builder
+        d->asyncBuilder = nullptr;
+        if (item == nullptr)
+            return;
     } else {
         item = d->pendingRootItem;
         d->pendingRootItem = nullptr;
@@ -280,6 +332,10 @@ QQuickVectorImage::~QQuickVectorImage()
     // This may have a running thread, so we need to delete it before we start deleting children
     delete d->incubator;
     d->incubator = nullptr;
+
+    // Does not wait for the worker thread
+    delete d->asyncBuilder;
+    d->asyncBuilder = nullptr;
 }
 
 /*!
@@ -548,6 +604,9 @@ void QQuickVectorImage::setRetainWhileLoading(bool retainWhileLoading)
 QQuickVectorImage::Status QQuickVectorImage::status() const
 {
     Q_D(const QQuickVectorImage);
+    if (d->asyncBuilder != nullptr) // Only kept while generation is running
+        return Status::Loading;
+
     if (d->incubator == nullptr) {
         if (d->rootItem != nullptr)
             return Status::Ready;

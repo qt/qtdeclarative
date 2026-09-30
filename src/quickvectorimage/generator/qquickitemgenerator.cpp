@@ -159,6 +159,11 @@ QQuickItemGenerator::~QQuickItemGenerator()
 void QQuickItemGenerator::setAnimationProvider(std::unique_ptr<QQuickGeneratorAnimationProvider> provider)
 {
     m_animationProvider = std::move(provider);
+    if (m_animationProvider) {
+        m_animationProvider->setDeferFunction([this](std::function<void()> call) {
+            deferToGuiThread(std::move(call));
+        });
+    }
 }
 
 QQuickItem *QQuickItemGenerator::takeRootItem()
@@ -166,6 +171,68 @@ QQuickItem *QQuickItemGenerator::takeRootItem()
     QQuickItem *item = m_rootItem;
     m_rootItem = nullptr;
     return item;
+}
+
+void QQuickItemGenerator::setDeferGuiThreadCalls(bool enabled)
+{
+    m_deferGuiThreadCalls = enabled;
+}
+
+QList<std::function<void()>> QQuickItemGenerator::takeDeferredCalls()
+{
+    return std::exchange(m_deferredCalls, {});
+}
+
+void QQuickItemGenerator::setCancellationFlag(const std::atomic<bool> *cancelled)
+{
+    m_cancelled = cancelled;
+}
+
+bool QQuickItemGenerator::isStopped()
+{
+    if (Q_UNLIKELY(m_cancelled != nullptr && !errorState()
+                   && m_cancelled->load(std::memory_order_relaxed))) {
+        m_errorState = QQuickVectorImageGenerator::Cancelled;
+    }
+    return errorState() != QQuickVectorImageGenerator::NoError;
+}
+
+// Calls passed here must only capture objects in the generated item tree (and the QML context),
+// never the generator itself, since they may be executed after the generator has been destroyed.
+void QQuickItemGenerator::deferToGuiThread(std::function<void()> call)
+{
+    if (m_deferGuiThreadCalls)
+        m_deferredCalls.append(std::move(call));
+    else
+        call();
+}
+
+// Sets the QML context of the object and runs setup between classBegin() and componentComplete().
+// Everything which depends on the QML engine (such as loading images or shaders) must be done
+// in setup.
+void QQuickItemGenerator::initializeQmlObject(QObject *object, std::function<void()> setup)
+{
+    deferToGuiThread([object, context = m_context, setup = std::move(setup)]() {
+        if (context)
+            QQmlEngine::setContextForObject(object, context);
+        auto *parserStatus = qobject_cast<QQmlParserStatus *>(object);
+        if (parserStatus)
+            parserStatus->classBegin();
+        if (setup)
+            setup();
+        if (parserStatus)
+            parserStatus->componentComplete();
+    });
+}
+
+void QQuickItemGenerator::startMasterAnimation(QQuickAbstractAnimation *animation)
+{
+    auto *root = qobject_cast<QQuickAnimationRootItem *>(m_rootItem);
+    deferToGuiThread([animation, root]() {
+        if (root)
+            root->addMasterAnimation(animation);
+        animation->setRunning(true);
+    });
 }
 
 QList<std::function<void()>> *QQuickItemGenerator::activeRecord() const
@@ -227,6 +294,8 @@ QString QQuickItemGenerator::generateNodeBase(const NodeInfo &info, const QStrin
 {
     static qint64 maxNodes =
             qEnvironmentVariableIntegerValue("QT_QUICKVECTORIMAGE_MAX_NODES").value_or(10000);
+    if (Q_UNLIKELY(isStopped()))
+        return {};
     if (Q_UNLIKELY(!checkSanityLimit(++m_nodeCounter, maxNodes, "nodes"_L1)))
         return {};
 
@@ -269,7 +338,7 @@ QString QQuickItemGenerator::generateNodeBase(const NodeInfo &info, const QStrin
 
 bool QQuickItemGenerator::generateRootNode(const StructureNodeInfo &info)
 {
-    if (Q_UNLIKELY(errorState()))
+    if (Q_UNLIKELY(isStopped()))
         return false;
 
     if (info.stage == StructureNodeStage::Start) {
@@ -351,7 +420,7 @@ bool QQuickItemGenerator::generateRootNode(const StructureNodeInfo &info)
 
 bool QQuickItemGenerator::generateStructureNode(const StructureNodeInfo &info)
 {
-    if (Q_UNLIKELY(errorState()))
+    if (Q_UNLIKELY(isStopped()))
         return false;
 
     if (auto *rec = activeRecord()) {
@@ -433,7 +502,7 @@ bool QQuickItemGenerator::generateStructureNode(const StructureNodeInfo &info)
 
 void QQuickItemGenerator::generatePath(const PathNodeInfo &info, const QRectF &overrideBoundingRect)
 {
-    if (Q_UNLIKELY(errorState()))
+    if (Q_UNLIKELY(isStopped()))
         return;
 
     if (auto *rec = activeRecord()) {
@@ -548,7 +617,7 @@ void QQuickItemGenerator::outputShapePath(const PathNodeInfo &info, const QPaint
 {
     Q_ASSERT(path || quadPath);
 
-    if (Q_UNLIKELY(errorState()))
+    if (Q_UNLIKELY(isStopped()))
         return;
 
     auto *shape = qobject_cast<QQuickShape *>(currentItem());
@@ -752,7 +821,7 @@ void QQuickItemGenerator::outputShapePath(const PathNodeInfo &info, const QPaint
 
 void QQuickItemGenerator::generateImageNode(const ImageNodeInfo &info)
 {
-    if (Q_UNLIKELY(errorState()))
+    if (Q_UNLIKELY(isStopped()))
         return;
 
     if (auto *rec = activeRecord()) {
@@ -774,18 +843,15 @@ void QQuickItemGenerator::generateImageNode(const ImageNodeInfo &info)
     }
 
     auto *image = new QQuickImage;
-    if (m_context)
-        QQmlEngine::setContextForObject(image, m_context);
     pushItem(image);
     generateNodeBase(info);
     image->setX(info.rect.x());
     image->setY(info.rect.y());
     image->setWidth(info.rect.width());
     image->setHeight(info.rect.height());
-    auto *parserStatus = qobject_cast<QQmlParserStatus *>(image);
-    parserStatus->classBegin();
-    image->setSource(QUrl::fromLocalFile(filePath));
-    parserStatus->componentComplete();
+    initializeQmlObject(image, [image, url = QUrl::fromLocalFile(filePath)]() {
+        image->setSource(url);
+    });
     QQuickItem *item = popItem();
     {
         QQuickItem *effectItem = item;
@@ -799,7 +865,7 @@ void QQuickItemGenerator::generateImageNode(const ImageNodeInfo &info)
 
 void QQuickItemGenerator::generateTextNode(const TextNodeInfo &info)
 {
-    if (Q_UNLIKELY(errorState()))
+    if (Q_UNLIKELY(isStopped()))
         return;
 
     if (auto *rec = activeRecord()) {
@@ -896,7 +962,7 @@ void QQuickItemGenerator::generateNode(const NodeInfo &info)
 
 void QQuickItemGenerator::generateUseNode(const UseNodeInfo &info)
 {
-    if (Q_UNLIKELY(errorState()))
+    if (Q_UNLIKELY(isStopped()))
         return;
 
     if (auto *rec = activeRecord()) {
@@ -924,7 +990,7 @@ void QQuickItemGenerator::generateUseNode(const UseNodeInfo &info)
 
 bool QQuickItemGenerator::generateDefsNode(const StructureNodeInfo &info)
 {
-    if (Q_UNLIKELY(errorState()))
+    if (Q_UNLIKELY(isStopped()))
         return false;
 
     if (info.stage == StructureNodeStage::Start) {
@@ -992,6 +1058,7 @@ void QQuickItemGenerator::replayDefsRecord(const QString &id)
         return;
 
     auto *container = new QQuickItem;
+    container->setParent(m_rootItem);
     m_itemStack.push(container);
     for (const auto &step : *it)
         step();
@@ -1013,7 +1080,7 @@ QQuickItemGenerator::resolveDef(QHash<QString, T> &registeredDefs, const QString
 
 void QQuickItemGenerator::generateDefsInstantiationNode(const StructureNodeInfo &info)
 {
-    if (Q_UNLIKELY(errorState()))
+    if (Q_UNLIKELY(isStopped()))
         return;
 
     if (auto *rec = activeRecord()) {
@@ -1066,7 +1133,7 @@ void QQuickItemGenerator::generateDefsInstantiationNode(const StructureNodeInfo 
 
 bool QQuickItemGenerator::generateMaskNode(const MaskNodeInfo &info)
 {
-    if (Q_UNLIKELY(errorState()))
+    if (Q_UNLIKELY(isStopped()))
         return false;
 
     if (auto *rec = activeRecord()) {
@@ -1107,20 +1174,15 @@ static QQuickShaderEffectSource *makeSES(QQuickItem *item, const QRectF &rect, Q
     return ses;
 }
 
-static QQuickShaderEffect *makeFilterEffect(QQuickItem *inputItem, const QUrl &shader,
-                                            QQmlContext *context, QQuickItem *parent)
+// The shader and its properties must be set up with initializeQmlObject()
+static QQuickShaderEffect *makeFilterEffect(QQuickItem *inputItem, QQuickItem *parent)
 {
     auto *effect = new QQuickShaderEffect;
-    if (context)
-        QQmlEngine::setContextForObject(effect, context);
-    auto *parserStatus = qobject_cast<QQmlParserStatus *>(effect);
-    parserStatus->classBegin();
     effect->bindableWidth().setBinding([inputItem] { return inputItem->width(); });
     effect->bindableHeight().setBinding([inputItem] { return inputItem->height(); });
     effect->setVisible(false);
     effect->setParent(parent);
     effect->setParentItem(parent);
-    effect->setFragmentShader(shader);
     return effect;
 }
 
@@ -1259,16 +1321,15 @@ void QQuickItemGenerator::generateMask(QQuickItem *item, const NodeInfo &info,
     bindTextureSize(itemSES);
 
     auto *shaderEffect = new QQuickShaderEffect;
-    if (m_context)
-        QQmlEngine::setContextForObject(shaderEffect, m_context);
-    auto *parserStatus = qobject_cast<QQmlParserStatus *>(shaderEffect);
-    parserStatus->classBegin();
-    shaderEffect->setFragmentShader(maskShaderUrl);
-    shaderEffect->setProperty("source", QVariant::fromValue<QQuickItem *>(itemSES));
-    shaderEffect->setProperty("maskSource", QVariant::fromValue<QQuickItem *>(maskSES));
-    shaderEffect->setProperty("isAlpha", info.isMaskAlpha);
-    shaderEffect->setProperty("isInverted", info.isMaskInverted);
-    parserStatus->componentComplete();
+    initializeQmlObject(shaderEffect, [shaderEffect, itemSES, maskSES,
+                                       isAlpha = info.isMaskAlpha,
+                                       isInverted = info.isMaskInverted]() {
+        shaderEffect->setFragmentShader(maskShaderUrl);
+        shaderEffect->setProperty("source", QVariant::fromValue<QQuickItem *>(itemSES));
+        shaderEffect->setProperty("maskSource", QVariant::fromValue<QQuickItem *>(maskSES));
+        shaderEffect->setProperty("isAlpha", isAlpha);
+        shaderEffect->setProperty("isInverted", isInverted);
+    });
 
     if (!info.isDefaultOpacity)
         shaderEffect->setOpacity(info.opacity.defaultValue().toReal());
@@ -1509,17 +1570,19 @@ QQuickItemGenerator::generateFilterMerge(const QList<QQuickShaderEffectSource *>
 
     static const QUrl shader(
             u"qrc:/qt-project.org/quickvectorimage/helpers/shaders_ng/femerge.frag.qsb"_s);
-    auto *effect = makeFilterEffect(inputs.first(), shader, m_context, m_rootItem);
+    auto *effect = makeFilterEffect(inputs.first(), m_rootItem);
 
     const int count = qMin(maxNodeCount, inputs.size());
-    effect->setProperty("sourceCount", count);
-    for (int i = 0; i < maxNodeCount; ++i) {
-        QQuickItem *src = i < inputs.size() ? inputs.at(i) : nullptr;
-        effect->setProperty(QStringLiteral("source%1").arg(i + 1).toLatin1(),
-                            QVariant::fromValue(src));
-    }
+    initializeQmlObject(effect, [effect, inputs, count]() {
+        effect->setFragmentShader(shader);
+        effect->setProperty("sourceCount", count);
+        for (int i = 0; i < maxNodeCount; ++i) {
+            QQuickItem *src = i < inputs.size() ? inputs.at(i) : nullptr;
+            effect->setProperty(QStringLiteral("source%1").arg(i + 1).toLatin1(),
+                                QVariant::fromValue(src));
+        }
+    });
 
-    qobject_cast<QQmlParserStatus *>(effect)->componentComplete();
     return makeEffectSES(effect, stepRect, filterRect, m_rootItem);
 }
 
@@ -1575,18 +1638,20 @@ QQuickItemGenerator::generateFilterColorMatrix(const FilterNodeInfo::FilterStep 
 {
     static const QUrl shader(
             u"qrc:/qt-project.org/quickvectorimage/helpers/shaders_ng/fecolormatrix.frag.qsb"_s);
-    auto *effect = makeFilterEffect(input, shader, m_context, m_rootItem);
-    effect->setProperty("source", QVariant::fromValue(input));
+    auto *effect = makeFilterEffect(input, m_rootItem);
 
     const auto matrix = step.filterParameter.value<QGenericMatrix<5, 5, qreal>>();
-    for (int row = 0; row < 4; ++row) {
-        for (int col = 0; col < 5; ++col) {
-            effect->setProperty(QStringLiteral("m_%1_%2").arg(row).arg(col).toLatin1(),
-                                matrix(col, row));
+    initializeQmlObject(effect, [effect, input, matrix]() {
+        effect->setFragmentShader(shader);
+        effect->setProperty("source", QVariant::fromValue(input));
+        for (int row = 0; row < 4; ++row) {
+            for (int col = 0; col < 5; ++col) {
+                effect->setProperty(QStringLiteral("m_%1_%2").arg(row).arg(col).toLatin1(),
+                                    matrix(col, row));
+            }
         }
-    }
+    });
 
-    qobject_cast<QQmlParserStatus *>(effect)->componentComplete();
     return makeEffectSES(effect, stepRect, filterRect, m_rootItem);
 }
 
@@ -1617,10 +1682,12 @@ QQuickShaderEffectSource *QQuickItemGenerator::generateFilterBlend(
 
     const QUrl shaderUrl(u"qrc:/qt-project.org/quickvectorimage/helpers/shaders_ng/"_s + shaderName
                          + u".frag.qsb"_s);
-    auto *effect = makeFilterEffect(input1, shaderUrl, m_context, m_rootItem);
-    effect->setProperty("source", QVariant::fromValue(input1));
-    effect->setProperty("source2", QVariant::fromValue(input2));
-    qobject_cast<QQmlParserStatus *>(effect)->componentComplete();
+    auto *effect = makeFilterEffect(input1, m_rootItem);
+    initializeQmlObject(effect, [effect, shaderUrl, input1, input2]() {
+        effect->setFragmentShader(shaderUrl);
+        effect->setProperty("source", QVariant::fromValue(input1));
+        effect->setProperty("source2", QVariant::fromValue(input2));
+    });
     return makeEffectSES(effect, stepRect, filterRect, m_rootItem);
 }
 
@@ -1657,12 +1724,16 @@ QQuickShaderEffectSource *QQuickItemGenerator::generateFilterComposite(
 
     const QUrl shaderUrl(u"qrc:/qt-project.org/quickvectorimage/helpers/shaders_ng/"_s + shaderName
                          + u".frag.qsb"_s);
-    auto *effect = makeFilterEffect(input1, shaderUrl, m_context, m_rootItem);
-    effect->setProperty("source", QVariant::fromValue(input1));
-    effect->setProperty("source2", QVariant::fromValue(input2));
-    if (step.filterType == FilterNodeInfo::Type::CompositeArithmetic)
-        effect->setProperty("k", QVariant::fromValue(step.filterParameter.value<QVector4D>()));
-    qobject_cast<QQmlParserStatus *>(effect)->componentComplete();
+    auto *effect = makeFilterEffect(input1, m_rootItem);
+    const bool isArithmetic = step.filterType == FilterNodeInfo::Type::CompositeArithmetic;
+    const QVector4D k = isArithmetic ? step.filterParameter.value<QVector4D>() : QVector4D{};
+    initializeQmlObject(effect, [effect, shaderUrl, input1, input2, isArithmetic, k]() {
+        effect->setFragmentShader(shaderUrl);
+        effect->setProperty("source", QVariant::fromValue(input1));
+        effect->setProperty("source2", QVariant::fromValue(input2));
+        if (isArithmetic)
+            effect->setProperty("k", QVariant::fromValue(k));
+    });
     return makeEffectSES(effect, stepRect, filterRect, m_rootItem);
 }
 
@@ -1678,20 +1749,17 @@ QQuickItemGenerator::generateFilterGaussianBlur(const FilterNodeInfo::FilterStep
             : std::min(1.0, deviation / maxDeviation);
 
     auto *effect = new QQuickMultiEffect;
-    if (m_context)
-        QQmlEngine::setContextForObject(effect, m_context);
-    auto *parserStatus = qobject_cast<QQmlParserStatus *>(effect);
-    parserStatus->classBegin();
     effect->bindableWidth().setBinding([input] { return input->width(); });
     effect->bindableHeight().setBinding([input] { return input->height(); });
     effect->setVisible(false);
     effect->setParent(m_rootItem);
     effect->setParentItem(m_rootItem);
-    effect->setSource(input);
-    effect->setBlurEnabled(true);
-    effect->setBlur(blurValue);
-    effect->setBlurMax(64);
-    parserStatus->componentComplete();
+    initializeQmlObject(effect, [effect, input, blurValue]() {
+        effect->setSource(input);
+        effect->setBlurEnabled(true);
+        effect->setBlur(blurValue);
+        effect->setBlurMax(64);
+    });
 
     auto *wrapper = new QQuickItem;
     wrapper->setWidth(stepRect.width());
@@ -1710,7 +1778,7 @@ QQuickItemGenerator::generateFilterGaussianBlur(const FilterNodeInfo::FilterStep
 
 bool QQuickItemGenerator::generateMarkerNode(const MarkerNodeInfo &info)
 {
-    if (Q_UNLIKELY(errorState()))
+    if (Q_UNLIKELY(isStopped()))
         return false;
 
     if (m_currentDefsRecord) {
@@ -1731,7 +1799,7 @@ bool QQuickItemGenerator::generateMarkerNode(const MarkerNodeInfo &info)
 
 bool QQuickItemGenerator::generatePatternNode(const PatternNodeInfo &info)
 {
-    if (Q_UNLIKELY(errorState()))
+    if (Q_UNLIKELY(isStopped()))
         return false;
 
     if (auto *rec = activeRecord()) {
@@ -2130,9 +2198,7 @@ void QQuickItemGenerator::bindAnimatedProperty(QObject *target, const QString &p
 
         auto *entry = createAnimationForOneEntry(target, propertyName, anim, fallback, target,
                                                  m_easingCache);
-        if (auto *root = qobject_cast<QQuickAnimationRootItem *>(m_rootItem))
-            root->addMasterAnimation(entry);
-        entry->setRunning(true);
+        startMasterAnimation(entry);
         return;
     }
 
@@ -2148,9 +2214,7 @@ void QQuickItemGenerator::bindAnimatedProperty(QObject *target, const QString &p
                                                       m_easingCache));
     }
     completeParserStatus(master);
-    if (auto *root = qobject_cast<QQuickAnimationRootItem *>(m_rootItem))
-        root->addMasterAnimation(master);
-    master->setRunning(true);
+    startMasterAnimation(master);
 }
 
 void QQuickItemGenerator::bindColorWithOpacity(QObject *target, const QString &colorPropertyName,
@@ -2345,9 +2409,7 @@ QQuickTransform *QQuickItemGenerator::createAnimatedTransformGroup(QQuickItem *i
             completeParserStatus(activateAction);
             activateAnims.append(&activateAnims, activateAction);
             completeParserStatus(activateSeq);
-            if (auto *root = qobject_cast<QQuickAnimationRootItem *>(m_rootItem))
-                root->addMasterAnimation(activateSeq);
-            activateSeq->setRunning(true);
+            startMasterAnimation(activateSeq);
 
             if (firstAnimation.repeatCount >= 0) {
                 const int loopDurationMs = firstAnimation.frames.isEmpty()
@@ -2374,9 +2436,7 @@ QQuickTransform *QQuickItemGenerator::createAnimatedTransformGroup(QQuickItem *i
                 completeParserStatus(endAction);
                 endAnims.append(&endAnims, endAction);
                 completeParserStatus(endSeq);
-                if (auto *root = qobject_cast<QQuickAnimationRootItem *>(m_rootItem))
-                    root->addMasterAnimation(endSeq);
-                endSeq->setRunning(true);
+                startMasterAnimation(endSeq);
             }
         }
     }
