@@ -16,7 +16,6 @@
 //
 
 #include <QQuickPaintedItem>
-#include <QSvgRenderer>
 #include <private/qquickitem_p.h>
 #include <QtQuickVectorImageGenerator/private/qquickvectorimagesource_p.h>
 #include "qquickvectorimage_p.h"
@@ -34,6 +33,7 @@ public:
     void setSource(const QUrl &source);
     void setSourceData(const QByteArray &data);
     void loadFile();
+    bool useQmlGenerator();
 
     static QQuickVectorImagePrivate *get(QQuickVectorImage *q)
     {

@@ -19,14 +19,18 @@
 
 QT_BEGIN_NAMESPACE
 
+using namespace Qt::StringLiterals;
+
 Q_GLOBAL_STATIC_WITH_ARGS(QFactoryLoader, itemGenPluginLoader,
                           (QQuickVectorImageFormatsPluginFactory_iid,
                            QLatin1String("/vectorimageformats"), Qt::CaseInsensitive))
 
-static bool useQmlGenerator()
+bool QQuickVectorImagePrivate::useQmlGenerator()
 {
+    Q_Q(QQuickVectorImage);
     static const bool val = !qEnvironmentVariableIsSet("QT_QUICKVECTORIMAGE_USE_ITEM_GENERATOR");
-    return val;
+    const bool useNonDefaultGenerator = q->property("_qt_usenondefaultgenerator").toBool();
+    return useNonDefaultGenerator ? !val : val;
 }
 
 /*!

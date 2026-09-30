@@ -23,6 +23,13 @@ qt_internal_add_manual_test(qmlscenegrabber
         Qt::QuickTemplates2Private
 )
 
+qt_add_resources(qmlscenegrabber "qmlscenegrabber"
+    PREFIX
+        "/"
+    FILES
+        checkered.png
+)
+
 qt6_add_shaders(qmlscenegrabber "qmlscenegrabber_shaders"
     BATCHABLE
     PREFIX
