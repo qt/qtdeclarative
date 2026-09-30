@@ -34,3 +34,5 @@ qt_internal_extend_target(tst_reformatter CONDITION ANDROID OR IOS
     DEFINES
         QT_REFORMATTERTEST_DATADIR=":/domdata"
 )
+
+add_dependencies(tst_reformatter Qt6::qmldom)

@@ -218,13 +218,15 @@ int main(int argc, char *argv[])
                     loadedFiles[iPos] = newIt;
                 },
                 fileType);
+        ++iPos;
     }
     envPtr->loadPendingDependencies();
     bool hadFailures = false;
     const qsizetype largestFileSizeToCheck = 32000;
 
     if (parser.isSet(reformatOption)) {
-        for (auto &qmlFile : loadedFiles) {
+        for (const DomItem &loadedFile : std::as_const(loadedFiles)) {
+            DomItem qmlFile = loadedFile.fileObject();
             QString qmlFilePath = qmlFile.canonicalFilePath();
             if (qmlFile.internalKind() != DomType::QmlFile) {
                 qWarning() << "cannot reformat" << qmlFile.internalKindStr() << "(" << qmlFilePath

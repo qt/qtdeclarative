@@ -12,7 +12,10 @@
 #include <QtTest/QTest>
 #include <QCborValue>
 #include <QDebug>
+#include <QFile>
 #include <QLibraryInfo>
+#include <QProcess>
+#include <QTemporaryDir>
 
 #include <memory>
 
@@ -938,6 +941,33 @@ private slots:
         QString formattedCode = formatJSCode(codeToBeFormatted);
         QCOMPARE(formattedCode, expectedFormattedCode);
     }
+
+#if QT_CONFIG(process)
+    void qmldomToolReformat()
+    {
+        const QByteArray code = "import QtQml\n\nQtObject {\n}\n";
+        const QByteArray in = "\n\n" + code;
+        const QByteArray out = code;
+
+        QTemporaryDir dir;
+        QVERIFY(dir.isValid());
+        QFile file(dir.filePath("File.qml"));
+        QVERIFY(file.open(QIODevice::Text | QIODevice::ReadWrite));
+        QCOMPARE_NE(file.write(in), -1);
+        file.close();
+
+        QProcess qmldom;
+        qmldom.setProgram(QLibraryInfo::path(QLibraryInfo::BinariesPath) + "/qmldom"_L1);
+        qmldom.setArguments({ "--reformat"_L1, file.fileName() });
+        qmldom.start();
+        QVERIFY(qmldom.waitForFinished());
+        QCOMPARE(qmldom.exitStatus(), QProcess::NormalExit);
+        QCOMPARE(qmldom.exitCode(), 0);
+
+        QVERIFY(file.open(QIODevice::Text | QIODevice::ReadOnly));
+        QCOMPARE(file.readAll(), out);
+    }
+#endif
 
 private:
 };
