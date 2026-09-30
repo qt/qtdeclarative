@@ -897,8 +897,8 @@ bool ScriptFormatter::visit(FunctionExpression *ast)
 bool ScriptFormatter::visit(Elision *ast)
 {
     for (Elision *it = ast; it; it = it->next) {
-        if (ast->commaToken.isValid()) {
-            outWithComments(ast->commaToken, ast);
+        if (it->commaToken.isValid()) {
+            outWithComments(it->commaToken, it);
             ensureSpaceIfNoComment();
         }
     }

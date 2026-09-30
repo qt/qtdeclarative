@@ -117,6 +117,8 @@ void TestQmlformat::plainJS_data()
                                      << "caseWithComment.formatted.js";
     QTest::newRow("longStatementList") << "longStatementList.js"
                                        << "longStatementList.formatted.js";
+    QTest::newRow("elisionCommaConfusion") << "elisionCommaConfusion.js"
+                                           << "elisionCommaConfusion.formatted.js";
 }
 
 void TestQmlformat::plainJS()
