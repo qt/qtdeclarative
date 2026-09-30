@@ -898,6 +898,11 @@
     \note When configured declaratively, the initial sort request is made after
     the TableView has completed initialization.
 
+    \note To set both sortColumn and \l sortOrder at run-time, prefer calling
+    \l sortByColumn() with both values in a single call. Setting these
+    properties separately applies each change immediately, which can result
+    in the model being sorted twice.
+
     A value of \c -1 means that no sort column is currently set. This is the
     initial state and also the state after sorting has been cleared. In this
     state, \l sortOrder does not describe the current order of the model.
@@ -932,6 +937,11 @@
     \note If \l sortColumn is \c -1, setting this property only changes the order
     to use when a sort column is later set; it does not request sorting. In
     this state, this property does not describe the current order of the model.
+
+    \note To set both \l sortColumn and sortOrder at run-time, prefer calling
+    \l sortByColumn() with both values in a single call. Setting these
+    properties separately applies each change immediately, which can result
+    in the model being sorted twice.
 
     This property reflects the sorting state requested by the view. It does not
     guarantee that the model has applied the requested sorting.
@@ -1124,7 +1134,7 @@
     Requests sorting of the current model by \a column in the given \a order.
 
     Sorting is supported for models based on QAbstractItemModel. When sorting is
-    requested, TableView updates sortColumn and sortOrder, and calls
+    requested, TableView updates \l sortColumn and \l sortOrder, and calls
     QAbstractItemModel::sort() on the current model. The model is responsible for
     defining the actual sorting behavior. Models that do not support sorting may
     ignore the request.
