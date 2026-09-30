@@ -330,6 +330,15 @@ QQmlJSImporter::Import QQmlJSImporter::readQmldir(const QString &modulePath)
     return result;
 }
 
+static QList<QQmlJS::Export> createExports(const QString &name)
+{
+    QList<QQmlJS::Export> exports;
+    const bool hasExport = name.front().isUpper();
+    if (hasExport)
+        exports << QQmlJSScope::Export(QString(), name, QTypeRevision(), QTypeRevision());
+    return exports;
+}
+
 QQmlJSImporter::Import QQmlJSImporter::readDirectory(const QString &directory)
 {
     Import import;
@@ -340,12 +349,8 @@ QQmlJSImporter::Import QQmlJSImporter::readDirectory(const QString &directory)
                         QQmlJSResourceFileMapper::resourceQmlDirectoryFilter(directory.mid(1)));
             for (const auto &entry : resources) {
                 const QString name = QFileInfo(entry.resourcePath).baseName();
-                if (name.front().isUpper()) {
-                    import.objects.append({
-                        localFile2QQmlJSScope(entry.filePath),
-                        { QQmlJSScope::Export(QString(), name, QTypeRevision(), QTypeRevision()) }
-                    });
-                }
+                import.objects.append(
+                        { localFile2QQmlJSScope(entry.filePath), createExports(name) });
             }
         } else {
             qWarning() << "Cannot read files from resource directory" << directory
@@ -367,10 +372,6 @@ QQmlJSImporter::Import QQmlJSImporter::readDirectory(const QString &directory)
     for (const QDirListing::DirEntry &entry: dirListing) {
         QString name = entry.completeBaseName();
 
-        // Non-uppercase names cannot be imported anyway.
-        if (!name.front().isUpper())
-            continue;
-
         // .ui.qml is fine
         if (name.endsWith(u".ui"))
             name = name.chopped(3);
@@ -379,10 +380,7 @@ QQmlJSImporter::Import QQmlJSImporter::readDirectory(const QString &directory)
         if (name.contains(u'.'))
             continue;
 
-        import.objects.append({
-                localFile2QQmlJSScope(entry.filePath()),
-                { QQmlJSScope::Export(QString(), name, QTypeRevision(), QTypeRevision()) }
-        });
+        import.objects.append({ localFile2QQmlJSScope(entry.filePath()), createExports(name) });
     }
     return import;
 }

@@ -135,6 +135,7 @@ private Q_SLOTS:
     void sourceAndBuildTypeAreTheSame();
     void importMissingModule();
     void weakPointers();
+    void importDirectoryCreatesUnreachableScopes();
 
 public:
     tst_qqmljsscope()
@@ -1327,6 +1328,25 @@ void tst_qqmljsscope::weakPointers()
     QVERIFY(getBackButtonProperty().isValid());
     QEXPECT_FAIL("", "ResetForReparse breaks weak references to the resetted scope", Continue);
     QVERIFY(getBackButtonProperty().type());
+}
+
+void tst_qqmljsscope::importDirectoryCreatesUnreachableScopes()
+{
+    const QString directory = QDir::cleanPath(dataDirectory() + u"/importDirectoryUnreachable"_s);
+
+    QQmlJSImporter importer{ { QLibraryInfo::path(QLibraryInfo::QmlImportsPath) }, nullptr };
+    QQmlJSImporter::ImportedTypes imported =
+            importer.importDirectory(directory, quint8(QQmlJS::PrecedenceValues::Default));
+
+    QVERIFY(imported.hasType(u"Reachable"_s));
+    QVERIFY(!imported.hasType(u"unreachable"_s));
+    QVERIFY(imported.hasType(u"$internal$.$anonymous$.unreachable"_s));
+
+    const auto importedFiles = importer.importedFiles();
+    const bool unreachableScopeWasCreated =
+            std::any_of(importedFiles.keyBegin(), importedFiles.keyEnd(),
+                        [](const QString &file) { return file.endsWith(u"/unreachable.qml"_s); });
+    QVERIFY(unreachableScopeWasCreated);
 }
 
 QTEST_MAIN(tst_qqmljsscope)
