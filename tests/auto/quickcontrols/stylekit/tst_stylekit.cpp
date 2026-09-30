@@ -33,6 +33,7 @@ public:
 
 private slots:
     void propagation_variations();
+    void engineRecreated();
 };
 
 tst_StyleKit::tst_StyleKit()
@@ -68,6 +69,26 @@ void tst_StyleKit::propagation_variations()
     GET_CONTROL(outsideFrame_instanceVariation);
     QCOMPARE(outsideFrame_instanceVariation->background()->border()->width(), 5);
     QCOMPARE(outsideFrame_instanceVariation->background()->radius(), 8);
+}
+
+void tst_StyleKit::engineRecreated()
+{
+    /* Components cached for a destroyed engine must not be reused by a new
+     * engine, which may be allocated at the same address. */
+    for (int i = 0; i < 3; ++i) {
+        LOAD_STYLEKIT_FILE("engineRecreated.qml")
+
+        GET_CONTROL(button);
+        const QPoint center = buttonControl->mapToScene(
+                QPointF(buttonControl->width() / 2, buttonControl->height() / 2)).toPoint();
+
+        QTest::mouseMove(view.get(), QPoint(1, 1));
+        QTest::mouseMove(view.get(), center);
+        QTRY_COMPARE(button->background()->color(), QColor(QStringLiteral("green")));
+        QTest::mousePress(view.get(), Qt::LeftButton, {}, center);
+        QTRY_COMPARE(button->background()->color(), QColor(QStringLiteral("blue")));
+        QTest::mouseRelease(view.get(), Qt::LeftButton, {}, center);
+    }
 }
 
 QTEST_MAIN(tst_StyleKit)

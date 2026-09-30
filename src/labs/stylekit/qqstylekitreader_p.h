@@ -246,7 +246,7 @@ private:
 
     QQStyleKitControlProperties m_global;
 
-    using PropertyChangesComponents = QMap<std::pair<Qt::totally_ordered_wrapper<QQmlEngine*>, QString>, QQmlComponent *>;
+    using PropertyChangesComponents = QMap<std::pair<Qt::totally_ordered_wrapper<QQmlEngine*>, QString>, QPointer<QQmlComponent>>;
     static PropertyChangesComponents s_propertyChangesComponents;
 
     friend class QQStyleKitControlProperties;

@@ -333,7 +333,7 @@ QQmlComponent *QQStyleKitReader::createControlChangesComponent() const
     QQmlEngine *engine = qmlEngine(style());
     auto key = PropertyChangesComponents::key_type{engine, u"control"_s};
     if (auto r = s_propertyChangesComponents.value(key, nullptr))
-        return r;
+        return r.data();
 
     const QString qmlControlCode = QString::fromUtf8(R"(
     import QtQuick
@@ -358,7 +358,7 @@ QQmlComponent *QQStyleKitReader::createControlChangesComponent() const
     )");
 
     // TODO: cache propertyName to component!
-    QQmlComponent *component = new QQmlComponent(engine);
+    QQmlComponent *component = new QQmlComponent(engine, engine);
     component->setData(qmlControlCode.toUtf8(), QUrl());
     Q_ASSERT_X(!component->isError(), __FUNCTION__, component->errorString().toUtf8().constData());
     s_propertyChangesComponents.insert(key, component);
@@ -373,7 +373,7 @@ QQmlComponent *QQStyleKitReader::createDelegateChangesComponent(const QString &d
     QQmlEngine *engine = qmlEngine(style());
     auto key = PropertyChangesComponents::key_type{engine, delegateName};
     if (auto r = s_propertyChangesComponents.value(key, nullptr))
-        return r;
+        return r.data();
 
     static const QString qmlTemplateCode = QString::fromUtf8(R"(
     import QtQuick
@@ -417,7 +417,7 @@ QQmlComponent *QQStyleKitReader::createDelegateChangesComponent(const QString &d
 
     QString substitutedCode = qmlTemplateCode;
     substitutedCode.replace('$'_L1, delegateName);
-    QQmlComponent *component = new QQmlComponent(engine);
+    QQmlComponent *component = new QQmlComponent(engine, engine);
     component->setData(substitutedCode.toUtf8(), QUrl());
     Q_ASSERT_X(!component->isError(), __FUNCTION__, component->errorString().toUtf8().constData());
     s_propertyChangesComponents.insert(key, component);
