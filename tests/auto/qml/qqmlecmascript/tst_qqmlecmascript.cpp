@@ -454,6 +454,7 @@ private slots:
     void vmeMetaObjectAccessors();
     void deletedContextObjectProperty_data();
     void deletedContextObjectProperty();
+    void compositeSingletonInListProperty();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -11050,6 +11051,18 @@ void tst_qqmlecmascript::deletedContextObjectProperty()
     const QJSValue result = fn.call();
     QVERIFY(result.isError());
     QCOMPARE(result.errorType(), QJSValue::ReferenceError);
+}
+
+void tst_qqmlecmascript::compositeSingletonInListProperty()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("singletonIntoListProperty/compositeSingletonInListProperty.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(o != nullptr);
+
+    QCOMPARE(o->property("count").toInt(), 1);
+    QVERIFY(o->property("first").value<QObject *>() != nullptr);
 }
 
 QTEST_MAIN(tst_qqmlecmascript)
