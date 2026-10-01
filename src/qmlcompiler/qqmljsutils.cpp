@@ -322,12 +322,13 @@ QString qmlSourcePathFromBuildPath(const QQmlJSResourceFileMapper *mapper,
     if (!mapper)
         return pathInBuildFolder;
 
-    const auto qmlModuleEntry =
-            qmlModuleEntryFromBuildPath(mapper, pathInBuildFolder, LocalFileFilter);
+    // Slice the path the mapper matched against: its entries are absolute and clean.
+    const QString buildPath = QDir::cleanPath(QFileInfo(pathInBuildFolder).absoluteFilePath());
+    const auto qmlModuleEntry = qmlModuleEntryFromBuildPath(mapper, buildPath, LocalFileFilter);
     if (!qmlModuleEntry.isValid())
         return pathInBuildFolder;
     const QString qrcPath = qmlModuleEntry.resourcePath
-            + QStringView(pathInBuildFolder).sliced(qmlModuleEntry.filePath.size());
+            + QStringView(buildPath).sliced(qmlModuleEntry.filePath.size());
 
     const auto entry = mapper->entry(QQmlJSResourceFileMapper::resourceFileFilter(qrcPath));
     return entry.isValid()? entry.filePath : pathInBuildFolder;

@@ -4,6 +4,9 @@
 #include "tst_qqmljsutils.h"
 #include <QtQmlCompiler/private/qqmljsutils_p.h>
 
+#include <QtCore/qdir.h>
+#include <QtCore/qscopeguard.h>
+
 using namespace Qt::StringLiterals;
 
 void tst_qqmljsutils::findResourceFilesFromBuildFolders()
@@ -55,6 +58,16 @@ void tst_qqmljsutils::qmlFileSourcePathFromBuildPath()
 
     QCOMPARE(QQmlJSUtils::qmlSourcePathFromBuildPath(&mapper, buildFile), expectedSourceFile);
     QCOMPARE(QQmlJSUtils::qmlBuildPathFromSourcePath(&mapper, expectedSourceFile), buildFile);
+
+    // qmllint passes the file's path as given on its command line. Relative to the build folder,
+    // so that it is relative on any drive.
+    const QString currentPath = QDir::currentPath();
+    const auto restore = qScopeGuard([&]() { QDir::setCurrent(currentPath); });
+    QVERIFY(QDir::setCurrent(buildFolder));
+    const QString relativeBuildFile = QDir(buildFolder).relativeFilePath(buildFile);
+    QVERIFY(QDir::isRelativePath(relativeBuildFile));
+    QCOMPARE(QQmlJSUtils::qmlSourcePathFromBuildPath(&mapper, relativeBuildFile),
+             expectedSourceFile);
 }
 
 void tst_qqmljsutils::qmlBuildPathFromSourcePathWithMultipleRegistrations()
