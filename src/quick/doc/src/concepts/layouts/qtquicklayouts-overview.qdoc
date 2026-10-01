@@ -140,7 +140,7 @@
     \l{Layout.preferredHeight}. In such cases, the effective preferred height
     is determined from the \l{Item::}{implicitHeight}.
 
-    \note If you don't specify neither preferredWidth nor implicitWidth, the
+    \note If you specify neither preferredWidth nor implicitWidth, the
     Layout will query \l {Item::}{width} as an ultimate value for the effective
     preferred width. However, you shouldn't rely on \l {Item::}{width} as a
     source for the effective preferred width, as that may cause unexpected
