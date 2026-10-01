@@ -79,6 +79,7 @@ public:
     bool tryClose(const QPointF &pos, QQuickPopup::ClosePolicy flags);
 
     bool contains(const QPointF &scenePos) const;
+    bool belongsToOverlayChildAbove(QQuickItem *item) const;
 
 #if QT_CONFIG(quicktemplates2_multitouch)
     virtual bool acceptTouch(const QTouchEvent::TouchPoint &point);

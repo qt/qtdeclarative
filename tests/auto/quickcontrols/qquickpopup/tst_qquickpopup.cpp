@@ -108,7 +108,10 @@ private slots:
     void nestedWheelWithOverlayParent();
 #endif
 #endif
+    void modelessOnModalOnModeless_data();
     void modelessOnModalOnModeless();
+    void modalPopupBlocksPressesWhileToolTipIsOpen_data();
+    void modalPopupBlocksPressesWhileToolTipIsOpen();
     void grabber();
     void cursorShape();
     void componentComplete();
@@ -1596,8 +1599,21 @@ void tst_QQuickPopup::nestedWheelWithOverlayParent()
 #endif // QT_CONFIG(quick_draganddrop)
 #endif // QT_CONFIG(wheelevent)
 
+void tst_QQuickPopup::modelessOnModalOnModeless_data()
+{
+    QTest::addColumn<QQuickPopup::ClosePolicy>("tooltipClosePolicy");
+
+    QTest::newRow("tooltip that cannot close")
+            << QQuickPopup::ClosePolicy(QQuickPopup::NoAutoClose);
+    QTest::newRow("tooltip that closes on press outside its parent, like ToolTip")
+            << (QQuickPopup::CloseOnEscape | QQuickPopup::CloseOnPressOutsideParent
+                | QQuickPopup::CloseOnReleaseOutsideParent);
+}
+
 void tst_QQuickPopup::modelessOnModalOnModeless()
 {
+    QFETCH(QQuickPopup::ClosePolicy, tooltipClosePolicy);
+
     QQuickControlsApplicationHelper helper(this, QStringLiteral("modelessOnModalOnModeless.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickWindow *window = helper.window;
@@ -1613,6 +1629,7 @@ void tst_QQuickPopup::modelessOnModalOnModeless()
     QVERIFY(modalPopup);
     QQuickPopup *tooltip = window->property("tooltip").value<QQuickPopup *>();
     QVERIFY(tooltip);
+    tooltip->setClosePolicy(tooltipClosePolicy);
 
     modelessPopup->open();
     QCOMPARE(modelessPopup->isVisible(), true);
@@ -1633,9 +1650,55 @@ void tst_QQuickPopup::modelessOnModalOnModeless()
     tooltip->setVisible(true);
     QCOMPARE(tooltip->isVisible(), true);
     QTRY_COMPARE(tooltip->isOpened(), true);
+    QSignalSpy buttonPressedSpy(button, &QQuickAbstractButton::pressed);
     // click into the button, should be blocked
     QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, buttonPoint);
+    QCOMPARE(buttonPressedSpy.size(), 0);
     QVERIFY(button->isChecked());
+}
+
+void tst_QQuickPopup::modalPopupBlocksPressesWhileToolTipIsOpen_data()
+{
+    QTest::addColumn<bool>("dim");
+
+    QTest::newRow("dimmed") << true;
+    QTest::newRow("not dimmed, so only the overlay can block") << false;
+}
+
+void tst_QQuickPopup::modalPopupBlocksPressesWhileToolTipIsOpen()
+{
+    QFETCH(bool, dim);
+
+    QQuickControlsApplicationHelper helper(this, QStringLiteral("modalPopupUnderToolTip.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    auto *backgroundMouseArea = window->property("backgroundMouseArea").value<QQuickItem *>();
+    QVERIFY(backgroundMouseArea);
+    auto *modalPopup = window->property("modalPopup").value<QQuickPopup *>();
+    QVERIFY(modalPopup);
+    auto *toolTip = window->property("toolTip").value<QQuickPopup *>();
+    QVERIFY(toolTip);
+    QSignalSpy backgroundPressedChangedSpy(backgroundMouseArea, SIGNAL(pressedChanged()));
+
+    modalPopup->setDim(dim);
+    modalPopup->open();
+    QTRY_VERIFY(modalPopup->isOpened());
+
+    toolTip->open();
+    QTRY_VERIFY(toolTip->isOpened());
+    const QPoint insideModalPopup = modalPopup->popupItem()->mapToScene(QPointF(5, 5)).toPoint();
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, insideModalPopup);
+    QCOMPARE(backgroundPressedChangedSpy.size(), 0);
+
+    QTRY_VERIFY(!toolTip->isVisible());
+    toolTip->open();
+    QTRY_VERIFY(toolTip->isOpened());
+    const QPoint outsideModalPopup(350, 350);
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, outsideModalPopup);
+    QCOMPARE(backgroundPressedChangedSpy.size(), 0);
 }
 
 // QTBUG-56697
