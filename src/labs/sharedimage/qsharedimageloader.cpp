@@ -104,10 +104,12 @@ bool QSharedImageLoaderPrivate::verifyMem(const void *data, int size)
         return false;
     }
 
-    int availSize = size - h->offset;
-    if (h->height * h->bpl > availSize)
+    const int depth = qt_depthForFormat(h->format);
+    if (h->bpl < (qint64(h->width) * depth + 7) / 8)
         return false;
-    if ((qt_depthForFormat(h->format) * h->width * h->height) > (8 * availSize))
+
+    qint64 availSize = size - h->offset;
+    if (qint64(h->height) * h->bpl > availSize)
         return false;
 
     return true;
