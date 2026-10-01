@@ -4035,7 +4035,7 @@ void tst_QQuickPopup::blockEventsBehindModal_data()
     QTest::newRow("window: touch")
             << QQuickPopup::Window
             << static_cast<const QPointingDevice*>(touchScreen.get());
-#if QT_CONFIG(tabletevent) && !defined(Q_OS_QNX)
+#if QT_CONFIG(tabletevent) && !defined(Q_OS_QNX) && !defined(Q_OS_VXWORKS)
     QTest::newRow("window: stylus")     // QTBUG-135879
             << QQuickPopup::Window
             << tabletStylusDevice.get();
