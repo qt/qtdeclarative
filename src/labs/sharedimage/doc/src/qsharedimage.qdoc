@@ -17,6 +17,9 @@
     This module only shares CPU memory. It does not provide sharing of GPU
     memory or textures.
 
+    \note Neither the sending nor the receiving process is authenticated.
+    This module should not be used in untrusted environments.
+
     \section2 Usage
 
     To use this module, import it like this:
