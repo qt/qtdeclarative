@@ -22,6 +22,7 @@
 #include <private/qquickanimation_p.h>
 #include <private/qquickanimation_p_p.h>
 #include <private/qquickpathinterpolator_p.h>
+#include <private/qquickimage_p_p.h>
 
 #include "utils_p.h"
 
@@ -832,16 +833,6 @@ void QQuickItemGenerator::generateImageNode(const ImageNodeInfo &info)
     if (!isNodeVisible(info))
         return;
 
-    QString filePath = info.externalFileReference;
-    if (filePath.isEmpty()) {
-        filePath =
-                QDir::tempPath() + QStringLiteral("/svg_asset_%1.png").arg(info.image.cacheKey());
-        if (!info.image.save(filePath))
-            qCWarning(lcQuickVectorImage) << "Unable to save image resource" << filePath;
-    } else if (QDir::isRelativePath(filePath)) {
-        filePath = QFileInfo(source().fileName()).dir().absoluteFilePath(filePath);
-    }
-
     auto *image = new QQuickImage;
     pushItem(image);
     generateNodeBase(info);
@@ -849,9 +840,12 @@ void QQuickItemGenerator::generateImageNode(const ImageNodeInfo &info)
     image->setY(info.rect.y());
     image->setWidth(info.rect.width());
     image->setHeight(info.rect.height());
-    initializeQmlObject(image, [image, url = QUrl::fromLocalFile(filePath)]() {
-        image->setSource(url);
-    });
+
+    {
+        auto *imagePriv = static_cast<QQuickImageBasePrivate *>(QQuickItemPrivate::get(image));
+        imagePriv->currentPix->setImage(info.image);
+    }
+
     QQuickItem *item = popItem();
     {
         QQuickItem *effectItem = item;
