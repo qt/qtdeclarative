@@ -5,11 +5,8 @@
 #define TST_DOMMERGING_H
 #include <QtQmlDom/private/qqmldomitem_p.h>
 #include <QtQmlDom/private/qqmldomtop_p.h>
-#include <QtQmlDom/private/qqmldomastdumper_p.h>
 
 #include <QtTest/QTest>
-#include <QCborValue>
-#include <QDebug>
 #include <QLibraryInfo>
 
 #include <memory>

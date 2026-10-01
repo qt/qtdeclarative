@@ -8,19 +8,14 @@
 #include <QtQmlDom/private/qqmldomastdumper_p.h>
 #include <QtQmlDom/private/qqmldommock_p.h>
 #include <QtQmlDom/private/qqmldomcompare_p.h>
-#include <QtQmlDom/private/qqmldomfieldfilter_p.h>
 #include <QtQmlDom/private/qqmldomscriptelements_p.h>
 
 #include <QtTest/QTest>
-#include <QtCore/QCborValue>
-#include <QtCore/QDebug>
 #include <QtCore/QLibraryInfo>
 #include <QtCore/QFileInfo>
 
 #include <deque>
 #include <memory>
-#include <utility>
-#include <variant>
 #include <vector>
 
 QT_BEGIN_NAMESPACE

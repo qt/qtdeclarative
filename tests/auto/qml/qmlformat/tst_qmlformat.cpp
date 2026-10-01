@@ -3,10 +3,7 @@
 
 #include <QtTest/QTest>
 #include <QDir>
-#include <QFile>
-#include <QProcess>
 #include <QString>
-#include <QTemporaryDir>
 #include <QtTest/private/qemulationdetector_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQmlDom/private/qqmldomitem_p.h>

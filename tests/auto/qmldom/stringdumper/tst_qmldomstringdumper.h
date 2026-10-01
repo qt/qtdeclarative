@@ -6,8 +6,6 @@
 #include <QtQmlDom/private/qqmldomstringdumper_p.h>
 
 #include <QtTest/QTest>
-#include <QTextStream>
-#include <QDebug>
 
 #include <limits>
 

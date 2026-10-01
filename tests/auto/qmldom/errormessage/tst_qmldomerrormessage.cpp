@@ -5,11 +5,6 @@
 #include <QtQmlDom/private/qqmldomerrormessage_p.h>
 
 #include <QtTest/QTest>
-#include <QTextStream>
-#include <QDebug>
-
-#include <limits>
-
 
 QT_BEGIN_NAMESPACE
 namespace QQmlJS {

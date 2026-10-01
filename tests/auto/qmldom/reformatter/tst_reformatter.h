@@ -7,17 +7,13 @@
 #include <QtQmlDom/private/qqmldomoutwriter_p.h>
 #include <QtQmlDom/private/qqmldomitem_p.h>
 #include <QtQmlDom/private/qqmldomtop_p.h>
-#include <QtQmlDom/private/qqmldomreformatter_p.h>
 
 #include <QtTest/QTest>
-#include <QCborValue>
 #include <QDebug>
 #include <QFile>
 #include <QLibraryInfo>
 #include <QProcess>
 #include <QTemporaryDir>
-
-#include <memory>
 
 QT_BEGIN_NAMESPACE
 namespace QQmlJS {
