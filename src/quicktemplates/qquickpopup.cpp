@@ -557,6 +557,28 @@ bool QQuickPopupPrivate::contains(const QPointF &scenePos) const
     return popupItem->contains(popupItem->mapFromScene(scenePos));
 }
 
+static QQuickItem *findRootOfOverlaySubtree(QQuickItem *source, const QQuickOverlay *overlay)
+{
+    QQuickItem *sourceAncestor = source;
+    while (sourceAncestor) {
+        QQuickItem *parentItem = sourceAncestor->parentItem();
+        if (parentItem == overlay)
+            return sourceAncestor;
+        sourceAncestor = parentItem;
+    }
+    // Not an ancestor of the overlay.
+    return nullptr;
+}
+
+bool QQuickPopupPrivate::belongsToOverlayChildAbove(QQuickItem *item) const
+{
+    auto *overlay = QQuickOverlay::overlay(window, parentItem);
+    Q_ASSERT(overlay);
+    const auto paintOrderChildItems = QQuickOverlayPrivate::get(overlay)->paintOrderChildItems();
+    return paintOrderChildItems.indexOf(findRootOfOverlaySubtree(item, overlay))
+            > paintOrderChildItems.indexOf(popupItem);
+}
+
 #if QT_CONFIG(quicktemplates2_multitouch)
 bool QQuickPopupPrivate::acceptTouch(const QTouchEvent::TouchPoint &point)
 {
@@ -3293,19 +3315,6 @@ void QQuickPopup::mouseUngrabEvent()
 }
 
 
-static QQuickItem *findRootOfOverlaySubtree(QQuickItem *source, const QQuickOverlay *overlay)
-{
-    QQuickItem *sourceAncestor = source;
-    while (sourceAncestor) {
-        QQuickItem *parentItem = sourceAncestor->parentItem();
-        if (parentItem == overlay)
-            return sourceAncestor;
-        sourceAncestor = parentItem;
-    }
-    // Not an ancestor of the overlay.
-    return nullptr;
-}
-
 /*!
     \internal
 
@@ -3325,12 +3334,7 @@ bool QQuickPopup::overlayEvent(QQuickItem *item, QEvent *event)
     // The overlay will normally call this function for each active popup, assuming there is no active mouse grabber.
     // If \a item doesn't belong to any of these popups, but exists in an overlay subtree, we shouldn't filter the event,
     // since the item is supposed to be independent of any active popups.
-    auto *overlay = QQuickOverlay::overlay(d->window, d->parentItem);
-    Q_ASSERT(overlay);
-    const QList<QQuickItem *> paintOrderChildItems = QQuickOverlayPrivate::get(overlay)->paintOrderChildItems();
-    const qsizetype targetItemPaintOrderIndex = paintOrderChildItems.indexOf(findRootOfOverlaySubtree(item, overlay));
-    const qsizetype popupItemPaintOrderIndex = paintOrderChildItems.indexOf(d->popupItem);
-    if (targetItemPaintOrderIndex > popupItemPaintOrderIndex)
+    if (d->belongsToOverlayChildAbove(item))
         return false;
 
     switch (event->type()) {
