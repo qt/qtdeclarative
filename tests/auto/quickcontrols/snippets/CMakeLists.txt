@@ -19,7 +19,9 @@ file(GLOB_RECURSE test_data_glob
     ${CMAKE_CURRENT_SOURCE_DIR}/data/*)
 list(APPEND test_data ${test_data_glob})
 
-set(SNIPPETS_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../../../src/quickcontrols/doc/snippets")
+set(SNIPPETS_SOURCE_DIR
+  "${CMAKE_CURRENT_SOURCE_DIR}/../../../../src/quickcontrols/doc/snippets")
+set(SNIPPETS_PATH "${SNIPPETS_SOURCE_DIR}")
 
 if(WEBOS)
     # Collect snippets for webOS
@@ -48,6 +50,11 @@ qt_internal_add_test(tst_snippets
         Qt::QuickControls2Private
     TESTDATA ${test_data}
 )
+
+# Make sure qml import scanner finds the snippets when building against a static Qt build.
+# By default it only scans the current source directory.
+set_target_properties(tst_snippets PROPERTIES
+    QT_QML_IMPORT_SCANNER_EXTRA_ROOT_PATHS "${SNIPPETS_SOURCE_DIR}")
 
 # Resources:
 set(qmake_immediate_resource_files
