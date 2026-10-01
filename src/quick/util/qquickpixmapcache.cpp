@@ -261,7 +261,6 @@ private:
     {
         return runLoopReaderThreadExecutionEnforcer;
     }
-    QObject *eventLoopQuitHack;
     QMutex mutex;
     ReaderThreadExecutionEnforcer *runLoopReaderThreadExecutionEnforcer = nullptr;
 #else
@@ -606,9 +605,6 @@ QQuickPixmapReader::QQuickPixmapReader(QQmlEngine *eng)
 
     Q_DETACH_THREAD_AFFINITY_MARKER(m_readerThreadAffinityMarker);
 #if QT_CONFIG(quick_pixmap_cache_threaded_download)
-    eventLoopQuitHack = new QObject;
-    eventLoopQuitHack->moveToThread(this);
-    QObject::connect(eventLoopQuitHack, &QObject::destroyed, this, &QThread::quit, Qt::DirectConnection);
     start(QThread::LowestPriority);
 #else
     run(); // Call nonblocking run for ourselves.
@@ -656,11 +652,7 @@ QQuickPixmapReader::~QQuickPixmapReader()
     }
 
 #if QT_CONFIG(quick_pixmap_cache_threaded_download)
-    // ... schedule stopping of this thread via the eventLoopQuitHack (processJobs scheduled above
-    // will run first) ...
-    eventLoopQuitHack->deleteLater();
-    // ... and wait() for it all to finish, as the thread will only quit after eventLoopQuitHack
-    // has been deleted.
+    quit();
     wait();
 #endif
 
