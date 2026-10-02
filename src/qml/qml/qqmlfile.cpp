@@ -503,10 +503,11 @@ QT_WARNING_POP
 */
 bool QQmlFile::isSynchronous(const QUrl &url)
 {
+    if (url.isLocalFile())
+        return true;
     QString scheme = url.scheme();
 
-    if ((scheme.size() == 4 && 0 == scheme.compare(QLatin1String(file_string))) ||
-        (scheme.size() == 3 && 0 == scheme.compare(QLatin1String(qrc_string)))) {
+    if ((scheme.size() == 3 && 0 == scheme.compare(QLatin1String(qrc_string)))) {
         return true;
 
 #if defined(Q_OS_ANDROID)
@@ -605,13 +606,9 @@ static bool hasLocalContentAuthority(const QUrl &url)
 */
 bool QQmlFile::isLocalFile(const QUrl &url)
 {
-    QString scheme = url.scheme();
-
-    // file: URLs with two slashes following the scheme can be interpreted as local files
-    // where the slashes are part of the path. Therefore, disregard the authority.
-    // See QUrl::toLocalFile().
-    if (scheme.size() == 4 && scheme.startsWith(QLatin1String(file_string)))
+    if (url.isLocalFile())
         return true;
+    QString scheme = url.scheme();
 
     if (scheme.size() == 3 && scheme.startsWith(QLatin1String(qrc_string)))
         return url.authority().isEmpty();
