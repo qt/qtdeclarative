@@ -200,6 +200,35 @@ TestCase {
         }
     }
 
+    function test_shortcutShownAtImplicitContentWidth_data() {
+        return [
+            { "tag": "TextOnly", display: MenuItem.TextOnly },
+            { "tag": "TextBesideIcon", display: MenuItem.TextBesideIcon }
+        ]
+    }
+
+    function test_shortcutShownAtImplicitContentWidth(data) {
+        if (!testCase.platformSupportsShortcuts)
+            skip("Shortcuts are not shown on this platform")
+
+        ApplicationAttributes.set(Qt.AA_DontShowShortcutsInContextMenus, false)
+        let control = createTemporaryObject(menuItemWithActionComponent, testCase, {
+            text: "MenuItem",
+            display: data.display,
+            "icon.source": "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/check.png"
+        })
+        verify(control)
+        let shortcutLabel = findChild(control.contentItem, "shortcutLabel")
+        verify(shortcutLabel)
+
+        control.width = control.leftPadding + control.implicitContentWidth + control.rightPadding
+        compare(control.contentItem.width, control.implicitContentWidth)
+        verify(shortcutLabel.visible)
+
+        control.width -= 1
+        verify(!shortcutLabel.visible)
+    }
+
     function test_menu() {
         let control = createTemporaryObject(menu, testCase)
         verify(control)
