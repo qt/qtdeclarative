@@ -505,19 +505,19 @@ bool QQmlFile::isSynchronous(const QUrl &url)
 {
     QString scheme = url.scheme();
 
-    if ((scheme.size() == 4 && 0 == scheme.compare(QLatin1String(file_string), Qt::CaseInsensitive)) ||
-        (scheme.size() == 3 && 0 == scheme.compare(QLatin1String(qrc_string), Qt::CaseInsensitive))) {
+    if ((scheme.size() == 4 && 0 == scheme.compare(QLatin1String(file_string))) ||
+        (scheme.size() == 3 && 0 == scheme.compare(QLatin1String(qrc_string)))) {
         return true;
 
 #if defined(Q_OS_ANDROID)
-    } else if (scheme.length() == 6 && 0 == scheme.compare(QLatin1String(assets_string), Qt::CaseInsensitive)) {
+    } else if (scheme.length() == 6 && 0 == scheme.compare(QLatin1String(assets_string))) {
         return true;
-    } else if (scheme.length() == 7 && 0 == scheme.compare(QLatin1String(content_string), Qt::CaseInsensitive)) {
+    } else if (scheme.length() == 7 && 0 == scheme.compare(QLatin1String(content_string))) {
         return true;
 #endif
 
 #if defined(Q_OS_WASM)
-    } else if (scheme.length() == 12 && 0 == scheme.compare(QLatin1String(weblocalfile_string), Qt::CaseInsensitive)) {
+    } else if (scheme.length() == 12 && 0 == scheme.compare(QLatin1String(weblocalfile_string))) {
         return true;
 #endif
 
@@ -610,24 +610,24 @@ bool QQmlFile::isLocalFile(const QUrl &url)
     // file: URLs with two slashes following the scheme can be interpreted as local files
     // where the slashes are part of the path. Therefore, disregard the authority.
     // See QUrl::toLocalFile().
-    if (scheme.size() == 4 && scheme.startsWith(QLatin1String(file_string), Qt::CaseInsensitive))
+    if (scheme.size() == 4 && scheme.startsWith(QLatin1String(file_string)))
         return true;
 
-    if (scheme.size() == 3 && scheme.startsWith(QLatin1String(qrc_string), Qt::CaseInsensitive))
+    if (scheme.size() == 3 && scheme.startsWith(QLatin1String(qrc_string)))
         return url.authority().isEmpty();
 
 #if defined(Q_OS_ANDROID)
     if (scheme.length() == 6
-         && scheme.startsWith(QLatin1String(assets_string), Qt::CaseInsensitive))
+         && scheme.startsWith(QLatin1String(assets_string)))
         return url.authority().isEmpty();
     if (scheme.length() == 7
-         && scheme.startsWith(QLatin1String(content_string), Qt::CaseInsensitive))
+         && scheme.startsWith(QLatin1String(content_string)))
         return hasLocalContentAuthority(url);
 #endif
 
 #if defined(Q_OS_WASM)
     if (scheme.length() == 12
-         && scheme.startsWith(QLatin1String(weblocalfile_string), Qt::CaseInsensitive))
+         && scheme.startsWith(QLatin1String(weblocalfile_string)))
         return true;
 #endif
 
@@ -741,16 +741,16 @@ bool QQmlFile::isLocalFile(const QString &url)
 */
 QString QQmlFile::urlToLocalFileOrQrc(const QUrl& url)
 {
-    if (url.scheme().compare(QLatin1String("qrc"), Qt::CaseInsensitive) == 0) {
+    if (url.scheme().compare(QLatin1String("qrc")) == 0) {
         if (url.authority().isEmpty())
             return QLatin1Char(':') + url.path();
         return QString();
     }
 
 #if defined(Q_OS_ANDROID)
-    if (url.scheme().compare(QLatin1String(assets_string), Qt::CaseInsensitive) == 0)
+    if (url.scheme().compare(QLatin1String(assets_string)) == 0)
         return url.authority().isEmpty() ? url.toString() : QString();
-    if (url.scheme().compare(QLatin1String(content_string), Qt::CaseInsensitive) == 0) {
+    if (url.scheme().compare(QLatin1String(content_string)) == 0) {
         if (hasLocalContentAuthority(url))
             return url.toString();
         return QString();
@@ -758,7 +758,7 @@ QString QQmlFile::urlToLocalFileOrQrc(const QUrl& url)
 #endif
 
 #if defined(Q_OS_WASM)
-    if (url.scheme().compare(QLatin1String("weblocalfile"), Qt::CaseInsensitive) == 0)
+    if (url.scheme().compare(QLatin1String("weblocalfile")) == 0)
         return url.toString();
 #endif
 
