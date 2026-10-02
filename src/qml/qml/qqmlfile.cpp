@@ -23,19 +23,19 @@ QT_BEGIN_NAMESPACE
     and file names the way \l{QQmlEngine} does when loading content from them.
 */
 
-static char qrc_string[] = "qrc";
-static char file_string[] = "file";
+static constexpr QLatin1StringView qrc_string { "qrc" };
+static constexpr QLatin1StringView file_string { "file" };
 
 #if defined(Q_OS_ANDROID)
-static char assets_string[] = "assets";
-static char content_string[] = "content";
+static constexpr QLatin1StringView assets_string { "assets" };
+static constexpr QLatin1StringView content_string { "content" };
 static char authority_externalstorage[] = "com.android.externalstorage.documents";
 static char authority_downloads_documents[] = "com.android.providers.downloads.documents";
 static char authority_media_documents[] = "com.android.providers.media.documents";
 #endif
 
 #if defined(Q_OS_WASM)
-static char weblocalfile_string[] = "weblocalfile";
+static constexpr QLatin1StringView weblocalfile_string { "weblocalfile" };
 #endif
 
 #if QT_DEPRECATED_SINCE(6, 11)
@@ -507,18 +507,18 @@ bool QQmlFile::isSynchronous(const QUrl &url)
         return true;
     QString scheme = url.scheme();
 
-    if (scheme == QLatin1String(qrc_string)) {
+    if (scheme == qrc_string) {
         return true;
 
 #if defined(Q_OS_ANDROID)
-    } else if (scheme == QLatin1String(assets_string)) {
+    } else if (scheme == assets_string) {
         return true;
-    } else if (scheme == QLatin1String(content_string)) {
+    } else if (scheme == content_string) {
         return true;
 #endif
 
 #if defined(Q_OS_WASM)
-    } else if (scheme == QLatin1String(weblocalfile_string)) {
+    } else if (scheme == weblocalfile_string) {
         return true;
 #endif
 
@@ -546,33 +546,33 @@ bool QQmlFile::isSynchronous(const QString &url)
 
     if (f == QLatin1Char('f') || f == QLatin1Char('F')) {
 
-        return url.size() >= 7 /* file:// */ &&
-               url.startsWith(QLatin1String(file_string), Qt::CaseInsensitive) &&
+        return url.size() >= file_string.size() + 3 /* file:// */ &&
+               url.startsWith(file_string, Qt::CaseInsensitive) &&
                url[4] == QLatin1Char(':') && url[5] == QLatin1Char('/') && url[6] == QLatin1Char('/');
 
     } else if (f == QLatin1Char('q') || f == QLatin1Char('Q')) {
 
-        return url.size() >= 5 /* qrc:/ */ &&
-               url.startsWith(QLatin1String(qrc_string), Qt::CaseInsensitive) &&
+        return url.size() >= qrc_string.size() + 2 /* qrc:/ */ &&
+               url.startsWith(qrc_string, Qt::CaseInsensitive) &&
                url[3] == QLatin1Char(':') && url[4] == QLatin1Char('/');
 
     }
 
 #if defined(Q_OS_ANDROID)
     else if (f == QLatin1Char('a') || f == QLatin1Char('A')) {
-        return url.length() >= 8 /* assets:/ */ &&
-               url.startsWith(QLatin1String(assets_string), Qt::CaseInsensitive) &&
+        return url.length() >= assets_string.size() + 2  /* assets:/ */ &&
+               url.startsWith(assets_string, Qt::CaseInsensitive) &&
                url[6] == QLatin1Char(':') && url[7] == QLatin1Char('/');
     } else if (f == QLatin1Char('c') || f == QLatin1Char('C')) {
-        return url.length() >= 9 /* content:/ */ &&
-               url.startsWith(QLatin1String(content_string), Qt::CaseInsensitive) &&
+        return url.length() >= content_string.size() + 2 /* content:/ */ &&
+               url.startsWith(content_string, Qt::CaseInsensitive) &&
                url[7] == QLatin1Char(':') && url[8] == QLatin1Char('/');
     }
 #endif
 
 #if defined(Q_OS_WASM)
     else if (f == QLatin1Char('w') || f == QLatin1Char('W')) {
-        return url.length() >= 14 /* weblocalfile:/ */ &&
+        return url.length() >= weblocalfile_string.size() + 2 /* weblocalfile:/ */ &&
                url.startsWith(QLatin1String(weblocalfile_string), Qt::CaseInsensitive) &&
                url[12] == QLatin1Char(':') && url[13] == QLatin1Char('/');
     }
@@ -610,32 +610,33 @@ bool QQmlFile::isLocalFile(const QUrl &url)
         return true;
     QString scheme = url.scheme();
 
-    if (scheme == QLatin1String(qrc_string))
+    if (scheme == qrc_string)
         return url.authority().isEmpty();
 
 #if defined(Q_OS_ANDROID)
-    if (scheme == QLatin1String(assets_string))
+    if (scheme == assets_string)
         return url.authority().isEmpty();
-    if (scheme == QLatin1String(content_string))
+    if (scheme == content_string)
         return hasLocalContentAuthority(url);
 #endif
 
 #if defined(Q_OS_WASM)
-    if (scheme == QLatin1String(weblocalfile_string))
+    if (scheme == weblocalfile_string)
         return true;
 #endif
 
     return false;
 }
 
-static bool hasScheme(const QString &url, const char *scheme, qsizetype schemeLength)
+static bool hasScheme(const QString &url, QLatin1StringView scheme)
 {
     const qsizetype urlLength = url.size();
+    const qsizetype schemeLength = scheme.size();
 
     if (urlLength < schemeLength + 1)
         return false;
 
-    if (!url.startsWith(QLatin1String(scheme, scheme + schemeLength), Qt::CaseInsensitive))
+    if (!url.startsWith(scheme, Qt::CaseInsensitive))
         return false;
 
     if (url[schemeLength] != QLatin1Char(':'))
@@ -695,30 +696,29 @@ bool QQmlFile::isLocalFile(const QString &url)
         // file: URLs with two slashes following the scheme can be interpreted as local files
         // where the slashes are part of the path. Therefore, disregard the authority.
         // See QUrl::toLocalFile().
-        const qsizetype fileLength = strlen(file_string);
-        return url.startsWith(QLatin1String(file_string, file_string + fileLength),
-                              Qt::CaseInsensitive)
+        const qsizetype fileLength = file_string.size();
+        return url.startsWith(file_string, Qt::CaseInsensitive)
                 && url.size() > fileLength
                 && url[fileLength] == QLatin1Char(':');
     }
     case 'q':
     case 'Q':
-        return hasScheme(url, qrc_string, strlen(qrc_string))
-            && authorityOffset(url, strlen(qrc_string)) == -1;
+        return hasScheme(url, qrc_string)
+            && authorityOffset(url, qrc_string.size()) == -1;
 #if defined(Q_OS_ANDROID)
     case 'a':
     case 'A':
-        return hasScheme(url, assets_string, strlen(assets_string))
-            && authorityOffset(url, strlen(assets_string)) == -1;
+        return hasScheme(url, assets_string)
+            && authorityOffset(url, assets_string.size()) == -1;
     case 'c':
     case 'C':
-        return hasScheme(url, content_string, strlen(content_string))
-            && hasLocalContentAuthority(url, strlen(content_string));
+        return hasScheme(url, content_string)
+            && hasLocalContentAuthority(url, content_string.size());
 #endif
 #if defined(Q_OS_WASM)
     case 'w':
     case 'W':
-        return hasScheme(url, weblocalfile_string, strlen(weblocalfile_string));
+        return hasScheme(url, weblocalfile_string);
 #endif
     default:
         break;
@@ -735,16 +735,16 @@ bool QQmlFile::isLocalFile(const QString &url)
 */
 QString QQmlFile::urlToLocalFileOrQrc(const QUrl& url)
 {
-    if (url.scheme().compare(QLatin1String("qrc")) == 0) {
+    if (url.scheme() == qrc_string) {
         if (url.authority().isEmpty())
             return QLatin1Char(':') + url.path();
         return QString();
     }
 
 #if defined(Q_OS_ANDROID)
-    if (url.scheme().compare(QLatin1String(assets_string)) == 0)
+    if (url.scheme() == assets_string)
         return url.authority().isEmpty() ? url.toString() : QString();
-    if (url.scheme().compare(QLatin1String(content_string)) == 0) {
+    if (url.scheme() == content_string) {
         if (hasLocalContentAuthority(url))
             return url.toString();
         return QString();
@@ -752,7 +752,7 @@ QString QQmlFile::urlToLocalFileOrQrc(const QUrl& url)
 #endif
 
 #if defined(Q_OS_WASM)
-    if (url.scheme().compare(QLatin1String("weblocalfile")) == 0)
+    if (url.scheme() == weblocalfile_string)
         return url.toString();
 #endif
 
@@ -814,14 +814,14 @@ QString QQmlFile::urlToLocalFileOrQrc(const QString& url)
     }
 
 #if defined(Q_OS_ANDROID)
-    if (hasScheme(url, assets_string, strlen(assets_string)))
-        return authorityOffset(url, strlen(assets_string)) == -1 ? url : QString();
-    if (hasScheme(url, content_string, strlen(content_string)))
-        return hasLocalContentAuthority(url, strlen(content_string)) ? url : QString();
+    if (hasScheme(url, assets_string))
+        return authorityOffset(url, assets_string.size()) == -1 ? url : QString();
+    if (hasScheme(url, content_string))
+        return hasLocalContentAuthority(url, content_string.size()) ? url : QString();
 #endif
 
 #if defined(Q_OS_WASM)
-    if (hasScheme(url, weblocalfile_string, strlen(weblocalfile_string)))
+    if (hasScheme(url, weblocalfile_string))
         return url;
 #endif
 
