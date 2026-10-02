@@ -507,18 +507,18 @@ bool QQmlFile::isSynchronous(const QUrl &url)
         return true;
     QString scheme = url.scheme();
 
-    if ((scheme.size() == 3 && 0 == scheme.compare(QLatin1String(qrc_string)))) {
+    if (scheme == QLatin1String(qrc_string)) {
         return true;
 
 #if defined(Q_OS_ANDROID)
-    } else if (scheme.length() == 6 && 0 == scheme.compare(QLatin1String(assets_string))) {
+    } else if (scheme == QLatin1String(assets_string)) {
         return true;
-    } else if (scheme.length() == 7 && 0 == scheme.compare(QLatin1String(content_string))) {
+    } else if (scheme == QLatin1String(content_string)) {
         return true;
 #endif
 
 #if defined(Q_OS_WASM)
-    } else if (scheme.length() == 12 && 0 == scheme.compare(QLatin1String(weblocalfile_string))) {
+    } else if (scheme == QLatin1String(weblocalfile_string)) {
         return true;
 #endif
 
@@ -610,21 +610,18 @@ bool QQmlFile::isLocalFile(const QUrl &url)
         return true;
     QString scheme = url.scheme();
 
-    if (scheme.size() == 3 && scheme.startsWith(QLatin1String(qrc_string)))
+    if (scheme == QLatin1String(qrc_string))
         return url.authority().isEmpty();
 
 #if defined(Q_OS_ANDROID)
-    if (scheme.length() == 6
-         && scheme.startsWith(QLatin1String(assets_string)))
+    if (scheme == QLatin1String(assets_string))
         return url.authority().isEmpty();
-    if (scheme.length() == 7
-         && scheme.startsWith(QLatin1String(content_string)))
+    if (scheme == QLatin1String(content_string))
         return hasLocalContentAuthority(url);
 #endif
 
 #if defined(Q_OS_WASM)
-    if (scheme.length() == 12
-         && scheme.startsWith(QLatin1String(weblocalfile_string)))
+    if (scheme == QLatin1String(weblocalfile_string))
         return true;
 #endif
 
