@@ -59,10 +59,11 @@ protected:
     void timerEvent(QTimerEvent *) override;
 
 private:
-    QQuickPixmapCache() = default;
+    QQuickPixmapCache();
     Q_DISABLE_COPY(QQuickPixmapCache)
 
     void shrinkCache(int remove);
+    void maybeStartExpiryTimer();
     int destroyCache();
     qsizetype referencedCost() const;
 

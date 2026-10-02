@@ -68,6 +68,7 @@ private slots:
     void massive();
     void cancelcrash();
     void shrinkcache();
+    void releaseFromOtherThread(); // before anything calls destroyCache()
 #if QT_CONFIG(concurrent)
     void networkCrash();
 #endif
@@ -620,6 +621,30 @@ void tst_qquickpixmapcache::slowDeviceInterrupted()
     QTRY_COMPARE(QQuickPixmapCache::instance()->referencedCost(), 0);
     const int leakedPixmaps = QQuickPixmapCache::instance()->destroyCache();
     QCOMPARE_LE(leakedPixmaps, 0); // -1 if the cache is already destroyed
+#else
+    QSKIP("This test relies on private APIs that are only exported in developer-builds");
+#endif
+}
+
+void tst_qquickpixmapcache::releaseFromOtherThread()
+{
+#ifdef QT_BUILD_INTERNAL
+    auto *cache = QQuickPixmapCache::instance();
+    // earlier tests may have left the expiry timer running
+    if (cache->m_timerId > 0)
+        cache->killTimer(cache->m_timerId);
+    cache->m_timerId = -1;
+
+    auto *pixmap = new QQuickPixmap;
+    pixmap->load(&engine, testFileUrl("exists.png"), QQuickPixmap::Cache);
+    QVERIFY(pixmap->isReady());
+
+    QTest::failOnWarning("QObject::startTimer: Timers cannot be started from another thread");
+    // as on the scene graph render thread, while the GUI thread is blocked
+    std::unique_ptr<QThread> thread(QThread::create([pixmap] { delete pixmap; }));
+    thread->start();
+    QVERIFY(thread->wait());
+    QTRY_VERIFY(cache->m_timerId > 0);
 #else
     QSKIP("This test relies on private APIs that are only exported in developer-builds");
 #endif

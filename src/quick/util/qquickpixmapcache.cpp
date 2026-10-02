@@ -1266,6 +1266,18 @@ inline QDebug operator<<(QDebug debug, const QQuickPixmapKey &key)
 }
 #endif
 
+/*! \internal
+    The singleton is created by whichever thread first asks for a pixmap,
+    but the expiry timer has to be started on the thread the object lives in.
+    So pin it to the application thread; unreferencePixmap() may be called
+    from elsewhere.
+*/
+QQuickPixmapCache::QQuickPixmapCache()
+{
+    if (auto *app = QCoreApplication::instance(); app && thread() != app->thread())
+        moveToThread(app->thread());
+}
+
 QQuickPixmapCache *QQuickPixmapCache::instance()
 {
     static QQuickPixmapCache self;
@@ -1335,6 +1347,10 @@ qsizetype QQuickPixmapCache::referencedCost() const
 /*! \internal
     Declare that \a data is currently unused so that shrinkCache() can lazily
     delete it later.
+
+    This may be called from another thread (e.g. the scene graph render
+    thread) only while the GUI thread is blocked, as during scene graph sync:
+    the unreferenced list is not protected by m_cacheMutex.
 */
 void QQuickPixmapCache::unreferencePixmap(QQuickPixmapData *data)
 {
@@ -1360,6 +1376,20 @@ void QQuickPixmapCache::unreferencePixmap(QQuickPixmapData *data)
 
     shrinkCache(-1); // Shrink the cache in case it has become larger than cache_limit
 
+    // startTimer() only works on our own thread
+    if (thread() == QThread::currentThread())
+        maybeStartExpiryTimer();
+    else if (m_timerId == -1)
+        QMetaObject::invokeMethod(this, &QQuickPixmapCache::maybeStartExpiryTimer, Qt::QueuedConnection);
+}
+
+/*! \internal
+    Starts the timer that periodically expires unreferenced pixmaps,
+    unless it's already running or there's nothing to expire.
+*/
+void QQuickPixmapCache::maybeStartExpiryTimer()
+{
+    Q_ASSERT(thread() == QThread::currentThread());
     if (m_timerId == -1 && m_unreferencedPixmaps
             && !m_destroying && !QCoreApplication::closingDown()) {
         m_timerId = startTimer(CACHE_EXPIRE_TIME * 1000);
