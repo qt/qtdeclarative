@@ -572,8 +572,11 @@ qt_internal_extend_target(Qml CONDITION LINUX AND QT_FEATURE_dlopen
         dl
 )
 
-#### Keys ignored in scope 7:.:.:qml.pro:solaris-cc_x_:
-# QMAKE_CXXFLAGS_RELEASE = "--O2"
+qt_internal_extend_target(Qml CONDITION GCC
+    COMPILE_OPTIONS
+        # GCC 17 started complaining about MASM's use of defined in macros
+        -Wno-expansion-to-defined
+)
 
 qt_internal_extend_target(Qml CONDITION GCC AND (TEST_architecture_arch STREQUAL "mips")
     COMPILE_OPTIONS

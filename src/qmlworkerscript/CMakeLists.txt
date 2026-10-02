@@ -84,10 +84,11 @@ qt_internal_extend_target(QmlWorkerScript CONDITION CMAKE_BUILD_TYPE STREQUAL Re
         NDEBUG
 )
 
-qt_internal_extend_target(QmlWorkerScript CONDITION GCC AND QT_COMPILER_VERSION_MAJOR STRGREATER 6 AND NOT CLANG AND NOT ICC
+qt_internal_extend_target(QmlWorkerScript CONDITION GCC
     COMPILE_OPTIONS
         -Wno-expansion-to-defined
 )
+
 
 #### Keys ignored in scope 12:.:../3rdparty/masm:../3rdparty/masm/masm-defs.pri:(QT_COMPILER_VERSION_MAJOR STRGREATER 6):
 # QMAKE_CXXFLAGS_WARN_ON = "-Wno-expansion-to-defined"
