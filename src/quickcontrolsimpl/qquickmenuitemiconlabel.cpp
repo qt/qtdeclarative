@@ -104,8 +104,10 @@ void QQuickMenuItemIconLabelPrivate::updateImplicitSize()
     qreal effectiveSpacing = showText && showIcon && image->implicitWidth() > 0 ? spacing : 0;
     if (showShortcutText && shortcutLabel->implicitWidth() > 0)
         effectiveSpacing += spacing;
-    const qreal implicitWidth = display == QQuickIconLabel::TextBesideIcon
-        ? iconImplicitWidth + textImplicitWidth + shortcutTextImplicitHeight + effectiveSpacing
+    const bool shortcutFollowsText = display == QQuickIconLabel::TextBesideIcon
+        || display == QQuickIconLabel::TextOnly;
+    const qreal implicitWidth = shortcutFollowsText
+        ? iconImplicitWidth + textImplicitWidth + shortcutTextImplicitWidth + effectiveSpacing
         : qMax(qMax(iconImplicitWidth, textImplicitWidth), shortcutTextImplicitWidth);
     const qreal implicitHeight = display == QQuickIconLabel::TextUnderIcon
         ? iconImplicitHeight + textImplicitHeight + shortcutTextImplicitHeight + effectiveSpacing
@@ -123,7 +125,7 @@ void QQuickMenuItemIconLabelPrivate::layout()
     const qreal availableHeight = height - topPadding - bottomPadding;
 
     auto layoutShortcutLabel = [this, availableWidth, availableHeight](const qreal availableWidthForShortcut){
-        if (availableWidthForShortcut - spacing - shortcutLabel->implicitWidth() > 0) {
+        if (availableWidthForShortcut - spacing - shortcutLabel->implicitWidth() >= 0) {
             // There's enough space for everyone.
             shortcutLabel->setVisible(true);
 
@@ -157,7 +159,7 @@ void QQuickMenuItemIconLabelPrivate::layout()
         }
 
         if (shortcutLabel)
-            layoutShortcutLabel(availableWidth - (label->width() + spacing));
+            layoutShortcutLabel(availableWidth - label->width());
         break;
     } case QQuickIconLabel::TextUnderIcon: {
         // TextUnderIcon doesn't make sense for menu items, but we don't need to break
