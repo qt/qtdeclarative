@@ -72,7 +72,7 @@ std::optional<QQmlProgressSupport::UriWithToken> QQmlProgressSupport::Tokens::ta
 void QQmlProgressSupport::Tokens::removeToken(const QByteArray &uri)
 {
     const auto it = m_tokens.find(uri);
-    if (it != m_tokens.end())
+    if (it == m_tokens.end())
         return;
 
     if (const auto it2 = m_uriByToken.find(it->token); it2 != m_uriByToken.end())
