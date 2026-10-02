@@ -42,6 +42,7 @@ public:
     void updateSize();
     void signalSizeChange(const QSizeF &previousSize);
     void updateLayout();
+    void scheduleUpdatePaintNode();
     bool determineHorizontalAlignment();
     bool setHAlign(QQuickText::HAlignment, bool forceAlign = false);
     void mirrorChange() override;

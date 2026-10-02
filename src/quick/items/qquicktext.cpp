@@ -273,6 +273,12 @@ void QQuickTextPrivate::updateLayout()
     q->polish();
 }
 
+void QQuickTextPrivate::scheduleUpdatePaintNode()
+{
+    updateType = UpdatePaintNode;
+    dirty(QQuickItemPrivate::Content);
+}
+
 /*! \internal
     QTextDocument::loadResource() calls this to load inline images etc.
     But if it's a local file, don't do it: let QTextDocument::loadResource()
@@ -398,8 +404,7 @@ void QQuickText::imageDownloadFinished()
         d->textHasChanged = true;
         d->updateLayout();
     } else {
-        d->updateType = QQuickTextPrivate::UpdatePaintNode;
-        update();
+        d->scheduleUpdatePaintNode();
     }
 }
 
@@ -478,8 +483,7 @@ void QQuickTextPrivate::updateSize()
             truncated = false;
             emit q->truncatedChanged();
         }
-        updateType = UpdatePaintNode;
-        q->update();
+        scheduleUpdatePaintNode();
         return;
     }
 
@@ -586,8 +590,7 @@ void QQuickTextPrivate::updateSize()
     }
 
     signalSizeChange(previousSize);
-    updateType = UpdatePaintNode;
-    q->update();
+    scheduleUpdatePaintNode();
 }
 
 QQuickTextLine::QQuickTextLine()
@@ -1900,10 +1903,8 @@ void QQuickText::setColor(const QColor &color)
         return;
 
     d->color = rgb;
-    if (isComponentComplete())  {
-        d->updateType = QQuickTextPrivate::UpdatePaintNode;
-        update();
-    }
+    if (isComponentComplete())
+        d->scheduleUpdatePaintNode();
     emit colorChanged();
 }
 
@@ -1931,10 +1932,8 @@ void QQuickText::setLinkColor(const QColor &color)
         return;
 
     d->linkColor = rgb;
-    if (isComponentComplete()) {
-        d->updateType = QQuickTextPrivate::UpdatePaintNode;
-        update();
-    }
+    if (isComponentComplete())
+        d->scheduleUpdatePaintNode();
     emit linkColorChanged();
 }
 
@@ -1975,10 +1974,8 @@ void QQuickText::setStyle(QQuickText::TextStyle style)
         return;
 
     d->style = style;
-    if (isComponentComplete()) {
-        d->updateType = QQuickTextPrivate::UpdatePaintNode;
-        update();
-    }
+    if (isComponentComplete())
+        d->scheduleUpdatePaintNode();
     emit styleChanged(d->style);
 }
 
@@ -2011,10 +2008,8 @@ void QQuickText::setStyleColor(const QColor &color)
         return;
 
     d->styleColor = rgb;
-    if (isComponentComplete()) {
-        d->updateType = QQuickTextPrivate::UpdatePaintNode;
-        update();
-    }
+    if (isComponentComplete())
+        d->scheduleUpdatePaintNode();
     emit styleColorChanged();
 }
 
@@ -2532,8 +2527,7 @@ void QQuickText::geometryChange(const QRectF &newGeometry, const QRectF &oldGeom
     if ((effectiveHAlign() != QQuickText::AlignLeft && widthChanged) || verticalPositionChanged) {
         // If the width has changed and we're not left aligned do an update so the text is
         // repositioned even if a full layout isn't required. And the same for vertical.
-        d->updateType = QQuickTextPrivate::UpdatePaintNode;
-        update();
+        d->scheduleUpdatePaintNode();
     }
 
     if (!wrapped && !elide && !scaleFont && !verticalPositionChanged)
@@ -3235,10 +3229,8 @@ bool QQuickTextPrivate::transformChanged(QQuickItem *transformedItem)
 {
     // If there's a lot of text, we may need QQuickText::updatePaintNode() to call
     // QSGInternalTextNode::addTextLayout() again to populate a different range of lines
-    if (flags & QQuickItem::ItemObservesViewport) {
-        updateType = UpdatePaintNode;
-        dirty(QQuickItemPrivate::Content);
-    }
+    if (flags & QQuickItem::ItemObservesViewport)
+        scheduleUpdatePaintNode();
     return QQuickImplicitSizeItemPrivate::transformChanged(transformedItem);
 }
 
@@ -3277,10 +3269,8 @@ void QQuickText::setRenderTypeQuality(int renderTypeQuality)
         return;
     d->extra.value().renderTypeQuality = renderTypeQuality;
 
-    if (isComponentComplete()) {
-        d->updateType = QQuickTextPrivate::UpdatePaintNode;
-        update();
-    }
+    if (isComponentComplete())
+        d->scheduleUpdatePaintNode();
 
     emit renderTypeQualityChanged();
 }
