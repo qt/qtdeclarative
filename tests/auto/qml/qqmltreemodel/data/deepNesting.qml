@@ -35,4 +35,24 @@ QtObject {
     function setRowsWithDepth(levels) {
         testModel.rows = [ chain(levels, leaf) ]
     }
+
+    // The following return true if the conversion of the rows ran out of stack
+    // space. Only the nesting matters, so the rows are kept minimal.
+    function setRowsTooDeep(levels) {
+        try {
+            testModel.rows = [ chain(levels, level => ({ amount: level })) ]
+        } catch (e) {
+            return e instanceof RangeError
+        }
+        return false
+    }
+
+    function appendRowTooDeep(levels) {
+        try {
+            testModel.appendRow(testModel.index([0], 0), chain(levels, level => ({ amount: level })))
+        } catch (e) {
+            return e instanceof RangeError
+        }
+        return false
+    }
 }
