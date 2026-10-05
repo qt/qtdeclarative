@@ -1145,7 +1145,7 @@ void QQmlBindPrivate::decodeBinding(
     case QV4::CompiledData::Binding::Type_Number:
         setVariant(QV4::PersistentValue(
                 compilationUnit->engine,
-                compilationUnit->constants[binding->value.constantValueIndex].asReturnedValue()));
+                QV4::Encode(compilationUnit->bindingValueAsNumber(binding))));
         break;
     case QV4::CompiledData::Binding::Type_Boolean:
         setVariant(QV4::PersistentValue(compilationUnit->engine, QV4::Encode(binding->value.b)));

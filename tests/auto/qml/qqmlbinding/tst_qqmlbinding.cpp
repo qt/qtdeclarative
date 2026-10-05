@@ -12,6 +12,7 @@
 #include <private/qqmlinstantiator_p.h>
 #include <private/qqmlpropertytopropertybinding_p.h>
 #include <private/qquickrectangle_p.h>
+#include <QtQuick/qquickitem.h>
 
 #include <QtTest/qtest.h>
 
@@ -60,6 +61,7 @@ private slots:
     void deleteStashedObject();
     void multiValueTypeBinding();
     void objectBindingToId();
+    void resolvedEnumValue();
     void setFunction();
 
 private:
@@ -992,6 +994,16 @@ void tst_qqmlbinding::objectBindingToId()
 
     root->setProperty("bindingActive", true);
     QCOMPARE_NE(root->property("background").value<QObject *>(), nullptr);
+}
+
+void tst_qqmlbinding::resolvedEnumValue()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("resolvedEnumValue.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QQuickItem> root(qobject_cast<QQuickItem *>(component.create()));
+    QVERIFY(root);
+    QCOMPARE(root->transformOrigin(), QQuickItem::TopLeft);
 }
 
 void tst_qqmlbinding::setFunction()
