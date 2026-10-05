@@ -133,6 +133,7 @@ set(qml_files
     callWithSpread.qml
     childobject.qml
     collector.qml
+    ensureWrapperOnDeletedObject.qml
     colorAsVariant.qml
     colorString.qml
     compareOriginals.qml

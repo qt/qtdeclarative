@@ -603,10 +603,11 @@ bool QObjectWrapper::setQmlProperty(
 void QObjectWrapper::ensureWrapper(ExecutionEngine *engine, QObject *object)
 {
     QV4::Scope scope(engine);
-    QV4::Scoped<QV4::QObjectWrapper> wrapper {scope, QV4::QObjectWrapper::wrap(engine, object)};
-    QV4::WriteBarrier::markCustom(engine, [&wrapper](QV4::MarkStack *ms) {
-        wrapper->mark(ms);
-    });
+    if (QV4::Scoped<QV4::QObjectWrapper> wrapper{ scope,
+                                                  QV4::QObjectWrapper::wrap(engine, object) }) {
+        QV4::WriteBarrier::markCustom(engine,
+                                      [&wrapper](QV4::MarkStack *ms) { wrapper->mark(ms); });
+    }
 }
 
 void QObjectWrapper::setProperty(
