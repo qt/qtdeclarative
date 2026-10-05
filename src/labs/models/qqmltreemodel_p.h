@@ -85,6 +85,8 @@ private:
 
     void doInsert(const QModelIndex &index, int rowIndex, const QVariant &row);
 
+    bool rowConversionFailed(QLatin1StringView functionName) const;
+
     std::vector<std::unique_ptr<QQmlTreeRow>> mRows;
 
     QVariantList mInitialRows;

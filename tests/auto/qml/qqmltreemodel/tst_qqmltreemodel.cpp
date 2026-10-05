@@ -47,6 +47,7 @@ private slots:
     void buildNestedRows();
     void exportNestedRows();
     void validateNestedRows();
+    void rowsTooDeepToConvert();
 };
 
 void tst_QQmlTreeModel::appendToEmptyModel()
@@ -1868,6 +1869,40 @@ void tst_QQmlTreeModel::validateNestedRows()
     model->insertRow(0, QVariant(invalid));
     QCOMPARE(rowsChangedSpy.size(), 1);
     QCOMPARE(model->treeSize(), NestedRowsDepth);
+}
+
+void tst_QQmlTreeModel::rowsTooDeepToConvert()
+{
+    // Deep enough for the conversion from JavaScript to run out of stack space
+    // on any platform, which it reports as a RangeError.
+    constexpr int depth = 300'000;
+    const QRegularExpression tooDeep(u".*rows are nested too deeply to be converted"_s);
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("deepNesting.qml"));
+    std::unique_ptr<QObject> root(component.create());
+    QVERIFY2(root, qPrintable(component.errorString()));
+    auto *model = root->property("testModel").value<QQmlTreeModel *>();
+    QVERIFY(model);
+    const int initialTreeSize = model->treeSize();
+    QSignalSpy rowsChangedSpy(model, SIGNAL(rowsChanged()));
+    QVERIFY(rowsChangedSpy.isValid());
+
+    // The incompletely converted rows are rejected, and the model is unchanged.
+    QVariant rangeError;
+    QTest::ignoreMessage(QtWarningMsg, tooDeep);
+    QVERIFY(QMetaObject::invokeMethod(root.get(), "setRowsTooDeep",
+                                      Q_RETURN_ARG(QVariant, rangeError), Q_ARG(QVariant, depth)));
+    QVERIFY(rangeError.toBool());
+    QCOMPARE(rowsChangedSpy.size(), 0);
+    QCOMPARE(model->treeSize(), initialTreeSize);
+
+    QTest::ignoreMessage(QtWarningMsg, tooDeep);
+    QVERIFY(QMetaObject::invokeMethod(root.get(), "appendRowTooDeep",
+                                      Q_RETURN_ARG(QVariant, rangeError), Q_ARG(QVariant, depth)));
+    QVERIFY(rangeError.toBool());
+    QCOMPARE(rowsChangedSpy.size(), 0);
+    QCOMPARE(model->treeSize(), initialTreeSize);
 }
 
 QTEST_MAIN(tst_QQmlTreeModel)

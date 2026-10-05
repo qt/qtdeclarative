@@ -118,7 +118,7 @@ QVariant QQmlTreeModel::rows() const
 void QQmlTreeModel::setRows(const QVariant &rows)
 {
     const std::optional<QVariantList> validated = validateRowsArgument(rows);
-    if (!validated)
+    if (!validated || rowConversionFailed("TreeModel::setRows"_L1))
         return;
 
     const QVariantList rowsAsVariantList = *validated;
@@ -241,10 +241,18 @@ void QQmlTreeModel::setDataPrivate(const QModelIndex &index, const QString &role
 */
 void QQmlTreeModel::appendRow(QModelIndex parent, const QVariant &row)
 {
-    if (!validateNewRow("TreeModel::appendRow"_L1, row))
+    // Convert before validating: validation of incompletely converted rows would fail with a
+    // misleading warning.
+    const QVariant data =
+            row.userType() == QMetaType::QVariantMap
+               ? row
+               : row.value<QJSValue>().toVariant();
+
+    if (rowConversionFailed("TreeModel::appendRow"_L1))
         return;
 
-    const QVariant data = row.userType() == QMetaType::QVariantMap ? row : row.value<QJSValue>().toVariant();
+    if (!validateNewRow("TreeModel::appendRow"_L1, row))
+        return;
 
     if (parent.isValid()) {
         auto *parentRow = static_cast<QQmlTreeRow *>(parent.internalPointer());
@@ -366,10 +374,21 @@ void QQmlTreeModel::insertRow(int rowIndex, QModelIndex parent, const QVariant &
                                    << rowCount(parent);
         return;
     }
+
+    // Convert here rather than in doInsert(), which is too late to reject the
+    // row, and before validating: validation of incompletely converted rows
+    // would fail with a misleading warning.
+    const QVariant data =
+            row.userType() == QMetaType::QVariantMap
+                ? row
+                : row.value<QJSValue>().toVariant();
+    if (rowConversionFailed("insertRow()"_L1))
+        return;
+
     if (!validateNewRow("insertRow()"_L1, row))
         return;
 
-    doInsert(parent, rowIndex, row);
+    doInsert(parent, rowIndex, data);
 }
 
 /*!
@@ -506,6 +525,9 @@ void QQmlTreeModel::setRow(QModelIndex rowIndex, const QVariant &rowData)
         return;
 
     const QVariant rowAsVariant = rowData.userType() == QMetaType::QVariantMap ? rowData : rowData.value<QJSValue>().toVariant();
+    if (rowConversionFailed("TreeModel::setRow"_L1))
+        return;
+
     auto *row = static_cast<QQmlTreeRow *>(rowIndex.internalPointer());
     row->setData(rowAsVariant);
 
@@ -723,6 +745,22 @@ bool QQmlTreeModel::validateNewRow(QLatin1StringView functionName, const QVarian
         pending.pop_back();
      }
 
+    return true;
+}
+
+/*
+    QJSValue::toVariant() stops converting when it runs out of stack space: it
+    returns an incomplete result and raises a RangeError on the engine. Rows
+    converted that way must not end up in the model.
+*/
+bool QQmlTreeModel::rowConversionFailed(QLatin1StringView functionName) const
+{
+    const QJSEngine *engine = qjsEngine(this);
+    if (!engine || !engine->hasError())
+        return false;
+
+    qmlWarning(this).nospace() << functionName
+                               << ": rows are nested too deeply to be converted";
     return true;
 }
 
