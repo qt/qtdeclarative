@@ -1869,22 +1869,6 @@ static QString pathToUrl(const QString &path)
         return QUrl::fromLocalFile(dir).toString();
 };
 
-QStringList QQmlTypeLoader::urlsForModule(const QString &module) const
-{
-    const auto &importPaths = importPathList();
-    const auto completedImportPaths = QQmlImports::completeQmldirPaths(module, importPaths, {});
-    QStringList urls;
-    for (const auto &importPath : completedImportPaths) {
-        const auto cleanPath = cleanFilePath(localPathForUrlOrPath(importPath));
-        if (cleanPath.isEmpty())
-            continue;
-        if (const std::optional<QString> url = pathToUrl(cleanPath))
-            urls.append(url.value());
-    }
-
-    return urls;
-};
-
 /*!
 \internal
 

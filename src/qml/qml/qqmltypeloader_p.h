@@ -296,8 +296,6 @@ public:
     bool readCacheFile();
     bool isDebugging();
 
-    QStringList urlsForModule(const QString &module) const;
-
     static bool isResource(const QString &path);
 
 private:

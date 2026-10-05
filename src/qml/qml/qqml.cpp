@@ -7,15 +7,16 @@
 #include <private/qjsvalue_p.h>
 #include <private/qqmlbuiltinfunctions_p.h>
 #include <private/qqmlcomponent_p.h>
-#include <private/qqmldirdata_p.h>
 #include <private/qqmlengine_p.h>
 #include <private/qqmlfinalizer_p.h>
+#include <private/qqmlimport_p.h>
 #include <private/qqmlloggingcategorybase_p.h>
 #include <private/qqmlmetaobject_p.h>
 #include <private/qqmlmetatype_p.h>
 #include <private/qqmlmetatypedata_p.h>
 #include <private/qqmltype_p_p.h>
 #include <private/qqmltypemodule_p.h>
+#include <private/qqmltypenamecache_p.h>
 #include <private/qqmltypewrapper_p.h>
 #include <private/qqmlvaluetypewrapper_p.h>
 #include <private/qv4alloca_p.h>
@@ -3227,9 +3228,7 @@ private:
 
     bool typesMatch(const QMetaType &actual, const Type &expected) const;
     const QMetaObject *metaObjectForType(const Type &type) const;
-    QQmlRefPointer<QQmlTypeData> getTypeFromModule(const QString &moduleName,
-                                                   const QString &typeName) const;
-    QString qrcUrlForModule(const QString &moduleName) const;
+    QQmlType compositeType(const Type &type) const;
     const QMetaObject *baseMOAtDepth(const QMetaObject *mo, int depth) const;
 
     QQmlEngine *m_engine = nullptr;
@@ -3392,61 +3391,43 @@ const QMetaObject *Validator::metaObjectForType(const Type &type) const
         return mt.metaObject();
     }
 
-    if (type.module.isEmpty() || type.name.isEmpty())
-        return nullptr;
-
-    const auto typeData = getTypeFromModule(type.module, type.name);
-    if (typeData.isNull())
-        return nullptr;
-
-    if (type.isInlineComponent == IsIC::Yes)
-        return typeData->qmlType(type.icNameOrExtensionTypeName).typeId().metaObject();
-
-    const auto *cu = typeData->compilationUnit();
-    if (!cu)
-        return nullptr;
-
-    return cu->metaType().metaObject();
+    return compositeType(type).typeId().metaObject();
 }
 
-QQmlRefPointer<QQmlTypeData> Validator::getTypeFromModule(const QString &moduleName,
-                                                          const QString &typeName) const
+QQmlType Validator::compositeType(const Type &type) const
 {
-    QString typeUrl;
-    if (moduleName == s_thisCuModule && typeName == s_thisCuType) {
-        typeUrl = m_compilationUnit->finalUrlString();
-    } else {
-        Q_ASSERT(moduleName != s_thisCuModule);
-        Q_ASSERT(typeName != s_thisCuType);
+    const QString icName =
+            type.isInlineComponent == IsIC::Yes ? type.icNameOrExtensionTypeName : QString();
 
-        QString moduleUrl = qrcUrlForModule(moduleName);
-        if (moduleUrl.isEmpty())
-            return {};
+    if (type.module == s_thisCuModule && type.name == s_thisCuType)
+        return m_compilationUnit->qmlTypeForComponent(icName);
 
-        QQmlDirParser parser; // TODO avoid reparsing?
-        const QUrl qmldirUrl(moduleUrl + QStringLiteral("qmldir"));
-        const auto *data = m_loader->getQmldir(qmldirUrl).data();
-        if (!parser.parse(data->content()))
-            return {};
+    Q_ASSERT(type.module != s_thisCuModule);
+    Q_ASSERT(type.name != s_thisCuType);
 
-        const auto &components = parser.components();
-        const auto it = components.constFind(typeName);
-        if (it == components.constEnd())
-            return {};
+    if (type.module.isEmpty() || type.name.isEmpty())
+        return QQmlType();
 
-        typeUrl = moduleUrl + it->fileName;
-    }
+    // The compilation unit has already resolved all its imports. We don't have to look further.
+    // If the module isn't among them, the type has moved to a different module since the
+    // signature was recorded.
+    Q_ASSERT(m_compilationUnit->typeNameCache);
+    const QQmlImportInstance *import =
+            m_compilationUnit->typeNameCache->findImportByModuleUri(type.module);
+    if (!import)
+        return QQmlType();
 
-    return m_loader->getType(QUrl(typeUrl), QQmlTypeLoader::Synchronous);
-};
+    // If the module also has a C++ type of the same name, that one takes precedence. We cannot
+    // reach the composite type through the module then.
+    QQmlType qmlType;
+    if (!import->resolveType(m_loader, type.name, nullptr, &qmlType) || !qmlType.isComposite())
+        return QQmlType();
 
-QString Validator::qrcUrlForModule(const QString &moduleName) const
-{
-    for (const auto &url : m_loader->urlsForModule(moduleName)) {
-        if (url.startsWith(QStringLiteral("qrc")))
-            return url;
-    }
-    return QString();
+    // Types only used in script code are resolved, but not loaded yet. Load them like
+    // QQmlTypeWrapper does. If the type is loaded already, this is just a cache lookup.
+    const auto cu =
+            m_loader->getType(qmlType.sourceUrl(), QQmlTypeLoader::Synchronous)->compilationUnit();
+    return cu ? cu->qmlTypeForComponent(icName) : QQmlType();
 }
 
 bool validateLookupSignature(QQmlEngine *engine, QV4::CompiledData::CompilationUnit *cu,
