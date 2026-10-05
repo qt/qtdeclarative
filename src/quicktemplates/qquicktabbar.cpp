@@ -6,6 +6,8 @@
 #include "qquicktabbutton_p.h"
 #include "qquickcontainer_p_p.h"
 
+#include <QtQuick/private/qquickitemview_p.h>
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -333,7 +335,12 @@ void QQuickTabBar::itemAdded(int index, QQuickItem *item)
 {
     Q_D(QQuickTabBar);
     Q_UNUSED(index);
-    QQuickItemPrivate::get(item)->setCulled(true); // QTBUG-55129
+    // Cull the tab so that it stays hidden until the view shows it (QTBUG-55129). Only do this
+    // for views, as nothing else would uncull it. A Repeater, for example, does uncull an item when
+    // it creates it, but for a tab added after the Repeater was created, that happens before this
+    // function is called. If we culled the tab here, it would stay culled, and hence invisible.
+    if (qobject_cast<QQuickItemView *>(d->contentItem))
+        QQuickItemPrivate::get(item)->setCulled(true);
     if (QQuickTabButton *button = qobject_cast<QQuickTabButton *>(item))
         QObjectPrivate::connect(button, &QQuickTabButton::checkedChanged, d, &QQuickTabBarPrivate::updateCurrentIndex);
     QQuickTabBarAttached *attached = qobject_cast<QQuickTabBarAttached *>(qmlAttachedPropertiesObject<QQuickTabBar>(item));
