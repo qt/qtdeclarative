@@ -1016,10 +1016,10 @@ QVariant SequencePrototype::toVariant(const QV4::Value &array, QMetaType targetT
     Q_ASSERT(length >= 0);
     Q_ASSERT(length <= qint64(std::numeric_limits<quint32>::max()));
 
-    QV4::ScopedValue v(scope);
+    QV4::ScopedValue element(scope);
     for (quint32 i = 0; i < quint32(length); ++i) {
         QVariant variant;
-        QV4::ScopedValue element(scope, a->get(i));
+        element = a->get(i);
 
         // Note: We can convert to any sequence type here, even those that don't have a specified
         //       order. Therefore the meta.addValue() below. meta.addValue() preferably adds to the

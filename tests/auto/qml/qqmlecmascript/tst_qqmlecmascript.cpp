@@ -211,6 +211,7 @@ private slots:
     void sequenceConversionThreads();
     void sequenceConversionBindings();
     void assignSequenceTypes();
+    void largeArrayToSequence();
     void sequenceSort_data();
     void sequenceSort();
     void sequenceConversionViaSequentialIterableFallback();
@@ -6390,6 +6391,17 @@ void tst_qqmlecmascript::sequenceConversionBindings()
         QScopedPointer<QObject> object(component.create());
         QVERIFY2(object, qPrintable(component.errorString()));
     }
+}
+
+void tst_qqmlecmascript::largeArrayToSequence()
+{
+    // QTBUG-151133: Converting a huge JS array must not use up one JS stack slot per element.
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("largeArrayToSequence.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY2(object, qPrintable(component.errorString()));
+    QCOMPARE(object->property("count").toInt(), 600000);
 }
 
 void tst_qqmlecmascript::assignSequenceTypes()
