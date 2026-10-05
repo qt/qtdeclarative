@@ -192,15 +192,18 @@ ApplicationWindow {
 
         //! [delayButton]
         delayButton {
-            padding: 0
             indicator {
+                height: 6
                 fillWidth: true
-                fillHeight: true
-                color: "transparent"
-                border.width: 0
-                foreground.color: palette.accent
+                border.width: 1
+                alignment: Qt.AlignBottom
+                foreground {
+                    margins: 2
+                    fillWidth: true
+                    fillHeight: true
+                    color: palette.accent
+                }
             }
-            checked.indicator.foreground.color: palette.accent.darker(1.2)
         }
         //! [delayButton]
 
