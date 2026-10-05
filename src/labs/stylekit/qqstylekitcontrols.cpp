@@ -147,8 +147,8 @@ QT_BEGIN_NAMESPACE
     Grouped property for styling \l [QtQuickControls]{DelayButton}.
 
     For a delay button, the progress is styled through the indicator. By
-    default, the indicator itself is transparent and without a border,
-    so only the indicator's foreground is visible as it fills up.
+    default, the indicator is drawn as a thin bar along the bottom edge of
+    the button, and its foreground fills up as the progress increases.
 
     Unset properties fall back to \l abstractButton.
 
