@@ -52,6 +52,11 @@ public:
     QQmlTypeNameCache(const QQmlRefPointer<QQmlImports> &imports) : m_imports(imports) {}
     ~QQmlTypeNameCache() {}
 
+    const QQmlImportInstance *findImportByModuleUri(const QString &uri) const
+    {
+        return m_imports->findImportByModuleUri(uri);
+    }
+
     inline bool isEmpty() const;
 
     void add(const QHashedString &name, int sciptIndex = -1, const QHashedString &nameSpace = QHashedString());
