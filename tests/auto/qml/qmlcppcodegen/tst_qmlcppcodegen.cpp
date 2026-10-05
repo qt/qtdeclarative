@@ -89,6 +89,7 @@ private slots:
     void callObjectLookupOnNull();
     void callWithSpread();
     void collectGarbageDuringAotCode();
+    void ensureWrapperOnDeletedObject();
     void collectGarbageAfterAotCodeReturned();
     void colorAsVariant();
     void colorString();
@@ -1250,6 +1251,22 @@ void tst_QmlCppCodegen::collectGarbageDuringAotCode()
     QVERIFY(o3);
 
     QTRY_COMPARE_GT(o3->property("count").toInt(), 10);
+}
+
+void tst_QmlCppCodegen::ensureWrapperOnDeletedObject()
+{
+    // Make the garbage collector run incrementally, returning to the event loop mid-cycle.
+    qputenv("QV4_GC_TIMELIMIT", "1");
+    const auto restoreEnvironment = qScopeGuard([]() { qunsetenv("QV4_GC_TIMELIMIT"); });
+
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/ensureWrapperOnDeletedObject.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    std::unique_ptr<QObject> o(c.create());
+    QVERIFY(o);
+
+    // Reaching a number of rounds without crashing is the test.
+    QTRY_COMPARE_GT(o->property("rounds").toInt(), 50);
 }
 
 void tst_QmlCppCodegen::colorAsVariant()

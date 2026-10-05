@@ -134,6 +134,7 @@ set(qml_files
     childobject.qml
     aotLocalsGarbage.qml
     collector.qml
+    ensureWrapperOnDeletedObject.qml
     colorAsVariant.qml
     colorString.qml
     compareOriginals.qml
