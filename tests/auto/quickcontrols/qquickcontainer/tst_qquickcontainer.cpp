@@ -24,6 +24,7 @@ private slots:
     void zeroSize_data();
     void zeroSize();
     void skipReorderContentModelItem();
+    void tabBarWithRepeater();
 };
 
 tst_qquickcontainer::tst_qquickcontainer()
@@ -144,6 +145,29 @@ void tst_qquickcontainer::skipReorderContentModelItem()
         const auto *textItem = qobject_cast<QQuickText *>(listView->itemAtIndex(index));
         QCOMPARE(textItem->text().toInt(), index + 1);
     }
+}
+
+// Tests that tabs in a TabBar whose contentItem is a Repeater (in a Row) aren't culled,
+// including those added after the Repeater was created.
+void tst_qquickcontainer::tabBarWithRepeater()
+{
+    QQuickControlsApplicationHelper helper(this, "tabBarWithRepeater.qml");
+    QVERIFY2(helper.ready, helper.failureMessage());
+    centerOnScreen(helper.window);
+    helper.window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(helper.window));
+
+    auto *staticTabButton = helper.window->property("staticTabButton").value<QQuickItem *>();
+    QVERIFY(staticTabButton);
+    QCOMPARE(QQuickItemPrivate::get(staticTabButton)->culled, false);
+
+    QVERIFY(QMetaObject::invokeMethod(helper.window, "addTabButton"));
+    auto *tabBar = helper.window->property("tabBar").value<QQuickContainer *>();
+    QVERIFY(tabBar);
+    QCOMPARE(tabBar->count(), 2);
+    auto *dynamicTabButton = tabBar->itemAt(1);
+    QVERIFY(dynamicTabButton);
+    QCOMPARE(QQuickItemPrivate::get(dynamicTabButton)->culled, false);
 }
 
 QTEST_MAIN(tst_qquickcontainer)
