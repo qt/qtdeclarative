@@ -16,6 +16,16 @@
 
 #include <QQuickView>
 
+QQuickWidget *MainWindow::setupQuickWidget(const QUrl &source)
+{
+    QQuickWidget *w = new QQuickWidget;
+    w->setSizePolicy(QSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed));
+    w->setSource(source);
+    w->setResizeMode(QQuickWidget::SizeViewToRootObject);
+    return w;
+}
+
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -36,21 +46,14 @@ MainWindow::MainWindow(QWidget *parent)
     ui->saSvgPainter->setWidget(m_svgPainter);
     ui->saSvgPainter->setBackgroundRole(QPalette::Base);
 
-    m_lottieAnimationWidget = new QQuickWidget;
-    m_lottieAnimationWidget->setSource(QUrl(QStringLiteral("qrc:/qt/qml/VectorImageTest/LottieAnimation.qml")));
-    m_lottieAnimationWidget->setResizeMode(QQuickWidget::SizeViewToRootObject);
-    m_lottieAnimationWidget->setSizePolicy(QSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed));
+    m_lottieAnimationWidget = setupQuickWidget(QUrl(QStringLiteral("qrc:/qt/qml/VectorImageTest/LottieAnimation.qml")));
     ui->saLottieAnimation->setWidget(m_lottieAnimationWidget);
 
-    m_vectorImageView = new QQuickView(windowHandle());
-    connect(m_vectorImageView, &QWindow::widthChanged, this, &MainWindow::vectorImageSizeUpdated);
-    connect(m_vectorImageView, &QWindow::heightChanged, this, &MainWindow::vectorImageSizeUpdated);
-    m_vectorImageView->setSource(QUrl(QStringLiteral("qrc:/qt/qml/VectorImageTest/VectorImage.qml")));
-    m_vectorImageView->setResizeMode(QQuickView::SizeViewToRootObject);
-
-    m_vectorImageWidget = QWidget::createWindowContainer(m_vectorImageView);
-    m_vectorImageWidget->setSizePolicy(QSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed));
+    m_vectorImageWidget = setupQuickWidget(QUrl(QStringLiteral("qrc:/qt/qml/VectorImageTest/VectorImage.qml")));
     ui->saVectorImage->setWidget(m_vectorImageWidget);
+
+    m_vectorImageWidgetNonDefault = setupQuickWidget(QUrl(QStringLiteral("qrc:/qt/qml/VectorImageTest/VectorImageNonDefault.qml")));
+    ui->saVectorImageNonDefault->setWidget(m_vectorImageWidgetNonDefault);
 
     connect(m_manager, &VectorImageManager::currentSourceChanged, this, &MainWindow::updateSource);
     connect(m_manager, &VectorImageManager::sourcesChanged, this, &MainWindow::updateSources);
@@ -102,13 +105,6 @@ void MainWindow::togglePlaying()
     m_manager->setPlaying(!m_manager->playing());
     m_settings->setValue(QStringLiteral("playing"), m_manager->playing());
     updatePlayButton();
-}
-
-void MainWindow::vectorImageSizeUpdated()
-{
-    if (m_vectorImageView && m_vectorImageWidget) {
-        m_vectorImageWidget->setMinimumSize(m_vectorImageView->size());
-    }
 }
 
 void MainWindow::loadDirectory(const QString &newDir)

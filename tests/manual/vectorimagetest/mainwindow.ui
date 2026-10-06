@@ -54,8 +54,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>263</width>
-             <height>756</height>
+             <width>209</width>
+             <height>752</height>
             </rect>
            </property>
           </widget>
@@ -97,8 +97,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>264</width>
-             <height>756</height>
+             <width>208</width>
+             <height>752</height>
             </rect>
            </property>
           </widget>
@@ -140,8 +140,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>263</width>
-             <height>756</height>
+             <width>209</width>
+             <height>752</height>
             </rect>
            </property>
           </widget>
@@ -183,8 +183,51 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>263</width>
-             <height>756</height>
+             <width>208</width>
+             <height>752</height>
+            </rect>
+           </property>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout_5">
+        <item>
+         <widget class="QLabel" name="label_4">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>VectorImage (non-default generator)</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QScrollArea" name="saVectorImageNonDefault">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="toolTip">
+           <string>VectorImage</string>
+          </property>
+          <property name="widgetResizable">
+           <bool>true</bool>
+          </property>
+          <widget class="QWidget" name="scrollAreaWidgetContents_3">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>0</y>
+             <width>209</width>
+             <height>752</height>
             </rect>
            </property>
           </widget>
@@ -336,7 +379,7 @@
      <x>0</x>
      <y>0</y>
      <width>1107</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>
