@@ -38,8 +38,6 @@ using namespace Qt::StringLiterals;
     \note All loading and saving is done synchronously for now.
     This may block the UI if the \l source is a slow network drive.
     This may be improved in future versions of Qt.
-
-    \note This API is considered tech preview and may change in future versions of Qt.
 */
 
 /*!

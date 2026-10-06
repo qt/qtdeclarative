@@ -72,9 +72,6 @@
     FlexboxLayout to arrange the rectangle items in more flexible way
 
     \snippet layouts/simpleFlexboxLayout.qml layout-definition
-
-    \note This API is considered tech preview and may change or be removed in
-    future versions of Qt.
 */
 
 QT_BEGIN_NAMESPACE

@@ -154,9 +154,6 @@ QT_BEGIN_NAMESPACE
 
     \preliminary
 
-    \note QQuickRhiItem and QQuickRhiItemRenderer are in tech preview in Qt
-    6.7. \b {The API is under development and subject to change.}
-
     \sa QQuickRhiItem, QRhi
  */
 
