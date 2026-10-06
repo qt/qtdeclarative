@@ -18,6 +18,7 @@ class QSettings;
 class QLabel;
 class QQuickWidget;
 class QQuickView;
+class QScrollArea;
 
 class MainWindow : public QMainWindow
 {
@@ -36,7 +37,6 @@ private slots:
     void loadDirectory(const QString &newDir);
     void updateIndex(int newIndex);
     void setLooping(bool looping);
-    void vectorImageSizeUpdated();
     void updatePlayButton();
     void togglePlaying();
     void updateCurrentDir(const QString &newDir);
@@ -44,14 +44,15 @@ private slots:
 private:
     void setDirList(const QStringList &list);
     void setScale(const int scale);
+    QQuickWidget *setupQuickWidget(const QUrl &source);
 
     Ui::MainWindow *ui;
     VectorImageManager *m_manager = nullptr;
     QSettings *m_settings = nullptr;
     QLabel *m_imageLabel = nullptr;
     SvgPainter *m_svgPainter = nullptr;
-    QWidget *m_vectorImageWidget = nullptr;
+    QQuickWidget *m_vectorImageWidget = nullptr;
+    QQuickWidget *m_vectorImageWidgetNonDefault = nullptr;
     QQuickWidget *m_lottieAnimationWidget = nullptr;
-    QQuickView *m_vectorImageView = nullptr;
 };
 #endif // MAINWINDOW_H

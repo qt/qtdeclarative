@@ -7,9 +7,14 @@ import QtQuick.Controls
 import Qt.labs.lottieqt
 
 Item {
-    width: vectorImage.visible ? vectorImage.implicitWidth * (VectorImageManager.scale / 10.0) : 500
-    height: vectorImage.visible ? vectorImage.implicitHeight * (VectorImageManager.scale / 10.0) : 500
-    scale: vectorImage.visible ? (VectorImageManager.scale / 10.0) : 1
+    property bool isLottie: VectorImageManager.currentSource.toString().endsWith("json")
+    property alias isNonDefault: vectorImage._qt_usenondefaultgenerator
+    property int vectorImageWidth: vectorImage.visible ? vectorImage.implicitWidth : 500
+    property int vectorImageHeight: vectorImage.visible ? vectorImage.implicitHeight : 500
+
+    width: vectorImageWidth * scale
+    height: vectorImageHeight * scale
+    scale: VectorImageManager.scale / 10.0
     transformOrigin: Item.TopLeft
 
     Image {
@@ -21,24 +26,26 @@ Item {
         width: parent.width
         height: parent.height
         transformOrigin: Item.TopLeft
-        visible: vectorImage.visible
     }
 
     VectorImage {
         id: vectorImage
+        property bool _qt_usenondefaultgenerator: false
+
         source: VectorImageManager.currentSource
         preferredRendererType: VectorImage.CurveRenderer
         assumeTrustedSource: true
         animations.loops: VectorImageManager.looping ? Animation.Infinite : 1
         asynchronous: true
         visible: status === VectorImage.Ready
-        animations.paused: !VectorImageManager.playing
+        animations.paused: !VectorImageManager.playing || (isLottie && isNonDefault)
 
         LottieVectorImageController {
             id: controller
-            target: VectorImageManager.currentSource.toString().endsWith("json") ? vectorImage : null
+            target: isLottie ? vectorImage : null
             onCurrentFrameChanged: {
-                VectorImageManager.currentTime = 100.0 * (controller.currentFrame - controller.startFrame) / (controller.endFrame - controller.startFrame)
+                if (!isNonDefault)
+                    VectorImageManager.currentTime = 100.0 * (controller.currentFrame - controller.startFrame) / (controller.endFrame - controller.startFrame)
             }
         }
     }
@@ -48,7 +55,7 @@ Item {
         target: VectorImageManager
 
         function onCurrentTimeChanged(time) {
-            if (!VectorImageManager.playing && !isUpdating) {
+            if (!isUpdating && (!VectorImageManager.playing || (isLottie && isNonDefault))) {
                 isUpdating = true
                 var frame = ((time / 100.0) * (controller.endFrame - controller.startFrame) + controller.startFrame)
                 controller.gotoAndStop(frame)
