@@ -313,7 +313,7 @@ void QQmlJSLogger::log(Message &&diagMsg, bool showContext, bool showFileName)
 
     // Note: we do the clamping to [Info, Critical] range since our logger only
     // supports 3 categories
-    diagMsg.type = std::clamp(diagMsg.type, QtInfoMsg, QtCriticalMsg, isMsgTypeLess);
+    diagMsg.type = std::clamp(diagMsg.msgType(), QtInfoMsg, QtCriticalMsg, isMsgTypeLess);
 
     // Note: since we clamped our \a type, the output message is not printed
     // exactly like it was requested, bear with us
@@ -322,7 +322,7 @@ void QQmlJSLogger::log(Message &&diagMsg, bool showContext, bool showFileName)
             "https://doc.qt.io/qt-6/qmllint-warnings-and-errors-%1.html"_L1.arg(categoryName),
             "[%1]"_L1.arg(categoryName));
     m_output.writePrefixedMessage(u"%1%2 %3"_s.arg(prefix, diagMsg.message, categoryLink),
-                                  diagMsg.type);
+                                  diagMsg.msgType());
 
     if (diagMsg.loc.length > 0 && !m_code.isEmpty() && showContext)
         printContext(diagMsg.loc);
@@ -343,7 +343,7 @@ void QQmlJSLogger::log(Message &&diagMsg, bool showContext, bool showFileName)
 
 void QQmlJSLogger::countMessage(const Message &message)
 {
-    switch (message.type) {
+    switch (message.msgType()) {
     case QtWarningMsg:
         ++m_numWarnings;
         break;

@@ -60,9 +60,8 @@ QQmlJSLinterCodegen::compileBinding(const QV4::Compiler::Context *context,
                 &m_typeResolver, m_currentObject->location, m_currentScope->location, m_logger);
     QQmlJSCompilePass::Function function = initializer.run(context, name, astNode, irBinding);
 
-    m_logger->iterateCurrentFunctionMessages([this](const Message &error) {
-        diagnose(error.message, error.type, error.loc);
-    });
+    m_logger->iterateCurrentFunctionMessages(
+            [this](const Message &error) { diagnose(error.message, error.msgType(), error.loc); });
 
     m_logger->setCompileErrorPrefix(u"Could not compile binding for %1: "_s.arg(name));
     m_logger->setCompileSkipPrefix(u"Compilation of binding for %1 was skipped: "_s.arg(name));
@@ -84,9 +83,8 @@ QQmlJSLinterCodegen::compileFunction(const QV4::Compiler::Context *context,
                 &m_typeResolver, m_currentObject->location, m_currentScope->location, m_logger);
     QQmlJSCompilePass::Function function = initializer.run(context, name, astNode);
 
-    m_logger->iterateCurrentFunctionMessages([this](const Message &error) {
-        diagnose(error.message, error.type, error.loc);
-    });
+    m_logger->iterateCurrentFunctionMessages(
+            [this](const Message &error) { diagnose(error.message, error.msgType(), error.loc); });
 
     m_logger->setCompileErrorPrefix(u"Could not compile function %1: "_s.arg(name));
     m_logger->setCompileSkipPrefix(u"Compilation of function %1 was skipped: "_s.arg(name));

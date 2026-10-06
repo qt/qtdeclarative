@@ -362,7 +362,10 @@ public:
 
     QString appendEnum(Enum *enumeration);
     QString appendSignal(Signal *signal);
-    QString appendProperty(Property *prop, const QString &propertyName, bool isDefaultProperty, const QQmlJS::SourceLocation &defaultToken, QQmlJS::SourceLocation *errorLocation);
+    QString appendProperty(Property *prop, const QString &propertyName, bool isDefaultProperty,
+                           const QQmlJS::SourceLocation &defaultToken,
+                           QQmlJS::SourceLocation *errorLocation,
+                           QQmlJS::DiagnosticCategory *errorCategory);
     QString appendAlias(Alias *prop, const QString &aliasName, bool isDefaultProperty, const QQmlJS::SourceLocation &defaultToken, QQmlJS::SourceLocation *errorLocation);
     void setFirstAlias(Alias *alias) { aliases->first = alias; }
 
@@ -595,6 +598,8 @@ public:
     bool resolveQualifiedId(QQmlJS::AST::UiQualifiedId **nameToResolve, Object **object, bool onAssignment = false);
 
     void recordError(const QQmlJS::SourceLocation &location, const QString &description);
+    void recordError(const QQmlJS::SourceLocation &location, const QString &description,
+                     QQmlJS::DiagnosticCategory category);
     bool shouldContinue() const { return m_failureMode == ContinueAfterFailure; }
 
     quint32 registerString(const QString &str) const { return jsGenerator->registerString(str); }

@@ -487,10 +487,11 @@ void QQmlJSImportVisitor::processImportWarnings(
     QList<QQmlJS::DiagnosticMessage> importWarnings = warnings;
 
     // if we have file selector warnings, they are marked by a lower priority
-    auto fileSelectorWarningsIt = std::partition(importWarnings.begin(), importWarnings.end(),
-                                                 [](const QQmlJS::DiagnosticMessage &message) {
-                                                     return message.type != QtMsgType::QtInfoMsg;
-                                                 });
+    auto fileSelectorWarningsIt =
+            std::partition(importWarnings.begin(), importWarnings.end(),
+                           [](const QQmlJS::DiagnosticMessage &message) {
+                               return message.msgType() != QtMsgType::QtInfoMsg;
+                           });
     if (fileSelectorWarningsIt != importWarnings.end()) {
         m_logger->log(QStringLiteral("Warnings occurred while importing %1:").arg(what), qmlImportFileSelector,
                       srcLocation);

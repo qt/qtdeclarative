@@ -458,7 +458,7 @@ static void addJsonWarning(QJsonArray &warnings, const QQmlJS::DiagnosticMessage
     QJsonObject jsonMessage;
 
     QString type;
-    switch (message.type) {
+    switch (message.msgType()) {
     case QtDebugMsg:
         type = u"debug"_s;
         break;

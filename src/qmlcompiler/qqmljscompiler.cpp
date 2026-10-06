@@ -865,7 +865,7 @@ std::optional<QList<QQmlJS::DiagnosticMessage>> QQmlJSAotCompiler::finalizeBindi
     QList<QQmlJS::DiagnosticMessage> errors;
     m_logger->iterateCurrentFunctionMessages([&](const Message &msg) {
         if (msg.compilationStatus == Message::CompilationStatus::Error)
-            errors.append(diagnose(msg.message, msg.type, msg.loc));
+            errors.append(diagnose(msg.message, msg.msgType(), msg.loc));
     });
     return errors;
 }

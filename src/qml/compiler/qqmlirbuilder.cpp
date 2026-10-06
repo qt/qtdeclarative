@@ -142,6 +142,7 @@ void Object::sortAliasDependencies(const Document *doc, QList<QQmlJS::Diagnostic
                 error.loc.offset = QQmlJS::SourceLocation::offsetFrom(doc->code, location.line(),
                                                                       location.column());
                 error.message = QStringLiteral("Alias \"%1\" is part of an alias cycle").arg(name);
+                error.type = QQmlJS::DiagnosticCategory::AliasCycle;
                 errors->append(std::move(error));
             }
             return;
@@ -302,7 +303,10 @@ QString Object::appendSignal(Signal *signal)
     return QString(); // no error
 }
 
-QString Object::appendProperty(Property *prop, const QString &propertyName, bool isDefaultProperty, const QQmlJS::SourceLocation &defaultToken, QQmlJS::SourceLocation *errorLocation)
+QString Object::appendProperty(Property *prop, const QString &propertyName, bool isDefaultProperty,
+                               const QQmlJS::SourceLocation &defaultToken,
+                               QQmlJS::SourceLocation *errorLocation,
+                               QQmlJS::DiagnosticCategory *errorCategory)
 {
     Object *target = declarationsOverride;
     if (!target)
@@ -310,13 +314,15 @@ QString Object::appendProperty(Property *prop, const QString &propertyName, bool
 
     for (Property *p = target->properties->first; p; p = p->next)
         if (p->nameIndex() == prop->nameIndex()) {
+            *errorCategory = DiagnosticCategory::DuplicatedName;
             return tr("Duplicated property name \"%1\", \"%1\" is already a property.")
                     .arg(propertyName);
         }
 
     for (Alias *a = target->aliases->first; a; a = a->next)
         if (a->nameIndex() == prop->nameIndex()) {
-            return tr("Duplicated property name \"%1\", \"%1\" is already an alias")
+            *errorCategory = DiagnosticCategory::DuplicatedName;
+            return tr("Duplicated property name \"%1\", \"%1\" is already an alias.")
                     .arg(propertyName);
         }
 
@@ -327,6 +333,7 @@ QString Object::appendProperty(Property *prop, const QString &propertyName, bool
     if (isDefaultProperty) {
         if (target->indexOfDefaultPropertyOrAlias != -1) {
             *errorLocation = defaultToken;
+            *errorCategory = DiagnosticCategory::DuplicatedName;
             return tr("Duplicate default property");
         }
         target->indexOfDefaultPropertyOrAlias = index;
@@ -616,7 +623,9 @@ bool IRBuilder::visit(QQmlJS::AST::UiInlineComponent *ast)
             return false;
     }
     if (inlineComponentsNames.contains(ast->name.toString())) {
-        recordError(ast->firstSourceLocation(), QLatin1String("Inline component names must be unique per file"));
+        recordError(ast->firstSourceLocation(),
+                    QLatin1String("Inline component names must be unique per file"),
+                    QQmlJS::DiagnosticCategory::DuplicateInlineComponent);
         if (!shouldContinue())
             return false;
     } else {
@@ -672,7 +681,8 @@ bool IRBuilder::visit(QQmlJS::AST::UiArrayBinding *node)
 
     if (bindingsTarget()->findBinding(propertyNameIndex) != nullptr) {
         recordError(name->identifierToken,
-                    "Duplicate binding on property '%1'"_L1.arg(stringAt(propertyNameIndex)));
+                    "Duplicate binding on property '%1'"_L1.arg(stringAt(propertyNameIndex)),
+                    QQmlJS::DiagnosticCategory::DuplicatePropertyBinding);
         if (!shouldContinue())
             return false;
     }
@@ -777,7 +787,13 @@ bool IRBuilder::visit(QQmlJS::AST::UiImport *node)
     if (!node->importId.isNull()) {
         QString qualifier = node->importId.toString();
         if (!qualifier.at(0).isUpper()) {
-            recordError(node->importIdToken, QCoreApplication::translate("QQmlParser","Invalid import qualifier '%1': must start with an uppercase letter").arg(qualifier));
+            recordError(
+                    node->importIdToken,
+                    QCoreApplication::translate(
+                            "QQmlParser",
+                            "Invalid import qualifier '%1': must start with an uppercase letter")
+                            .arg(qualifier),
+                    DiagnosticCategory::Import);
             if (!shouldContinue())
                 return false;
         }
@@ -1266,18 +1282,21 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
             property->location.set(loc.startLine, loc.startColumn);
 
             QQmlJS::SourceLocation errorLocation;
+            QQmlJS::DiagnosticCategory errorCategory = QQmlJS::DiagnosticCategory::Syntax;
             QString error;
 
             if (QV4::Compiler::Codegen::isNameGlobal(propName))
                 error = tr("Illegal property name");
             else if (isValid)
-                error = _object->appendProperty(property, propName, node->isDefaultMember(), node->defaultToken(), &errorLocation);
+                error = _object->appendProperty(property, propName, node->isDefaultMember(),
+                                                node->defaultToken(), &errorLocation,
+                                                &errorCategory);
 
             if (!error.isEmpty()) {
                 if (errorLocation.startLine == 0)
                     errorLocation = node->identifierToken;
 
-                recordError(errorLocation, error);
+                recordError(errorLocation, error, errorCategory);
                 if (!shouldContinue())
                     return false;
                 isValid = false;
@@ -1549,7 +1568,8 @@ void IRBuilder::appendBinding(const QQmlJS::SourceLocation &qualifiedNameLocatio
     setBindingValue(binding, value, parentNode);
     QString error = bindingsTarget()->appendBinding(binding, /*isListBinding*/false);
     if (!error.isEmpty()) {
-        recordError(qualifiedNameLocation, error.arg(stringAt(propertyNameIndex)));
+        recordError(qualifiedNameLocation, error.arg(stringAt(propertyNameIndex)),
+                    QQmlJS::DiagnosticCategory::DuplicatePropertyBinding);
     }
 }
 
@@ -1587,7 +1607,8 @@ void IRBuilder::appendBinding(const QQmlJS::SourceLocation &qualifiedNameLocatio
         binding->value.objectIndex = objectIndex;
         QString error = bindingsTarget()->appendBinding(binding, isListItem);
         if (!error.isEmpty())
-            recordError(qualifiedNameLocation, error.arg(stringAt(propertyNameIndex)));
+            recordError(qualifiedNameLocation, error.arg(stringAt(propertyNameIndex)),
+                        QQmlJS::DiagnosticCategory::DuplicatePropertyBinding);
     }
 }
 
@@ -1704,7 +1725,8 @@ bool IRBuilder::setId(const QQmlJS::SourceLocation &idLocation, QQmlJS::AST::Sta
     } else {
         QChar ch = str.at(0);
         if (ch.isLetter() && !ch.isLower()) {
-            recordError(loc, tr("Id must start with a lower case letter or an '_'"));
+            recordError(loc, tr("Id must start with a lower case letter or an '_'"),
+                        QQmlJS::DiagnosticCategory::Syntax);
             if (!shouldContinue())
                 return false;
             isValid = false;
@@ -1735,7 +1757,8 @@ bool IRBuilder::setId(const QQmlJS::SourceLocation &idLocation, QQmlJS::AST::Sta
             recordError(idLocation,
                         u"Found a duplicated id. id %1 was first declared at %2:%3"_s.arg(
                                 str, QString::number(_object->locationOfIdProperty.line()),
-                                QString::number(_object->locationOfIdProperty.column())));
+                                QString::number(_object->locationOfIdProperty.column())),
+                        QQmlJS::DiagnosticCategory::SyntaxDuplicateIds);
             if (!shouldContinue())
                 return false;
             isValid = false;
@@ -1813,7 +1836,8 @@ bool IRBuilder::resolveQualifiedId(QQmlJS::AST::UiQualifiedId **nameToResolve, O
             QString error = (*object)->appendBinding(binding, /*isListBinding*/false);
             if (!error.isEmpty()) {
                 recordError(qualifiedIdElement->identifierToken,
-                            error.arg(stringAt(propertyNameIndex)));
+                            error.arg(stringAt(propertyNameIndex)),
+                            QQmlJS::DiagnosticCategory::DuplicatePropertyBinding);
                 if (!shouldContinue())
                     return false;
             }
@@ -1836,6 +1860,16 @@ void IRBuilder::recordError(const QQmlJS::SourceLocation &location, const QStrin
     QQmlJS::DiagnosticMessage error;
     error.loc = location;
     error.message = description;
+    errors << error;
+}
+
+void IRBuilder::recordError(const QQmlJS::SourceLocation &location, const QString &description,
+                            QQmlJS::DiagnosticCategory category)
+{
+    QQmlJS::DiagnosticMessage error;
+    error.loc = location;
+    error.message = description;
+    error.type = category;
     errors << error;
 }
 

@@ -315,7 +315,7 @@ public:
     inline DiagnosticMessage diagnosticMessage() const
     {
         for (const DiagnosticMessage &d : diagnostic_messages) {
-            if (d.type != QtWarningMsg)
+            if (!d.isWarning())
                 return d;
         }
 

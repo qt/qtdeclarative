@@ -27,21 +27,57 @@
 QT_BEGIN_NAMESPACE
 
 namespace QQmlJS {
+enum class DiagnosticCategory : quint8 {
+    // warnings -> QtWarningMsg
+    AliasCycle,
+    DuplicateInlineComponent,
+    DuplicatePropertyBinding,
+    DuplicatedName,
+    Import,
+
+    // errors -> QtCriticalMsg
+    Syntax,
+    SyntaxDuplicateIds,
+};
+
+struct MsgTypeOrDiagnosticCategory
+{
+public:
+    MsgTypeOrDiagnosticCategory() : m_isQtMsgType(1), m_data(QtCriticalMsg) { }
+    MsgTypeOrDiagnosticCategory(QtMsgType qtMsgType) : m_isQtMsgType(1), m_data(qtMsgType) { }
+    MsgTypeOrDiagnosticCategory(DiagnosticCategory diagnosticCategory)
+        : m_isQtMsgType(0), m_data(static_cast<quint8>(diagnosticCategory))
+    {
+    }
+    friend bool comparesEqual(MsgTypeOrDiagnosticCategory a, MsgTypeOrDiagnosticCategory b) noexcept
+    {
+        return a.m_isQtMsgType == b.m_isQtMsgType && a.m_data == b.m_data;
+    }
+    Q_DECLARE_EQUALITY_COMPARABLE(MsgTypeOrDiagnosticCategory);
+
+    QtMsgType asMsgType() const
+    {
+        if (m_isQtMsgType)
+            return static_cast<QtMsgType>(m_data);
+        return static_cast<DiagnosticCategory>(m_data) < DiagnosticCategory::Syntax ? QtWarningMsg
+                                                                                    : QtCriticalMsg;
+    }
+
+    quint8 m_isQtMsgType : 1;
+    quint8 m_data : 7;
+};
+
 struct DiagnosticMessage
 {
     QString message;
-    QtMsgType type = QtCriticalMsg;
+    MsgTypeOrDiagnosticCategory type = QtCriticalMsg;
     SourceLocation loc;
 
-    bool isError() const
-    {
-        return type == QtCriticalMsg;
-    }
+    QtMsgType msgType() const { return type.asMsgType(); }
 
-    bool isWarning() const
-    {
-        return type == QtWarningMsg;
-    }
+    bool isError() const { return msgType() == QtCriticalMsg; }
+
+    bool isWarning() const { return msgType() == QtWarningMsg; }
 };
 } // namespace QQmlJS
 

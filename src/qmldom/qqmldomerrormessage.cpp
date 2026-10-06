@@ -273,12 +273,12 @@ ErrorMessage::ErrorMessage(
         const ErrorGroups &errorGroups, const DiagnosticMessage &msg, const Path &element,
         const QString &canonicalFilePath, QLatin1String errorId)
     : errorId(errorId)
-    , message(msg.message)
-    , errorGroups(errorGroups)
-    , level(errorLevelFromQtMsgType(msg.type))
-    , path(element)
-    , file(canonicalFilePath)
-    , location(msg.loc)
+      , message(msg.message)
+      , errorGroups(errorGroups)
+      , level(errorLevelFromQtMsgType(msg.msgType()))
+      , path(element)
+      , file(canonicalFilePath)
+      , location(msg.loc)
 {
     if (level == Level::Fatal) // we should not end up here, it should have been handled at a higher level already
         errorGroups.fatal(msg.message, element, canonicalFilePath, location);

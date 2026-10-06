@@ -147,7 +147,7 @@ static Diagnostic messageToDiagnostic_helper(AdvanceFunc advancePositionPastLoca
                                              std::optional<int> version, const Message &message)
 {
     Diagnostic diagnostic;
-    diagnostic.severity = severityFromMsgType(message.type);
+    diagnostic.severity = severityFromMsgType(message.msgType());
     Range &range = diagnostic.range;
     Position &position = range.start;
 
