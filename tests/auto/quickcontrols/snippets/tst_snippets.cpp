@@ -79,6 +79,11 @@ void tst_Snippets::verify()
     if (QTest::currentDataTag() != QLatin1String("qtquickcontrols-spinbox-custom"))
         QTest::failOnWarning();
 
+#ifdef Q_OS_VXWORKS
+    if (QTest::currentDataTag() == QLatin1String("qtquickcontrols-headerviewdelegate-custom"))
+        QSKIP("QTBUG-151176: delegate bindings are evaluated without a QML context");
+#endif
+
     QUrl url = QUrl::fromLocalFile(input);
 #if !QT_CONFIG(qml_labs)
     QStringList filesUsingLabs {
