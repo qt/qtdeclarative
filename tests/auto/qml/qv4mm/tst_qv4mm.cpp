@@ -32,6 +32,8 @@
 #include <private/qqmlcomponent_p.h>
 #include <private/qv4executablecompilationunit_p.h>
 
+using namespace Qt::StringLiterals;
+
 class tst_qv4mm : public QQmlDataTest
 {
     Q_OBJECT
@@ -88,6 +90,8 @@ private slots:
     void redrainDuringSweepWhenRunningToCompletion();
     void destroyOnEngineShutdown_data();
     void destroyOnEngineShutdown();
+    void generatorFrameMarking_data();
+    void generatorFrameMarking();
 };
 
 tst_qv4mm::tst_qv4mm()
@@ -2025,6 +2029,86 @@ void tst_qv4mm::destroyOnEngineShutdown()
     EngineShutdownState state;
     createAndShutDownEngine(&state);
     QCOMPARE(state.destroyCount, 1);
+}
+
+static QV4::Heap::Base *trackedGeneratorLocal = nullptr;
+
+static QV4::ReturnedValue method_track_generator_local(const QV4::FunctionObject *,
+                                                       const QV4::Value *, const QV4::Value *argv,
+                                                       int argc)
+{
+    Q_ASSERT(argc == 1);
+    trackedGeneratorLocal = argv[0].heapObject();
+    return argv[0].asReturnedValue();
+}
+
+static void runGcUntil(QV4::GCStateMachine *sm, QV4::GCState target)
+{
+    while (sm->state != target) {
+        QV4::GCStateInfo &stateInfo = sm->stateInfoMap[int(sm->state)];
+        sm->state = stateInfo.execute(sm, sm->stateData);
+    }
+}
+
+static QV4::ReturnedValue method_finish_gc(const QV4::FunctionObject *f, const QV4::Value *,
+                                           const QV4::Value *, int)
+{
+    runGcUntil(f->engine()->memoryManager->gcStateMachine.get(), QV4::GCState::Invalid);
+    return QV4::Encode::undefined();
+}
+
+void tst_qv4mm::generatorFrameMarking_data()
+{
+    QTest::addColumn<QString>("duringGc");
+
+    // The generator stores a fresh string in a local and yields after the generator's
+    // frame has already been marked.
+    QTest::addRow("suspended") << u"suspended.next()"_s;
+
+    // The gc completes while the generator is still executing.
+    QTest::addRow("executing") << u"executing.next()"_s;
+}
+
+void tst_qv4mm::generatorFrameMarking()
+{
+    QFETCH(QString, duringGc);
+
+    QJSEngine jsEngine;
+    QV4::ExecutionEngine *v4 = jsEngine.handle();
+    v4->globalObject->defineDefaultProperty(u"__track"_s, method_track_generator_local);
+    v4->globalObject->defineDefaultProperty(u"__finishGc"_s, method_finish_gc);
+
+    jsEngine.evaluate(uR"(
+        function* suspendedGenerator() {
+            for (;;) {
+                const s = __track("x".repeat(64) + Math.random());
+                yield;
+                s.length;
+            }
+        }
+        var suspended = suspendedGenerator();
+        suspended.next();
+
+        function* executingGenerator() {
+            const s = __track("x".repeat(64) + Math.random());
+            __finishGc();
+            yield;
+            s.length;
+        }
+        var executing = executingGenerator();
+    )"_s);
+
+    auto *sm = v4->memoryManager->gcStateMachine.get();
+    sm->reset();
+    v4->memoryManager->gcBlocked = QV4::MemoryManager::Unblocked;
+    runGcUntil(sm, QV4::GCState::MarkReady);
+
+    trackedGeneratorLocal = nullptr;
+    jsEngine.evaluate(duringGc);
+    QVERIFY(trackedGeneratorLocal);
+
+    runGcUntil(sm, QV4::GCState::Invalid);
+    QVERIFY(trackedGeneratorLocal->inUse());
 }
 
 QTEST_MAIN(tst_qv4mm)

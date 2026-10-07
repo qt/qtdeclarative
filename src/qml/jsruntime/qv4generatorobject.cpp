@@ -56,6 +56,15 @@ Heap::FunctionObject *GeneratorFunction::create(ExecutionContext *context, Funct
     return g->d();
 }
 
+// The interpreter writes to the generator's frame without write barrier. While the generator is
+// executing, the frame is marked as part of the stack. Once it's suspended, we need to mark it
+// explicitly.
+static void markSuspendedFrame(ExecutionEngine *engine, const JSTypesStackFrame *frame)
+{
+    WriteBarrier::markCustom(engine,
+                             [frame](MarkStack *markStack) { frame->markJSFrame(markStack); });
+}
+
 ReturnedValue GeneratorFunction::virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
 {
     const GeneratorFunction *gf = static_cast<const GeneratorFunction *>(f);
@@ -87,6 +96,7 @@ ReturnedValue GeneratorFunction::virtualCall(const FunctionObject *f, const Valu
     gp->cppFrame.push(engine);
 
     Moth::VME::interpret(&gp->cppFrame, engine, function->codeData);
+    markSuspendedFrame(engine, &gp->cppFrame);
 
     gp->state = GeneratorState::SuspendedStart;
 
@@ -205,6 +215,7 @@ ReturnedValue GeneratorObject::resume(ExecutionEngine *engine, const Value &arg,
     ScopedValue result(scope, Moth::VME::interpret(&gp->cppFrame, engine, code));
 
     engine->currentStackFrame = gp->cppFrame.parentFrame();
+    markSuspendedFrame(engine, &gp->cppFrame);
 
     bool done = (gp->cppFrame.yield() == nullptr);
     gp->state = done ? GeneratorState::Completed : GeneratorState::SuspendedYield;
