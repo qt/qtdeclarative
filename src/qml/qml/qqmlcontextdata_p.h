@@ -76,6 +76,7 @@ public:
     void clearContextGuards();
     void clearIdValues();
     void invalidate();
+    void invalidateAfterContextObjectLost();
 
     bool isValid() const
     {

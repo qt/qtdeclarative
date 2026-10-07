@@ -7127,14 +7127,6 @@ static KnownIssue interpreterIssue(const UnqualifiedName &name, NameKinds kinds,
 
     const bool lostBeforeFirstUse = loss != Loss::None && !cached;
 
-    // Same as above: The interpreter walks up the parents of the invalidated context to find
-    // the ids of the enclosing contexts.
-    if (winner == BoundId && loss == Loss::ContextObject) {
-        return { KnownIssue::Failure,
-                 "The enclosing contexts of a bound component cannot be reached anymore once the "
-                 "context object is lost" };
-    }
-
     // QQmlContextWrapper::getPropertyAndBase() disables lookups and searches the global object
     // before anything else if the scope object has a dynamic metaobject.
     if ((name.builtIn & Global) && (kinds & DynamicScopeObject)) {
@@ -7146,18 +7138,14 @@ static KnownIssue interpreterIssue(const UnqualifiedName &name, NameKinds kinds,
     // QQmlContextWrapper::getPropertyAndBase() searches the global object, and therefore the
     // translation functions, only after all scopes and contexts. NaN is not folded because the
     // code generator compares with "Nan". Translation bindings don't look up the translation
-    // functions at all. A lost scope object is skipped, and the contexts underneath a lost context
-    // cannot be reached anymore.
+    // functions at all. A lost scope or context object is skipped.
     if (((isTranslation && usage != "Binding") || isNaN) && !(kinds & DynamicScopeObject)) {
         NameKinds reachable = kinds
                 & (ScopeObject | ContextObject | BoundContextObject | ModelContextObject
                    | UnboundContextObject | ParentContextProperty | ParentContextObject);
         if (lostBeforeFirstUse) {
-            // The parent contexts are unreachable once the context object is lost, so nothing
-            // is found before the global object.
-            constexpr NameKinds contexts = ContextObject | BoundContextObject | ModelContextObject
-                    | UnboundContextObject | ParentContextProperty | ParentContextObject;
-            reachable &= loss == Loss::ScopeObject ? ~NameKinds(ScopeObject) : ~contexts;
+            const NameKind lost = loss == Loss::ScopeObject ? ScopeObject : ContextObject;
+            reachable &= ~NameKinds(lost);
         }
         if (reachable) {
             return { KnownIssue::Failure,
@@ -7175,8 +7163,7 @@ static KnownIssue interpreterIssue(const UnqualifiedName &name, NameKinds kinds,
         && (kinds
             & (ModelContextObject | UnboundContextObject | ParentContextProperty
                | ParentContextObject))
-        && !(kinds & (UpperCaseType | ScopeObject | ContextObject | BoundContextObject))
-        && !(lostBeforeFirstUse && loss == Loss::ContextObject)) {
+        && !(kinds & (UpperCaseType | ScopeObject | ContextObject | BoundContextObject))) {
         return { KnownIssue::Failure,
                  "The interpreter searches the parent contexts before the global object" };
     }
@@ -7190,10 +7177,9 @@ static KnownIssue interpreterIssue(const UnqualifiedName &name, NameKinds kinds,
                  "not been populated before" };
     }
 
-    // Likewise for the context object. The parent contexts are unreachable after it is lost, so
-    // the search can only end up on the global object, ids of the component, or types.
+    // Likewise for the context object.
     if (winner == ContextObject && loss == Loss::ContextObject && !cached
-        && (name.builtIn || (kinds & (Id | BoundId | UpperCaseType | LowerCaseType)))) {
+        && (kinds & ~NameKinds(ContextObject))) {
         return { KnownIssue::Failure,
                  "The interpreter resumes the search past a lost context object if the lookup has "
                  "not been populated before" };
@@ -7204,7 +7190,7 @@ static KnownIssue interpreterIssue(const UnqualifiedName &name, NameKinds kinds,
 
 // Where compiled code deviates from the rules.
 static KnownIssue compilerIssue(const UnqualifiedName &name, NameKinds kinds,
-                                const QByteArray &usage, Loss loss)
+                                const QByteArray &usage)
 {
     const NameKind winner = winnerOf(kinds);
 
@@ -7254,17 +7240,6 @@ static KnownIssue compilerIssue(const UnqualifiedName &name, NameKinds kinds,
                  "Compiled code does not know the names a dynamic metaobject provides" };
     }
 
-    // The compiled lookup for an enclosing id walks up the parents of the immediate context. Once
-    // the context is invalidated, it has no parents and the id is not found. Since the compiler
-    // resolves the id before the lower-case type, this also happens if there is one.
-    if ((winner == BoundId || (winner == LowerCaseType && (kinds & BoundId)))
-        && loss == Loss::ContextObject) {
-        return { KnownIssue::Crash,
-                 "Compiled code doesn't find an enclosing id of a bound component anymore once "
-                 "the context object is lost and asserts in "
-                 "AOTCompiledContext::(init)loadContextIdLookup()" };
-    }
-
     // QQmlJSTypeResolver::scopedType() searches ids and the scope object before types.
     if (winner == LowerCaseType && (kinds & (Id | BoundId | ScopeObject))) {
         return { KnownIssue::Failure,
@@ -7287,20 +7262,8 @@ static KnownIssue unqualifiedNameIssue(const UnqualifiedName &name, NameKinds ki
                                        const QByteArray &usage, Loss loss, bool cached,
                                        bool interpreted)
 {
-    const NameKind winner = winnerOf(kinds);
-
-    // QQmlContextData::invalidate() clears the parent of the lost context. Nothing underneath
-    // the immediate context can be reached anymore.
-    if (loss == Loss::ContextObject
-        && (winner == BoundContextObject || winner == ModelContextObject || winner == UnboundId
-            || winner == UnboundContextObject || winner == ParentContextProperty
-            || winner == ParentContextObject)) {
-        return { KnownIssue::Failure,
-                 "The parent contexts cannot be reached anymore once the context object is lost" };
-    }
-
     return interpreted ? interpreterIssue(name, kinds, usage, loss, cached)
-                       : compilerIssue(name, kinds, usage, loss);
+                       : compilerIssue(name, kinds, usage);
 }
 
 void tst_QmlCppCodegen::unqualifiedInlineComponent_data()
@@ -7400,7 +7363,7 @@ void tst_QmlCppCodegen::unqualifiedLostEnclosingContextObject()
         file += u"Swapped"_s;
 
     // When an enclosing context's context object is destroyed, QQmlContextData::
-    // invalidateContextObjectLost() keeps that context linked to its own parent, but it
+    // invalidateAfterContextObjectLost() keeps that context linked to its own parent, but it
     // invalidates its child contexts, which clears their parent link. The contexts of the inner
     // component then cannot reach the lost context anymore. They cannot tell that it would have
     // resolved the name, and the interpreter continues the search beyond it, to the global object.

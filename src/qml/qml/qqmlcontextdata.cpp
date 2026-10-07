@@ -95,6 +95,34 @@ void QQmlContextData::invalidate()
     clearParent();
 }
 
+/*!
+    \internal
+
+    Invalidates this context after its context object was lost, but keeps it linked to its
+    parent. The lexically enclosing contexts of a bound component have to stay reachable for
+    looking up ids, even after the context object is gone. If the parent dies first, it
+    invalidates this context again, which then clears the link.
+
+    This only applies to internal contexts, the ones the engine creates for the components it
+    instantiates. A context that is not internal is invalidated, which also clears its link to
+    the parent.
+*/
+void QQmlContextData::invalidateAfterContextObjectLost()
+{
+    if (!m_isInternal) {
+        invalidate();
+        return;
+    }
+
+    emitDestruction();
+
+    while (m_childContexts)
+        m_childContexts->invalidate();
+    clearImportedScripts();
+
+    m_engine = nullptr;
+}
+
 void QQmlContextData::clearContextRecursively()
 {
     emitDestruction();
