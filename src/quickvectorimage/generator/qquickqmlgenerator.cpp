@@ -1367,7 +1367,19 @@ void QQuickQmlGenerator::generateUseNode(const UseNodeInfo &info)
         stream() << "Item {";
         m_indentLevel++;
         generateNodeBase(info);
+
+        // The offset is part of the content, so it is not replaced by transform animations
+        if (!info.startPos.isNull()) {
+            stream() << "Item {";
+            m_indentLevel++;
+            stream() << "transform: Translate { x: " << info.startPos.x()
+                     << "; y: " << info.startPos.y() << " }";
+        }
     } else {
+        if (!info.startPos.isNull()) {
+            m_indentLevel--;
+            stream() << "}";
+        }
         generateNodeEnd(info);
     }
 }

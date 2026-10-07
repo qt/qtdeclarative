@@ -1163,20 +1163,10 @@ void QSvgVisitorImpl::visitUseNode(const QSvgUse *node)
         return;
     handleBaseNodeSetup(node);
     UseNodeInfo info;
-    QPointF startPos = node->start();
     fillCommonNodeInfo(node, info);
     fillAnimationInfo(node, info);
-    if (!info.bounds.isNull())
-        info.bounds.translate(-startPos);
     info.stage = StructureNodeStage::Start;
-    if (!startPos.isNull()) {
-        QTransform xform;
-        if (!info.isDefaultTransform)
-            xform = info.transform.defaultValue().value<QTransform>();
-        xform.translate(startPos.x(), startPos.y());
-        info.transform.setDefaultValue(QVariant::fromValue(xform));
-        info.isDefaultTransform = false;
-    }
+    info.startPos = node->start();
     m_generator->generateUseNode(info);
     QString oldLinkSuffix = m_linkSuffix;
     m_linkSuffix += QStringLiteral("_use") + info.id;

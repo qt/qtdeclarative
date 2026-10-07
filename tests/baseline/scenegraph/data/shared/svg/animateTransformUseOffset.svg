@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="200" height="100">
+  <defs>
+    <rect id="box" width="80" height="80" />
+  </defs>
+
+  <!-- Red marks the expected final positions and should be fully covered -->
+  <rect x="10" y="10" width="80" height="80" fill="red" />
+  <rect x="120" y="20" width="40" height="40" fill="red" />
+
+  <!-- Offset (5, 5) + animated translate (5, 5) => ends at (10, 10) -->
+  <use xlink:href="#box" x="5" y="5" fill="green">
+    <animateTransform attributeName="transform" type="translate" from="0 0" to="5 5" dur="200ms" additive="replace" fill="freeze" />
+  </use>
+
+  <!-- Offset (240, 40) inside animated scale 0.5 => ends at (120, 20), size 40x40 -->
+  <use xlink:href="#box" x="240" y="40" fill="green">
+    <animateTransform attributeName="transform" type="scale" from="1 1" to="0.5 0.5" dur="200ms" additive="replace" fill="freeze" />
+  </use>
+</svg>

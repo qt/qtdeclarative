@@ -149,6 +149,7 @@ enum class StructureNodeStage
 struct UseNodeInfo : NodeInfo
 {
     StructureNodeStage stage;
+    QPointF startPos;
 };
 
 struct LottieMarkerInfo

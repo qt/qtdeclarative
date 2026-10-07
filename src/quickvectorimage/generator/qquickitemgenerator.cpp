@@ -971,7 +971,20 @@ void QQuickItemGenerator::generateUseNode(const UseNodeInfo &info)
         auto *item = new QQuickItem;
         pushItem(item);
         generateNodeBase(info);
+
+        // The offset is part of the content, so it is not replaced by transform animations
+        if (!info.startPos.isNull()) {
+            auto *contentItem = new QQuickItem;
+            auto *translate = new QQuickTranslate(contentItem);
+            translate->setX(info.startPos.x());
+            translate->setY(info.startPos.y());
+            auto transformProp = contentItem->transform();
+            transformProp.append(&transformProp, translate);
+            pushItem(contentItem);
+        }
     } else {
+        if (!info.startPos.isNull())
+            popItem();
         QQuickItem *item = popItem();
         QQuickItem *effectItem = item;
         QPointF sourceOrigin;

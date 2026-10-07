@@ -15,6 +15,7 @@ Rectangle {
         ListElement { src: "../shared/svg/animateTransformRemoveSum.svg" }
         ListElement { src: "../shared/svg/animateTransformFreezeSum.svg" }
         ListElement { src: "../shared/svg/animateTransformAll.svg" }
+        ListElement { src: "../shared/svg/animateTransformUseOffset.svg" }
     }
 
     Grid {
