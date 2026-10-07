@@ -7204,7 +7204,7 @@ static KnownIssue interpreterIssue(const UnqualifiedName &name, NameKinds kinds,
 
 // Where compiled code deviates from the rules.
 static KnownIssue compilerIssue(const UnqualifiedName &name, NameKinds kinds,
-                                const QByteArray &usage, Loss loss, bool cached, bool swapped)
+                                const QByteArray &usage, Loss loss)
 {
     const NameKind winner = winnerOf(kinds);
 
@@ -7212,37 +7212,9 @@ static KnownIssue compilerIssue(const UnqualifiedName &name, NameKinds kinds,
     const bool isTranslation = (name.builtIn & Keyword) && name.expression[0] != '"';
     const bool isNaN = qstrcmp(name.name, "NaN") == 0;
 
-    // Compiled code calls the scope object's method. Once the scope object is gone, that call
-    // asserts in QObjectMethod (cached lookup). An uncached lookup resumes the search past the lost
-    // scope object. If it finds the name in a context, AOTCompiledContext asserts because it
-    // expects a scope object method. If it finds an id or the global object, the compiled code
-    // calls that and throws a TypeError instead.
-    if (swapped && winner == ScopeObject && loss == Loss::ScopeObject) {
-        if (cached
-            || (kinds
-                & (ContextObject | BoundContextObject | ModelContextObject | UnboundContextObject
-                   | ParentContextProperty | ParentContextObject))) {
-            return { KnownIssue::Crash,
-                     "Compiled code calls the method of the lost scope object and asserts" };
-        }
-        if (kinds & (Global | UnboundId)) {
-            return { KnownIssue::Failure,
-                     "Compiled code resumes the search past the lost scope object and calls what "
-                     "it finds there" };
-        }
-    }
-
     // QQmlJSTypeResolver::scopedType() searches the scope object before the global object, so the
-    // compiled code calls the scope object's method. Once the scope object is gone, that call
-    // asserts in QObjectMethod (cached lookup) or in AOTCompiledContext, which expects a scope
-    // object lookup (uncached lookup). Only if nothing else has the name, the uncached call
-    // throws a TypeError instead.
+    // compiled code calls the scope object's method, not the translation function.
     if (isTranslation && usage != "Binding" && (kinds & ScopeObject)) {
-        if (loss == Loss::ScopeObject && (cached || kinds != (Keyword | ScopeObject))) {
-            return { KnownIssue::Crash,
-                     "Compiled code calls the translation method of the lost scope object and "
-                     "asserts" };
-        }
         return { KnownIssue::Failure,
                  "Compiled code searches the scope object before the translation functions" };
     }
@@ -7313,7 +7285,7 @@ static KnownIssue compilerIssue(const UnqualifiedName &name, NameKinds kinds,
 // Where the current implementation deviates from the rules.
 static KnownIssue unqualifiedNameIssue(const UnqualifiedName &name, NameKinds kinds,
                                        const QByteArray &usage, Loss loss, bool cached,
-                                       bool interpreted, bool swapped)
+                                       bool interpreted)
 {
     const NameKind winner = winnerOf(kinds);
 
@@ -7328,7 +7300,7 @@ static KnownIssue unqualifiedNameIssue(const UnqualifiedName &name, NameKinds ki
     }
 
     return interpreted ? interpreterIssue(name, kinds, usage, loss, cached)
-                       : compilerIssue(name, kinds, usage, loss, cached, swapped);
+                       : compilerIssue(name, kinds, usage, loss);
 }
 
 void tst_QmlCppCodegen::unqualifiedInlineComponent_data()
@@ -7746,7 +7718,7 @@ void tst_QmlCppCodegen::unqualifiedName()
 #endif
 
     const KnownIssue issue =
-            unqualifiedNameIssue(name, present, usage, loss, cached, interpreted, swapped);
+            unqualifiedNameIssue(name, present, usage, loss, cached, interpreted);
     if (issue.kind == KnownIssue::Crash)
         QSKIP(issue.reason);
 

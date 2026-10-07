@@ -2274,6 +2274,12 @@ bool AOTCompiledContext::callQmlContextPropertyLookup(uint index, void **args, i
 {
     QV4::Lookup *lookup = compilationUnit->runtimeLookups + index;
 
+    if (QQmlData::wasDeleted(qmlScopeObject)) {
+        engine->handle()->throwReferenceError(
+                compilationUnit->runtimeStrings[lookup->nameIndex]->toQString());
+        return false;
+    }
+
     if (lookup->call == QV4::Lookup::Call::ContextGetterScopeObjectMethod)
         return callQObjectMethod(engine->handle(), lookup, qmlScopeObject, args, argc);
 
@@ -2349,6 +2355,12 @@ void AOTCompiledContext::initCallQmlContextPropertyLookup(uint index, int relati
     }
 
     QV4::Lookup *lookup = compilationUnit->runtimeLookups + index;
+    if (QQmlData::wasDeleted(qmlScopeObject)) {
+        engine->handle()->throwReferenceError(
+                compilationUnit->runtimeStrings[lookup->nameIndex]->toQString());
+        return;
+    }
+
     QV4::Scope scope(engine->handle());
     QV4::ScopedValue thisObject(scope);
     QV4::ScopedFunctionObject function(
