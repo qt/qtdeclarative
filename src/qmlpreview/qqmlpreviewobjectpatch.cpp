@@ -37,6 +37,9 @@ objectIndices(QObject *object, const QQmlRefPointer<QV4::ExecutableCompilationUn
     QVarLengthArray<int, 4> objectIndices;
 
     QQmlData *ddata = QQmlData::get(object);
+    if (!ddata)
+        return objectIndices;
+
     if (ddata->compilationUnit == oldUnit)
         objectIndices.push_back(ddata->cuObjectIndex);
     if (ddata->hasVMEMetaObject) {
@@ -81,8 +84,37 @@ hasChangedNonCompositeBaseType(const QQmlRefPointer<QV4::ExecutableCompilationUn
             != nonCompositeBaseType(newTypeRef->typePropertyCache());
 }
 
+// Whether the object at objectIndex is the root of a component: The document, an inline component,
+// or an explicit or implicit Component.
+static bool isComponentRoot(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit,
+                            int objectIndex)
+{
+    if (objectIndex == 0)
+        return true;
+
+    if (objectIndex >= unit->objectCount())
+        return false;
+
+    if (unit->objectAt(objectIndex)->hasFlag(QV4::CompiledData::Object::IsInlineComponentRoot))
+        return true;
+
+    if (unit->baseCompilationUnit()->implicitComponentForObject(objectIndex) >= 0)
+        return true;
+
+    for (int i = 0, end = unit->objectCount(); i < end; ++i) {
+        const QV4::CompiledData::Object *object = unit->objectAt(i);
+        if (object->hasFlag(QV4::CompiledData::Object::IsComponent)
+            && int(object->bindingTable()->value.objectIndex) == objectIndex) {
+            return true;
+        }
+    }
+    return false;
+}
+
 // reset() + repopulateBindings() cannot faithfully reproduce some components in place,
 // because either:
+//  - Its index doesn't denote a component root anymore in the new unit, because objects were
+//    added or removed in front of it.
 //  - Its non-composite (C++) base type changed: the reused QObject is still an instance of the old
 //    class (see hasChangedNonCompositeBaseType).
 //  - It carries deferred bindings. We cannot re-install those because their handling is in the
@@ -93,10 +125,13 @@ canRebuildComponentRootInPlace(const QQmlRefPointer<QV4::ExecutableCompilationUn
                                   const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit,
                                   int objectIndex)
 {
-    // An index out of range in the new CU is obsolete: rebuildObject() skips it and the remap loop
-    // retires it. There is nothing to recreate from an enclosing root.
+    // An index out of range in the new CU is obsolete: rebuildObject() skips it and applyDiff()
+    // retires it afterwards. There is nothing to recreate from an enclosing root.
     if (objectIndex >= newUnit->objectCount())
         return true;
+
+    if (!isComponentRoot(newUnit, objectIndex))
+        return false;
 
     if (newUnit->objectAt(objectIndex)->hasFlag(QV4::CompiledData::Object::HasDeferredBindings))
         return false;
@@ -577,7 +612,7 @@ static void patchConstantBindings(const std::vector<QObject *> &objects,
 }
 
 // Point every live object that still references oldUnit at newUnit, in both its ddata and its
-// VME meta-object chain. Used after both in-place patching and root rebuilds.
+// VME meta-object chain. Used after in-place patching, which keeps all object indices stable.
 //
 // The ddata compilation unit and the VME chain are remapped independently: a composite-type
 // instance can carry oldUnit in its VME chain while its ddata->compilationUnit is a different
@@ -633,24 +668,30 @@ static void remapObjectsToNewUnit(const std::vector<QObject *> &objects,
     }
 }
 
-// If the object is instantiated as a component root of the old unit (its document root or an
-// inline-component root) whose own non-composite base type differs in the new unit or which
-// carries deferred bindings, return false. Otherwise return true.
+// Returns true if the object is instantiated as a component root of the old unit that we can
+// rebuild in place (see canRebuildComponentRootInPlace()), or as a component root of a different,
+// unchanged unit. The latter is rebuilt against its own unit. Otherwise, for example if the object
+// is not a component root at all or not even created from QML, return false.
 static bool isRebuildableComponentRoot(
         QObject *object,
         const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit,
         const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit)
 {
+    bool foundComponentRoot = false;
     for (int index : objectIndices(object, oldUnit)) {
-        if (index >= oldUnit->objectCount())
-            continue;
-        const auto flags = oldUnit->objectAt(index)->flags();
-        if (index != 0 && !(flags & QV4::CompiledData::Object::IsInlineComponentRoot))
+        if (index >= oldUnit->objectCount() || !isComponentRoot(oldUnit, index))
             continue;
         if (!canRebuildComponentRootInPlace(oldUnit, newUnit, index))
             return false;
+        foundComponentRoot = true;
     }
-    return true;
+
+    if (foundComponentRoot)
+        return true;
+
+    const QQmlData *ddata = QQmlData::get(object);
+    return ddata && ddata->compilationUnit && ddata->compilationUnit != oldUnit
+            && isComponentRoot(ddata->compilationUnit, ddata->cuObjectIndex);
 }
 
 // A component root whose non-composite base type changed or that carries deferred bindings cannot
@@ -666,24 +707,21 @@ static QObject *outerRebuildTarget(
 {
     Q_ASSERT(object);
 
-    // Eventually we either reach the outermost context or a context without context object.
-    // Then we return nullptr if we haven't found anything better before.
-    while (true) {
-        QQmlData *ddata = QQmlData::get(object);
-        if (!ddata || !ddata->outerContext)
-            return nullptr;
+    const QQmlData *ddata = QQmlData::get(object);
+    if (!ddata)
+        return nullptr;
 
-        QObject *outer = ddata->outerContext->contextObject();
-        if (!outer || outer == object)
-            return nullptr;
-
-        if (isRebuildableComponentRoot(outer, oldUnit, newUnit))
+    // Walk up the context hierarchy. The root of a component instance is the context object of
+    // its own context. Contexts may also have no context object or one that is not a component
+    // root at all (e.g. a delegate model's item). If we reach the root context, we give up.
+    for (QQmlRefPointer<QQmlContextData> context(ddata->outerContext); context;
+         context = context->parent()) {
+        QObject *outer = context->contextObject();
+        if (outer && outer != object && isRebuildableComponentRoot(outer, oldUnit, newUnit))
             return outer;
-
-        object = outer;
     }
 
-    Q_UNREACHABLE_RETURN(nullptr);
+    return nullptr;
 }
 
 // TODO: This is dangerous. We are manipulating compilation units exposed to multiple
@@ -837,20 +875,19 @@ PatchResult applyDiff(std::vector<QObject *> &objects,
     for (QObject *object : objects) {
         const QVarLengthArray<int, 4> indices = objectIndices(object, oldUnit);
         for (int index : indices) {
-            // Objects instantiated by an enclosing component (indices beyond the CU, explicit
-            // Component content) are recreated when that enclosing root is rebuilt, so we don't
-            // record them here.
-            if (index >= oldUnit->objectCount())
-                continue;
-            const auto flags = oldUnit->objectAt(index)->flags();
-            if (index != 0 && !(flags & QV4::CompiledData::Object::IsInlineComponentRoot))
+            // Objects instantiated by an enclosing component (indices beyond the CU) are recreated
+            // when that enclosing root is rebuilt, so we don't record them here. Neither do we
+            // record any other objects but component roots. Instances of inner components are not
+            // recreated by rebuilding the enclosing component. Therefore, we record their roots.
+            if (index >= oldUnit->objectCount() || !isComponentRoot(oldUnit, index))
                 continue;
 
-            // A component root whose own non-composite base type changed or which carries deferred
-            // bidnings cannot be rebuilt in place. Rebuild the enclosing component root instead, so
-            // that the object is recreated from scratch as an instance of the new C++ class with
-            // new deferred bindings. Travelling up the scope hierarchy this way only fails once we
-            // hit the root scope.
+            // A component root whose own non-composite base type changed, which carries deferred
+            // bidnings, or which isn't a component root anymore cannot be rebuilt in place. Rebuild
+            // the enclosing component root instead, so that the object is recreated from scratch
+            // as an instance of the new C++ class with new deferred bindings. A surviving instance
+            // of an inner component stays on oldUnit then. Travelling up the scope hierarchy this
+            // way only fails once we hit the root scope.
             if (!canRebuildComponentRootInPlace(oldUnit, newUnit, index)) {
                 QObject *outer = outerRebuildTarget(object, oldUnit, newUnit);
                 if (!outer)
@@ -907,7 +944,17 @@ PatchResult applyDiff(std::vector<QObject *> &objects,
         rebuildObject(target.object, target.index, target.oldCu, target.newCu);
     }
 
-    remapObjectsToNewUnit(objects, oldUnit, newUnit);
+    // Everything lexically inside the rebuilt components has been recreated or rebuilt now. Whatever
+    // was instantiated by oldUnit and survived without being rebuilt is obsolete. We cannot remap it
+    // to newUnit by index since indices may have shifted. Retire it.
+    for (QObject *object : objects) {
+        const QQmlData *ddata = QQmlData::get(object);
+        if (ddata->compilationUnit != oldUnit || ddata->isQueuedForDeletion)
+            continue;
+        BindingPatchContext::clearBindingsRecursive(object);
+        BindingPatchContext::retireObject(object);
+    }
+
     return PatchResult::Rebuilt;
 }
 
