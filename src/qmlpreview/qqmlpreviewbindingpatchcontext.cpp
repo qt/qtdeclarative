@@ -803,7 +803,10 @@ void BindingPatchContext::retireObject(QObject *object)
     // Unparent from QObject hierarchy so it no longer appears in
     // parent->children(), then schedule deletion. The destructor will
     // cascade-delete all QObject children (the recursive descendants).
+    // Mark the whole subtree as queued for deletion right away. Descendants may themselves be
+    // pending rebuild targets (e.g. inline component instances); they must not be rebuilt anymore.
     QQml_setParent_noEvent(object, nullptr);
+    QQmlData::markAsDeleted(object);
     object->deleteLater();
 }
 

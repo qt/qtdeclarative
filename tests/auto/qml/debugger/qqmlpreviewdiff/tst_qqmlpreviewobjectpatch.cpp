@@ -27,6 +27,7 @@
 #include <QtQuick/qquickwindow.h>
 #include <private/qquickitem_p.h>
 #include <private/qquickanimation_p.h>
+#include <private/qquicktext_p.h>
 
 #include <QtGui/qfont.h>
 #include <QtGui/qcolor.h>
@@ -512,6 +513,10 @@ private slots:
     // trigger an assert in "canGetTypeFromVariant<T>(this)" during rebuild.
     void derivedTypeFunctionChangeCrash();
     void nestedDerivedIdMethodChange();
+
+    // QTBUG-151189: adding a child forces a rebuild of a file whose inline component has a default
+    // alias. Rebuilding must not crash, and the inline component instances must stay intact.
+    void rebuildWithInlineComponentDefaultAlias();
 
 private:
     QQmlEngine engine;
@@ -5405,6 +5410,44 @@ void tst_QQmlPreviewObjectPatch::groupedPropertyNameClashesWithId()
         QObject *spotItem = w->findChild<QObject *>(QStringLiteral("spotItem"));
         QVERIFY(spotItem);
         QCOMPARE(spotItem->property("x").toReal(), 7);
+    }
+}
+
+void tst_QQmlPreviewObjectPatch::rebuildWithInlineComponentDefaultAlias()
+{
+    QTest::failOnWarning();
+
+    QQmlEngine localEngine;
+    QQmlComponent oldComp(&localEngine, testFileUrl("InlineDefaultAliasAddChildOld.qml"));
+    QVERIFY2(oldComp.isReady(), qPrintable(oldComp.errorString()));
+    std::unique_ptr<QObject> object(oldComp.create());
+    QVERIFY(object);
+
+    QQmlComponent newComp(&localEngine, testFileUrl("InlineDefaultAliasAddChildNew.qml"));
+    QVERIFY2(newComp.isReady(), qPrintable(newComp.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldComp)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComp)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    auto objects = objectsForCompilationUnit(&localEngine, oldExecUnit);
+    QVERIFY(!objects.empty());
+    QCOMPARE_NE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
+
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+
+    QVERIFY(object->findChild<QObject *>(QStringLiteral("probe")));
+
+    const QList<QQuickText *> texts = object->findChildren<QQuickText *>();
+    QCOMPARE(texts.size(), 2);
+    for (QQuickText *text : texts) {
+        QQuickItem *body = text->parentItem();
+        QVERIFY(body);
+        QQuickItem *notice = body->parentItem();
+        QVERIFY(notice);
+        QCOMPARE(body->width(), notice->width() - 20);
+        QCOMPARE(notice->height(), body->implicitHeight() + 20);
     }
 }
 
