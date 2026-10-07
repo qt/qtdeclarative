@@ -194,7 +194,7 @@ bool QQuickDeliveryAgentPrivate::deliverTouchAsMouse(QQuickItem *item, QTouchEve
     auto device = pointerEvent->pointingDevice();
 
     // A touch event from a trackpad is likely to be followed by a mouse or gesture event, so mouse event synth is redundant
-    if (device->type() == QInputDevice::DeviceType::TouchPad && device->capabilities().testFlag(QInputDevice::Capability::MouseEmulation)) {
+    if (isTouchPadWithMouseEmulation(pointerEvent->device())) {
         qCDebug(lcTouchTarget) << q << "skipping delivery of synth-mouse event from" << device;
         return false;
     }
@@ -1741,6 +1741,15 @@ bool QQuickDeliveryAgentPrivate::isSinglePointDevice(const QInputDevice *dev)
     return false;
 }
 
+/*!
+    Returns \c true if \a dev is a touch/track pad that will emulate mouse events.
+*/
+bool QQuickDeliveryAgentPrivate::isTouchPadWithMouseEmulation(const QInputDevice *device)
+{
+    return device->type() == QInputDevice::DeviceType::TouchPad
+        && device->capabilities().testFlag(QInputDevice::Capability::MouseEmulation);
+}
+
 QQuickPointingDeviceExtra *QQuickDeliveryAgentPrivate::deviceExtra(const QInputDevice *device)
 {
     QInputDevicePrivate *devPriv = QInputDevicePrivate::get(const_cast<QInputDevice *>(device));
@@ -1895,7 +1904,7 @@ void QQuickDeliveryAgentPrivate::handleTouchEvent(QTouchEvent *event)
     Q_Q(QQuickDeliveryAgent);
     translateTouchEvent(event);
     // TODO remove: touch and mouse should be independent until we come to touch->mouse synth
-    if (event->pointCount()) {
+    if (event->pointCount() && !isTouchPadWithMouseEmulation(event->device())) {
         auto &point = event->point(0);
         if (point.state() == QEventPoint::State::Released) {
             // Clearing lastMousePosition here switches off the frame-synchronous hover delivery
@@ -2541,7 +2550,7 @@ void QQuickDeliveryAgentPrivate::deliverUpdatedPoints(QPointerEvent *event)
             deliverToPassiveGrabbers(relevantPassiveGrabbers, event);
 
         // Ensure that HoverHandlers are updated, in case no items got dirty so far and there's no update request
-        if (event->type() == QEvent::TouchUpdate) {
+        if (event->type() == QEvent::TouchUpdate && !isTouchPadWithMouseEmulation(event->device())) {
             for (const auto &[item, id, fromFinger] : hoverItems) {
                 if (item) {
                     bool res = deliverHoverEventToItem(item, item->mapFromScene(point.scenePosition()), point.scenePosition(), point.sceneLastPosition(),
@@ -3063,8 +3072,7 @@ bool QQuickDeliveryAgentPrivate::sendFilteredPointerEventImpl(QPointerEvent *eve
         } else if (isTouchEvent(event)) {
             const bool acceptsTouchEvents = receiver->acceptTouchEvents() || hasHandlers;
             auto device = event->device();
-            if (device->type() == QInputDevice::DeviceType::TouchPad &&
-                    device->capabilities().testFlag(QInputDevice::Capability::MouseEmulation)) {
+            if (isTouchPadWithMouseEmulation(event->device())) {
                 qCDebug(lcTouchTarget) << "skipping filtering of synth-mouse event from" << device;
             } else if (acceptsTouchEvents || receiver->acceptedMouseButtons()) {
                 // get a touch event customized for delivery to filteringParent

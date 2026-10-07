@@ -178,6 +178,7 @@ public:
     static bool isWithinDoubleClickInterval(ulong timeInterval);
     static bool isWithinDoubleTapDistance(const QPoint &distanceBetweenPresses);
     static bool isSinglePointDevice(const QInputDevice *dev);
+    static bool isTouchPadWithMouseEmulation(const QInputDevice *device);
     static QQuickPointingDeviceExtra *deviceExtra(const QInputDevice *device);
 
     // delivery of pointer events:
