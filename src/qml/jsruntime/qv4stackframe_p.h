@@ -206,6 +206,23 @@ struct Q_QML_EXPORT JSTypesStackFrame : public CppStackFrame
         return requiredJSStackFrameSize(v4Function);
     }
 
+    void markJSFrame(MarkStack *markStack) const
+    {
+        const CallData *constFrame = jsFrame;
+        constFrame->function.asValue<Value>().mark(markStack);
+        constFrame->context.asValue<Value>().mark(markStack);
+        constFrame->accumulator.asValue<Value>().mark(markStack);
+        constFrame->thisObject.asValue<Value>().mark(markStack);
+        constFrame->newTarget.asValue<Value>().mark(markStack);
+
+        // First argc of those are actually arguments, but after that there are
+        // other local registers.
+        const Value *registers = constFrame->argValues<Value>();
+
+        for (int i = 0, end = v4Function->compiledFunction->nRegisters; i != end; ++i)
+            registers[i].mark(markStack);
+    }
+
     void setupJSFrame(Value *stackSpace, const Value &function, const Heap::ExecutionContext *scope,
                       const Value &thisObject, const Value &newTarget = Value::undefinedValue()) {
         setupJSFrame(stackSpace, function, scope, thisObject, newTarget,

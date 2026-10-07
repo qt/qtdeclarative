@@ -174,7 +174,7 @@ struct Q_QML_EXPORT Value : public StaticValue
     bool sameValue(Value other) const;
     bool sameValueZero(Value other) const;
 
-    inline void mark(MarkStack *markStack);
+    inline void mark(MarkStack *markStack) const;
 
     static double toInteger(double d) { return StaticValue::toInteger(d); }
     static int toInt32(double d) { return StaticValue::toInt32(d); }
@@ -278,7 +278,7 @@ inline Encode::Encode(HeapBase *o)
     val = Value::fromHeapObject(o).asReturnedValue();
 }
 
-inline void Value::mark(MarkStack *markStack)
+inline void Value::mark(MarkStack *markStack) const
 {
     HeapBasePtr o = heapObject();
     if (o)

@@ -1500,8 +1500,13 @@ void MemoryManager::collectFromJSStack(MarkStack *markStack) const
     }
 
     for (auto *frame = engine->currentStackFrame; frame; frame = frame->parentFrame()) {
-        if (!frame->isMetaTypesFrame())
+        if (frame->isJSTypesFrame()) {
+            // Generator frames don't live on the JS stack, but in a heap object that the
+            // interpreter writes to without write barrier.
+            if (frame->v4Function->isGenerator())
+                static_cast<const JSTypesStackFrame *>(frame)->markJSFrame(markStack);
             continue;
+        }
 
         if (const QQmlPrivate::AOTTrackedLocalsStorage *locals
                 = static_cast<const MetaTypesStackFrame *>(frame)->locals()) {
