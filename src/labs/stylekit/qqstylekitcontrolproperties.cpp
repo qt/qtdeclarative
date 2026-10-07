@@ -1104,25 +1104,22 @@ void QQStyleKitPropertyGroup::emitChangedForAllStylePropertiesRecursive(EmitFlag
     /* This function will emit changed signals for all style properties in the
      * StyleKit API (for a single QQStyleKitReader), which is needed after
      * doing a style-, or theme change. */
+    const QMetaObject *meta = metaObject();
+    if (meta->inherits(&QQStyleKitControlProperties::staticMetaObject)) {
+        /* Subclasses of QQStyleKitControlProperties, such as QQStyleKitReader, add
+         * properties that describe the state of the control (hovered, checked, etc.)
+         * rather than its style. Those should not be emitted from here. */
+        meta = &QQStyleKitControlProperties::staticMetaObject;
+    }
+
     const int startIndex = QQStyleKitPropertyGroup::staticMetaObject.propertyOffset();
-    const QMetaObject* meta = metaObject();
     for (int i = startIndex; i < meta->propertyCount(); ++i) {
         const QMetaProperty prop = meta->property(i);
         const QMetaObject* propMetaObject = QMetaType::fromName(prop.typeName()).metaObject();
-        if (propMetaObject) {
-            if (propMetaObject->inherits(&QQStyleKitDelegateProperties::staticMetaObject)) {
-                /* Skip recursing into QQStyleKitDelegateProperties, because those are lazy
-                 * created when read, and reading them from here would accidentally
-                 * create them. */
-                continue;
-            }
-            if (propMetaObject->inherits(&QQStyleKitPropertyGroup::staticMetaObject)) {
-                // The property is of type QQStyleKitPropertyGroup, so recurse into it
-                QObject *childObj = qvariant_cast<QObject *>(property(prop.name()));
-                if (auto *child = qobject_cast<QQStyleKitPropertyGroup *>(childObj))
-                    child->emitChangedForAllStylePropertiesRecursive(emitFlags);
-                continue;
-            }
+        if (propMetaObject && propMetaObject->inherits(&QQStyleKitPropertyGroup::staticMetaObject)) {
+            /* Nested groups are handled by forEachExistingNestedGroup() below. Reading them
+             * through their property getters from here would lazily create them. */
+            continue;
         }
 
         if (!emitFlags.testFlag(EmitFlag::AllProperties)) {
@@ -1133,11 +1130,46 @@ void QQStyleKitPropertyGroup::emitChangedForAllStylePropertiesRecursive(EmitFlag
             }
         }
 
-        // Emit the changed signal for the property
+        /* Emit the changed signal for the property.
+         * Note: even if we call invoke() for every style property, only the signals that
+         * are connected to something (e.g. a binding) end up doing any real work. If
+         * isSignalConnected() is false, the emit will exit early. */
         Q_ASSERT(prop.hasNotifySignal());
         QMetaMethod notify = prop.notifySignal();
         notify.invoke(this, Qt::DirectConnection);
     }
+
+    /* Recurse into the nested groups, but only the ones that have been created. Since
+     * nested groups are lazily created when first read, a group that doesn't exist has
+     * never been read, so there are no bindings to it that would need to be notified. */
+    forEachExistingNestedGroup([emitFlags](QQStyleKitPropertyGroup *group) {
+        group->emitChangedForAllStylePropertiesRecursive(emitFlags);
+    });
+}
+
+void QQStyleKitPropertyGroup::forEachExistingNestedGroup(
+    const std::function<void (QQStyleKitPropertyGroup *)> &f) const
+{
+    /* Subclasses with nested groups should override this function and call f for
+     * each nested group that has been created, mirroring the groups that the subclass
+     * creates with lazyCreateGroup(). Nested groups are lazily created when read, so a
+     * group that hasn't been created has never been read either. Using the member
+     * pointers directly (as opposed to the property getters) avoids creating them by
+     * accident. Overrides should not call this base implementation. */
+    Q_UNUSED(f);
+
+#ifdef QT_DEBUG
+    /* Verify that this group has no nested groups, since it would otherwise need to
+     * override this function. */
+    const QMetaObject *meta = metaObject();
+    const int startIndex = QQStyleKitPropertyGroup::staticMetaObject.propertyOffset();
+    for (int i = startIndex; i < meta->propertyCount(); ++i) {
+        const QMetaProperty prop = meta->property(i);
+        const QMetaObject *propMetaObject = QMetaType::fromName(prop.typeName()).metaObject();
+        Q_ASSERT_X(!propMetaObject || !propMetaObject->inherits(&QQStyleKitPropertyGroup::staticMetaObject),
+                   meta->className(), "Classes with nested property groups must override forEachExistingNestedGroup()");
+    }
+#endif
 }
 
 bool QQStyleKitPropertyGroup::shouldEmitLocally()
@@ -1381,6 +1413,18 @@ void QQStyleKitDelegateProperties::emitGlobally(
     CONDITIONALLY_EMIT_SIGNALS_GLOBALLY_FOR(cp, handle());
     CONDITIONALLY_EMIT_SIGNALS_GLOBALLY_FOR(cp, indicator());
     CONDITIONALLY_EMIT_SIGNALS_GLOBALLY_FOR(cp, indicator()->foreground());
+}
+
+void QQStyleKitDelegateProperties::forEachExistingNestedGroup(
+    const std::function<void (QQStyleKitPropertyGroup *)> &f) const
+{
+    // Keep in sync with the nested groups this class creates with lazyCreateGroup()
+    if (m_image)
+        f(m_image);
+    if (m_border)
+        f(m_border);
+    if (m_shadow)
+        f(m_shadow);
 }
 
 qreal QQStyleKitDelegateProperties::radius() const
@@ -1701,6 +1745,17 @@ QQStyleKitHandleProperties::QQStyleKitHandleProperties(QQSK::PropertyGroup group
 {
 }
 
+void QQStyleKitHandleProperties::forEachExistingNestedGroup(
+    const std::function<void (QQStyleKitPropertyGroup *)> &f) const
+{
+    // Keep in sync with the nested groups this class creates with lazyCreateGroup()
+    QQStyleKitDelegateProperties::forEachExistingNestedGroup(f);
+    if (m_first)
+        f(m_first);
+    if (m_second)
+        f(m_second);
+}
+
 QQStyleKitDelegateProperties *QQStyleKitHandleProperties::first() const
 {
     return lazyCreateGroup(m_first, QQSK::PropertyGroup::DelegateSubtype1);
@@ -1729,6 +1784,15 @@ void QQStyleKitIndicatorProperties::emitGlobally(
     CONDITIONALLY_EMIT_SIGNALS_GLOBALLY_FOR(cp, indicator()->second());
 }
 
+void QQStyleKitIndicatorProperties::forEachExistingNestedGroup(
+    const std::function<void (QQStyleKitPropertyGroup *)> &f) const
+{
+    // Keep in sync with the nested groups this class creates with lazyCreateGroup()
+    QQStyleKitDelegateProperties::forEachExistingNestedGroup(f);
+    if (m_foreground)
+        f(m_foreground);
+}
+
 QQStyleKitDelegateProperties *QQStyleKitIndicatorProperties::foreground() const
 {
     return lazyCreateGroup(m_foreground, QQSK::PropertyGroup::Foreground);
@@ -1749,6 +1813,19 @@ void QQStyleKitIndicatorWithSubTypes::emitGlobally(
     // Go through all instances of QQStyleKitIndicatorWithSubTypes
     const QQStyleKitControlProperties *cp = controlProperties();
     CONDITIONALLY_EMIT_SIGNALS_GLOBALLY_FOR(cp, indicator());
+}
+
+void QQStyleKitIndicatorWithSubTypes::forEachExistingNestedGroup(
+    const std::function<void (QQStyleKitPropertyGroup *)> &f) const
+{
+    // Keep in sync with the nested groups this class creates with lazyCreateGroup()
+    QQStyleKitDelegateProperties::forEachExistingNestedGroup(f);
+    if (m_foreground)
+        f(m_foreground);
+    if (m_first)
+        f(m_first);
+    if (m_second)
+        f(m_second);
 }
 
 QQStyleKitDelegateProperties *QQStyleKitIndicatorWithSubTypes::foreground() const
@@ -1790,6 +1867,16 @@ void QQStyleKitTextProperties::emitGlobally(
     CONDITIONALLY_EMIT_SIGNALS_GLOBALLY_FOR(cp, text());
     CONDITIONALLY_EMIT_SIGNALS_GLOBALLY_FOR(cp, text()->first());
     CONDITIONALLY_EMIT_SIGNALS_GLOBALLY_FOR(cp, text()->second());
+}
+
+void QQStyleKitTextProperties::forEachExistingNestedGroup(
+    const std::function<void (QQStyleKitPropertyGroup *)> &f) const
+{
+    // Keep in sync with the nested groups this class creates with lazyCreateGroup()
+    if (m_first)
+        f(m_first);
+    if (m_second)
+        f(m_second);
 }
 
 QColor QQStyleKitTextProperties::color() const
@@ -2033,19 +2120,7 @@ void QQStyleKitControlProperties::emitChangedForAllStyleProperties(EmitFlags emi
     /* This brute-force function will emit update signals for _all_ style properties
      * in the QQStyleKitStyle API. Doing so is typically needed after a style-, or theme
      * change, as we don't know which properties are affected by such a big change. */
-    if (emitFlags.testFlag(EmitFlag::AllProperties)) {
-        emit leftPaddingChanged();
-        emit rightPaddingChanged();
-        emit topPaddingChanged();
-        emit bottomPaddingChanged();
-        emit spacingChanged();
-        emit transitionChanged();
-        emit textChanged();
-    }
-
-    forEachUsedDelegate([=](QQStyleKitDelegateProperties *delegate, QQSK::Delegate, const QString &){
-        delegate->emitChangedForAllStylePropertiesRecursive(emitFlags);
-    });
+    emitChangedForAllStylePropertiesRecursive(emitFlags);
 }
 
 template <typename... CHANGED_SIGNALS>
@@ -2057,6 +2132,20 @@ void QQStyleKitControlProperties::emitGlobally(
             continue;
         ((reader->*changedSignals)(), ...);
     }
+}
+
+void QQStyleKitControlProperties::forEachExistingNestedGroup(
+    const std::function<void (QQStyleKitPropertyGroup *)> &f) const
+{
+    // Keep in sync with the nested groups this class creates with lazyCreateGroup()
+    if (m_background)
+        f(m_background);
+    if (m_handle)
+        f(m_handle);
+    if (m_indicator)
+        f(m_indicator);
+    if (m_text)
+        f(m_text);
 }
 
 qreal QQStyleKitControlProperties::spacing() const
