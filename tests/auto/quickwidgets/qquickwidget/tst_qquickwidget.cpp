@@ -988,6 +988,9 @@ void tst_qquickwidget::focusOnClick()
 #if QT_CONFIG(graphicsview)
 void tst_qquickwidget::focusOnClickInProxyWidget()
 {
+#ifdef Q_OS_ANDROID
+    QSKIP("Crashes on Android, see QTBUG-139400");
+#endif
     QGraphicsScene scene(0,0,400,400);
 
     QGraphicsView view1(&scene);
@@ -1033,7 +1036,7 @@ void tst_qquickwidget::focusOnClickInProxyWidget()
 
     QVERIFY(QTest::qWaitForWindowExposed(&view2));
     QWindow *window2 = view2.windowHandle();
-    QVERIFY(window2);
+    QVERIFY(QTest::qWaitForWindowActive(window2));
 
     QTest::mouseClick(window2, Qt::LeftButton, Qt::KeyboardModifiers(), QPoint(300, 300));
     QTRY_VERIFY(!text1->hasActiveFocus());

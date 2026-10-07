@@ -2869,7 +2869,8 @@ bool QQmlListModelParser::verifyProperty(const QQmlRefPointer<QV4::ExecutableCom
 
 bool QQmlListModelParser::applyProperty(
         const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit,
-        const QV4::CompiledData::Binding *binding, ListModel *model, int outterElementIndex)
+        const QV4::CompiledData::Binding *binding, ListModel *model, QQmlListModel *owner,
+        int outterElementIndex)
 {
     const QString elementName = compilationUnit->stringAt(binding->propertyNameIndex);
 
@@ -2898,7 +2899,7 @@ bool QQmlListModelParser::applyProperty(
 
         const QV4::CompiledData::Binding *subBinding = target->bindingTable();
         for (quint32 i = 0; i < target->nBindings; ++i, ++subBinding) {
-            roleSet |= applyProperty(compilationUnit, subBinding, subModel, elementIndex);
+            roleSet |= applyProperty(compilationUnit, subBinding, subModel, owner, elementIndex);
         }
 
     } else {
@@ -2927,6 +2928,13 @@ bool QQmlListModelParser::applyProperty(
 
                 auto v4 = compilationUnit->engine;
                 QV4::Scope scope(v4);
+
+                if (model->m_modelCache == nullptr) {
+                    model->m_modelCache = new QQmlListModel(owner, model, v4);
+                    QQmlEngine::setContextForObject(
+                            model->m_modelCache, QQmlEngine::contextForObject(owner));
+                }
+
                 // for now we do not provide a context object; data from the ListElement must be passed to the function
                 QV4::ScopedContext context(scope, QV4::QmlContext::create(v4->rootContext(), QQmlContextData::get(qmlContext(model->m_modelCache)), nullptr));
                 QV4::ScopedFunctionObject function(scope, QV4::FunctionObject::createScriptFunction(context, compilationUnit->runtimeFunctions[id]));
@@ -2989,7 +2997,8 @@ void QQmlListModelParser::applyBindings(QObject *obj, const QQmlRefPointer<QV4::
     for (const QV4::CompiledData::Binding *binding : bindings) {
         if (binding->type() != QV4::CompiledData::Binding::Type_Object)
             continue;
-        setRoles |= applyProperty(compilationUnit, binding, rv->m_listModel, /*outter element index*/-1);
+        setRoles |= applyProperty(
+                compilationUnit, binding, rv->m_listModel, rv, /*outter element index*/-1);
     }
 
     if (setRoles == false)

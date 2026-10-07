@@ -121,6 +121,7 @@ private slots:
     void protectQObjectFromGC();
     void deadModelData();
     void valuesOfInnerList();
+    void functionInNested();
 };
 
 bool tst_qqmllistmodel::compareVariantList(const QVariantList &testList, QVariant object)
@@ -2019,6 +2020,18 @@ void tst_qqmllistmodel::valuesOfInnerList()
             QtDebugMsg, QRegularExpression("\\[.*QQmlListModelWorkerAgent\\(0x[0-9a-f]*\\).*\\]"));
 
     QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+}
+
+void tst_qqmllistmodel::functionInNested()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("functionInNested.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QTest::ignoreMessage(QtDebugMsg, "called");
+
+    QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
 }
 
