@@ -518,6 +518,25 @@ private slots:
     // alias. Rebuilding must not crash, and the inline component instances must stay intact.
     void rebuildWithInlineComponentDefaultAlias();
 
+    // An object created from an explicit Component survives a rebuild of its document, but the
+    // objects before it in the document shift. If its index doesn't denote a component root
+    // anymore, it is obsolete and has to be retired, rather than left with a stale index.
+    void rebuildDynamicObjectAfterIndexShift();
+
+    // An object created from an explicit Component survives a rebuild of its document. If it still
+    // exists at its index in the reloaded document, it has to be rebuilt with its new bindings.
+    void rebuildDynamicObjectAtStableIndex();
+
+    // If an instance of an inner component cannot be rebuilt and has no enclosing component (it
+    // was created in the engine's root context), the reload fails.
+    void rebuildDynamicObjectInRootContextFails();
+
+    // The delegate instances of a Repeater are instances of an inner component. If the delegate's
+    // index shifts, they cannot be rebuilt in place. Between them and the enclosing component
+    // there is a context created by the delegate model, with the model item as context object.
+    // That one is not a component root. The document root has to be rebuilt instead.
+    void rebuildRepeaterDelegateAfterIndexShift();
+
 private:
     QQmlEngine engine;
 };
@@ -5449,6 +5468,148 @@ void tst_QQmlPreviewObjectPatch::rebuildWithInlineComponentDefaultAlias()
         QCOMPARE(body->width(), notice->width() - 20);
         QCOMPARE(notice->height(), body->implicitHeight() + 20);
     }
+}
+
+void tst_QQmlPreviewObjectPatch::rebuildDynamicObjectAfterIndexShift()
+{
+    QTest::failOnWarning();
+
+    const QString moduleDir = dataDirectory() + QStringLiteral("/FunkyIndices");
+
+    QQmlEngine localEngine;
+    QQmlComponent padOld(&localEngine, QUrl::fromLocalFile(moduleDir + "/Pad.qml"));
+    QVERIFY2(padOld.isReady(), qPrintable(padOld.errorString()));
+    std::unique_ptr<QObject> root(padOld.create());
+    QVERIFY(root);
+
+    QQmlComponent *comp = root->property("comp").value<QQmlComponent *>();
+    QVERIFY(comp);
+    QPointer<QObject> dynamic = comp->create(qmlContext(root.get()));
+    QVERIFY(dynamic);
+    QCOMPARE(dynamic->property("label").toString(), QStringLiteral("dyn"));
+
+    // Insert objects in front of the Component in Pad. The dynamically created Widget's index now
+    // denotes a Text, which is not a component root. The Widget is obsolete and has to be retired
+    // rather than left behind with an index referring to the Text.
+    QQmlComponent padNew(&localEngine, QUrl::fromLocalFile(moduleDir + "/PadShifted.qml"));
+    QVERIFY2(padNew.isReady(), qPrintable(padNew.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&padOld)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&padNew)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    auto objects = objectsForCompilationUnit(&localEngine, oldExecUnit);
+    QVERIFY(std::find(objects.begin(), objects.end(), dynamic.data()) != objects.end());
+    QCOMPARE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Rebuilt);
+
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+
+    QVERIFY(dynamic.isNull());
+}
+
+void tst_QQmlPreviewObjectPatch::rebuildDynamicObjectAtStableIndex()
+{
+    QTest::failOnWarning();
+
+    const QString moduleDir = dataDirectory() + QStringLiteral("/FunkyIndices");
+
+    QQmlEngine localEngine;
+    QQmlComponent padOld(&localEngine, QUrl::fromLocalFile(moduleDir + "/Pad.qml"));
+    QVERIFY2(padOld.isReady(), qPrintable(padOld.errorString()));
+    std::unique_ptr<QObject> root(padOld.create());
+    QVERIFY(root);
+
+    QQmlComponent *comp = root->property("comp").value<QQmlComponent *>();
+    QVERIFY(comp);
+    std::unique_ptr<QObject> dynamic(comp->create(qmlContext(root.get())));
+    QVERIFY(dynamic);
+    QCOMPARE(dynamic->property("label").toString(), QStringLiteral("dyn"));
+
+    // Append an object after the Component and change the dynamically created Widget's binding.
+    // The Widget keeps its index.
+    QQmlComponent padNew(&localEngine, QUrl::fromLocalFile(moduleDir + "/PadAppended.qml"));
+    QVERIFY2(padNew.isReady(), qPrintable(padNew.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&padOld)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&padNew)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    auto objects = objectsForCompilationUnit(&localEngine, oldExecUnit);
+    QVERIFY(std::find(objects.begin(), objects.end(), dynamic.get()) != objects.end());
+    QCOMPARE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Rebuilt);
+
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+
+    QCOMPARE(dynamic->property("label").toString(), QStringLiteral("changed"));
+}
+
+void tst_QQmlPreviewObjectPatch::rebuildDynamicObjectInRootContextFails()
+{
+    const QString moduleDir = dataDirectory() + QStringLiteral("/FunkyIndices");
+
+    QQmlEngine localEngine;
+    QQmlComponent padOld(&localEngine, QUrl::fromLocalFile(moduleDir + "/Pad.qml"));
+    QVERIFY2(padOld.isReady(), qPrintable(padOld.errorString()));
+    std::unique_ptr<QObject> root(padOld.create());
+    QVERIFY(root);
+
+    QQmlComponent *comp = root->property("comp").value<QQmlComponent *>();
+    QVERIFY(comp);
+    std::unique_ptr<QObject> dynamic(comp->create());
+    QVERIFY(dynamic);
+
+    // The Widget's index denotes a Text in PadShifted. Its own context's parent is the engine's
+    // root context. There is no enclosing component to rebuild instead.
+    QQmlComponent padNew(&localEngine, QUrl::fromLocalFile(moduleDir + "/PadShifted.qml"));
+    QVERIFY2(padNew.isReady(), qPrintable(padNew.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&padOld)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&padNew)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    auto objects = objectsForCompilationUnit(&localEngine, oldExecUnit);
+    QVERIFY(std::find(objects.begin(), objects.end(), dynamic.get()) != objects.end());
+    QCOMPARE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Failed);
+}
+
+static qsizetype countChildItems(QQuickItem *item, const QString &objectName)
+{
+    const QList<QQuickItem *> children = item->childItems();
+    return std::count_if(children.cbegin(), children.cend(), [&](QQuickItem *child) {
+        return child->objectName() == objectName;
+    });
+}
+
+void tst_QQmlPreviewObjectPatch::rebuildRepeaterDelegateAfterIndexShift()
+{
+    QTest::failOnWarning();
+
+    QQmlEngine localEngine;
+    QQmlComponent oldComp(&localEngine, testFileUrl("RepeaterDelegateShiftOld.qml"));
+    QVERIFY2(oldComp.isReady(), qPrintable(oldComp.errorString()));
+    std::unique_ptr<QObject> object(oldComp.create());
+    QQuickItem *root = qobject_cast<QQuickItem *>(object.get());
+    QVERIFY(root);
+    QCOMPARE(countChildItems(root, QStringLiteral("delegate")), 2);
+
+    QQmlComponent newComp(&localEngine, testFileUrl("RepeaterDelegateShiftNew.qml"));
+    QVERIFY2(newComp.isReady(), qPrintable(newComp.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldComp)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComp)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    auto objects = objectsForCompilationUnit(&localEngine, oldExecUnit);
+    QVERIFY(!objects.empty());
+    QCOMPARE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Rebuilt);
+
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+
+    QVERIFY(root->findChild<QObject *>(QStringLiteral("probe")));
+    QCOMPARE(countChildItems(root, QStringLiteral("delegate")), 2);
 }
 
 QTEST_MAIN(tst_QQmlPreviewObjectPatch)

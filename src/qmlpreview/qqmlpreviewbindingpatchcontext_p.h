@@ -54,6 +54,8 @@ class BindingPatchContext
 public:
     static QString targetPropertyName(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit,
                                       int objectIndex, const QV4::CompiledData::Binding *binding);
+    static void retireObject(QObject *object);
+    static void clearBindingsRecursive(QObject *object);
 
     BindingPatchContext(QObject *object, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit,
                         int objectIndex, const QString &prefix)
@@ -125,9 +127,6 @@ private:
                        int newCuIndex);
     void patchBinding(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit,
                       const QV4::CompiledData::Change &change);
-
-    static void retireObject(QObject *object);
-    static void clearBindingsRecursive(QObject *object);
 
 
     QPointer<QObject> m_object;
