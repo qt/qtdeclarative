@@ -102,6 +102,9 @@ public:
     void emitChangedForAllStylePropertiesRecursive(EmitFlags emitFlags);
 
 protected:
+    virtual void forEachExistingNestedGroup(
+        const std::function<void (QQStyleKitPropertyGroup *)> &f) const;
+
     QQStyleKitPropertyGroupSpace m_groupSpace;
     QQSK::PropertyPathFlags m_pathFlags = QQSK::PropertyPathFlag::NoFlags;
 
@@ -385,6 +388,10 @@ signals:
     void fillWidthChanged();
     void fillHeightChanged();
 
+protected:
+    void forEachExistingNestedGroup(
+        const std::function<void (QQStyleKitPropertyGroup *)> &f) const override;
+
 private:
     QPointer<QQuickGradient> m_gradient;
     QQStyleKitBorderProperties *m_border = nullptr;
@@ -410,6 +417,10 @@ public:
 signals:
     void firstChanged();
     void secondChanged();
+
+protected:
+    void forEachExistingNestedGroup(
+        const std::function<void (QQStyleKitPropertyGroup *)> &f) const override;
 
 private:
     QQStyleKitDelegateProperties *m_first = nullptr;
@@ -438,6 +449,10 @@ public:
 
 signals:
     void foregroundChanged();
+
+protected:
+    void forEachExistingNestedGroup(
+        const std::function<void (QQStyleKitPropertyGroup *)> &f) const override;
 
 private:
     QQStyleKitDelegateProperties *m_foreground = nullptr;
@@ -478,6 +493,10 @@ signals:
     void downChanged();
     void firstChanged();
     void secondChanged();
+
+protected:
+    void forEachExistingNestedGroup(
+        const std::function<void (QQStyleKitPropertyGroup *)> &f) const override;
 
 private:
     QQStyleKitDelegateProperties *m_foreground = nullptr;
@@ -560,6 +579,10 @@ signals:
     void bottomPaddingChanged();
     void firstChanged();
     void secondChanged();
+
+protected:
+    void forEachExistingNestedGroup(
+        const std::function<void (QQStyleKitPropertyGroup *)> &f) const override;
 
 private:
     QQStyleKitTextProperties *m_first = nullptr;
@@ -647,6 +670,10 @@ signals:
     void bottomPaddingChanged();
     void transitionChanged();
     void textChanged();
+
+protected:
+    void forEachExistingNestedGroup(
+        const std::function<void (QQStyleKitPropertyGroup *)> &f) const override;
 
 private:
     Q_DISABLE_COPY(QQStyleKitControlProperties)
