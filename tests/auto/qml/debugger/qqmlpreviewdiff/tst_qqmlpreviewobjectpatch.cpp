@@ -537,6 +537,13 @@ private slots:
     // That one is not a component root. The document root has to be rebuilt instead.
     void rebuildRepeaterDelegateAfterIndexShift();
 
+    // Only an inner Component of the document changes. The objects of the enclosing component
+    // have to refer to the new compilation unit afterwards, and the instance of the inner component
+    // has to keep resolving ids of the enclosing component, which lives in the context of either
+    // the document root or one of its composite base levels.
+    void rebuildInnerComponentOnly_data();
+    void rebuildInnerComponentOnly();
+
 private:
     QQmlEngine engine;
 };
@@ -5610,6 +5617,66 @@ void tst_QQmlPreviewObjectPatch::rebuildRepeaterDelegateAfterIndexShift()
 
     QVERIFY(root->findChild<QObject *>(QStringLiteral("probe")));
     QCOMPARE(countChildItems(root, QStringLiteral("delegate")), 2);
+}
+
+void tst_QQmlPreviewObjectPatch::rebuildInnerComponentOnly_data()
+{
+    QTest::addColumn<QString>("oldFile");
+    QTest::addColumn<QString>("newFile");
+
+    QTest::newRow("documentRoot") << u"InnerComponentOnlyOld.qml"_s
+                                  << u"InnerComponentOnlyNew.qml"_s;
+    QTest::newRow("compositeBase")
+            << u"InnerComponentInBaseOld.qml"_s << u"InnerComponentInBaseNew.qml"_s;
+}
+
+void tst_QQmlPreviewObjectPatch::rebuildInnerComponentOnly()
+{
+    QFETCH(QString, oldFile);
+    QFETCH(QString, newFile);
+
+    QTest::failOnWarning();
+
+    QQmlEngine localEngine;
+    QQmlComponent oldComp(&localEngine, testFileUrl(oldFile));
+    QVERIFY2(oldComp.isReady(), qPrintable(oldComp.errorString()));
+    std::unique_ptr<QObject> root(oldComp.create());
+    QVERIFY(root);
+
+    QQmlComponent *comp = root->property("comp").value<QQmlComponent *>();
+    QVERIFY(comp);
+    std::unique_ptr<QObject> dynamic(comp->create(comp->creationContext()));
+    QVERIFY(dynamic);
+    QCOMPARE(dynamic->property("value").toInt(), 3);
+
+    QQmlComponent newComp(&localEngine, testFileUrl(newFile));
+    QVERIFY2(newComp.isReady(), qPrintable(newComp.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldComp)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComp)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    auto objects = objectsForCompilationUnit(&localEngine, oldExecUnit);
+    QVERIFY(std::find(objects.begin(), objects.end(), root.get()) != objects.end());
+    QVERIFY(std::find(objects.begin(), objects.end(), dynamic.get()) != objects.end());
+    QCOMPARE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Rebuilt);
+
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+
+    QCOMPARE(QQmlData::get(root.get())->compilationUnit, newExecUnit);
+    QObject *outerChild = root->findChild<QObject *>(QStringLiteral("outerChild"));
+    QVERIFY(outerChild);
+    QCOMPARE(QQmlData::get(outerChild)->compilationUnit, newExecUnit);
+    QCOMPARE(QQmlData::get(dynamic.get())->compilationUnit, newExecUnit);
+
+    QVERIFY(dynamic->findChild<QObject *>(QStringLiteral("added")));
+    QCOMPARE(outerChild->property("value").toInt(), 2);
+    QCOMPARE(dynamic->property("value").toInt(), 12);
+
+    root->setProperty("base", 5);
+    QCOMPARE(outerChild->property("value").toInt(), 6);
+    QCOMPARE(dynamic->property("value").toInt(), 16);
 }
 
 QTEST_MAIN(tst_QQmlPreviewObjectPatch)

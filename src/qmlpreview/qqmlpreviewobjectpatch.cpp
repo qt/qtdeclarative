@@ -295,11 +295,48 @@ collectCompositeLevels(const CompositeLevel &instanceLevel,
     return levels;
 }
 
+// Rebuilding a component root replaces the contexts it is the context object of. Instances of
+// inner components created in such a context still have it as parent context. When rebuilding
+// those, we have to parent their new contexts to the replacements, or they keep resolving ids
+// against the old context, whose objects have been retired.
+struct ReplacedContext
+{
+    QQmlRefPointer<QQmlContextData> oldContext;
+    QQmlRefPointer<QQmlContextData> newContext;
+};
+using ReplacedContexts = QHash<const QQmlContextData *, ReplacedContext>;
+
+static QQmlRefPointer<QQmlContextData>
+currentContext(const QQmlRefPointer<QQmlContextData> &context,
+               const ReplacedContexts &replacedContexts)
+{
+    const auto it = replacedContexts.constFind(context.data());
+    return it == replacedContexts.constEnd() ? context : it->newContext;
+}
+
+// The contexts of the composite levels of object, in the order of collectCompositeLevels().
+static QVarLengthArray<QQmlRefPointer<QQmlContextData>, 4>
+levelContexts(QObject *object, const QQmlRefPointer<QQmlContextData> &outerContext)
+{
+    QVarLengthArray<QQmlRefPointer<QQmlContextData>, 4> contexts;
+    for (QQmlRefPointer<QQmlContextData> ctx(QQmlData::get(object)->context); ctx;
+         ctx = ctx->linkedContext()) {
+        if (ctx != outerContext && ctx->contextObject() == object)
+            contexts.append(ctx);
+    }
+
+    // The linked contexts are ordered from the deepest base type to the most derived one.
+    std::reverse(contexts.begin(), contexts.end());
+
+    return contexts;
+}
+
 // cuIndex is not necessarily the "outermost" index. There may be levels above oldUnit.
 // Those have to be preserved/rebuilt.
 static void rebuildObject(QObject *object, int cuIndex,
                           const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit,
-                          const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit)
+                          const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit,
+                          ReplacedContexts *replacedContexts)
 {
     // If the object's index doesn't exist in the new CU, it's obsolete.
     if (cuIndex >= newUnit->objectCount())
@@ -352,12 +389,18 @@ static void rebuildObject(QObject *object, int cuIndex,
     QQmlEnginePrivate *enginePrivate = QQmlEnginePrivate::get(v4);
     Q_ASSERT(enginePrivate);
 
+    const QVarLengthArray<QQmlRefPointer<QQmlContextData>, 4> oldLevelContexts =
+            levelContexts(object, outerContext);
+
     if (outerContext->contextObject() == object) {
-        outerContext->setContextObject(nullptr);
+        const QQmlRefPointer<QQmlContextData> oldOuterContext = outerContext;
+        oldOuterContext->setContextObject(nullptr);
         outerContext = enginePrivate->createComponentRootContext(
-                instanceLevel.newCu, outerContext->parent(), instanceLevel.objectIndex);
+                instanceLevel.newCu, currentContext(oldOuterContext->parent(), *replacedContexts),
+                instanceLevel.objectIndex);
         outerContext->setContextObject(object);
         instanceLevel.context = outerContext;
+        replacedContexts->insert(oldOuterContext.data(), { oldOuterContext, outerContext });
     }
 
     for (QQmlRefPointer<QQmlContextData> ctx(ddata->context); ctx; ctx = ctx->linkedContext()) {
@@ -371,11 +414,24 @@ static void rebuildObject(QObject *object, int cuIndex,
     delete std::exchange(objectPrivate->metaObject, nullptr);
 
     QQmlRefPointer<QQmlContextData> levelContext = outerContext;
+    qsizetype replacedLevels = 0;
     for (qsizetype i = 0, end = levels.size(); i < end; ++i) {
         CompositeLevel &level = levels[i];
         levelContext = level.context = enginePrivate->createComponentRootContext(
                 level.newCu, levelContext, level.objectIndex);
         levelContext->setContextObject(object);
+
+        // The base type chain may have changed. Only match the old contexts up to the first
+        // level that differs.
+        if (i >= oldLevelContexts.size() || i != replacedLevels)
+            continue;
+        const QQmlRefPointer<QQmlContextData> &oldLevelContext = oldLevelContexts[i];
+        const QQmlRefPointer<QV4::ExecutableCompilationUnit> oldLevelCu =
+                oldLevelContext->typeCompilationUnit();
+        if ((oldLevelCu == oldUnit ? newUnit : oldLevelCu) != level.newCu)
+            continue;
+        replacedContexts->insert(oldLevelContext.data(), { oldLevelContext, levelContext });
+        ++replacedLevels;
     }
 
     if (outerContext->contextObject() == object) {
@@ -937,11 +993,12 @@ PatchResult applyDiff(std::vector<QObject *> &objects,
             skip.insert(child);
     }
 
+    ReplacedContexts replacedContexts;
     for (const RebuildTarget &target : rebuild) {
         if (skip.contains(target.object))
             continue;
 
-        rebuildObject(target.object, target.index, target.oldCu, target.newCu);
+        rebuildObject(target.object, target.index, target.oldCu, target.newCu, &replacedContexts);
     }
 
     // Everything lexically inside the rebuilt components has been recreated or rebuilt now. Whatever
