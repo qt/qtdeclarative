@@ -206,7 +206,7 @@ void QQmlPrivate::qdeclarativeelement_destructor(QObject *o)
 {
     QObjectPrivate *p = QObjectPrivate::get(o);
     if (QQmlData *d = QQmlData::get(p)) {
-        const auto invalidate = [](QQmlContextData *c) {c->invalidate();};
+        const auto invalidate = [](QQmlContextData *c) { c->invalidateAfterContextObjectLost(); };
         if (d->ownContext) {
             d->ownContext->deepClearContextObject(o, invalidate, invalidate);
             d->ownContext.reset();
