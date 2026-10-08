@@ -116,6 +116,7 @@ qt_internal_add_resource(tst_qmltyperegistrar "resources"
         brokenEnums.json
         duplicatedExports.json
         missingTypes.json
+        processTwice.json
 )
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)

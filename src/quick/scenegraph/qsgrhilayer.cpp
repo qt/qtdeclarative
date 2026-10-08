@@ -410,22 +410,41 @@ void QSGRhiLayer::grab()
     m_renderer->setDevicePixelRatio(m_dpr);
     m_renderer->setDeviceRect(m_pixelSize);
     m_renderer->setViewportRect(m_pixelSize);
+
     QRectF mirrored; // in logical coordinates (no dpr) since this gets passed to setProjectionMatrixToRect()
-    if (m_rhi->isYUpInFramebuffer()) {
+
+    // In the unlikely event of back/front face culling used by a custom
+    // material or effect in the layer, the default front face setting may be
+    // wrong. Rather, it needs to invert based on what the vertex shader does,
+    // and so on the rect (and so matrix) generated here.
+    bool frontFaceSwap = false;
+
+    if (m_rhi->isYUpInFramebuffer()) { // basically OpenGL
         mirrored = QRectF(m_mirrorHorizontal ? m_logicalRect.right() : m_logicalRect.left(),
                           m_mirrorVertical ? m_logicalRect.bottom() : m_logicalRect.top(),
                           m_mirrorHorizontal ? -m_logicalRect.width() : m_logicalRect.width(),
                           m_mirrorVertical ? -m_logicalRect.height() : m_logicalRect.height());
-    } else {
+        if (m_mirrorHorizontal)
+            frontFaceSwap = !frontFaceSwap;
+        if (m_mirrorVertical)
+            frontFaceSwap = !frontFaceSwap;
+    } else { // APIs other than OpenGL
         mirrored = QRectF(m_mirrorHorizontal ? m_logicalRect.right() : m_logicalRect.left(),
                           m_mirrorVertical ? m_logicalRect.top() : m_logicalRect.bottom(),
                           m_mirrorHorizontal ? -m_logicalRect.width() : m_logicalRect.width(),
                           m_mirrorVertical ? m_logicalRect.height() : -m_logicalRect.height());
+        if (m_mirrorHorizontal)
+            frontFaceSwap = !frontFaceSwap;
+        if (!m_mirrorVertical)
+            frontFaceSwap = !frontFaceSwap;
     }
+
     QSGAbstractRenderer::MatrixTransformFlags matrixFlags;
     if (!m_rhi->isYUpInNDC())
         matrixFlags |= QSGAbstractRenderer::MatrixTransformFlipY;
+
     m_renderer->setProjectionMatrixToRect(mirrored, matrixFlags);
+    m_renderer->setInvertFrontFace(frontFaceSwap);
     m_renderer->setClearColor(Qt::transparent);
     m_renderer->setRenderTarget({ m_rt, m_rtRp, m_context->currentFrameCommandBuffer() });
 

@@ -157,6 +157,8 @@ protected:
 
     virtual bool checkCustomParser(const QQmlJSScope::ConstPtr &scope);
 
+    void setScopeName(QQmlJSScope::Ptr &scope, QQmlJSScope::ScopeType type, const QString &name);
+
     QString m_implicitImportDirectory;
     QStringList m_qmldirFiles;
     QQmlJSScope::Ptr m_currentScope;
@@ -298,8 +300,6 @@ protected:
     void processMethodTypes();
     void processPropertyBindingObjects();
     void flushPendingSignalParameters();
-
-    QQmlJSScope::ConstPtr scopeById(const QString &id, const QQmlJSScope::ConstPtr &current);
 
     void breakInheritanceCycles(const QQmlJSScope::Ptr &scope);
     void checkDeprecation(const QQmlJSScope::ConstPtr &scope);

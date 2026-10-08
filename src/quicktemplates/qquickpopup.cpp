@@ -511,6 +511,11 @@ void QQuickPopupPrivate::init()
     QObject::connect(popupItem, &QQuickControl::implicitContentHeightChanged, q, &QQuickPopup::implicitContentHeightChanged);
     QObject::connect(popupItem, &QQuickControl::implicitBackgroundWidthChanged, q, &QQuickPopup::implicitBackgroundWidthChanged);
     QObject::connect(popupItem, &QQuickControl::implicitBackgroundHeightChanged, q, &QQuickPopup::implicitBackgroundHeightChanged);
+    QObject::connect(popupItem, &QQuickControl::spacingChanged, q, &QQuickPopup::spacingChanged);
+    QObject::connect(popupItem, &QQuickControl::topInsetChanged, q, &QQuickPopup::topInsetChanged);
+    QObject::connect(popupItem, &QQuickControl::bottomInsetChanged, q, &QQuickPopup::bottomInsetChanged);
+    QObject::connect(popupItem, &QQuickControl::leftInsetChanged, q, &QQuickPopup::leftInsetChanged);
+    QObject::connect(popupItem, &QQuickControl::rightInsetChanged, q, &QQuickPopup::rightInsetChanged);
 }
 
 void QQuickPopupPrivate::closeOrReject()
@@ -1021,6 +1026,12 @@ void QQuickPopupPrivate::setWindow(QQuickWindow *newWindow)
         QQuickOverlay *overlay = QQuickOverlay::overlay(window);
         if (overlay)
             QQuickOverlayPrivate::get(overlay)->removePopup(q);
+
+        // Interacting with Popups in async Loaders (QTBUG-139306) would cause crashes
+        // because the popup's window was null. We can avoid this by unparenting the popupItem,
+        // which removes it from stackingOrderPopups and hence excludes it from receiving events.
+        if (!newWindow && popupItem)
+            popupItem->setParentItem(nullptr);
     }
 
     window = newWindow;
@@ -3223,7 +3234,7 @@ bool QQuickPopup::overlayEvent(QQuickItem *item, QEvent *event)
 void QQuickPopup::touchEvent(QTouchEvent *event)
 {
     Q_D(QQuickPopup);
-    d->handleTouchEvent(d->popupItem, event);
+    event->setAccepted(d->handleTouchEvent(d->popupItem, event));
 }
 
 void QQuickPopup::touchUngrabEvent()

@@ -2756,6 +2756,7 @@ bool Renderer::ensurePipelineState(Element *e, const ShaderManager::Shader *sms,
     ps->setFlags(flags);
     ps->setTopology(qsg_topology(m_gstate.drawMode, m_rhi));
     ps->setCullMode(m_gstate.cullMode);
+    ps->setFrontFace(invertFrontFace() ? QRhiGraphicsPipeline::CW : QRhiGraphicsPipeline::CCW);
     ps->setPolygonMode(m_gstate.polygonMode);
     ps->setMultiViewCount(m_gstate.multiViewCount);
 
@@ -3589,20 +3590,16 @@ void Renderer::renderUnmergedBatch(PreparedRenderBatch *renderBatch, bool depthP
     }
 }
 
-void Renderer::setGraphicsPipeline(QRhiCommandBuffer *cb, const Batch *batch, Element *e, bool depthPostPass)
+void Renderer::setViewportAndScissors(QRhiCommandBuffer *cb, const Batch *batch)
 {
-    cb->setGraphicsPipeline(depthPostPass ? e->depthPostPassPs : e->ps);
-
     if (!m_pstate.viewportSet) {
         m_pstate.viewportSet = true;
         cb->setViewport(m_pstate.viewport);
     }
     if (batch->clipState.type & ClipState::ScissorClip) {
-        Q_ASSERT(e->ps->flags().testFlag(QRhiGraphicsPipeline::UsesScissor));
         m_pstate.scissorSet = true;
         cb->setScissor(batch->clipState.scissor);
     } else {
-        Q_ASSERT(!e->ps->flags().testFlag(QRhiGraphicsPipeline::UsesScissor));
         // Regardless of the ps not using scissor, the scissor may need to be
         // reset, depending on the backend. So set the viewport again, which in
         // turn also sets the scissor on backends where a scissor rect is
@@ -3612,6 +3609,15 @@ void Renderer::setGraphicsPipeline(QRhiCommandBuffer *cb, const Batch *batch, El
             cb->setViewport(m_pstate.viewport);
         }
     }
+}
+
+
+void Renderer::setGraphicsPipeline(QRhiCommandBuffer *cb, const Batch *batch, Element *e, bool depthPostPass)
+{
+    cb->setGraphicsPipeline(depthPostPass ? e->depthPostPassPs : e->ps);
+
+    setViewportAndScissors(cb, batch);
+
     if (batch->clipState.type & ClipState::StencilClip) {
         Q_ASSERT(e->ps->flags().testFlag(QRhiGraphicsPipeline::UsesStencilRef));
         cb->setStencilRef(batch->clipState.stencilRef);
@@ -4063,6 +4069,14 @@ bool Renderer::prepareRhiRenderNode(Batch *batch, PreparedRenderBatch *renderBat
     if (Q_UNLIKELY(debug_render()))
         qDebug() << " -" << batch << "rendernode";
 
+    const int viewCount = projectionMatrixCount();
+    m_current_projection_matrix.resize(viewCount);
+    for (int viewIndex = 0; viewIndex < viewCount; ++viewIndex)
+        m_current_projection_matrix[viewIndex] = projectionMatrix(viewIndex);
+    m_current_projection_matrix_native_ndc.resize(projectionMatrixWithNativeNDCCount());
+    for (int viewIndex = 0; viewIndex < projectionMatrixWithNativeNDCCount(); ++viewIndex)
+        m_current_projection_matrix_native_ndc[viewIndex] = projectionMatrixWithNativeNDC(viewIndex);
+
     Q_ASSERT(batch->first->isRenderNode);
     RenderNodeElement *e = static_cast<RenderNodeElement *>(batch->first);
 
@@ -4111,7 +4125,6 @@ bool Renderer::prepareRhiRenderNode(Batch *batch, PreparedRenderBatch *renderBat
 
     rd->m_rt = renderTarget();
 
-    const int viewCount = projectionMatrixCount();
     rd->m_projectionMatrix.resize(viewCount);
     for (int viewIndex = 0; viewIndex < viewCount; ++viewIndex)
         rd->m_projectionMatrix[viewIndex] = projectionMatrix(viewIndex);
@@ -4151,6 +4164,7 @@ void Renderer::renderRhiRenderNode(const Batch *batch)
     const QSGRenderNode::StateFlags changes = e->renderNode->changedStates();
 
     QRhiCommandBuffer *cb = renderTarget().cb;
+    setViewportAndScissors(cb, batch);
     const bool needsExternal = !e->renderNode->flags().testFlag(QSGRenderNode::NoExternalRendering);
     if (needsExternal)
         cb->beginExternal();

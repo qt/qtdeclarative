@@ -163,7 +163,7 @@ void QQuickMaterialTextContainer::setControlHasText(bool controlHasText)
     m_controlHasText = controlHasText;
     // TextArea's text length is updated after component completion,
     // so account for that here and in setPlaceholderHasText().
-    maybeSetFocusAnimationProgress();
+    updateFocusAnimation();
     update();
     emit controlHasTextChanged();
 }
@@ -179,7 +179,7 @@ void QQuickMaterialTextContainer::setPlaceholderHasText(bool placeholderHasText)
         return;
 
     m_placeholderHasText = placeholderHasText;
-    maybeSetFocusAnimationProgress();
+    updateFocusAnimation();
     update();
     emit placeholderHasTextChanged();
 }
@@ -349,6 +349,10 @@ QQuickItem *QQuickMaterialTextContainer::textControl() const
 
 void QQuickMaterialTextContainer::controlGotActiveFocus()
 {
+    if (m_focusAnimation) {
+        m_focusAnimation->stop();
+        m_focusAnimation.clear();
+    }
     const bool shouldAnimate = m_filled ? !m_controlHasText : shouldAnimateOutline();
     if (!shouldAnimate) {
         // It does have focus, but sometimes we don't need to animate anything, just change colors.
@@ -361,11 +365,15 @@ void QQuickMaterialTextContainer::controlGotActiveFocus()
         return;
     }
 
-    startFocusAnimation();
+    updateFocusAnimation(true);
 }
 
 void QQuickMaterialTextContainer::controlLostActiveFocus()
 {
+    if (m_focusAnimation) {
+        m_focusAnimation->stop();
+        m_focusAnimation.clear();
+    }
     // We don't want to animate the active indicator line (at the bottom) of filled containers
     // when the control loses focus, only when it gets it.
     if (m_filled || !shouldAnimateOutline()) {
@@ -377,35 +385,43 @@ void QQuickMaterialTextContainer::controlLostActiveFocus()
         return;
     }
 
-    QPropertyAnimation *animation = new QPropertyAnimation(this, "focusAnimationProgress", this);
-    animation->setDuration(300);
-    animation->setStartValue(1);
-    animation->setEndValue(0);
-    animation->start(QAbstractAnimation::DeleteWhenStopped);
+    updateFocusAnimation(true);
 }
 
-void QQuickMaterialTextContainer::startFocusAnimation()
+void QQuickMaterialTextContainer::updateFocusAnimation(bool createIfNeeded)
 {
-    // Each time setFocusAnimationProgress is called by the animation, it'll call update(),
-    // which will cause us to be re-rendered.
-    QPropertyAnimation *animation = new QPropertyAnimation(this, "focusAnimationProgress", this);
-    animation->setDuration(300);
-    animation->setStartValue(0);
-    animation->setEndValue(1);
-    animation->start(QAbstractAnimation::DeleteWhenStopped);
-}
-
-void QQuickMaterialTextContainer::maybeSetFocusAnimationProgress()
-{
-    if (m_filled)
+    if (m_filled) {
+        if (m_focusAnimation) {
+            m_focusAnimation->stop();
+            m_focusAnimation.clear();
+        }
         return;
+    }
 
+    int focusAnimationProgressValue = 0;
     if (m_controlHasText && m_placeholderHasText) {
         // Show the interrupted outline when there is text.
-        setFocusAnimationProgress(1);
-    } else if (!m_controlHasText && !m_controlHasActiveFocus) {
-        // If the text was cleared while it didn't have focus, don't animate, just close the gap.
-        setFocusAnimationProgress(0);
+        focusAnimationProgressValue = 1;
+    } else if (!m_controlHasText) {
+        if (m_controlHasActiveFocus && m_placeholderHasText)
+            focusAnimationProgressValue = 1;
+        else
+            focusAnimationProgressValue = 0;
+    }
+
+    if (m_focusAnimation || createIfNeeded) {
+        int duration = 300;
+        if (m_focusAnimation) {
+            duration = m_focusAnimation->totalDuration() - m_focusAnimation->currentTime();
+            m_focusAnimation->stop();
+        }
+        m_focusAnimation = new QPropertyAnimation(this, "focusAnimationProgress", this);
+        m_focusAnimation->setDuration(duration);
+        m_focusAnimation->setStartValue(focusAnimationProgress());
+        m_focusAnimation->setEndValue(focusAnimationProgressValue);
+        m_focusAnimation->start(QAbstractAnimation::DeleteWhenStopped);
+    } else {
+        setFocusAnimationProgress(focusAnimationProgressValue);
     }
 }
 
@@ -416,7 +432,7 @@ void QQuickMaterialTextContainer::componentComplete()
     if (!parentItem())
         qmlWarning(this) << "Expected parent item by component completion!";
 
-    maybeSetFocusAnimationProgress();
+    updateFocusAnimation();
 }
 
 QT_END_NAMESPACE

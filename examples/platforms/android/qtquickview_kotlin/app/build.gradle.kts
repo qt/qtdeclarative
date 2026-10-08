@@ -6,7 +6,7 @@ plugins {
 
 QtBuild {
     // Relative for Qt (Installer or MaintenanceTool) installations.
-    qtPath = file("../../../../../../6.8.4")
+    qtPath = file("../../../../../../6.8.5")
     projectPath = file("../../qtquickview")
 }
 

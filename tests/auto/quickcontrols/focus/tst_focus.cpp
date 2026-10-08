@@ -145,7 +145,6 @@ void tst_focus::policy()
     QVERIFY(!control->hasVisualFocus());
 
     window->show();
-    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
 
     control->setFocusPolicy(Qt::NoFocus);

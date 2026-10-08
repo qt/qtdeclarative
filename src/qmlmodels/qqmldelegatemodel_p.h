@@ -1,5 +1,6 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+// Qt-Security score:significant
 
 #ifndef QQMLDATAMODEL_P_H
 #define QQMLDATAMODEL_P_H
@@ -205,10 +206,10 @@ class QQmlDelegateModelAttached : public QObject
     Q_PROPERTY(QQmlDelegateModel *model READ model CONSTANT FINAL)
     Q_PROPERTY(QStringList groups READ groups WRITE setGroups NOTIFY groupsChanged FINAL)
     Q_PROPERTY(bool isUnresolved READ isUnresolved NOTIFY unresolvedChanged FINAL)
-    Q_PROPERTY(bool inPersistedItems READ inPersistedItems WRITE setInPersistedItems NOTIFY groupsChanged FINAL)
-    Q_PROPERTY(bool inItems READ inItems WRITE setInItems NOTIFY groupsChanged FINAL)
-    Q_PROPERTY(int persistedItemsIndex READ persistedItemsIndex NOTIFY groupsChanged FINAL)
-    Q_PROPERTY(int itemsIndex READ itemsIndex NOTIFY groupsChanged FINAL)
+    Q_PROPERTY(bool inPersistedItems READ inPersistedItems WRITE setInPersistedItems NOTIFY groupsChanged)
+    Q_PROPERTY(bool inItems READ inItems WRITE setInItems NOTIFY groupsChanged)
+    Q_PROPERTY(int persistedItemsIndex READ persistedItemsIndex NOTIFY groupsChanged)
+    Q_PROPERTY(int itemsIndex READ itemsIndex NOTIFY groupsChanged)
 
 public:
     QQmlDelegateModelAttached(QObject *parent);

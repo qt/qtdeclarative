@@ -36,6 +36,8 @@ private slots:
     void actionAccessibilityImplicitName();
 
     void accessibleName();
+    void sliderTest();
+
 private:
     QQmlEngine engine;
 };
@@ -373,6 +375,55 @@ void tst_accessibility::accessibleName()
     QAccessibleInterface *button3Acc = QAccessible::queryAccessibleInterface(object3.get());
     QVERIFY(button3Acc);
     QCOMPARE(button3Acc->text(QAccessible::Name), "Explicitly set accessible name");
+#endif
+}
+
+void tst_accessibility::sliderTest()
+{
+#if QT_CONFIG(accessibility)
+    if (!QAccessible::isActive()) {
+        QPlatformAccessibility *accessibility = platformAccessibility();
+        if (!accessibility)
+            QSKIP("No QPlatformAccessibility available.");
+        accessibility->setActive(true);
+    }
+
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("item.qml"));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY2(!object.isNull(), qPrintable(component.errorString()));
+
+    auto root = QAccessible::queryAccessibleInterface(object.get());
+    QVERIFY(root);
+    QCOMPARE(root->childCount(), 4);
+
+    for (int childIndex = 0; childIndex < 4; ++childIndex)
+    {
+        auto item = root->child(childIndex);
+        auto actionIface = item->actionInterface();
+        QVERIFY(actionIface);
+        auto valueIface = item->valueInterface();
+        QVERIFY(valueIface);
+
+        QVERIFY(actionIface->actionNames().contains(QAccessibleActionInterface::increaseAction()));
+        QVERIFY(actionIface->actionNames().contains(QAccessibleActionInterface::decreaseAction()));
+        QCOMPARE(valueIface->currentValue(), 25);
+        QCOMPARE(valueIface->minimumValue(), 0);
+        QCOMPARE(valueIface->maximumValue(), 100);
+
+        valueIface->setCurrentValue(30);
+        QCOMPARE(valueIface->currentValue(), 30);
+
+        const auto stepSize = valueIface->minimumStepSize();
+
+        actionIface->doAction(QAccessibleActionInterface::increaseAction());
+        QCOMPARE(valueIface->currentValue(), 30 + stepSize.toDouble());
+
+        actionIface->doAction(QAccessibleActionInterface::decreaseAction());
+        QCOMPARE(valueIface->currentValue(), 30);
+        QCOMPARE(valueIface->minimumValue(), 0);
+        QCOMPARE(valueIface->maximumValue(), 100);
+    }
 #endif
 }
 

@@ -90,6 +90,8 @@ QT_BEGIN_NAMESPACE
 
     \image qtquickcontrols-scrollindicator-non-attached.png
 
+    \include varying-delegate-heights-section.qdocinc {file} {1} {ScrollIndicator}
+
     \sa ScrollBar, {Customizing ScrollIndicator}, {Indicator Controls}
 */
 

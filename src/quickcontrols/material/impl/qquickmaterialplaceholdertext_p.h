@@ -89,10 +89,9 @@ private:
     qreal normalTargetX() const;
     qreal floatingTargetX() const;
 
-    void controlGotActiveFocus();
-    void controlLostActiveFocus();
+    void controlActiveFocusChanged();
 
-    void maybeSetFocusAnimationProgress();
+    void updateFocusAnimation(bool createIfNeeded = false);
 
     void componentComplete() override;
 
@@ -105,8 +104,7 @@ private:
     qreal m_controlHeight = 0;
     int m_leftPadding = 0;
     int m_floatingLeftPadding = 0;
-    QPointer<QParallelAnimationGroup> m_focusInAnimation;
-    QPointer<QParallelAnimationGroup> m_focusOutAnimation;
+    QPointer<QParallelAnimationGroup> m_focusAnimation;
 };
 
 QT_END_NAMESPACE

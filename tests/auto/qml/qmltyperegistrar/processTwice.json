@@ -1,0 +1,30 @@
+[
+    {
+        "classes": [
+            {
+                "className": "QObject",
+                "object": true,
+                "qualifiedClassName": "QObject"
+            },
+            {
+                "classInfos": [
+                    {
+                        "name": "QML.Element",
+                        "value": "SomeElement"
+                    }
+                ],
+                "className": "SomeElement",
+                "object": true,
+                "qualifiedClassName": "SomeElement",
+                "superClasses": [
+                    {
+                        "access": "public",
+                        "name": "QObject"
+                    }
+                ]
+            }
+        ],
+        "inputFile": "elsewhere.h",
+        "outputRevision": 68
+    }
+]

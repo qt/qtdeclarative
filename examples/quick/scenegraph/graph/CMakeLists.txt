@@ -4,7 +4,7 @@
 cmake_minimum_required(VERSION 3.16)
 project(graph LANGUAGES CXX)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick ShaderTools)
 
 qt_standard_project_setup()
 
@@ -31,13 +31,21 @@ qt_add_qml_module(graph
     URI Graph
     QML_FILES
         main.qml
-    RESOURCES
-        shaders/line.frag.qsb
-        shaders/line.vert.qsb
-        shaders/noisy.frag.qsb
-        shaders/noisy.vert.qsb
     RESOURCE_PREFIX /scenegraph/graph
     NO_RESOURCE_TARGET_PATH
+)
+
+qt6_add_shaders(graph "shaders"
+    BATCHABLE
+    PRECOMPILE
+    OPTIMIZED
+    PREFIX
+        "/scenegraph/graph"
+    FILES
+        "shaders/line.vert"
+        "shaders/line.frag"
+        "shaders/noisy.vert"
+        "shaders/noisy.frag"
 )
 
 install(TARGETS graph

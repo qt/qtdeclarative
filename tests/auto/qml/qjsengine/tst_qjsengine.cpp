@@ -337,6 +337,9 @@ private slots:
 
     void multiMatchingRegularExpression();
 
+    void evalInGlobalContext();
+    void truncateArrayData();
+
 public:
     Q_INVOKABLE QJSValue throwingCppMethod1();
     Q_INVOKABLE void throwingCppMethod2();
@@ -6635,6 +6638,43 @@ void tst_QJSEngine::multiMatchingRegularExpression()
 
     QVERIFY(result2.isString());
     QCOMPARE(result2.toString(), "4F15 9D7A D402 55D9 4A5B 7EB9 AAAC D740 8C79 245D "_L1);
+}
+
+void tst_QJSEngine::evalInGlobalContext()
+{
+    QJSEngine myEngine;
+    const QJSValue fun = myEngine.globalObject().property(QLatin1String("eval"));
+    const QJSValue ret = fun.call({ QLatin1String("99") });
+    QCOMPARE(ret.toString(), QLatin1String("99"));
+}
+
+void tst_QJSEngine::truncateArrayData()
+{
+    QJSEngine engine;
+
+    QJSValue array = engine.newArray();
+    array.setProperty(0, QJSValue::NullValue);
+    array.setProperty(1, QJSValue(14));
+    array.setProperty(2, QJSValue(QLatin1String("aaa")));
+
+    // Append a JavaScript-owned object to the array and don't keep a local reference.
+    QJSValue object = engine.newQObject(new QObject());
+    QSignalSpy spy(object.toQObject(), &QObject::destroyed);
+    // std::move won't do here because setProperty() doesn't accept rvalue refs
+    array.setProperty(3, std::exchange(object, QJSValue()));
+    QVERIFY(object.isUndefined());
+
+    QCOMPARE(array.property("length").toInt(), 4);
+
+    gc(*engine.handle());
+    QCOMPARE(spy.count(), 0);
+    QCOMPARE(array.property("length").toInt(), 4);
+
+    // Truncating the array allows the GC to collect the QObject, which results in its deletion.
+    array.setProperty("length", 3);
+    QCOMPARE(array.property("length").toInt(), 3);
+    gc(*engine.handle());
+    QCOMPARE(spy.count(), 1);
 }
 
 QTEST_MAIN(tst_QJSEngine)

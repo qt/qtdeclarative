@@ -688,7 +688,8 @@ void *QAccessibleQuickItem::interface_cast(QAccessible::InterfaceType t)
            (r == QAccessible::Slider ||
             r == QAccessible::SpinBox ||
             r == QAccessible::Dial ||
-            r == QAccessible::ScrollBar))
+            r == QAccessible::ScrollBar ||
+            r == QAccessible::ProgressBar))
        return static_cast<QAccessibleValueInterface*>(this);
 
     if (t == QAccessible::TextInterface) {
@@ -712,12 +713,34 @@ void QAccessibleQuickItem::setCurrentValue(const QVariant &value)
 
 QVariant QAccessibleQuickItem::maximumValue() const
 {
-    return item()->property("maximumValue");
+    const auto minimumValue = item()->property("minimumValue");
+    const auto maximumValue = item()->property("maximumValue");
+    const auto from = item()->property("from");
+    const auto to   = item()->property("to");
+
+    if (minimumValue.isValid() && maximumValue.isValid())
+        return maximumValue;
+
+    if (from.isValid() && to.isValid())
+        return to;
+
+    return QVariant();
 }
 
 QVariant QAccessibleQuickItem::minimumValue() const
 {
-    return item()->property("minimumValue");
+    const auto minimumValue = item()->property("minimumValue");
+    const auto maximumValue = item()->property("maximumValue");
+    const auto from = item()->property("from");
+    const auto to   = item()->property("to");
+
+    if (minimumValue.isValid() && maximumValue.isValid())
+        return minimumValue;
+
+    if (from.isValid() && to.isValid())
+        return from;
+
+    return QVariant();
 }
 
 QVariant QAccessibleQuickItem::minimumStepSize() const
@@ -769,7 +792,11 @@ int QAccessibleQuickItem::characterCount() const
         cursor.movePosition(QTextCursor::End);
         return cursor.position();
     }
-    return text(QAccessible::Value).size();
+
+    if (role() == QAccessible::EditableText)
+        return text(QAccessible::Value).size();
+
+    return text(QAccessible::Name).size();
 }
 
 int QAccessibleQuickItem::cursorPosition() const
@@ -791,7 +818,11 @@ QString QAccessibleQuickItem::text(int startOffset, int endOffset) const
         cursor.setPosition(endOffset, QTextCursor::KeepAnchor);
         return cursor.selectedText();
     }
-    return text(QAccessible::Value).mid(startOffset, endOffset - startOffset);
+
+    if (role() == QAccessible::EditableText)
+        return text(QAccessible::Value).mid(startOffset, endOffset - startOffset);
+
+    return text(QAccessible::Name).mid(startOffset, endOffset - startOffset);
 }
 
 QString QAccessibleQuickItem::textBeforeOffset(int offset, QAccessible::TextBoundaryType boundaryType,

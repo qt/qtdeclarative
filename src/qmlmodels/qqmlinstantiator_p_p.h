@@ -1,5 +1,6 @@
 // Copyright (C) 2016 Research In Motion.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+// Qt-Security score:significant
 
 #ifndef QQMLINSTANTIATOR_P_P_H
 #define QQMLINSTANTIATOR_P_P_H

@@ -55,10 +55,10 @@ void QtQuickControls2FluentWinUI3StylePlugin::initializeTheme(QQuickTheme *theme
 
 void QtQuickControls2FluentWinUI3StylePlugin::updateTheme()
 {
-    QQuickTheme *theme = QQuickTheme::instance();
-    QPalette palette;
-    this->theme.updatePalette(palette);
-    theme->setPalette(QQuickTheme::System, palette);
+    auto *theme = QQuickTheme::instance();
+    if (theme)
+        theme->setPalette(QQuickTheme::System, this->theme.initializeDefaultPalette());
+    // TODO: Update the font too if needed
 }
 
 QT_END_NAMESPACE

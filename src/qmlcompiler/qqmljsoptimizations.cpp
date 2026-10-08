@@ -83,15 +83,28 @@ void QQmlJSOptimizations::populateReaderLocations()
                 it->second.changedRegisterIndex = InvalidRegister;
                 it->second.changedRegister = QQmlJSRegisterContent();
             } else {
-                // void the output, rather than deleting it. We still need its variant.
-                bool adjusted = m_typeResolver->adjustTrackedType(
-                        it->second.changedRegister.storedType(), m_typeResolver->voidType());
-                Q_ASSERT(adjusted); // Can always convert to void
+                // We can't do this with certain QObjects because they still need tracking as
+                // implicitly destructible by the garbage collector. We may be calling a factory
+                // function and then forgetting the object after all.
+                //
+                // However, objects we need to track that way can only be produced through external
+                // side effects (i.e. function calls).
+                const QQmlJSScope::ConstPtr contained
+                        = m_typeResolver->containedType(it->second.changedRegister);
+                if (!it->second.hasExternalSideEffects
+                        || (!contained->isReferenceType()
+                            && !m_typeResolver->canHold(
+                                contained, m_typeResolver->qObjectType()))) {
+                    // void the output, rather than deleting it. We still need its variant.
+                    bool adjusted = m_typeResolver->adjustTrackedType(
+                            it->second.changedRegister.storedType(), m_typeResolver->voidType());
+                    Q_ASSERT(adjusted); // Can always convert to void
 
-                adjusted = m_typeResolver->adjustTrackedType(
+                    adjusted = m_typeResolver->adjustTrackedType(
                             m_typeResolver->containedType(it->second.changedRegister),
                             m_typeResolver->voidType());
-                Q_ASSERT(adjusted); // Can always convert to void
+                    Q_ASSERT(adjusted); // Can always convert to void
+                }
             }
             m_readerLocations.erase(reader);
 

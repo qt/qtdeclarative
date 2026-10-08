@@ -41,7 +41,7 @@
 
     \note Although we try to keep QtQuickView as thread-safe as possible, that
         can't be guaranteed since it follows the same considerations as
-        \l {Android: View}{View}. See {Android: Event Handling and Threading}
+        \l {Android: View}{View}. See \l {Android: Event Handling and Threading}
         {Event Handling and Threading}.
 
     A typical use of the class:

@@ -1,5 +1,6 @@
 // Copyright (C) 2018 Crimson AS <info@crimson.no>
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+// Qt-Security score:significant
 
 #include "qv4estable_p.h"
 #include "qv4object_p.h"

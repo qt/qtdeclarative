@@ -3,8 +3,6 @@
 
 #include "qqml.h"
 
-#include <QtQml/qqmlprivate.h>
-
 #include <private/qjsvalue_p.h>
 #include <private/qqmlbuiltinfunctions_p.h>
 #include <private/qqmlcomponent_p.h>
@@ -23,7 +21,10 @@
 #include <private/qv4lookup_p.h>
 #include <private/qv4qobjectwrapper_p.h>
 
+#include <QtQml/qqmlprivate.h>
+
 #include <QtCore/qmutex.h>
+#include <QtCore/qsequentialiterable.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -1182,11 +1183,100 @@ void AOTCompiledContext::setInstructionPointer(int offset) const
         frame->instructionPointer = offset;
 }
 
+void AOTCompiledContext::setLocals(const AOTTrackedLocalsStorage *locals) const
+{
+    if (auto *frame = engine->handle()->currentStackFrame)
+        frame->locals = locals;
+}
+
 void AOTCompiledContext::setReturnValueUndefined() const
 {
     if (auto *frame = engine->handle()->currentStackFrame) {
         Q_ASSERT(frame->isMetaTypesFrame());
         static_cast<QV4::MetaTypesStackFrame *>(frame)->setReturnValueUndefined();
+    }
+}
+
+void AOTCompiledContext::mark(QObject *object, QV4::MarkStack *markStack)
+{
+    QV4::QObjectWrapper::markWrapper(object, markStack);
+}
+
+static bool markPointer(const QVariant &element, QV4::MarkStack *markStack)
+{
+    if (!element.metaType().flags().testFlag(QMetaType::PointerToQObject))
+        return false;
+
+    QV4::QObjectWrapper::markWrapper(
+            *static_cast<QObject *const *>(element.constData()), markStack);
+    return true;
+}
+
+static void iterateVariant(const QVariant &element, std::vector<QVariant> *elements)
+{
+#define ADD_CASE(Type, id, T) \
+    case QMetaType::Type:
+
+    switch (element.metaType().id()) {
+    case QMetaType::QVariantMap:
+        for (const QVariant &variant : *static_cast<const QVariantMap *>(element.constData()))
+            elements->push_back(variant);
+        return;
+    case QMetaType::QVariantHash:
+        for (const QVariant &variant : *static_cast<const QVariantHash *>(element.constData()))
+            elements->push_back(variant);
+        return;
+    case QMetaType::QVariantList:
+        for (const QVariant &variant : *static_cast<const QVariantList *>(element.constData()))
+            elements->push_back(variant);
+        return;
+    QT_FOR_EACH_STATIC_PRIMITIVE_TYPE(ADD_CASE)
+    QT_FOR_EACH_STATIC_CORE_CLASS(ADD_CASE)
+    QT_FOR_EACH_STATIC_GUI_CLASS(ADD_CASE)
+    case QMetaType::QStringList:
+    case QMetaType::QByteArrayList:
+        return;
+    default:
+        break;
+    }
+
+    QSequentialIterable iterable;
+    if (!QMetaType::convert(
+                element.metaType(), element.constData(),
+                QMetaType::fromType<QSequentialIterable>(), &iterable)) {
+        return;
+    }
+
+    switch (iterable.valueMetaType().id()) {
+    QT_FOR_EACH_STATIC_PRIMITIVE_TYPE(ADD_CASE)
+    QT_FOR_EACH_STATIC_CORE_CLASS(ADD_CASE)
+    QT_FOR_EACH_STATIC_GUI_CLASS(ADD_CASE)
+    case QMetaType::QStringList:
+    case QMetaType::QByteArrayList:
+        return;
+    default:
+        break;
+    }
+
+    for (auto it = iterable.constBegin(), end = iterable.constEnd(); it != end; ++it)
+        elements->push_back(*it);
+
+#undef ADD_CASE
+}
+
+void AOTCompiledContext::mark(const QVariant &variant, QV4::MarkStack *markStack)
+{
+    if (markPointer(variant, markStack))
+        return;
+
+    std::vector<QVariant> stack;
+    iterateVariant(variant, &stack);
+
+    while (!stack.empty()) {
+        const QVariant &element = std::as_const(stack).back();
+        if (!markPointer(element, markStack))
+            iterateVariant(element, &stack);
+        stack.pop_back();
     }
 }
 
@@ -2747,6 +2837,13 @@ void AOTCompiledContext::initSetValueLookup(
             : QV4::QQmlValueTypeWrapper::lookupSetter;
 }
 
+void AOTCompiledContext::setObjectImplicitDestructible(QObject *object) const
+{
+    Q_ASSERT(object);
+    QQmlData::get(object, true)->setImplicitDestructible();
+    QV4::QObjectWrapper::ensureWrapper(engine->handle(), object);
+}
+
 } // namespace QQmlPrivate
 
 /*!
@@ -3103,11 +3200,11 @@ void AOTCompiledContext::initSetValueLookup(
     This returns the attached object instance that has been attached to the specified
     \a attachee by the attaching type \e T.
 
-    If \a create is true and type \e T is a valid attaching type, this creates and returns a new
-    attached object instance.
+    If \a attachee is \nullptr, returns \nullptr.
 
-    Returns \nullptr if type \e T is not a valid attaching type, or if \a create is false and no
-    attachment object instance has previously been created for \a attachee.
+    If an existing attached object instance of type \e T exists, it will return
+    it. Otherwise, it will return a newly created instance if \a create is
+    \c true and \e T is a valid attaching type, or \nullptr if it's not.
 
     \sa QML_ATTACHED(), {Providing Attached Properties}
 */

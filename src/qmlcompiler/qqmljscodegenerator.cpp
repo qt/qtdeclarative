@@ -139,10 +139,10 @@ static QString registerName(int registerIndex, int offset)
     // That's why we need both 'v' and 'c'.
 
     if (offset < 0)
-        return u"a%1"_s.arg(registerIndex - QQmlJSCompilePass::Argc);
+        return u"s.a%1"_s.arg(registerIndex - QQmlJSCompilePass::Argc);
     if (registerIndex < 0)
-        return u"c%1_%2"_s.arg(-registerIndex).arg(offset);
-    return u"v%1_%2"_s.arg(registerIndex).arg(offset);
+        return u"s.c%1_%2"_s.arg(-registerIndex).arg(offset);
+    return u"s.v%1_%2"_s.arg(registerIndex).arg(offset);
 }
 
 QQmlJSAotFunction QQmlJSCodeGenerator::run(const Function *function,
@@ -209,8 +209,12 @@ QT_WARNING_POP
             .arg(m_context->name).arg(m_context->line).arg(m_context->column);
 
     QStringList initializations;
+    QStringList markings;
     for (auto registerIt = m_registerVariables.cbegin(), registerEnd = m_registerVariables.cend();
          registerIt != registerEnd; ++registerIt) {
+
+        // Remove the "s.". Inside the struct we need the plain name.
+        QString declarationName = registerIt->variableName.mid(2);
 
         const int registerIndex = registerIt->initialRegisterIndex;
         const bool registerIsArgument = isArgument(registerIndex);
@@ -231,7 +235,7 @@ QT_WARNING_POP
                 && !m_typeResolver->registerIsStoredIn(
                     function->registerTypes[registerIndex - firstRegisterIndex()],
                     m_typeResolver->voidType())) {
-            code += registerIt->variableName + u" = "_s;
+            code += declarationName + u" = "_s;
             code += convertStored(m_typeResolver->voidType(), storedType, QString());
         } else if (registerIsArgument && m_typeResolver->registerIsStoredIn(
                        argumentType(registerIndex), storedType)) {
@@ -252,7 +256,7 @@ QT_WARNING_POP
                 code += u'&';
             }
 
-            code += registerIt->variableName + u" = "_s;
+            code += declarationName + u" = "_s;
 
             const auto originalContained = m_typeResolver->originalContainedType(argument);
             QString originalValue;
@@ -272,18 +276,50 @@ QT_WARNING_POP
                 code += conversion(original, argument, originalValue);
             else
                 code += originalValue;
+        } else if (isPointer) {
+            code += declarationName + u" = nullptr"_s;
         } else {
-            code += registerIt->variableName;
+            code += declarationName;
         }
         code += u";\n"_s;
 
         initializations.push_back(std::move(code));
+
+        if (isPointer) {
+            markings.append(u"    aotContext->mark("_s + declarationName + u", markStack);\n");
+        } else if (storedType == m_typeResolver->varType()) {
+            markings.append(u"    aotContext->mark("_s + declarationName + u", markStack);\n");
+        } else if (storedType == m_typeResolver->listPropertyType()) {
+            // No need to mark that since it's always backed by a property
+        } else if (storedType == m_typeResolver->variantMapType()
+                   || storedType->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence) {
+            QString marking = u"    for (const auto &v : std::as_const(" + declarationName + u"))\n"
+                    + u"        aotContext->mark(v, markStack);\n";
+            markings.append(std::move(marking));
+        }
     }
+
+    result.code += u"struct Storage : QQmlPrivate::AOTTrackedLocalsStorage {\n"_s;
+    result.code += u"Storage(const QQmlPrivate::AOTCompiledContext *ctxt, void **a)"_s;
+    result.code += u"   : aotContext(ctxt), argv(a) {}\n"_s;
+    result.code += u"void markObjects(QV4::MarkStack *markStack) const final {"_s;
+    result.code += u"    Q_UNUSED(markStack);\n"_s;
+
+    markings.sort();
+    for (const QString &marking : std::as_const(markings))
+        result.code += marking;
+
+    result.code += u"}\n"_s;
+    result.code += u"const QQmlPrivate::AOTCompiledContext *aotContext;\n"_s;
+    result.code += u"void **argv;\n"_s;
 
     // Sort them to obtain stable output.
     initializations.sort();
     for (const QString &initialization : std::as_const(initializations))
         result.code += initialization;
+
+    result.code += u"};\nStorage s(aotContext, argv);\n"_s;
+    result.code += u"aotContext->setLocals(&s);\n"_s;
 
     result.code += m_body;
 
@@ -1413,6 +1449,17 @@ void QQmlJSCodeGenerator::generate_GetLookup(int index)
     generate_GetLookupHelper(index);
 }
 
+QString QQmlJSCodeGenerator::generateVariantMapLookup(
+        const QString &map, const int nameIndex)
+{
+    const QString mapLookup = map
+            + u"["_s + QQmlJSUtils::toLiteral(m_jsUnitGenerator->lookupName(nameIndex)) + u"]"_s;
+
+    return m_state.accumulatorVariableOut + u" = "_s
+            + conversion(m_typeResolver->varType(), m_state.accumulatorOut(), mapLookup)
+            + u";\n"_s;
+}
+
 void QQmlJSCodeGenerator::generate_GetLookupHelper(int index)
 {
     if (m_state.accumulatorOut().isMethod()) {
@@ -1558,12 +1605,7 @@ void QQmlJSCodeGenerator::generate_GetLookupHelper(int index)
         }
     } else if (m_typeResolver->registerIsStoredIn(accumulatorIn,
                                                   m_typeResolver->variantMapType())) {
-        QString mapLookup = m_state.accumulatorVariableIn + u"["_s
-                + QQmlJSUtils::toLiteral(m_jsUnitGenerator->lookupName(index)) + u"]"_s;
-        m_body += m_state.accumulatorVariableOut + u" = "_s;
-        m_body += conversion(m_typeResolver->globalType(m_typeResolver->varType()),
-                             m_state.accumulatorOut(), mapLookup);
-        m_body += u";\n"_s;
+        m_body += generateVariantMapLookup(m_state.accumulatorVariableIn, index);
     } else {
         if (m_state.isRegisterAffectedBySideEffects(Accumulator))
             reject(u"reading from a value that's potentially affected by side effects"_s);
@@ -1572,6 +1614,13 @@ void QQmlJSCodeGenerator::generate_GetLookupHelper(int index)
                     scope, accumulatorIn, m_state.accumulatorVariableIn,
                     u"Cannot read property '%1' of %2"_s.arg(
                         m_jsUnitGenerator->lookupName(index)));
+
+        if (m_typeResolver->equals(scope, m_typeResolver->variantMapType())) {
+            m_body += generateVariantMapLookup(
+                    u"(*static_cast<const QVariantMap *>("_s
+                            + inputContentPointer + u"))"_s, index);
+            return;
+        }
 
         const QString lookup = u"aotContext->getValueLookup("_s + indexString
                 + u", "_s + inputContentPointer
@@ -1831,13 +1880,14 @@ QString QQmlJSCodeGenerator::argumentsList(int argc, int argv, QString *outVar)
             + u"const QMetaType types[] = { "_s + types + u" };\n"_s;
 }
 
-void QQmlJSCodeGenerator::generateMoveOutVar(const QString &outVar)
+void QQmlJSCodeGenerator::generateMoveOutVarAfterCall(const QString &outVar)
 {
     if (m_state.accumulatorVariableOut.isEmpty() || outVar.isEmpty())
         return;
 
-    m_body += m_state.accumulatorVariableOut + u" = "_s;
-    m_body += u"std::move(" + outVar + u");\n";
+    m_body += m_state.accumulatorVariableOut + u" = "_s + u"std::move(" + outVar + u");\n";
+    m_body += u"aotContext->setImplicitDestructible("_s
+            + m_state.accumulatorVariableOut + u");\n"_s;
 }
 
 void QQmlJSCodeGenerator::generate_CallValue(int name, int argc, int argv)
@@ -2350,7 +2400,7 @@ void QQmlJSCodeGenerator::generate_CallPropertyLookup(int index, int base, int a
     const QString initialization = u"aotContext->initCallObjectPropertyLookup("_s
             + indexString + u')';
     generateLookup(lookup, initialization);
-    generateMoveOutVar(outVar);
+    generateMoveOutVarAfterCall(outVar);
 
     m_body += u"}\n"_s;
 }
@@ -2405,7 +2455,7 @@ void QQmlJSCodeGenerator::generate_CallQmlContextPropertyLookup(int index, int a
     const QString initialization = u"aotContext->initCallQmlContextPropertyLookup("_s
             + indexString + u')';
     generateLookup(lookup, initialization);
-    generateMoveOutVar(outVar);
+    generateMoveOutVarAfterCall(outVar);
 
     m_body += u"}\n"_s;
 }
@@ -2633,8 +2683,9 @@ void QQmlJSCodeGenerator::generate_GetIterator(int iterator)
     }
 
     const QString identifier = QString::number(iteratorType.baseLookupIndex());
-    const QString iteratorName = m_state.accumulatorVariableOut + u"Iterator" + identifier;
-    const QString listName = m_state.accumulatorVariableOut + u"List" + identifier;
+    QString baseName = m_state.accumulatorVariableOut.mid(2); // remove "s."
+    const QString iteratorName = baseName + u"Iterator" + identifier;
+    const QString listName = baseName + u"List" + identifier;
 
     m_body += u"QJSListFor"_s
             + (iterator == int(QQmlJS::AST::ForEachType::In) ? u"In"_s : u"Of"_s)

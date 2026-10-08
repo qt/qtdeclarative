@@ -57,6 +57,8 @@ QQmlAnimationTimer::~QQmlAnimationTimer()
         unsetJobTimer(animation);
     for (const auto &animation : std::as_const(runningPauseAnimations))
         unsetJobTimer(animation);
+
+    QUnifiedTimer::stopAnimationTimer(this);
 }
 
 QQmlAnimationTimer *QQmlAnimationTimer::instance(bool create)

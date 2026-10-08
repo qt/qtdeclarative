@@ -28,10 +28,10 @@ public class MainActivity extends AppCompatActivity implements QtQmlStatusChange
     private static final String TAG = "myTag";
     private final Colors m_colors = new Colors();
     private final Map<QtQmlStatus, String> m_statusNames = new HashMap<QtQmlStatus, String>()  {{
-        put(QtQmlStatus.READY, " READY");
-        put(QtQmlStatus.LOADING, " LOADING");
-        put(QtQmlStatus.ERROR, " ERROR");
-        put(QtQmlStatus.NULL, " NULL");
+        put(QtQmlStatus.READY, "READY");
+        put(QtQmlStatus.LOADING, "LOADING");
+        put(QtQmlStatus.ERROR, "ERROR");
+        put(QtQmlStatus.NULL, "NULL");
     }};
     private int m_qmlButtonSignalListenerId;
     private QtQuickView m_qtQuickView;
@@ -135,11 +135,8 @@ public class MainActivity extends AppCompatActivity implements QtQmlStatusChange
     public void onStatusChanged(QtQmlStatus qtQmlStatus) {
         Log.i(TAG, "Status of QtQuickView: " + qtQmlStatus);
 
-        final String qmlStatus = getResources().getString(R.string.qml_view_status)
-                + m_statusNames.get(qtQmlStatus);
-
         // Show current QML View status in a textview
-        m_qmlStatus.setText(qmlStatus);
+        m_qmlStatus.setText(getResources().getString(R.string.qml_view_status, m_statusNames.get(qtQmlStatus)));
 
         // Connect signal listener to "onClicked" signal from main.qml
         // addSignalListener returns int which can be used later to identify the listener

@@ -119,11 +119,8 @@ class MainActivity : AppCompatActivity(), QtQmlStatusChangeListener {
     override fun onStatusChanged(status: QtQmlStatus?) {
         Log.v(TAG, "Status of QtQuickView: $status")
 
-        val qmlStatus = (resources.getString(R.string.qml_view_status)
-                + m_statusNames[status])
-
         // Show current QML View status in a textview
-        m_binding.qmlStatusText.text = qmlStatus
+        m_binding.qmlStatusText.text = resources.getString(R.string.qml_view_status, m_statusNames[status])
 
         // Connect signal listener to "onClicked" signal from main.qml
         // addSignalListener returns int which can be used later to identify the listener

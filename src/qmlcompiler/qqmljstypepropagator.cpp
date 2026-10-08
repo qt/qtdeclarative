@@ -385,7 +385,8 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name, bool isM
         for (QQmlJSScope::ConstPtr scope = m_function->qmlScope; !scope.isNull();
              scope = scope->parentScope()) {
             if (scope->hasProperty(name)) {
-                const QString id = m_function->addressableScopes.id(scope, m_function->qmlScope);
+                QQmlJSScopesById::MostLikelyCallback<QString> id;
+                m_function->addressableScopes.possibleIds(scope, m_function->qmlScope, Default, id);
 
                 QQmlJS::SourceLocation fixLocation = location;
                 fixLocation.length = 0;
@@ -393,10 +394,10 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name, bool isM
                     name
                             + " is a member of a parent element.\n      You can qualify the access "
                               "with its id to avoid this warning.\n"_L1,
-                    fixLocation, (id.isEmpty() ? u"<id>."_s : (id + u'.'))
+                    fixLocation, (id.result.isEmpty() ? u"<id>."_s : (id.result + u'.'))
                 };
 
-                if (id.isEmpty())
+                if (id.result.isEmpty())
                     suggestion->setHint("You first have to give the element an id"_L1);
                 else
                     suggestion->setAutoApplicable();

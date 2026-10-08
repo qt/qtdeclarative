@@ -40,6 +40,11 @@ public:
         currentPix = &pix1;
     }
 
+    static QQuickImageBasePrivate *get(QQuickImageBase *image)
+    {
+        return image->d_func();
+    }
+
     virtual bool updateDevicePixelRatio(qreal targetDevicePixelRatio);
 
     void setStatus(QQuickImageBase::Status value);

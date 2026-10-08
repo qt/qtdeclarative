@@ -1,5 +1,7 @@
 // Copyright (C) 2020 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+// Qt-Security score:significant
+
 #include "qqmldomattachedinfo_p.h"
 #include "qqmldomconstants_p.h"
 #include "qqmldomitem_p.h"
@@ -2830,7 +2832,7 @@ void List::writeOut(const DomItem &self, OutWriter &ow, bool compact) const
                 if (first)
                     first = false;
                 else
-                    ow.write(u", ", LineWriter::TextAddType::Extra);
+                    ow.writeRegion(CommaTokenRegion).ensureSpace();
                 if (!compact)
                     ow.ensureNewline(1);
                 DomItem el = elF();
@@ -3593,7 +3595,7 @@ void ListPBase::writeOut(const DomItem &self, OutWriter &ow, bool compact) const
         if (first)
             first = false;
         else
-            ow.write(u", ", LineWriter::TextAddType::Extra);
+            ow.writeRegion(CommaTokenRegion).ensureSpace();
         if (!compact)
             ow.ensureNewline(1);
         DomItem el = index(self, i);

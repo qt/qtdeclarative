@@ -1054,29 +1054,10 @@ static bool isRevisionAllowed(int memberRevision, const QQmlJSScope::ConstPtr &s
     return typeRevision.isValid() && typeRevision >= revision;
 }
 
-/*!
- * \internal
- * We can generally determine the relevant component boundaries for each scope. However,
- * if the scope or any of its parents is assigned to a property of which we cannot see the
- * type, we don't know whether the type of that property happens to be Component. In that
- * case, we can't say.
- */
-bool QQmlJSTypeResolver::canFindComponentBoundaries(const QQmlJSScope::ConstPtr &scope) const
-{
-    for (QQmlJSScope::ConstPtr parent = scope; parent; parent = parent->parentScope()) {
-        if (parent->isAssignedToUnknownProperty())
-            return false;
-    }
-    return true;
-}
-
 QQmlJSRegisterContent QQmlJSTypeResolver::scopedType(const QQmlJSScope::ConstPtr &scope,
                                                      const QString &name, int lookupIndex,
                                                      QQmlJSScopesByIdOptions options) const
 {
-    if (!canFindComponentBoundaries(scope))
-        return {};
-
     const auto isAssignedToDefaultProperty = [this](const QQmlJSScope::ConstPtr &parent,
                                                     const QQmlJSScope::ConstPtr &child) {
         const QString defaultPropertyName = parent->defaultPropertyName();
@@ -1094,9 +1075,18 @@ QQmlJSRegisterContent QQmlJSTypeResolver::scopedType(const QQmlJSScope::ConstPtr
         return false;
     };
 
-    if (QQmlJSScope::ConstPtr identified = m_objectsById.scope(name, scope, options)) {
-        return QQmlJSRegisterContent::create(storedType(identified), identified, lookupIndex,
-                                             QQmlJSRegisterContent::ObjectById, scope);
+    QQmlJSScopesById::CertainCallback<QQmlJSScope::ConstPtr> identified;
+    if (m_objectsById.possibleScopes(name, scope, options, identified)
+            != QQmlJSScopesById::Success::Yes) {
+        // Could not determine component boundaries
+        return {};
+    }
+
+    if (identified.result) {
+        // Found a definite match
+        return QQmlJSRegisterContent::create(
+                storedType(identified.result), identified.result, lookupIndex,
+                QQmlJSRegisterContent::ObjectById, scope);
     }
 
     if (QQmlJSScope::ConstPtr base = QQmlJSScope::findCurrentQMLScope(scope)) {

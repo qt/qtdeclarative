@@ -1,5 +1,6 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+// Qt-Security score:significant
 #ifndef QV4SCOPEDVALUE_P_H
 #define QV4SCOPEDVALUE_P_H
 
@@ -129,6 +130,22 @@ struct Scope {
         case Uninitialized:
             break;
         }
+        return ptr;
+    }
+
+    QML_NEARLY_ALWAYS_INLINE Value *construct(int nValues, const ReturnedValue& initialValue) const
+    {
+        Value *ptr = engine->jsAlloca(nValues);
+        for (int i = 0; i < nValues; ++i)
+            ptr[i].setRawValue(initialValue);
+        return ptr;
+    }
+
+    QML_NEARLY_ALWAYS_INLINE Value *construct(int nValues, const Value &initialValue) const
+    {
+        Value *ptr = engine->jsAlloca(nValues);
+        for (int i = 0; i < nValues; ++i)
+            ptr[i] = initialValue;
         return ptr;
     }
 
@@ -295,8 +312,7 @@ struct Scoped
 
     QML_NEARLY_ALWAYS_INLINE Scoped(const Scope &scope, const Value &v, ConvertType)
     {
-        ptr = scope.alloc<Scope::Uninitialized>();
-        ptr->setRawValue(value_convert<T>(scope.engine, v));
+        ptr = scope.construct(1, value_convert<T>(scope.engine, v));
     }
 
     QML_NEARLY_ALWAYS_INLINE Scoped(const Scope &scope, const Value *v)
@@ -331,8 +347,7 @@ struct Scoped
 
     QML_NEARLY_ALWAYS_INLINE Scoped(const Scope &scope, const ReturnedValue &v, ConvertType)
     {
-        ptr = scope.alloc<Scope::Uninitialized>();
-        ptr->setRawValue(value_convert<T>(scope.engine, QV4::Value::fromReturnedValue(v)));
+        ptr = scope.construct(1, value_convert<T>(scope.engine, QV4::Value::fromReturnedValue(v)));
     }
 
     Scoped<T> &operator=(Heap::Base *o) {

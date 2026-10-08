@@ -1,5 +1,6 @@
 // Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+// Qt-Security score:significant
 
 #include <private/qqmldmabstractitemmodeldata_p.h>
 
@@ -41,15 +42,12 @@ int QQmlDMAbstractItemModelData::metaCall(QMetaObject::Call call, int id, void *
                 m_cachedData[0] = *static_cast<QVariant *>(arguments[0]);
                 QMetaObject::activate(this, meta, 0, nullptr);
             }
-        } else if (*m_type->model) {
-            QQmlGuard<QQmlDMAbstractItemModelData> guard(this);
-            setValue(m_type->propertyRoles.at(propertyIndex), *static_cast<QVariant *>(arguments[0]));
-            if (guard.isNull())
-              return -1;
 
-            QMetaObject::activate(this, meta, propertyIndex, nullptr);
+            emit modelDataChanged();
+        } else if (*m_type->model) {
+            setValue(m_type->propertyRoles.at(propertyIndex),
+                     *static_cast<QVariant *>(arguments[0]));
         }
-        emit modelDataChanged();
         return -1;
     } else {
         return qt_metacall(call, id, arguments);

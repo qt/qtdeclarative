@@ -1,5 +1,6 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+// Qt-Security score:significant
 
 #ifndef QV4SEQUENCEWRAPPER_P_H
 #define QV4SEQUENCEWRAPPER_P_H
@@ -28,6 +29,8 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 
 struct Sequence;
+struct SequenceOwnPropertyKeyIterator;
+
 struct Q_QML_EXPORT SequencePrototype : public QV4::Object
 {
     V4_PROTOTYPE(arrayPrototype)
@@ -36,6 +39,10 @@ struct Q_QML_EXPORT SequencePrototype : public QV4::Object
     static ReturnedValue method_valueOf(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_sort(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_shift(const FunctionObject *b, const Value *thisObject, const Value *, int);
+    static ReturnedValue method_getLength(
+            const FunctionObject *b, const Value *thisObject, const Value *, int);
+    static ReturnedValue method_setLength(
+            const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 
     static ReturnedValue newSequence(
         QV4::ExecutionEngine *engine, QMetaType type, QMetaSequence metaSequence, const void *data,
@@ -47,7 +54,19 @@ struct Q_QML_EXPORT SequencePrototype : public QV4::Object
     static QMetaType metaTypeForSequence(const Sequence *object);
     static QVariant toVariant(const Sequence *object);
     static QVariant toVariant(const Value &array, QMetaType targetType);
-    static void *getRawContainerPtr(const Sequence *object, QMetaType typeHint);
+
+    enum RawCopyResult
+    {
+        Copied,
+        WasEqual,
+        TypeMismatch
+    };
+
+    static void *rawContainerPtr(const Sequence *sequence, QMetaType typeHint);
+    static RawCopyResult setRawContainer(
+            Sequence *sequence, const void *container, QMetaType typeHint);
+    static RawCopyResult getRawContainer(
+            const Sequence *sequence, void *container, QMetaType typeHint);
 };
 
 namespace Heap {
@@ -58,12 +77,31 @@ struct Sequence : ReferenceObject
     void init(QMetaType listType, QMetaSequence metaSequence, const void *container,
               Object *object, int propertyIndex, Heap::ReferenceObject::Flags flags);
 
-    Sequence *detached() const;
+    Sequence *detached();
     void destroy();
 
-    bool hasData() const { return m_container != nullptr; }
     void *storagePointer();
     const void *storagePointer() const { return m_container; }
+
+    bool isStoredInline() const
+    {
+        if (isReference())
+            return true;
+
+        const QMetaType valueType = valueMetaType();
+        switch (valueType.id()) {
+        case QMetaType::QVariant:
+        case QMetaType::QVariantHash:
+        case QMetaType::QVariantMap:
+        case QMetaType::QVariantList:
+        case QMetaType::QObjectStar:
+            return false;
+        default:
+            break;
+        }
+
+        return !valueType.flags().testFlag(QMetaType::PointerToQObject);
+    }
 
     bool isReadOnly() const { return m_object && !canWriteBack(); }
 
@@ -75,9 +113,21 @@ struct Sequence : ReferenceObject
     QMetaSequence metaSequence() const { return QMetaSequence(m_metaSequence); }
 
 private:
-    void initTypes(QMetaType listType, QMetaSequence metaSequence);
+    friend struct QV4::Sequence;
+    friend struct QV4::SequencePrototype;
+    friend struct QV4::SequenceOwnPropertyKeyIterator;
 
-    void *m_container;
+    void initTypes(QMetaType listType, QMetaSequence metaSequence);
+    void createElementWrappers(const void *container);
+    void createInlineStorage(const void *container);
+
+    bool loadReference();
+    bool storeReference();
+
+    union {
+        void *m_container; // if stored inline
+        uint m_size;       // if stored out of line
+    };
     const QtPrivate::QMetaTypeInterface *m_listType;
     const QtMetaContainerPrivate::QMetaSequenceInterface *m_metaSequence;
 };
@@ -99,23 +149,6 @@ public:
     static bool virtualIsEqualTo(Managed *that, Managed *other);
     static QV4::OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m, Value *target);
     static int virtualMetacall(Object *object, QMetaObject::Call call, int index, void **a);
-
-    qsizetype size() const;
-    QVariant at(qsizetype index) const;
-    QVariant shift();
-    void append(const QVariant &item);
-    void append(qsizetype num, const QVariant &item);
-    void replace(qsizetype index, const QVariant &item);
-    void removeLast(qsizetype num);
-
-    QV4::ReturnedValue containerGetIndexed(qsizetype index, bool *hasProperty) const;
-    bool containerPutIndexed(qsizetype index, const QV4::Value &value);
-    bool containerDeleteIndexedProperty(qsizetype index);
-    bool containerIsEqualTo(Managed *other);
-    bool sort(const FunctionObject *f, const Value *, const Value *argv, int argc);
-    void *getRawContainerPtr() const;
-    bool loadReference() const;
-    bool storeReference();
 };
 
 }

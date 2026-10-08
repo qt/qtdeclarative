@@ -1,5 +1,6 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+// Qt-Security score:significant
 #include "qv4arraydata_p.h"
 #include "qv4object_p.h"
 #include "qv4functionobject_p.h"
@@ -264,14 +265,19 @@ uint SimpleArrayData::truncate(Object *o, uint newLen)
         return newLen;
 
     if (!dd->attrs) {
+        for (uint i = newLen; i < dd->values.size; ++i)
+            dd->setData(dd->internalClass->engine, i, Value::emptyValue());
         dd->values.size = newLen;
         return newLen;
     }
 
     while (dd->values.size > newLen) {
-        if (!dd->data(dd->values.size - 1).isEmpty() && !dd->attrs[dd->values.size - 1].isConfigurable())
+        const uint lastIndex = dd->values.size - 1;
+        if (!dd->data(lastIndex).isEmpty() && !dd->attrs[lastIndex].isConfigurable())
             return dd->values.size;
-        --dd->values.size;
+
+        dd->setData(dd->internalClass->engine, lastIndex, Value::emptyValue());
+        dd->values.size = lastIndex;
     }
     return dd->values.size;
 }

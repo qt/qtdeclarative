@@ -15,6 +15,8 @@ ApplicationWindow {
         id: contextMenu
         objectName: "menu"
         popupType: Popup.Native
+        // For debugging in case of warnings in QPA.
+        title: objectName
 
         Action {
             objectName: text

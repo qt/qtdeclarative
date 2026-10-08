@@ -536,20 +536,28 @@ static Iterator partitionBindings(Iterator first, Iterator last)
 // and otherwise falls back to a the more generic
 // `QObject::setProperty` for properties where a WRITE method is not
 // available or in scope.
-static void compilePropertyInitializer(QmltcType &current, const QQmlJSScope::ConstPtr &type) {
-    static auto isFromExtension = [](const QQmlJSMetaProperty &property, const QQmlJSScope::ConstPtr &scope) {
-        return scope->ownerOfProperty(scope, property.propertyName()).extensionSpecifier != QQmlJSScope::NotExtension;
+void QmltcCompiler::compilePropertyInitializer(
+        QmltcType &current, const QQmlJSScope::ConstPtr &type) {
+    static auto isFromExtension
+            = [](const QQmlJSMetaProperty &property, const QQmlJSScope::ConstPtr &scope) {
+        return scope->ownerOfProperty(scope, property.propertyName()).extensionSpecifier
+                != QQmlJSScope::NotExtension;
     };
 
     current.propertyInitializer.constructor.initializerList << u"component{component}"_s;
 
-    auto properties = type->properties().values();
-    for (auto& property: properties) {
+    const auto properties = type->properties().values();
+    for (const auto &property: properties) {
         if (property.index() == -1) continue;
         if (property.isPrivate()) continue;
         if (!property.isWritable() && !qIsReferenceTypeList(property)) continue;
 
         const QString name = property.propertyName();
+        const auto propertyType = property.type();
+        if (propertyType.isNull()) {
+            recordError(type->sourceLocation(), u"Type of property '%1' is unknown"_s.arg(name));
+            continue;
+        }
 
         current.propertyInitializer.propertySetters.emplace_back();
         auto& compiledSetter = current.propertyInitializer.propertySetters.back();
@@ -560,7 +568,8 @@ static void compilePropertyInitializer(QmltcType &current, const QQmlJSScope::Co
 
         if (qIsReferenceTypeList(property)) {
             compiledSetter.parameterList.emplaceBack(
-                QQmlJSUtils::constRefify(u"QList<%1*>"_s.arg(property.type()->valueType()->internalName())),
+                QQmlJSUtils::constRefify(
+                            u"QList<%1*>"_s.arg(propertyType->valueType()->internalName())),
                 name + u"_", QString()
             );
         } else {

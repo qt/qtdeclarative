@@ -21,11 +21,15 @@ QT_BEGIN_NAMESPACE
 
 class QQuickTheme;
 class QPalette;
+class QtQuickControls2FluentWinUI3StylePlugin;
 class QQuickFluentWinUI3Theme
 {
 public:
     static void initialize(QQuickTheme *theme);
-    static void updatePalette(QPalette &palette);
+private:
+    static QPalette initializeDefaultPalette();
+
+    friend class QtQuickControls2FluentWinUI3StylePlugin;
 };
 
 QT_END_NAMESPACE

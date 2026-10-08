@@ -3,6 +3,7 @@
 
 #include <data/birthdayparty.h>
 #include <data/cppbaseclass.h>
+#include <data/detachedreferences.h>
 #include <data/druggeljug.h>
 #include <data/enumProperty.h>
 #include <data/enumproblems.h>
@@ -11,6 +12,7 @@
 #include <data/objectwithmethod.h>
 #include <data/qmlusing.h>
 #include <data/resettable.h>
+#include <data/sequenceToIterable.h>
 #include <data/takenumber.h>
 #include <data/weathermoduleurl.h>
 #include <data/withlength.h>
@@ -66,7 +68,9 @@ private slots:
     void boolPointerMerge();
     void boundComponents();
     void callContextPropertyLookupResult();
+    void callFactoryFunction();
     void callWithSpread();
+    void collectGarbageDuringAotCode();
     void colorAsVariant();
     void colorString();
     void compareOriginals();
@@ -90,6 +94,7 @@ private slots:
     void dateConstruction();
     void dateConversions();
     void deadShoeSize();
+    void detachedReferences();
     void dialogButtonBox();
     void enumConversion();
     void enumFromBadSingleton();
@@ -131,6 +136,7 @@ private slots:
     void getOptionalLookupShadowed();
     void globals();
     void idAccess();
+    void idVsMember();
     void ignoredFunctionReturn();
     void importsFromImportPath();
     void inPlaceDecrement();
@@ -204,6 +210,7 @@ private slots:
     void objectLookupOnListElement();
     void objectToString();
     void objectWithStringListMethod();
+    void oldEnum();
     void onAssignment();
     void optionalComparison();
     void outOfBoundsArray();
@@ -1017,6 +1024,19 @@ void tst_QmlCppCodegen::callContextPropertyLookupResult()
     QVERIFY(qvariant_cast<QQmlComponent *>(o->property("c")) != nullptr);
 }
 
+void tst_QmlCppCodegen::callFactoryFunction()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/callFactory.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QTest::ignoreMessage(QtDebugMsg, "Object created: 0");
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+
+    QTest::ignoreMessage(QtDebugMsg, "Object destroyed: 0");
+}
+
 void tst_QmlCppCodegen::callWithSpread()
 {
     QQmlEngine engine;
@@ -1025,6 +1045,25 @@ void tst_QmlCppCodegen::callWithSpread()
     QTest::ignoreMessage(QtCriticalMsg, "That is great!");
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
+}
+
+void tst_QmlCppCodegen::collectGarbageDuringAotCode()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/collector.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QObject *inner = o->property("o").value<QObject *>();
+    QVERIFY(inner);
+    QCOMPARE(inner->objectName(), u"dynamic"_s);
+
+    inner = o->property("o2").value<QObject *>();
+    QVERIFY(inner);
+    QCOMPARE(inner->objectName(), u"dynamic"_s);
+
+    QCOMPARE(o->property("gcRun").toInt(), 1);
 }
 
 void tst_QmlCppCodegen::colorAsVariant()
@@ -1570,6 +1609,67 @@ void tst_QmlCppCodegen::deadShoeSize()
     QScopedPointer<QObject> o(c.create());
     QVERIFY(o);
     QCOMPARE(o->property("shoeSize").toInt(), 0);
+}
+
+void tst_QmlCppCodegen::detachedReferences()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/detachedreferences.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+
+    DetachedReferences *d = qobject_cast<DetachedReferences *>(o.data());
+    QVERIFY(d);
+
+    const QVariantMap map = d->getMap();
+    QObject *collectable2 = map["collectable"_L1].value<QObject *>();
+    QVERIFY(collectable2);
+    QSignalSpy spy2(collectable2, &QObject::destroyed);
+
+    const QVariantList list = d->getList();
+    QObject *collectable3 = list[1].value<QObject *>();
+    QVERIFY(collectable3);
+    QSignalSpy spy3(collectable3, &QObject::destroyed);
+
+    // The detached list retains its type.
+    QCOMPARE(d->property("markedList").metaType(), QMetaType::fromType<QVariantList>());
+
+    engine.collectGarbage();
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+
+    QCOMPARE(spy2.count(), 0);
+    QCOMPARE(spy3.count(), 0);
+
+    // Resetting the map does not cause the collectibles to be collected
+    // because they're also in the list (recursively).
+    d->setProperty("markedMap", QVariant());
+
+    engine.collectGarbage();
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+
+    QCOMPARE(spy2.count(), 0);
+    QCOMPARE(spy3.count(), 0);
+
+    // Resetting the list finally causes everything to be collected.
+    d->setProperty("markedList", QVariantList());
+
+    engine.collectGarbage();
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+
+    // TODO: Resetting the list does not actually cause the objects to be collected because:
+    //       1. We don't truncate the array data so far. So the GC still legally marks the objects
+    //       2. The GC actually marks the array data by allocation, not by size. Truncating it
+    //          only reduces its size, but keeps the allocation around.
+
+    QEXPECT_FAIL("", "Garbage collection for truncated detached sequences is broken", Continue);
+    QCOMPARE(spy2.count(), 1);
+
+    QEXPECT_FAIL("", "Garbage collection for truncated detached sequences is broken", Continue);
+    QCOMPARE(spy3.count(), 1);
 }
 
 void tst_QmlCppCodegen::dialogButtonBox()
@@ -2363,6 +2463,19 @@ void tst_QmlCppCodegen::idAccess()
     ttt->setProperty("text", u"kill"_s);
     QCOMPARE(object.data(), ttt);
     QCOMPARE(ttt->objectName(), u"context"_s);
+}
+
+void tst_QmlCppCodegen::idVsMember()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/idVsMember.qml"_s));
+    QVERIFY2(!component.isError(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    QVERIFY(QRegularExpression(u"QQuickItem\\(0x[0-9a-f]+, \"blub\"\\)"_s)
+            .match(object->objectName()).hasMatch());
+
 }
 
 void tst_QmlCppCodegen::ignoredFunctionReturn()
@@ -3178,11 +3291,13 @@ void tst_QmlCppCodegen::listConversion()
     QStringList strings = o->property("s").value<QStringList>();
     QCOMPARE(strings, QStringList({u"Horst 1"_s, u"Horst 2"_s, u"Horst 3"_s}));
 
+    // Since this is stored as list<var>, the exact types can't be retained.
+    // For JavaScript any number is double, and any nullptr is just null.
     QVariantList vars = o->property("v").toList();
     QCOMPARE(vars, QVariantList({
         QString(),
-        QVariant::fromValue<qsizetype>(3),
-        QVariant::fromValue<Person *>(nullptr)
+        QVariant::fromValue<double>(3),
+        QVariant::fromValue(nullptr)
     }));
 
     QCOMPARE(o->property("numbers").value<QList<int>>(), (QList<int>{1, 2}));
@@ -4090,6 +4205,16 @@ void tst_QmlCppCodegen::objectWithStringListMethod()
     QVERIFY(!o.isNull());
 }
 
+void tst_QmlCppCodegen::oldEnum()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/oldEnum.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QCOMPARE(o->property("foos").value<OldEnum::Foos>(), OldEnum::Bar);
+}
+
 void tst_QmlCppCodegen::onAssignment()
 {
     QQmlEngine engine;
@@ -4718,6 +4843,19 @@ void tst_QmlCppCodegen::sequenceToIterable()
         const auto match = name.match(children.at(i)->objectName());
         QVERIFY(match.hasMatch());
         QCOMPARE(match.captured(1), QString::number(i));
+    }
+
+    QQmlComponent component2(&engine, QUrl(u"qrc:/qt/qml/TestTypes/sequenceToIterable2.qml"_s));
+    QVERIFY2(!component2.isError(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object2(component2.create());
+    QVERIFY(!object2.isNull());
+
+    QQmlListReference converted(object2.data(), "converted");
+    QCOMPARE(converted.count(), 10);
+    for (int i = 0; i < 10; ++i) {
+        Entry *e = qobject_cast<Entry *>(converted.at(i));
+        QVERIFY(e);
+        QCOMPARE(e->objectName(), QStringLiteral("Item %1").arg(i));
     }
 }
 
@@ -5503,6 +5641,7 @@ void tst_QmlCppCodegen::variantMapLookup()
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
     QCOMPARE(o->property("i"), 42);
+    QCOMPARE(o->property("j"), 42);
 }
 
 void tst_QmlCppCodegen::variantReturn()

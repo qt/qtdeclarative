@@ -11,10 +11,10 @@
 anti-patterns.
 
 \e qmllint is a tool shipped with Qt, that verifies the syntatic validity of
-QML files.
-It also warns about some QML anti-patterns. If you want to disable a specific
-warning type, you can find the appropriate flag for doing so by passing
-\c{--help} on the command line.
+QML files. You can \l{Using qmllint with CMake}{integrate qmllint into your build system}
+for ease of use. It also warns about some QML anti-patterns. If you want to
+disable a specific warning type, you can find the appropriate flag for doing so
+by passing \c{--help} on the command line.
 
 By default, some issues will result in warnings that will be printed. If there
 are more warnings than a limit which can be configured with \c{--max-warnings},
@@ -54,6 +54,11 @@ qmllint can warn you about code that cannot be compiled by \l{qmlsc}.
 
 These warnings are not enabled by default. In order to enable them specify
 \c{--compiler warning} or adjust your settings file accordingly.
+
+\section2 Using qmllint with CMake
+For projects using the \l{qt6_add_qml_module}{qt_add_qml_module()} CMake API for creating QML
+modules, \l{Linting QML sources}{convenience targets} such as \c all_qmllint are created
+automatically. These run qmllint on all the QML files of a specific module or of the project.
 
 \section2 Marking components and properties as deprecated
 

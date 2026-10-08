@@ -155,7 +155,7 @@ void tst_PointHandler::tabletStylus()
         Qt::LeftButton, 0.5, 25, 35, 0.6, 12.3, 3, stylusId, Qt::NoModifier);
     QTRY_COMPARE(handler->active(), true);
     QCOMPARE(activeSpy.size(), 1);
-    QCOMPARE(pointSpy.size(), guiSynthMouse ? 3 : 1);
+    QCOMPARE(pointSpy.size(), guiSynthMouse ? 2 : 1);
     QCOMPARE(handler->point().position().toPoint(), pointLocalDPI);
     QCOMPARE(handler->point().scenePosition().toPoint(), pointLocalDPI);
     QCOMPARE(handler->point().pressedButtons(), Qt::LeftButton);
@@ -163,7 +163,7 @@ void tst_PointHandler::tabletStylus()
     QCOMPARE(handler->point().rotation(), 12.3);
     QCOMPARE(handler->point().uniqueId().numericId(), stylusId);
     QCOMPARE(handler->translation(), QVector2D());
-    QCOMPARE(translationSpy.size(), guiSynthMouse ? 3 : 1);
+    QCOMPARE(translationSpy.size(), guiSynthMouse ? 2 : 1);
 
     QPoint delta(10, 10);
     QPoint deltaLocalDPI = QHighDpi::fromNativeLocalPosition(delta, &window);
@@ -171,7 +171,7 @@ void tst_PointHandler::tabletStylus()
     QWindowSystemInterface::handleTabletEvent(&window, timestamp++, point, window.mapToGlobal(point),
         int(QInputDevice::DeviceType::Stylus), int(QPointingDevice::PointerType::Pen),
         Qt::LeftButton, 0.45, 23, 33, 0.57, 15.6, 3, stylusId, Qt::NoModifier);
-    QTRY_COMPARE(pointSpy.size(), guiSynthMouse ? 5 : 2);
+    QTRY_COMPARE(pointSpy.size(), guiSynthMouse ? 4 : 2);
     QCOMPARE(handler->active(), true);
     QCOMPARE(activeSpy.size(), 1);
     QCOMPARE(handler->point().position().toPoint(), pointLocalDPI + deltaLocalDPI);
@@ -185,16 +185,16 @@ void tst_PointHandler::tabletStylus()
     QCOMPARE_GT(handler->point().velocity().x(), 0);
     QCOMPARE_GT(handler->point().velocity().y(), 0);
     QCOMPARE(handler->translation(), QVector2D(deltaLocalDPI));
-    QCOMPARE(translationSpy.size(), guiSynthMouse ? 5 : 2);
+    QCOMPARE(translationSpy.size(), guiSynthMouse ? 4 : 2);
 
     QWindowSystemInterface::handleTabletEvent(&window, timestamp++, point, window.mapToGlobal(point),
         int(QInputDevice::DeviceType::Stylus), int(QPointingDevice::PointerType::Pen),
         Qt::NoButton, 0, 0, 0, 0, 0, 0, stylusId, Qt::NoModifier);
     QTRY_COMPARE(handler->active(), false);
     QCOMPARE(activeSpy.size(), 2);
-    QCOMPARE(pointSpy.size(), guiSynthMouse ? 6 : 3);
+    QCOMPARE(pointSpy.size(), guiSynthMouse ? 5 : 3);
     QCOMPARE(handler->translation(), QVector2D());
-    QCOMPARE(translationSpy.size(), guiSynthMouse ? 6 : 3);
+    QCOMPARE(translationSpy.size(), guiSynthMouse ? 5 : 3);
 }
 
 void tst_PointHandler::simultaneousMultiTouch()

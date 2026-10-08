@@ -385,19 +385,22 @@ void QQmlJSLogger::printFix(const QQmlJSFixSuggestion &fixItem)
     // But if there's nothing to change it cannot be auto-applied
     Q_ASSERT(!replacement.isEmpty() || !fixItem.isAutoApplicable());
 
-    m_output.write(replacementString, QtDebugMsg);
+    if (!replacementString.isEmpty())
+        m_output.write(replacementString, QtDebugMsg);
     m_output.write(issueLocationWithContext.afterText().toString() + u'\n');
 
     int tabCount = issueLocationWithContext.beforeText().count(u'\t');
 
     // Do not draw location indicator for multiline replacement strings
-    if (replacementString.contains(u'\n'))
-        return;
+    if (!replacementString.contains(u'\n')) {
+        m_output.write(u" "_s.repeated(
+                               issueLocationWithContext.beforeText().size() - tabCount)
+                       + u"\t"_s.repeated(tabCount)
+                       + u"^"_s.repeated(replacement.size()) + u'\n');
+    }
 
-    m_output.write(u" "_s.repeated(
-                           issueLocationWithContext.beforeText().size() - tabCount)
-                   + u"\t"_s.repeated(tabCount)
-                   + u"^"_s.repeated(replacement.size()) + u'\n');
+    if (!fixItem.hint().isEmpty())
+        m_output.write("      "_L1 + fixItem.hint());
 }
 
 QQmlJSFixSuggestion::QQmlJSFixSuggestion(const QString &fixDescription,

@@ -20,6 +20,8 @@ public:
         m_coloringEnabled = isColoringPossible();
     }
 
+    ~QColorOutputPrivate() { fflush(stderr); }
+
     static const char *const foregrounds[];
     static const char *const backgrounds[];
 

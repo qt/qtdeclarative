@@ -42,7 +42,7 @@ public:
 
     QVarLengthArray<QMatrix4x4, 1> m_projection_matrix;
     QVarLengthArray<QMatrix4x4, 1> m_projection_matrix_native_ndc;
-    uint m_mirrored : 1;
+    uint m_invertFrontFace : 1;
 };
 
 QT_END_NAMESPACE

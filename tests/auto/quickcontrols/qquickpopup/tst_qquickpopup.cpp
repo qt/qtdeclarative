@@ -33,6 +33,7 @@
 #include <QtQuick/private/qquicktextinput_p.h>
 #include <QtQuick/private/qquicklistview_p.h>
 #include <QtQuick/private/qquicktextedit_p.h>
+#include <QtQuick/private/qquicktaphandler_p.h>
 #if QT_CONFIG(quick_draganddrop)
 #include <QtQuick/private/qquickdroparea_p.h>
 #endif
@@ -139,6 +140,8 @@ private slots:
     void popupWindowDestructedBeforeQQuickPopup();
     void popupWindowPositionerRespectingScreenBounds_data();
     void popupWindowPositionerRespectingScreenBounds();
+    void propagateTouchEvents();
+    void spacingAndInsetsAreRevaluatedWhenChanged();
 
 private:
     QScopedPointer<QPointingDevice> touchScreen = QScopedPointer<QPointingDevice>(QTest::createTouchDevice());
@@ -2438,7 +2441,7 @@ void tst_QQuickPopup::fadeDimmer()
     auto dimmer = QQuickPopupPrivate::get(popup)->dimmer;
     QVERIFY(dimmer);
     int opacityChangeCount = 0;
-    connect(dimmer, &QQuickItem::opacityChanged, this, [&opacityChangeCount]{
+    connect(dimmer, &QQuickItem::opacityChanged, dimmer, [&opacityChangeCount]{
         ++opacityChangeCount;
     });
     QTRY_VERIFY(popup->isOpened());
@@ -3391,6 +3394,84 @@ void tst_QQuickPopup::popupWindowPositionerRespectingScreenBounds()
                             .arg((*abf)().bottom() - popup->height()).arg(window->contentItem()->mapToGlobal(popup->x(), popup->y()).y())));
 
     popup->close();
+}
+
+void tst_QQuickPopup::propagateTouchEvents()
+{
+    QQuickApplicationHelper helper(this, "propagateTouchEvents.qml");
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    auto *popup = window->contentItem()->findChild<QQuickPopup *>();
+    popup->open();
+    QTRY_VERIFY(popup->isOpened());
+
+    auto *tapHandler = window->property("tapHandler").value<QQuickTapHandler *>();
+    QVERIFY(tapHandler);
+    QSignalSpy tapSpy(tapHandler, &QQuickTapHandler::tapped);
+    // check for the item within the popup for touch events
+    QTest::touchEvent(window, touchScreen.data()).press(0, QPoint(10, 10));
+    QTest::touchEvent(window, touchScreen.data()).release(0, QPoint(10, 10));
+    QCOMPARE(tapSpy.count(), 1);
+
+    // touch outside to close the popup window
+    QTest::touchEvent(window, touchScreen.data()).press(0, QPoint(90, 90));
+    QTest::touchEvent(window, touchScreen.data()).release(0, QPoint(90, 90));
+    QCOMPARE(tapSpy.count(), 1);
+
+    QTRY_VERIFY(!popup->isOpened());
+}
+
+void tst_QQuickPopup::spacingAndInsetsAreRevaluatedWhenChanged()
+{
+    QQuickApplicationHelper helper(this, "simplepopup.qml");
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+    auto *popup = window->contentItem()->findChild<QQuickPopup *>();
+    QVERIFY(popup);
+
+    QSignalSpy spacingSpy(popup, &QQuickPopup::spacingChanged);
+    QSignalSpy paddingSpy(popup, &QQuickPopup::paddingChanged);
+    QSignalSpy topInsetSpy(popup, &QQuickPopup::topInsetChanged);
+    QSignalSpy leftInsetSpy(popup, &QQuickPopup::leftInsetChanged);
+    QSignalSpy rightInsetSpy(popup, &QQuickPopup::rightInsetChanged);
+    QSignalSpy bottomInsetSpy(popup, &QQuickPopup::bottomInsetChanged);
+
+    const qreal initialSpacing = popup->spacing();
+    const qreal initialPadding = popup->padding();
+    const qreal initialTopInset = popup->topInset();
+    const qreal initialLeftInset = popup->leftInset();
+    const qreal initialRightInset = popup->rightInset();
+    const qreal initialBottomInset = popup->bottomInset();
+    const qreal offset = 5;
+
+    popup->setSpacing(initialSpacing + offset);
+    QCOMPARE(spacingSpy.count(), 1);
+    QCOMPARE(popup->spacing(), initialSpacing + offset);
+
+    popup->setPadding(initialPadding + offset);
+    QCOMPARE(paddingSpy.count(), 1);
+    QCOMPARE(popup->padding(), initialPadding + offset);
+
+    popup->setTopInset(initialTopInset + offset);
+    QCOMPARE(topInsetSpy.count(), 1);
+    QCOMPARE(popup->topInset(), initialTopInset + offset);
+
+    popup->setLeftInset(initialLeftInset + offset);
+    QCOMPARE(leftInsetSpy.count(), 1);
+    QCOMPARE(popup->leftInset(), initialLeftInset + offset);
+
+    popup->setRightInset(initialRightInset + offset);
+    QCOMPARE(rightInsetSpy.count(), 1);
+    QCOMPARE(popup->rightInset(), initialRightInset + offset);
+
+    popup->setBottomInset(initialBottomInset + offset);
+    QCOMPARE(bottomInsetSpy.count(), 1);
+    QCOMPARE(popup->bottomInset(), initialBottomInset + offset);
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickPopup)

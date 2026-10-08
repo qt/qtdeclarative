@@ -5746,6 +5746,10 @@ bool QQuickItemPrivate::anyPointerHandlerWants(const QPointerEvent *event, const
     HoverHandlers if the event is a QMouseEvent or QWheelEvent (they are visited
     in QQuickDeliveryAgentPrivate::deliverHoverEventToItem()), and skip handlers
     that are in QQuickPointerHandlerPrivate::deviceDeliveryTargets().
+    However if the event is a QTabletEvent, we do NOT skip delivery here:
+    this is the means by which HoverHandler can change the cursor when the
+    tablet stylus hovers over its parent item.
+
     If \a avoidGrabbers is true, also skip delivery to any handler that
     is exclusively or passively grabbing any point within \a event
     (because delivery to grabbers is handled separately).
@@ -6536,13 +6540,20 @@ void QQuickItem::setVisible(bool v)
     \qmlproperty bool QtQuick::Item::enabled
 
     This property holds whether the item receives mouse and keyboard events.
-    By default this is true.
+    By default, this is \c true.
 
-    Setting this property affects the \e effective \c enabled states of child items.
-    When an item's parent is not enabled, the (child) item is effectively disabled and
-    does not receive input events, even if its own \c enabled property is explicitly
-    set to \c true. The child \c enabled property keeps its value, but becomes
-    effective again only if all its ancestor items are enabled.
+    When set to \c false, the item does not receive keyboard or pointing device
+    events, such as press, release, or click, but can still receive hover
+    events.
+
+    \note In Qt 5, setting \c enabled to \c false also blocked hover events.
+    This was changed in Qt 6 to allow \l {QtQuick.Controls::ToolTip}{tooltips}
+    and similar features to work on disabled items.
+
+    Setting this property directly affects the \c enabled value of child
+    items. When set to \c false, the \c enabled values of all child items also
+    become \c false. When set to \c true, the \c enabled values of child items
+    are returned to \c true, unless they have explicitly been set to \c false.
 
     Setting this property to \c false automatically causes \l activeFocus to be
     set to \c false, and this item will no longer receive keyboard events.

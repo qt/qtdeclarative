@@ -24,6 +24,7 @@ qt_internal_add_test(tst_qquickframebufferobject
         tst_qquickframebufferobject.cpp
     LIBRARIES
         Qt::Gui
+        Qt::GuiPrivate
         Qt::Quick
         Qt::QuickTestUtilsPrivate
     TESTDATA ${test_data}

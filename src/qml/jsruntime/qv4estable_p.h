@@ -1,5 +1,6 @@
 // Copyright (C) 2018 Crimson AS <info@crimson.no>
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+// Qt-Security score:significant
 
 //
 //  W A R N I N G

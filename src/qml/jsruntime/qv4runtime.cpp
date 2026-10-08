@@ -1,5 +1,6 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+// Qt-Security score:significant
 
 #include "qv4runtime_p.h"
 
@@ -1601,13 +1602,13 @@ static CallArgs createSpreadArguments(Scope &scope, Value *argv, int argc)
 
     int argCount = 0;
 
-    Value *v = scope.alloc<Scope::Uninitialized>();
+    Value *v = scope.alloc<Scope::Undefined>();
     Value *arguments = v;
     for (int i = 0; i < argc; ++i) {
         if (!argv[i].isEmpty()) {
             *v = argv[i];
             ++argCount;
-            v = scope.alloc<Scope::Uninitialized>();
+            v = scope.alloc<Scope::Undefined>();
             continue;
         }
         // spread element
@@ -1628,7 +1629,7 @@ static CallArgs createSpreadArguments(Scope &scope, Value *argv, int argc)
                 scope.engine->throwRangeError(QLatin1String("Too many elements in array to use it with the spread operator"));
                         return { nullptr, 0 };
             }
-            v = scope.alloc<Scope::Uninitialized>();
+            v = scope.alloc<Scope::Undefined>();
         }
     }
     return { arguments, argCount };

@@ -1,5 +1,6 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+// Qt-Security score:significant
 
 #include "qqmldomcomments_p.h"
 #include "qqmldomoutwriter_p.h"
@@ -498,14 +499,6 @@ const QSet<int> AstRangesVisitor::kindsToSkip()
 bool AstRangesVisitor::shouldSkipRegion(const DomItem &item, FileLocationRegion region)
 {
     switch (item.internalKind()) {
-    case DomType::EnumDecl: {
-        return (region == FileLocationRegion::IdentifierRegion)
-                || (region == FileLocationRegion::EnumKeywordRegion);
-    }
-    case DomType::EnumItem: {
-        return (region == FileLocationRegion::IdentifierRegion)
-                || (region == FileLocationRegion::EnumValueRegion);
-    }
     case DomType::QmlObject: {
         return (region == FileLocationRegion::RightBraceRegion
                 || region == FileLocationRegion::LeftBraceRegion);

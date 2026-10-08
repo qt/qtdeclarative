@@ -157,6 +157,9 @@ void registerTypes()
 
     qmlRegisterTypesAndRevisions<BaseValueType>("ValueTypes", 1);
     qmlRegisterTypesAndRevisions<DerivedValueType>("ValueTypes", 1);
+    qmlRegisterTypesAndRevisions<CustomIdentifier>("ValueTypes", 1);
+    qmlRegisterTypesAndRevisions<IdProvider>("ValueTypes", 1);
+
     qmlRegisterTypesAndRevisions<GetterObject>("Test", 1);
 
     qmlRegisterNamespaceAndRevisions(&TypedEnums::staticMetaObject, "TypedEnums", 1);

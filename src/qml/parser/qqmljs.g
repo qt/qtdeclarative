@@ -1,5 +1,6 @@
 -- Copyright (C) 2016 The Qt Company Ltd.
 -- SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+-- Qt-Security score:critical reason:dataparser
 
 %parser         QQmlJSGrammar
 %decl           qqmljsparser_p.h
@@ -1253,7 +1254,9 @@ UiObjectMember: T_SIGNAL T_IDENTIFIER T_LPAREN UiParameterListOpt T_RPAREN Semic
         node->setPropertyToken(loc(1));
         node->typeToken = loc(2);
         node->identifierToken = loc(2);
+        node->leftParenToken = loc(3);
         node->parameters = sym(4).UiParameterList;
+        node->rightParenToken = loc(5);
         node->semicolonToken = loc(6);
         sym(1).Node = node;
     } break;
@@ -1586,6 +1589,7 @@ EnumMemberList: EnumMemberList T_COMMA T_IDENTIFIER;
 /.
     case $rule_number: {
         AST::UiEnumMemberList *node = new (pool) AST::UiEnumMemberList(sym(1).UiEnumMemberList, stringRef(3));
+        node->commaToken = loc(2);
         node->memberToken = loc(3);
         sym(1).Node = node;
         break;
@@ -1596,7 +1600,9 @@ EnumMemberList: EnumMemberList T_COMMA T_IDENTIFIER T_EQ T_NUMERIC_LITERAL;
 /.
     case $rule_number: {
         AST::UiEnumMemberList *node = new (pool) AST::UiEnumMemberList(sym(1).UiEnumMemberList, stringRef(3), sym(5).dval);
+        node->commaToken = loc(2);
         node->memberToken = loc(3);
+        node->equalToken = loc(4);
         node->valueToken = loc(5);
         sym(1).Node = node;
         break;
@@ -1608,7 +1614,9 @@ EnumMemberList: EnumMemberList T_COMMA T_IDENTIFIER T_EQ T_MINUS T_NUMERIC_LITER
 /.
     case $rule_number: {
         AST::UiEnumMemberList *node = new (pool) AST::UiEnumMemberList(sym(1).UiEnumMemberList, stringRef(3), -sym(6).dval);
+        node->commaToken = loc(2);
         node->memberToken = loc(3);
+        node->equalToken = loc(4);
         node->valueToken = combine(loc(5), loc(6));
         sym(1).Node = node;
         break;

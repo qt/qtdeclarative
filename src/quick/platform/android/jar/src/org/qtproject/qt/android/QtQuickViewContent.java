@@ -9,12 +9,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 /**
- * @Since 6.8
+ * The QtQuickViewContent represents a QML component that can be loaded by a QtQuickView instance.
  *
- * The QtQuickViewContent represents a QML component that can be loaded by a QtQuickView instance
  * This abstract class should be extended to be used by a QtQuickView. It provides QtQuickView with
  * essential information to load the QML component it represents.
  * It also offers convenient methods for seamless interaction with the QtQuickView that loads it.
+ * @Since 6.8
  **/
 public abstract class QtQuickViewContent
 {

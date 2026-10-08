@@ -1,5 +1,6 @@
 // Copyright (C) 2018 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+// Qt-Security score:critical reason:jit
 
 #ifndef QV4PLATFORMASSEMBLER_P_H
 #define QV4PLATFORMASSEMBLER_P_H
@@ -586,12 +587,12 @@ public:
         for (Jump j : catchyJumps)
             j.link(this);
 
+        loadUndefined();
         // We don't need to check for isInterrupted here because if that is set,
         // then the first checkException() in any exception handler will find another "exception"
         // and jump out of the exception handler.
         loadPtr(exceptionHandlerAddress(), ScratchRegister);
         Jump exitFunction = branchPtr(Equal, ScratchRegister, TrustedImmPtr(0));
-        loadUndefined();
         jump(ScratchRegister);
         exitFunction.link(this);
 

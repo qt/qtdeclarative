@@ -1,5 +1,6 @@
 // Copyright (C) 2017 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+// Qt-Security score:significant
 #ifndef QV4JSCALL_H
 #define QV4JSCALL_H
 
@@ -303,7 +304,7 @@ inline ReturnedValue coerceListType(
     ScopedValue v(scope);
     for (qsizetype i = 0; i < length; ++i) {
         v =  array->get(i);
-        sequence->containerPutIndexed(i, v);
+        sequence->put(PropertyKey::fromArrayIndex(i), v);
     }
     return sequence->asReturnedValue();
 }

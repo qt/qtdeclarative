@@ -59,7 +59,7 @@
     \include style-screenshots.qdocinc {file} {Universal} {universal}
 
     The \l {Universal Style} offers an appealing design based on the
-    \l {https://dev.windows.com/design}{Microsoft Universal Design Guidelines},
+    Microsoft Universal Design Guidelines,
     but requires more system resources than the Basic style.
 
     \section2 Windows Style

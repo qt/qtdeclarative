@@ -326,10 +326,18 @@ void QQuickShapeCurveRenderer::endSync(bool async)
         }
 
         if (pathData.currentRunner) {
-            // Already performing async computing. New dirty flags will be handled in the next sync
-            // after the current computation is done and the item is updated
-            asyncThreadsRunning = true;
-            continue;
+            // We are in a new sync round before updateNode() has been called to commit the results
+            // of the previous sync and processing round
+            if (pathData.currentRunner->isAsync) {
+                // Already performing async processing. A new run of the runner will be started in
+                // updateNode() to take care of the new dirty flags
+                asyncThreadsRunning = true;
+                continue;
+            } else {
+                // Throw away outdated results and start a new processing
+                delete pathData.currentRunner;
+                pathData.currentRunner = nullptr;
+            }
         }
 
         pathData.currentRunner = new QQuickShapeCurveRunnable;

@@ -116,14 +116,29 @@ bool QQmlJSImportVisitor::safeInsertJSIdentifier(QQmlJSScope::Ptr &scope, const 
   \internal
   Sets the name of \a scope to \a name based on \a type.
 */
-inline void setScopeName(QQmlJSScope::Ptr &scope, QQmlJSScope::ScopeType type, const QString &name)
+void QQmlJSImportVisitor::setScopeName(QQmlJSScope::Ptr &scope, QQmlJSScope::ScopeType type,
+                                       const QString &name)
 {
     Q_ASSERT(scope);
-    if (type == QQmlSA::ScopeType::GroupedPropertyScope
-        || type == QQmlSA::ScopeType::AttachedPropertyScope)
+    switch (type) {
+    case QQmlSA::ScopeType::GroupedPropertyScope:
         scope->setInternalName(name);
-    else
+        return;
+    case QQmlSA::ScopeType::AttachedPropertyScope:
+        scope->setInternalName(name);
         scope->setBaseTypeName(name);
+        QQmlJSScope::resolveTypes(scope, m_rootScopeImports.contextualTypes(), &m_usedTypes);
+        return;
+    case QQmlSA::ScopeType::QMLScope:
+        scope->setBaseTypeName(name);
+        QQmlJSScope::resolveTypes(scope, m_rootScopeImports.contextualTypes(), &m_usedTypes);
+        return;
+    case QQmlSA::ScopeType::JSFunctionScope:
+    case QQmlSA::ScopeType::JSLexicalScope:
+    case QQmlSA::ScopeType::EnumScope:
+        scope->setBaseTypeName(name);
+        return;
+    };
 }
 
 /*!
@@ -241,10 +256,10 @@ void QQmlJSImportVisitor::populateCurrentScope(
         QQmlJSScope::ScopeType type, const QString &name, const QQmlJS::SourceLocation &location)
 {
     m_currentScope->setScopeType(type);
-    setScopeName(m_currentScope, type, name);
     m_currentScope->setIsComposite(true);
     m_currentScope->setFilePath(m_logger->filePath());
     m_currentScope->setSourceLocation(location);
+    setScopeName(m_currentScope, type, name);
     m_scopesByIrLocation.insert({ location.startLine, location.startColumn }, m_currentScope);
 }
 
@@ -1716,8 +1731,7 @@ bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
             m_currentScope->setIsSingleton(m_rootIsSingleton);
         }
 
-        const QTypeRevision revision = QQmlJSScope::resolveTypes(
-                    m_currentScope, m_rootScopeImports.contextualTypes(), &m_usedTypes);
+        const QTypeRevision revision = m_currentScope->baseTypeRevision();
         if (auto base = m_currentScope->baseType(); base) {
             if (isRoot && base->internalName() == u"QQmlComponent") {
                 m_logger->log(u"Qml top level type cannot be 'Component'."_s, qmlTopLevelComponent,
@@ -2242,8 +2256,15 @@ void QQmlJSImportVisitor::handleIdDeclaration(QQmlJS::AST::UiScriptBinding *scri
         // ### TODO: find an alternative to breakInhertianceCycles here
         // we shouldn't need to search for the current root component in any case here
         breakInheritanceCycles(m_currentScope);
-        if (auto otherScopeWithID = m_scopesById.scope(name, m_currentScope)) {
+        m_scopesById.possibleScopes(
+                name, m_currentScope, Default,
+                [&](const QQmlJSScope::ConstPtr &otherScopeWithID,
+                    QQmlJSScopesById::Confidence confidence) {
+            // If it's a fuzzy match, that's still warning-worthy
+            Q_UNUSED(confidence);
+
             auto otherLocation = otherScopeWithID->sourceLocation();
+
             // critical because subsequent analysis cannot cope with messed up ids
             // and the file is invalid
             m_logger->log(u"Found a duplicated id. id %1 was first declared at %2:%3"_s.arg(
@@ -2251,7 +2272,8 @@ void QQmlJSImportVisitor::handleIdDeclaration(QQmlJS::AST::UiScriptBinding *scri
                                   QString::number(otherLocation.startColumn)),
                           qmlSyntaxDuplicateIds, // ??
                           scriptBinding->firstSourceLocation());
-        }
+            return QQmlJSScopesById::CallbackResult::ContinueSearch;
+        });
     }
     if (!name.isEmpty())
         m_scopesById.insert(name, m_currentScope);
@@ -2934,7 +2956,6 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
 
     enterEnvironment(QQmlSA::ScopeType::QMLScope, typeName,
                      uiob->qualifiedTypeNameId->identifierToken);
-    QQmlJSScope::resolveTypes(m_currentScope, m_rootScopeImports.contextualTypes(), &m_usedTypes);
 
     m_qmlTypes.append(m_currentScope); // new QMLScope is created here, so add it
     m_objectBindingScopes << m_currentScope;
@@ -2985,10 +3006,15 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::UiObjectBinding *uiob)
 
         while (!childScopes.isEmpty()) {
             const QQmlJSScope::ConstPtr scope = childScopes.takeFirst();
-            if (!m_scopesById.id(scope, scope).isEmpty()) {
+            m_scopesById.possibleIds(
+                    scope, scope, Default,
+                    [&](const QString &id, QQmlJSScopesById::Confidence confidence) {
+                // Any ID is enough to trigger the warning, no matter how confident we are about it.
+                Q_UNUSED(id);
+                Q_UNUSED(confidence);
                 foundIds = true;
-                break;
-            }
+                return QQmlJSScopesById::CallbackResult::StopSearch;
+            });
 
             childScopes << scope->childScopes();
         }

@@ -618,15 +618,16 @@ void QQuickDeliveryAgentPrivate::clearFocusInScope(QQuickItem *scope, QQuickItem
         QCoreApplication::sendEvent(newActiveFocusItem, &event);
     }
 
-    if (activeFocusItem != currentActiveFocusItem)
-        emit rootItem->window()->focusObjectChanged(activeFocusItem);
+    QQuickWindow *rootItemWindow = rootItem->window();
+    if (activeFocusItem != currentActiveFocusItem && rootItemWindow)
+        emit rootItemWindow->focusObjectChanged(activeFocusItem);
 
     if (!changed.isEmpty())
         notifyFocusChangesRecur(changed.data(), changed.size() - 1, reason);
-    if (isSubsceneAgent) {
-        auto da = QQuickWindowPrivate::get(rootItem->window())->deliveryAgent;
+    if (isSubsceneAgent && rootItemWindow) {
+        auto da = QQuickWindowPrivate::get(rootItemWindow)->deliveryAgent;
         qCDebug(lcFocus) << "    delegating clearFocusInScope to" << da;
-        QQuickWindowPrivate::get(rootItem->window())->deliveryAgentPrivate()->clearFocusInScope(da->rootItem(), item, reason, options);
+        QQuickWindowPrivate::get(rootItemWindow)->deliveryAgentPrivate()->clearFocusInScope(da->rootItem(), item, reason, options);
     }
     if (oldActiveFocusItem == activeFocusItem)
         qCDebug(lcFocus) << "activeFocusItem remains" << activeFocusItem << "in" << q;
@@ -966,7 +967,9 @@ void QQuickDeliveryAgentPrivate::deliverKeyEvent(QKeyEvent *e)
                                          e->isAutoRepeat(), e->count());
 
         do {
-            e->accept();
+            Q_ASSERT(e->type() != QEvent::ShortcutOverride || !e->isAccepted());
+            if (e->type() != QEvent::ShortcutOverride)
+                e->accept();
             QCoreApplication::sendEvent(item, e);
         } while (!e->isAccepted() && (item = item->parentItem()));
     }
@@ -2027,7 +2030,26 @@ void QQuickDeliveryAgentPrivate::deliverPointerEvent(QPointerEvent *event)
         if (!deliverPressOrReleaseEvent(event))
             event->setAccepted(false);
     }
-    if (!allUpdatedPointsAccepted(event))
+
+    auto isHoveringMoveEvent = [](QPointerEvent *event) -> bool {
+        if (event->type() == QEvent::MouseMove) {
+            const auto *spe = static_cast<const QSinglePointEvent *>(event);
+            if (spe->button() == Qt::NoButton && spe->buttons() == Qt::NoButton)
+                return true;
+        }
+        return false;
+    };
+
+    /*
+        If some QEventPoints were not yet handled, deliver to existing grabbers,
+        and then non-grabbing pointer handlers.
+        But don't deliver stray mouse moves in which no buttons are pressed:
+        stray mouse moves risk deactivating handlers that don't expect them;
+        for mouse hover tracking, we rather use deliverHoverEvent().
+        But do deliver TabletMove events, in case there is a HoverHandler that
+        changes its cursorShape depending on stylus type.
+    */
+    if (!allUpdatedPointsAccepted(event) && !isHoveringMoveEvent(event))
         deliverUpdatedPoints(event);
     if (event->isEndEvent())
         deliverPressOrReleaseEvent(event, true);

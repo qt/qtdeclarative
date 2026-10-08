@@ -28,8 +28,16 @@ qt_internal_add_test(tst_qquickoverlay
         Qt::QuickPrivate
         Qt::QuickTemplates2
         Qt::QuickTemplates2Private
+        Qt::QuickTestUtilsPrivate
+        Qt::QuickControlsTestUtilsPrivate
         Qt::TestPrivate
     TESTDATA ${test_data}
+)
+
+# Make the QML files available to Creator's locator.
+target_sources(tst_qquickoverlay
+    PRIVATE
+        ${test_data}
 )
 
 qt_internal_extend_target(tst_qquickoverlay CONDITION ANDROID OR IOS

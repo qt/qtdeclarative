@@ -1,5 +1,7 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+// Qt-Security score:significant
+
 // Suppress GCC 11 warning about maybe-uninitialized copy of
 // another Data. We're not sure if the compiler is actually right,
 // but in this type of warning, it often isn't.
@@ -353,7 +355,7 @@ void Import::writeOut(const DomItem &self, OutWriter &ow) const
     if (uri.isModule()) {
         QString vString = version.stringValue();
         if (!vString.isEmpty())
-            ow.ensureSpace().write(vString);
+            ow.ensureSpace().writeRegion(VersionRegion, vString);
     }
     if (!importId.isEmpty()) {
         ow.ensureSpace().writeRegion(AsTokenRegion).ensureSpace().writeRegion(IdNameRegion,
@@ -728,7 +730,8 @@ void QmlObject::writeOut(const DomItem &self, OutWriter &ow, const QString &onTa
         ow.ensureSpace().writeRegion(OnTokenRegion).ensureSpace().writeRegion(OnTargetRegion,
                                                                               onTarget);
     }
-    ow.writeRegion(LeftBraceRegion, u" {");
+    ow.ensureSpace();
+    ow.writeRegion(LeftBraceRegion);
     int baseIndent = ow.increaseIndent();
     int spacerId = 0;
     if (!idStr().isEmpty()) { // *always* put id first
@@ -858,7 +861,8 @@ void QmlObject::writeOut(const DomItem &self, OutWriter &ow, const QString &onTa
                 }
                 el.second.writeOut(ow);
                 if (b) {
-                    ow.write(u": ");
+                    ow.writeRegion(ColonTokenRegion);
+                    ow.ensureSpace();
                     if (const Binding *bPtr = b.as<Binding>())
                         bPtr->writeOutValue(b, ow);
                     else {
@@ -933,7 +937,7 @@ void QmlObject::writeOut(const DomItem &self, OutWriter &ow, const QString &onTa
             }
             pDef.writeOut(ow);
             if (b) {
-                ow.write(u":");
+                ow.writeRegion(ColonTokenRegion);
                 ow.ensureSpace();
                 if (const Binding *bPtr = b.as<Binding>())
                     bPtr->writeOutValue(b, ow);
@@ -1240,7 +1244,8 @@ void Binding::writeOutValue(const DomItem &self, OutWriter &lw) const
     switch (valueKind()) {
     case BindingValueKind::Empty:
         qCWarning(writeOutLog()) << "Writing of empty binding " << name();
-        lw.write(u"{}");
+        lw.writeRegion(LeftBraceRegion);
+        lw.writeRegion(RightBraceRegion);
         break;
     case BindingValueKind::Array:
         if (const List *vPtr = v.as<List>()) {
@@ -1356,10 +1361,8 @@ void EnumDecl::writeOut(const DomItem &self, OutWriter &ow) const
             .writeRegion(LeftBraceRegion);
     int iLevel = ow.increaseIndent(1);
     const auto values = self.field(Fields::values).values();
-    for (const auto &value : values) {
-        ow.ensureNewline();
+    for (const auto &value : values)
         value.writeOut(ow);
-    }
     ow.decreaseIndent(1, iLevel);
     ow.ensureNewline().writeRegion(RightBraceRegion);
 }
@@ -1905,16 +1908,18 @@ void MethodInfo::writeOut(const DomItem &self, OutWriter &ow) const
         ow.writeRegion(LeftParenthesisRegion);
         int baseIndent = ow.increaseIndent();
         for (const DomItem &arg : self.field(Fields::parameters).values()) {
-            if (first)
+            if (first) {
                 first = false;
-            else
-                ow.write(u", ");
+            } else {
+                ow.writeRegion(CommaTokenRegion);
+                ow.ensureSpace();
+            }
 
             if (const MethodParameter *argPtr = arg.as<MethodParameter>()) {
                 if (argPtr->typeAnnotationStyle == MethodParameter::TypeAnnotationStyle::Prefix)
                     argPtr->writeOutSignal(arg, ow);
                 else
-                    argPtr->writeOut(arg, ow);
+                    arg.writeOut(ow);
             } else
                 qCWarning(domLog) << "failed to cast to MethodParameter";
         }
@@ -2034,17 +2039,17 @@ bool EnumItem::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor)
 
 void EnumItem::writeOut(const DomItem &self, OutWriter &ow) const
 {
+    index_type myIndex = self.pathFromOwner().last().headIndex();
+    if (myIndex != 0)
+        ow.writeRegion(CommaTokenRegion);
     ow.ensureNewline();
     ow.writeRegion(IdentifierRegion, name());
-    index_type myIndex = self.pathFromOwner().last().headIndex();
     if (m_valueKind == ValueKind::ExplicitValue) {
         QString v = QString::number(value(), 'f', 0);
         if (abs(value() - v.toDouble()) > 1.e-10)
             v = QString::number(value());
         ow.ensureSpace().writeRegion(EqualTokenRegion).ensureSpace().writeRegion(EnumValueRegion, v);
     }
-    if (myIndex >= 0 && self.container().indexes() != myIndex + 1)
-        ow.writeRegion(CommaTokenRegion);
 }
 
 QmlUri QmlUri::fromString(const QString &str)

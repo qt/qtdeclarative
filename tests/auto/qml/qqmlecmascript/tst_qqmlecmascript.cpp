@@ -27,6 +27,7 @@
 #include <private/qv4objectiterator_p.h>
 #include <private/qqmlabstractbinding_p.h>
 #include <private/qqmlvaluetypeproxybinding_p.h>
+#include <private/qqmltimer_p.h>
 #include <QtCore/private/qproperty_p.h>
 #include <QtQuick/qquickwindow.h>
 #include <QtQuick/private/qquickitem_p.h>
@@ -127,6 +128,7 @@ private slots:
     void exceptionClearsOnReeval();
     void exceptionSlotProducesWarning();
     void exceptionBindingProducesWarning();
+    void bindingNoEvaluationIfObjectGone();
     void compileInvalidBinding();
     void transientErrors();
     void shutdownErrors();
@@ -431,6 +433,8 @@ private slots:
     void methodCallOnDerivedSingleton();
 
     void proxyMetaObject();
+
+    void jittedJavaScriptExpressionDoesNotCrashOnExceptionBeingThrown();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -2511,6 +2515,27 @@ void tst_qqmlecmascript::exceptionBindingProducesWarning()
     QVERIFY2(obj, qPrintable(component.errorString()));
     MyQmlObject *object = qobject_cast<MyQmlObject *>(obj.data());
     QVERIFY(object != nullptr);
+}
+
+void tst_qqmlecmascript::bindingNoEvaluationIfObjectGone()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("bindingNoEvaluationIfObjectGone.qml"));
+    std::unique_ptr<QObject> root(component.create());
+    QVERIFY(root);
+    QObject *targetObject = root->property("obj").value<QObject *>();
+    QVERIFY(targetObject);
+    QQmlProperty yProp(targetObject, u"y"_s, &engine);
+    // hold a reference to the binding to keep it alive
+    auto binding = QQmlAnyBinding::ofProperty(yProp);
+    QVERIFY(binding.asAbstractBinding());
+    QCOMPARE(binding.asAbstractBinding()->targetObject(), targetObject);
+    delete targetObject;
+    // the target object pointer of the binding hasn't been reset; we might
+    // want to change this in the future; that line can be then adapted
+    QVERIFY(binding.asAbstractBinding()->targetObject());
+    // trigger a binding reevaluation
+    root->setProperty("x", 10); // no ASAN warning/crash
 }
 
 void tst_qqmlecmascript::compileInvalidBinding()
@@ -10690,6 +10715,25 @@ void tst_qqmlecmascript::proxyMetaObject()
     QVERIFY(!MetaCallInterceptor::didGetObjectDestroyedCallback);
     o.reset(nullptr);
     QVERIFY(MetaCallInterceptor::didGetObjectDestroyedCallback);
+}
+
+void tst_qqmlecmascript::jittedJavaScriptExpressionDoesNotCrashOnExceptionBeingThrown()
+{
+    QQmlEngine engine;
+
+    engine.handle()->memoryManager->aggressiveGC = true;
+    engine.handle()->memoryManager->setGCTimeLimit(0);
+
+    QQmlComponent c(&engine, testFileUrl("jittedJavaScriptExpressionDoesNotCrashOnExceptionBeingThrown.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY2(o, qPrintable(c.errorString()));
+
+    QQmlContext *context = qmlContext(o.data());
+    auto timer = qobject_cast<QQmlTimer*>(context->objectForName("timer"));
+    QVERIFY(timer);
+
+    QTRY_VERIFY(!timer->isRunning());
 }
 
 QTEST_MAIN(tst_qqmlecmascript)
