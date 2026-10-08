@@ -70,6 +70,7 @@ private Q_SLOTS:
 
     void isBlockedCheck_data();
     void isBlockedCheck();
+    void isBlockedCheckNodeFlag();
 
     void textureNodeTextureOwnership_data();
     void textureNodeTextureOwnership();
@@ -369,6 +370,30 @@ void NodesTest::isBlockedCheck()
     QVERIFY(!updater.isNodeBlocked(node, &root));
 
     renderContext->invalidate();
+}
+
+void NodesTest::isBlockedCheckNodeFlag()
+{
+    QSGRootNode root;
+    QSGTransformNode *transform = new QSGTransformNode();
+    QSGNode *node = new QSGNode();
+
+    root.appendChildNode(transform);
+    transform->appendChildNode(node);
+
+    QSGNodeUpdater updater;
+
+    QVERIFY(!transform->isSubtreeBlocked());
+    QVERIFY(!updater.isNodeBlocked(node, &root));
+
+    transform->setFlag(QSGNode::IsNodeBlocked);
+    QVERIFY(transform->isSubtreeBlocked());
+    QVERIFY(updater.isNodeBlocked(node, &root));
+    QVERIFY(!node->isSubtreeBlocked());
+
+    transform->setFlag(QSGNode::IsNodeBlocked, false);
+    QVERIFY(!transform->isSubtreeBlocked());
+    QVERIFY(!updater.isNodeBlocked(node, &root));
 }
 
 void NodesTest::textureNodeTextureOwnership_data()

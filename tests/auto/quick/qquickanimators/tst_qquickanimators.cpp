@@ -35,6 +35,8 @@ private slots:
     void testTransitions();
     void testTransitionsWithImplicitFrom();
     void testAnimationPause();
+    void opacityAnimatorOnHiddenItem_data();
+    void opacityAnimatorOnHiddenItem();
 };
 
 tst_Animators::tst_Animators()
@@ -185,6 +187,63 @@ void tst_Animators::testAnimationPause()
     auto job = dynamic_cast<QQuickAnimatorProxyJob*>(animator->qtAnimation());
     animator->setPaused(true);
     QTRY_COMPARE(job->m_internalState, QQuickAnimatorProxyJob::State_Paused);
+}
+
+void tst_Animators::opacityAnimatorOnHiddenItem_data()
+{
+    QTest::addColumn<QByteArray>("hideMode");
+
+    QTest::newRow("visible") << QByteArray("visible");
+    QTest::newRow("culled") << QByteArray("culled");
+    QTest::newRow("hideSource") << QByteArray("hideSource");
+}
+
+void tst_Animators::opacityAnimatorOnHiddenItem()
+{
+    QFETCH(QByteArray, hideMode);
+
+    QQuickView view;
+    QVERIFY(QQuickTest::showView(view, testFileUrl("opacityAnimatorOnHiddenItem.qml")));
+
+    QQuickItem *target = view.rootObject()->findChild<QQuickItem *>("target");
+    QVERIFY(target);
+    QQuickItem *effectSource = view.rootObject()->findChild<QQuickItem *>("effectSource");
+    QVERIFY(effectSource);
+    QQuickAnimator *animator = view.rootObject()->findChild<QQuickAnimator *>("animator");
+    QVERIFY(animator);
+
+    const auto setHidden = [&](bool hidden) {
+        if (hideMode == "visible") {
+            // Without an effect referencing it, an invisible item has no node in the scene
+            effectSource->setProperty("sourceItem", QVariant::fromValue(target));
+            target->setVisible(!hidden);
+        } else if (hideMode == "culled") {
+            QQuickItemPrivate::get(target)->setCulled(hidden);
+        } else {
+            effectSource->setProperty("sourceItem", QVariant::fromValue(target));
+            effectSource->setProperty("hideSource", hidden);
+        }
+    };
+    const auto centerColor = [&] {
+        const QPointF center = target->mapToScene(QPointF(50, 50)) * view.devicePixelRatio();
+        return view.grabWindow().pixelColor(center.toPoint());
+    };
+
+    setHidden(true);
+    animator->start();
+    QTRY_VERIFY(animator->currentTime() > 0);
+
+    // The animated opacity must not make the hidden item visible
+    QCOMPARE(centerColor(), QColor(Qt::white));
+
+    // Once shown, the item is rendered with the animated opacity
+    setHidden(false);
+    const QColor shown = centerColor();
+    QCOMPARE(shown.red(), 255);
+    QVERIFY2(shown.green() < 200, qPrintable(shown.name()));
+    QCOMPARE(shown.green(), shown.blue());
+
+    animator->stop();
 }
 
 QT_END_NAMESPACE

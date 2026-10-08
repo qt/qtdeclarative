@@ -11,6 +11,12 @@ if(NOT QT_BUILD_STANDALONE_TESTS AND NOT QT_BUILDING_QT)
     find_package(Qt6BuildInternals REQUIRED COMPONENTS STANDALONE_TEST)
 endif()
 
+# Collect test data
+file(GLOB_RECURSE test_data_glob
+    RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+    data/*)
+list(APPEND test_data ${test_data_glob})
+
 qt_internal_add_test(tst_softwarerenderer
     SOURCES
         tst_softwarerenderer.cpp
@@ -19,6 +25,7 @@ qt_internal_add_test(tst_softwarerenderer
         Qt::Quick
         Qt::QuickPrivate
         Qt::QuickTestUtilsPrivate
+    TESTDATA ${test_data}
 )
 
 ## Scopes:

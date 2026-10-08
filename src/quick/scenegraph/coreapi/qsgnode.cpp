@@ -107,6 +107,7 @@ static void qt_print_node_count()
     \value InternalReserved Reserved for internal use.
 
     \omitvalue IsVisitableNode
+    \omitvalue IsNodeBlocked
  */
 
 /*!
@@ -325,7 +326,7 @@ QSGNode::~QSGNode()
 
 bool QSGNode::isSubtreeBlocked() const
 {
-    return false;
+    return flags().testFlag(IsNodeBlocked);
 }
 
 /*!
@@ -1393,6 +1394,8 @@ void QSGOpacityNode::setCombinedOpacity(qreal opacity)
 
 bool QSGOpacityNode::isSubtreeBlocked() const
 {
+    // IsNodeBlocked is deliberately not checked: it is only ever set on the
+    // transform nodes of items.
     return m_opacity < OPACITY_THRESHOLD;
 }
 

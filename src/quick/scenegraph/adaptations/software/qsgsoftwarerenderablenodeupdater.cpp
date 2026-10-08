@@ -36,6 +36,9 @@ QSGSoftwareRenderableNodeUpdater::~QSGSoftwareRenderableNodeUpdater()
 bool QSGSoftwareRenderableNodeUpdater::visit(QSGTransformNode *node)
 {
     m_transformState.push(node->matrix().toTransform() * m_transformState.top());
+    // Renderables in a blocked subtree (e.g. hidden items) are treated as fully
+    // transparent, which skips painting them.
+    m_opacityState.push(node->isSubtreeBlocked() ? 0.0f : m_opacityState.top());
     m_stateMap[node] = currentState(node);
     return true;
 }
@@ -43,6 +46,7 @@ bool QSGSoftwareRenderableNodeUpdater::visit(QSGTransformNode *node)
 void QSGSoftwareRenderableNodeUpdater::endVisit(QSGTransformNode *)
 {
     m_transformState.pop();
+    m_opacityState.pop();
 }
 
 bool QSGSoftwareRenderableNodeUpdater::visit(QSGClipNode *node)
