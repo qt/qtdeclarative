@@ -20,6 +20,7 @@
 #include <QQuickWindow>
 #include <QQuickView>
 #include <QQuickImageProvider>
+#include <QQuickRenderTarget>
 #include <QQmlAbstractUrlInterceptor>
 #include <QtQuick/QQuickItemGrabResult>
 
@@ -85,6 +86,7 @@ private slots:
     void colorSpace();
     void devicePixelRatio();
     void grabToImageDevicePixelRatio();
+    void reloadOnWindowDprMismatch();
 
 private:
     QQmlEngine engine;
@@ -1369,6 +1371,43 @@ void tst_qquickimage::grabToImageDevicePixelRatio()
     // grabToImage() results loaded via Image.source ignore devicePixelRatio: on a HiDPI screen,
     // grabbedImage ends up devicePixelRatio times too big instead of matching sourceImage.
     QCOMPARE(grabbedImage->size(), sourceImage->size());
+}
+
+void tst_qquickimage::reloadOnWindowDprMismatch()
+{
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick\nImage { source: \"heart.svg\" }", testFileUrl(""));
+    QScopedPointer<QQuickImage> image(qobject_cast<QQuickImage *>(component.create()));
+    QVERIFY2(image, qPrintable(component.errorString()));
+    QVERIFY(!image->window());
+    QCOMPARE(image->status(), QQuickImageBase::Ready);
+    QSignalSpy statusSpy(image.get(), &QQuickImageBase::statusChanged);
+
+    // Without a window, the image is loaded for qApp->devicePixelRatio().
+    const QSizeF origSize(595, 841);
+    const qreal appDpr = qApp->devicePixelRatio();
+    QCOMPARE(image->sourceSize(), (appDpr * origSize).toSize());
+
+    // A window whose effective DPR differs from qApp->devicePixelRatio().
+    const qreal windowDpr = appDpr + 1;
+    QImage renderTargetImage(QSize(100, 100) * windowDpr, QImage::Format_RGBA8888_Premultiplied);
+    QQuickRenderTarget renderTarget = QQuickRenderTarget::fromPaintDevice(&renderTargetImage);
+    renderTarget.setDevicePixelRatio(windowDpr);
+    QQuickWindow window;
+    window.setRenderTarget(renderTarget);
+    QCOMPARE(window.effectiveDevicePixelRatio(), windowDpr);
+
+    image->setParentItem(window.contentItem());
+    QCOMPARE(image->window(), &window);
+    QCOMPARE(statusSpy.size(), 1);
+    QCOMPARE(image->status(), QQuickImageBase::Ready);
+    QCOMPARE(image->sourceSize(), (windowDpr * origSize).toSize());
+
+    // Leaving the window and re-entering it does not trigger another reload,
+    // as the image is already loaded for this window's DPR.
+    image->setParentItem(nullptr);
+    image->setParentItem(window.contentItem());
+    QCOMPARE(statusSpy.size(), 1);
 }
 
 QTEST_MAIN(tst_qquickimage)

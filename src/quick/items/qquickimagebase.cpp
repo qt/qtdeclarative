@@ -433,6 +433,14 @@ void QQuickImageBase::itemChange(ItemChange change, const ItemChangeData &value)
             if (d->devicePixelRatio == oldDpr)
                 d->updateDevicePixelRatio(value.realValue);
         }
+    } else if (change == ItemSceneChange && value.window
+               && value.window->effectiveDevicePixelRatio() != d->devicePixelRatio) {
+        // If the image was loaded before the item had a window, it was loaded
+        // for qApp->devicePixelRatio(). ItemDevicePixelRatioHasChanged is not
+        // sent when the item enters a window, so reload the image if the
+        // window's DPR differs.
+        if (qmlEngine(this) && isComponentComplete())
+            load();
     }
     QQuickItem::itemChange(change, value);
 }
