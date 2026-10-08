@@ -54,10 +54,11 @@ public:
     int count() const { return m_refCount; }
     int refCount() const { return m_refCount; }
 
-    QQmlRefPointer<QV4::ExecutableCompilationUnit> typeCompilationUnit() const
+    const QQmlRefPointer<QV4::ExecutableCompilationUnit> &typeCompilationUnit() const
     {
         return m_typeCompilationUnit;
     }
+    int componentObjectIndex() const { return m_componentObjectIndex; }
     void setTypeCompilationUnit(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit);
 
     void initFromTypeCompilationUnit(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit,

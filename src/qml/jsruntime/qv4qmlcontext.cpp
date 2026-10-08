@@ -63,11 +63,18 @@ static OptionalReturnedValue searchContextProperties(
         if (hasProperty)
             *hasProperty = true;
 
-        if (lookup) {
+        // The same code can run in different immediate contexts, for example a script string in
+        // a context created by the user. Only cache the index if the context has the id table
+        // of the component the code belongs to. Compilation unit and component object index
+        // together identify the id table.
+        if (lookup && context->typeCompilationUnit().data()
+                    == v4->currentStackFrame->v4Function->executableCompilationUnit()) {
             lookup->qmlContextIdObjectLookup.objectId = propertyIdx;
+            lookup->qmlContextIdObjectLookup.componentObjectIndex
+                    = context->componentObjectIndex();
             lookup->call = Lookup::Call::ContextGetterIdObject;
             return OptionalReturnedValue(lookup->contextGetter(v4, base));
-        } else if (originalLookup) {
+        } else if (originalLookup && !lookup) {
             originalLookup->call = Lookup::Call::ContextGetterInParentContextHierarchy;
         }
 
@@ -601,8 +608,18 @@ ReturnedValue QQmlContextWrapper::lookupIdObject(Lookup *l, ExecutionEngine *eng
     if (!context)
         return QV4::Encode::null();
 
-    QQmlEnginePrivate *qmlEngine = QQmlEnginePrivate::get(engine->qmlEngine());
+    // The lookup was populated for the id table of one component. The same code can also run
+    // in a different context, for example a script string in a context created by the user.
+    // In that case, we have to invalidate.
+    if (context->typeCompilationUnit().data()
+                    != engine->currentStackFrame->v4Function->executableCompilationUnit()
+            || context->componentObjectIndex() != l->qmlContextIdObjectLookup.componentObjectIndex) {
+        l->call = Lookup::Call::ContextGetterGeneric;
+        return QQmlContextWrapper::resolveQmlContextPropertyLookupGetter(l, engine, base);
+    }
+
     const int objectId = l->qmlContextIdObjectLookup.objectId;
+    QQmlEnginePrivate *qmlEngine = QQmlEnginePrivate::get(engine->qmlEngine());
 
     if (qmlEngine->propertyCapture)
         qmlEngine->propertyCapture->captureProperty(context->idValueBindings(objectId));

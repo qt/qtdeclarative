@@ -196,6 +196,7 @@ struct Q_QML_EXPORT Lookup {
             quintptr unused1;
             quintptr unused2;
             int objectId;
+            int componentObjectIndex;
         } qmlContextIdObjectLookup;
         struct {
             // Same as protoLookup, as used for global lookups
