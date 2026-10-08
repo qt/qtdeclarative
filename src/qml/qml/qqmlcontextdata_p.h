@@ -81,8 +81,19 @@ public:
 
     bool isValid() const
     {
-        return m_engine && (!m_isInternal || !m_contextObject
-                            || !QObjectPrivate::get(m_contextObject)->wasDeleted);
+        if (!m_engine)
+            return false;
+
+        if (!m_isInternal)
+            return true;
+
+        if (!m_contextObject.isT1())
+            return true;
+
+        if (QObject *contextObject = m_contextObject.asT1())
+            return !QObjectPrivate::get(contextObject)->wasDeleted;
+
+        return true;
     }
 
     bool isInternal() const { return m_isInternal; }
@@ -135,8 +146,21 @@ public:
         return QQmlContextPrivate::get(asQQmlContext());
     }
 
-    QObject *contextObject() const { return m_contextObject; }
-    void setContextObject(QObject *contextObject) { m_contextObject = contextObject; }
+    QObject *contextObject() const
+    {
+        return m_contextObject.isT1() ? m_contextObject.asT1() : nullptr;
+    }
+
+    void setContextObject(QObject *contextObject)
+    {
+        Q_ASSERT(!m_contextObject.isT2());
+        m_contextObject = contextObject;
+    }
+
+    const QQmlPropertyCache *lostContextObjectCache() const
+    {
+        return m_contextObject.isT2() ? m_contextObject.asT2() : nullptr;
+    }
 
     template<typename HandleSelf, typename HandleLinked>
     void deepClearContextObject(
@@ -144,12 +168,12 @@ public:
         for (QQmlContextData *lc = m_linkedContext.data(); lc; lc = lc->m_linkedContext.data()) {
             handleLinked(lc);
             if (lc->m_contextObject == contextObject)
-                lc->m_contextObject = nullptr;
+                lc->clearContextObject();
         }
 
         handleSelf(this);
         if (m_contextObject == contextObject)
-            m_contextObject = nullptr;
+            clearContextObject();
     }
 
     void deepClearContextObject(QObject *contextObject)
@@ -440,8 +464,11 @@ private:
     // flag indicates whether the context owns the cache (after mutation) or not.
     mutable QV4::IdentifierHash m_propertyNameCache;
 
-    // Context object
-    QObject *m_contextObject = nullptr;
+    void clearContextObject();
+
+    // The type of the context object (its property cache) is retained
+    // when the context object is lost.
+    QBiPointer<QObject, const QQmlPropertyCache> m_contextObject;
 
     // Any script blocks that exist on this context
     union {

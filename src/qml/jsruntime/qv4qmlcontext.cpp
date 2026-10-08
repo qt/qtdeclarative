@@ -301,6 +301,8 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
         contextGetterCall = Lookup::Call::ContextGetterScopeObjectProperty;
     }
 
+    bool immediateContextDone = false;
+
     QQmlRefPointer<QQmlContextData> outer = context;
     while (context) {
         if (outer == context) {
@@ -379,6 +381,16 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
         }
         scopeObject = nullptr;
 
+        // The context object would have resolved the name, but it is gone. The search doesn't
+        // resume past it. Its type is still known.
+        if (!immediateContextDone && !context->contextObject()) {
+            if (const QQmlPropertyCache *lostCache = context->lostContextObjectCache();
+                lostCache && lostScopeCacheResolves(lostCache, v4, name)) {
+                if (hasProperty)
+                    *hasProperty = true;
+                return v4->throwReferenceError(name->toQString());
+            }
+        }
 
         // Search context object
         if (QObject *contextObject = context->contextObject()) {
@@ -423,6 +435,7 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
             }
         }
 
+        immediateContextDone = true;
         context = context->parent();
 
         // As the hierarchy of contexts is not stable, we can't do accelerated lookups beyond

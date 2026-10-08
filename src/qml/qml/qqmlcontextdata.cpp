@@ -123,6 +123,17 @@ void QQmlContextData::invalidateAfterContextObjectLost()
     m_engine = nullptr;
 }
 
+void QQmlContextData::clearContextObject()
+{
+    Q_ASSERT(m_contextObject.asT1());
+    // The property cache can be missing, for example if the object is still being created.
+    const QQmlData *ddata = QQmlData::get(m_contextObject.asT1(), false);
+    const QQmlPropertyCache *propCache = ddata ? ddata->propertyCache.data() : nullptr;
+    if (propCache)
+        propCache->addref();
+    m_contextObject = propCache;
+}
+
 void QQmlContextData::clearContextRecursively()
 {
     emitDestruction();
@@ -249,6 +260,9 @@ QQmlContextData::~QQmlContextData()
         delete m_publicContext;
 
     Q_ASSERT(refCount() == 1);
+
+    if (const QQmlPropertyCache *cache = m_contextObject.isT2() ? m_contextObject.asT2() : nullptr)
+        cache->release();
 }
 
 void QQmlContextData::refreshExpressionsRecursive(QQmlJavaScriptExpression *expression)
@@ -356,15 +370,15 @@ QString QQmlContextData::findObjectId(const QObject *obj) const
                 return propertyName(ii);
     }
 
-    if (m_contextObject) {
+    if (QObject *contextObject = m_contextObject.asT1()) {
         // This is expensive, but nameForObject should really mirror contextProperty()
-        for (const QMetaObject *metaObject = m_contextObject->metaObject();
+        for (const QMetaObject *metaObject = contextObject->metaObject();
              metaObject; metaObject = metaObject->superClass()) {
             for (int i = metaObject->propertyOffset(), end = metaObject->propertyCount();
                  i != end; ++i) {
                 const QMetaProperty prop = metaObject->property(i);
                 if (prop.metaType().flags() & QMetaType::PointerToQObject
-                        && prop.read(m_contextObject) == objVariant) {
+                        && prop.read(contextObject) == objVariant) {
                     return QString::fromUtf8(prop.name());
                 }
             }
