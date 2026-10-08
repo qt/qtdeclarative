@@ -7204,13 +7204,7 @@ static KnownIssue compilerIssue(const UnqualifiedName &name, NameKinds kinds,
                  "searches the scope object before the global object" };
     }
 
-    // QQmlJSTypeResolver::scopedType() never searches the context object.
-    if ((name.builtIn & Global) && winner == ContextObject) {
-        return { KnownIssue::Failure,
-                 "Compiled code does not search the context object before the global object" };
-    }
-
-    // QQmlJSTypeResolver::scopedType() never searches the enclosing context objects either.
+    // QQmlJSTypeResolver::scopedType() never searches the enclosing context objects.
     if ((name.builtIn & Global) && winner == BoundContextObject) {
         return { KnownIssue::Failure,
                  "Compiled code does not search the enclosing context objects of a bound "

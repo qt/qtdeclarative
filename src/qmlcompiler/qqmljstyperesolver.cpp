@@ -8,6 +8,7 @@
 #include "qqmljsimportvisitor_p.h"
 #include "qqmljslogger_p.h"
 #include "qqmljsutils_p.h"
+#include <private/qv4codegen_p.h>
 #include <private/qv4value_p.h>
 
 #include <private/qduplicatetracker_p.h>
@@ -175,7 +176,7 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer)
     // We use this as scope type quite often, and it should always be the same scope type.
     m_jsGlobalObjectContent = m_pool->createType(
             m_jsGlobalObject, QQmlJSRegisterContent::InvalidLookupIndex,
-            QQmlJSRegisterContent::ScopeObject);
+            QQmlJSRegisterContent::GlobalObject);
 }
 
 /*!
@@ -1069,32 +1070,75 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::resolveParentProperty(
 /*!
  * \internal
  *
+ * Returns the context object type of the context \a scope belongs to, if it has a property or
+ * method called \a name. The context object is the root object of the surrounding component.
+ * Returns nullptr if the root doesn't have the name, or we cannot tell where the component
+ * starts.
+ */
+static QQmlJSScope::ConstPtr contextObjectWithName(
+        const QQmlJSScope::ConstPtr &scope, const QString &name)
+{
+    // The keywords come before everything else, including the context object.
+    if (QV4::Compiler::Codegen::isNameKeyword(name))
+        return {};
+
+    const auto hasName = [&](const QQmlJSScope::ConstPtr &root) {
+        return QQmlJSUtils::searchBaseAndExtensionTypes(
+                root, [&](const QQmlJSScope::ConstPtr &found, QQmlJSScope::ExtensionKind mode) {
+            return mode != QQmlJSScope::ExtensionNamespace
+                    && (found->hasOwnProperty(name) || found->hasOwnMethod(name));
+        });
+    };
+
+    for (QQmlJSScope::ConstPtr current = scope; current; current = current->parentScope()) {
+        if (current->scopeType() != QQmlSA::ScopeType::QMLScope)
+            continue;
+
+        const QQmlJSScope::IsComponentRoot status = current->componentRootStatus();
+        if (status == QQmlJSScope::IsComponentRoot::No)
+            continue;
+
+        // If the status is Maybe, we may return a context object from an outer context even
+        // though the search would have had to stop at an inner one and hand off to the next
+        // stage. That can only make the code generator reject code it could have compiled, so
+        // it is safe.
+        if (hasName(current))
+            return current;
+
+        if (status == QQmlJSScope::IsComponentRoot::Yes)
+            return {};
+    }
+
+    return {};
+}
+
+/*!
+ * \internal
+ *
  * Retrieves the type of whatever \a name signifies in the given \a scope.
  * \a name can be an ID, a property of the scope, a singleton, an attachment,
  * a plain type reference or a JavaScript global.
  *
- * TODO: The lookup is actually wrong. We cannot really retrieve JavaScript
- *       globals here because any runtime-inserted context property would
- *       override them. We still do because we don't have a better solution for
- *       identifying e.g. the console object, yet.
+ * The lookup follows the rules in the internal "Resolving Unqualified Names in QML"
+ * documentation (qml-name-resolution.qdoc), as far as the compiler can know the
+ * contexts and scope objects involved. User-created contexts are not visible
+ * ahead of time. They are only searched after the global object, and script
+ * strings, the only code that can run in one as immediate context, are not
+ * compiled. The global object, including the JavaScript globals, can therefore
+ * be resolved here.
  *
  * \a options tells us whether to consider components as bound. If components
  * are bound we can retrieve objects identified by ID in outer contexts.
  *
- * TODO: This is also wrong because we should alternate scopes and contexts when
- *       traveling the scope/context hierarchy. Currently we have IDs from any
- *       context override all scope properties if components are considered
- *       bound. This is mostly because we don't care about outer scopes at all;
- *       so we cannot determine with certainty whether an ID from a far outer
- *       context is overridden by a property of a near outer scope. To
- *       complicate this further, user context properties can also be inserted
- *       in outer contexts at run time, shadowing names in further removed outer
- *       scopes and contexts. What we need to do is determine where exactly what
- *       kind of property can show up and defend against that with additional
- *       pragmas.
+ * Names found on the context object (rule 6) are resolved, but the code
+ * generator does not generate code for them. The linter warns about them as
+ * unqualified access.
  *
- * Note: It probably takes at least 3 nested bound components in one document to
- *       trigger the misbehavior.
+ * TODO: Rule 7 is not implemented. If components are bound, the context
+ *       objects of the lexically enclosing contexts come after the context
+ *       object and before the global object. They are not searched, so a name
+ *       that such an object shares with the global object is resolved to the
+ *       global object.
  */
 QQmlJSScope::ConstPtr QQmlJSTypeResolver::scopedType(
         const QQmlJSScope::ConstPtr &scope, const QString &name,
@@ -1146,6 +1190,26 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::scopedType(
 
     if (QQmlJSScope::ConstPtr result = containedTypeForName(name))
         return result;
+
+    // Rule 6: The context object comes before the global object.
+    if (const QQmlJSScope::ConstPtr root = contextObjectWithName(scope, name)) {
+        QQmlJSScope::ConstPtr result;
+        QQmlJSUtils::searchBaseAndExtensionTypes(
+                root, [&](const QQmlJSScope::ConstPtr &found, QQmlJSScope::ExtensionKind mode) {
+            if (mode == QQmlJSScope::ExtensionNamespace)
+                return false;
+            if (found->hasOwnProperty(name)) {
+                result = resolveParentProperty(name, root, found->ownProperty(name).type());
+                return true;
+            }
+            if (found->hasOwnMethod(name)) {
+                result = jsValueType();
+                return true;
+            }
+            return false;
+        });
+        return result;
+    }
 
     if (m_jsGlobalObject->hasProperty(name))
         return m_jsGlobalObject->property(name).type();
@@ -1232,6 +1296,41 @@ QQmlJSRegisterContent QQmlJSTypeResolver::scopedType(QQmlJSRegisterContent scope
     if (result.isValid())
         return result;
 
+    // Rule 6: The context object comes before the global object.
+    if (const QQmlJSScope::ConstPtr root = contextObjectWithName(contained, name)) {
+        const QQmlJSRegisterContent contextObject = m_pool->createType(
+                root, QQmlJSRegisterContent::InvalidLookupIndex,
+                QQmlJSRegisterContent::ContextObject, scope);
+        QQmlJSRegisterContent result;
+        QQmlJSUtils::searchBaseAndExtensionTypes(
+                root, [&](const QQmlJSScope::ConstPtr &found, QQmlJSScope::ExtensionKind mode) {
+            if (mode == QQmlJSScope::ExtensionNamespace)
+                return false;
+
+            const QQmlJSRegisterContent resultScope = mode == QQmlJSScope::NotExtension
+                    ? contextObject
+                    : extensionType(found, contextObject);
+
+            if (found->hasOwnProperty(name)) {
+                QQmlJSMetaProperty prop = found->ownProperty(name);
+                prop.setType(resolveParentProperty(name, root, prop.type()));
+                result = m_pool->createProperty(
+                        prop, QQmlJSRegisterContent::InvalidLookupIndex, lookupIndex,
+                        scopeContentVariant(mode, false), resultScope);
+                return true;
+            }
+
+            if (!found->hasOwnMethod(name))
+                return false;
+
+            result = m_pool->createMethod(
+                    found->ownMethods(name), jsValueType(), scopeContentVariant(mode, true),
+                    resultScope);
+            return true;
+        });
+        return result;
+    }
+
     if (m_jsGlobalObject->hasProperty(name)) {
         return m_pool->createProperty(
                 m_jsGlobalObject->property(name), QQmlJSRegisterContent::InvalidLookupIndex,
@@ -1252,10 +1351,6 @@ QQmlJSRegisterContent QQmlJSTypeResolver::scopedType(QQmlJSRegisterContent scope
  *
  * Same as scopedType(), but assumes that the \a name is an ID and only searches
  * the context.
- *
- * TODO: This is just as wrong as scopedType() in that it disregards both scope
- *       properties overriding context properties and run time context
- *       properties.
  */
 
 bool QQmlJSTypeResolver::checkEnums(

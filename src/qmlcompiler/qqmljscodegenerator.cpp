@@ -791,6 +791,9 @@ void QQmlJSCodeGenerator::generate_LoadQmlContextPropertyLookup(int index)
 
     const bool isProperty = m_state.accumulatorOut().isProperty();
     if (isProperty) {
+        if (isQmlContextObject(m_state.accumulatorOut().scope()))
+            REJECT(u"unqualified access to a property of the context object"_s);
+
         const QString lookup = u"aotContext->loadScopeObjectPropertyLookup("_s
                 + indexString + u", "_s
                 + contentPointer(m_state.accumulatorOut(), m_state.accumulatorVariableOut) + u')';
@@ -819,6 +822,9 @@ void QQmlJSCodeGenerator::generate_StoreNameSloppy(int nameIndex)
 
     switch (type.variant()) {
     case QQmlJSRegisterContent::Property: {
+        if (isQmlContextObject(type.scope()))
+            REJECT(u"assignment to a property of the context object"_s);
+
         // Do not convert here. We may intentionally pass the "wrong" type, for example to trigger
         // a property reset.
         m_body += u"aotContext->storeNameSloppy("_s + QString::number(nameIndex)
@@ -2568,6 +2574,9 @@ void QQmlJSCodeGenerator::generate_CallQmlContextPropertyLookup(int index, int a
         if (inlineTranslateMethod(name, argc, argv))
             return;
     }
+
+    if (isQmlContextObject(scope))
+        REJECT(u"unqualified call of a method of the context object"_s);
 
     if (m_state.accumulatorOut().isJavaScriptReturnValue())
         REJECT(u"call to untyped JavaScript function"_s);

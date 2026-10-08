@@ -438,6 +438,13 @@ void TestQmllint::testUnqualified_data()
                        { u"x is a member of a parent element.\n      "_s
                          u"You can qualify the access with its id to avoid this warning."_s,
                          Edit{ u"root."_s, 13, 33 } } } } };
+    // The type propagator resolves these via the context object, but they are unqualified access.
+    QTest::newRow("FromRootCallAndStore")
+            << QStringLiteral("FromRootCallAndStore.qml")
+            << Result { {
+                   { "Unqualified access"_L1, 9, 28 },
+                   { "Unqualified access"_L1, 10, 32 },
+               } };
     // access injected name from signal
     QTest::newRow("SignalHandler")
             << QStringLiteral("SignalHandler.qml")
