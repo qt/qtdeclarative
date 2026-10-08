@@ -7153,15 +7153,13 @@ static KnownIssue interpreterIssue(const UnqualifiedName &name, NameKinds kinds,
     // QQmlContextWrapper::getPropertyAndBase() searches the global object, and therefore the
     // translation functions, only after all scopes and contexts. NaN is not folded because the
     // code generator compares with "Nan". Translation bindings don't look up the translation
-    // functions at all. A lost scope or context object is skipped.
+    // functions at all. A lost scope object throws. A lost context object is skipped.
     if (((isTranslation && usage != "Binding") || isNaN) && !(kinds & DynamicScopeObject)) {
         NameKinds reachable = kinds
                 & (ScopeObject | ContextObject | BoundContextObject | ModelContextObject
                    | UnboundContextObject | ParentContextProperty | ParentContextObject);
-        if (lostBeforeFirstUse) {
-            const NameKind lost = loss == Loss::ScopeObject ? ScopeObject : ContextObject;
-            reachable &= ~NameKinds(lost);
-        }
+        if (lostBeforeFirstUse && loss == Loss::ContextObject)
+            reachable &= ~NameKinds(ContextObject);
         if (reachable) {
             return { KnownIssue::Failure,
                      isNaN ? "NaN is not folded (\"Nan\" typo in the code generator) and the "
@@ -7183,16 +7181,8 @@ static KnownIssue interpreterIssue(const UnqualifiedName &name, NameKinds kinds,
                  "The interpreter searches the parent contexts before the global object" };
     }
 
-    // An unpopulated lookup skips a scope object that is gone and searches the rest. A populated
-    // lookup remembers that it found the name on the scope object and throws.
-    if (winner == ScopeObject && loss == Loss::ScopeObject && !cached
-        && (kinds & ~NameKinds(ScopeObject))) {
-        return { KnownIssue::Failure,
-                 "The interpreter resumes the search past a lost scope object if the lookup has "
-                 "not been populated before" };
-    }
-
-    // Likewise for the context object.
+    // An unpopulated lookup skips a context object that is gone and searches the rest. A
+    // populated lookup remembers that it found the name on the context object and throws.
     if (winner == ContextObject && loss == Loss::ContextObject && !cached
         && (kinds & ~NameKinds(ContextObject))) {
         return { KnownIssue::Failure,
@@ -7487,16 +7477,6 @@ void tst_QmlCppCodegen::unqualifiedLostScopeObject()
     // search does not resume there.
     delete root->property("child").value<QObject *>();
     const QString result = callStored();
-
-#ifdef QT_TEST_FORCE_INTERPRETER
-    // An unpopulated lookup skips a scope object that is gone and searches the rest.
-    if (!cached) {
-        QEXPECT_FAIL("",
-                     "The interpreter resumes the search past a lost scope object if the "
-                     "lookup has not been populated before",
-                     Abort);
-    }
-#endif
 
     QCOMPARE(result, u"<ReferenceError>"_s);
 }

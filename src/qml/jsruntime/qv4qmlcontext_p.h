@@ -25,6 +25,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQmlPropertyCache;
+
 namespace QV4 {
 
 struct QQmlContextWrapper;
@@ -43,6 +45,11 @@ DECLARE_HEAP_OBJECT(QQmlContextWrapper, Object) {
     // This has to be a plain pointer because object needs to be a POD type.
     QQmlContextData *context;
     QV4QPointer<QObject> scopeObject;
+
+    // The type of the scope object. It outlives the scope object, so that we can tell whether the
+    // scope object would have resolved a name even if it is gone. Held as a plain pointer with
+    // manual reference counting because the heap object needs to be a POD type.
+    const QQmlPropertyCache *scopePropertyCache;
 };
 
 #define QmlContextMembers(class, Member)
