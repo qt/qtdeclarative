@@ -7176,15 +7176,11 @@ struct KnownIssue
 
 // Where the interpreter deviates from the rules.
 static KnownIssue interpreterIssue(const UnqualifiedName &name, NameKinds kinds,
-                                   const QByteArray &usage, Loss loss, bool cached)
+                                   const QByteArray &usage)
 {
-    const NameKind winner = winnerOf(kinds);
-
     // The translation functions are the only names the tests call directly.
     const bool isTranslation = (name.builtIn & Keyword) && name.expression[0] != '"';
     const bool isNaN = qstrcmp(name.name, "NaN") == 0;
-
-    const bool lostBeforeFirstUse = loss != Loss::None && !cached;
 
     // QQmlContextWrapper::getPropertyAndBase() disables lookups and searches the global object
     // before anything else if the scope object has a dynamic metaobject.
@@ -7197,13 +7193,10 @@ static KnownIssue interpreterIssue(const UnqualifiedName &name, NameKinds kinds,
     // QQmlContextWrapper::getPropertyAndBase() searches the global object, and therefore the
     // translation functions, only after the scope object and the context objects. NaN is not
     // folded because the code generator compares with "Nan". Translation bindings don't look up
-    // the translation functions at all. A lost scope object throws. A lost context object
-    // hides the context objects, but the enclosing context object of a bound component stays
-    // reachable.
+    // the translation functions at all. A lost scope object or context object throws if it
+    // would have resolved the name.
     if (((isTranslation && usage != "Binding") || isNaN) && !(kinds & DynamicScopeObject)) {
         NameKinds reachable = kinds & (ScopeObject | ContextObject | BoundContextObject);
-        if (lostBeforeFirstUse && loss == Loss::ContextObject)
-            reachable &= ~NameKinds(ContextObject);
         if (reachable) {
             return { KnownIssue::Failure,
                      isNaN ? "NaN is not folded (\"Nan\" typo in the code generator) and the "
@@ -7212,15 +7205,6 @@ static KnownIssue interpreterIssue(const UnqualifiedName &name, NameKinds kinds,
                            : "The interpreter searches the scope object and the context objects "
                              "before the translation functions" };
         }
-    }
-
-    // An unpopulated lookup skips a context object that is gone and searches the rest. A
-    // populated lookup remembers that it found the name on the context object and throws.
-    if (winner == ContextObject && loss == Loss::ContextObject && !cached
-        && (kinds & ~NameKinds(ContextObject))) {
-        return { KnownIssue::Failure,
-                 "The interpreter resumes the search past a lost context object if the lookup has "
-                 "not been populated before" };
     }
 
     return {};
@@ -7297,10 +7281,9 @@ static KnownIssue compilerIssue(const UnqualifiedName &name, NameKinds kinds,
 
 // Where the current implementation deviates from the rules.
 static KnownIssue unqualifiedNameIssue(const UnqualifiedName &name, NameKinds kinds,
-                                       const QByteArray &usage, Loss loss, bool cached,
-                                       bool interpreted)
+                                       const QByteArray &usage, bool interpreted)
 {
-    return interpreted ? interpreterIssue(name, kinds, usage, loss, cached)
+    return interpreted ? interpreterIssue(name, kinds, usage)
                        : compilerIssue(name, kinds, usage);
 }
 
@@ -7710,7 +7693,7 @@ void tst_QmlCppCodegen::unqualifiedName()
 #endif
 
     const KnownIssue issue =
-            unqualifiedNameIssue(name, present, usage, loss, cached, interpreted);
+            unqualifiedNameIssue(name, present, usage, interpreted);
     if (issue.kind == KnownIssue::Crash)
         QSKIP(issue.reason);
 

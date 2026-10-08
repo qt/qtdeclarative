@@ -542,6 +542,17 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
         }
         scopeObject = nullptr;
 
+        // The context object would have resolved the name, but it is gone. The search doesn't
+        // resume past it. Its type is still known.
+        if (!immediateContextDone && !context->contextObject()) {
+            if (const QQmlPropertyCache *lostCache = context->lostContextObjectCache();
+                lostCache && lostScopeCacheResolves(lostCache, v4, name)) {
+                if (hasProperty)
+                    *hasProperty = true;
+                return v4->throwReferenceError(name->toQString());
+            }
+        }
+
         if (auto property = searchContextObject(
                     v4, context, name, hasProperty, base, lookup, originalLookup,
                     contextGetterCall)) {
