@@ -495,14 +495,18 @@ void QQuickShapeGenericRenderer::triangulateFill(const QPainterPath &path,
     if (ts.indices.type() == QVertexIndexVector::UnsignedShort) {
         *indexType = QSGGeometry::UnsignedShortType;
         // fillIndices is still QList<quint32>. Just resize to N/2 and pack
-        // the N quint16s into it.
-        fillIndices->resize(ts.indices.size() / 2);
+        // the N quint16s into it. To ensure that there is enough space to hold the full buffer,
+        // we round the number up. Any redundant padding indexes will be ignored as the renderer
+        // processes geometry in triplets.
+        fillIndices->resize((ts.indices.size() + 1) / 2);
         indexByteSize = ts.indices.size() * sizeof(quint16);
     } else {
         *indexType = QSGGeometry::UnsignedIntType;
         fillIndices->resize(ts.indices.size());
         indexByteSize = ts.indices.size() * sizeof(quint32);
     }
+
+    Q_ASSERT(fillIndices->size() * sizeof(quint32) >= indexByteSize);
     memcpy(fillIndices->data(), ts.indices.data(), indexByteSize);
 }
 

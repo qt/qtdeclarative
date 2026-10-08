@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="100" viewBox="0 0 300 100">
+    <path d="M10,90 L50,10 L90,90 Z" fill="transparent">
+        <animateColor attributeName="fill"
+                      values="transparent;transparent;#ff0000"
+                      dur="1s" repeatCount="indefinite"/>
+    </path>
+</svg>
