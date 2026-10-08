@@ -29,6 +29,7 @@ private slots:
     void asyncShapes_data();
     void asyncShapes();
     void clearSource();
+    void renderAnimatedFrames();
 };
 
 tst_QQuickVectorImage::tst_QQuickVectorImage()
@@ -145,6 +146,31 @@ void tst_QQuickVectorImage::clearSource()
     item->setSource(QUrl{});
 
     QVERIFY(d_ptr->rootItem == nullptr);
+}
+
+void tst_QQuickVectorImage::renderAnimatedFrames()
+{
+    QQmlEngine engine;
+    engine.rootContext()->setContextProperty(QStringLiteral("fileName"),
+                                              testFileUrl("svg/indexbufferoverflow.svg"));
+
+    QQuickWindow window;
+    window.resize(512, 512);
+    window.create();
+
+    QQmlComponent c(&engine, testFileUrl("vectorimage.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    std::unique_ptr<QObject> object(c.create());
+    QQuickVectorImage *image = qobject_cast<QQuickVectorImage *>(object.get());
+    QVERIFY(image != nullptr);
+
+    image->setParentItem(window.contentItem());
+
+    for (int i = 0; i < 150; ++i) {
+        window.grabWindow();
+        QTest::qWait(16);
+    }
 }
 
 QTEST_MAIN(tst_QQuickVectorImage)
