@@ -1398,9 +1398,14 @@ void Renderer::nodeChanged(QSGNode *node, QSGNode::DirtyState state)
     if (state & QSGNode::DirtySubtreeBlocked) {
         Node *sn = m_nodes.value(node);
 
-        // Force a batch rebuild if this includes an opacity change
+#if defined(QSGBATCHRENDERER_INVALIDATE_WEDGED_NODES)
+        // Force a batch rebuild if this includes an opacity change. Batches
+        // may otherwise end up in the wrong order when their first element is
+        // removed (QTBUG-85965). Not needed without this define, since then a
+        // batch never skips over overlapping elements of other batches.
         if (state & QSGNode::DirtyOpacity)
             m_rebuild |= FullRebuild;
+#endif
 
         bool blocked = node->isSubtreeBlocked();
         if (blocked && sn) {

@@ -60,7 +60,8 @@ public:
         OwnsOpaqueMaterial          = 0x00040000,
 
         // Uppermost 8 bits are reserved for internal use.
-        IsVisitableNode             = 0x01000000
+        IsVisitableNode             = 0x01000000,
+        IsNodeBlocked               = 0x02000000
 #ifdef Q_QDOC
         , InternalReserved            = 0x01000000
 #endif

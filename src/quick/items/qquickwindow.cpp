@@ -2408,11 +2408,35 @@ void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
         itemPriv->clipNode()->update();
     }
 
+#if !defined(QSGBATCHRENDERER_INVALIDATE_WEDGED_NODES)
+    if (dirty & (QQuickItemPrivate::Visible | QQuickItemPrivate::HideReference
+                 | QQuickItemPrivate::Window))
+    {
+        // Hidden items are kept out of the scene by blocking the item's
+        // transform node. Unlike an opacity node with opacity 0, this neither
+        // changes the node structure nor in itself forces the renderer to
+        // rebuild all batches, and also plays nice with OpacityAnimator.
+        const bool blocked = !itemPriv->explicitVisible
+                || (itemPriv->extra.isAllocated() && itemPriv->extra->hideRefCount > 0);
+        QSGTransformNode *itemNode = itemPriv->itemNode();
+        if (itemNode->flags().testFlag(QSGNode::IsNodeBlocked) != blocked) {
+            itemNode->setFlag(QSGNode::IsNodeBlocked, blocked);
+            itemNode->markDirty(QSGNode::DirtySubtreeBlocked);
+        }
+    }
+
+    if (dirty & (QQuickItemPrivate::OpacityValue | QQuickItemPrivate::Window)) {
+        const qreal opacity = itemPriv->opacity();
+#else
+    // The batch renderer's legacy batching may render batches in the wrong
+    // order when elements are removed from them, unless the removal comes with
+    // an opacity change (QTBUG-85965). Hide items with opacity 0 instead.
     if (dirty & (QQuickItemPrivate::OpacityValue | QQuickItemPrivate::Visible
                  | QQuickItemPrivate::HideReference | QQuickItemPrivate::Window))
     {
         qreal opacity = itemPriv->explicitVisible && (!itemPriv->extra.isAllocated() || itemPriv->extra->hideRefCount == 0)
                       ? itemPriv->opacity() : qreal(0);
+#endif
 
         if (opacity != 1 && !itemPriv->opacityNode()) {
             QSGOpacityNode *node = new QSGOpacityNode;

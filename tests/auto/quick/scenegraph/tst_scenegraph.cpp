@@ -123,6 +123,15 @@ private slots:
     void sgInternalTextNodeRecycleBatchRoot_data();
     void sgInternalTextNodeRecycleBatchRoot();
 
+    void hiddenItemBlocksNode_data();
+    void hiddenItemBlocksNode();
+    void changeWhileHidden_data();
+    void changeWhileHidden();
+    void hiddenItemMultipleReasons_data();
+    void hiddenItemMultipleReasons();
+    void hiddenItemWindowChange_data();
+    void hiddenItemWindowChange();
+
 private:
     QQuickView *createView(const QString &file, QWindow *parent = nullptr, int x = -1, int y = -1, int w = -1, int h = -1);
     bool isRunningOnRhi();
@@ -395,6 +404,9 @@ void tst_SceneGraph::render_data()
         u"render_Mipmap.qml"_s,
         u"render_AlphaOverlapRebuild.qml"_s,
         u"render_MutabilityGroups.qml"_s,
+        u"render_HideFirstInBatchVisible.qml"_s,
+        u"render_HideFirstInBatchOpacity.qml"_s,
+        u"render_HideFirstInBatchHideSource.qml"_s,
     };
 
     QRegularExpression sampleCount("#samples: *(\\d+)");
@@ -1572,6 +1584,327 @@ void tst_SceneGraph::sgInternalTextNodeRecycleBatchRoot()
         if (!previousChildren.isEmpty())
             QCOMPARE(children, previousChildren);
         previousChildren = children;
+    }
+}
+
+void tst_SceneGraph::hiddenItemBlocksNode_data()
+{
+    QTest::addColumn<QByteArray>("hideMode");
+
+    QTest::newRow("visible") << "visible"_ba;
+    QTest::newRow("culled") << "culled"_ba;
+    QTest::newRow("hideSource") << "hideSource"_ba;
+}
+
+void tst_SceneGraph::hiddenItemBlocksNode()
+{
+    if (!isRunningOnRhi())
+        QSKIP("Skipping rendering test due to not running with QRhi");
+
+    QFETCH(QByteArray, hideMode);
+
+    QQuickView view;
+    view.setSource(testFileUrl(u"hiddenItem.qml"_s));
+    view.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+
+    QQuickItem *target = view.rootObject()->findChild<QQuickItem *>(u"target"_s);
+    QVERIFY(target);
+    QQuickItem *effectSource = view.rootObject()->findChild<QQuickItem *>(u"effectSource"_s);
+    QVERIFY(effectSource);
+    QQuickItemPrivate *d = QQuickItemPrivate::get(target);
+
+    const auto setHidden = [&](bool hidden) {
+        if (hideMode == "visible") {
+            // Without an effect referencing it, an invisible item has no node in the scene
+            effectSource->setProperty("sourceItem", QVariant::fromValue(target));
+            target->setVisible(!hidden);
+        } else if (hideMode == "culled") {
+            d->setCulled(hidden);
+        } else {
+            effectSource->setProperty("sourceItem", QVariant::fromValue(target));
+            effectSource->setProperty("hideSource", hidden);
+        }
+    };
+    const auto centerColor = [&] {
+        const QPointF center = target->mapToScene(QPointF(50, 50)) * view.devicePixelRatio();
+        return view.grabWindow().pixelColor(center.toPoint());
+    };
+
+    QCOMPARE(centerColor(), QColor(Qt::red));
+    QVERIFY(d->itemNode());
+    QVERIFY(!d->itemNode()->isSubtreeBlocked());
+
+    // Hidden items get their transform node blocked, without an opacity node
+    for (int i = 0; i < 2; ++i) {
+        setHidden(true);
+        QCOMPARE(centerColor(), QColor(Qt::white));
+        QVERIFY(d->itemNode()->isSubtreeBlocked());
+        QVERIFY(!d->opacityNode());
+
+        setHidden(false);
+        QCOMPARE(centerColor(), QColor(Qt::red));
+        QVERIFY(!d->itemNode()->isSubtreeBlocked());
+        QVERIFY(!d->opacityNode());
+    }
+}
+
+using PixelSamples = QList<std::pair<QPoint, QColor>>;
+
+static bool checkPixels(QQuickWindow *window, const PixelSamples &samples, QString *errorMessage)
+{
+    const QImage content = window->grabWindow();
+    for (const auto &[pos, expected] : samples) {
+        const QPoint pixelPos = (QPointF(pos) * window->devicePixelRatio()).toPoint();
+        const QColor actual = content.pixelColor(pixelPos);
+        if (actual != expected) {
+            *errorMessage = u"Pixel at %1,%2 is %3, expected %4"_s
+                    .arg(pos.x()).arg(pos.y()).arg(actual.name(), expected.name());
+            return false;
+        }
+    }
+    return true;
+}
+
+// Hides or shows item for one reason: "visible", "culled", or "hideSource" or
+// "hideSource2" for the ShaderEffectSource named "effectSource" or
+// "effectSource2" in scene, respectively.
+static void setItemHidden(QObject *scene, QQuickItem *item, QByteArrayView reason, bool hidden)
+{
+    if (reason == "visible") {
+        item->setVisible(!hidden);
+    } else if (reason == "culled") {
+        QQuickItemPrivate::get(item)->setCulled(hidden);
+    } else {
+        QVERIFY(reason.startsWith("hideSource"));
+        const QString name = u"effectSource"_s
+                + QString::fromLatin1(reason.sliced(qstrlen("hideSource")));
+        QQuickItem *effectSource = scene->findChild<QQuickItem *>(name);
+        QVERIFY(effectSource);
+        effectSource->setProperty("sourceItem", QVariant::fromValue(item));
+        effectSource->setProperty("hideSource", hidden);
+    }
+}
+
+void tst_SceneGraph::changeWhileHidden_data()
+{
+    QTest::addColumn<QByteArray>("hideMode");
+    QTest::addColumn<QByteArray>("change");
+    QTest::addColumn<PixelSamples>("hiddenSamples");
+    QTest::addColumn<PixelSamples>("shownSamples");
+
+    // The target is red at (20, 20, 60x60), the cover blue on top of it at
+    // (60, 60, 60x60), the background is white.
+    const struct {
+        const char *change;
+        PixelSamples hiddenSamples;
+        PixelSamples shownSamples;
+    } changes[] = {
+        { "color",
+          { { { 40, 40 }, Qt::white } },
+          { { { 40, 40 }, Qt::green } } },
+        { "size",
+          { { { 150, 40 }, Qt::white } },
+          { { { 40, 40 }, Qt::red }, { { 150, 40 }, Qt::red } } },
+        { "position",
+          { { { 40, 160 }, Qt::white } },
+          { { { 40, 40 }, Qt::white }, { { 40, 160 }, Qt::red } } },
+        { "child",
+          { { { 35, 35 }, Qt::white } },
+          { { { 35, 35 }, Qt::green }, { { 70, 30 }, Qt::red } } },
+        { "stacking",
+          { { { 70, 70 }, Qt::blue } },
+          { { { 40, 40 }, Qt::red }, { { 70, 70 }, Qt::red } } },
+    };
+
+    for (const char *hideMode : { "visible", "culled", "hideSource" }) {
+        for (const auto &c : changes) {
+            QTest::addRow("%s-%s", hideMode, c.change)
+                    << QByteArray(hideMode) << QByteArray(c.change)
+                    << c.hiddenSamples << c.shownSamples;
+        }
+    }
+}
+
+void tst_SceneGraph::changeWhileHidden()
+{
+    if (!isRunningOnRhi())
+        QSKIP("Skipping rendering test due to not running with QRhi");
+
+    QFETCH(QByteArray, hideMode);
+    QFETCH(QByteArray, change);
+    QFETCH(PixelSamples, hiddenSamples);
+    QFETCH(PixelSamples, shownSamples);
+
+    QQuickView view;
+    view.setSource(testFileUrl(u"hiddenItemScene.qml"_s));
+    view.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+
+    QQuickItem *target = view.rootObject()->findChild<QQuickItem *>(u"target"_s);
+    QVERIFY(target);
+
+    QString errorMessage;
+    QVERIFY2(checkPixels(&view, { { { 40, 40 }, Qt::red }, { { 70, 70 }, Qt::blue } },
+                         &errorMessage),
+             qPrintable(errorMessage));
+
+    setItemHidden(view.rootObject(), target, hideMode, true);
+    QVERIFY2(checkPixels(&view, { { { 40, 40 }, Qt::white }, { { 70, 70 }, Qt::blue } },
+                         &errorMessage),
+             qPrintable(errorMessage));
+
+    // The renderer has no shadow nodes for a blocked subtree, so it ignores
+    // the change while the item is hidden. Showing the item again, below a
+    // clip node, only partially rebuilds the batches, which must still pick
+    // up the change.
+    if (change == "color") {
+        target->setProperty("color", QColor(Qt::green));
+    } else if (change == "size") {
+        target->setWidth(160);
+    } else if (change == "position") {
+        target->setY(130);
+    } else if (change == "child") {
+        QQuickRectangle *child = new QQuickRectangle(target);
+        child->setPosition(QPointF(5, 5));
+        child->setSize(QSizeF(20, 20));
+        child->setColor(Qt::green);
+    } else if (change == "stacking") {
+        target->setZ(1);
+    }
+    QVERIFY2(checkPixels(&view, hiddenSamples, &errorMessage), qPrintable(errorMessage));
+
+    setItemHidden(view.rootObject(), target, hideMode, false);
+    QVERIFY2(checkPixels(&view, shownSamples, &errorMessage), qPrintable(errorMessage));
+}
+
+void tst_SceneGraph::hiddenItemMultipleReasons_data()
+{
+    // Each reason is "item.reason", see setItemHidden() for the reasons
+    QTest::addColumn<QByteArray>("first");
+    QTest::addColumn<QByteArray>("second");
+
+    const std::pair<const char *, const char *> rows[] = {
+        { "target.visible", "target.culled" },
+        { "target.visible", "target.hideSource" },
+        { "target.culled", "target.hideSource" },
+        { "target.hideSource", "target.hideSource2" },
+        { "outer.visible", "target.visible" },
+        { "outer.culled", "target.culled" },
+        { "outer.hideSource2", "target.hideSource" },
+        { "outer.visible", "target.culled" },
+        { "outer.culled", "target.visible" },
+    };
+    for (const auto &[first, second] : rows)
+        QTest::addRow("%s+%s", first, second) << QByteArray(first) << QByteArray(second);
+}
+
+void tst_SceneGraph::hiddenItemMultipleReasons()
+{
+    if (!isRunningOnRhi())
+        QSKIP("Skipping rendering test due to not running with QRhi");
+
+    QFETCH(QByteArray, first);
+    QFETCH(QByteArray, second);
+
+    QQuickView view;
+    view.setSource(testFileUrl(u"hiddenItemScene.qml"_s));
+    view.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+
+    QQuickItem *target = view.rootObject()->findChild<QQuickItem *>(u"target"_s);
+    QVERIFY(target);
+    QQuickItemPrivate *d = QQuickItemPrivate::get(target);
+
+    const auto setHidden = [&](const QByteArray &spec, bool hidden) {
+        const QList<QByteArray> parts = spec.split('.');
+        QQuickItem *item = view.rootObject()->findChild<QQuickItem *>(QString::fromLatin1(parts.first()));
+        QVERIFY(item);
+        setItemHidden(view.rootObject(), item, parts.last(), hidden);
+    };
+
+    const PixelSamples hiddenSamples = { { { 40, 40 }, Qt::white } };
+    const PixelSamples shownSamples = { { { 40, 40 }, Qt::red } };
+    QString errorMessage;
+    QVERIFY2(checkPixels(&view, shownSamples, &errorMessage), qPrintable(errorMessage));
+
+    // Hide for both reasons, then show for one reason at a time, in both orders.
+    // The item stays hidden until neither reason applies.
+    for (const auto &[showFirst, showLast] : { std::pair(first, second), std::pair(second, first) }) {
+        setHidden(first, true);
+        setHidden(second, true);
+        QVERIFY2(checkPixels(&view, hiddenSamples, &errorMessage), qPrintable(errorMessage));
+        QVERIFY(d->itemNode()->isSubtreeBlocked());
+
+        setHidden(showFirst, false);
+        QVERIFY2(checkPixels(&view, hiddenSamples, &errorMessage), qPrintable(errorMessage));
+        // Showing an item with an invisible parent does not mark it dirty, so
+        // its node only reliably reflects reasons that still apply to itself.
+        if (showLast.startsWith("target."))
+            QVERIFY(d->itemNode()->isSubtreeBlocked());
+
+        setHidden(showLast, false);
+        QVERIFY2(checkPixels(&view, shownSamples, &errorMessage), qPrintable(errorMessage));
+        QVERIFY(!d->itemNode()->isSubtreeBlocked());
+    }
+}
+
+void tst_SceneGraph::hiddenItemWindowChange_data()
+{
+    QTest::addColumn<QByteArray>("hideMode");
+
+    QTest::newRow("visible") << "visible"_ba;
+    QTest::newRow("culled") << "culled"_ba;
+    QTest::newRow("hideSource") << "hideSource"_ba;
+}
+
+void tst_SceneGraph::hiddenItemWindowChange()
+{
+    if (!isRunningOnRhi())
+        QSKIP("Skipping rendering test due to not running with QRhi");
+
+    QFETCH(QByteArray, hideMode);
+
+    QQuickView view;
+    view.setSource(testFileUrl(u"hiddenItemScene.qml"_s));
+    QQuickItem *content = view.rootObject()->findChild<QQuickItem *>(u"content"_s);
+    QVERIFY(content);
+    QQuickItem *target = view.rootObject()->findChild<QQuickItem *>(u"target"_s);
+    QVERIFY(target);
+    QQuickItemPrivate *d = QQuickItemPrivate::get(target);
+
+    const PixelSamples hiddenSamples = { { { 40, 40 }, Qt::white } };
+    const PixelSamples shownSamples = { { { 40, 40 }, Qt::red } };
+    QString errorMessage;
+
+    // Hidden before the first frame, so the item's nodes are created blocked
+    setItemHidden(view.rootObject(), target, hideMode, true);
+    view.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+    QVERIFY2(checkPixels(&view, hiddenSamples, &errorMessage), qPrintable(errorMessage));
+    QVERIFY(d->itemNode()->isSubtreeBlocked());
+
+    setItemHidden(view.rootObject(), target, hideMode, false);
+    QVERIFY2(checkPixels(&view, shownSamples, &errorMessage), qPrintable(errorMessage));
+    QVERIFY(!d->itemNode()->isSubtreeBlocked());
+
+    // Moving to another window recreates the item's nodes, which must be
+    // blocked again. Declared after view, so that it is destroyed first.
+    QQuickWindow otherWindow;
+    otherWindow.resize(200, 200);
+    otherWindow.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&otherWindow));
+
+    for (QQuickWindow *window : { static_cast<QQuickWindow *>(&otherWindow),
+                                  static_cast<QQuickWindow *>(&view) }) {
+        setItemHidden(view.rootObject(), target, hideMode, true);
+        content->setParentItem(window == &view ? view.rootObject() : window->contentItem());
+        QVERIFY2(checkPixels(window, hiddenSamples, &errorMessage), qPrintable(errorMessage));
+        QVERIFY(d->itemNode()->isSubtreeBlocked());
+
+        setItemHidden(view.rootObject(), target, hideMode, false);
+        QVERIFY2(checkPixels(window, shownSamples, &errorMessage), qPrintable(errorMessage));
+        QVERIFY(!d->itemNode()->isSubtreeBlocked());
     }
 }
 
