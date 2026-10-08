@@ -517,6 +517,13 @@ void TestQmllint::testUnqualified_data()
                        "You can qualify the access with its id to avoid this warning."_L1,
                        Edit{ u"root."_s, 13, 33 })
                .build();
+    // The type propagator resolves these via the context object, but they are unqualified access.
+    QTest::newRow("FromRootCallAndStore")
+            << QStringLiteral("FromRootCallAndStore.qml")
+            << ResultBuilder()
+               .addExpected("Unqualified access"_L1, 9, 28)
+               .addExpected("Unqualified access"_L1, 10, 32)
+               .build();
     // access injected name from signal
     QTest::newRow("SignalHandler")
             << QStringLiteral("SignalHandler.qml")

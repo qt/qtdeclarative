@@ -356,6 +356,14 @@ protected:
         return m_function->argumentTypes[registerIndex - FirstArgument];
     }
 
+    bool isQmlContextObject(QQmlJSRegisterContent content)
+    {
+        // Members of extension types are scoped to the extension, which is scoped to the object.
+        if (content.variant() == QQmlJSRegisterContent::Extension)
+            content = content.scope();
+        return content.variant() == QQmlJSRegisterContent::ContextObject;
+    }
+
     /*!
      * \internal
      * Determines whether this is the _QML_ scope object

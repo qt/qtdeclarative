@@ -87,6 +87,7 @@ public:
             bool storeSourceLocations = false);
 
     static bool isNameGlobal(QAnyStringView name);
+    static bool isNameKeyword(QAnyStringView name);
     static void forEachGlobalName(qxp::function_ref<void(QLatin1StringView)> &&handler);
 
     void generateFromProgram(

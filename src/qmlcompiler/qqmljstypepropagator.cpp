@@ -311,6 +311,9 @@ void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup(int index)
         return;
     }
 
+    if (isQmlContextObject(accumulatorOut.scope()))
+        handleUnqualifiedAccessAndContextProperties(name, false);
+
     const QQmlJSScope::ConstPtr retrieved
             = m_typeResolver->genericType(accumulatorOut.containedType());
 
@@ -350,6 +353,9 @@ void QQmlJSTypePropagator::generate_StoreNameCommon(int nameIndex)
         addError(u"Cannot find name "_s + name);
         return;
     }
+
+    if (isQmlContextObject(type.scope()))
+        handleUnqualifiedAccess(name, false);
 
     if (!type.isProperty()) {
         QString message = type.isMethod() ? u"Cannot assign to method %1"_s
@@ -1532,6 +1538,9 @@ void QQmlJSTypePropagator::propagateScopeLookupCall(const QString &functionName,
     const QQmlJSRegisterContent resolvedContent
             = m_typeResolver->scopedType(m_function->qmlScope, functionName);
     if (resolvedContent.isMethod()) {
+        if (isQmlContextObject(resolvedContent.scope()))
+            handleUnqualifiedAccessAndContextProperties(functionName, true);
+
         const auto methods = resolvedContent.method();
         if (resolvedContent.scope().contains(m_typeResolver->jsGlobalObject())) {
             if (propagateTranslationMethod(methods, argc, argv))

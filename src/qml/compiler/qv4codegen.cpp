@@ -191,6 +191,27 @@ bool Codegen::isNameGlobal(QAnyStringView name)
     return std::binary_search(std::begin(s_globalNames), std::end(s_globalNames), name);
 }
 
+/*!
+ * \internal
+ * Returns true if \a name is one of the global names that are resolved before anything else,
+ * including the context object. These are the names the engine provides as keywords.
+ */
+bool Codegen::isNameKeyword(QAnyStringView name)
+{
+    static constexpr QLatin1StringView s_keywordNames[] = {
+        QLatin1StringView("Infinity"),
+        QLatin1StringView("NaN"),
+        QLatin1StringView("QT_TRANSLATE_NOOP"),
+        QLatin1StringView("QT_TRID_NOOP"),
+        QLatin1StringView("QT_TR_NOOP"),
+        QLatin1StringView("qsTr"),
+        QLatin1StringView("qsTrId"),
+        QLatin1StringView("qsTranslate"),
+        QLatin1StringView("undefined"),
+    };
+    return std::binary_search(std::begin(s_keywordNames), std::end(s_keywordNames), name);
+}
+
 void Codegen::forEachGlobalName(qxp::function_ref<void (QLatin1StringView)> &&handler)
 {
     for (QLatin1StringView name : s_globalNames)

@@ -39,7 +39,9 @@ public:
         Script,       // type (scope is either import namespace or QML scope)
         MetaType,     // type (always QMetaObject, scope is the type reprented by the metaobject)
         Extension,    // type (scope is the type being extended)
-        ScopeObject,  // type (either QML scope of binding/function or JS global object)
+        ScopeObject,  // type (QML scope of binding/function)
+        GlobalObject, // type (JS global object, no scope)
+        ContextObject, // type (context object, scope is the QML scope of binding/function)
         ParentScope,  // type (scope is the child scope)
 
         Property,     // property (scope is the owner (hasOwnProperty) of the property)
