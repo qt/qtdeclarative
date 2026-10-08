@@ -39,6 +39,9 @@ void Heap::QQmlContextWrapper::init(QQmlRefPointer<QQmlContextData> context, QOb
     Object::init();
     this->context = context.take();
     this->scopeObject.init(scopeObject);
+    scopePropertyCache = nullptr;
+    if (scopeObject && !QQmlData::wasDeleted(scopeObject))
+        scopePropertyCache = QQmlData::ensurePropertyCache(scopeObject).take();
 }
 
 void Heap::QQmlContextWrapper::destroy()
@@ -46,6 +49,8 @@ void Heap::QQmlContextWrapper::destroy()
     context->release();
     context = nullptr;
     scopeObject.destroy();
+    if (scopePropertyCache)
+        scopePropertyCache->release();
     Object::destroy();
 }
 
@@ -372,6 +377,16 @@ static bool cacheGlobalLookup(QV4::ExecutionEngine *v4, Lookup *lookup, ScopedVa
     return true;
 }
 
+static bool lostScopeCacheResolves(
+        const QQmlPropertyCache *cache, QV4::ExecutionEngine *v4, String *name)
+{
+    // QObjectWrapper provides those for any QObject.
+    if (name->equals(v4->id_destroy()) || name->equals(v4->id_toString()))
+        return true;
+
+    return cache->property(name->toQString(), nullptr, nullptr) != nullptr;
+}
+
 ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *resource, PropertyKey id, const Value *receiver, bool *hasProperty, Value *base, Lookup *lookup)
 {
     if (!id.isString())
@@ -418,6 +433,12 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
     const auto jsLookup = [resource, &id, receiver](bool *hasProp) {
         return Object::virtualGet(resource, id, receiver, hasProp);
     };
+
+    // The scope object would have resolved the name, but it is gone. The search doesn't resume
+    // past it. Its type is still known.
+    const bool scopeObjectLost = !scopeObject || QQmlData::wasDeleted(scopeObject);
+    const QQmlPropertyCache *lostScopeCache = scopeObjectLost ? resource->d()->scopePropertyCache
+                                                              : nullptr;
 
     const bool isJSContext = context->isJSContext();
 
@@ -504,7 +525,16 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
             }
         }
 
-        if (scopeObject) {
+        if (lostScopeCache) {
+            if (lostScopeCacheResolves(lostScopeCache, v4, name)) {
+                if (hasProperty)
+                    *hasProperty = true;
+                return v4->throwReferenceError(name->toQString());
+            }
+            lostScopeCache = nullptr;
+        }
+
+        if (scopeObject && !scopeObjectLost) {
             if (auto property = searchScopeObject(
                         v4, context, scopeObject, name, hasProperty, base, lookup)) {
                 return *property;
