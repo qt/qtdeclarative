@@ -19,6 +19,9 @@ private Q_SLOTS:
     void urlToLocalFileOrQrcOverloads_data();
     void urlToLocalFileOrQrcOverloads();
 
+    void urlToLocalFileOrQrcUnsafe_data();
+    void urlToLocalFileOrQrcUnsafe();
+
 private:
     void urlData();
 };
@@ -173,6 +176,35 @@ void tst_qqmlfile::urlToLocalFileOrQrcOverloads()
 
     QCOMPARE(pathForUrlString, localPath);
     QCOMPARE(pathForUrl, localPath);
+}
+
+void tst_qqmlfile::urlToLocalFileOrQrcUnsafe_data()
+{
+    QTest::addColumn<QUrl>("url");
+    QTest::addColumn<QString>("localPath");
+
+    // Safe
+    QTest::addRow("plain") << QUrl(QStringLiteral("qrc:/a.txt")) << QStringLiteral(":/a.txt");
+    QTest::addRow("space") << QUrl(QStringLiteral("qrc:/a%20b.txt")) << QStringLiteral(":/a b.txt");
+
+    // Unsafe
+    QTest::addRow("nul") << QUrl(QStringLiteral("qrc:/a%00b.txt")) << QString();
+    QTest::addRow("encoded-slash") << QUrl(QStringLiteral("qrc:/a%2Fb.txt")) << QString();
+    QTest::addRow("encoded-slash-lower") << QUrl(QStringLiteral("qrc:/a%2fb.txt")) << QString();
+    QTest::addRow("invalid-utf8-80") << QUrl(QStringLiteral("qrc:/a%80b.txt")) << QString();
+    QTest::addRow("invalid-utf8-e1") << QUrl(QStringLiteral("qrc:/a%E1b.txt")) << QString();
+    QTest::addRow("encoded-slash-dotdot") << QUrl(QStringLiteral("qrc:/a/%2F..%2F/b")) << QString();
+#ifdef Q_OS_WIN
+    QTest::addRow("encoded-backslash") << QUrl(QStringLiteral("qrc:/a%5Cb.txt")) << QString();
+#endif
+}
+
+void tst_qqmlfile::urlToLocalFileOrQrcUnsafe()
+{
+    QFETCH(QUrl, url);
+    QFETCH(QString, localPath);
+
+    QCOMPARE(QQmlFile::urlToLocalFileOrQrc(url), localPath);
 }
 
 QTEST_GUILESS_MAIN(tst_qqmlfile)

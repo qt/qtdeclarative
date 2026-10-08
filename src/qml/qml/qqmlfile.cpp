@@ -10,6 +10,7 @@
 #include <QtCore/qfile.h>
 #include <private/qqmlengine_p.h>
 #include <private/qqmlglobal_p.h>
+#include <private/qurl_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -736,9 +737,12 @@ bool QQmlFile::isLocalFile(const QString &url)
 QString QQmlFile::urlToLocalFileOrQrc(const QUrl& url)
 {
     if (url.scheme().compare(QLatin1String("qrc")) == 0) {
-        if (url.authority().isEmpty())
-            return QLatin1Char(':') + url.path();
-        return QString();
+        if (!url.authority().isEmpty())
+            return QString();
+        const QString path = url.path(QUrlDecodeForLocalFile);
+        if (!path.isEmpty())
+            return QLatin1Char(':') + path;
+        return url.path(QUrl::PrettyDecoded).isEmpty() ? QStringLiteral(":") : QString();
     }
 
 #if defined(Q_OS_ANDROID)
