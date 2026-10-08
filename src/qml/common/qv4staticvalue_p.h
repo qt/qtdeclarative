@@ -502,6 +502,11 @@ struct StaticValue
     // When encoding, we shift right by that amount. When decoding, we shift left.
     // Negative numbers mean shifting the other direction. 0 means no shifting.
     //
+    // PointerSignExtend is the number of most significant bits that are copies of the
+    // bit below them. They are dropped when encoding and restored by sign extension when
+    // decoding. Sparc64 needs this because Linux maps user memory above the VA hole
+    // there, so heap pointers have their top bits set.
+    //
     // The IA64 and Sparc64 cases are mostly there to demonstrate the idea. Sparc64
     // and IA64 are not officially supported, but we can expect more platforms with
     // similar "problems" in the future.
@@ -517,28 +522,33 @@ struct StaticValue
         Top1Shift   = 0,
         Upper3Shift = 12,
         Lower5Shift = 56,
+        PointerSignExtend = 0,
 #elif defined(Q_PROCESSOR_IA64)
         // On ia64, bits 63-61 in a 64-bit pointer are used to store the virtual region
         // number. We can move those to Upper3.
         Top1Shift   = 0,
         Upper3Shift = 12,
         Lower5Shift = 0,
+        PointerSignExtend = 0,
 #elif defined(Q_PROCESSOR_SPARC_64)
-        // Sparc64 wants to use 52 bits for pointers.
-        // Upper3 can stay where it is, bit48 moves to the top bit.
+        // Sparc64 pointers are sign-extended from bit 52 at most (M8, 53-bit VA).
+        // Keep the low 57 bits as in the 5-level page table case below.
         Top1Shift   = -15,
         Upper3Shift = 0,
-        Lower5Shift = 0,
+        Lower5Shift = 52,
+        PointerSignExtend = 7,
 #elif 0 // TODO: Once we need 5-level page tables, add the appropriate check here.
         // With 5-level page tables (as possible on linux) we need 57 address bits.
         // Upper3 can stay where it is, bit48 moves to the top bit, the rest moves to Lower5.
         Top1Shift   = -15,
         Upper3Shift = 0,
         Lower5Shift = 52,
+        PointerSignExtend = 0,
 #else
         Top1Shift   = 0,
         Upper3Shift = 0,
-        Lower5Shift = 0
+        Lower5Shift = 0,
+        PointerSignExtend = 0
 #endif
     };
 
@@ -570,9 +580,11 @@ struct StaticValue
         Q_ASSERT(!(_val & ManagedMask));
 
         // Re-assemble the pointer from its fragments.
-        const quint64 tmp = retrievePointerBits<Top1Shift, Top1Mask>(
-                            retrievePointerBits<Upper3Shift, Upper3Mask>(
-                            retrievePointerBits<Lower5Shift, Lower5Mask>(_val)));
+        quint64 tmp = retrievePointerBits<Top1Shift, Top1Mask>(
+                      retrievePointerBits<Upper3Shift, Upper3Mask>(
+                      retrievePointerBits<Lower5Shift, Lower5Mask>(_val)));
+        if constexpr (PointerSignExtend > 0)
+            tmp = quint64(qint64(tmp << PointerSignExtend) >> PointerSignExtend);
 
         HeapBasePtr b;
         memcpy(&b, &tmp, 8);
@@ -585,6 +597,9 @@ struct StaticValue
 
         // Has to be aligned to 32 bytes
         Q_ASSERT(!(tmp & Lower5Mask));
+
+        if constexpr (PointerSignExtend > 0)
+            tmp &= ~quint64(0) >> PointerSignExtend;
 
         // MinGW produces a bogus warning about array bounds.
         // There is no array access here.
