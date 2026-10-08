@@ -124,6 +124,9 @@ public:
 
     bool outputWarningsToMsgLog = true;
 
+    // TODO: Remove this when we can.
+    bool preferContextPropertiesOverJavaScriptGlobals = false;
+
     // Bindings that have had errors during startup
     QQmlDelayedError *erroredBindings = nullptr;
     int inProgressCreations = 0;

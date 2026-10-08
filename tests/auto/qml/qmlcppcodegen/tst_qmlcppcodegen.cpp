@@ -7195,36 +7195,25 @@ static KnownIssue interpreterIssue(const UnqualifiedName &name, NameKinds kinds,
     }
 
     // QQmlContextWrapper::getPropertyAndBase() searches the global object, and therefore the
-    // translation functions, only after all scopes and contexts. NaN is not folded because the
-    // code generator compares with "Nan". Translation bindings don't look up the translation
-    // functions at all. A lost scope or context object is skipped.
+    // translation functions, only after the scope object and the context objects. NaN is not
+    // folded because the code generator compares with "Nan". Translation bindings don't look up
+    // the translation functions at all. A lost scope or context object is skipped.
     if (((isTranslation && usage != "Binding") || isNaN) && !(kinds & DynamicScopeObject)) {
-        NameKinds reachable = kinds
-                & (ScopeObject | ContextObject | BoundContextObject | ModelContextObject
-                   | UnboundContextObject | ParentContextProperty | ParentContextObject);
+        NameKinds reachable = kinds & (ScopeObject | ContextObject | BoundContextObject);
         if (lostBeforeFirstUse) {
-            const NameKind lost = loss == Loss::ScopeObject ? ScopeObject : ContextObject;
-            reachable &= ~NameKinds(lost);
+            // Nothing is found on a lost object before the global object. The enclosing context
+            // object of a bound component stays reachable when the context object is lost.
+            reachable &= loss == Loss::ScopeObject ? ~NameKinds(ScopeObject)
+                                                   : ~NameKinds(ContextObject);
         }
         if (reachable) {
             return { KnownIssue::Failure,
                      isNaN ? "NaN is not folded (\"Nan\" typo in the code generator) and the "
-                             "interpreter searches all scopes and contexts before the global object"
-                           : "The interpreter searches all scopes and contexts before the "
-                             "translation functions" };
+                             "interpreter searches the scope object and the context objects before the "
+                             "global object"
+                           : "The interpreter searches the scope object and the context objects "
+                             "before the translation functions" };
         }
-    }
-
-    // Same cause: The global object comes after all contexts. A type name, the scope object, the
-    // context object, or the enclosing context object of a bound component come before the
-    // remaining contexts anyway.
-    if ((name.builtIn & Global)
-        && (kinds
-            & (ModelContextObject | UnboundContextObject | ParentContextProperty
-               | ParentContextObject))
-        && !(kinds & (UpperCaseType | ScopeObject | ContextObject | BoundContextObject))) {
-        return { KnownIssue::Failure,
-                 "The interpreter searches the parent contexts before the global object" };
     }
 
     // An unpopulated lookup skips a scope object that is gone and searches the rest. A populated
@@ -7371,11 +7360,12 @@ void tst_QmlCppCodegen::unqualifiedInlineComponent()
     }
 
 #ifdef QT_TEST_FORCE_INTERPRETER
-    // QQmlContextWrapper::getPropertyAndBase() searches all contexts before the global object.
+    // The walk over the contexts of the same compilation unit doesn't stop at the root of an
+    // inline component, so the instantiation site is searched before the global object.
     if (probe == "probeGlobal") {
         QEXPECT_FAIL("",
-                     "The interpreter searches the instantiation site of an inline component "
-                     "before the global object",
+                     "The interpreter searches the context object of the instantiation site of an "
+                     "inline component as if it was lexically enclosing",
                      Abort);
     }
 #endif

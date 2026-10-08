@@ -119,29 +119,273 @@ static QV4::QObjectWrapper::Flags getQmlPropertyFlags(const Lookup *l)
             : (QV4::QObjectWrapper::CheckRevision | QV4::QObjectWrapper::AttachMethods);
 }
 
+/*!
+    \internal
+    Searches the module the context wrapped by \a resource belongs to, if any. This is what code
+    running outside of that context can see besides the plain JavaScript properties.
+*/
+static OptionalReturnedValue searchModule(
+        const QQmlContextWrapper *resource, PropertyKey id, const Value *receiver,
+        bool *hasProperty)
+{
+    if (!resource->d()->module)
+        return OptionalReturnedValue();
+
+    QV4::Scope scope(resource->engine());
+    Scoped<Module> module(scope, resource->d()->module);
+    bool hasProp = false;
+    ScopedValue value(scope, module->get(id, receiver, &hasProp));
+    if (!hasProp)
+        return OptionalReturnedValue();
+
+    if (hasProperty)
+        *hasProperty = hasProp;
+    return OptionalReturnedValue(value->asReturnedValue());
+}
+
+/*!
+    \internal
+    Prepares \a lookup to return the singleton \a type.
+*/
+static void setupSingletonLookup(QV4::ExecutionEngine *v4, Lookup *lookup, const QQmlType &type)
+{
+    bool isValueSingleton = false;
+    QQmlEnginePrivate *e = QQmlEnginePrivate::get(v4->qmlEngine());
+    if (type.isQObjectSingleton() || type.isCompositeSingleton()) {
+        e->singletonInstance<QObject*>(type);
+        lookup->qmlContextSingletonLookup.singletonObject.set(
+                v4, Value::fromReturnedValue(QQmlTypeWrapper::create(v4, nullptr, type))
+                            .heapObject());
+    } else {
+        QJSValue singleton = e->singletonInstance<QJSValue>(type);
+
+        // QString values should already have been put on the engine heap at
+        // this point to manage their memory. We later assume this has already
+        // happened.
+        Q_ASSERT(!QJSValuePrivate::asQString(&singleton));
+
+        if (QV4::Value *val = QJSValuePrivate::takeManagedValue(&singleton)) {
+            lookup->qmlContextSingletonLookup.singletonObject.set(v4, val->heapObject());
+        } else {
+            lookup->qmlContextSingletonLookup.singletonValue
+                    = QJSValuePrivate::asReturnedValue(&singleton);
+            isValueSingleton = true;
+        }
+    }
+    lookup->call = isValueSingleton
+            ? Lookup::Call::ContextGetterValueSingleton
+            : Lookup::Call::ContextGetterSingleton;
+}
+
+/*!
+    \internal
+    Searches the attached properties, enums, imported scripts, types and namespaces visible in
+    \a context for \a name.
+*/
+static OptionalReturnedValue searchImports(
+        QV4::ExecutionEngine *v4, const QQmlRefPointer<QQmlContextData> &context,
+        QObject *scopeObject, String *name, bool *hasProperty, Value *base, Lookup *lookup)
+{
+    if (!context->imports() || !(name->startsWithUpper() || context->valueTypesAreAddressable()))
+        return OptionalReturnedValue();
+
+    const QQmlTypeNameCache::Result r = context->imports()->query<QQmlImport::AllowRecursion>(
+            name, v4->typeLoader());
+    if (!r.isValid())
+        return OptionalReturnedValue();
+
+    if (hasProperty)
+        *hasProperty = true;
+
+    QV4::Scope scope(v4);
+    ScopedValue result(scope);
+
+    if (r.scriptIndex != -1) {
+        if (lookup) {
+            lookup->qmlContextScriptLookup.scriptIndex = r.scriptIndex;
+            lookup->call = Lookup::Call::ContextGetterScript;
+            return OptionalReturnedValue(lookup->contextGetter(v4, base));
+        }
+        QV4::ScopedObject scripts(scope, context->importedScripts());
+        if (scripts)
+            return OptionalReturnedValue(scripts->get(r.scriptIndex));
+        return OptionalReturnedValue(QV4::Encode::null());
+    } else if (r.type.isValid()) {
+        if (lookup && r.type.isSingleton()) {
+            setupSingletonLookup(v4, lookup, r.type);
+            return OptionalReturnedValue(lookup->contextGetter(v4, base));
+        }
+        result = QQmlTypeWrapper::create(v4, scopeObject, r.type);
+    } else if (r.importNamespace) {
+        result = QQmlTypeWrapper::create(v4, scopeObject, context->imports(), r.importNamespace);
+    }
+
+    if (lookup) {
+        lookup->qmlTypeLookup.qmlTypeWrapper.set(v4, result->heapObject());
+        lookup->call = Lookup::Call::ContextGetterType;
+    }
+    return OptionalReturnedValue(result->asReturnedValue());
+}
+
+/*!
+    \internal
+    Searches the contexts enclosing \a outer that belong to the same compilation unit as \a
+    context, advancing \a outer to the first context beyond them. Only applies if the components
+    of the compilation unit are bound.
+*/
+static OptionalReturnedValue searchBoundComponentContexts(
+        QV4::ExecutionEngine *v4, const QQmlRefPointer<QQmlContextData> &context,
+        QQmlRefPointer<QQmlContextData> &outer, String *name, bool *hasProperty, Value *base,
+        Lookup *originalLookup, QQmlEnginePrivate *ep)
+{
+    const auto cu = context->typeCompilationUnit();
+    if (!cu || !cu->componentsAreBound())
+        return OptionalReturnedValue();
+
+    // If components are bound in this CU, we can search the whole context hierarchy
+    // of the file. Bound components' contexts override their local properties.
+    // You also can't instantiate bound components outside of their creation
+    // context. Therefore this is safe.
+    for (; outer && outer->typeCompilationUnit() == cu; outer = outer->parent()) {
+        if (auto property = searchContextProperties(
+                    v4, outer, name, hasProperty, base, nullptr, originalLookup, ep)) {
+            return property;
+        }
+    }
+    return OptionalReturnedValue();
+}
+
+/*!
+    \internal
+    Searches the properties and methods of \a scopeObject for \a name, and prepares \a lookup if
+    it can accelerate the next access.
+*/
+static OptionalReturnedValue searchScopeObject(
+        QV4::ExecutionEngine *v4, const QQmlRefPointer<QQmlContextData> &context,
+        QObject *scopeObject, String *name, bool *hasProperty, Value *base, Lookup *lookup)
+{
+    QV4::Scope scope(v4);
+    bool hasProp = false;
+    const QQmlPropertyData *propertyData = nullptr;
+
+    QV4::ScopedObject wrapper(scope, QV4::QObjectWrapper::wrap(v4, scopeObject));
+    QV4::ScopedValue result(scope, QV4::QObjectWrapper::getQmlProperty(
+                                    v4, context, wrapper->d(), scopeObject, name,
+                                    getQmlPropertyFlags(lookup), &hasProp, &propertyData));
+    if (!hasProp)
+        return OptionalReturnedValue();
+
+    if (hasProperty)
+        *hasProperty = true;
+    if (base)
+        *base = wrapper;
+
+    if (lookup) {
+        QQmlData *ddata = QQmlData::get(scopeObject, false);
+        if (ddata && ddata->propertyCache) {
+            ScopedValue val(scope, base ? *base : Value::fromReturnedValue(
+                                           QV4::QObjectWrapper::wrap(v4, scopeObject)));
+            if (QObjectMethod *method = result->as<QObjectMethod>()) {
+                QV4::setupQObjectMethodLookup(
+                        lookup, ddata->propertyCache, propertyData, val->objectValue(),
+                        method->d());
+                lookup->call = Lookup::Call::ContextGetterScopeObjectMethod;
+            } else {
+                QV4::setupQObjectLookup(lookup, ddata, propertyData, val->objectValue());
+                lookup->call = Lookup::Call::ContextGetterScopeObjectProperty;
+            }
+        }
+    }
+
+    return OptionalReturnedValue(result->asReturnedValue());
+}
+
+/*!
+    \internal
+    Searches the properties and methods of the context object of \a context for \a name, and
+    prepares \a lookup if it can accelerate the next access. \a contextGetterCall is the getter
+    to use for properties. It is the scope object getter if scope and context object are the same.
+*/
+static OptionalReturnedValue searchContextObject(
+        QV4::ExecutionEngine *v4, const QQmlRefPointer<QQmlContextData> &context, String *name,
+        bool *hasProperty, Value *base, Lookup *lookup, Lookup *originalLookup,
+        Lookup::Call contextGetterCall)
+{
+    QObject *contextObject = context->contextObject();
+    if (!contextObject)
+        return OptionalReturnedValue();
+
+    QV4::Scope scope(v4);
+    bool hasProp = false;
+    const QQmlPropertyData *propertyData = nullptr;
+    QV4::ScopedObject wrapper(scope, QV4::QObjectWrapper::wrap(v4, contextObject));
+    QV4::ScopedValue result(scope, QV4::QObjectWrapper::getQmlProperty(
+                                    v4, context, wrapper->d(), contextObject, name,
+                                    getQmlPropertyFlags(lookup), &hasProp, &propertyData));
+    if (!hasProp)
+        return OptionalReturnedValue();
+
+    if (hasProperty)
+        *hasProperty = true;
+    if (base)
+        *base = wrapper;
+
+    if (lookup) {
+        QQmlData *ddata = QQmlData::get(contextObject, false);
+        if (ddata && ddata->propertyCache && lookup->call != contextGetterCall) {
+            ScopedValue val(scope, base ? *base : Value::fromReturnedValue(
+                                           QV4::QObjectWrapper::wrap(v4, contextObject)));
+            if (QObjectMethod *method = result->as<QObjectMethod>()) {
+                setupQObjectMethodLookup(
+                        lookup, ddata->propertyCache, propertyData, val->objectValue(),
+                        method->d());
+                if (contextGetterCall == Lookup::Call::ContextGetterScopeObjectProperty)
+                    lookup->call = Lookup::Call::ContextGetterScopeObjectMethod;
+                else
+                    lookup->call = Lookup::Call::ContextGetterContextObjectMethod;
+            } else {
+                setupQObjectLookup(lookup, ddata, propertyData, val->objectValue());
+                lookup->call = contextGetterCall;
+            }
+        }
+    } else if (originalLookup) {
+        originalLookup->call = Lookup::Call::ContextGetterInParentContextHierarchy;
+    }
+
+    return OptionalReturnedValue(result->asReturnedValue());
+}
+
+/*!
+    \internal
+    Resolves the global object getter on \a lookup and turns it into a lookup that caches a
+    hit in the global object. The global object cannot change, and everything searched before it
+    is either stable or not covered by the lookup anyway. Returns false and leaves the generic
+    global getter in place if the hit cannot be cached.
+*/
+static bool cacheGlobalLookup(QV4::ExecutionEngine *v4, Lookup *lookup, ScopedValue *result)
+{
+    *result = lookup->resolveGlobalGetter(v4);
+    if (lookup->call == Lookup::Call::GlobalGetterGeneric)
+        return false;
+    lookup->qmlContextGlobalLookup.getterTrampoline = lookup->call;
+    lookup->call = Lookup::Call::ContextGetterInGlobalObject;
+    return true;
+}
+
 ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *resource, PropertyKey id, const Value *receiver, bool *hasProperty, Value *base, Lookup *lookup)
 {
     if (!id.isString())
         return Object::virtualGet(resource, id, receiver, hasProperty);
 
     QV4::ExecutionEngine *v4 = resource->engine();
-    QV4::Scope scope(v4);
 
     if (v4->callingQmlContext().data() != resource->d()->context) {
-        if (resource->d()->module) {
-            Scoped<Module> module(scope, resource->d()->module);
-            bool hasProp = false;
-            ScopedValue value(scope, module->get(id, receiver, &hasProp));
-            if (hasProp) {
-                if (hasProperty)
-                    *hasProperty = hasProp;
-                return value->asReturnedValue();
-            }
-        }
-
+        if (auto property = searchModule(resource, id, receiver, hasProperty))
+            return *property;
         return Object::virtualGet(resource, id, receiver, hasProperty);
     }
 
+    QV4::Scope scope(v4);
     ScopedValue result(scope);
 
     // It's possible we could delay the calculation of the "actual" context (in the case
@@ -206,69 +450,9 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
     }
 
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(v4->qmlEngine());
-    if (context->imports() && (name->startsWithUpper() || context->valueTypesAreAddressable())) {
-        // Search for attached properties, enums and imported scripts
-        QQmlTypeNameCache::Result r = context->imports()->query<QQmlImport::AllowRecursion>(
-                name, v4->typeLoader());
 
-        if (r.isValid()) {
-            if (hasProperty)
-                *hasProperty = true;
-            if (r.scriptIndex != -1) {
-                if (lookup) {
-                    lookup->qmlContextScriptLookup.scriptIndex = r.scriptIndex;
-                    lookup->call = Lookup::Call::ContextGetterScript;
-                    return lookup->contextGetter(v4, base);
-                }
-                QV4::ScopedObject scripts(scope, context->importedScripts());
-                if (scripts)
-                    return scripts->get(r.scriptIndex);
-                return QV4::Encode::null();
-            } else if (r.type.isValid()) {
-                if (lookup) {
-                    bool isValueSingleton = false;
-                    if (r.type.isSingleton()) {
-                        QQmlEnginePrivate *e = QQmlEnginePrivate::get(v4->qmlEngine());
-                        if (r.type.isQObjectSingleton() || r.type.isCompositeSingleton()) {
-                            e->singletonInstance<QObject*>(r.type);
-                            lookup->qmlContextSingletonLookup.singletonObject.set(v4,
-                                        Value::fromReturnedValue(
-                                            QQmlTypeWrapper::create(v4, nullptr, r.type)
-                                        ).heapObject());
-                        } else {
-                            QJSValue singleton = e->singletonInstance<QJSValue>(r.type);
-
-                            // QString values should already have been put on the engine heap at
-                            // this point to manage their memory. We later assume this has already
-                            // happened.
-                            Q_ASSERT(!QJSValuePrivate::asQString(&singleton));
-
-                            if (QV4::Value *val = QJSValuePrivate::takeManagedValue(&singleton)) {
-                                lookup->qmlContextSingletonLookup.singletonObject.set(v4, val->heapObject());
-                            } else {
-                                lookup->qmlContextSingletonLookup.singletonValue = QJSValuePrivate::asReturnedValue(&singleton);
-                                isValueSingleton = true;
-                            }
-                        }
-                        lookup->call = isValueSingleton
-                                ? Lookup::Call::ContextGetterValueSingleton
-                                : Lookup::Call::ContextGetterSingleton;
-                        return lookup->contextGetter(v4, base);
-                    }
-                }
-                result = QQmlTypeWrapper::create(v4, scopeObject, r.type);
-            } else if (r.importNamespace) {
-                result = QQmlTypeWrapper::create(v4, scopeObject, context->imports(), r.importNamespace);
-            }
-            if (lookup) {
-                lookup->qmlTypeLookup.qmlTypeWrapper.set(v4, result->heapObject());
-                lookup->call = Lookup::Call::ContextGetterType;
-            }
-            return result->asReturnedValue();
-        }
-
-        // Fall through
-    }
+    if (auto imported = searchImports(v4, context, scopeObject, name, hasProperty, base, lookup))
+        return *imported;
 
     Lookup * const originalLookup = lookup;
 
@@ -280,8 +464,32 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
         contextGetterCall = Lookup::Call::ContextGetterScopeObjectProperty;
     }
 
+    // The global object comes after the immediate context, the scope object, the context object,
+    // and the lexically enclosing contexts of a bound component, but before any other context.
+    bool globalSearched = false;
+    bool immediateContextDone = false;
+
     QQmlRefPointer<QQmlContextData> outer = context;
     while (context) {
+        if (immediateContextDone && outer == context && !globalSearched
+            && !ep->preferContextPropertiesOverJavaScriptGlobals) {
+            globalSearched = true;
+            if (!isJSContext && performLookup(&result, hasProperty, jsLookup))
+                return result->asReturnedValue();
+            if (originalLookup) {
+                // Don't throw if the global object doesn't have the name.
+                if (v4->globalObject->hasProperty(id)) {
+                    if (hasProperty)
+                        *hasProperty = true;
+                    if (!cacheGlobalLookup(v4, originalLookup, &result))
+                        originalLookup->call = Lookup::Call::ContextGetterGeneric;
+                    return result->asReturnedValue();
+                }
+            } else if (performLookup(&result, hasProperty, globalLookup)) {
+                return result->asReturnedValue();
+            }
+        }
+
         if (outer == context) {
             if (auto property = searchContextProperties(
                         v4, context, name, hasProperty, base, lookup, originalLookup, ep)) {
@@ -290,109 +498,27 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
 
             outer = outer->parent();
 
-            if (const auto cu = context->typeCompilationUnit(); cu && cu->componentsAreBound()) {
-                // If components are bound in this CU, we can search the whole context hierarchy
-                // of the file. Bound components' contexts override their local properties.
-                // You also can't instantiate bound components outside of their creation
-                // context. Therefore this is safe.
-
-                for (;
-                     outer && outer->typeCompilationUnit() == cu;
-                     outer = outer->parent()) {
-                    if (auto property = searchContextProperties(
-                                v4, outer, name, hasProperty, base,
-                                nullptr, originalLookup, ep)) {
-                        return *property;
-                    }
-                }
+            if (auto property = searchBoundComponentContexts(
+                        v4, context, outer, name, hasProperty, base, originalLookup, ep)) {
+                return *property;
             }
         }
 
-        // Search scope object
         if (scopeObject) {
-            bool hasProp = false;
-
-            const QQmlPropertyData *propertyData = nullptr;
-
-            QV4::ScopedObject wrapper(scope, QV4::QObjectWrapper::wrap(v4, scopeObject));
-            QV4::ScopedValue result(scope, QV4::QObjectWrapper::getQmlProperty(
-                                        v4, context, wrapper->d(), scopeObject, name,
-                                        getQmlPropertyFlags(lookup), &hasProp, &propertyData));
-            if (hasProp) {
-                if (hasProperty)
-                    *hasProperty = true;
-                if (base)
-                    *base = wrapper;
-
-                if (lookup) {
-                    QQmlData *ddata = QQmlData::get(scopeObject, false);
-                    if (ddata && ddata->propertyCache) {
-                        ScopedValue val(
-                                    scope,
-                                    base ? *base : Value::fromReturnedValue(
-                                               QV4::QObjectWrapper::wrap(v4, scopeObject)));
-                        if (QObjectMethod *method = result->as<QObjectMethod>()) {
-                            QV4::setupQObjectMethodLookup(
-                                    lookup, ddata->propertyCache, propertyData,
-                                    val->objectValue(), method->d());
-                            lookup->call = Lookup::Call::ContextGetterScopeObjectMethod;
-                        } else {
-                            QV4::setupQObjectLookup(
-                                        lookup, ddata, propertyData, val->objectValue());
-                            lookup->call = Lookup::Call::ContextGetterScopeObjectProperty;
-                        }
-                    }
-                }
-
-                return result->asReturnedValue();
+            if (auto property = searchScopeObject(
+                        v4, context, scopeObject, name, hasProperty, base, lookup)) {
+                return *property;
             }
         }
         scopeObject = nullptr;
 
-
-        // Search context object
-        if (QObject *contextObject = context->contextObject()) {
-            bool hasProp = false;
-            const QQmlPropertyData *propertyData = nullptr;
-            QV4::ScopedObject wrapper(scope, QV4::QObjectWrapper::wrap(v4, contextObject));
-            result = QV4::QObjectWrapper::getQmlProperty(
-                        v4, context, wrapper->d(), contextObject, name, getQmlPropertyFlags(lookup),
-                        &hasProp, &propertyData);
-            if (hasProp) {
-                if (hasProperty)
-                    *hasProperty = true;
-                if (base)
-                    *base = wrapper;
-
-                if (lookup) {
-                    QQmlData *ddata = QQmlData::get(contextObject, false);
-                    if (ddata && ddata->propertyCache && lookup->call != contextGetterCall) {
-                        ScopedValue val(
-                                    scope,
-                                    base ? *base : Value::fromReturnedValue(
-                                               QV4::QObjectWrapper::wrap(v4, contextObject)));
-                        if (QObjectMethod *method = result->as<QObjectMethod>()) {
-                            setupQObjectMethodLookup(
-                                    lookup, ddata->propertyCache, propertyData,
-                                    val->objectValue(), method->d());
-                            if (contextGetterCall == Lookup::Call::ContextGetterScopeObjectProperty)
-                                lookup->call = Lookup::Call::ContextGetterScopeObjectMethod;
-                            else
-                                lookup->call = Lookup::Call::ContextGetterContextObjectMethod;
-                        } else {
-                            setupQObjectLookup(
-                                        lookup, ddata, propertyData, val->objectValue());
-                            lookup->call = contextGetterCall;
-                        }
-                    }
-                } else if (originalLookup) {
-                    originalLookup->call = Lookup::Call::ContextGetterInParentContextHierarchy;
-                }
-
-                return result->asReturnedValue();
-            }
+        if (auto property = searchContextObject(
+                    v4, context, name, hasProperty, base, lookup, originalLookup,
+                    contextGetterCall)) {
+            return *property;
         }
 
+        immediateContextDone = true;
         context = context->parent();
 
         // As the hierarchy of contexts is not stable, we can't do accelerated lookups beyond
@@ -400,30 +526,28 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
         lookup = nullptr;
     }
 
-    // Do the generic JS lookup late in case of a non-JavaScript context.
-    // The scope, context, types etc should be able to override it.
-    if (!isJSContext && performLookup(&result, hasProperty, jsLookup))
-        return result->asReturnedValue();
+    if (!globalSearched) {
+        // Do the generic JS lookup late in case of a non-JavaScript context.
+        // The scope, context, types etc should be able to override it.
+        if (!isJSContext && performLookup(&result, hasProperty, jsLookup))
+            return result->asReturnedValue();
 
-    // Do a lookup in the global object here to avoid expressionContext->unresolvedNames becoming
-    // true if we access properties of the global object.
-    if (originalLookup) {
-        // Try a lookup in the global object. It's theoretically possible to first find a property
-        // in the global object and then later a context property with the same name is added, but that
-        // never really worked as we used to detect access to global properties at type compile time anyway.
-        lookup = originalLookup;
-        result = lookup->resolveGlobalGetter(v4);
-        if (lookup->call != Lookup::Call::GlobalGetterGeneric) {
-            if (hasProperty)
-                *hasProperty = true;
-            lookup->qmlContextGlobalLookup.getterTrampoline = lookup->call;
-            lookup->call = Lookup::Call::ContextGetterInGlobalObject;
+        // Do a lookup in the global object here to avoid expressionContext->unresolvedNames
+        // becoming true if we access properties of the global object.
+        if (originalLookup) {
+            if (cacheGlobalLookup(v4, originalLookup, &result)) {
+                if (hasProperty)
+                    *hasProperty = true;
+                return result->asReturnedValue();
+            }
+            originalLookup->call = Lookup::Call::ContextGetterGeneric;
+        } else if (performLookup(&result, hasProperty, globalLookup)) {
             return result->asReturnedValue();
         }
-        lookup->call = Lookup::Call::ContextGetterGeneric;
-    } else {
-        if (performLookup(&result, hasProperty, globalLookup))
-            return result->asReturnedValue();
+    } else if (originalLookup) {
+        // Not found anywhere. Resolving the global getter throws the ReferenceError.
+        originalLookup->resolveGlobalGetter(v4);
+        originalLookup->call = Lookup::Call::ContextGetterGeneric;
     }
 
     expressionContext->setUnresolvedNames(true);

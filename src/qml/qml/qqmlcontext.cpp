@@ -251,6 +251,8 @@ void QQmlContext::setContextProperty(const QString &name, const QVariant &value)
     }
 
     if (QV4::Compiler::Codegen::isNameGlobal(name)) {
+        QQmlEnginePrivate::get(data->engine())->preferContextPropertiesOverJavaScriptGlobals = true;
+
         qWarning("Setting a context property '%s' tries to override a member of the JavaScript "
                  "global object. This only works if you run the code through the interpreter or "
                  "the JIT. You can't do this in AOT-compiled code. Furthermore, it only works if "

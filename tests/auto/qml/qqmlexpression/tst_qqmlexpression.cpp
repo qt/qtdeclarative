@@ -464,14 +464,10 @@ void tst_qqmlexpression::contextPropertyNamedLikeGlobal()
     QVERIFY2(!expression.hasError(), qPrintable(expression.error().toString()));
 
     // The immediate context comes before the global object. The remaining contexts come after it.
-    if (depth == 0) {
+    if (depth == 0)
         QCOMPARE(result.toString(), u"context property"_s);
-        return;
-    }
-
-    QEXPECT_FAIL("", "The context properties of all contexts are searched before the global "
-                     "object, see QQmlContextWrapper::getPropertyAndBase()", Abort);
-    QVERIFY(!result.isValid());
+    else
+        QVERIFY(!result.isValid());
 }
 
 void tst_qqmlexpression::idInDifferentContext_data()
