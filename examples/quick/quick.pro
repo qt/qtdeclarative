@@ -40,6 +40,3 @@ qtHaveModule(widgets) {
 }
 
 !vxworks:!integrity: SUBDIRS += flexboxlayout
-
-EXAMPLE_FILES = \
-    shared

@@ -3,7 +3,6 @@
 
 import QtQuick
 import QtQuick.Shapes
-import shared
 
 Rectangle {
     color: "lightGray"
@@ -12,7 +11,7 @@ Rectangle {
 
     Image {
         id: image
-        source: Images.qtLogo
+        source: "images/qt-logo.png"
         visible: false
 
         layer.enabled: true

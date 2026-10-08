@@ -8,8 +8,6 @@ find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick QuickTools)
 
 qt_standard_project_setup(REQUIRES 6.8)
 
-add_subdirectory("../../shared" "shared")
-
 qt_add_executable(weatherforecastexample
     WIN32
     MACOSX_BUNDLE
@@ -24,8 +22,6 @@ target_link_libraries(weatherforecastexample PRIVATE
     Qt6::Qml
     Qt6::Quick
 )
-
-add_dependencies(weatherforecastexample weatherforecast_shared)
 
 qt_add_qml_module(weatherforecastexample
   URI weatherforecast

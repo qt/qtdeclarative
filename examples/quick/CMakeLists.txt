@@ -46,22 +46,3 @@ qt_internal_add_example(advancedtext)
 if(TARGET Qt6::Svg)
     qt_internal_add_example(vectorimage)
 endif()
-
-# qt_examples_build_end() misses at least some of these due to some
-# source subdirectories being added multiple times. See QTBUG-96159.
-set(reused_dir_targets
-    window_shared
-    itemparticle_shared
-    testbed_shared
-    itemswitcher_shared
-    neumorphicpanel_shared
-)
-
-foreach(target IN LISTS reused_dir_targets)
-    if(TARGET ${target})
-        qt_autogen_tools(${target} ENABLE_AUTOGEN_TOOLS moc rcc)
-        if(TARGET Qt6::Widgets)
-            qt_autogen_tools(${target} ENABLE_AUTOGEN_TOOLS uic)
-        endif()
-    endif()
-endforeach()

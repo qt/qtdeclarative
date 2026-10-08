@@ -8,8 +8,6 @@ find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick QuickControls2)
 
 qt_standard_project_setup(REQUIRES 6.8)
 
-add_subdirectory("../../shared" "shared")
-
 qt_add_executable(itemswitcherexample WIN32 MACOSX_BUNDLE
     main.cpp
 )
@@ -23,8 +21,6 @@ target_link_libraries(itemswitcherexample PRIVATE
     Qt6::Quick
     Qt6::QuickControls2
 )
-
-add_dependencies(itemswitcherexample itemswitcher_shared)
 
 # Resources:
 qt_add_qml_module(itemswitcherexample

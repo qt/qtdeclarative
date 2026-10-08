@@ -8,8 +8,6 @@ find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
 qt_standard_project_setup(REQUIRES 6.8)
 
-add_subdirectory("../shared" "shared")
-
 qt_add_executable(windowexample
     WIN32
     MACOSX_BUNDLE
@@ -32,9 +30,9 @@ qt_add_qml_module(windowexample
         "CurrentScreen.qml"
         "Splash.qml"
         "window.qml"
+    RESOURCES
+        "images/qt-logo.png"
 )
-
-add_dependencies(windowexample window_shared)
 
 install(TARGETS windowexample
     BUNDLE  DESTINATION .

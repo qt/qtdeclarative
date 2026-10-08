@@ -8,8 +8,6 @@ find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick QuickControls2)
 
 qt_standard_project_setup(REQUIRES 6.8)
 
-add_subdirectory("../../shared" "shared")
-
 qt_add_executable(shapesexample
     WIN32
     MACOSX_BUNDLE
@@ -25,8 +23,6 @@ target_link_libraries(shapesexample PRIVATE
     Qt6::Quick
     Qt6::QuickControls2
 )
-
-add_dependencies(shapesexample shapes_shared)
 
 qt_add_qml_module(shapesexample
     URI shapes
@@ -66,6 +62,7 @@ qt_add_qml_module(shapesexample
         "images/back@2x.png"
         "images/back@3x.png"
         "images/back@4x.png"
+        "images/qt-logo.png"
 )
 
 install(TARGETS shapesexample
