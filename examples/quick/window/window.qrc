@@ -4,5 +4,6 @@
         <file>Splash.qml</file>
         <file>CurrentScreen.qml</file>
         <file>AllScreens.qml</file>
+        <file>images/qt-logo.png</file>
     </qresource>
 </RCC>

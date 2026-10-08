@@ -3,8 +3,7 @@ TEMPLATE = app
 QT += quick qml
 SOURCES += main.cpp
 RESOURCES += \
-    window.qrc \
-    ../shared/shared.qrc
+    window.qrc
 EXAMPLE_FILES = \
     window.qml \
     resources

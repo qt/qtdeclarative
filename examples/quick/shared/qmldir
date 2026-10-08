@@ -1,4 +1,0 @@
-module shared
-LauncherList 2.0 LauncherList.qml
-SimpleLauncherDelegate 2.0 SimpleLauncherDelegate.qml
-singleton Images 2.2 Images.qml
