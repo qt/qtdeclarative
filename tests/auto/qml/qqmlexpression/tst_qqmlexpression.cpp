@@ -507,13 +507,6 @@ void tst_qqmlexpression::idInDifferentContext()
     if (firstInComponentContext)
         std::swap(contexts[0], contexts[1]);
 
-    // QQmlContextWrapper::lookupIdObject() reads the id by index from the immediate context
-    // without checking that the context has it.
-    if (firstInComponentContext) {
-        QSKIP("The cached lookup of an id of the immediate context reads past the ids of a "
-              "different context and crashes");
-    }
-
     for (QQmlContext *context : contexts) {
         QQmlExpression expression(script, context, root.get());
         const QVariant result = expression.evaluate();
