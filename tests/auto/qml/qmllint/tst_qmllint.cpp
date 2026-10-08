@@ -1161,6 +1161,13 @@ void TestQmllint::dirtyQmlCode_data()
             << Result{ { { "Signal handler for \"onBChanged\" has more formal parameters than "
                            "the signal it handles"_L1 } } }
             << defaultOptions;
+    QTest::newRow("cppShadowsQml")
+            << QStringLiteral("cppShadowsQml.qml")
+            << Result{ { { "Could not find property \"qmlOnly\"."_L1, 6, 5 } },
+                       { { "Could not find property \"cppOnly\"."_L1 },
+                         { "Ambiguous type detected"_L1 },
+                         { "Shadowed was not found"_L1 } } }
+            << defaultOptions;
     QTest::newRow("cycle in import")
             << QStringLiteral("cycleHead.qml")
             << Result{ { { "MenuItem is part of an inheritance cycle: MenuItem -> MenuItem"_L1 } } }

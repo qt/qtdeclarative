@@ -3,6 +3,7 @@
 
 add_subdirectory(Confused)
 add_subdirectory(WithSubDir)
+add_subdirectory(CppShadowsQml)
 
 set(cpp_sources
     ambiguous.h
@@ -320,6 +321,7 @@ set(qml_files
     shadowedMethod.qml
     shadowedPrimitiveCmpEqNull.qml
     shadowingSingleton.qml
+    cppShadowsQml.qml
     shared/Slider.qml
     shifts.qml
     sideEffectOnArgument.qml
@@ -456,7 +458,7 @@ target_compile_definitions(codegen_test_module PUBLIC
 qt6_add_qml_module(codegen_test_module
     VERSION 1.5
     URI TestTypes
-    IMPORT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/imports/"
+    IMPORT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/imports/" "${CMAKE_CURRENT_BINARY_DIR}/shared_imports/"
     DEPENDENCIES
         ${qml_module_dependencies}
     SOURCES
@@ -496,7 +498,7 @@ else()
     )
 endif()
 
-add_dependencies(codegen_test_module ${cmake_target_dependencies})
+add_dependencies(codegen_test_module ${cmake_target_dependencies} cpp_shadows_qml_test_module)
 
 qt_autogen_tools_initial_setup(codegen_test_moduleplugin)
 
@@ -518,7 +520,7 @@ set_target_properties(codegen_test_module_verify PROPERTIES
 qt6_add_qml_module(codegen_test_module_verify
     VERSION 1.5
     URI TestTypes
-    IMPORT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/imports/"
+    IMPORT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/imports/" "${CMAKE_CURRENT_BINARY_DIR}/shared_imports/"
     DEPENDENCIES
         ${qml_module_dependencies}
     SOURCES
@@ -534,7 +536,7 @@ qt6_add_qml_module(codegen_test_module_verify
 
 target_link_libraries(codegen_test_module_verify PRIVATE Qt::QmlPrivate)
 
-add_dependencies(codegen_test_module_verify ${cmake_target_dependencies})
+add_dependencies(codegen_test_module_verify ${cmake_target_dependencies} cpp_shadows_qml_test_module)
 
 qt_autogen_tools_initial_setup(codegen_test_module_verifyplugin)
 

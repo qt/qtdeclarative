@@ -43,6 +43,7 @@ public:
 
     QQmlJSRegisterContentPool *registerContentPool() const { return m_pool.get(); }
     QQmlJSLogger *logger() const { return m_logger; }
+    QQmlJSImporter *importer() const { return m_importer; }
 
 
     // Configuration options
@@ -368,6 +369,7 @@ protected:
     ParentMode m_parentMode = UseParentProperty;
     CloneMode m_cloneMode = CloneTypes;
     QQmlJSLogger *m_logger = nullptr;
+    QQmlJSImporter *m_importer = nullptr;
 };
 
 /*!

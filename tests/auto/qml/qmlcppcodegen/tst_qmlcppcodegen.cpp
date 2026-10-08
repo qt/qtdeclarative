@@ -45,6 +45,7 @@ using namespace Qt::StringLiterals;
 
 Q_IMPORT_QML_PLUGIN(TestTypesPlugin)
 Q_IMPORT_QML_PLUGIN(ConfusedPlugin)
+Q_IMPORT_QML_PLUGIN(CppShadowsQmlPlugin)
 
 class tst_QmlCppCodegen : public QObject
 {
@@ -107,6 +108,7 @@ private slots:
     void convertToOriginalReadAcumulatorForUnaryOperators();
     void cppMethodListReturnType();
     void cppValueTypeList();
+    void cppShadowsQml();
     void ctorArgumentConversion();
     void dateConstruction();
     void dateConversions();
@@ -1684,6 +1686,19 @@ void tst_QmlCppCodegen::cppValueTypeList()
     QCOMPARE(object->property("b").toDouble(), 0.25);
     QMetaObject::invokeMethod(object.get(), "incB");
     QCOMPARE(object->property("b").toDouble(), 13.5);
+}
+
+void tst_QmlCppCodegen::cppShadowsQml()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, QUrl(u"qrc:/qt/qml/TestTypes/cppShadowsQml.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    std::unique_ptr<QObject> o(c.create());
+    QVERIFY(o);
+
+    // The C++ type takes precedence over the QML type of the same name in the same module.
+    for (const char *name : { "fromTyped", "fromCast", "fromArg", "fromSelf" })
+        QCOMPARE(o->property(name).toString(), u"cpp"_s);
 }
 
 void tst_QmlCppCodegen::ctorArgumentConversion()

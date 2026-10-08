@@ -1,0 +1,3 @@
+module CppShadowsQml
+typeinfo plugins.qmltypes
+Shadowed 1.0 Shadowed.qml
