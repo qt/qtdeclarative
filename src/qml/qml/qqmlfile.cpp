@@ -546,9 +546,9 @@ bool QQmlFile::isSynchronous(const QString &url)
 
     if (f == QLatin1Char('f') || f == QLatin1Char('F')) {
 
-        return url.size() >= file_string.size() + 3 /* file:// */ &&
+        return url.size() >= file_string.size() + 2 /* file:/ */ &&
                url.startsWith(file_string, Qt::CaseInsensitive) &&
-               url[4] == QLatin1Char(':') && url[5] == QLatin1Char('/') && url[6] == QLatin1Char('/');
+               url[4] == QLatin1Char(':') && url[5] == QLatin1Char('/');
 
     } else if (f == QLatin1Char('q') || f == QLatin1Char('Q')) {
 

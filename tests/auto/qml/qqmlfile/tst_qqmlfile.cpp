@@ -19,6 +19,9 @@ private Q_SLOTS:
     void urlToLocalFileOrQrcOverloads_data();
     void urlToLocalFileOrQrcOverloads();
 
+    void isSynchronous_data();
+    void isSynchronous();
+
 private:
     void urlData();
 };
@@ -173,6 +176,35 @@ void tst_qqmlfile::urlToLocalFileOrQrcOverloads()
 
     QCOMPARE(pathForUrlString, localPath);
     QCOMPARE(pathForUrl, localPath);
+}
+
+void tst_qqmlfile::isSynchronous_data()
+{
+    QTest::addColumn<QString>("urlString");
+    QTest::addColumn<bool>("synchronous");
+
+    QTest::addRow("file 1 slash")   << QStringLiteral("file:/foo/bar") << true;
+    QTest::addRow("file 2 slashes") << QStringLiteral("file://foo/bar") << true;
+    QTest::addRow("file 3 slashes") << QStringLiteral("file:///foo/bar") << true;
+    QTest::addRow("FILE 1 slash")   << QStringLiteral("FILE:/foo/bar") << true;
+    QTest::addRow("file minimal")   << QStringLiteral("file:/") << true;
+
+    QTest::addRow("qrc 1 slash")    << QStringLiteral("qrc:/foo/bar") << true;
+    QTest::addRow("qrc 3 slashes")  << QStringLiteral("qrc:///foo/bar") << true;
+    QTest::addRow("qrc minimal")    << QStringLiteral("qrc:/") << true;
+
+    QTest::addRow("files 1 slash")      << QStringLiteral("files:/foo/bar") << false;
+    QTest::addRow("file+stuff 1 slash") << QStringLiteral("file+stuff:/foo/bar") << false;
+    QTest::addRow("http")               << QStringLiteral("http://foo/bar") << false;
+}
+
+void tst_qqmlfile::isSynchronous()
+{
+    QFETCH(QString, urlString);
+    QFETCH(bool, synchronous);
+
+    QCOMPARE(QQmlFile::isSynchronous(urlString), synchronous);
+    QCOMPARE(QQmlFile::isSynchronous(QUrl(urlString)), synchronous);
 }
 
 QTEST_GUILESS_MAIN(tst_qqmlfile)
