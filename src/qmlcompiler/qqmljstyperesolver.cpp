@@ -31,6 +31,7 @@ static inline void assertExtension(const QQmlJSScope::ConstPtr &type, QLatin1Str
 QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer)
     : m_pool(std::make_unique<QQmlJSRegisterContentPool>())
     , m_imports(importer->builtinInternalNames())
+    , m_importer(importer)
 {
     const QQmlJSImporter::ImportedTypes &builtinTypes = m_imports;
 

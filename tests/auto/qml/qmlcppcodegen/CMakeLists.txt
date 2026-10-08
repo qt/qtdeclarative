@@ -25,6 +25,8 @@ qt_internal_add_test(tst_qmlcppcodegen
         confused_test_moduleplugin
         with_subdir_test_module
         with_subdir_test_moduleplugin
+        cpp_shadows_qml_test_module
+        cpp_shadows_qml_test_moduleplugin
     DEFINES
         QT_NO_CAST_FROM_ASCII
         QT_NO_CAST_TO_ASCII
@@ -46,6 +48,8 @@ qt_internal_add_test(tst_qmlcppcodegen_interpreted
         confused_test_moduleplugin
         with_subdir_test_module
         with_subdir_test_moduleplugin
+        cpp_shadows_qml_test_module
+        cpp_shadows_qml_test_moduleplugin
     DEFINES
         QT_TEST_FORCE_INTERPRETER
 )

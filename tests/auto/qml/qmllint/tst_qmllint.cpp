@@ -1255,6 +1255,15 @@ void TestQmllint::dirtyQmlCode_data()
             << ResultBuilder::singleExpected("Signal handler for \"onBChanged\" has more formal "
                                              "parameters than the signal it handles"_L1)
             << defaultOptions;
+    QTest::newRow("cppShadowsQml")
+            << u"cppShadowsQml.qml"_s
+            << ResultBuilder()
+               .addExpected("Could not find property \"qmlOnly\"."_L1, 6, 5)
+               .addUnexpected("Could not find property \"cppOnly\"."_L1)
+               .addUnexpected("Ambiguous type detected"_L1)
+               .addUnexpected("Shadowed was not found"_L1)
+               .build()
+            << defaultOptions;
     QTest::newRow("cycle in import")
             << QStringLiteral("cycleHead.qml")
             << ResultBuilder::singleExpected("MenuItem is part of an inheritance cycle: "

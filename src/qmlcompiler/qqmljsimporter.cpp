@@ -642,11 +642,34 @@ void QQmlJSImporter::processImport(const QQmlJS::Import &importDescription,
                       precedence, &seenExports, types);
     }
 
-    // add objects
+    // Like the engine, prefer C++ types over QML types of the same name in the same module.
+    QSet<QString> cppExportNames;
     for (const auto &val : import.objects) {
-        const QString cppName = isComposite(val.scope)
-                ? prefixedName(anonPrefix, internalName(val.scope))
-                : internalName(val.scope);
+        if (isComposite(val.scope))
+            continue;
+        for (const auto &valExport : val.exports) {
+            if (isVersionAllowed(valExport, importDescription))
+                cppExportNames.insert(valExport.type());
+        }
+    }
+
+    // add objects
+    for (const auto &object : import.objects) {
+        const bool composite = isComposite(object.scope);
+        const QString cppName = composite
+                ? prefixedName(anonPrefix, internalName(object.scope))
+                : internalName(object.scope);
+
+        // Remove all exports of composite types that clash with exports of
+        // non-composite types. These exports of composite types are invisible.
+        // TODO: We should probably warn about this, but first we need to fix
+        //       QtQuick.Dialogs not to do this anymore (see QTBUG-151326).
+        QQmlJSExportedScope val = object;
+        if (composite) {
+            val.exports.removeIf([&](const QQmlJSScope::Export &valExport) {
+                return cppExportNames.contains(valExport.type());
+            });
+        }
 
         if (val.exports.isEmpty()) {
             const QQmlJS::ContextualType unresolvableDummyName{ val.scope, QTypeRevision(),

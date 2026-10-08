@@ -64,8 +64,23 @@ QQmlJSLookupSignaturesRecorder::type(const QQmlJSScope::ConstPtr &type)
     bool isFileBeingCompiled = root->filePath() == m_typeResolver->logger()->filePath();
 
     Q_ASSERT(!root->internalName().isEmpty());
-    res.module = isFileBeingCompiled ? s_thisCuModule : root->moduleName();
-    res.name = isFileBeingCompiled ? s_thisCuType : root->internalName();
+    if (isFileBeingCompiled) {
+        res.module = s_thisCuModule;
+        res.name = s_thisCuType;
+    } else {
+        res.module = root->moduleName();
+        res.name = root->internalName();
+
+        // At run time, the type is looked up by name in its module. A C++ type of the same name
+        // takes precedence there. Then we cannot find this type that way.
+        const QQmlJSScope::ConstPtr found
+                = m_typeResolver->importer()->importModule(res.module, 0).type(res.name).scope;
+        if (found && !found->isComposite()) {
+            m_rejectMessage = "%1 is shadowed by C++ type %2 in module %3"_L1.arg(
+                    root->filePath(), res.name, res.module);
+            return {};
+        }
+    }
 
     if (type->isInlineComponent()) {
         res.isInlineComponent = IsIC::Yes;
