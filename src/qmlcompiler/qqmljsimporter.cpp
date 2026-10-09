@@ -160,6 +160,20 @@ static QString internalName(const QQmlJSScope::ConstPtr &scope)
     return scope->internalName();
 }
 
+static QString filePath(const QQmlJSScope::ConstPtr &scope)
+{
+    if (const auto *factory = scope.factory())
+        return factory->filePath();
+    return scope->filePath();
+}
+
+static QString moduleName(const QQmlJSScope::ConstPtr &scope)
+{
+    if (const auto *factory = scope.factory())
+        return factory->moduleName();
+    return scope->moduleName();
+}
+
 static bool isComposite(const QQmlJSScope::ConstPtr &scope)
 {
     // The only thing the factory can do is load a composite type.
@@ -837,7 +851,8 @@ QQmlJSImporter::ImportedTypes QQmlJSImporter::importModule(const QString &module
     if (staticModuleList)
         *staticModuleList << result.staticModules;
 
-    return ImportedTypes(std::move(result.qmlNames), std::move(result.warnings));
+    return ImportedTypes(std::move(result.qmlNames), std::move(result.warnings),
+                         std::move(result.moduleImports));
 }
 
 QQmlJSImporter::ImportedTypes QQmlJSImporter::builtinInternalNames()
@@ -872,6 +887,7 @@ bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types, 
         if (!isDependency) {
             types->warnings.append(cacheEntry->warnings);
             types->qmlNames.addTypes(cacheEntry->qmlNames);
+            types->moduleImports.append(cacheEntry->moduleImports);
         }
 
         return true;
@@ -884,6 +900,8 @@ bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types, 
             new QQmlJSImporter::AvailableTypes(QQmlJS::ContextualTypes(
                     QQmlJS::ContextualTypes::INTERNAL, {}, {}, types->cppNames.arrayType())));
     m_cachedImportTypes[cacheKey] = cacheTypes;
+    if (!isDependency)
+        cacheTypes->moduleImports.append(cacheKey);
 
     const std::pair<QString, QTypeRevision> importId { module, version };
     const auto it = m_seenImports.constFind(importId);
@@ -1008,7 +1026,65 @@ QQmlJSImporter::importDirectory(const QString &directory, quint8 precedence, con
     QQmlJSImporter::AvailableTypes types(QQmlJS::ContextualTypes(
             QQmlJS::ContextualTypes::INTERNAL, {}, {}, builtins.cppNames.arrayType()));
     importHelper(directory, &types, precedence, prefix, QTypeRevision(), false, true);
-    return ImportedTypes(std::move(types.qmlNames), std::move(types.warnings));
+    return ImportedTypes(std::move(types.qmlNames), std::move(types.warnings),
+                         std::move(types.moduleImports));
+}
+
+/*!
+    \internal
+    Records through which module imports the types in \a imported are visible, so that
+    they can later be found again by name at run time. Only call this for the imports a document
+    actually has. Directory imports are recorded with the module of the qmldir file in the
+    directory and an invalid version, like the QML engine does.
+ */
+void QQmlJSImporter::registerVersionedImports(const ImportedTypes &imported)
+{
+    const QList<QQmlJS::Import> &moduleImports = imported.moduleImports();
+    const auto findImport = [&](const QString &module) -> const QQmlJS::Import * {
+        const auto byName =
+                std::find_if(moduleImports.cbegin(), moduleImports.cend(),
+                             [&](const QQmlJS::Import &import) { return import.name() == module; });
+        if (byName != moduleImports.cend())
+            return &*byName;
+        const auto byDirectory =
+                std::find_if(moduleImports.cbegin(), moduleImports.cend(),
+                             [](const QQmlJS::Import &import) { return import.isFile(); });
+        return byDirectory != moduleImports.cend() ? &*byDirectory : nullptr;
+    };
+
+    const QHash<QString, QQmlJS::ContextualType> &types = imported.contextualTypes().types();
+    for (auto it = types.cbegin(), end = types.cend(); it != end; ++it) {
+        const QQmlJSScope::ConstPtr &scope = it->scope;
+        if (!scope)
+            continue;
+
+        const QString module = moduleName(scope);
+        if (module.isEmpty())
+            continue;
+
+        const QQmlJS::Import *import = findImport(module);
+        if (!import)
+            continue;
+
+        QString name = it.key();
+        if (!import->prefix().isEmpty()) {
+            const QString qualifier = import->prefix() + u'.';
+            if (!name.startsWith(qualifier))
+                continue;
+            name = name.mid(qualifier.size());
+        }
+
+        // Internal names, anonymous types, and module markers
+        if (name.startsWith(u'$'))
+            continue;
+
+        const VersionedImport versionedImport {
+            module, name, import->isFile() ? QTypeRevision() : import->version()
+        };
+        QList<VersionedImport> &versionedImports = m_versionedImports[filePath(scope)];
+        if (!versionedImports.contains(versionedImport))
+            versionedImports.append(versionedImport);
+    }
 }
 
 void QQmlJSImporter::setImportPaths(const QStringList &importPaths)
@@ -1031,6 +1107,7 @@ void QQmlJSImporter::clearCache()
     m_cachedImportTypes.clear();
     m_seenQmldirFilesAndDirectories.clear();
     m_importedFiles.clear();
+    m_versionedImports.clear();
     m_builtins.reset();
 }
 
