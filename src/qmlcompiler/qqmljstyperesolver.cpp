@@ -1154,11 +1154,10 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::scopedType(
         const QQmlJSScope::ConstPtr &scope, const QString &name,
         QQmlJSScopesByIdOptions options) const
 {
-    // Upper-case type names come before everything but the keywords. Ids cannot be upper-case.
-    if (!name.isEmpty() && name.at(0).isUpper()) {
-        if (QQmlJSScope::ConstPtr result = containedTypeForName(name))
-            return result;
-    }
+    // Type names come before everything but the keywords. Lower-case type names are only found if
+    // value types are addressable. Otherwise containedTypeForName() doesn't find them.
+    if (QQmlJSScope::ConstPtr result = containedTypeForName(name))
+        return result;
 
     QQmlJSScopesById::CertainCallback<QQmlJSScope::ConstPtr> identified;
     if (m_objectsById.possibleScopes(name, scope, options, identified)
@@ -1204,9 +1203,6 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::scopedType(
         }
     }
 
-    if (QQmlJSScope::ConstPtr result = containedTypeForName(name))
-        return result;
-
     // Rule 6: The context object comes before the global object.
     if (const QQmlJSScope::ConstPtr root = contextObjectWithName(
                 scope, name, componentBehavior(m_objectsById))) {
@@ -1250,11 +1246,10 @@ QQmlJSRegisterContent QQmlJSTypeResolver::scopedType(QQmlJSRegisterContent scope
 {
     const QQmlJSScope::ConstPtr contained = scope.containedType();
 
-    // Upper-case type names come before everything but the keywords. Ids cannot be upper-case.
-    if (!name.isEmpty() && name.at(0).isUpper()) {
-        if (QQmlJSRegisterContent result = registerContentForName(name, scope); result.isValid())
-            return result;
-    }
+    // Type names come before everything but the keywords. registerContentForName() only finds
+    // lower-case value types if they are addressable.
+    if (QQmlJSRegisterContent result = registerContentForName(name, scope); result.isValid())
+        return result;
 
     QQmlJSScopesById::CertainCallback<QQmlJSScope::ConstPtr> identified;
     if (m_objectsById.possibleScopes(name, contained, options, identified)
@@ -1313,11 +1308,6 @@ QQmlJSRegisterContent QQmlJSTypeResolver::scopedType(QQmlJSRegisterContent scope
             return result;
         }
     }
-
-    QQmlJSRegisterContent result = registerContentForName(name, scope);
-
-    if (result.isValid())
-        return result;
 
     // Rule 6: The context object comes before the global object.
     if (const QQmlJSScope::ConstPtr root = contextObjectWithName(
