@@ -15,14 +15,14 @@ QQuickIconImagePrivate::~QQuickIconImagePrivate()
     icon.entries.clear();
 }
 
-bool QQuickIconImagePrivate::updateDevicePixelRatio(qreal targetDevicePixelRatio)
+bool QQuickIconImagePrivate::updateDevicePixelRatio(qreal targetDevicePixelRatio, bool scalable)
 {
     if (isThemeIcon) {
         devicePixelRatio = effectiveDevicePixelRatio();
         return true;
     }
 
-    return QQuickImagePrivate::updateDevicePixelRatio(targetDevicePixelRatio);
+    return QQuickImagePrivate::updateDevicePixelRatio(targetDevicePixelRatio, scalable);
 }
 
 void QQuickIconImage::load()
