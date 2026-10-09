@@ -37,6 +37,9 @@ void tst_QmlNoResourceTargetPath::aotLookupValidation_data()
     QTest::newRow("mixedVersions") << QUrl(u"qrc:/NtpMixedVersions.qml"_s) << "lateLife"_ba;
     QTest::newRow("shifting1") << QUrl(u"qrc:/NtpShifting1.qml"_s) << "shiftingLife"_ba;
     QTest::newRow("shifting2") << QUrl(u"qrc:/NtpShifting2.qml"_s) << "shiftingLife"_ba;
+    QTest::newRow("shiftingIndirect")
+            << QUrl(u"qrc:/NtpShiftingIndirect.qml"_s) << "shiftingLife"_ba;
+    QTest::newRow("unimported") << QUrl(u"qrc:/NtpUnimported.qml"_s) << "lateLife"_ba;
 }
 
 void tst_QmlNoResourceTargetPath::aotLookupValidation()
