@@ -1154,6 +1154,12 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::scopedType(
         const QQmlJSScope::ConstPtr &scope, const QString &name,
         QQmlJSScopesByIdOptions options) const
 {
+    // Upper-case type names come before everything but the keywords. Ids cannot be upper-case.
+    if (!name.isEmpty() && name.at(0).isUpper()) {
+        if (QQmlJSScope::ConstPtr result = containedTypeForName(name))
+            return result;
+    }
+
     QQmlJSScopesById::CertainCallback<QQmlJSScope::ConstPtr> identified;
     if (m_objectsById.possibleScopes(name, scope, options, identified)
             != QQmlJSScopesById::Success::Yes) {
@@ -1243,6 +1249,12 @@ QQmlJSRegisterContent QQmlJSTypeResolver::scopedType(QQmlJSRegisterContent scope
                                                      QQmlJSScopesByIdOptions options) const
 {
     const QQmlJSScope::ConstPtr contained = scope.containedType();
+
+    // Upper-case type names come before everything but the keywords. Ids cannot be upper-case.
+    if (!name.isEmpty() && name.at(0).isUpper()) {
+        if (QQmlJSRegisterContent result = registerContentForName(name, scope); result.isValid())
+            return result;
+    }
 
     QQmlJSScopesById::CertainCallback<QQmlJSScope::ConstPtr> identified;
     if (m_objectsById.possibleScopes(name, contained, options, identified)
