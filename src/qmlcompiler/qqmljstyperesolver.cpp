@@ -1067,16 +1067,24 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::resolveParentProperty(
     return propType;
 }
 
+using ComponentBehavior = QmlIR::Pragma::ComponentBehaviorValue;
+
+static ComponentBehavior componentBehavior(const QQmlJSScopesById &objectsById)
+{
+    return objectsById.componentsAreBound() ? QmlIR::Pragma::Bound : QmlIR::Pragma::Unbound;
+}
+
 /*!
  * \internal
  *
  * Returns the context object type of the context \a scope belongs to, if it has a property or
  * method called \a name. The context object is the root object of the surrounding component.
- * Returns nullptr if the root doesn't have the name, or we cannot tell where the component
- * starts.
+ * If \a behavior is Bound, the context objects of the lexically enclosing contexts are searched as
+ * well, up to the root of the document or of an inline component. Returns nullptr if no root has
+ * the name, or we cannot tell where the component starts.
  */
 static QQmlJSScope::ConstPtr contextObjectWithName(
-        const QQmlJSScope::ConstPtr &scope, const QString &name)
+        const QQmlJSScope::ConstPtr &scope, const QString &name, ComponentBehavior behavior)
 {
     // The keywords come before everything else, including the context object.
     if (QV4::Compiler::Codegen::isNameKeyword(name))
@@ -1105,8 +1113,11 @@ static QQmlJSScope::ConstPtr contextObjectWithName(
         if (hasName(current))
             return current;
 
-        if (status == QQmlJSScope::IsComponentRoot::Yes)
+        if (status == QQmlJSScope::IsComponentRoot::Yes
+                && (behavior == QmlIR::Pragma::Unbound || current->isFileRootComponent()
+                    || current->isInlineComponent())) {
             return {};
+        }
     }
 
     return {};
@@ -1134,11 +1145,10 @@ static QQmlJSScope::ConstPtr contextObjectWithName(
  * generator does not generate code for them. The linter warns about them as
  * unqualified access.
  *
- * TODO: Rule 7 is not implemented. If components are bound, the context
- *       objects of the lexically enclosing contexts come after the context
- *       object and before the global object. They are not searched, so a name
- *       that such an object shares with the global object is resolved to the
- *       global object.
+ * Rule 7: If components are bound, the context objects of the lexically
+ * enclosing contexts come after the context object and before the global
+ * object. They are searched, too, and the code generator does not generate
+ * code for names they provide either.
  */
 QQmlJSScope::ConstPtr QQmlJSTypeResolver::scopedType(
         const QQmlJSScope::ConstPtr &scope, const QString &name,
@@ -1192,7 +1202,8 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::scopedType(
         return result;
 
     // Rule 6: The context object comes before the global object.
-    if (const QQmlJSScope::ConstPtr root = contextObjectWithName(scope, name)) {
+    if (const QQmlJSScope::ConstPtr root = contextObjectWithName(
+                scope, name, componentBehavior(m_objectsById))) {
         QQmlJSScope::ConstPtr result;
         QQmlJSUtils::searchBaseAndExtensionTypes(
                 root, [&](const QQmlJSScope::ConstPtr &found, QQmlJSScope::ExtensionKind mode) {
@@ -1297,7 +1308,8 @@ QQmlJSRegisterContent QQmlJSTypeResolver::scopedType(QQmlJSRegisterContent scope
         return result;
 
     // Rule 6: The context object comes before the global object.
-    if (const QQmlJSScope::ConstPtr root = contextObjectWithName(contained, name)) {
+    if (const QQmlJSScope::ConstPtr root = contextObjectWithName(
+                contained, name, componentBehavior(m_objectsById))) {
         const QQmlJSRegisterContent contextObject = m_pool->createType(
                 root, QQmlJSRegisterContent::InvalidLookupIndex,
                 QQmlJSRegisterContent::ContextObject, scope);

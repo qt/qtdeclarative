@@ -7204,13 +7204,6 @@ static KnownIssue compilerIssue(const UnqualifiedName &name, NameKinds kinds,
                  "searches the scope object before the global object" };
     }
 
-    // QQmlJSTypeResolver::scopedType() never searches the enclosing context objects.
-    if ((name.builtIn & Global) && winner == BoundContextObject) {
-        return { KnownIssue::Failure,
-                 "Compiled code does not search the enclosing context objects of a bound "
-                 "component before the global object" };
-    }
-
     // QQmlJSTypeResolver::scopedType() searches ids, then the scope object, and only then types.
     // A dynamic scope object doesn't have the name statically, but the lookup still fails on it.
     if (winner == UpperCaseType && (kinds & (ScopeObject | DynamicScopeObject))) {
