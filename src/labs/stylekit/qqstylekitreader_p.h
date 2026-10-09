@@ -87,6 +87,7 @@ public:
         ToolButton,
         ToolSeparator,
         ToolTip,
+        TreeViewDelegate,
         Tumbler,
         RadioButton,
         RadioDelegate,

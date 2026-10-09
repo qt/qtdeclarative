@@ -82,6 +82,7 @@ qt_internal_add_qml_module(LabsStyleKit
         ToolButton.qml
         ToolSeparator.qml
         ToolTip.qml
+        TreeViewDelegate.qml
         Tumbler.qml
         Page.qml
         Pane.qml

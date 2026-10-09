@@ -646,6 +646,16 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \qmlproperty ControlStyle StylableControls::treeViewDelegate
+
+    Grouped property for styling \l [QtQuickControls]{TreeViewDelegate}.
+
+    Unset properties fall back to \l itemDelegate.
+
+    \snippet ControlsSnippets.qml treeViewDelegate
+*/
+
+/*!
     \qmlproperty ControlStyle StylableControls::tumbler
 
     Grouped property for styling \l [QtQuickControls]{Tumbler}.
@@ -772,6 +782,7 @@ IMPLEMENT_ACCESSORS(toolBar, QQStyleKitReader::ControlType::ToolBar)
 IMPLEMENT_ACCESSORS(toolButton, QQStyleKitReader::ControlType::ToolButton)
 IMPLEMENT_ACCESSORS(toolSeparator, QQStyleKitReader::ControlType::ToolSeparator)
 IMPLEMENT_ACCESSORS(toolTip, QQStyleKitReader::ControlType::ToolTip)
+IMPLEMENT_ACCESSORS(treeViewDelegate, QQStyleKitReader::ControlType::TreeViewDelegate)
 IMPLEMENT_ACCESSORS(tumbler, QQStyleKitReader::ControlType::Tumbler)
 IMPLEMENT_ACCESSORS(radioButton, QQStyleKitReader::ControlType::RadioButton)
 IMPLEMENT_ACCESSORS(radioDelegate, QQStyleKitReader::ControlType::RadioDelegate)

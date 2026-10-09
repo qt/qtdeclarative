@@ -107,6 +107,7 @@ QT_BEGIN_NAMESPACE
     \value StyleReader.ToolButton                       \l {ToolButton}
     \value StyleReader.ToolSeparator                    \l {ToolSeparator}
     \value StyleReader.ToolTip                          \l {ToolTip}
+    \value StyleReader.TreeViewDelegate                 \l {TreeViewDelegate}
     \value StyleReader.Tumbler                          \l {Tumbler}
     \value StyleReader.VerticalHeaderViewDelegate       \l {VerticalHeaderViewDelegate}
 

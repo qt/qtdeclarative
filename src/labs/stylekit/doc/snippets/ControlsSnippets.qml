@@ -976,6 +976,35 @@ ApplicationWindow {
         }
         //! [toolTip]
 
+        //! [treeViewDelegate]
+        treeViewDelegate {
+            background {
+                radius: 0
+                color: "white"
+                border.width: 0
+            }
+            indicator {
+                width: 18
+                height: 18
+                color: "transparent"
+                border.width: 0
+                alignment: Qt.AlignLeft | Qt.AlignVCenter
+                foreground {
+                    fillWidth: true
+                    fillHeight: true
+                    color: "transparent"
+                    image.color: palette.accent
+                    image.source: "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/arrow-indicator.png"
+                }
+            }
+            highlighted.background.color: "darkslategray"
+            highlighted.hovered.background.color: "darkslategray"
+            focused.background.border.width: 2
+            // For TreeViewDelegate, checked means expanded, so rotate the arrow to point down
+            checked.indicator.foreground.rotation: 90
+        }
+        //! [treeViewDelegate]
+
         //! [tumbler]
         tumbler {
             background {

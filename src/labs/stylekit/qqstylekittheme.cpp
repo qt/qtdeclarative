@@ -70,6 +70,7 @@ static QQuickTheme::Scope scopeForType(QQStyleKitExtendableControlType type)
     case QQStyleKitReader::ControlType::HorizontalHeaderViewDelegate:
     case QQStyleKitReader::ControlType::ItemDelegate:
     case QQStyleKitReader::ControlType::TableViewDelegate:
+    case QQStyleKitReader::ControlType::TreeViewDelegate:
     case QQStyleKitReader::ControlType::VerticalHeaderViewDelegate:
         return QQuickTheme::ItemView;
     case QQStyleKitReader::ControlType::Label:

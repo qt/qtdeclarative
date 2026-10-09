@@ -66,11 +66,13 @@ const QList<QQStyleKitExtendableControlType> QQStyleKitPropertyResolver::baseTyp
     case QQStyleKitReader::RadioDelegate:
     case QQStyleKitReader::SwipeDelegate:
     case QQStyleKitReader::SwitchDelegate:
-    case QQStyleKitReader::TableViewDelegate: {
+    case QQStyleKitReader::TableViewDelegate:
+    case QQStyleKitReader::TreeViewDelegate: {
         static QList<QQStyleKitExtendableControlType> t =
             { QQStyleKitReader::ItemDelegate, QQStyleKitReader::Control };
         return t; }
-    case QQStyleKitReader::HorizontalHeaderViewDelegate: {
+    case QQStyleKitReader::HorizontalHeaderViewDelegate:
+    case QQStyleKitReader::VerticalHeaderViewDelegate: {
         static QList<QQStyleKitExtendableControlType> t =
             { QQStyleKitReader::TableViewDelegate, QQStyleKitReader::ItemDelegate, QQStyleKitReader::Control };
         return t;
@@ -100,11 +102,6 @@ const QList<QQStyleKitExtendableControlType> QQStyleKitPropertyResolver::baseTyp
         static QList<QQStyleKitExtendableControlType> t =
             { QQStyleKitReader::TextInput, QQStyleKitReader::Control };
         return t; }
-    case QQStyleKitReader::VerticalHeaderViewDelegate: {
-        static QList<QQStyleKitExtendableControlType> t =
-            { QQStyleKitReader::TableViewDelegate, QQStyleKitReader::ItemDelegate, QQStyleKitReader::Control };
-            return t;
-    }
     default: {
         static QList<QQStyleKitExtendableControlType> t =
             { QQStyleKitReader::Control };
