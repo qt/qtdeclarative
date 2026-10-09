@@ -674,6 +674,7 @@ void tst_QQuickPopup::closePolicy()
 
     QQuickWindow *window = helper.window;
     window->show();
+    window->raise();
     window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
@@ -746,7 +747,8 @@ void tst_QQuickPopup::closePolicy()
         QTRY_VERIFY(popup->isOpened());
 
         // press inside and release outside
-        QQuickTest::pointerPress(device, window, 0, buttonPoint + QPoint(popup->x(), popup->y()));
+        QQuickTest::pointerPress(device, window, 0,
+                popup->popupItem()->mapToScene(QPointF(1, 1)).toPoint());
         QVERIFY(popup->isOpened());
         QQuickTest::pointerRelease(device, window, 0, topLeftSafePoint);
         QVERIFY(popup->isOpened());
