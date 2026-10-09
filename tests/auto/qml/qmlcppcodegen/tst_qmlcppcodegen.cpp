@@ -7235,13 +7235,6 @@ static KnownIssue compilerIssue(const UnqualifiedName &name, NameKinds kinds,
                  "searches the scope object before the global object" };
     }
 
-    // QQmlJSTypeResolver::scopedType() searches ids, then the scope object, and only then types.
-    // A dynamic scope object doesn't have the name statically, but the lookup still fails on it.
-    if (winner == UpperCaseType && (kinds & (ScopeObject | DynamicScopeObject))) {
-        return { KnownIssue::Failure,
-                 "Compiled code searches the scope object before the type names" };
-    }
-
     // The compiler only knows the static properties of a type with a dynamic metaobject. It
     // resolves the name to the global object.
     if ((name.builtIn & Global) && (kinds & DynamicScopeObject)) {
@@ -7249,7 +7242,7 @@ static KnownIssue compilerIssue(const UnqualifiedName &name, NameKinds kinds,
                  "Compiled code does not know the names a dynamic metaobject provides" };
     }
 
-    // QQmlJSTypeResolver::scopedType() searches ids and the scope object before types.
+    // QQmlJSTypeResolver::scopedType() searches ids and the scope object before lower-case types.
     if (winner == LowerCaseType && (kinds & (Id | BoundId | ScopeObject))) {
         return { KnownIssue::Failure,
                  "Compiled code searches the ids and the scope object before the type names" };

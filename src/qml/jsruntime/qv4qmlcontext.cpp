@@ -463,9 +463,9 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
     const QMetaObjectPrivate *metaObjectPrivate = scopeObject
             ? reinterpret_cast<const QMetaObjectPrivate *>(scopeObject->metaObject()->d.data)
             : nullptr;
-    if (metaObjectPrivate && metaObjectPrivate->flags & DynamicMetaObject) {
-        // all bets are off, so don't try to optimize any lookups
-        lookup = nullptr;
+    const bool scopeObjectIsDynamic = metaObjectPrivate
+            && (metaObjectPrivate->flags & DynamicMetaObject);
+    if (scopeObjectIsDynamic) {
         if (performLookup(&result, hasProperty, globalLookup))
             return result->asReturnedValue();
     }
@@ -474,6 +474,11 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
 
     if (auto imported = searchImports(v4, context, scopeObject, name, hasProperty, base, lookup))
         return *imported;
+
+    // The types cannot change, so they can be cached. Everything else is not predictable if the
+    // scope object is dynamic, so don't try to optimize any lookups.
+    if (scopeObjectIsDynamic)
+        lookup = nullptr;
 
     Lookup * const originalLookup = lookup;
 
