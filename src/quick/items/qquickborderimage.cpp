@@ -415,8 +415,8 @@ void QQuickBorderImage::requestFinished()
         d->pendingPix->clear(this); // Clear the old image
     }
 
-    const QSize impsize = d->currentPix->implicitSize();
-    setImplicitSize(impsize.width() / d->devicePixelRatio, impsize.height() / d->devicePixelRatio);
+    setImplicitSize(d->currentPix->width() / d->devicePixelRatio,
+                    d->currentPix->height() / d->devicePixelRatio);
 
     if (d->currentPix->isError()) {
         qmlWarning(this) << d->currentPix->error();
