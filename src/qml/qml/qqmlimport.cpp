@@ -473,21 +473,14 @@ bool QQmlImports::resolveType(
     return false;
 }
 
-const QQmlImportInstance *QQmlImports::findImportByModuleUri(const QString &uri) const
+const QQmlImportInstance *QQmlImports::findImportByModuleUri(const QString &uri,
+                                                             QTypeRevision version) const
 {
-    const auto findIn = [&](const QQmlImportNamespace &nameSpace) -> const QQmlImportInstance * {
-        const auto end = nameSpace.imports.cend();
-        const auto it = std::find_if(
-                nameSpace.imports.cbegin(), end,
-                [&](const QQmlImportInstance *import) { return import->uri == uri; });
-        return it == end ? nullptr : *it;
-    };
-
-    if (const QQmlImportInstance *import = findIn(m_unqualifiedset))
+    if (const QQmlImportInstance *import = m_unqualifiedset.findImportByModuleUri(uri, version))
         return import;
 
     for (QQmlImportNamespace *ns = m_qualifiedSets.first(); ns; ns = m_qualifiedSets.next(ns)) {
-        if (const QQmlImportInstance *import = findIn(*ns))
+        if (const QQmlImportInstance *import = ns->findImportByModuleUri(uri, version))
             return import;
     }
 

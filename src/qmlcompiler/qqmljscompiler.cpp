@@ -454,11 +454,22 @@ static QString typeToString(const QQmlPrivate::AOTLookupValidation::Type &type)
 {
     bool isComposite = type.isComposite == QQmlPrivate::AOTLookupValidation::IsComposite::Yes;
     bool isIC = type.isInlineComponent == QQmlPrivate::AOTLookupValidation::IsIC::Yes;
-    return u"Type{ %1, %2, %3, %4, %5 }"_s
-            .arg(wrapString(type.module), wrapString(type.name),
-                 wrapString(type.icNameOrExtensionTypeName),
-                 isComposite ? "IsComposite::Yes"_L1 : "IsComposite::No"_L1,
-                 isIC ? "IsIC::Yes"_L1 : "IsIC::No"_L1);
+    QString version = "QTypeRevision()"_L1;
+    if (type.version.hasMinorVersion()) {
+        version = "QTypeRevision::fromVersion(%1, %2)"_L1.arg(
+                QString::number(type.version.majorVersion()),
+                QString::number(type.version.minorVersion()));
+    } else if (type.version.hasMajorVersion()) {
+        version = "QTypeRevision::fromMajorVersion(%1)"_L1.arg(
+                QString::number(type.version.majorVersion()));
+    }
+
+    return u"Type{ %1, %2, %3, %4, %5, %6 }"_s.arg(wrapString(type.module), wrapString(type.name),
+                                                   wrapString(type.icNameOrExtensionTypeName),
+                                                   version,
+                                                   isComposite ? "IsComposite::Yes"_L1
+                                                               : "IsComposite::No"_L1,
+                                                   isIC ? "IsIC::Yes"_L1 : "IsIC::No"_L1);
 };
 
 static QString lookupToString(const QQmlPrivate::AOTLookupValidation::Lookup &lookup)

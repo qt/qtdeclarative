@@ -3409,11 +3409,13 @@ QQmlType Validator::compositeType(const Type &type) const
         return QQmlType();
 
     // The compilation unit has already resolved all its imports. We don't have to look further.
-    // If the module isn't among them, the type has moved to a different module since the
-    // signature was recorded.
+    // If the import isn't among them, the type has moved to a different module or the imports
+    // have changed since the signature was recorded. We need the exact import the signature was
+    // recorded for. Different versions of a module can provide different files under the same
+    // name.
     Q_ASSERT(m_compilationUnit->typeNameCache);
     const QQmlImportInstance *import =
-            m_compilationUnit->typeNameCache->findImportByModuleUri(type.module);
+            m_compilationUnit->typeNameCache->findImportByModuleUri(type.module, type.version);
     if (!import)
         return QQmlType();
 
