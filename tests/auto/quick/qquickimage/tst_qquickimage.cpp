@@ -5,6 +5,7 @@
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QDir>
+#include <QBuffer>
 #include <QTemporaryDir>
 
 #include <QtQml/qqmlengine.h>
@@ -93,6 +94,8 @@ private slots:
     void reloadOnWindowDprMismatch();
     void scalableImageWithoutSuffix_data();
     void scalableImageWithoutSuffix();
+    void scalableImageFromDataUrl_data();
+    void scalableImageFromDataUrl();
 
 private:
     QQmlEngine engine;
@@ -1528,6 +1531,63 @@ void tst_qquickimage::scalableImageWithoutSuffix()
     image->setParentItem(window.contentItem());
     component.completeCreate();
     QCOMPARE(image->status(), QQuickImageBase::Ready);
+
+    // Only a scalable image is rendered for the window's DPR.
+    QCOMPARE(image->implicitWidth(), naturalSize.width());
+    QCOMPARE(image->implicitHeight(), naturalSize.height());
+    QCOMPARE(image->image().size(), scalable ? naturalSize * dpr : naturalSize);
+}
+
+void tst_qquickimage::scalableImageFromDataUrl_data()
+{
+    QTest::addColumn<QString>("source");
+    QTest::addColumn<QSize>("naturalSize");
+    QTest::addColumn<bool>("scalable");
+
+    const QByteArray svg = "<svg xmlns='http://www.w3.org/2000/svg' width='100' height='50'>"
+                           "<rect width='100' height='50' fill='red'/></svg>";
+    QTest::newRow("svg") << u"data:image/svg+xml;utf8,"_s
+                    + QString::fromLatin1(svg.toPercentEncoding())
+                         << QSize(100, 50) << true;
+    QTest::newRow("svg, base64") << u"data:image/svg+xml;base64,"_s
+                    + QString::fromLatin1(svg.toBase64())
+                                 << QSize(100, 50) << true;
+
+    QImage png(100, 50, QImage::Format_RGB32);
+    png.fill(Qt::red);
+    QByteArray pngData;
+    QBuffer buffer(&pngData);
+    QVERIFY(buffer.open(QIODevice::WriteOnly));
+    QVERIFY(png.save(&buffer, "PNG"));
+    QTest::newRow("png, base64") << u"data:image/png;base64,"_s
+                    + QString::fromLatin1(pngData.toBase64())
+                                 << QSize(100, 50) << false;
+}
+
+void tst_qquickimage::scalableImageFromDataUrl()
+{
+    QFETCH(QString, source);
+    QFETCH(QSize, naturalSize);
+    QFETCH(bool, scalable);
+    if (scalable && !QImageReader::supportedImageFormats().contains("svg"))
+        QSKIP("svg support not available");
+
+    const qreal dpr = 2;
+    QImage renderTargetImage(QSize(100, 100) * dpr, QImage::Format_RGBA8888_Premultiplied);
+    QQuickRenderTarget renderTarget = QQuickRenderTarget::fromPaintDevice(&renderTargetImage);
+    renderTarget.setDevicePixelRatio(dpr);
+    QQuickWindow window;
+    window.setRenderTarget(renderTarget);
+
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick\nImage { }", QUrl());
+    QScopedPointer<QQuickImage> image(
+            qobject_cast<QQuickImage *>(component.beginCreate(engine.rootContext())));
+    QVERIFY2(image, qPrintable(component.errorString()));
+    image->setParentItem(window.contentItem());
+    image->setSource(QUrl(source));
+    component.completeCreate();
+    QTRY_COMPARE(image->status(), QQuickImageBase::Ready);
 
     // Only a scalable image is rendered for the window's DPR.
     QCOMPARE(image->implicitWidth(), naturalSize.width());
