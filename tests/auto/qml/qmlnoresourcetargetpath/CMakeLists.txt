@@ -28,11 +28,15 @@ qt_add_qml_module(tst_qmlnoresourcetargetpath
     NO_RESOURCE_TARGET_PATH
     QML_FILES
         NtpBurner.qml
+        NtpLateHolder.qml
         NtpMixedVersions.qml
         NtpQualifiedOnly.qml
         NtpShifting1.qml
         NtpShifting2.qml
+        NtpShiftingHolder.qml
+        NtpShiftingIndirect.qml
         NtpThing.qml
+        NtpUnimported.qml
     NO_LINT
     __QT_INTERNAL_NO_GENERATE_QMLLS_BUILD_INI
 )

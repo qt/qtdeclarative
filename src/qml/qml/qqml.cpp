@@ -3229,6 +3229,7 @@ private:
     bool typesMatch(const QMetaType &actual, const Type &expected) const;
     const QMetaObject *metaObjectForType(const Type &type) const;
     QQmlType compositeType(const Type &type) const;
+    const QQmlImportInstance *findImport(const QString &module, QTypeRevision version) const;
     const QMetaObject *baseMOAtDepth(const QMetaObject *mo, int depth) const;
 
     QQmlEngine *m_engine = nullptr;
@@ -3408,14 +3409,7 @@ QQmlType Validator::compositeType(const Type &type) const
     if (type.module.isEmpty() || type.name.isEmpty())
         return QQmlType();
 
-    // The compilation unit has already resolved all its imports. We don't have to look further.
-    // If the import isn't among them, the type has moved to a different module or the imports
-    // have changed since the signature was recorded. We need the exact import the signature was
-    // recorded for. Different versions of a module can provide different files under the same
-    // name.
-    Q_ASSERT(m_compilationUnit->typeNameCache);
-    const QQmlImportInstance *import =
-            m_compilationUnit->typeNameCache->findImportByModuleUri(type.module, type.version);
+    const QQmlImportInstance *import = findImport(type.module, type.version);
     if (!import)
         return QQmlType();
 
@@ -3430,6 +3424,37 @@ QQmlType Validator::compositeType(const Type &type) const
     const auto cu =
             m_loader->getType(qmlType.sourceUrl(), QQmlTypeLoader::Synchronous)->compilationUnit();
     return cu ? cu->qmlTypeForComponent(icName) : QQmlType();
+}
+
+const QQmlImportInstance *Validator::findImport(const QString &module, QTypeRevision version) const
+{
+    // We need the exact import the signature was recorded for. Different versions of a module can
+    // provide different types under the same name. The compilation unit doesn't have to have
+    // that import itself, though. It may get hold of the type via a property of a type defined
+    // in a different document. Then the other document has the import. The compilation unit and
+    // the compilation units of the types it uses have already resolved all their imports. We
+    // don't have to look further. If the import isn't among them, the type has moved to a
+    // different module or the imports have changed since the signature was recorded.
+    QList<const QV4::CompiledData::CompilationUnit *> pending{ m_compilationUnit };
+    QSet<const QV4::CompiledData::CompilationUnit *> seen{ m_compilationUnit };
+    while (!pending.isEmpty()) {
+        const QV4::CompiledData::CompilationUnit *cu = pending.takeFirst();
+        Q_ASSERT(cu->typeNameCache);
+        if (const QQmlImportInstance *import =
+                    cu->typeNameCache->findImportByModuleUri(module, version)) {
+            return import;
+        }
+
+        for (const QV4::ResolvedTypeReference *ref : cu->resolvedTypes) {
+            const QV4::CompiledData::CompilationUnit *dependency = ref->compilationUnit().data();
+            if (dependency && !seen.contains(dependency)) {
+                seen.insert(dependency);
+                pending.append(dependency);
+            }
+        }
+    }
+
+    return nullptr;
 }
 
 bool validateLookupSignature(QQmlEngine *engine, QV4::CompiledData::CompilationUnit *cu,
