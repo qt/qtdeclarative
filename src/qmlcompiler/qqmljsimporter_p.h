@@ -86,8 +86,11 @@ public:
     static inline constexpr QLatin1String s_inProcessMarker = QLatin1String("$InProcess$");
 
     struct ImportedTypes {
-        ImportedTypes(QQmlJS::ContextualTypes &&types, QList<QQmlJS::DiagnosticMessage> &&warnings)
-            : m_types(std::move(types)), m_warnings(std::move(warnings))
+        ImportedTypes(QQmlJS::ContextualTypes &&types, QList<QQmlJS::DiagnosticMessage> &&warnings,
+                      QList<QQmlJS::Import> &&moduleImports = {})
+            : m_types(std::move(types)),
+              m_warnings(std::move(warnings)),
+              m_moduleImports(std::move(moduleImports))
         {}
 
         ImportedTypes(const ImportedTypes &) = default;
@@ -104,6 +107,7 @@ public:
 
         const QQmlJS::ContextualTypes &contextualTypes() const { return m_types; }
         const QList<QQmlJS::DiagnosticMessage> &warnings() const { return m_warnings; };
+        const QList<QQmlJS::Import> &moduleImports() const { return m_moduleImports; }
 
         void setCurrentFileSelector(const QString &selector)
         {
@@ -140,7 +144,34 @@ public:
     private:
         QQmlJS::ContextualTypes m_types;
         QList<QQmlJS::DiagnosticMessage> m_warnings;
+
+        // The imports of modules, including the ones forwarded via qmldir "import" lines,
+        // but not the dependencies.
+        QList<QQmlJS::Import> m_moduleImports;
     };
+
+    struct VersionedImport
+    {
+        QString module;
+        QString name;
+        QTypeRevision version;
+
+        friend bool operator==(const VersionedImport &a, const VersionedImport &b)
+        {
+            return a.module == b.module && a.name == b.name && a.version == b.version;
+        }
+
+        friend bool operator!=(const VersionedImport &a, const VersionedImport &b)
+        {
+            return !(a == b);
+        }
+    };
+
+    void registerVersionedImports(const ImportedTypes &imported);
+    QList<VersionedImport> versionedImports(const QString &filePath) const
+    {
+        return m_versionedImports.value(filePath);
+    }
 
     QQmlJSImporter(const QStringList &importPaths, QQmlJSResourceFileMapper *mapper,
                    QQmlJSImporterFlags flags = QQmlJSImporterFlags{});
@@ -243,6 +274,10 @@ private:
         // Warnings produced when importing
         QList<QQmlJS::DiagnosticMessage> warnings;
 
+        // The imports of modules, including the ones forwarded via qmldir "import" lines,
+        // but not the dependencies.
+        QList<QQmlJS::Import> moduleImports;
+
         // Whether a system module has been imported
         bool hasSystemModule = false;
         // Whether QQmlJSImporter::importHelper() returned false on the first time it loaded the
@@ -317,6 +352,9 @@ private:
     QHash<QString, Import> m_seenQmldirFilesAndDirectories;
 
     QHash<QString, QQmlJSScope::Ptr> m_importedFiles;
+
+    // The imports through which documents see a type, by file path of the type
+    QHash<QString, QList<VersionedImport>> m_versionedImports;
     QList<QQmlJS::DiagnosticMessage> m_globalWarnings;
     std::optional<AvailableTypes> m_builtins;
 
