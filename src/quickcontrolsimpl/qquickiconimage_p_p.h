@@ -29,7 +29,7 @@ public:
 
     ~QQuickIconImagePrivate() override;
     void updateFillMode();
-    bool updateDevicePixelRatio(qreal targetDevicePixelRatio) override;
+    bool updateDevicePixelRatio(qreal targetDevicePixelRatio, bool scalable) override;
 
     QUrl source;
     QColor color = Qt::transparent;

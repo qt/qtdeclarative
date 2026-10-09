@@ -20,17 +20,14 @@ using namespace Qt::Literals::StringLiterals;
 
 // This function gives derived classes the chance set the devicePixelRatio
 // if they're not happy with our implementation of it.
-bool QQuickImageBasePrivate::updateDevicePixelRatio(qreal targetDevicePixelRatio)
+bool QQuickImageBasePrivate::updateDevicePixelRatio(qreal targetDevicePixelRatio, bool scalable)
 {
     // QQuickImageProvider and SVG and PDF can generate a high resolution image when
     // sourceSize is set. If sourceSize is not set then the provider default size will
     // be used, as usual.
-    const bool setDevicePixelRatio = QQuickPixmap::isScalableImageFormat(url);
-
-    if (setDevicePixelRatio)
+    if (scalable)
         devicePixelRatio = targetDevicePixelRatio;
-
-    return setDevicePixelRatio;
+    return scalable;
 }
 
 // Returns the device pixel ratio to load the image for, and remembers it.
@@ -318,16 +315,15 @@ void QQuickImageBase::loadPixmap(const QUrl &url, LoadPixmapOptions loadOptions)
         const qreal targetDevicePixelRatio = d->devicePixelRatioForLoading();
         d->devicePixelRatio = 1.0;
         bool updatedDevicePixelRatio = false;
-        if (d->sourcesize.isValid()
-            || (QQuickPixmap::isScalableImageFormat(d->url) && d->url.scheme() != "image"_L1)) {
-            updatedDevicePixelRatio = d->updateDevicePixelRatio(targetDevicePixelRatio);
-        }
+        const QUrl resolvedUrl = context ? context->resolvedUrl(d->url) : d->url;
+        const bool scalable = QQuickPixmap::isScalableImageFormat(resolvedUrl);
+        if (d->sourcesize.isValid() || (scalable && d->url.scheme() != "image"_L1))
+            updatedDevicePixelRatio = d->updateDevicePixelRatio(targetDevicePixelRatio, scalable);
 
         if (!updatedDevicePixelRatio) {
             // (possible) local file: loadUrl and d->devicePixelRatio will be modified if
             // an "@2x" file is found.
-            resolve2xLocalFile(context ? context->resolvedUrl(d->url) : d->url,
-                               targetDevicePixelRatio, &loadUrl, &d->devicePixelRatio);
+            resolve2xLocalFile(resolvedUrl, targetDevicePixelRatio, &loadUrl, &d->devicePixelRatio);
         }
     }
 
@@ -446,8 +442,12 @@ void QQuickImageBase::itemChange(ItemChange change, const ItemChangeData &value)
         if (qmlEngine(this) && isComponentComplete()) {
             load();
             // not changed when loading (sourceSize might not be set)
-            if (d->devicePixelRatio == oldDpr)
-                d->updateDevicePixelRatio(value.realValue);
+            if (d->devicePixelRatio == oldDpr) {
+                const QQmlContext *context = qmlContext(this);
+                const QUrl resolvedUrl = context ? context->resolvedUrl(d->url) : d->url;
+                d->updateDevicePixelRatio(value.realValue,
+                                          QQuickPixmap::isScalableImageFormat(resolvedUrl));
+            }
         }
     } else if (change == ItemSceneChange && d->needsReloadForDevicePixelRatio()) {
         // If the image was loaded before the item had a window, it was loaded

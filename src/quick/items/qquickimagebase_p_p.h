@@ -46,7 +46,7 @@ public:
         return image->d_func();
     }
 
-    virtual bool updateDevicePixelRatio(qreal targetDevicePixelRatio);
+    virtual bool updateDevicePixelRatio(qreal targetDevicePixelRatio, bool scalable);
     qreal devicePixelRatioForLoading();
     bool needsReloadForDevicePixelRatio() const;
 

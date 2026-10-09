@@ -31,6 +31,8 @@
 #include <QtCore/qmetaobject.h>
 #include <QtCore/qscopeguard.h>
 
+#include <algorithm>
+
 #if QT_CONFIG(qml_network)
 #include <QtQml/qqmlnetworkaccessmanagerfactory.h>
 #include <QtNetwork/qnetworkreply.h>
@@ -2060,10 +2062,24 @@ bool QQuickPixmap::isScalableImageFormat(const QUrl &url)
     if (url.scheme() == "image"_L1)
         return true;
 
-    const QString stringUrl = url.path(QUrl::PrettyDecoded);
-    return stringUrl.endsWith("svg"_L1)
-            || stringUrl.endsWith("svgz"_L1)
-            || stringUrl.endsWith("pdf"_L1);
+    const auto isScalableFormat = [](const auto &f) {
+        return (f == "svg"_L1 || f == "svgz"_L1 || f == "pdf"_L1);
+    };
+
+    const QString suffix = QFileInfo(url.path(QUrl::PrettyDecoded)).suffix();
+    if (!suffix.isEmpty())
+        return isScalableFormat(suffix);
+
+    // A local file without a suffix is found by trying the supported suffixes
+    // (see existingImageFileForPath()), so detect its format the same way.
+    const QString localFile = QQmlFile::urlToLocalFileOrQrc(url);
+    if (localFile.isEmpty())
+        return false;
+    const QString file = existingImageFileForPath(localFile);
+    const QString fileSuffix = QFileInfo(file).suffix();
+    if (!fileSuffix.isEmpty())
+        return isScalableFormat(fileSuffix);
+    return isScalableFormat(QLatin1StringView(QImageReader::imageFormat(file)));
 }
 
 bool QQuickPixmap::connectFinished(QObject *object, const char *method)

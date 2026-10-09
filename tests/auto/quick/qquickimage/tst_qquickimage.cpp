@@ -36,6 +36,7 @@
 Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
 
 using namespace QQuickVisualTestUtils;
+using namespace Qt::StringLiterals;
 
 Q_DECLARE_METATYPE(QQuickImageBase::Status)
 
@@ -90,6 +91,8 @@ private slots:
     void grabToImageDevicePixelRatio();
     void reloadOnWindowDprMismatch_data();
     void reloadOnWindowDprMismatch();
+    void scalableImageWithoutSuffix_data();
+    void scalableImageWithoutSuffix();
 
 private:
     QQmlEngine engine;
@@ -1470,6 +1473,66 @@ void tst_qquickimage::reloadOnWindowDprMismatch()
     image->setParentItem(window.contentItem());
     windowPrivate->polishItems();
     QCOMPARE(statusSpy.size(), expectedReloads);
+}
+
+void tst_qquickimage::scalableImageWithoutSuffix_data()
+{
+    QTest::addColumn<QString>("fileName");
+    QTest::addColumn<QString>("source");
+    QTest::addColumn<bool>("scalable");
+
+    // The file is found by trying the supported suffixes.
+    QTest::newRow("svg") << u"image.svg"_s << u"image"_s << true;
+    QTest::newRow("png") << u"image.png"_s << u"image"_s << false;
+    // A file without a suffix, the format is detected from its contents.
+    QTest::newRow("svg, file without suffix") << u"image"_s << u"image"_s << true;
+    QTest::newRow("png, file without suffix") << u"image"_s << u"image"_s << false;
+}
+
+void tst_qquickimage::scalableImageWithoutSuffix()
+{
+    QFETCH(QString, fileName);
+    QFETCH(QString, source);
+    QFETCH(bool, scalable);
+    if (scalable && !QImageReader::supportedImageFormats().contains("svg"))
+        QSKIP("svg support not available");
+
+    const QSize naturalSize(100, 50);
+    QTemporaryDir dir;
+    QVERIFY2(dir.isValid(), qPrintable(dir.errorString()));
+    if (scalable) {
+        QFile file(dir.filePath(fileName));
+        QVERIFY(file.open(QIODevice::WriteOnly));
+        file.write("<svg xmlns='http://www.w3.org/2000/svg' width='100' height='50'>"
+                   "<rect width='100' height='50' fill='red'/></svg>");
+    } else {
+        QImage image(naturalSize, QImage::Format_RGB32);
+        image.fill(Qt::red);
+        QVERIFY(image.save(dir.filePath(fileName), "PNG"));
+    }
+
+    const qreal dpr = 2;
+    QImage renderTargetImage(QSize(100, 100) * dpr, QImage::Format_RGBA8888_Premultiplied);
+    QQuickRenderTarget renderTarget = QQuickRenderTarget::fromPaintDevice(&renderTargetImage);
+    renderTarget.setDevicePixelRatio(dpr);
+    QQuickWindow window;
+    window.setRenderTarget(renderTarget);
+
+    // The source is relative to the component's URL.
+    QQmlComponent component(&engine);
+    component.setData(u"import QtQuick\nImage { source: \"%1\" }"_s.arg(source).toUtf8(),
+                      QUrl::fromLocalFile(dir.filePath(u"main.qml"_s)));
+    QScopedPointer<QQuickImage> image(
+            qobject_cast<QQuickImage *>(component.beginCreate(engine.rootContext())));
+    QVERIFY2(image, qPrintable(component.errorString()));
+    image->setParentItem(window.contentItem());
+    component.completeCreate();
+    QCOMPARE(image->status(), QQuickImageBase::Ready);
+
+    // Only a scalable image is rendered for the window's DPR.
+    QCOMPARE(image->implicitWidth(), naturalSize.width());
+    QCOMPARE(image->implicitHeight(), naturalSize.height());
+    QCOMPARE(image->image().size(), scalable ? naturalSize * dpr : naturalSize);
 }
 
 QTEST_MAIN(tst_qquickimage)
