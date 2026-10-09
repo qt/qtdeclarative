@@ -12,10 +12,14 @@ qt_internal_add_test(tst_qmlnoresourcetargetpath
         tst_qmlnoresourcetargetpath.cpp
     LIBRARIES
         Qt::Qml
+        ntp_versioned_module
+        ntp_versioned_moduleplugin
 )
 
 qt_policy(SET QTP0001 NEW)
 qt_policy(SET QTP0004 NEW)
+
+add_subdirectory(NtpVersioned)
 
 # NO_RESOURCE_TARGET_PATH puts the QML files and the qmldir at qrc:/ instead of
 # qrc:/qt/qml/NoResourceTargetPath/.
@@ -24,6 +28,10 @@ qt_add_qml_module(tst_qmlnoresourcetargetpath
     NO_RESOURCE_TARGET_PATH
     QML_FILES
         NtpBurner.qml
+        NtpMixedVersions.qml
+        NtpQualifiedOnly.qml
+        NtpShifting1.qml
+        NtpShifting2.qml
         NtpThing.qml
     NO_LINT
     __QT_INTERNAL_NO_GENERATE_QMLLS_BUILD_INI

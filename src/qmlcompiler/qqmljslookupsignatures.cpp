@@ -68,13 +68,31 @@ QQmlJSLookupSignaturesRecorder::type(const QQmlJSScope::ConstPtr &type)
         res.module = s_thisCuModule;
         res.name = s_thisCuType;
     } else {
-        res.module = root->moduleName();
-        res.name = root->internalName();
+        // At run time, the type is looked up by name through an import of its module. Record an
+        // import a document has. Prefer the imports of the document being compiled, since they
+        // are registered first.
+        const auto imports = m_typeResolver->importer()->versionedImports(root->filePath());
+        const auto import = std::find_if(imports.cbegin(), imports.cend(),
+                                         [&](const QQmlJSImporter::VersionedImport &import) {
+                                             return import.module == root->moduleName();
+                                         });
+        if (import == imports.cend()) {
+            m_rejectMessage = "%1 is not imported through its module %2"_L1.arg(root->filePath(),
+                                                                                root->moduleName());
+            return {};
+        }
 
-        // At run time, the type is looked up by name in its module. A C++ type of the same name
-        // takes precedence there. Then we cannot find this type that way.
-        const QQmlJSScope::ConstPtr found
-                = m_typeResolver->importer()->importModule(res.module, 0).type(res.name).scope;
+        res.module = import->module;
+        res.name = import->name;
+        res.version = import->version;
+
+        // A C++ type of the same name takes precedence there. Then we cannot find this type that
+        // way.
+        const QQmlJSScope::ConstPtr found =
+                m_typeResolver->importer()
+                        ->importModule(res.module, 0, QString(), res.version)
+                        .type(res.name)
+                        .scope;
         if (found && !found->isComposite()) {
             m_rejectMessage = "%1 is shadowed by C++ type %2 in module %3"_L1.arg(
                     root->filePath(), res.name, res.module);

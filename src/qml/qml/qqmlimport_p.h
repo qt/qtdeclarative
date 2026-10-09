@@ -150,7 +150,8 @@ public:
             QQmlType::RegistrationType registrationType = QQmlType::AnyRegistrationType,
             bool *typeRecursionDetected = nullptr) const;
 
-    const QQmlImportInstance *findImportByModuleUri(const QString &uri) const;
+    const QQmlImportInstance *findImportByModuleUri(const QString &uri,
+                                                    QTypeRevision version) const;
 
     QTypeRevision addImplicitImport(
             QQmlTypeLoader *typeLoader, QString *localQmldir, QList<QQmlError> *errors)

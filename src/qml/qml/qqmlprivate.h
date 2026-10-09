@@ -1319,6 +1319,11 @@ namespace AOTLookupValidation {
         QString module;
         QString name;
         QString icNameOrExtensionTypeName; // composite ? icName : extensionTypeName
+
+        // The version of the import of the module through which the type
+        // is found by name. Different versions can provide different types under the same name.
+        QTypeRevision version;
+
         IsComposite isComposite = IsComposite::No;
         IsIC isInlineComponent = IsIC::No;
 
@@ -1326,13 +1331,16 @@ namespace AOTLookupValidation {
         {
             return lhs.module == rhs.module && lhs.name == rhs.name
                     && lhs.icNameOrExtensionTypeName == rhs.icNameOrExtensionTypeName
+                    && lhs.version == rhs.version
                     && lhs.isComposite == rhs.isComposite
                     && lhs.isInlineComponent == rhs.isInlineComponent;
         }
         Q_DECLARE_EQUALITY_COMPARABLE(Type)
         friend size_t qHash(const Type &type, size_t seed = 0)
         {
-            return qHashMulti(seed, type.module, type.name, type.icNameOrExtensionTypeName);
+            return qHashMulti(seed, type.module, type.name, type.icNameOrExtensionTypeName,
+                              type.version.toEncodedVersion<quint16>(),
+                              type.isComposite, type.isInlineComponent);
         }
     };
 

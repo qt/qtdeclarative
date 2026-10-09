@@ -52,9 +52,9 @@ public:
     QQmlTypeNameCache(const QQmlRefPointer<QQmlImports> &imports) : m_imports(imports) {}
     ~QQmlTypeNameCache() {}
 
-    const QQmlImportInstance *findImportByModuleUri(const QString &uri) const
+    const QQmlImportInstance *findImportByModuleUri(const QString &uri, QTypeRevision version) const
     {
-        return m_imports->findImportByModuleUri(uri);
+        return m_imports->findImportByModuleUri(uri, version);
     }
 
     inline bool isEmpty() const;
