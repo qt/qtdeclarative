@@ -2060,6 +2060,22 @@ bool QQuickPixmap::isScalableImageFormat(const QUrl &url)
         return (f == "svg"_L1 || f == "svgz"_L1 || f == "pdf"_L1);
     };
 
+    if (url.scheme() == "data"_L1) {
+        // data:[<media type>][;base64],<data>
+        const QString path = url.path(QUrl::PrettyDecoded);
+        QStringView mediaType(path);
+        if (const qsizetype comma = mediaType.indexOf(u','); comma >= 0)
+            mediaType.truncate(comma);
+        if (const qsizetype semicolon = mediaType.indexOf(u';'); semicolon >= 0)
+            mediaType.truncate(semicolon);
+        // Map the media type to the image formats of the plugins supporting it.
+        const QList<QByteArray> formats =
+                QImageReader::imageFormatsForMimeType(mediaType.trimmed().toLatin1().toLower());
+        return std::any_of(formats.cbegin(), formats.cend(), [&](const QByteArray &format) {
+            return isScalableFormat(QLatin1StringView(format));
+        });
+    }
+
     const QString suffix = QFileInfo(url.path(QUrl::PrettyDecoded)).suffix();
     if (!suffix.isEmpty())
         return isScalableFormat(suffix);
