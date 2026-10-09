@@ -5,6 +5,7 @@
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QDir>
+#include <QImageReader>
 #include <QPainter>
 #include <QSignalSpy>
 
@@ -15,6 +16,7 @@
 #include <private/qquickscalegrid_p_p.h>
 #include <private/qquickloader_p.h>
 #include <QtQuick/qquickview.h>
+#include <QtQuick/qquickrendertarget.h>
 #include <QtQml/qqmlcontext.h>
 
 #include <QtQuickTestUtils/private/testhttpserver_p.h>
@@ -59,6 +61,8 @@ private slots:
 #endif
     void multiFrame_data();
     void multiFrame();
+    void implicitSizeDevicePixelRatio_data();
+    void implicitSizeDevicePixelRatio();
 
 private:
     QQmlEngine engine;
@@ -652,6 +656,61 @@ void tst_qquickborderimage::multiFrame()
     QVERIFY(color.redF() < 0.75);
     QVERIFY(color.green() > 0.75);
     QVERIFY(color.blueF() < 0.75);
+}
+
+void tst_qquickborderimage::implicitSizeDevicePixelRatio_data()
+{
+    QTest::addColumn<QString>("fileName");
+    QTest::addColumn<bool>("highDpi");
+    QTest::addColumn<int>("border");
+
+    // Scalable images are rendered for the window's DPR.
+    QTest::newRow("svg") << QStringLiteral("dpr.svg") << true << 0;
+    QTest::newRow("svg, border") << QStringLiteral("dpr.svg") << true << 20;
+    QTest::newRow("png") << QStringLiteral("dpr.png") << false << 0;
+    QTest::newRow("png, border") << QStringLiteral("dpr.png") << false << 20;
+    // dpr2x@2x.png is loaded instead.
+    QTest::newRow("png @2x") << QStringLiteral("dpr2x.png") << true << 0;
+    QTest::newRow("png @2x, border") << QStringLiteral("dpr2x.png") << true << 20;
+}
+
+void tst_qquickborderimage::implicitSizeDevicePixelRatio()
+{
+    QFETCH(QString, fileName);
+    QFETCH(bool, highDpi);
+    QFETCH(int, border);
+
+    if (fileName.endsWith(QLatin1String(".svg"))
+        && !QImageReader::supportedImageFormats().contains("svg")) {
+        QSKIP("This test requires the SVG image format plugin");
+    }
+
+    const qreal dpr = 2;
+    const QSize naturalSize(200, 100);
+    QImage renderTargetImage(QSize(100, 100) * dpr, QImage::Format_RGBA8888_Premultiplied);
+    QQuickRenderTarget renderTarget = QQuickRenderTarget::fromPaintDevice(&renderTargetImage);
+    renderTarget.setDevicePixelRatio(dpr);
+    QQuickWindow window;
+    window.setRenderTarget(renderTarget);
+
+    QQmlComponent component(&engine);
+    component.setData(QStringLiteral("import QtQuick\nBorderImage { source: \"%1\"; border { "
+                                     "left: %2; top: %2; right: %2; bottom: %2 } }")
+                              .arg(fileName)
+                              .arg(border)
+                              .toUtf8(),
+                      testFileUrl(""));
+    QScopedPointer<QQuickBorderImage> image(
+            qobject_cast<QQuickBorderImage *>(component.beginCreate(engine.rootContext())));
+    QVERIFY2(image, qPrintable(component.errorString()));
+    image->setParentItem(window.contentItem());
+    component.completeCreate();
+    QCOMPARE(image->status(), QQuickImageBase::Ready);
+
+    // The implicit size is the natural size in all cases.
+    QCOMPARE(image->image().size(), highDpi ? naturalSize * dpr : naturalSize);
+    QCOMPARE(image->implicitWidth(), naturalSize.width());
+    QCOMPARE(image->implicitHeight(), naturalSize.height());
 }
 
 QTEST_MAIN(tst_qquickborderimage)
