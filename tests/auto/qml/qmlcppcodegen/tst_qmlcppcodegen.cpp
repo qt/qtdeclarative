@@ -7242,12 +7242,6 @@ static KnownIssue compilerIssue(const UnqualifiedName &name, NameKinds kinds,
                  "Compiled code does not know the names a dynamic metaobject provides" };
     }
 
-    // QQmlJSTypeResolver::scopedType() searches ids and the scope object before lower-case types.
-    if (winner == LowerCaseType && (kinds & (Id | BoundId | ScopeObject))) {
-        return { KnownIssue::Failure,
-                 "Compiled code searches the ids and the scope object before the type names" };
-    }
-
     // Compiled code converts a type to a string through a QVariant holding its QMetaObject. The
     // interpreter produces "QML/rect".
     if (winner == LowerCaseType) {
