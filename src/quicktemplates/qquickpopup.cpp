@@ -1243,7 +1243,10 @@ void QQuickPopupPrivate::adjustPopupItemParentAndWindow()
     if (usePopupWindow()) {
         if (visible) {
             if (!popupWindow) {
-                popupWindow = new QQuickPopupWindow(q, window);
+                QWindow *ancestor = window;
+                while (ancestor->parent())
+                    ancestor = ancestor->parent();
+                popupWindow = new QQuickPopupWindow(q, ancestor);
                 // Changing the visual parent can cause the popup item's implicit width/height to change.
                 // We store the initial size here first, to ensure that we're resizing the window to the correct size.
                 const qreal initialWidth = popupItem->width() + windowInsets().left() + windowInsets().right();
@@ -1261,9 +1264,13 @@ void QQuickPopupPrivate::adjustPopupItemParentAndWindow()
             popupItem->forceActiveFocus(Qt::PopupFocusReason);
         }
         if (popupWindow && popupWindow->transientParent()) {
-            auto *transientParentPriv = QQuickWindowPrivate::get(qobject_cast<QQuickWindow *>(popupWindow->transientParent()));
-            if (!transientParentPriv->inDestructor)
+            if (qobject_cast<QQuickWindow *>(popupWindow->transientParent())) {
+                auto *transientParentPriv = QQuickWindowPrivate::get(qobject_cast<QQuickWindow *>(popupWindow->transientParent()));
+                if (!transientParentPriv->inDestructor)
+                    popupWindow->setVisible(visible);
+            } else {
                 popupWindow->setVisible(visible);
+            }
         }
     } else {
         if (visible) {
