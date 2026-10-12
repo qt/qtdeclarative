@@ -650,6 +650,10 @@ void QQuickFileDialogImplAttachedPrivate::fileNameEditingByUserFinished()
         return;
 
     fileDialogImpl->setFileName(fileNameTextField->text());
+    auto *openButton = buttonBox->standardButton(QPlatformDialogHelper::Open);
+    // editingFinished is emitted both on Enter and focus lost. We only want to accept the dialog on Enter being pressed.
+    if (openButton && QQuickItemPrivate::get(fileNameTextField)->activeFocus)
+        openButton->animateClick();
 }
 
 QQuickFileDialogImplAttached::QQuickFileDialogImplAttached(QObject *parent)

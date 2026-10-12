@@ -1575,16 +1575,35 @@ void tst_QQuickFileDialogImpl::selectNewFileViaTextField()
             QTest::keyClick(dialogHelper.popupWindow(), c);
         QCOMPARE(acceptButton->isEnabled(), true);
 
-        QTest::keyClick(dialogHelper.popupWindow(), Qt::Key_Enter);
-        QCOMPARE(acceptButton->isEnabled(), true);
-
-        QTRY_COMPARE(fileNameTextField->text(), newFileName);
-        QCOMPARE(dialogHelper.dialog->selectedFile().fileName(), newFileName);
-
         QVERIFY_ACTIVE_FOCUS(fileNameTextField);
         for (int i = 0; i < newFileName.size(); i++)
             QTest::keyClick(dialogHelper.popupWindow(), Qt::Key_Backspace);
         QCOMPARE(acceptButton->isEnabled(), false);
+
+        for (const auto &c : newFileName)
+            QTest::keyClick(dialogHelper.popupWindow(), c);
+        QCOMPARE(acceptButton->isEnabled(), true);
+
+        QSignalSpy acceptedSpy(dialogHelper.dialog, &QQuickAbstractDialog::accepted);
+
+        // Losing focus emits editingFinished, which should update the selected file,
+        // but not accept the dialog.
+        dialogHelper.fileDialogListView->forceActiveFocus();
+        QVERIFY(!fileNameTextField->hasActiveFocus());
+        QCOMPARE(fileNameTextField->text(), newFileName);
+        QCOMPARE(dialogHelper.dialog->selectedFile().fileName(), newFileName);
+        // animateClick() presses the button synchronously and accepts the dialog on release.
+        QVERIFY(!acceptButton->isDown());
+        QCOMPARE(acceptedSpy.size(), 0);
+        QVERIFY(dialogHelper.dialog->isVisible());
+
+        // Pressing enter should accept the dialog (QTBUG-150375).
+        QTest::mouseClick(dialogHelper.popupWindow(), Qt::LeftButton, Qt::NoModifier, textFieldCenterPos);
+        QTRY_VERIFY_ACTIVE_FOCUS(fileNameTextField);
+        QTest::keyClick(dialogHelper.popupWindow(), Qt::Key_Enter);
+        QTRY_COMPARE(acceptedSpy.size(), 1);
+        QVERIFY(!dialogHelper.dialog->isVisible());
+        QCOMPARE(dialogHelper.dialog->selectedFile().fileName(), newFileName);
     }
 }
 
