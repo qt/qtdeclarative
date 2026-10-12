@@ -16,6 +16,7 @@
 //
 
 #include <functional>
+#include <optional>
 
 #include <QtCore/qcryptographichash.h>
 #include <QtCore/qhash.h>
@@ -54,7 +55,7 @@ QT_BEGIN_NAMESPACE
 // benefit that if another patch changes the version too, it will result in a merge conflict, and
 // not get removed silently.
 // Also update the comparison functions in qqmlpreviewdiff.cpp when you change the data structures.
-#define QV4_DATA_STRUCTURE_VERSION 0x52 // Serialize bindings in natural order
+#define QV4_DATA_STRUCTURE_VERSION 0x53 // Stop folding qualified enums at compile time
 
 class QIODevice;
 class QQmlTypeNameCache;
@@ -585,7 +586,6 @@ struct Binding
     enum Flag : unsigned int {
         IsOnAssignment = 0x4,
         InitializerForReadOnlyDeclaration = 0x8,
-        IsResolvedEnum = 0x10,
         IsListItem = 0x20,
         IsFunctionExpression = 0x200
     };
@@ -606,8 +606,6 @@ struct Binding
     union {
         bool b;
         quint32_le constantValueIndex;
-        qint32_le resolvedEnumValue;    // used when Type_Number and IsResolvedEnum: enum values are
-                                        // integers and stored inline rather than in the constant table
         quint32_le compiledScriptIndex; // used when Type_Script
         quint32_le objectIndex;
         quint32_le translationDataIndex; // used when Type_Translation
@@ -1362,9 +1360,11 @@ struct RuntimeBinding
         IsSignalHandlerExpression = 0x8,
         IsSignalHandlerObject = 0x10,
         IsPropertyObserver = 0x20,
+        IsFoldedEnum = 0x40,
     };
 
     quint32_le flags;
+    qint32_le enumValue; // only valid when IsFoldedEnum is set
 };
 
 using RuntimeBindingIndex = quint16_le;
@@ -1643,8 +1643,6 @@ public:
     {
         if (binding->type() != CompiledData::Binding::Type_Number)
             return 0.0;
-        if (binding->hasFlag(CompiledData::Binding::IsResolvedEnum))
-            return binding->value.resolvedEnumValue;
         return constants[binding->value.constantValueIndex].doubleValue();
     }
 
@@ -1774,6 +1772,14 @@ public:
         return runtimeObjectAt(objectIndex)->bindingTable()[bindingIndex].flags
                 & (RuntimeBinding::IsSignalHandlerExpression | RuntimeBinding::IsSignalHandlerObject
                    | RuntimeBinding::IsPropertyObserver);
+    }
+
+    std::optional<int> bindingFoldedEnum(int objectIndex, int bindingIndex) const
+    {
+        const RuntimeBinding &binding = runtimeObjectAt(objectIndex)->bindingTable()[bindingIndex];
+        if (binding.flags & RuntimeBinding::IsFoldedEnum)
+            return int(binding.enumValue);
+        return std::nullopt;
     }
 
     const RuntimeBindingIndex *bindingApplicationOrder(int objectIndex) const

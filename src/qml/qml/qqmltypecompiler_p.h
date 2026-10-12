@@ -96,7 +96,6 @@ public:
     void recordError(const QQmlError &e);
 
     int registerString(const QString &str);
-    int registerConstant(QV4::ReturnedValue v);
 
     const QV4::CompiledData::Unit *qmlUnit() const;
 
@@ -163,34 +162,6 @@ protected:
     { return compiler->resolvedType(id); }
 
     QQmlTypeCompiler *compiler;
-};
-
-// ### This will go away when the codegen resolves all enums to constant expressions
-// and we replace the constant expression with a literal binding instead of using
-// a script.
-class QQmlEnumTypeResolver : public QQmlCompilePass
-{
-    Q_DECLARE_TR_FUNCTIONS(QQmlEnumTypeResolver)
-public:
-    QQmlEnumTypeResolver(QQmlTypeCompiler *typeCompiler);
-
-    bool resolveEnumBindings();
-
-private:
-    bool assignEnumToBinding(QmlIR::Binding *binding, QStringView enumName, int enumValue);
-    bool assignEnumToBinding(QmlIR::Binding *binding, const QString &enumName, int enumValue)
-    {
-        return assignEnumToBinding(binding, QStringView(enumName), enumValue);
-    }
-    bool tryQualifiedEnumAssignment(
-            const QmlIR::Object *obj, const QQmlPropertyCache::ConstPtr &propertyCache,
-            const QQmlPropertyData *prop, QmlIR::Binding *binding);
-    int evaluateEnum(const QString &scope, QStringView enumName, QStringView enumValue, bool *ok) const;
-
-
-    const QList<QmlIR::Object*> &qmlObjects;
-    const QQmlPropertyCacheVector * const propertyCaches;
-    const QQmlImports *imports;
 };
 
 class QQmlCustomParserScriptIndexer: public QQmlCompilePass

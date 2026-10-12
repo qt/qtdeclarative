@@ -182,6 +182,10 @@ public:
     {
         return m_compilationUnit->bindingIsSignalHandler(objectIndex, bindingIndex);
     }
+    std::optional<int> bindingFoldedEnum(int objectIndex, int bindingIndex) const
+    {
+        return m_compilationUnit->bindingFoldedEnum(objectIndex, bindingIndex);
+    }
     const CompiledData::RuntimeBindingIndex *bindingApplicationOrder(int objectIndex) const
     {
         return m_compilationUnit->bindingApplicationOrder(objectIndex);

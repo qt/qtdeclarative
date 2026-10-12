@@ -316,15 +316,22 @@ void QQmlObjectCreator::finalizePopulateDeferred()
     phase = ObjectsCreated;
 }
 
-void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const QV4::CompiledData::Binding *binding)
+void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const QV4::CompiledData::Binding *binding,
+                                         std::optional<int> foldedNumber)
 {
     QQmlPropertyData::WriteFlags propertyWriteFlags = QQmlPropertyData::BypassInterceptor | QQmlPropertyData::RemoveBindingOnAliasWrite;
     QV4::Scope scope(v4);
 
     QMetaType propertyType = property->propType();
 
+    const QV4::CompiledData::Binding::Type effectiveType
+            = foldedNumber ? QV4::CompiledData::Binding::Type_Number : binding->type();
+    const auto effectiveNumber = [&]() -> double {
+        return foldedNumber ? double(*foldedNumber) : compilationUnit->bindingValueAsNumber(binding);
+    };
+
     if (property->isEnum()) {
-        if (binding->hasFlag(QV4::CompiledData::Binding::IsResolvedEnum) ||
+        if (foldedNumber.has_value() ||
                 // TODO: For historical reasons you can assign any number to an enum property alias
                 //       This can be fixed with an opt-out mechanism, for example a pragma.
                 (property->isAlias() && binding->isNumberBinding())) {
@@ -341,18 +348,18 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
 
     auto assertOrNull = [&](bool ok)
     {
-        Q_ASSERT(ok || binding->type() == QV4::CompiledData::Binding::Type_Null);
+        Q_ASSERT(ok || effectiveType == QV4::CompiledData::Binding::Type_Null);
         Q_UNUSED(ok);
     };
 
     auto assertType = [&](QV4::CompiledData::Binding::Type type)
     {
-        Q_ASSERT(binding->type()== type || binding->type() == QV4::CompiledData::Binding::Type_Null);
+        Q_ASSERT(effectiveType == type || effectiveType == QV4::CompiledData::Binding::Type_Null);
         Q_UNUSED(type);
     };
 
     if (property->isQObject()) {
-        if (binding->type() == QV4::CompiledData::Binding::Type_Null) {
+        if (effectiveType == QV4::CompiledData::Binding::Type_Null) {
             QObject *value = nullptr;
             const bool ok = property->writeProperty(_qobject, &value, propertyWriteFlags);
             Q_ASSERT(ok);
@@ -363,8 +370,8 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
 
     switch (propertyType.id()) {
     case QMetaType::QVariant: {
-        if (binding->type() == QV4::CompiledData::Binding::Type_Number) {
-            double n = compilationUnit->bindingValueAsNumber(binding);
+        if (effectiveType == QV4::CompiledData::Binding::Type_Number) {
+            double n = effectiveNumber();
             if (double(int(n)) == n) {
                 if (property->isVarProperty()) {
                     _vmeMetaObject->setVMEProperty(property->coreIndex(), QV4::Value::fromInt32(int(n)));
@@ -381,14 +388,14 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
                     property->writeProperty(_qobject, &value, propertyWriteFlags);
                 }
             }
-        } else if (binding->type() == QV4::CompiledData::Binding::Type_Boolean) {
+        } else if (effectiveType == QV4::CompiledData::Binding::Type_Boolean) {
             if (property->isVarProperty()) {
                 _vmeMetaObject->setVMEProperty(property->coreIndex(), QV4::Value::fromBoolean(binding->valueAsBoolean()));
             } else {
                 QVariant value(binding->valueAsBoolean());
                 property->writeProperty(_qobject, &value, propertyWriteFlags);
             }
-        } else if (binding->type() == QV4::CompiledData::Binding::Type_Null) {
+        } else if (effectiveType == QV4::CompiledData::Binding::Type_Null) {
             if (property->isVarProperty()) {
                 _vmeMetaObject->setVMEProperty(property->coreIndex(), QV4::Value::nullValue());
             } else {
@@ -436,7 +443,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
     break;
     case QMetaType::UInt: {
         assertType(QV4::CompiledData::Binding::Type_Number);
-        double d = compilationUnit->bindingValueAsNumber(binding);
+        double d = effectiveNumber();
         uint value = uint(d);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
         break;
@@ -444,7 +451,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
     break;
     case QMetaType::Int: {
         assertType(QV4::CompiledData::Binding::Type_Number);
-        double d = compilationUnit->bindingValueAsNumber(binding);
+        double d = effectiveNumber();
         int value = int(d);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
         break;
@@ -452,42 +459,42 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
     break;
     case QMetaType::SChar: {
         assertType(QV4::CompiledData::Binding::Type_Number);
-        double d = compilationUnit->bindingValueAsNumber(binding);
+        double d = effectiveNumber();
         qint8 value = qint8(d);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
         break;
     }
     case QMetaType::UChar: {
         assertType(QV4::CompiledData::Binding::Type_Number);
-        double d = compilationUnit->bindingValueAsNumber(binding);
+        double d = effectiveNumber();
         quint8 value = quint8(d);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
         break;
     }
     case QMetaType::Short: {
         assertType(QV4::CompiledData::Binding::Type_Number);
-        double d = compilationUnit->bindingValueAsNumber(binding);
+        double d = effectiveNumber();
         qint16 value = qint16(d);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
         break;
     }
     case QMetaType::UShort: {
         assertType(QV4::CompiledData::Binding::Type_Number);
-        double d = compilationUnit->bindingValueAsNumber(binding);
+        double d = effectiveNumber();
         quint16 value = quint16(d);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
         break;
     }
     case QMetaType::LongLong: {
         assertType(QV4::CompiledData::Binding::Type_Number);
-        double d = compilationUnit->bindingValueAsNumber(binding);
+        double d = effectiveNumber();
         qint64 value = qint64(d);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
         break;
     }
     case QMetaType::ULongLong: {
         assertType(QV4::CompiledData::Binding::Type_Number);
-        double d = compilationUnit->bindingValueAsNumber(binding);
+        double d = effectiveNumber();
         quint64 value = quint64(d);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
         break;
@@ -495,13 +502,13 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
     break;
     case QMetaType::Float: {
         assertType(QV4::CompiledData::Binding::Type_Number);
-        float value = float(compilationUnit->bindingValueAsNumber(binding));
+        float value = float(effectiveNumber());
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
     case QMetaType::Double: {
         assertType(QV4::CompiledData::Binding::Type_Number);
-        double value = compilationUnit->bindingValueAsNumber(binding);
+        double value = effectiveNumber();
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
@@ -892,6 +899,8 @@ void QQmlObjectCreator::setupBindings(BindingSetupFlags mode)
 bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProperty, const QV4::CompiledData::Binding *binding)
 {
     const int bindingIndex = int(binding - _compiledObject->bindingTable());
+    const std::optional<int> foldedNumber
+            = compilationUnit->bindingFoldedEnum(_compiledObjectIndex, bindingIndex);
     const QV4::CompiledData::Binding::Type bindingType = binding->type();
     if (bindingType == QV4::CompiledData::Binding::Type_AttachedProperty) {
         const QV4::CompiledData::Object *obj = compilationUnit->objectAt(binding->value.objectIndex);
@@ -1074,7 +1083,8 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
         }
     }
 
-    if (bindingType == QV4::CompiledData::Binding::Type_Script || binding->isTranslationBinding()) {
+    if (!foldedNumber
+        && (bindingType == QV4::CompiledData::Binding::Type_Script || binding->isTranslationBinding())) {
         if (compilationUnit->bindingIsSignalHandlerExpression(_compiledObjectIndex, bindingIndex)
             || compilationUnit->bindingIsPropertyObserver(_compiledObjectIndex, bindingIndex)) {
             QV4::Function *runtimeFunction = compilationUnit->runtimeFunctions[binding->value.compiledScriptIndex];
@@ -1335,7 +1345,7 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
         return false;
     }
 
-    setPropertyValue(bindingProperty, binding);
+    setPropertyValue(bindingProperty, binding, foldedNumber);
     return true;
 }
 

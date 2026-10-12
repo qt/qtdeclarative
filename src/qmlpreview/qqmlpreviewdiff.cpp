@@ -19,7 +19,7 @@ QT_BEGIN_NAMESPACE
 // If you update the data structures in qv4compileddata_p.h, then you also need to
 // update the comparison functions below. Only after making sure the comparisons
 // are fine, bump the version in the static_assert.
-static_assert(QV4_DATA_STRUCTURE_VERSION == 0x52);
+static_assert(QV4_DATA_STRUCTURE_VERSION == 0x53);
 
 namespace QV4::CompiledData {
 
@@ -460,8 +460,6 @@ struct UnitDiffer
         case Binding::Type_Boolean:
             return oldBinding.valueAsBoolean() == newBinding.valueAsBoolean();
         case Binding::Type_Number: {
-            if (oldBinding.hasFlag(CompiledData::Binding::IsResolvedEnum))
-                return oldBinding.value.resolvedEnumValue == newBinding.value.resolvedEnumValue;
             const uint oldIdx = oldBinding.value.constantValueIndex;
             const uint newIdx = newBinding.value.constantValueIndex;
             Q_ASSERT(oldIdx < oldUnit->constantTableSize);

@@ -397,9 +397,6 @@ QQmlError QQmlPropertyValidator::validateLiteralBinding(
     QQmlError noError;
 
     if (property->isEnum()) {
-        if (binding->hasFlag(QV4::CompiledData::Binding::IsResolvedEnum))
-            return noError;
-
         // TODO: For historical reasons you can assign any number to an enum property alias
         //       This can be fixed with an opt-out mechanism, for example a pragma.
         if (property->isAlias() && binding->isNumberBinding())

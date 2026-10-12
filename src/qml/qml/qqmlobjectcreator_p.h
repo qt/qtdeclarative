@@ -256,7 +256,8 @@ private:
 
     void setupBindings(BindingSetupFlags mode = BindingMode::ApplyImmediate);
     bool setPropertyBinding(const QQmlPropertyData *property, const QV4::CompiledData::Binding *binding);
-    void setPropertyValue(const QQmlPropertyData *property, const QV4::CompiledData::Binding *binding);
+    void setPropertyValue(const QQmlPropertyData *property, const QV4::CompiledData::Binding *binding,
+                          std::optional<int> foldedNumber = std::nullopt);
     void setupFunctions();
 
     QString stringAt(int idx) const { return compilationUnit->stringAt(idx); }
