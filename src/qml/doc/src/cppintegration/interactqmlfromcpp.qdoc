@@ -50,6 +50,8 @@ component, which is accessible via QQuickView::rootObject():
 \dots 0
 \snippet qml/qtbinding/loading/main.cpp QQmlComponent-b
 \li
+\snippet qml/qtbinding/loading/main.cpp QQuickView-includes
+\dots 0
 \snippet qml/qtbinding/loading/main.cpp QQuickView
 \endtable
 

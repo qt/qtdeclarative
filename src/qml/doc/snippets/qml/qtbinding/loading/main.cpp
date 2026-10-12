@@ -2,7 +2,10 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 #include <QGuiApplication>
 #include <QtQml>
-#include <QtQuick>
+//![QQuickView-includes]
+#include <QQuickView>
+#include <QQuickItem> // to convert rootObject() to QObject *
+//![QQuickView-includes]
 
 static void withComponent()
 {
