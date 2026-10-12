@@ -262,8 +262,8 @@ ReturnedValue JsonParser::parseArray()
         nextToken();
     } else {
         uint index = 0;
+        ScopedValue val(scope);
         while (1) {
-            ScopedValue val(scope);
             if (!parseValue(val))
                 return Encode::undefined();
             array->arraySet(index, val);

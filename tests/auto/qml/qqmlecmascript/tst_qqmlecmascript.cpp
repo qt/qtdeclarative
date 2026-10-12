@@ -447,6 +447,8 @@ private slots:
 
     void anonymousFunctionReturnTypeAnnotationIsPreserved();
     void namedFunctionExpressionReturnTypeIsPreserved();
+    void largeLoopsDoNotExhaustJSStack_data();
+    void largeLoopsDoNotExhaustJSStack();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -10885,6 +10887,28 @@ void tst_qqmlecmascript::namedFunctionExpressionReturnTypeIsPreserved() {
 
     QVERIFY(!signature.empty());
     QCOMPARE(signature.first(), QQmlMetaType::qmlType(QMetaType::fromType<int>()));
+}
+
+void tst_qqmlecmascript::largeLoopsDoNotExhaustJSStack_data()
+{
+    QTest::addColumn<QString>("script");
+
+    const QString prelude = QStringLiteral("var n = 700000;\n");
+    auto add = [&](const char *name, const char *script) {
+        QTest::newRow(name) << (prelude + QLatin1String(script));
+    };
+
+    add("JSON.parse", "JSON.parse('[' + '0,'.repeat(n - 1) + '0]').length === n");
+}
+
+void tst_qqmlecmascript::largeLoopsDoNotExhaustJSStack()
+{
+    QFETCH(QString, script);
+
+    QQmlEngine engine;
+    const QJSValue result = engine.evaluate(script);
+    QVERIFY2(!result.isError(), qPrintable(result.toString()));
+    QVERIFY(result.toBool());
 }
 
 QTEST_MAIN(tst_qqmlecmascript)
