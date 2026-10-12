@@ -5,7 +5,6 @@
 #include <private/qqmlcomponentandaliasresolver_p.h>
 #include <private/qqmlengine_p.h>
 #include <private/qqmlirbuilder_p.h>
-#include <private/qqmlirloader_p.h>
 #include <private/qqmlpropertycachecreator_p.h>
 #include <private/qqmlpropertyvalidator_p.h>
 #include <private/qqmlscriptblob_p.h>
@@ -80,10 +79,9 @@ bool QQmlTypeData::tryLoadFromDiskCache()
         }
     }
 
-    if (unit->unitData()->flags & QV4::CompiledData::Unit::PendingTypeCompilation) {
-        restoreIR(unit);
-        return true;
-    }
+    // qmlcachegen stores the build time URLs in the unit.
+    if (unit->unitData()->flags & QV4::CompiledData::Unit::PendingTypeCompilation)
+        unit->setUnitData(unit->unitData(), nullptr, urlString(), finalUrlString());
 
     return loadFromDiskCache(unit);
 }
@@ -633,8 +631,12 @@ void QQmlTypeData::done()
 
     // verify if any dependencies changed if we're using a cache
     if (m_document.isNull() && verifyCaches) {
+        // qmlcachegen doesn't know the dependencies. It doesn't store anything that depends on them.
+        const bool hasDependencyChecksum = !(m_compiledData->unitData()->flags
+                                             & QV4::CompiledData::Unit::PendingTypeCompilation);
         const QQmlError error = createTypeAndPropertyCaches(typeNameCache, resolvedTypeCache);
-        if (error.isValid() || !m_compiledData->verifyChecksum(dependencyHasher)) {
+        if (error.isValid()
+                || (hasDependencyChecksum && !m_compiledData->verifyChecksum(dependencyHasher))) {
 
             if (error.isValid()) {
                 qCDebug(DBG_DISK_CACHE)
@@ -816,15 +818,10 @@ void QQmlTypeData::initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *un
         return;
     }
 
-    m_document.reset(
-            new QmlIR::Document(urlString(), finalUrlString(), m_typeLoader->isDebugging()));
-    QQmlIRLoader loader(unit->qmlData, m_document.data());
-    loader.load();
-    m_document->javaScriptCompilationUnit
-            = QQmlRefPointer<QV4::CompiledData::CompilationUnit>(
-                new QV4::CompiledData::CompilationUnit(unit->qmlData, unit->aotCompiledFunctions, unit->validateLookupSignatures),
-                QQmlRefPointer<QV4::CompiledData::CompilationUnit>::Adopt);
-    continueLoadFromIR();
+    auto compilationUnit = QQml::makeRefPointer<QV4::CompiledData::CompilationUnit>(
+            unit->qmlData, unit->aotCompiledFunctions, unit->validateLookupSignatures,
+            urlString(), finalUrlString());
+    loadFromDiskCache(compilationUnit);
 }
 
 bool QQmlTypeData::loadFromSource()
@@ -858,18 +855,6 @@ bool QQmlTypeData::loadFromSource()
         return false;
     }
     return true;
-}
-
-void QQmlTypeData::restoreIR(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &unit)
-{
-    assertTypeLoaderThread();
-
-    m_document.reset(
-            new QmlIR::Document(urlString(), finalUrlString(), m_typeLoader->isDebugging()));
-    QQmlIRLoader loader(unit->unitData(), m_document.data());
-    loader.load();
-    m_document->javaScriptCompilationUnit = unit;
-    continueLoadFromIR();
 }
 
 void QQmlTypeData::continueLoadFromIR()
@@ -954,12 +939,6 @@ void QQmlTypeData::compile(const QQmlRefPointer<QQmlTypeNameCache> &typeNameCach
 
     Q_ASSERT(m_compiledData.isNull());
 
-    const bool typeRecompilation = m_document
-            && m_document->javaScriptCompilationUnit
-            && m_document->javaScriptCompilationUnit->unitData()
-            && (m_document->javaScriptCompilationUnit->unitData()->flags
-                & QV4::CompiledData::Unit::PendingTypeCompilation);
-
     QQmlTypeCompiler compiler(
             typeLoader(), this, m_document.data(), resolvedTypeCache, dependencyHasher);
     auto compilationUnit = compiler.compile();
@@ -970,10 +949,7 @@ void QQmlTypeData::compile(const QQmlRefPointer<QQmlTypeNameCache> &typeNameCach
         return;
     }
 
-    const bool trySaveToDisk = m_backupSourceCode.isCacheable()
-            && m_typeLoader->writeCacheFile()
-            && !typeRecompilation;
-    if (trySaveToDisk) {
+    if (m_backupSourceCode.isCacheable() && m_typeLoader->writeCacheFile()) {
         QString errorString;
 
         QByteArray cachedChecksum;

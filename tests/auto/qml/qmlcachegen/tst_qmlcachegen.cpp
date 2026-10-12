@@ -395,18 +395,13 @@ void tst_qmlcachegen::signalHandlerParameters()
         QVERIFY(compilationUnit);
         QVERIFY(compilationUnit->unitData());
 
-        // Verify that the QML objects don't come from the original data.
-        QVERIFY(compilationUnit->objectAt(0) != compilationUnit->unitData()->qmlUnit()->objectAt(0));
+        QCOMPARE(compilationUnit->objectAt(0), compilationUnit->unitData()->qmlUnit()->objectAt(0));
 
-        // Typically the final file name is one of those strings that is not in the original
-        // pre-compiled qml file's string table, while for example the signal parameter
-        // name ("value") is.
         const auto isStringIndexInStringTable = [compilationUnit](uint index) {
             return index < compilationUnit->unitData()->stringTableSize;
         };
 
         QVERIFY(isStringIndexInStringTable(compilationUnit->objectAt(0)->signalAt(0)->parameterAt(0)->nameIndex));
-        QVERIFY(!compilationUnit->baseCompilationUnit()->dynamicStrings.isEmpty());
     }
 }
 

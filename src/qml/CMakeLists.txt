@@ -284,7 +284,6 @@ qt_internal_add_qml_module(Qml
         qml/qqmlimport.cpp qml/qqmlimport_p.h
         qml/qqmlincubator.cpp qml/qqmlincubator.h qml/qqmlincubator_p.h
         qml/qqmlinfo.cpp qml/qqmlinfo.h
-        qml/qqmlirloader.cpp qml/qqmlirloader_p.h
         qml/qqmljavascriptexpression.cpp qml/qqmljavascriptexpression_p.h
         qml/qqmllist.cpp qml/qqmllist.h qml/qqmllist_p.h
         qml/qqmllistwrapper.cpp qml/qqmllistwrapper_p.h

@@ -32,7 +32,6 @@ QT_BEGIN_NAMESPACE
 class QQmlPropertyCache;
 class QQmlContextData;
 class QQmlTypeNameCache;
-struct QQmlIRLoader;
 class QTypeRevision;
 
 namespace QmlIR {
@@ -391,8 +390,6 @@ public:
     bool hasAliasAsDefaultProperty() const { return defaultPropertyIsAlias; }
 
 private:
-    friend struct ::QQmlIRLoader;
-
     PoolList<Property> *properties;
     PoolList<Alias> *aliases;
     PoolList<Enum> *qmlEnums;

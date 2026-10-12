@@ -88,8 +88,9 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> QQmlTypeCompiler::compile()
         cpi.annotateBindingsWithScriptStrings();
     }
 
-    if (!document->javaScriptCompilationUnit || !document->javaScriptCompilationUnit->unitData()) {
-        // Compile JS binding expressions and signal handlers if necessary
+    Q_ASSERT(!document->javaScriptCompilationUnit || !document->javaScriptCompilationUnit->unitData());
+    {
+        // Compile JS binding expressions and signal handlers
         {
             // We can compile script strings ahead of time, but they must be compiled
             // without type optimizations as their scope is always entirely dynamic.

@@ -18,7 +18,6 @@
 #include <QtQml/private/qqmlcomponent_p.h>
 #include <QtQml/private/qqmlengine_p.h>
 #include <QtQml/private/qqmlirbuilder_p.h>
-#include <QtQml/private/qqmlirloader_p.h>
 #include <QtQml/private/qqmltypedata_p.h>
 #include <QtQml/private/qqmltypeloader_p.h>
 #include <QtQml/private/qqmldata_p.h>
@@ -769,17 +768,17 @@ static void getCompilationUnitAndRuntimeInfo(QQmlRefPointer<QV4::ExecutableCompi
     unit = engine->handle()->executableCompilationUnit(typeData->compilationUnit());
     QVERIFY(unit);
 
-    // the QmlIR::Document is deleted once loader.getType() is complete, so
-    // restore it
-    const QString &urlString = url.toString();
-    QmlIR::Document restoredIrDocument(urlString, urlString, false);
-    QQmlIRLoader irLoader(unit->unitData(), &restoredIrDocument);
-    irLoader.load();
-    QCOMPARE(restoredIrDocument.objects.size(), 1);
-
-    const QmlIR::Object *irRoot = restoredIrDocument.objects.at(0);
-    runtimeFunctionIndices = QList<int>(irRoot->runtimeFunctionIndices.begin(),
-                                        irRoot->runtimeFunctionIndices.end());
+    const QV4::CompiledData::Unit *unitData = unit->unitData();
+    const QV4::CompiledData::Object *root = unitData->qmlUnit()->objectAt(0);
+    runtimeFunctionIndices.clear();
+    for (const QV4::CompiledData::Binding *b = root->bindingsBegin(), *end = root->bindingsEnd();
+         b != end; ++b) {
+        if (b->type() == QV4::CompiledData::Binding::Type_Script)
+            runtimeFunctionIndices.append(b->value.compiledScriptIndex);
+    }
+    const quint32_le *functionIdx = root->functionOffsetTable();
+    for (uint i = 0; i < root->nFunctions; ++i, ++functionIdx)
+        runtimeFunctionIndices.append(*functionIdx);
 }
 
 void tst_QQMLTypeLoader::signalHandlersAreCompatible()
