@@ -1,4 +1,4 @@
-import Test
+import qqmllanguage.Test
 
 DerivedFromUnexposedBase {
     group.value: 42

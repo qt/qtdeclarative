@@ -1,5 +1,5 @@
 import QtQml 2.12
-import Test 1.0
+import qqmllanguage.Test 1.0
 
 QtObject {
     property Foreign foreign: Foreign {

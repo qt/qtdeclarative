@@ -1,4 +1,4 @@
-import Test
+import qqmllanguage.Test
 
 EnumPropsManyUnderlyingTypes {
     si8prop: EnumPropsManyUnderlyingTypes.ResolvedValue

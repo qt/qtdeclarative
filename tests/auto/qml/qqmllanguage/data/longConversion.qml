@@ -1,5 +1,5 @@
 import QtQml
-import Test
+import qqmllanguage.Test
 
 QtObject {
     property bool testProp: GetterObject.getFalse()

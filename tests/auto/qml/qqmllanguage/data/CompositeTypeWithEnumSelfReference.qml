@@ -1,5 +1,5 @@
 import QtQml
-import Test
+import qqmllanguage.Test
 
 QtObject {
     enum A { B, C, D }

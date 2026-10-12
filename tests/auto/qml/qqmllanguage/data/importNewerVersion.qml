@@ -1,3 +1,3 @@
-import Test 2.0
+import qqmllanguage.Test 2.0
 
 MyTypeObject { }

@@ -1,5 +1,5 @@
-import Test 1.0
-import Test 1.0 as Namespace
+import qqmllanguage.Test 1.0
+import qqmllanguage.Test 1.0 as Namespace
 import QtQuick 2.0
 
 QtObject {

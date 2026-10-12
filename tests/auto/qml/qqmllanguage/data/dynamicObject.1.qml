@@ -1,4 +1,4 @@
-import Test 1.0
+import qqmllanguage.Test 1.0
 import QtQuick 2.0
 MyCustomParserType {
     propa: a + 10

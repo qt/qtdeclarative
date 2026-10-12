@@ -1,4 +1,4 @@
-import Test 1.0
+import qqmllanguage.Test 1.0
 
 RegisteredCompositeTypeWithEnum {
     property int enumValue0: RegisteredCompositeTypeWithEnum.EnumValue0

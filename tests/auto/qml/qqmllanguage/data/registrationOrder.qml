@@ -1,4 +1,4 @@
-import Test.VersionOrder 2.0
+import qqmllanguage.Test.VersionOrder 2.0
 
 MyQmlObject {
 }

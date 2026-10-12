@@ -1,4 +1,4 @@
-import Test 1.0
+import qqmllanguage.Test 1.0
 MyTypeObject {
     id: me
     property int v1: 10

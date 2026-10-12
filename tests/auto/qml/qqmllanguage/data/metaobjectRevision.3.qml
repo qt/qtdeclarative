@@ -1,4 +1,4 @@
-import Test 1.1
+import qqmllanguage.Test 1.1
 
 MyRevisionedClass
 {

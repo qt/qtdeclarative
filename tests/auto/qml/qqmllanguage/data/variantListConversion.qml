@@ -1,4 +1,4 @@
-import Test
+import qqmllanguage.Test
 import QtQml
 
 Foo {

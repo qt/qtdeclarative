@@ -4021,7 +4021,7 @@ void tst_qqmllanguage::subclassedUncreateableRevision()
 
     {
         QQmlEngine engine;
-        QString qml = QString("import QtQuick 2.0\nimport Test %1\nMyUncreateableBaseClass {}").arg(version);
+        QString qml = QString("import QtQuick 2.0\nimport qqmllanguage.Test %1\nMyUncreateableBaseClass {}").arg(version);
         QQmlComponent c(&engine);
         QTest::ignoreMessage(QtWarningMsg, "QQmlComponent: Component is not ready");
         c.setData(qml.toUtf8(), QUrl::fromLocalFile(QDir::currentPath()));
@@ -4032,7 +4032,7 @@ void tst_qqmllanguage::subclassedUncreateableRevision()
     }
 
     QQmlEngine engine;
-    QString qml = QString("import QtQuick 2.0\nimport Test %1\nMyCreateableDerivedClass {\n%3: true\n}").arg(version).arg(prop);
+    QString qml = QString("import QtQuick 2.0\nimport qqmllanguage.Test %1\nMyCreateableDerivedClass {\n%3: true\n}").arg(version).arg(prop);
     QQmlComponent c(&engine);
     if (!shouldWork)
         QTest::ignoreMessage(QtWarningMsg, "QQmlComponent: Component is not ready");
@@ -4076,7 +4076,7 @@ void tst_qqmllanguage::subclassedExtendedUncreateableRevision()
 
     {
         QQmlEngine engine;
-        QString qml = QString("import QtQuick 2.0\nimport Test %1\nMyExtendedUncreateableBaseClass {}").arg(version);
+        QString qml = QString("import QtQuick 2.0\nimport qqmllanguage.Test %1\nMyExtendedUncreateableBaseClass {}").arg(version);
         QQmlComponent c(&engine);
         QTest::ignoreMessage(QtWarningMsg, "QQmlComponent: Component is not ready");
         c.setData(qml.toUtf8(), QUrl::fromLocalFile(QDir::currentPath()));
@@ -4087,7 +4087,7 @@ void tst_qqmllanguage::subclassedExtendedUncreateableRevision()
     }
 
     QQmlEngine engine;
-    QString qml = QString("import QtQuick 2.0\nimport Test %1\nMyExtendedCreateableDerivedClass {\n%3: true\n}").arg(version).arg(prop);
+    QString qml = QString("import QtQuick 2.0\nimport qqmllanguage.Test %1\nMyExtendedCreateableDerivedClass {\n%3: true\n}").arg(version).arg(prop);
     QQmlComponent c(&engine);
     if (!shouldWork)
         QTest::ignoreMessage(QtWarningMsg, "QQmlComponent: Component is not ready");
@@ -4130,12 +4130,12 @@ void tst_qqmllanguage::initTestCase()
 
     registerTypes();
     // Registered here because it uses testFileUrl
-    qmlRegisterType(testFileUrl("CompositeType.qml"), "Test", 1, 0, "RegisteredCompositeType");
-    qmlRegisterType(testFileUrl("CompositeType.DoesNotExist.qml"), "Test", 1, 0, "RegisteredCompositeType2");
-    qmlRegisterType(testFileUrl("invalidRoot.1.qml"), "Test", 1, 0, "RegisteredCompositeType3");
-    qmlRegisterType(testFileUrl("CompositeTypeWithEnum.qml"), "Test", 1, 0, "RegisteredCompositeTypeWithEnum");
-    qmlRegisterType(testFileUrl("CompositeTypeWithAttachedProperty.qml"), "Test", 1, 0, "RegisteredCompositeTypeWithAttachedProperty");
-    qmlRegisterType(testFileUrl("CompositeTypeWithEnumSelfReference.qml"), "Test", 1, 0, "CompositeTypeWithEnumSelfReference");
+    qmlRegisterType(testFileUrl("CompositeType.qml"), "qqmllanguage.Test", 1, 0, "RegisteredCompositeType");
+    qmlRegisterType(testFileUrl("CompositeType.DoesNotExist.qml"), "qqmllanguage.Test", 1, 0, "RegisteredCompositeType2");
+    qmlRegisterType(testFileUrl("invalidRoot.1.qml"), "qqmllanguage.Test", 1, 0, "RegisteredCompositeType3");
+    qmlRegisterType(testFileUrl("CompositeTypeWithEnum.qml"), "qqmllanguage.Test", 1, 0, "RegisteredCompositeTypeWithEnum");
+    qmlRegisterType(testFileUrl("CompositeTypeWithAttachedProperty.qml"), "qqmllanguage.Test", 1, 0, "RegisteredCompositeTypeWithAttachedProperty");
+    qmlRegisterType(testFileUrl("CompositeTypeWithEnumSelfReference.qml"), "qqmllanguage.Test", 1, 0, "CompositeTypeWithEnumSelfReference");
 
     // Registering the TestType class in other modules should have no adverse effects
     qmlRegisterType<TestType>("org.qtproject.TestPre", 1, 0, "Test");
@@ -4303,7 +4303,7 @@ void tst_qqmllanguage::registeredCompositeTypeWithEnum()
 
     {
         QQmlComponent component(&engine);
-        component.setData("import Test\nCompositeTypeWithEnumSelfReference {}", QUrl());
+        component.setData("import qqmllanguage.Test\nCompositeTypeWithEnumSelfReference {}", QUrl());
         VERIFY_ERRORS(0);
         QScopedPointer<QObject> o(component.create());
         QVERIFY(o != nullptr);
@@ -5559,7 +5559,7 @@ void tst_qqmllanguage::deferredProperties_extra()
     QQmlComponent component(&engine);
     component.setData(R"(
         import QtQuick
-        import Test 1.0
+        import qqmllanguage.Test 1.0
         import deferred.properties.extra 1.0
 
         ExtraDeferredProperties {
@@ -5626,7 +5626,7 @@ void tst_qqmllanguage::deferredGeneralizedGroupReenters()
 void tst_qqmllanguage::noChildEvents()
 {
     QQmlComponent component(&engine);
-    component.setData("import QtQml 2.0; import Test 1.0; MyQmlObject { property QtObject child: QtObject {} }", QUrl());
+    component.setData("import QtQml 2.0; import qqmllanguage.Test 1.0; MyQmlObject { property QtObject child: QtObject {} }", QUrl());
     VERIFY_ERRORS(0);
     QScopedPointer<MyQmlObject> object(qobject_cast<MyQmlObject*>(component.create()));
     QVERIFY(object != nullptr);
@@ -6100,8 +6100,8 @@ void tst_qqmllanguage::accessDeletedObject()
 
 void tst_qqmllanguage::lowercaseTypeNames()
 {
-    QCOMPARE(qmlRegisterType<QObject>("Test", 1, 0, "lowerCaseTypeName"), -1);
-    QCOMPARE(qmlRegisterSingletonType<QObject>("Test", 1, 0, "lowerCaseTypeName", nullptr), -1);
+    QCOMPARE(qmlRegisterType<QObject>("qqmllanguage.Test", 1, 0, "lowerCaseTypeName"), -1);
+    QCOMPARE(qmlRegisterSingletonType<QObject>("qqmllanguage.Test", 1, 0, "lowerCaseTypeName", nullptr), -1);
 }
 
 void tst_qqmllanguage::thisInQmlScope()
@@ -6136,21 +6136,21 @@ void tst_qqmllanguage::valueTypeGroupedPropertiesInBehavior()
 void tst_qqmllanguage::retrieveQmlTypeId()
 {
     // Register in reverse order to provoke wrong minor version matching.
-    int id2 = qmlRegisterType<QObject>("Test", 2, 3, "SomeTestType");
-    int id1 = qmlRegisterType<QObject>("Test", 2, 1, "SomeTestType");
-    QCOMPARE(qmlTypeId("Test", 2, 1, "SomeTestType"), id1);
-    QCOMPARE(qmlTypeId("Test", 2, 2, "SomeTestType"), id1);
-    QCOMPARE(qmlTypeId("Test", 2, 3, "SomeTestType"), id2);
+    int id2 = qmlRegisterType<QObject>("qqmllanguage.Test", 2, 3, "SomeTestType");
+    int id1 = qmlRegisterType<QObject>("qqmllanguage.Test", 2, 1, "SomeTestType");
+    QCOMPARE(qmlTypeId("qqmllanguage.Test", 2, 1, "SomeTestType"), id1);
+    QCOMPARE(qmlTypeId("qqmllanguage.Test", 2, 2, "SomeTestType"), id1);
+    QCOMPARE(qmlTypeId("qqmllanguage.Test", 2, 3, "SomeTestType"), id2);
 
     // Error cases
-    QCOMPARE(qmlTypeId("Test", 2, 0, "SomeTestType"), -1);
-    QCOMPARE(qmlTypeId("Test", 2, 3, "DoesNotExist"), -1);
+    QCOMPARE(qmlTypeId("qqmllanguage.Test", 2, 0, "SomeTestType"), -1);
+    QCOMPARE(qmlTypeId("qqmllanguage.Test", 2, 3, "DoesNotExist"), -1);
     QCOMPARE(qmlTypeId("DoesNotExist", 2, 3, "SomeTestType"), -1);
 
     // Must also work for other types (defined in testtpes.cpp)
-    QVERIFY(qmlTypeId("Test", 1, 0, "MyExtendedUncreateableBaseClass") >= 0);
-    QVERIFY(qmlTypeId("Test", 1, 0, "MyUncreateableBaseClass") >= 0);
-    QVERIFY(qmlTypeId("Test", 1, 0, "MyTypeObjectSingleton") >= 0);
+    QVERIFY(qmlTypeId("qqmllanguage.Test", 1, 0, "MyExtendedUncreateableBaseClass") >= 0);
+    QVERIFY(qmlTypeId("qqmllanguage.Test", 1, 0, "MyUncreateableBaseClass") >= 0);
+    QVERIFY(qmlTypeId("qqmllanguage.Test", 1, 0, "MyTypeObjectSingleton") >= 0);
 
     // Must also work for declaratively registered types whose module wasn't imported  so far
     QVERIFY(qmlTypeId("testhelper", 1, 0, "PurelyDeclarativeSingleton") >= 0);
@@ -6320,7 +6320,7 @@ void tst_qqmllanguage::listContainingDeletedObject()
 void tst_qqmllanguage::overrideSingleton()
 {
     auto check = [](const QString &name, const QByteArray &singletonElement) {
-        const QByteArray testQml = "import Test 1.0\n"
+        const QByteArray testQml = "import qqmllanguage.Test 1.0\n"
                                    "import QtQml 2.0\n"
                                    "QtObject { objectName: " + singletonElement + ".objectName }";
         QQmlEngine engine;
@@ -6335,7 +6335,7 @@ void tst_qqmllanguage::overrideSingleton()
 
     BareSingleton singleton;
     singleton.setObjectName("dynamically registered");
-    qmlRegisterSingletonInstance("Test", 1, 0, "BareSingleton", &singleton);
+    qmlRegisterSingletonInstance("qqmllanguage.Test", 1, 0, "BareSingleton", &singleton);
 
     check("dynamically registered", "BareSingleton");
 
@@ -6344,7 +6344,7 @@ void tst_qqmllanguage::overrideSingleton()
                 "singleton.qml:3:12: TypeError: Cannot read property 'objectName' of undefined");
     check("", "UncreatableSingleton");
 
-    qmlRegisterSingletonInstance("Test", 1, 0, "UncreatableSingleton",
+    qmlRegisterSingletonInstance("qqmllanguage.Test", 1, 0, "UncreatableSingleton",
                                  UncreatableSingleton::instance());
     check("uncreatable", "UncreatableSingleton");
 }
@@ -7420,7 +7420,7 @@ void tst_qqmllanguage::valueTypeWithEnum()
     {
         QQmlEngine e;
         QQmlComponent c(&engine);
-        c.setData("import Test\n"
+        c.setData("import qqmllanguage.Test\n"
                   "ObjectTypeHoldingValueType1 {\n"
                   "    vv.quality: ValueTypeWithEnum1.NormalQuality\n"
                   "}", QUrl());
@@ -7434,7 +7434,7 @@ void tst_qqmllanguage::valueTypeWithEnum()
     {
         QQmlEngine e;
         QQmlComponent c(&engine);
-        c.setData("import Test\n"
+        c.setData("import qqmllanguage.Test\n"
                   "ObjectTypeHoldingValueType2 {\n"
                   "    vv.quality: ValueTypeWithEnum2.LowQuality\n"
                   "}", QUrl());
@@ -7471,7 +7471,7 @@ void tst_qqmllanguage::enumsFromRelatedTypes()
     QQmlEngine e;
     {
         QQmlComponent c(&engine);
-        c.setData("import Test\n"
+        c.setData("import qqmllanguage.Test\n"
                   "ObjectTypeHoldingValueType1 {\n"
                   "    vv.quality: ObjectTypeHoldingValueType1.NormalQuality\n"
                   "}", QUrl("Test1.qml"));
@@ -7483,7 +7483,7 @@ void tst_qqmllanguage::enumsFromRelatedTypes()
 
     {
         QQmlComponent c(&engine);
-        c.setData("import Test\n"
+        c.setData("import qqmllanguage.Test\n"
                   "ObjectTypeHoldingValueType2 {\n"
                   "    vv.quality: ObjectTypeHoldingValueType2.LowQuality\n"
                   "}", QUrl("Test2.qml"));
@@ -8886,7 +8886,7 @@ void tst_qqmllanguage::attachedInCtor()
     QQmlEngine e;
     QQmlComponent c(&e);
     c.setData(R"(
-        import Test
+        import qqmllanguage.Test
         AttachedInCtor {}
     )", QUrl());
     QVERIFY2(c.isReady(), qPrintable(c.errorString()));
@@ -8901,7 +8901,7 @@ void tst_qqmllanguage::byteArrayConversion()
     QQmlEngine e;
     QQmlComponent c(&e);
     c.setData(R"(
-        import Test
+        import qqmllanguage.Test
         import QtQml
         ByteArrayReceiver {
             Component.onCompleted: {
@@ -9019,7 +9019,7 @@ void tst_qqmllanguage::callMethodOfAttachedDerived()
     QQmlComponent c(&engine);
     c.setData(R"(
         import QtQml
-        import Test
+        import qqmllanguage.Test
 
         QtObject {
             Component.onCompleted: Counter.increase()

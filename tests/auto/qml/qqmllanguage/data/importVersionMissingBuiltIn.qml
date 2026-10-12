@@ -1,4 +1,4 @@
-import Test as S
+import qqmllanguage.Test as S
 
 S.MyQmlObject {
     property real x;

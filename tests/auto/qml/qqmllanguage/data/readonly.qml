@@ -1,4 +1,4 @@
-import Test 1.0
+import qqmllanguage.Test 1.0
 
 MyQmlObject {
     property int testData: 9

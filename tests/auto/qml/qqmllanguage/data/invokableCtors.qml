@@ -1,5 +1,5 @@
 import QtQml as QQ
-import Test as VV
+import qqmllanguage.Test as VV
 
 QQ.QtObject {
     property QQ.QtObject oo: new QQ.QtObject()
