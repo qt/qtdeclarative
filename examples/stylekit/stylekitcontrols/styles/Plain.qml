@@ -126,6 +126,15 @@ Style {
         background.radius: 255
     }
 
+    dial {
+        background {
+            radius: 255
+            color: Qt.darker("white", 1.1)
+            scale: 1.0
+        }
+        handle.radius: 255
+    }
+
     scrollBar {
         // Hide the background, showing only the groove and handle
         background.visible: false

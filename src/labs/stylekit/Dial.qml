@@ -44,13 +44,14 @@ T.Dial {
         quickControl: control
         handleStyle: styleReader.handle
 
-        x: control.background.indicator.x + (control.background.indicator.width - width) / 2
-        y: control.background.indicator.y + (control.background.indicator.height - height) / 2
+        x: control.background.x + (control.background.width - width) / 2
+        y: control.background.y + (control.background.height - height) / 2
         transform: [
             Translate {
-                y: -Math.min(control.background.indicator.width, control.background.indicator.height) / 2
+                x: styleReader.handle.leftMargin - styleReader.handle.rightMargin
+                y: -Math.min(control.background.width, control.background.height) / 2
                     + (handleItem.height / 2)
-                    + styleReader.spacing
+                    + styleReader.handle.topMargin - styleReader.handle.bottomMargin
             },
             Rotation {
                 angle: control.angle
@@ -60,9 +61,8 @@ T.Dial {
         ]
     }
 
-    background: BackgroundAndIndicatorDelegate {
+    background: BackgroundDelegate {
         quickControl: control
-        indicatorStyle: styleReader.indicator
         backgroundStyle: styleReader.background
     }
 }

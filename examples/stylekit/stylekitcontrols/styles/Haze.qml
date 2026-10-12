@@ -135,7 +135,6 @@ Style {
     dial {
         handle.width: 15
         handle.height: 15
-        indicator.foreground.margins: 0
     }
 
     pane {
@@ -758,10 +757,9 @@ Style {
             dial {
                 handle.width: 15
                 handle.height: 15
-                indicator {
+                background {
                     width: 60
                     height: 60
-                    foreground.margins: 0
                 }
             }
 
