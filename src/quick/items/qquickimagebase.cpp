@@ -33,6 +33,21 @@ bool QQuickImageBasePrivate::updateDevicePixelRatio(qreal targetDevicePixelRatio
     return setDevicePixelRatio;
 }
 
+// Returns the device pixel ratio to load the image for, and remembers it.
+qreal QQuickImageBasePrivate::devicePixelRatioForLoading()
+{
+    loadedForDevicePixelRatio = effectiveDevicePixelRatio();
+    return loadedForDevicePixelRatio;
+}
+
+// Whether the image needs to be reloaded for the device pixel ratio of its window.
+bool QQuickImageBasePrivate::needsReloadForDevicePixelRatio() const
+{
+    Q_Q(const QQuickImageBase);
+    return window && loadedForDevicePixelRatio > 0 && qmlEngine(q) && q->isComponentComplete()
+            && window->effectiveDevicePixelRatio() != loadedForDevicePixelRatio;
+}
+
 void QQuickImageBasePrivate::setStatus(QQuickImageBase::Status value)
 {
     Q_Q(QQuickImageBase);
@@ -265,6 +280,7 @@ int QQuickImageBase::frameCount() const
 void QQuickImageBase::loadEmptyUrl()
 {
     Q_D(QQuickImageBase);
+    d->loadedForDevicePixelRatio = 0;
     d->currentPix->clear(this);
     d->pendingPix->clear(this);
     d->setProgress(0);
@@ -299,7 +315,7 @@ void QQuickImageBase::loadPixmap(const QUrl &url, LoadPixmapOptions loadOptions)
         loadUrl = context->resolvedUrl(url);
 
     if (loadOptions & HandleDPR) {
-        const qreal targetDevicePixelRatio = d->effectiveDevicePixelRatio();
+        const qreal targetDevicePixelRatio = d->devicePixelRatioForLoading();
         d->devicePixelRatio = 1.0;
         bool updatedDevicePixelRatio = false;
         if (d->sourcesize.isValid()
@@ -433,16 +449,23 @@ void QQuickImageBase::itemChange(ItemChange change, const ItemChangeData &value)
             if (d->devicePixelRatio == oldDpr)
                 d->updateDevicePixelRatio(value.realValue);
         }
-    } else if (change == ItemSceneChange && value.window
-               && value.window->effectiveDevicePixelRatio() != d->devicePixelRatio) {
+    } else if (change == ItemSceneChange && d->needsReloadForDevicePixelRatio()) {
         // If the image was loaded before the item had a window, it was loaded
         // for qApp->devicePixelRatio(). ItemDevicePixelRatioHasChanged is not
-        // sent when the item enters a window, so reload the image if the
-        // window's DPR differs.
-        if (qmlEngine(this) && isComponentComplete())
-            load();
+        // sent when the item enters a window, so reload the image if it was
+        // loaded for a different DPR. Do it when polishing, to not emit
+        // signals in the middle of reparenting.
+        polish();
     }
     QQuickItem::itemChange(change, value);
+}
+
+void QQuickImageBase::updatePolish()
+{
+    Q_D(QQuickImageBase);
+    if (d->needsReloadForDevicePixelRatio())
+        load();
+    QQuickItem::updatePolish();
 }
 
 void QQuickImageBase::componentComplete()
