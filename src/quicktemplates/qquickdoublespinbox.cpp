@@ -409,11 +409,17 @@ QJSValue QQuickDoubleSpinBox::valueFromText() const
 
 /*!
     \include qquickindicatorbutton.qdocinc {properties} {DoubleSpinBox} {up}
+
+    \include qquickspinbox.qdocinc {indicator-enabled} {DoubleSpinBox} {up} {to}
+
     \sa increase()
 */
 
 /*!
     \include qquickindicatorbutton.qdocinc {properties} {DoubleSpinBox} {down}
+
+    \include qquickspinbox.qdocinc {indicator-enabled} {DoubleSpinBox} {down} {from}
+
     \sa decrease()
 */
 

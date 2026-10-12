@@ -78,6 +78,12 @@ This property holds whether the spinbox wraps. The default value is \c false.
 If wrap is \c true, stepping past \l to changes the value to \l from and vice versa.
 //! [wrap]
 
+//! [indicator-enabled]
+\1 disables the \2 indicator when \l value reaches \l \3, unless \l wrap is
+\c true. A custom \c \2.indicator can bind to its own \c enabled property to
+show this state.
+//! [indicator-enabled]
+
 //! [increase]
 \qmlmethod void QtQuick.Controls::\1::increase()
 
