@@ -118,6 +118,19 @@ Style {
         indicator.foreground.radius: 8
     }
 
+    dial {
+        background {
+            width: 80
+            height: 80
+            radius: 255
+        }
+        handle {
+            width: 16
+            height: 16
+            radius: 16
+        }
+    }
+
     slider {
         background.width: 180
         indicator {
@@ -298,6 +311,8 @@ Style {
         scrollBar {
             indicator.foreground.color: "white"
         }
+
+        dial.handle.color: palette.accent
 
         slider {
             indicator.foreground.color: palette.accent

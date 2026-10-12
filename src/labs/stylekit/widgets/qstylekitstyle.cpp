@@ -31,6 +31,9 @@
 #if QT_CONFIG(slider)
 #  include <QtWidgets/qslider.h>
 #endif
+#if QT_CONFIG(dial)
+#  include <QtWidgets/qdial.h>
+#endif
 #if QT_CONFIG(scrollbar)
 #  include <QtWidgets/qscrollbar.h>
 #endif
@@ -176,6 +179,9 @@ Q_STATIC_LOGGING_CATEGORY(lcStyleKit, "qt.labs.stylekit")
     \row
         \li QSlider
         \li \l {StylableControls::slider}{slider}
+    \row
+        \li QDial
+        \li \l {StylableControls::dial}{dial}
     \row
         \li QScrollBar
         \li \l {StylableControls::scrollBar}{scrollBar}
@@ -422,7 +428,10 @@ static QQStyleKitReader::ControlType controlTypeForWidget(const QWidget *widget)
     if (qobject_cast<const QFrame *>(widget))
         return QQStyleKitReader::Frame;
 #endif
-
+#if QT_CONFIG(dial)
+    if (qobject_cast<const QDial *>(widget))
+        return QQStyleKitReader::Dial;
+#endif
     return QQStyleKitReader::Control;
 }
 
@@ -540,6 +549,26 @@ static bool applyDelegateTransform(QPainter *painter,
     painter->translate(-center);
     return true;
 }
+
+#if QT_CONFIG(dial)
+static qreal dialAngle(const QStyleOptionSlider *dial)
+{
+    const qreal range = dial->maximum - dial->minimum;
+    qreal position = range > 0 ? (dial->sliderPosition - dial->minimum) / range : 0;
+    if (!dial->upsideDown)
+        position = 1 - position;
+    const qreal start = dial->dialWrapping ? -180 : -150;
+    return start + position * -2 * start;
+}
+
+static QPointF dialHandleOffset(const QRectF &backgroundRect, const QQStyleKitDelegateProperties *handle)
+{
+    // mirrors Dial.qml
+    return QPointF(handle->leftMargin() - handle->rightMargin(),
+                   -qMin(backgroundRect.width(), backgroundRect.height()) / 2 + handle->height() / 2
+                       + handle->topMargin() - handle->bottomMargin());
+}
+#endif
 
 // Copied from qstylesheetstyle.cpp
 static const QWidget *containerWidget(const QWidget *w)
@@ -714,6 +743,7 @@ void QStyleKitStylePrivate::updateStyle()
         if (customPaletteWidgets.contains(widget))
             unsetStylePalette(widget);
         refreshStylePalette(widget);
+        refreshStyleMinimumSize(widget);
     }
 
     QEvent styleChange(QEvent::StyleChange);
@@ -721,6 +751,42 @@ void QStyleKitStylePrivate::updateStyle()
         QApplication::sendEvent(widget, &styleChange);
         widget->update();
     }
+}
+
+void QStyleKitStylePrivate::refreshStyleMinimumSize(QWidget *widget)
+{
+    // QDial::sizeHint() is fixed and never asks the style, so enforce
+    // the minimum size from the StyleKit style.
+#if QT_CONFIG(dial)
+    if (!qobject_cast<QDial *>(widget))
+        return;
+    const auto resolved = resolveLayout(QQStyleKitReader::ControlType::Dial, QStyle::State_Enabled);
+    if (!resolved.isValid())
+        return;
+    const auto &m = *resolved.metrics;
+    const QSize styleSize(m.bgImplicitSize.width() + m.margins.left() + m.margins.right(),
+                          m.bgImplicitSize.height() + m.margins.top() + m.margins.bottom());
+
+    auto it = customMinimumSizeWidgets.find(widget);
+    if (it == customMinimumSizeWidgets.end()) {
+        it = customMinimumSizeWidgets.insert(widget, widget->minimumSize());
+        QObject::connect(widget, &QObject::destroyed, widget,
+                         [this, widget]() { customMinimumSizeWidgets.remove(widget); });
+    }
+    widget->setMinimumSize(it.value().expandedTo(styleSize));
+#else
+    Q_UNUSED(widget);
+#endif
+}
+
+void QStyleKitStylePrivate::unsetStyleMinimumSize(QWidget *widget)
+{
+    const auto it = customMinimumSizeWidgets.constFind(widget);
+    if (it == customMinimumSizeWidgets.cend())
+        return;
+    const QSize original = it.value();
+    customMinimumSizeWidgets.erase(it);
+    widget->setMinimumSize(original);
 }
 
 // Follow the approach in qstylesheetstyle.cpp
@@ -3150,6 +3216,28 @@ void QStyleKitStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCom
         }
         break;
 #endif // QT_CONFIG(slider)
+#if QT_CONFIG(dial)
+    case CC_Dial:
+        if (const QStyleOptionSlider *dial = qstyleoption_cast<const QStyleOptionSlider *>(opt)) {
+            const auto r = d->resolve(w, QQStyleKitReader::ControlType::Dial, dial->state);
+            if (!r.isValid())
+                break;
+            const QRectF backgroundRect = QRectF(opt->rect).marginsRemoved(r.metrics->margins);
+            d->drawStyledItemRect(r.background(), backgroundRect, p);
+
+            const auto *handle = r.handle();
+            if (handle && handle->visible() && handle->opacity() > 0) {
+                QPainterStateGuard stateGuard(p);
+                p->translate(backgroundRect.center());
+                p->rotate(dialAngle(dial));
+                p->translate(dialHandleOffset(backgroundRect, handle));
+                d->drawStyledItemRect(handle, QRectF(-handle->width() / 2, -handle->height() / 2,
+                                                     handle->width(), handle->height()), p);
+            }
+            return;
+        }
+        break;
+#endif // QT_CONFIG(dial)
 #if QT_CONFIG(combobox)
     case CC_ComboBox:
         if (const QStyleOptionComboBox *combo =
@@ -3436,6 +3524,34 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
         }
         break;
 #endif // QT_CONFIG(slider)
+#if QT_CONFIG(dial)
+    case CC_Dial:
+        if (const QStyleOptionSlider *dial = qstyleoption_cast<const QStyleOptionSlider *>(opt)) {
+            const auto resolved = d->resolveLayout(QQStyleKitReader::ControlType::Dial, opt->state);
+            if (!resolved.isValid())
+                break;
+            const auto &metrics = *resolved.metrics;
+            const QRectF backgroundRect(opt->rect.marginsRemoved(metrics.margins));
+            if (sc == SC_DialGroove)
+                return visualRect(opt->direction, opt->rect, backgroundRect.toAlignedRect());
+            if (sc != SC_DialHandle) {
+                return sc == SC_DialTickmarks
+                    ? QRect() : QRectF(opt->rect.marginsRemoved(metrics.padding)).toAlignedRect();
+            }
+
+            const auto *handle = resolved.handle();
+            if (!handle)
+                return QRect();
+            const QPointF offset = dialHandleOffset(backgroundRect, handle);
+            const QPointF center = backgroundRect.center()
+                + QTransform().rotate(dialAngle(dial)).map(offset);
+            const QRectF handleRect(center.x() - handle->width() / 2,
+                                    center.y() - handle->height() / 2,
+                                    handle->width(), handle->height());
+            return visualRect(opt->direction, opt->rect, handleRect.toAlignedRect());
+        }
+        break;
+#endif // QT_CONFIG(dial)
 #if QT_CONFIG(combobox)
     case CC_ComboBox:
         if (const QStyleOptionComboBox *combo =
@@ -4338,6 +4454,9 @@ void QStyleKitStyle::polish(QWidget *widget)
 #if QT_CONFIG(slider)
         || qobject_cast<const QSlider *>(widget)
 #endif
+#if QT_CONFIG(dial)
+        || qobject_cast<const QDial *>(widget)
+#endif
 #if QT_CONFIG(scrollbar)
         || qobject_cast<const QScrollBar *>(widget)
 #endif
@@ -4401,6 +4520,7 @@ void QStyleKitStyle::polish(QWidget *widget)
 
     d->refreshStyleFont(widget);
     d->refreshStylePalette(widget);
+    d->refreshStyleMinimumSize(widget);
 
     bool needsEventFilter = isSelfPaintingWidget(widget);
 #if QT_CONFIG(menu)
@@ -4431,6 +4551,7 @@ void QStyleKitStyle::unpolish(QWidget *widget)
     Q_D(QStyleKitStyle);
     d->unsetStylePalette(widget);
     d->unsetStyleFont(widget);
+    d->unsetStyleMinimumSize(widget);
     bool hasEventFilter = isSelfPaintingWidget(widget);
 #if QT_CONFIG(menu)
     hasEventFilter = hasEventFilter || qobject_cast<QMenu *>(widget);

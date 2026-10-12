@@ -74,6 +74,19 @@ Style {
         hovered.background.border.width: 2
     }
 
+    dial {
+        background {
+            width: 80
+            height: 80
+            radius: 255
+        }
+        handle {
+            width: 10
+            height: 10
+            radius: 2
+        }
+    }
+
     slider {
         background.width: 180
         indicator {
@@ -166,6 +179,8 @@ Style {
             focused.background.border.color: "#ffe600"
         }
 
+        dial.handle.color: "#00ffd0"
+
         slider {
             indicator.color: "#303080"
             indicator.foreground.color: "#00ffd0"
@@ -231,6 +246,8 @@ Style {
             background.color: "#ffffff"
             focused.background.border.color: "#00b894"
         }
+
+        dial.handle.color: "#3a2bd6"
 
         slider {
             indicator.color: "#e6e0ff"

@@ -186,6 +186,9 @@ private:
     void setStylePalette(QWidget *widget, const QPalette &stylePalette) const;
     void refreshStylePalette(QWidget *widget);
 
+    void unsetStyleMinimumSize(QWidget *widget);
+    void refreshStyleMinimumSize(QWidget *widget);
+
     QQStyleKitReader *readerForWidget(const QWidget *widget) const;
     void cleanupWidgetReader(const QWidget *widget) const;
     void onWidgetDestroyed(QObject *w) const;
@@ -252,6 +255,8 @@ private:
     mutable QHash<MetricsCacheKey, ControlMetrics> metricsCache;
     QHash<const QWidget *, Tampered<QFont>> customFontWidgets;
     mutable QHash<const QWidget *, Tampered<QPalette>> customPaletteWidgets;
+    // Widgets whose minimum size we raised
+    QHash<const QWidget *, QSize> customMinimumSizeWidgets;
     // Widgets whose automatic background fill we disabled
     QSet<const QWidget *> bgFillDisabledWidgets;
     QString stylePath;
