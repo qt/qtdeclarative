@@ -496,9 +496,31 @@ bool QQmlTypeWrapper::virtualIsEqualTo(Managed *a, Managed *b)
 {
     Q_ASSERT(a->as<QV4::QQmlTypeWrapper>());
     QV4::QQmlTypeWrapper *qmlTypeWrapperA = static_cast<QV4::QQmlTypeWrapper *>(a);
-    if (QV4::QQmlTypeWrapper *qmlTypeWrapperB = b->as<QV4::QQmlTypeWrapper>())
-        return qmlTypeWrapperA->toVariant() == qmlTypeWrapperB->toVariant();
-    else if (QV4::QObjectWrapper *qobjectWrapper = b->as<QV4::QObjectWrapper>())
+    if (QV4::QQmlTypeWrapper *qmlTypeWrapperB = b->as<QV4::QQmlTypeWrapper>()) {
+        const Heap::QQmlTypeWrapper *da = qmlTypeWrapperA->d();
+        const Heap::QQmlTypeWrapper *db = qmlTypeWrapperB->d();
+        if (da->kind() != db->kind())
+            return false;
+
+        if (da->kind() == Heap::QQmlTypeWrapper::Namespace) {
+            return da->n.typeNamespace == db->n.typeNamespace
+                    && da->n.importNamespace == db->n.importNamespace;
+        }
+
+        const QQmlType type = da->type();
+        if (type != db->type())
+            return false;
+
+        // Singletons and types without attached properties are the same if their types are. For
+        // attached property access, the wrappers have to refer to the same object.
+        if (type.isSingleton()
+                || !type.attachedPropertiesFunction(qmlTypeWrapperA->engine()->typeLoader())) {
+            return true;
+        }
+        return da->object == db->object;
+    }
+
+    if (QV4::QObjectWrapper *qobjectWrapper = b->as<QV4::QObjectWrapper>())
         return qmlTypeWrapperA->toVariant().value<QObject*>() == qobjectWrapper->object();
 
     return false;

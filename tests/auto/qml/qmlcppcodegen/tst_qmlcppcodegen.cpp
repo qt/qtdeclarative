@@ -6625,18 +6625,7 @@ void tst_QmlCppCodegen::typeReferenceSemantics()
     QString actual;
     QVERIFY(QMetaObject::invokeMethod(root.get(), function, Q_RETURN_ARG(QString, actual)));
     const QByteArray tag = QTest::currentDataTag();
-#ifdef QT_TEST_FORCE_INTERPRETER
-    // QQmlTypeWrapper::virtualIsEqualTo() (qqmltypewrapper.cpp) compares the toVariant() results
-    // of the two wrappers. Those are null QObject pointers for all non-singleton types, so any two
-    // such types are equal. QQmlVMEMetaObject::writeVarProperty() uses strictEqual() to skip
-    // redundant writes and thus drops the write of a different type.
-    if (tag == "overwrite stored type" || tag == "overwrite stored QML type"
-            || tag == "different QML types are unequal"
-            || tag == "different QML and C++ types are unequal"
-            || tag == "different types are not strictly equal") {
-        QEXPECT_FAIL("", "Different type references compare equal", Continue);
-    }
-#else
+#ifndef QT_TEST_FORCE_INTERPRETER
     // Reading a var property into a QVariant goes through
     // QQmlVMEMetaObject::readPropertyAsVariant() and ExecutionEngine::toVariant(). For a type
     // wrapper that is QQmlTypeWrapper::toVariant(), which yields a null QObject* for a
