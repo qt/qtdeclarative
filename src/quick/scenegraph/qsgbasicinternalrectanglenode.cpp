@@ -625,6 +625,14 @@ void QSGBasicInternalRectangleNode::updateGeometry()
                     advanceLeft = false;
                 }
 
+                // Whether this is the last vertex pair of the whole rectangle. All remaining
+                // gradient stops must be inserted before it, as they have already been
+                // accounted for in vertexCount. They might not be reached otherwise, for
+                // example when the minimal inner radius covers the whole (very small) height.
+                const bool lastVertex = part == 1
+                        && (advanceLeft ? iLeft >= segments[part][0] && iRight > segments[part][1]
+                                        : iRight >= segments[part][1] && iLeft > segments[part][0]);
+
                 // Inner: Find the matching y-coordinates for the x-coordinate found above.
                 // Outer: Also set the sine and cosine to make sure that outer vertices are
                 // drawn correctly.
@@ -746,15 +754,19 @@ void QSGBasicInternalRectangleNode::updateGeometry()
                 outerYRight = outerYCenter[part][1] + outerRadius[part][1] * sinAngleRight;
 
                 // insert gradient stops as required
-                while (nextGradientStop <= lastGradientStop && stops.at(nextGradientStop).first <= gradientPos) {
+                while (nextGradientStop <= lastGradientStop
+                       && (lastVertex || stops.at(nextGradientStop).first <= gradientPos)) {
                     float gradientX;
                     float gradientYLeft;
                     float gradientYRight;
 
-                    // Insert vertices at gradient stops
-                    gradientX = gradientStart + stops.at(nextGradientStop).first * gradientLength;
+                    // Insert vertices at gradient stops. Never go past the current vertex.
+                    gradientX = qMin(gradientStart + stops.at(nextGradientStop).first * gradientLength, xLeft);
                     // bilinear interpolation of known vertices
-                    float t = (gradientX - innerXPrev) / (xLeft - innerXPrev);
+                    // Avoid divide by zero and make sure t is 0.0 - 1.0.
+                    float t = !qFuzzyIsNull(xLeft - innerXPrev)
+                            ? qBound(0.0f, (gradientX - innerXPrev) / (xLeft - innerXPrev), 1.0f)
+                            : 1.0f;
                     gradientYLeft = innerYLeftPrev * (1. - t) + t * yLeft;
                     gradientYRight =  innerYRightPrev * (1. - t) + t * yRight;
 
