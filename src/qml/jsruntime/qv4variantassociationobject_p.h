@@ -77,9 +77,11 @@ DECLARE_HEAP_OBJECT(VariantAssociationObject, ReferenceObject)
 
         QV4::Scope scope(internalClass->engine);
         QV4::ScopedObject self(scope, this);
+        QV4::ScopedString key(scope);
+        QV4::ScopedValue val(scope);
         for (auto it = association.begin(), end = association.end(); it != end; ++it) {
-            QV4::ScopedString key(scope, scope.engine->newString(it.key()));
-            QV4::ScopedValue val(scope, scope.engine->fromVariant(*it));
+            key = scope.engine->newString(it.key());
+            val = scope.engine->fromVariant(*it);
             self->put(key, val);
         }
     }

@@ -241,8 +241,9 @@ void Heap::PromiseObject::triggerFullfillReactions(ExecutionEngine *e)
         Scoped<QV4::ArrayData> ad(scope, a->arrayData());
         const uint sz = ad->length();
         ScopedValue value(scope, resolution);
+        Scoped<QV4::PromiseReaction> r(scope);
         for (uint i = 0; i < sz; i++) {
-            Scoped<QV4::PromiseReaction> r(scope, ad->get(i));
+            r = ad->get(i);
             r->d()->triggerWithValue(scope.engine, value);
         }
     }
@@ -256,8 +257,9 @@ void Heap::PromiseObject::triggerRejectReactions(ExecutionEngine *e)
         Scoped<QV4::ArrayData> ad(scope, a->arrayData());
         const uint sz = ad->d()->length();
         ScopedValue value(scope, resolution);
+        Scoped<QV4::PromiseReaction> r(scope);
         for (uint i = 0; i < sz; i++) {
-            Scoped<QV4::PromiseReaction> r(scope, ad->d()->get(i));
+            r = ad->d()->get(i);
             r->d()->triggerWithValue(scope.engine, value);
         }
     }

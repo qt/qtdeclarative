@@ -579,6 +579,8 @@ void ListModel::set(int elementIndex, QV4::Object *object, QList<int> *roles)
     QV4::ObjectIterator it(scope, object, QV4::ObjectIterator::EnumerableOnly);
     QV4::ScopedString propertyName(scope);
     QV4::ScopedValue propertyValue(scope);
+    QV4::ScopedFunctionObject func(scope);
+    QV4::ScopedObject obj(scope);
     while (1) {
         propertyName = it.nextPropertyNameAsString(propertyValue);
         if (!propertyName)
@@ -613,7 +615,7 @@ void ListModel::set(int elementIndex, QV4::Object *object, QList<int> *roles)
             roleIndex = e->setUrlProperty(r, qurl);
         } else if (QV4::FunctionObject *f = propertyValue->as<QV4::FunctionObject>()) {
             const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::Function);
-            QV4::ScopedFunctionObject func(scope, f);
+            func =f;
             QJSValue jsv;
             QJSValuePrivate::setValue(&jsv, func);
             roleIndex = e->setFunctionProperty(r, jsv);
@@ -633,7 +635,7 @@ void ListModel::set(int elementIndex, QV4::Object *object, QList<int> *roles)
             } else {
                 const ListLayout::Role &role = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::VariantMap);
                 if (role.type == ListLayout::Role::VariantMap) {
-                    QV4::ScopedObject obj(scope, o);
+                    obj = o;
                     roleIndex = e->setVariantMapProperty(role, obj);
                 }
             }

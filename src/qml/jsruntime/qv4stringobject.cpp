@@ -962,8 +962,9 @@ ReturnedValue StringPrototype::method_split(const FunctionObject *b, const Value
     if (re) {
         uint offset = 0;
         Q_ALLOCA_VAR(uint, matchOffsets, re->value()->captureCount() * 2 * sizeof(uint));
+        Scoped<RegExp> regexp(scope);
         while (true) {
-            Scoped<RegExp> regexp(scope, re->value());
+            regexp = re->value();
             uint result = regexp->match(text, offset, matchOffsets);
             if (result == JSC::Yarr::offsetNoMatch)
                 break;

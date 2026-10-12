@@ -224,18 +224,19 @@ ReturnedValue ObjectPrototype::method_assign(const FunctionObject *b, const Valu
         if (argv[i].isUndefined() || argv[i].isNull())
             continue;
 
-        ScopedObject from(scope, argv[i].toObject(scope.engine));
-        if (scope.hasException())
+        Scope loopScope(b);
+        ScopedObject from(loopScope, argv[i].toObject(loopScope.engine));
+        if (loopScope.hasException())
         return QV4::Encode::undefined();
-        QV4::ScopedArrayObject keys(scope, QV4::ObjectPrototype::getOwnPropertyNames(scope.engine, from));
+        QV4::ScopedArrayObject keys(loopScope, QV4::ObjectPrototype::getOwnPropertyNames(loopScope.engine, from));
         quint32 length = keys->getLength();
 
-        ScopedString nextKey(scope);
-        ScopedValue propValue(scope);
+        ScopedString nextKey(loopScope);
+        ScopedValue propValue(loopScope);
+        ScopedProperty prop(loopScope);
         for (quint32 i = 0; i < length; ++i) {
-            nextKey = Value::fromReturnedValue(keys->get(i)).toString(scope.engine);
+            nextKey = Value::fromReturnedValue(keys->get(i)).toString(loopScope.engine);
 
-            ScopedProperty prop(scope);
             PropertyAttributes attrs = from->getOwnProperty(nextKey->toPropertyKey(), prop);
 
             if (attrs == PropertyFlag::Attr_Invalid)
@@ -246,8 +247,8 @@ ReturnedValue ObjectPrototype::method_assign(const FunctionObject *b, const Valu
 
             propValue = from->get(nextKey);
             to->set(nextKey, propValue, Object::DoThrowOnRejection);
-            if (scope.hasException())
-        return QV4::Encode::undefined();
+            if (loopScope.hasException())
+                return QV4::Encode::undefined();
         }
     }
 

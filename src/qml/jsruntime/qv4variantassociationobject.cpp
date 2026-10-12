@@ -251,8 +251,9 @@ QV4::ReturnedValue VariantAssociationObject::getElement(const QString &key, bool
         if (propertyIndexMapping) {
             Scoped<QV4::ArrayData> arrayData(scope, propertyIndexMapping->arrayData);
             const uint end = arrayData->length();
+            QV4::ScopedString value(scope);
             for (; i < end; ++i) {
-                QV4::ScopedString value(scope, arrayData->get(i));
+                value = arrayData->get(i);
                 Q_ASSERT(value);
                 if (value->equals(scopedKey))
                     break;
