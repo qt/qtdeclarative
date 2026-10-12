@@ -86,7 +86,7 @@ QList<QQmlError> QQmlPropertyValidator::validateObject(
             return errors;
     }
 
-    if (obj->hasFlag(QV4::CompiledData::Object::IsComponent)
+    if (compilationUnit->objectIsComponent(objectIndex)
             && !obj->hasFlag(QV4::CompiledData::Object::IsInlineComponentRoot)) {
         Q_ASSERT(obj->nBindings == 1);
         const QV4::CompiledData::Binding *componentBinding = obj->bindingTable();

@@ -19,7 +19,7 @@ QT_BEGIN_NAMESPACE
 // If you update the data structures in qv4compileddata_p.h, then you also need to
 // update the comparison functions below. Only after making sure the comparisons
 // are fine, bump the version in the static_assert.
-static_assert(QV4_DATA_STRUCTURE_VERSION == 0x53);
+static_assert(QV4_DATA_STRUCTURE_VERSION == 0x54);
 
 namespace QV4::CompiledData {
 
@@ -93,11 +93,6 @@ static ObjectHunk extractData(const Object &obj)
 
     for (quint32 i = 0; i < obj.nEnums; ++i)
         data.enums.append(extractData(*obj.enumAt(i)));
-
-    for (quint32 i = 0; i < obj.nNamedObjectsInComponent; ++i) {
-        data.namedObjectsInComponentIndices.append(
-                extractData(obj.namedObjectsInComponentTable()[i]));
-    }
 
     for (quint32 i = 0; i < obj.nInlineComponents; ++i)
         data.inlineComponents.append(extractData(obj.inlineComponentTable()[i]));
@@ -342,17 +337,7 @@ struct UnitDiffer
     bool objectContentEqual(const Object &oldObj, const Object &newObj) const
     {
         // Keep in sync with the Object struct in qv4compileddata_p.h
-        static_assert(sizeof(Object) == 84, "Update objectContentEqual when Object layout changes");
-        if (oldObj.nNamedObjectsInComponent != newObj.nNamedObjectsInComponent)
-            return false;
-
-        const quint32_le *oldNamed = oldObj.namedObjectsInComponentTable();
-        const quint32_le *newNamed = newObj.namedObjectsInComponentTable();
-        for (quint32 i = 0; i < oldObj.nNamedObjectsInComponent; ++i) {
-            if (oldNamed[i] != newNamed[i])
-                return false;
-        }
-
+        static_assert(sizeof(Object) == 76, "Update objectContentEqual when Object layout changes");
         if (oldObj.nFunctions != newObj.nFunctions)
             return false;
 
@@ -367,7 +352,6 @@ struct UnitDiffer
                 && stringsEqual(oldObj.idNameIndex, newObj.idNameIndex)
                 && oldObj.flags() == newObj.flags()
                 && oldObj.hasAliasAsDefaultProperty() == newObj.hasAliasAsDefaultProperty()
-                && oldObj.objectId() == newObj.objectId()
                 && oldObj.indexOfDefaultPropertyOrAlias == newObj.indexOfDefaultPropertyOrAlias;
     }
 

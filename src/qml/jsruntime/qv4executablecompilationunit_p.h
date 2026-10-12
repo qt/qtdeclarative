@@ -158,6 +158,15 @@ public:
     {
         return m_compilationUnit->objectIsPopulatedByDeferredBinding(objectIndex);
     }
+    bool objectIsComponent(int objectIndex) const
+    {
+        return m_compilationUnit->objectIsComponent(objectIndex);
+    }
+    int objectId(int objectIndex) const { return m_compilationUnit->objectId(objectIndex); }
+    quint32 namedObjectCountInComponent(int objectIndex) const
+    {
+        return m_compilationUnit->namedObjectCountInComponent(objectIndex);
+    }
     bool bindingIsDeferred(int objectIndex, int bindingIndex) const
     {
         return m_compilationUnit->bindingIsDeferred(objectIndex, bindingIndex);

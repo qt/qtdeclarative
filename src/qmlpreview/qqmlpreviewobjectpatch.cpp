@@ -103,9 +103,8 @@ static bool isComponentRoot(const QQmlRefPointer<QV4::ExecutableCompilationUnit>
         return true;
 
     for (int i = 0, end = unit->objectCount(); i < end; ++i) {
-        const QV4::CompiledData::Object *object = unit->objectAt(i);
-        if (object->hasFlag(QV4::CompiledData::Object::IsComponent)
-            && int(object->bindingTable()->value.objectIndex) == objectIndex) {
+        if (unit->objectIsComponent(i)
+            && int(unit->objectAt(i)->bindingTable()->value.objectIndex) == objectIndex) {
             return true;
         }
     }

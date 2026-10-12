@@ -642,7 +642,7 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjectRecur
             || obj->propertyCount() != 0 || obj->aliasCount() != 0 || obj->signalCount() != 0
             || obj->functionCount() != 0 || obj->enumCount() != 0
             || obj->inlineComponentCount() != 0
-            || ((obj->hasFlag(QV4::CompiledData::Object::IsComponent)
+            || ((objectContainer->objectIsComponent(objectIndex)
                  || (objectIndex == 0 && isAddressable(objectContainer->url())))
                 && !objectContainer->resolvedType(obj->inheritedTypeNameIndex)->isFullyDynamicType());
 

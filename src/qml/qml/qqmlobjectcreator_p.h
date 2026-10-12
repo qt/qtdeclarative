@@ -226,7 +226,7 @@ private:
     QObject *createInstance(int index, QObject *parent = nullptr, bool isContextObject = false);
 
     QObject *initializeComponent(
-            const QV4::CompiledData::Object *obj, QObject *instance, InitFlags flags);
+            int index, const QV4::CompiledData::Object *obj, QObject *instance, InitFlags flags);
     QObject *initializeComposite(
             int index, const QV4::CompiledData::Object *obj,
             const QV4::ResolvedTypeReference *typeRef,  QObject *instance, QObject *parent,
@@ -263,7 +263,7 @@ private:
     QString stringAt(int idx) const { return compilationUnit->stringAt(idx); }
     void recordError(const QV4::CompiledData::Location &location, const QString &description);
 
-    void registerObjectWithContextById(const QV4::CompiledData::Object *object, QObject *instance) const;
+    void registerObjectWithContextById(int objectIndex, QObject *instance) const;
 
     inline QV4::QmlContext *currentQmlContext();
     QV4::ResolvedTypeReference *resolvedType(int id) const

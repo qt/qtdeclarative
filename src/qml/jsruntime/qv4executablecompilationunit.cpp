@@ -335,11 +335,12 @@ void ExecutableCompilationUnit::markObjects(QV4::MarkStack *markStack) const
 IdentifierHash ExecutableCompilationUnit::createNamedObjectsPerComponent(int componentObjectIndex)
 {
     IdentifierHash namedObjectCache(engine);
-    const CompiledData::Object *component = objectAt(componentObjectIndex);
+    const CompiledData::RuntimeObject *component
+            = m_compilationUnit->runtimeObjectAt(componentObjectIndex);
     const quint32_le *namedObjectIndexPtr = component->namedObjectsInComponentTable();
     for (quint32 i = 0; i < component->nNamedObjectsInComponent; ++i, ++namedObjectIndexPtr) {
-        const CompiledData::Object *namedObject = objectAt(*namedObjectIndexPtr);
-        namedObjectCache.add(runtimeStrings[namedObject->idNameIndex], namedObject->objectId());
+        namedObjectCache.add(runtimeStrings[objectAt(*namedObjectIndexPtr)->idNameIndex],
+                             m_compilationUnit->objectId(*namedObjectIndexPtr));
     }
     Q_ASSERT(namedObjectCache.isValid());
     return *namedObjectsPerComponentCache.insert(componentObjectIndex, namedObjectCache);

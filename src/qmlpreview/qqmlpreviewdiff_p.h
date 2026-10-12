@@ -134,7 +134,6 @@ using PropertyHunk = Property;
 using ConstantHunk = quint64_le;
 using StringHunk = QString;
 using FunctionIndexHunk = quint32_le;
-using NamedObjectInComponentIndexHunk = quint32_le;
 
 struct EnumHunk
 {
@@ -193,7 +192,6 @@ struct ObjectHunk
     QList<EnumHunk> enums;
     QList<SignalHunk> sigs;
     QList<BindingHunk> bindings;
-    QList<NamedObjectInComponentIndexHunk> namedObjectsInComponentIndices;
     QList<InlineComponentHunk> inlineComponents;
     QList<RequiredPropertyExtraDataHunk> requiredPropertyExtraData;
 };

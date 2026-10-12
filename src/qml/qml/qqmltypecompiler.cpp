@@ -118,7 +118,27 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> QQmlTypeCompiler::compile()
     if (!errors.isEmpty())
         return nullptr;
 
+    copyComponentsAndIds();
     return std::move(document->javaScriptCompilationUnit);
+}
+
+void QQmlTypeCompiler::copyComponentsAndIds()
+{
+    using namespace QV4::CompiledData;
+    CompilationUnit *unit = document->javaScriptCompilationUnit.data();
+    unit->allocateRuntimeData();
+    for (int i = 0, count = document->objects.size(); i < count; ++i) {
+        const QmlIR::Object *object = document->objects.at(i);
+
+        RuntimeObject *runtimeObject = unit->runtimeDataForWrite()->objectAt(i);
+        if (object->isComponent)
+            runtimeObject->flags |= RuntimeObject::IsComponent;
+        runtimeObject->objectId = object->id;
+
+        // Invalidates runtimeObject since the whole runtime data may be re-allocated.
+        std::copy(object->namedObjectsInComponent.begin(), object->namedObjectsInComponent.end(),
+                  unit->allocateNamedObjectsInComponent(i, object->namedObjectsInComponent.size()));
+    }
 }
 
 void QQmlTypeCompiler::recordError(const QV4::CompiledData::Location &location, const QString &description)
@@ -329,17 +349,23 @@ void QQmlScriptStringScanner::scan()
 }
 
 template<>
-void QQmlComponentAndAliasResolver<QQmlTypeCompiler>::allocateNamedObjects(
-        QmlIR::Object *object) const
+void QQmlComponentAndAliasResolver<QQmlTypeCompiler>::allocateNamedObjects(int componentRoot) const
 {
-    object->namedObjectsInComponent.allocate(m_compiler->memoryPool(), m_idToObjectIndex);
+    m_compiler->objectAt(componentRoot)
+            ->namedObjectsInComponent.allocate(m_compiler->memoryPool(), m_idToObjectIndex);
 }
 
 template<>
 bool QQmlComponentAndAliasResolver<QQmlTypeCompiler>::markAsComponent(int index) const
 {
-    m_compiler->qmlObjects()->at(index)->flags |= QV4::CompiledData::Object::IsComponent;
+    m_compiler->qmlObjects()->at(index)->isComponent = true;
     return true;
+}
+
+template<>
+bool QQmlComponentAndAliasResolver<QQmlTypeCompiler>::isComponentBoundary(int index) const
+{
+    return m_compiler->objectAt(index)->isComponent;
 }
 
 template<>
@@ -350,9 +376,8 @@ void QQmlComponentAndAliasResolver<QQmlTypeCompiler>::setObjectId(int index) con
 
 template<>
 void QQmlComponentAndAliasResolver<QQmlTypeCompiler>::resolveGeneralizedGroupedProperty(
-        const CompiledObject &component, CompiledBinding *binding)
+        CompiledBinding *binding)
 {
-    Q_UNUSED(component);
     // We cannot make it fail here. It might be a custom-parsed property
     const int targetObjectIndex = m_idToObjectIndex.value(binding->propertyNameIndex, -1);
     if (targetObjectIndex != -1)
@@ -433,10 +458,9 @@ static bool resolveDeepAlias(
 template<>
 typename QQmlComponentAndAliasResolver<QQmlTypeCompiler>::AliasResolutionResult
 QQmlComponentAndAliasResolver<QQmlTypeCompiler>::resolveAliasesInObject(
-        const CompiledObject &component, int objectIndex,
-        QQmlPropertyCacheAliasCreator<QQmlTypeCompiler> *aliasCacheCreator, QQmlError *error)
+        int objectIndex, QQmlPropertyCacheAliasCreator<QQmlTypeCompiler> *aliasCacheCreator,
+        QQmlError *error)
 {
-    Q_UNUSED(component);
 
     const QmlIR::Object *obj = m_compiler->objectAt(objectIndex);
     if (!obj->aliasCount())
@@ -614,7 +638,10 @@ public:
 
     QList<QQmlError> build()
     {
-        unit->allocateRuntimeData();
+        // Units compiled from source already have their component boundaries and ids.
+        if (!unit->runtimeData)
+            unit->allocateRuntimeData();
+
         for (int i = 0, count = unit->objectCount(); i < count; ++i) {
             if (!classifySignalHandlers(i))
                 return errors;
@@ -1047,7 +1074,7 @@ private:
         if (obj->idNameIndex != 0)
             seenObjectWithId = true;
 
-        if (obj->hasFlag(Object::IsComponent)) {
+        if (unit->objectIsComponent(objectIndex)) {
             Q_ASSERT(obj->nBindings == 1);
             const Binding *componentBinding = obj->bindingTable();
             Q_ASSERT(componentBinding->type() == Binding::Type_Object);

@@ -123,7 +123,6 @@ QmlIR::Object *QQmlIRLoader::loadObject(const QV4::CompiledData::Object *seriali
     object->indexOfDefaultPropertyOrAlias = serializedObject->indexOfDefaultPropertyOrAlias;
     object->defaultPropertyIsAlias = serializedObject->hasAliasAsDefaultProperty();
     object->flags = serializedObject->flags();
-    object->id = serializedObject->objectId();
     object->locationOfIdProperty = serializedObject->locationOfIdProperty;
 
     QList<int> functionIndices;

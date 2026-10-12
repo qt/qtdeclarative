@@ -55,7 +55,7 @@ QT_BEGIN_NAMESPACE
 // benefit that if another patch changes the version too, it will result in a merge conflict, and
 // not get removed silently.
 // Also update the comparison functions in qqmlpreviewdiff.cpp when you change the data structures.
-#define QV4_DATA_STRUCTURE_VERSION 0x53 // Stop folding qualified enums at compile time
+#define QV4_DATA_STRUCTURE_VERSION 0x54 // Stop baking component boundaries and ids
 
 class QIODevice;
 class QQmlTypeNameCache;
@@ -900,11 +900,10 @@ struct Object
 private:
     using FlagsField = quint32_le_bitfield_member<0, 15>;
     using DefaultPropertyIsAliasField = quint32_le_bitfield_member<15, 1>;
-    using IdField = quint32_le_bitfield_member<16, 16, qint32>;
+    // 16 bits vacant
 public:
     enum Flag : unsigned int {
         NoFlag = 0x0,
-        IsComponent = 0x1, // object was identified to be an explicit or implicit component boundary
         IsInlineComponentRoot = 0x8,
         IsPartOfInlineComponent = 0x10
     };
@@ -915,8 +914,8 @@ public:
     // it will be the name of the attached type.
     quint32_le inheritedTypeNameIndex;
     quint32_le idNameIndex;
-    quint32_le_bitfield_union<FlagsField, DefaultPropertyIsAliasField, IdField>
-            flagsAndDefaultPropertyIsAliasAndId;
+    quint32_le_bitfield_union<FlagsField, DefaultPropertyIsAliasField>
+            flagsAndDefaultPropertyIsAlias;
     qint32_le indexOfDefaultPropertyOrAlias; // -1 means no default property declared in this object
     quint16_le nFunctions;
     quint16_le nProperties;
@@ -930,8 +929,6 @@ public:
     quint16_le nSignals;
     quint16_le nBindings;
     quint32_le offsetToBindings;
-    quint32_le nNamedObjectsInComponent;
-    quint32_le offsetToNamedObjectsInComponent;
     Location location;
     Location locationOfIdProperty;
     quint32_le offsetToInlineComponents;
@@ -947,47 +944,36 @@ public:
 
     Flags flags() const
     {
-        return Flags(flagsAndDefaultPropertyIsAliasAndId.get<FlagsField>());
+        return Flags(flagsAndDefaultPropertyIsAlias.get<FlagsField>());
     }
 
     bool hasFlag(Flag flag) const
     {
-        return flagsAndDefaultPropertyIsAliasAndId.get<FlagsField>() & flag;
+        return flagsAndDefaultPropertyIsAlias.get<FlagsField>() & flag;
     }
 
     void setFlag(Flag flag)
     {
-        flagsAndDefaultPropertyIsAliasAndId.set<FlagsField>(
-                flagsAndDefaultPropertyIsAliasAndId.get<FlagsField>() | flag);
+        flagsAndDefaultPropertyIsAlias.set<FlagsField>(
+                flagsAndDefaultPropertyIsAlias.get<FlagsField>() | flag);
     }
 
     void setFlags(Flags flags)
     {
-        flagsAndDefaultPropertyIsAliasAndId.set<FlagsField>(flags);
+        flagsAndDefaultPropertyIsAlias.set<FlagsField>(flags);
     }
 
     bool hasAliasAsDefaultProperty() const
     {
-        return flagsAndDefaultPropertyIsAliasAndId.get<DefaultPropertyIsAliasField>();
+        return flagsAndDefaultPropertyIsAlias.get<DefaultPropertyIsAliasField>();
     }
 
     void setHasAliasAsDefaultProperty(bool defaultAlias)
     {
-        flagsAndDefaultPropertyIsAliasAndId.set<DefaultPropertyIsAliasField>(defaultAlias);
+        flagsAndDefaultPropertyIsAlias.set<DefaultPropertyIsAliasField>(defaultAlias);
     }
 
-    qint32 objectId() const
-    {
-        return flagsAndDefaultPropertyIsAliasAndId.get<IdField>();
-    }
-
-    void setObjectId(qint32 id)
-    {
-        flagsAndDefaultPropertyIsAliasAndId.set<IdField>(id);
-    }
-
-
-    static int calculateSizeExcludingSignalsAndEnums(int nFunctions, int nProperties, int nAliases, int nEnums, int nSignals, int nBindings, int nNamedObjectsInComponent, int nInlineComponents, int nRequiredPropertyExtraData)
+    static int calculateSizeExcludingSignalsAndEnums(int nFunctions, int nProperties, int nAliases, int nEnums, int nSignals, int nBindings, int nInlineComponents, int nRequiredPropertyExtraData)
     {
         return ( sizeof(Object)
                  + nFunctions * sizeof(quint32)
@@ -996,7 +982,6 @@ public:
                  + nEnums * sizeof(quint32)
                  + nSignals * sizeof(quint32)
                  + nBindings * sizeof(Binding)
-                 + nNamedObjectsInComponent * sizeof(int)
                  + nInlineComponents * sizeof(InlineComponent)
                  + nRequiredPropertyExtraData * sizeof(RequiredPropertyExtraData)
                  + 0x7
@@ -1040,11 +1025,6 @@ public:
     const InlineComponent *inlineComponentAt(int idx) const
     {
         return inlineComponentTable() + idx;
-    }
-
-    const quint32_le *namedObjectsInComponentTable() const
-    {
-        return reinterpret_cast<const quint32_le*>(reinterpret_cast<const char *>(this) + offsetToNamedObjectsInComponent);
     }
 
     const InlineComponent *inlineComponentTable() const
@@ -1095,11 +1075,8 @@ public:
     typedef TableIterator<RequiredPropertyExtraData, Object, &Object::requiredPropertyExtraDataAt> RequiredPropertyExtraDataIterator;
     RequiredPropertyExtraDataIterator requiredPropertyExtraDataBegin() const {return RequiredPropertyExtraDataIterator(this, 0); }
     RequiredPropertyExtraDataIterator requiredPropertyExtraDataEnd() const {return RequiredPropertyExtraDataIterator(this, nRequiredPropertyExtraData); }
-
-    int namedObjectsInComponentCount() const { return nNamedObjectsInComponent; }
-    // ---
 };
-static_assert(sizeof(Object) == 84, "Object structure needs to have the expected size to be binary compatible on disk when generated by host compiler and loaded by target");
+static_assert(sizeof(Object) == 76, "Object structure needs to have the expected size to be binary compatible on disk when generated by host compiler and loaded by target");
 
 struct Import
 {
@@ -1375,10 +1352,14 @@ struct RuntimeObject
         HasDeferredBindings = 0x1,
         HasCustomParserBindings = 0x2,
         PopulatedByDeferredBinding = 0x4,
+        IsComponent = 0x8,
     };
 
     quint32_le flags;
+    qint32_le objectId;
     quint32_le offsetToBindingOrder;
+    quint32_le nNamedObjectsInComponent;
+    quint32_le offsetToNamedObjectsInComponent;
 
     const RuntimeBinding *bindingTable() const
     {
@@ -1402,6 +1383,18 @@ struct RuntimeObject
     {
         return reinterpret_cast<RuntimeBindingIndex *>(
                 reinterpret_cast<char *>(this) + offsetToBindingOrder);
+    }
+
+    const quint32_le *namedObjectsInComponentTable() const
+    {
+        return reinterpret_cast<const quint32_le *>(
+                reinterpret_cast<const char *>(this) + offsetToNamedObjectsInComponent);
+    }
+
+    quint32_le *namedObjectsInComponentTable()
+    {
+        return reinterpret_cast<quint32_le *>(
+                reinterpret_cast<char *>(this) + offsetToNamedObjectsInComponent);
     }
 };
 
@@ -1535,16 +1528,7 @@ public:
     using CompiledFunction = const CompiledData::Function;
     using CompiledBinding = const CompiledData::Binding;
 
-    // Empty dummy. We don't need to do this when loading from cache.
-    class IdToObjectMap
-    {
-    public:
-        void insert(int, int) {}
-        void clear() {}
-
-        // We have already checked uniqueness of IDs when creating the CU
-        bool contains(int) { return false; }
-    };
+    using IdToObjectMap = QMap<int, int>;
 
     explicit CompilationUnit(const Unit *unitData,
                              const QQmlPrivate::AOTCompiledFunction *aotCompiledFunctions,
@@ -1737,6 +1721,18 @@ public:
         return runtimeObjectAt(objectIndex)->flags & RuntimeObject::PopulatedByDeferredBinding;
     }
 
+    bool objectIsComponent(int objectIndex) const
+    {
+        return runtimeObjectAt(objectIndex)->flags & RuntimeObject::IsComponent;
+    }
+
+    int objectId(int objectIndex) const { return runtimeObjectAt(objectIndex)->objectId; }
+
+    quint32 namedObjectCountInComponent(int objectIndex) const
+    {
+        return runtimeObjectAt(objectIndex)->nNamedObjectsInComponent;
+    }
+
     bool bindingIsDeferred(int objectIndex, int bindingIndex) const
     {
         return runtimeObjectAt(objectIndex)->bindingTable()[bindingIndex].flags
@@ -1788,6 +1784,7 @@ public:
     }
 
     void allocateRuntimeData();
+    quint32_le *allocateNamedObjectsInComponent(int objectIndex, quint32 count);
 
     RuntimeDataBlock *runtimeDataForWrite()
     {

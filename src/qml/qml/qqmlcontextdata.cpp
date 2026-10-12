@@ -95,7 +95,7 @@ QT_BEGIN_NAMESPACE
     \endlist
 
     initFromTypeCompilationUnit() wires these up and sizes the id table from the
-    component root's \c nNamedObjectsInComponent. So a context is the runtime
+    number of named objects in the component. So a context is the runtime
     embodiment of one component instance: it knows its CU, its root object index,
     how many ids that component declares, and the import set (\c m_imports) used
     for name resolution.
@@ -541,8 +541,7 @@ void QQmlContextData::initFromTypeCompilationUnit(const QQmlRefPointer<QV4::Exec
     m_typeCompilationUnit = unit;
     m_componentObjectIndex = subComponentIndex == -1 ? /*root object*/0 : subComponentIndex;
     Q_ASSERT(!m_idValues);
-    m_idValueCount = m_typeCompilationUnit->objectAt(m_componentObjectIndex)
-            ->nNamedObjectsInComponent;
+    m_idValueCount = m_typeCompilationUnit->namedObjectCountInComponent(m_componentObjectIndex);
     if (m_idValueCount > 0)
         m_idValues = new ContextGuard[m_idValueCount];
 }

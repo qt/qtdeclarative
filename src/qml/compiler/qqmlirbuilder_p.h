@@ -313,6 +313,7 @@ public:
     int id;
     int indexOfDefaultPropertyOrAlias;
     bool defaultPropertyIsAlias;
+    bool isComponent; // object was identified to be an explicit or implicit component boundary
     quint32 flags;
 
     QV4::CompiledData::Location location;

@@ -231,6 +231,7 @@ void Object::init(QQmlJS::MemoryPool *pool, int typeNameIndex, int idIndex,
     id = -1;
     indexOfDefaultPropertyOrAlias = -1;
     defaultPropertyIsAlias = false;
+    isComponent = false;
     flags = QV4::CompiledData::Object::NoFlag;
     properties = pool->New<PoolList<Property> >();
     aliases = pool->New<PoolList<Alias> >();
@@ -2028,7 +2029,7 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
     uint nextOffset = objectOffset + objectOffsetTableSize;
     for (Object *o : std::as_const(output.objects)) {
         objectOffsets.insert(o, nextOffset);
-        nextOffset += QV4::CompiledData::Object::calculateSizeExcludingSignalsAndEnums(o->functionCount(), o->propertyCount(), o->aliasCount(), o->enumCount(), o->signalCount(), o->bindingCount(), o->namedObjectsInComponent.size(), o->inlineComponentCount(), o->requiredPropertyExtraDataCount());
+        nextOffset += QV4::CompiledData::Object::calculateSizeExcludingSignalsAndEnums(o->functionCount(), o->propertyCount(), o->aliasCount(), o->enumCount(), o->signalCount(), o->bindingCount(), o->inlineComponentCount(), o->requiredPropertyExtraDataCount());
 
         int signalTableSize = 0;
         for (const Signal *s = o->firstSignal(); s; s = s->next)
@@ -2073,7 +2074,6 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
         objectToWrite->setHasAliasAsDefaultProperty(o->defaultPropertyIsAlias);
         objectToWrite->setFlags(QV4::CompiledData::Object::Flags(o->flags));
         objectToWrite->idNameIndex = o->idNameIndex;
-        objectToWrite->setObjectId(o->id);
         objectToWrite->location = o->location;
         objectToWrite->locationOfIdProperty = o->locationOfIdProperty;
 
@@ -2102,10 +2102,6 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
         objectToWrite->nBindings = o->bindingCount();
         objectToWrite->offsetToBindings = nextOffset;
         nextOffset += objectToWrite->nBindings * sizeof(QV4::CompiledData::Binding);
-
-        objectToWrite->nNamedObjectsInComponent = o->namedObjectsInComponent.size();
-        objectToWrite->offsetToNamedObjectsInComponent = nextOffset;
-        nextOffset += objectToWrite->nNamedObjectsInComponent * sizeof(quint32);
 
         objectToWrite->nInlineComponents = o->inlineComponentCount();
         objectToWrite->offsetToInlineComponents = nextOffset;
@@ -2174,11 +2170,6 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
 
             int size = QV4::CompiledData::Enum::calculateSize(e->enumValues->count);
             enumPtr += size;
-        }
-
-        quint32_le *namedObjectInComponentPtr = reinterpret_cast<quint32_le *>(objectPtr + objectToWrite->offsetToNamedObjectsInComponent);
-        for (int i = 0; i < o->namedObjectsInComponent.size(); ++i) {
-            *namedObjectInComponentPtr++ = o->namedObjectsInComponent.at(i);
         }
 
         char *inlineComponentPtr = objectPtr + objectToWrite->offsetToInlineComponents;

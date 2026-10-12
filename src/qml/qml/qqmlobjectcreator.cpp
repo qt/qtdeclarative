@@ -1003,7 +1003,7 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
                 for (int i = 0, end = compilationUnit->objectCount(); i != end; ++i) {
                     const QV4::CompiledData::Object *external = compilationUnit->objectAt(i);
                     if (external->idNameIndex == binding->propertyNameIndex) {
-                        bindingTarget = groupObject = context->idValue(external->objectId());
+                        bindingTarget = groupObject = context->idValue(compilationUnit->objectId(i));
                         break;
                     }
                 }
@@ -1382,10 +1382,10 @@ void QQmlObjectCreator::recordError(const QV4::CompiledData::Location &location,
     errors << error;
 }
 
-void QQmlObjectCreator::registerObjectWithContextById(const QV4::CompiledData::Object *object, QObject *instance) const
+void QQmlObjectCreator::registerObjectWithContextById(int objectIndex, QObject *instance) const
 {
-    if (object->objectId() >= 0)
-        context->setIdValue(object->objectId(), instance);
+    if (const int id = compilationUnit->objectId(objectIndex); id >= 0)
+        context->setIdValue(id, instance);
 }
 
 QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isContextObject)
@@ -1399,7 +1399,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
             | (index == 0 ? InitFlag::IsDocumentRoot : InitFlag::None)
             | (isImplicitComponent ? InitFlag::IsImplicitComponent : InitFlag::None);
 
-    if (obj->hasFlag(QV4::CompiledData::Object::IsComponent) || isImplicitComponent) {
+    if (compilationUnit->objectIsComponent(index) || isImplicitComponent) {
         Q_TRACE_EXIT(QQmlObjectCreator_createInstance_exit, QStringLiteral("<component>"));
         Q_QML_OC_PROFILE(
                 sharedState->profiler,
@@ -1407,8 +1407,8 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
                         compilationUnit.data(), obj, QStringLiteral("<component>"),
                         context->url()));
         return initializeComponent(
-                obj, createComponent(engine, compilationUnit.data(), index, parent, context),
-                flags);
+                index, obj,
+                createComponent(engine, compilationUnit.data(), index, parent, context), flags);
     }
 
     const QV4::ResolvedTypeReference *typeRef = resolvedType(obj->inheritedTypeNameIndex);
@@ -1557,7 +1557,7 @@ QObject *QQmlObjectCreator::populateInstanceAndAliasBindings(
 }
 
 QObject *QQmlObjectCreator::initializeComponent(
-        const QV4::CompiledData::Object *obj, QObject *instance, InitFlags flags)
+        int index, const QV4::CompiledData::Object *obj, QObject *instance, InitFlags flags)
 {
     Q_ASSERT(instance);
     Q_ASSERT(obj);
@@ -1569,7 +1569,7 @@ QObject *QQmlObjectCreator::initializeComponent(
     initializeDData(obj, instance, QQmlData::get(instance), flags);
 
     if (!flags.testFlag(InitFlag::IsImplicitComponent))
-        registerObjectWithContextById(obj, instance);
+        registerObjectWithContextById(index, instance);
     return instance;
 }
 
@@ -1598,7 +1598,7 @@ QObject *QQmlObjectCreator::initializeNonComposite(
 {
     Q_ASSERT(instance);
     Q_ASSERT(obj);
-    Q_ASSERT(!obj->hasFlag(QV4::CompiledData::Object::IsComponent));
+    Q_ASSERT(!compilationUnit->objectIsComponent(index));
     Q_ASSERT(typeRef);
 
     const QQmlType type = typeRef->type();
@@ -1894,7 +1894,7 @@ void QQmlObjectCreator::registerPostHocRequiredProperties(const QV4::CompiledDat
             Q_ASSERT(binding->isGroupedProperty());
             return { 0, _propertyCache->propertyOffset() + 1 }; // 4.
         }
-        Q_ASSERT(!_compiledObject->hasFlag(QV4::CompiledData::Object::IsComponent));
+        Q_ASSERT(!compilationUnit->objectIsComponent(_compiledObjectIndex));
         QQmlType type = typeRef->type();
         if (type.isComposite())
             return { _propertyCache->propertyOffset(), _propertyCache->propertyCount() }; // 2.
@@ -1996,7 +1996,7 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
         vmeMetaObject = QQmlVMEMetaObject::get(_qobject, v4);
     }
 
-    registerObjectWithContextById(_compiledObject, _qobject);
+    registerObjectWithContextById(_compiledObjectIndex, _qobject);
 
     qSwap(_propertyCache, cache);
     qSwap(_vmeMetaObject, vmeMetaObject);
@@ -2166,8 +2166,8 @@ void QQmlObjectCreator::repopulateBindings(
     qSwap(_propertyCache, cache);
     qSwap(_vmeMetaObject, vmeMetaObject);
 
-    if (_compiledObject->objectId() < context->numIdValues())
-        registerObjectWithContextById(_compiledObject, _qobject);
+    if (compilationUnit->objectId(_compiledObjectIndex) < context->numIdValues())
+        registerObjectWithContextById(_compiledObjectIndex, _qobject);
 
     _ddata->compilationUnit = compilationUnit;
     _ddata->cuObjectIndex = int(_compiledObjectIndex);

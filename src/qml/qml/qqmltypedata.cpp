@@ -164,37 +164,43 @@ bool QQmlTypeData::loadFromDiskCache(const QQmlRefPointer<QV4::CompiledData::Com
 
 template<>
 void QQmlComponentAndAliasResolver<QV4::CompiledData::CompilationUnit>::allocateNamedObjects(
-        const QV4::CompiledData::Object *object) const
+        int componentRoot) const
 {
-    Q_UNUSED(object);
+    quint32_le *namedObjects
+            = m_compiler->allocateNamedObjectsInComponent(componentRoot, m_idToObjectIndex.size());
+    for (const int objectIndex : m_idToObjectIndex)
+        *namedObjects++ = objectIndex;
 }
 
 template<>
 bool QQmlComponentAndAliasResolver<QV4::CompiledData::CompilationUnit>::markAsComponent(int index) const
 {
-    return m_compiler->objectAt(index)->hasFlag(QV4::CompiledData::Object::IsComponent);
+    m_compiler->runtimeDataForWrite()->objectAt(index)->flags
+            |= QV4::CompiledData::RuntimeObject::IsComponent;
+    return true;
+}
+
+template<>
+bool QQmlComponentAndAliasResolver<QV4::CompiledData::CompilationUnit>::isComponentBoundary(
+        int index) const
+{
+    return m_compiler->objectIsComponent(index);
 }
 
 template<>
 void QQmlComponentAndAliasResolver<QV4::CompiledData::CompilationUnit>::setObjectId(int index) const
 {
-    Q_UNUSED(index)
-    // we cannot sanity-check the index here because bindings are sorted in a different order
-    // in the CU vs the IR.
+    m_compiler->runtimeDataForWrite()->objectAt(index)->objectId = m_idToObjectIndex.size();
 }
 
 template<>
 void QQmlComponentAndAliasResolver<QV4::CompiledData::CompilationUnit>::resolveGeneralizedGroupedProperty(
-        const CompiledObject &component, CompiledBinding *binding)
+        CompiledBinding *binding)
 {
     // We cannot make it fail here. It might be a custom-parsed property
-    for (int i = 0, count = component.namedObjectsInComponentCount(); i < count; ++i) {
-        const int candidateIndex = component.namedObjectsInComponentTable()[i];
-        if (m_compiler->objectAt(candidateIndex)->idNameIndex == binding->propertyNameIndex) {
-            m_propertyCaches->set(binding->value.objectIndex, m_propertyCaches->at(candidateIndex));
-            return;
-        }
-    }
+    const int targetObjectIndex = m_idToObjectIndex.value(binding->propertyNameIndex, -1);
+    if (targetObjectIndex != -1)
+        m_propertyCaches->set(binding->value.objectIndex, m_propertyCaches->at(targetObjectIndex));
 }
 
 enum class DeepAliasResult { NoProperty, CannotAppend, Success };
@@ -202,7 +208,7 @@ enum class DeepAliasResult { NoProperty, CannotAppend, Success };
 template<>
 typename QQmlComponentAndAliasResolver<QV4::CompiledData::CompilationUnit>::AliasResolutionResult
 QQmlComponentAndAliasResolver<QV4::CompiledData::CompilationUnit>::resolveAliasesInObject(
-        const CompiledObject &component, int objectIndex,
+        int objectIndex,
         QQmlPropertyCacheAliasCreator<QV4::CompiledData::CompilationUnit> *aliasCacheCreator,
         QQmlError *error)
 {
@@ -239,14 +245,7 @@ QQmlComponentAndAliasResolver<QV4::CompiledData::CompilationUnit>::resolveAliase
             continue;
         }
 
-        int targetObjectIndex = -1;
-        for (int i = 0, end = component.namedObjectsInComponentCount(); i < end; ++i) {
-            const int candidateIndex = component.namedObjectsInComponentTable()[i];
-            if (m_compiler->objectAt(candidateIndex)->idNameIndex == alias->idIndex()) {
-                targetObjectIndex = candidateIndex;
-                break;
-            }
-        }
+        const int targetObjectIndex = m_idToObjectIndex.value(alias->idIndex(), -1);
         if (targetObjectIndex == -1) {
             *error = qQmlCompileError(
                     alias->referenceLocation(),
@@ -255,7 +254,7 @@ QQmlComponentAndAliasResolver<QV4::CompiledData::CompilationUnit>::resolveAliase
             break;
         }
         const QV4::CompiledData::Object *targetObject = m_compiler->objectAt(targetObjectIndex);
-        const int resolvedTargetObjectId = targetObject->objectId();
+        const int resolvedTargetObjectId = m_compiler->objectId(targetObjectIndex);
 
         QStringView property;
         QStringView subProperty;
@@ -369,6 +368,8 @@ QQmlError QQmlTypeData::createTypeAndPropertyCaches(
     m_compiledData->resolvedTypes = resolvedTypeCache;
     m_compiledData->inlineComponentData = m_inlineComponentData;
     m_compiledData->qmlType = m_qmlType;
+
+    m_compiledData->allocateRuntimeData();
 
     QQmlPendingGroupedPropertyBindings pendingGroupedPropertyBindings;
 

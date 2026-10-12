@@ -336,10 +336,36 @@ void CompilationUnit::allocateRuntimeData()
         RuntimeObject *runtimeObject = reinterpret_cast<RuntimeObject *>(base + nextOffset);
         runtimeObject->offsetToBindingOrder
                 = sizeof(RuntimeObject) + nBindings * sizeof(RuntimeBinding);
+        runtimeObject->objectId = -1;
         nextOffset += objectSpan(nBindings);
     }
 
     runtimeData = block;
+}
+
+/*!
+ * \internal
+ *
+ * Allocate a table of \a count named objects in object \a objectIndex.
+ *
+ * We only know how many objects are named in each component once we have resolved the
+ * components. Therefore, the tables are appended to the runtime data as we go.
+ */
+quint32_le *CompilationUnit::allocateNamedObjectsInComponent(int objectIndex, quint32 count)
+{
+    Q_ASSERT(runtimeData);
+    const qsizetype tableOffset = runtimeDataStorage.size();
+    runtimeDataStorage.resize(tableOffset + count * sizeof(quint32_le));
+
+    char *base = runtimeDataStorage.data();
+    RuntimeDataBlock *block = reinterpret_cast<RuntimeDataBlock *>(base);
+    runtimeData = block;
+
+    RuntimeObject *runtimeObject = block->objectAt(resolvedIndex(objectIndex));
+    runtimeObject->nNamedObjectsInComponent = count;
+    runtimeObject->offsetToNamedObjectsInComponent
+            = tableOffset - (reinterpret_cast<char *>(runtimeObject) - base);
+    return runtimeObject->namedObjectsInComponentTable();
 }
 
 } // namespace CompiledData

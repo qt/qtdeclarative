@@ -921,8 +921,7 @@ private:
         int objSize = Object::calculateSizeExcludingSignalsAndEnums(
                 objData.data.nFunctions, objData.data.nProperties, objData.data.nAliases,
                 objData.data.nEnums, objData.data.nSignals, objData.data.nBindings,
-                objData.data.nNamedObjectsInComponent, objData.data.nInlineComponents,
-                objData.data.nRequiredPropertyExtraData);
+                objData.data.nInlineComponents, objData.data.nRequiredPropertyExtraData);
 
         QByteArray result(objSize, '\0');
         Object *newObj = reinterpret_cast<Object *>(result.data());
@@ -949,11 +948,6 @@ private:
         newObj->offsetToBindings = currentOffset;
         writeEntries<Binding>(result.data(), currentOffset, objData.bindings);
         currentOffset += objData.data.nBindings * sizeof(Binding);
-
-        newObj->offsetToNamedObjectsInComponent = currentOffset;
-        writeEntries<quint32_le>(result.data(), currentOffset,
-                                 objData.namedObjectsInComponentIndices);
-        currentOffset += objData.data.nNamedObjectsInComponent * sizeof(quint32_le);
 
         newObj->offsetToInlineComponents = currentOffset;
         newObj->offsetToRequiredPropertyExtraData = currentOffset;
@@ -1138,9 +1132,7 @@ private:
                         std::move(rpeds), oldObj->requiredPropertyExtraDataBegin(),
                         oldObj->requiredPropertyExtraDataEnd());
 
-        // Check for ObjectChanged to get updated nNamedObjectsInComponent and other fields
-        quint32 nNamedObjects = oldObj->nNamedObjectsInComponent;
-        std::optional<QList<quint32_le>> newNamedObjects;
+        // Check for ObjectChanged to get updated fields
         quint32 newNFunctions = oldObj->nFunctions;
         QList<quint32_le> newFunctionIndices;
         // Initialize from old object
@@ -1158,7 +1150,6 @@ private:
         qint32 newIndexOfDefaultPropertyOrAlias = oldObj->indexOfDefaultPropertyOrAlias;
         Object::Flags newFlags = oldObj->flags();
         bool newHasAliasAsDefaultProperty = oldObj->hasAliasAsDefaultProperty();
-        qint32 newObjectId = oldObj->objectId();
 
         for (const Change &change : m_diff.changes) {
             if (change.index != objIdx)
@@ -1166,14 +1157,11 @@ private:
 
             if (change.type == ChangeType::ObjectChanged) {
                 const ObjectHunk &newObject = std::get<ObjectHunk>(change.data);
-                nNamedObjects = newObject.namedObjectsInComponentIndices.size();
-                newNamedObjects = newObject.namedObjectsInComponentIndices;
                 newInheritedTypeNameIndex = newObject.data.inheritedTypeNameIndex;
                 newIdNameIndex = newObject.data.idNameIndex;
                 newIndexOfDefaultPropertyOrAlias = newObject.data.indexOfDefaultPropertyOrAlias;
                 newFlags = newObject.data.flags();
                 newHasAliasAsDefaultProperty = newObject.data.hasAliasAsDefaultProperty();
-                newObjectId = newObject.data.objectId();
                 newNFunctions = newObject.functionIndices.size();
                 newFunctionIndices = newObject.functionIndices;
                 newLocation = newObject.data.location;
@@ -1205,7 +1193,6 @@ private:
         qsizetype propertiesSize = static_cast<qsizetype>(newProperties.size()) * sizeof(Property);
         qsizetype aliasesSize = static_cast<qsizetype>(newAliases.size()) * sizeof(Alias);
         qsizetype bindingsSize = static_cast<qsizetype>(newBindings.size()) * sizeof(Binding);
-        qsizetype namedObjectsSize = static_cast<qsizetype>(nNamedObjects) * sizeof(quint32_le);
         qsizetype inlineComponentsSize =
                 static_cast<qsizetype>(newInlineComponents.size()) * sizeof(InlineComponent);
         qsizetype requiredPropertyExtraDataSize =
@@ -1213,7 +1200,7 @@ private:
                 * sizeof(RequiredPropertyExtraData);
 
         qsizetype totalSize = baseSize + functionsSize + propertiesSize + aliasesSize
-                + enumsOffsetTableSize + signalsOffsetTableSize + bindingsSize + namedObjectsSize
+                + enumsOffsetTableSize + signalsOffsetTableSize + bindingsSize
                 + inlineComponentsSize + requiredPropertyExtraDataSize + totalEnumsDataSize
                 + totalSignalsDataSize;
 
@@ -1230,14 +1217,12 @@ private:
         // Set the flags/id using proper accessors
         newObj->setFlags(newFlags);
         newObj->setHasAliasAsDefaultProperty(newHasAliasAsDefaultProperty);
-        newObj->setObjectId(newObjectId);
         newObj->nFunctions = newNFunctions;
         newObj->nProperties = static_cast<quint32>(newProperties.size());
         newObj->nAliases = static_cast<quint32>(newAliases.size());
         newObj->nEnums = static_cast<quint16>(newEnums.size());
         newObj->nSignals = static_cast<quint16>(newSignals.size());
         newObj->nBindings = static_cast<quint32>(newBindings.size());
-        newObj->nNamedObjectsInComponent = nNamedObjects;
         newObj->nInlineComponents = static_cast<quint16>(newInlineComponents.size());
         newObj->nRequiredPropertyExtraData = static_cast<quint16>(newRequiredPropExtraData.size());
         newObj->location = newLocation;
@@ -1262,9 +1247,6 @@ private:
 
         newObj->offsetToBindings = currentOffset;
         currentOffset += static_cast<quint32>(bindingsSize);
-
-        newObj->offsetToNamedObjectsInComponent = currentOffset;
-        currentOffset += static_cast<quint32>(namedObjectsSize);
 
         newObj->offsetToInlineComponents = currentOffset;
         currentOffset += static_cast<quint32>(inlineComponentsSize);
@@ -1313,16 +1295,6 @@ private:
         }
 
         writeEntries<Binding>(result.data(), newObj->offsetToBindings, newBindings);
-
-        quint32_le *namedObjectsTable = reinterpret_cast<quint32_le *>(
-                result.data() + newObj->offsetToNamedObjectsInComponent);
-        if (newNamedObjects.has_value()) {
-            writeEntries<quint32_le>(result.data(), newObj->offsetToNamedObjectsInComponent,
-                                     *newNamedObjects);
-        } else {
-            const quint32_le *oldNamedObjs = oldObj->namedObjectsInComponentTable();
-            std::memcpy(namedObjectsTable, oldNamedObjs, namedObjectsSize);
-        }
 
         writeEntries<InlineComponent>(result.data(), newObj->offsetToInlineComponents,
                                       newInlineComponents);
