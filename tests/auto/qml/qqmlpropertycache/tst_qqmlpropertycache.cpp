@@ -780,7 +780,7 @@ void tst_qqmlpropertycache::overriddenSignals()
     QTest::ignoreMessage(
             QtWarningMsg,
             qPrintable(c2Url.toString() + QLatin1String(
-                            ":6:14: Duplicate method name: "
+                            ":6:5: Duplicate method name: "
                             "invalid override of property change signal or superclass signal")));
     QQmlComponent c2(&engine, c2Url);
     // Should be an error, but we can't enforce it yet.

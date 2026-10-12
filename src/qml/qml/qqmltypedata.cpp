@@ -513,9 +513,14 @@ void QQmlTypeData::done()
     if (!m_document.isNull()) {
         Q_ASSERT(verifyCaches);
         // Compile component
-        compile(typeNameCache, &resolvedTypeCache, dependencyHasher);
+        compile(&resolvedTypeCache, dependencyHasher);
         if (isError())
             return;
+        if (const QQmlError error = createTypeAndPropertyCaches(typeNameCache, resolvedTypeCache);
+                error.isValid()) {
+            setError(error);
+            return;
+        }
     }
 
     {
@@ -777,16 +782,14 @@ QString QQmlTypeData::stringAt(int index) const
     return m_document->jsGenerator.stringTable.stringForIndex(index);
 }
 
-void QQmlTypeData::compile(const QQmlRefPointer<QQmlTypeNameCache> &typeNameCache,
-                           QV4::CompiledData::ResolvedTypeReferenceMap *resolvedTypeCache,
+void QQmlTypeData::compile(QV4::CompiledData::ResolvedTypeReferenceMap *resolvedTypeCache,
                            const QV4::CompiledData::DependentTypesHasher &dependencyHasher)
 {
     assertTypeLoaderThread();
 
     Q_ASSERT(m_compiledData.isNull());
 
-    QQmlTypeCompiler compiler(
-            typeLoader(), this, m_document.data(), resolvedTypeCache, dependencyHasher);
+    QQmlTypeCompiler compiler(this, m_document.data(), dependencyHasher);
     auto compilationUnit = compiler.compile();
     if (!compilationUnit) {
         qDeleteAll(*resolvedTypeCache);
@@ -821,11 +824,6 @@ void QQmlTypeData::compile(const QQmlRefPointer<QQmlTypeNameCache> &typeNameCach
     }
 
     m_compiledData = std::move(compilationUnit);
-    m_compiledData->typeNameCache = typeNameCache;
-    m_compiledData->resolvedTypes = *resolvedTypeCache;
-    m_compiledData->propertyCaches = std::move(*compiler.propertyCaches());
-    Q_ASSERT(m_compiledData->propertyCaches.count()
-             >= static_cast<int>(m_compiledData->objectCount()));
 }
 
 bool QQmlTypeData::resolveTypes()

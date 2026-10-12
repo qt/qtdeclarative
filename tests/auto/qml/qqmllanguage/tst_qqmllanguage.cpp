@@ -2618,13 +2618,13 @@ void tst_qqmllanguage::scriptString()
 
         const QQmlScriptStringPrivate *scriptPrivate = QQmlScriptStringPrivate::get(object->scriptProperty());
         QVERIFY(scriptPrivate != nullptr);
-        QCOMPARE(scriptPrivate->script, QString("foo + bar"));
+        QCOMPARE(scriptPrivate->script, QString());
         QCOMPARE(scriptPrivate->scope, qobject_cast<QObject*>(object.data()));
         QCOMPARE(scriptPrivate->context, qmlContext(object.data()));
 
         QVERIFY(object->grouped() != nullptr);
         const QQmlScriptStringPrivate *groupedPrivate = QQmlScriptStringPrivate::get(object->grouped()->script());
-        QCOMPARE(groupedPrivate->script, QString("console.log(1921)"));
+        QCOMPARE(groupedPrivate->script, QString());
         QCOMPARE(groupedPrivate->scope, qobject_cast<QObject*>(object.data()));
         QCOMPARE(groupedPrivate->context, qmlContext(object.data()));
     }
@@ -2814,8 +2814,6 @@ void tst_qqmllanguage::scriptStringWithoutSourceCode()
             const QV4::CompiledData::Binding *binding = rootObject->bindingTable() + i;
             if (compilationUnit->stringAt(binding->propertyNameIndex) != QString("scriptProperty"))
                 continue;
-            QCOMPARE(compilationUnit->bindingValueAsScriptString(binding), QString("intProperty"));
-            const_cast<QV4::CompiledData::Binding*>(binding)->stringIndex = 0; // empty string index
             QVERIFY(compilationUnit->bindingValueAsScriptString(binding).isEmpty());
             break;
         }

@@ -14,12 +14,6 @@
 
 #include <QtCore/qtyperevision.h>
 
-#define COMPILE_EXCEPTION(token, desc) \
-    { \
-        recordError((token)->location, desc); \
-        return false; \
-    }
-
 QT_BEGIN_NAMESPACE
 
 DEFINE_BOOL_CONFIG_OPTION(
@@ -28,12 +22,9 @@ DEFINE_BOOL_CONFIG_OPTION(
 Q_LOGGING_CATEGORY(lcQmlTypeCompiler, "qt.qml.typecompiler");
 
 QQmlTypeCompiler::QQmlTypeCompiler(
-        QQmlTypeLoader *typeLoader, QQmlTypeData *typeData, QmlIR::Document *parsedQML,
-        QV4::CompiledData::ResolvedTypeReferenceMap *resolvedTypeCache,
+        QQmlTypeData *typeData, QmlIR::Document *parsedQML,
         const QV4::CompiledData::DependentTypesHasher &dependencyHasher)
-    : resolvedTypes(resolvedTypeCache)
-    , loader(typeLoader)
-    , dependencyHasher(dependencyHasher)
+    : dependencyHasher(dependencyHasher)
     , document(parsedQML)
     , typeData(typeData)
 {
@@ -41,63 +32,8 @@ QQmlTypeCompiler::QQmlTypeCompiler(
 
 QQmlRefPointer<QV4::CompiledData::CompilationUnit> QQmlTypeCompiler::compile()
 {
-    // Build property caches and VME meta object data
-
-    for (auto it = resolvedTypes->constBegin(), end = resolvedTypes->constEnd();
-         it != end; ++it) {
-        QQmlCustomParser *customParser = (*it)->type().customParser();
-        if (customParser)
-            customParsers.insert(it.key(), customParser);
-    }
-
-    QQmlPendingGroupedPropertyBindings pendingGroupedPropertyBindings;
-
-
-    {
-        QQmlPropertyCacheCreator<QQmlTypeCompiler> propertyCacheBuilder(
-                &m_propertyCaches, &pendingGroupedPropertyBindings,
-                loader, this, imports(), typeData->typeClassName());
-        QQmlError cycleError = propertyCacheBuilder.verifyNoICCycle();
-        if (cycleError.isValid()) {
-            recordError(cycleError);
-            return nullptr;
-        }
-        QQmlPropertyCacheCreatorBase::IncrementalResult result;
-        do {
-            result = propertyCacheBuilder.buildMetaObjectsIncrementally();
-            const QQmlError &error = result.error;
-            if (error.isValid()) {
-                recordError(error);
-                return nullptr;
-            } else {
-                // Resolve component boundaries and aliases
-
-                QQmlComponentAndAliasResolver resolver(this, &m_propertyCaches);
-                if (QQmlError error = resolver.resolve(result.processedRoot); error.isValid()) {
-                    recordError(error);
-                    return nullptr;
-                }
-                pendingGroupedPropertyBindings.resolveMissingPropertyCaches(&m_propertyCaches);
-                pendingGroupedPropertyBindings.clear(); // anything that can be processed is now processed
-            }
-        } while (result.canResume);
-    }
-
-    {
-        QQmlCustomParserScriptIndexer cpi(this);
-        cpi.annotateBindingsWithScriptStrings();
-    }
-
     Q_ASSERT(!document->javaScriptCompilationUnit || !document->javaScriptCompilationUnit->unitData());
     {
-        // Compile JS binding expressions and signal handlers
-        {
-            // We can compile script strings ahead of time, but they must be compiled
-            // without type optimizations as their scope is always entirely dynamic.
-            QQmlScriptStringScanner sss(this);
-            sss.scan();
-        }
-
         Q_ASSERT(document->jsModule.fileName == typeData->urlString());
         Q_ASSERT(document->jsModule.finalUrl == typeData->finalUrlString());
         QmlIR::JSCodeGen v4CodeGenerator(document);
@@ -119,37 +55,7 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> QQmlTypeCompiler::compile()
     if (!errors.isEmpty())
         return nullptr;
 
-    copyComponentsAndIds();
     return std::move(document->javaScriptCompilationUnit);
-}
-
-void QQmlTypeCompiler::copyComponentsAndIds()
-{
-    using namespace QV4::CompiledData;
-    CompilationUnit *unit = document->javaScriptCompilationUnit.data();
-    unit->allocateRuntimeData();
-    for (int i = 0, count = document->objects.size(); i < count; ++i) {
-        const QmlIR::Object *object = document->objects.at(i);
-
-        RuntimeObject *runtimeObject = unit->runtimeDataForWrite()->objectAt(i);
-        if (object->isComponent)
-            runtimeObject->flags |= RuntimeObject::IsComponent;
-        runtimeObject->objectId = object->id;
-
-        // Invalidates runtimeObject since the whole runtime data may be re-allocated.
-        std::copy(object->namedObjectsInComponent.begin(), object->namedObjectsInComponent.end(),
-                  unit->allocateNamedObjectsInComponent(i, object->namedObjectsInComponent.size()));
-    }
-}
-
-void QQmlTypeCompiler::recordError(const QV4::CompiledData::Location &location, const QString &description)
-{
-    QQmlError error;
-    error.setLine(qmlConvertSourceCoordinate<quint32, int>(location.line()));
-    error.setColumn(qmlConvertSourceCoordinate<quint32, int>(location.column()));
-    error.setDescription(description);
-    error.setUrl(url());
-    errors << error;
 }
 
 void QQmlTypeCompiler::recordError(const QQmlJS::DiagnosticMessage &message)
@@ -158,231 +64,8 @@ void QQmlTypeCompiler::recordError(const QQmlJS::DiagnosticMessage &message)
     error.setDescription(message.message);
     error.setLine(qmlConvertSourceCoordinate<quint32, int>(message.loc.startLine));
     error.setColumn(qmlConvertSourceCoordinate<quint32, int>(message.loc.startColumn));
-    error.setUrl(url());
+    error.setUrl(typeData->finalUrl());
     errors << error;
-}
-
-void QQmlTypeCompiler::recordError(const QQmlError &e)
-{
-    QQmlError error = e;
-    error.setUrl(url());
-    errors << error;
-}
-
-QString QQmlTypeCompiler::stringAt(int idx) const
-{
-    return document->stringAt(idx);
-}
-
-int QQmlTypeCompiler::registerString(const QString &str)
-{
-    return document->jsGenerator.registerString(str);
-}
-
-int QQmlTypeCompiler::resolvedIndex(int index) const
-{
-    if (index < objectCount())
-        return index;
-    const auto *p = m_propertyCaches.at(index)->defaultProperty();
-    Q_ASSERT(p && p->isComponentWrapper());
-    return p->wrappedObjectIndex();
-}
-
-int QQmlTypeCompiler::implicitComponentForObject(int childIndex) const
-{
-    for (int i = objectCount(), end = m_propertyCaches.count(); i < end; ++i) {
-        const auto *p = m_propertyCaches.at(i)->defaultProperty();
-        Q_ASSERT(p && p->isComponentWrapper());
-        if (p->wrappedObjectIndex() == childIndex)
-            return i;
-    }
-    return -1;
-}
-
-const QV4::CompiledData::Unit *QQmlTypeCompiler::qmlUnit() const
-{
-    return document->javaScriptCompilationUnit->unitData();
-}
-
-const QQmlImports *QQmlTypeCompiler::imports() const
-{
-    return typeData->imports();
-}
-
-QList<QmlIR::Object *> *QQmlTypeCompiler::qmlObjects() const
-{
-    return &document->objects;
-}
-
-QQmlPropertyCacheVector *QQmlTypeCompiler::propertyCaches()
-{
-    return &m_propertyCaches;
-}
-
-const QQmlPropertyCacheVector *QQmlTypeCompiler::propertyCaches() const
-{
-    return &m_propertyCaches;
-}
-
-QQmlJS::MemoryPool *QQmlTypeCompiler::memoryPool()
-{
-    return document->jsParserEngine.pool();
-}
-
-QStringView QQmlTypeCompiler::newStringRef(const QString &string)
-{
-    return document->jsParserEngine.newStringRef(string);
-}
-
-const QV4::Compiler::StringTableGenerator *QQmlTypeCompiler::stringPool() const
-{
-    return &document->jsGenerator.stringTable;
-}
-
-QString QQmlTypeCompiler::bindingAsString(const QmlIR::Object *object, int scriptIndex) const
-{
-    return object->bindingAsString(document, scriptIndex);
-}
-
-void QQmlTypeCompiler::addImport(const QString &module, const QString &qualifier, QTypeRevision version)
-{
-    const quint32 moduleIdx = registerString(module);
-    const quint32 qualifierIdx = registerString(qualifier);
-
-    for (int i = 0, count = document->imports.size(); i < count; ++i) {
-        const QV4::CompiledData::Import *existingImport = document->imports.at(i);
-        if (existingImport->type == QV4::CompiledData::Import::ImportLibrary
-            && existingImport->uriIndex == moduleIdx
-            && existingImport->qualifierIndex == qualifierIdx)
-            return;
-    }
-    auto pool = memoryPool();
-    QV4::CompiledData::Import *import = pool->New<QV4::CompiledData::Import>();
-    import->type = QV4::CompiledData::Import::ImportLibrary;
-    import->version = version;
-    import->uriIndex = moduleIdx;
-    import->qualifierIndex = qualifierIdx;
-    document->imports.append(import);
-}
-
-QQmlType QQmlTypeCompiler::qmlTypeForComponent(const QString &inlineComponentName) const
-{
-    return typeData->qmlType(inlineComponentName);
-}
-
-QQmlCompilePass::QQmlCompilePass(QQmlTypeCompiler *typeCompiler)
-    : compiler(typeCompiler)
-{
-}
-
-QQmlCustomParserScriptIndexer::QQmlCustomParserScriptIndexer(QQmlTypeCompiler *typeCompiler)
-    : QQmlCompilePass(typeCompiler)
-    , qmlObjects(*typeCompiler->qmlObjects())
-    , customParsers(typeCompiler->customParserCache())
-{
-}
-
-void QQmlCustomParserScriptIndexer::annotateBindingsWithScriptStrings()
-{
-    scanObjectRecursively(/*root object*/0);
-    for (int i = 0; i < qmlObjects.size(); ++i)
-        if (qmlObjects.at(i)->flags & QV4::CompiledData::Object::IsInlineComponentRoot)
-            scanObjectRecursively(i);
-}
-
-void QQmlCustomParserScriptIndexer::scanObjectRecursively(int objectIndex, bool annotateScriptBindings)
-{
-    const QmlIR::Object * const obj = qmlObjects.at(objectIndex);
-    if (!annotateScriptBindings)
-        annotateScriptBindings = customParsers.contains(obj->inheritedTypeNameIndex);
-    for (QmlIR::Binding *binding = obj->firstBinding(); binding; binding = binding->next) {
-        switch (binding->type()) {
-        case QV4::CompiledData::Binding::Type_Script:
-            if (annotateScriptBindings) {
-                binding->stringIndex = compiler->registerString(
-                        compiler->bindingAsString(obj, binding->value.compiledScriptIndex));
-            }
-            break;
-        case QV4::CompiledData::Binding::Type_Object:
-        case QV4::CompiledData::Binding::Type_AttachedProperty:
-        case QV4::CompiledData::Binding::Type_GroupedProperty:
-            scanObjectRecursively(binding->value.objectIndex, annotateScriptBindings);
-            break;
-        default:
-            break;
-        }
-    }
-}
-
-QQmlScriptStringScanner::QQmlScriptStringScanner(QQmlTypeCompiler *typeCompiler)
-    : QQmlCompilePass(typeCompiler)
-    , qmlObjects(*typeCompiler->qmlObjects())
-    , propertyCaches(typeCompiler->propertyCaches())
-{
-
-}
-
-void QQmlScriptStringScanner::scan()
-{
-    const QMetaType scriptStringMetaType = QMetaType::fromType<QQmlScriptString>();
-    for (int i = 0; i < qmlObjects.size(); ++i) {
-        QQmlPropertyCache::ConstPtr propertyCache = propertyCaches->at(i);
-        if (!propertyCache)
-            continue;
-
-        const QmlIR::Object *obj = qmlObjects.at(i);
-
-        QQmlPropertyResolver resolver(propertyCache);
-        const QQmlPropertyData *defaultProperty = obj->indexOfDefaultPropertyOrAlias != -1 ? propertyCache->parent()->defaultProperty() : propertyCache->defaultProperty();
-
-        for (QmlIR::Binding *binding = obj->firstBinding(); binding; binding = binding->next) {
-            if (binding->type() != QV4::CompiledData::Binding::Type_Script)
-                continue;
-            bool notInRevision = false;
-            const QQmlPropertyData *pd = binding->propertyNameIndex != quint32(0) ? resolver.property(stringAt(binding->propertyNameIndex), &notInRevision) : defaultProperty;
-            if (!pd || pd->propType() != scriptStringMetaType)
-                continue;
-
-            QString script = compiler->bindingAsString(obj, binding->value.compiledScriptIndex);
-            binding->stringIndex = compiler->registerString(script);
-        }
-    }
-}
-
-template<>
-void QQmlComponentAndAliasResolver<QQmlTypeCompiler>::allocateNamedObjects(int componentRoot) const
-{
-    m_compiler->objectAt(componentRoot)
-            ->namedObjectsInComponent.allocate(m_compiler->memoryPool(), m_idToObjectIndex);
-}
-
-template<>
-bool QQmlComponentAndAliasResolver<QQmlTypeCompiler>::markAsComponent(int index) const
-{
-    m_compiler->qmlObjects()->at(index)->isComponent = true;
-    return true;
-}
-
-template<>
-bool QQmlComponentAndAliasResolver<QQmlTypeCompiler>::isComponentBoundary(int index) const
-{
-    return m_compiler->objectAt(index)->isComponent;
-}
-
-template<>
-void QQmlComponentAndAliasResolver<QQmlTypeCompiler>::setObjectId(int index) const
-{
-    m_compiler->qmlObjects()->at(index)->id = m_idToObjectIndex.size();
-}
-
-template<>
-void QQmlComponentAndAliasResolver<QQmlTypeCompiler>::resolveGeneralizedGroupedProperty(
-        CompiledBinding *binding)
-{
-    // We cannot make it fail here. It might be a custom-parsed property
-    const int targetObjectIndex = m_idToObjectIndex.value(binding->propertyNameIndex, -1);
-    if (targetObjectIndex != -1)
-        m_propertyCaches->set(binding->value.objectIndex, m_propertyCaches->at(targetObjectIndex));
 }
 
 namespace {
@@ -398,10 +81,7 @@ public:
 
     QList<QQmlError> build()
     {
-        // Units compiled from source already have their component boundaries and ids.
-        if (!unit->runtimeData)
-            unit->allocateRuntimeData();
-
+        Q_ASSERT(unit->runtimeData);
         for (int i = 0, count = unit->objectCount(); i < count; ++i) {
             if (!classifySignalHandlers(i))
                 return errors;

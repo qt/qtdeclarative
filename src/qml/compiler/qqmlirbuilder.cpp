@@ -228,7 +228,6 @@ void Object::init(QQmlJS::MemoryPool *pool, int typeNameIndex, int idIndex,
     inheritedTypeNameIndex = typeNameIndex;
     location = loc;
     idNameIndex = idIndex;
-    id = -1;
     indexOfDefaultPropertyOrAlias = -1;
     defaultPropertyIsAlias = false;
     isComponent = false;

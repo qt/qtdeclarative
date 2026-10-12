@@ -309,7 +309,6 @@ struct Q_QML_COMPILER_EXPORT Object
 public:
     quint32 inheritedTypeNameIndex;
     quint32 idNameIndex;
-    int id;
     int indexOfDefaultPropertyOrAlias;
     bool defaultPropertyIsAlias;
     bool isComponent; // object was identified to be an explicit or implicit component boundary
@@ -381,12 +380,7 @@ public:
     PoolList<CompiledFunctionOrExpression> *functionsAndExpressions;
     QQmlJS::FixedPoolArray<int> runtimeFunctionIndices;
 
-    QQmlJS::FixedPoolArray<quint32> namedObjectsInComponent;
-    int namedObjectsInComponentCount() const { return namedObjectsInComponent.size(); }
-    const quint32 *namedObjectsInComponentTable() const { return namedObjectsInComponent.begin(); }
-
     bool hasFlag(QV4::CompiledData::Object::Flag flag) const { return flags & flag; }
-    qint32 objectId() const { return id; }
     bool hasAliasAsDefaultProperty() const { return defaultPropertyIsAlias; }
 
 private:

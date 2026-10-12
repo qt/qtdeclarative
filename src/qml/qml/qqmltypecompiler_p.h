@@ -47,151 +47,24 @@ struct QQmlTypeCompiler
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlTypeCompiler)
 public:
-    QQmlTypeCompiler(QQmlTypeLoader *typeLoader,
-                     QQmlTypeData *typeData,
-                     QmlIR::Document *document,
-                     QV4::CompiledData::ResolvedTypeReferenceMap *resolvedTypeCache,
+    QQmlTypeCompiler(QQmlTypeData *typeData, QmlIR::Document *document,
                      const QV4::CompiledData::DependentTypesHasher &dependencyHasher);
-
-    // --- interface used by QQmlPropertyCacheCreator
-    typedef QmlIR::Object CompiledObject;
-    typedef QmlIR::Binding CompiledBinding;
-    using ListPropertyAssignBehavior = QmlIR::Pragma::ListPropertyAssignBehaviorValue;
-
-    // Deliberate choice of map over hash here to ensure stable generated output.
-    using IdToObjectMap = QMap<int, int>;
-
-    const QmlIR::Object *objectAt(int index) const
-    {
-        return document->objects.at(resolvedIndex(index));
-    }
-
-    QmlIR::Object *objectAt(int index)
-    {
-        return document->objects.at(resolvedIndex(index));
-    }
-
-    int objectCount() const { return document->objects.size(); }
-    int resolvedIndex(int index) const;
-    int implicitComponentForObject(int childIndex) const;
-    int objectId(int index) const { return objectAt(index)->objectId(); }
-    bool objectIsComponent(int index) const { return document->objects.at(index)->isComponent; }
-    QString stringAt(int idx) const;
-    QmlIR::PoolList<QmlIR::Function>::Iterator objectFunctionsBegin(const QmlIR::Object *object) const { return object->functionsBegin(); }
-    QmlIR::PoolList<QmlIR::Function>::Iterator objectFunctionsEnd(const QmlIR::Object *object) const { return object->functionsEnd(); }
-    QV4::CompiledData::ResolvedTypeReferenceMap *resolvedTypes = nullptr;
-    ListPropertyAssignBehavior listPropertyAssignBehavior() const
-    {
-        for (const QmlIR::Pragma *pragma : std::as_const(document->pragmas)) {
-            if (pragma->type == QmlIR::Pragma::ListPropertyAssignBehavior)
-                return pragma->listPropertyAssignBehavior;
-        }
-        return ListPropertyAssignBehavior::Append;
-    }
-    // ---
 
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> compile();
 
     QList<QQmlError> compilationErrors() const { return errors; }
-    void recordError(const QV4::CompiledData::Location &location, const QString &description);
-    void recordError(const QQmlJS::DiagnosticMessage &message);
-    void recordError(const QQmlError &e);
-
-    int registerString(const QString &str);
-
-    const QV4::CompiledData::Unit *qmlUnit() const;
-
-    QUrl url() const { return typeData->finalUrl(); }
-    QQmlTypeLoader *typeLoader() const { return loader; }
-    const QQmlImports *imports() const;
-    QList<QmlIR::Object *> *qmlObjects() const;
-    QQmlPropertyCacheVector *propertyCaches();
-    const QQmlPropertyCacheVector *propertyCaches() const;
-    QQmlJS::MemoryPool *memoryPool();
-    QStringView newStringRef(const QString &string);
-    const QV4::Compiler::StringTableGenerator *stringPool() const;
-
-    const QHash<int, QQmlCustomParser*> &customParserCache() const { return customParsers; }
-
-    QString bindingAsString(const QmlIR::Object *object, int scriptIndex) const;
-
-    void addImport(const QString &module, const QString &qualifier, QTypeRevision version);
-
-    QV4::ResolvedTypeReference *resolvedType(int id) const
-    {
-        return resolvedTypes->value(id);
-    }
-
-    QV4::ResolvedTypeReference *resolvedType(QMetaType type) const
-    {
-        for (QV4::ResolvedTypeReference *ref : std::as_const(*resolvedTypes)) {
-            if (ref->type().typeId() == type)
-                return ref;
-        }
-        return nullptr;
-    }
-
-    QQmlType qmlTypeForComponent(const QString &inlineComponentName = QString()) const;
 
     static QList<QQmlError> computeRuntimeData(
             QV4::CompiledData::CompilationUnit *unit, QQmlTypeLoader *typeLoader,
             const QQmlImports *imports);
 
 private:
-    void copyComponentsAndIds();
+    void recordError(const QQmlJS::DiagnosticMessage &message);
 
     QList<QQmlError> errors;
-    QQmlTypeLoader *loader;
     const QV4::CompiledData::DependentTypesHasher &dependencyHasher;
     QmlIR::Document *document;
-    // index is string index of type name (use obj->inheritedTypeNameIndex)
-    QHash<int, QQmlCustomParser*> customParsers;
-
-    // index in first hash is component index, vector inside contains object indices of objects with id property
-    QQmlPropertyCacheVector m_propertyCaches;
-
     QQmlTypeData *typeData;
-};
-
-struct QQmlCompilePass
-{
-    QQmlCompilePass(QQmlTypeCompiler *typeCompiler);
-
-    QString stringAt(int idx) const { return compiler->stringAt(idx); }
-protected:
-    void recordError(const QV4::CompiledData::Location &location, const QString &description) const
-    { compiler->recordError(location, description); }
-
-    QV4::ResolvedTypeReference *resolvedType(int id) const
-    { return compiler->resolvedType(id); }
-
-    QQmlTypeCompiler *compiler;
-};
-
-class QQmlCustomParserScriptIndexer: public QQmlCompilePass
-{
-public:
-    QQmlCustomParserScriptIndexer(QQmlTypeCompiler *typeCompiler);
-
-    void annotateBindingsWithScriptStrings();
-
-private:
-    void scanObjectRecursively(int objectIndex, bool annotateScriptBindings = false);
-
-    const QList<QmlIR::Object*> &qmlObjects;
-    const QHash<int, QQmlCustomParser*> &customParsers;
-};
-
-class QQmlScriptStringScanner : public QQmlCompilePass
-{
-public:
-    QQmlScriptStringScanner(QQmlTypeCompiler *typeCompiler);
-
-    void scan();
-
-private:
-    const QList<QmlIR::Object*> &qmlObjects;
-    const QQmlPropertyCacheVector * const propertyCaches;
 };
 
 QT_END_NAMESPACE
