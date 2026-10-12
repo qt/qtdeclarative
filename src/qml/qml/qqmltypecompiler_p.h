@@ -132,6 +132,8 @@ public:
 
     QQmlType qmlTypeForComponent(const QString &inlineComponentName = QString()) const;
 
+    static QList<QQmlError> computeRuntimeData(QV4::CompiledData::CompilationUnit *unit);
+
 private:
     QList<QQmlError> errors;
     QQmlTypeLoader *loader;
@@ -250,25 +252,6 @@ public:
 private:
     const QList<QmlIR::Object*> &qmlObjects;
     const QQmlPropertyCacheVector * const propertyCaches;
-};
-
-class QQmlDeferredAndCustomParserBindingScanner : public QQmlCompilePass
-{
-    Q_DECLARE_TR_FUNCTIONS(QQmlDeferredAndCustomParserBindingScanner)
-public:
-    QQmlDeferredAndCustomParserBindingScanner(QQmlTypeCompiler *typeCompiler);
-
-    bool scanObject();
-
-private:
-    enum class ScopeDeferred { False, True };
-    bool scanObject(int objectIndex, ScopeDeferred scopeDeferred);
-
-    QList<QmlIR::Object*> *qmlObjects;
-    const QQmlPropertyCacheVector * const propertyCaches;
-    const QHash<int, QQmlCustomParser*> &customParsers;
-
-    bool _seenObjectWithId;
 };
 
 QT_END_NAMESPACE

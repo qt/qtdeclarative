@@ -671,6 +671,13 @@ void QQmlTypeData::done()
 
     {
         m_compiledData->inlineComponentData = m_inlineComponentData;
+
+        if (QList<QQmlError> errors = QQmlTypeCompiler::computeRuntimeData(m_compiledData.data());
+                !errors.isEmpty()) {
+            setError(errors);
+            return;
+        }
+
         {
             // Sanity check property bindings
             QQmlPropertyValidator validator(typeLoader(), m_importCache.data(), m_compiledData);

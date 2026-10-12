@@ -134,7 +134,7 @@ canRebuildComponentRootInPlace(const QQmlRefPointer<QV4::ExecutableCompilationUn
     if (!isComponentRoot(newUnit, objectIndex))
         return false;
 
-    if (newUnit->objectAt(objectIndex)->hasFlag(QV4::CompiledData::Object::HasDeferredBindings))
+    if (newUnit->objectHasDeferredBindings(objectIndex))
         return false;
 
     return !hasChangedNonCompositeBaseType(oldUnit, newUnit, objectIndex);

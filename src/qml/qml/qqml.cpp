@@ -55,8 +55,8 @@ QT_BEGIN_NAMESPACE
    but only when completion is requested with qmlExecuteDeferred, or by manually
    calling QQmlComponentPrivate::beginDeferred and completeDeferred.
 
-   \sa QV4::CompiledData::Binding::IsDeferredBinding,
-       QV4::CompiledData::Object::HasDeferredBindings,
+   \sa QV4::CompiledData::RuntimeBinding::IsDeferredBinding,
+       QV4::CompiledData::RuntimeObject::HasDeferredBindings,
        QQmlData::deferData,
        QQmlObjectCreator::setupBindings
 */

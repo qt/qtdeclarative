@@ -301,6 +301,34 @@ QQmlType CompilationUnit::qmlTypeForComponent(const QString &inlineComponentName
     return inlineComponentData[inlineComponentName].qmlType;
 }
 
+void CompilationUnit::allocateRuntimeData()
+{
+    Q_ASSERT(qmlData);
+    const uint nObjects = qmlData->nObjects;
+
+    // An offset table for the objects, followed by each object and its bindings.
+    quint32 size = sizeof(RuntimeDataBlock) + nObjects * sizeof(quint32_le);
+    for (uint i = 0; i < nObjects; ++i)
+        size += sizeof(RuntimeObject) + qmlData->objectAt(i)->nBindings * sizeof(RuntimeBinding);
+
+    runtimeDataStorage = QByteArray(size, 0);
+    char *base = runtimeDataStorage.data();
+
+    RuntimeDataBlock *block = reinterpret_cast<RuntimeDataBlock *>(base);
+    block->nObjects = nObjects;
+
+    quint32_le *objectOffsetTable = reinterpret_cast<quint32_le *>(base + sizeof(RuntimeDataBlock));
+    quint32 nextOffset = sizeof(RuntimeDataBlock) + nObjects * sizeof(quint32_le);
+
+    for (uint i = 0; i < nObjects; ++i) {
+        const Object *object = qmlData->objectAt(i);
+        objectOffsetTable[i] = nextOffset;
+        nextOffset += sizeof(RuntimeObject) + object->nBindings * sizeof(RuntimeBinding);
+    }
+
+    runtimeData = block;
+}
+
 } // namespace CompiledData
 } // namespace QV4
 

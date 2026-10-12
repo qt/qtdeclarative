@@ -81,7 +81,7 @@ public:
     void restoreExternalState();
 
     BindingPatchContext *childContext(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit,
-                                      const QV4::CompiledData::Binding *binding,
+                                      int objectIndex, const QV4::CompiledData::Binding *binding,
                                       QDuplicateTracker<QObject *> *seenChildren);
     BindingPatchContext *childContext(const QString &name, QObject *object,
                                       const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit,
@@ -118,7 +118,8 @@ private:
     void recordBindingValues(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit,
                              int cuIndex, QHash<QString, QVariant> *constantValues,
                              QDuplicateTracker<QObject *> *seenChildren);
-    void resetBinding(const QV4::CompiledData::Binding *binding, const QString &name,
+    void resetBinding(int objectIndex, const QV4::CompiledData::Binding *binding,
+                      const QString &name,
                       const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit,
                       const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit,
                       const ReboundBindings &rebound);

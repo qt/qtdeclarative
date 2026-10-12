@@ -257,7 +257,6 @@ void QQmlObjectCreator::populateDeferred(QObject *instance, int deferredIndex,
 {
     doPopulateDeferred(instance, deferredIndex, [this, qmlProperty, binding]() {
         Q_ASSERT(qmlProperty);
-        Q_ASSERT(binding->hasFlag(QV4::CompiledData::Binding::IsDeferredBinding));
 
         QQmlListProperty<QObject> savedList;
         qSwap(_currentList, savedList);
@@ -851,10 +850,10 @@ void QQmlObjectCreator::setupBindings(BindingSetupFlags mode)
             sharedState->requiredProperties.remove({ _bindingTarget, property });
         }
 
-        if (binding->hasFlag(QV4::CompiledData::Binding::IsCustomParserBinding))
+        if (compilationUnit->bindingIsCustomParser(_compiledObjectIndex, i))
             continue;
 
-        if (binding->hasFlag(QV4::CompiledData::Binding::IsDeferredBinding)) {
+        if (compilationUnit->bindingIsDeferred(_compiledObjectIndex, i)) {
             if (!(mode & ApplyDeferred))
                 continue;
         } else if (!(mode & ApplyImmediate)) {
@@ -1627,7 +1626,7 @@ QObject *QQmlObjectCreator::initializeNonComposite(
     }
 
     if (QQmlCustomParser *customParser = type.customParser();
-            customParser && obj->hasFlag(QV4::CompiledData::Object::HasCustomParserBindings)) {
+            customParser && compilationUnit->objectHasCustomParserBindings(index)) {
         customParser->engine = QQmlEnginePrivate::get(engine);
         customParser->imports = compilationUnit->typeNameCache().data();
 
@@ -1635,7 +1634,7 @@ QObject *QQmlObjectCreator::initializeNonComposite(
         const QV4::CompiledData::Object *obj = compilationUnit->objectAt(index);
         const QV4::CompiledData::Binding *binding = obj->bindingTable();
         for (quint32 i = 0; i < obj->nBindings; ++i, ++binding) {
-            if (binding->hasFlag(QV4::CompiledData::Binding::IsCustomParserBinding))
+            if (compilationUnit->bindingIsCustomParser(index, i))
                 bindings << binding;
         }
         customParser->applyBindings(instance, compilationUnit, bindings);
@@ -2001,9 +2000,9 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
     // initiate it: the deferred bindings are applied right away via ApplyAll below. Registering
     // additional deferred data would make no sense.
     const bool applyingDeferred =
-            binding && binding->hasFlag(QV4::CompiledData::Binding::IsDeferredBinding);
+            compilationUnit->objectIsPopulatedByDeferredBinding(_compiledObjectIndex);
     if (!applyingDeferred
-        && _compiledObject->hasFlag(QV4::CompiledData::Object::HasDeferredBindings)) {
+        && compilationUnit->objectHasDeferredBindings(_compiledObjectIndex)) {
         _ddata->deferData(_compiledObjectIndex, compilationUnit, context, m_inlineComponentName);
     }
 

@@ -105,12 +105,6 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> QQmlTypeCompiler::compile()
         annotator.annotateBindingsToAliases();
     }
 
-    {
-        QQmlDeferredAndCustomParserBindingScanner deferredAndCustomParserBindingScanner(this);
-        if (!deferredAndCustomParserBindingScanner.scanObject())
-            return nullptr;
-    }
-
     if (!document->javaScriptCompilationUnit || !document->javaScriptCompilationUnit->unitData()) {
         // Compile JS binding expressions and signal handlers if necessary
         {
@@ -1027,191 +1021,242 @@ QQmlComponentAndAliasResolver<QQmlTypeCompiler>::resolveAliasesInObject(
     return SomeAliasesResolved;
 }
 
-QQmlDeferredAndCustomParserBindingScanner::QQmlDeferredAndCustomParserBindingScanner(QQmlTypeCompiler *typeCompiler)
-    : QQmlCompilePass(typeCompiler)
-    , qmlObjects(typeCompiler->qmlObjects())
-    , propertyCaches(typeCompiler->propertyCaches())
-    , customParsers(typeCompiler->customParserCache())
-    , _seenObjectWithId(false)
-{
-}
+namespace {
 
-bool QQmlDeferredAndCustomParserBindingScanner::scanObject()
+class RuntimeDataBuilder
 {
-    for (int i = 0; i < qmlObjects->size(); ++i) {
-        if ((qmlObjects->at(i)->flags & QV4::CompiledData::Object::IsInlineComponentRoot)
-                && !scanObject(i, ScopeDeferred::False)) {
-            return false;
+public:
+    explicit RuntimeDataBuilder(QV4::CompiledData::CompilationUnit *unit) : unit(unit) {}
+
+    QList<QQmlError> build()
+    {
+        unit->allocateRuntimeData();
+        for (int i = 0, count = unit->objectCount(); i < count; ++i) {
+            if (unit->objectAt(i)->hasFlag(QV4::CompiledData::Object::IsInlineComponentRoot)) {
+                if (!scanObject(i, ScopeDeferred::False))
+                    return errors;
+            }
         }
-    }
-    return scanObject(/*root object*/0, ScopeDeferred::False);
-}
-
-bool QQmlDeferredAndCustomParserBindingScanner::scanObject(
-        int objectIndex, ScopeDeferred scopeDeferred)
-{
-    using namespace QV4::CompiledData;
-
-    QmlIR::Object *obj = qmlObjects->at(objectIndex);
-    if (obj->idNameIndex != 0)
-        _seenObjectWithId = true;
-
-    if (obj->flags & Object::IsComponent) {
-        Q_ASSERT(obj->bindingCount() == 1);
-        const Binding *componentBinding = obj->firstBinding();
-        Q_ASSERT(componentBinding->type() == Binding::Type_Object);
-        // Components are separate from their surrounding scope. They cannot be deferred.
-        return scanObject(componentBinding->value.objectIndex, ScopeDeferred::False);
+        scanObject(/*root object*/0, ScopeDeferred::False);
+        return errors;
     }
 
-    QQmlPropertyCache::ConstPtr propertyCache = propertyCaches->at(objectIndex);
-    if (!propertyCache)
-        return true;
+private:
+    enum class ScopeDeferred : bool { False, True };
 
-    QString defaultPropertyName;
-    const QQmlPropertyData *defaultProperty = nullptr;
-    if (obj->indexOfDefaultPropertyOrAlias != -1) {
-        const QQmlPropertyCache *cache = propertyCache->parent().data();
-        defaultPropertyName = cache->defaultPropertyName();
-        defaultProperty = cache->defaultProperty();
-    } else {
-        defaultPropertyName = propertyCache->defaultPropertyName();
-        defaultProperty = propertyCache->defaultProperty();
+    bool recordError(const QV4::CompiledData::Location &location, const QString &description)
+    {
+        QQmlError error;
+        error.setUrl(unit->finalUrl());
+        error.setLine(qmlConvertSourceCoordinate<quint32, int>(location.line()));
+        error.setColumn(qmlConvertSourceCoordinate<quint32, int>(location.column()));
+        error.setDescription(description);
+        errors.append(error);
+        return false;
     }
 
-    QQmlCustomParser *customParser = customParsers.value(obj->inheritedTypeNameIndex);
-
-    QQmlPropertyResolver propertyResolver(propertyCache);
-
-    QStringList deferredPropertyNames;
-    QStringList immediatePropertyNames;
+    bool deferredAndImmediatePropertyNames(
+            const QV4::CompiledData::Object *obj, const QQmlPropertyCache::ConstPtr &propertyCache,
+            QStringList *deferredPropertyNames, QStringList *immediatePropertyNames)
     {
         const QMetaObject *mo = propertyCache->firstCppMetaObject();
         const int deferredNamesIndex = mo->indexOfClassInfo("DeferredPropertyNames");
         const int immediateNamesIndex = mo->indexOfClassInfo("ImmediatePropertyNames");
+
         if (deferredNamesIndex != -1) {
             if (immediateNamesIndex != -1) {
-                COMPILE_EXCEPTION(obj, tr("You cannot define both DeferredPropertyNames and "
-                                          "ImmediatePropertyNames on the same type."));
+                return recordError(obj->location,
+                                   QQmlTypeCompiler::tr("You cannot define both DeferredPropertyNames "
+                                                        "and ImmediatePropertyNames on the same type."));
             }
-            const QMetaClassInfo classInfo = mo->classInfo(deferredNamesIndex);
-            deferredPropertyNames = QString::fromUtf8(classInfo.value()).split(u',');
+            *deferredPropertyNames
+                    = QString::fromUtf8(mo->classInfo(deferredNamesIndex).value()).split(u',');
         } else if (immediateNamesIndex != -1) {
-            const QMetaClassInfo classInfo = mo->classInfo(immediateNamesIndex);
-            immediatePropertyNames = QString::fromUtf8(classInfo.value()).split(u',');
-
+            *immediatePropertyNames
+                    = QString::fromUtf8(mo->classInfo(immediateNamesIndex).value()).split(u',');
             // If the property contains an empty string, all properties shall be deferred.
-            if (immediatePropertyNames.isEmpty())
-                immediatePropertyNames.append(QString());
+            if (immediatePropertyNames->isEmpty())
+                immediatePropertyNames->append(QString());
         }
+        return true;
     }
 
-    for (QmlIR::Binding *binding = obj->firstBinding(); binding; binding = binding->next) {
-        QString name = stringAt(binding->propertyNameIndex);
+    bool scanObject(int objectIndex, ScopeDeferred scopeDeferred)
+    {
+        using namespace QV4::CompiledData;
 
-        if (customParser) {
-            if (binding->type() == Binding::Type_AttachedProperty) {
-                if (customParser->flags() & QQmlCustomParser::AcceptsAttachedProperties) {
-                    binding->setFlag(Binding::IsCustomParserBinding);
-                    obj->flags |= Object::HasCustomParserBindings;
+        if (objectIndex >= unit->objectCount())
+            return scanObject(unit->resolvedIndex(objectIndex), scopeDeferred);
+
+        const Object *obj = unit->objectAt(objectIndex);
+        if (obj->idNameIndex != 0)
+            seenObjectWithId = true;
+
+        if (obj->hasFlag(Object::IsComponent)) {
+            Q_ASSERT(obj->nBindings == 1);
+            const Binding *componentBinding = obj->bindingTable();
+            Q_ASSERT(componentBinding->type() == Binding::Type_Object);
+            // A Component is separate from its surrounding scope. Its contents cannot be deferred.
+            return scanObject(componentBinding->value.objectIndex, ScopeDeferred::False);
+        }
+
+        const QQmlPropertyCache::ConstPtr propertyCache = unit->propertyCaches.at(objectIndex);
+        if (!propertyCache)
+            return true;
+
+        QString defaultPropertyName;
+        const QQmlPropertyData *defaultProperty = nullptr;
+        if (obj->indexOfDefaultPropertyOrAlias != -1) {
+            const QQmlPropertyCache *parentCache = propertyCache->parent().data();
+            defaultPropertyName = parentCache->defaultPropertyName();
+            defaultProperty = parentCache->defaultProperty();
+        } else {
+            defaultPropertyName = propertyCache->defaultPropertyName();
+            defaultProperty = propertyCache->defaultProperty();
+        }
+
+        QStringList deferredPropertyNames;
+        QStringList immediatePropertyNames;
+        if (!deferredAndImmediatePropertyNames(
+                    obj, propertyCache, &deferredPropertyNames, &immediatePropertyNames)) {
+            return false;
+        }
+
+        QQmlCustomParser *customParser = nullptr;
+        if (const QV4::ResolvedTypeReference *typeRef
+                    = unit->resolvedType(obj->inheritedTypeNameIndex)) {
+            const QQmlType type = typeRef->type();
+            if (type.isValid())
+                customParser = type.customParser();
+        }
+
+        QQmlPropertyResolver propertyResolver(propertyCache);
+
+        RuntimeObject *runtimeObject = unit->runtimeDataForWrite()->objectAt(objectIndex);
+
+        const Binding *binding = obj->bindingTable();
+        for (quint32 i = 0; i < obj->nBindings; ++i, ++binding) {
+            QString name = unit->stringAt(binding->propertyNameIndex);
+
+            const auto markCustomParser = [&]() {
+                runtimeObject->flags |= RuntimeObject::HasCustomParserBindings;
+                runtimeObject->bindingTable()[i].flags |= RuntimeBinding::IsCustomParserBinding;
+            };
+
+            if (customParser) {
+                if (binding->type() == Binding::Type_AttachedProperty) {
+                    if (customParser->flags() & QQmlCustomParser::AcceptsAttachedProperties) {
+                        markCustomParser();
+                        continue;
+                    }
+                } else if (QQmlSignalNames::isHandlerName(name)
+                           && !(customParser->flags() & QQmlCustomParser::AcceptsSignalHandlers)) {
+                    markCustomParser();
                     continue;
                 }
-            } else if (QQmlSignalNames::isHandlerName(name)
-                       && !(customParser->flags() & QQmlCustomParser::AcceptsSignalHandlers)) {
-                obj->flags |= Object::HasCustomParserBindings;
-                binding->setFlag(Binding::IsCustomParserBinding);
-                continue;
             }
-        }
 
-        const bool hasPropertyData = [&]() {
-            if (name.isEmpty()) {
-                name = defaultPropertyName;
-                if (defaultProperty)
-                    return true;
-            } else if (name.constData()->isUpper()) {
-                // Upper case names cannot be custom-parsed unless they are attached properties
-                // and the custom parser explicitly accepts them. See above for that case.
+            const bool hasPropertyData = [&]() {
+                if (name.isEmpty()) {
+                    name = defaultPropertyName;
+                    if (defaultProperty)
+                        return true;
+                } else if (name.constData()->isUpper()) {
+                    // Upper case names cannot be custom-parsed unless they are attached properties
+                    // and the custom parser explicitly accepts them. See above for that case.
+                    return false;
+                } else {
+                    bool notInRevision = false;
+                    if (propertyResolver.property(
+                                name, &notInRevision, QQmlPropertyResolver::CheckRevision)) {
+                        return true;
+                    }
+                }
+
+                if (!customParser)
+                    return false;
+
+                // These signal handlers cannot be custom-parsed. The signal exists.
+                if (binding->hasSignalHandlerBindingFlag())
+                    return false;
+
+                // If the property isn't found, we may want to custom-parse the binding.
+                markCustomParser();
                 return false;
-            } else {
-                bool notInRevision = false;
-                if (propertyResolver.property(
-                            name, &notInRevision, QQmlPropertyResolver::CheckRevision)) {
-                    return true;
+            }();
+
+            bool seenSubObjectWithId = false;
+            bool isExternal = false;
+            if (binding->type() >= Binding::Type_Object) {
+                const bool isOwnProperty = hasPropertyData || binding->isAttachedProperty();
+                isExternal = !isOwnProperty && binding->isGroupedProperty();
+                if (isOwnProperty || isExternal) {
+                    qSwap(seenObjectWithId, seenSubObjectWithId);
+
+                    // Implicit component wrappers are scope boundaries.
+                    const bool isImplicitComponent = unit->implicitComponentForObject(
+                                binding->value.objectIndex) != -1;
+                    const ScopeDeferred objectScope =
+                            !isImplicitComponent
+                                && (isExternal || scopeDeferred == ScopeDeferred::True)
+                                ? ScopeDeferred::True
+                                : ScopeDeferred::False;
+                    const bool subObjectValid = scanObject(binding->value.objectIndex, objectScope);
+                    qSwap(seenObjectWithId, seenSubObjectWithId);
+                    seenObjectWithId |= seenSubObjectWithId;
+                    if (!subObjectValid)
+                        return false;
                 }
             }
 
-            if (!customParser)
-                return false;
-
-            const Binding::Flags bindingFlags = binding->flags();
-            if (bindingFlags & Binding::IsSignalHandlerExpression
-                        || bindingFlags & Binding::IsSignalHandlerObject
-                        || bindingFlags & Binding::IsPropertyObserver) {
-                // These signal handlers cannot be custom-parsed. We have already established
-                // that the signal exists.
-                return false;
-            }
-
-            // If the property isn't found, we may want to custom-parse the binding.
-            obj->flags |= Object::HasCustomParserBindings;
-            binding->setFlag(Binding::IsCustomParserBinding);
-            return false;
-        }();
-
-        bool seenSubObjectWithId = false;
-        bool isExternal = false;
-        if (binding->type() >= Binding::Type_Object) {
-            const bool isOwnProperty = hasPropertyData || binding->isAttachedProperty();
-            isExternal = !isOwnProperty && binding->isGroupedProperty();
-            if (isOwnProperty || isExternal) {
-                qSwap(_seenObjectWithId, seenSubObjectWithId);
-
-                // Implicit component wrappers are scope boundaries.
-                const bool isImplicitComponent
-                        = compiler->implicitComponentForObject(binding->value.objectIndex) != -1;
-
-                const ScopeDeferred objectScope =
-                        !isImplicitComponent && (isExternal || scopeDeferred == ScopeDeferred::True)
-                            ? ScopeDeferred::True
-                            : ScopeDeferred::False;
-                const bool subObjectValid = scanObject(binding->value.objectIndex, objectScope);
-                qSwap(_seenObjectWithId, seenSubObjectWithId);
-                if (!subObjectValid)
-                    return false;
-                _seenObjectWithId |= seenSubObjectWithId;
-            }
-        }
-
-        bool isDeferred = false;
-        if (!immediatePropertyNames.isEmpty() && !immediatePropertyNames.contains(name)) {
-            if (seenSubObjectWithId) {
-                COMPILE_EXCEPTION(binding, tr("You cannot assign an id to an object assigned "
-                                              "to a deferred property."));
-            }
-            if (isExternal || !disableInternalDeferredProperties())
-                isDeferred = true;
-        } else if (!deferredPropertyNames.isEmpty() && deferredPropertyNames.contains(name)) {
-            if (!seenSubObjectWithId && binding->type() != Binding::Type_GroupedProperty) {
+            bool isDeferred = false;
+            if (!immediatePropertyNames.isEmpty() && !immediatePropertyNames.contains(name)) {
+                if (seenSubObjectWithId) {
+                    return recordError(binding->location,
+                                       QQmlTypeCompiler::tr("You cannot assign an id to an object "
+                                                            "assigned to a deferred property."));
+                }
                 if (isExternal || !disableInternalDeferredProperties())
                     isDeferred = true;
+            } else if (!deferredPropertyNames.isEmpty() && deferredPropertyNames.contains(name)) {
+                if (!seenSubObjectWithId && binding->type() != Binding::Type_GroupedProperty) {
+                    if (isExternal || !disableInternalDeferredProperties())
+                        isDeferred = true;
+                }
+            }
+
+            if (binding->type() >= Binding::Type_Object && isExternal && !isDeferred
+                    && !customParser) {
+                return recordError(
+                        binding->location,
+                        QQmlTypeCompiler::tr("Cannot assign to non-existent property \"%1\"")
+                                .arg(name));
+            }
+
+            if (isDeferred) {
+                runtimeObject->bindingTable()[i].flags |= RuntimeBinding::IsDeferredBinding;
+                runtimeObject->flags |= RuntimeObject::HasDeferredBindings;
+                if (binding->type() == Binding::Type_AttachedProperty
+                        || binding->type() == Binding::Type_GroupedProperty) {
+                    unit->runtimeDataForWrite()->objectAt(binding->value.objectIndex)->flags
+                            |= RuntimeObject::PopulatedByDeferredBinding;
+                }
             }
         }
 
-        if (binding->type() >= Binding::Type_Object) {
-            if (isExternal && !isDeferred && !customParser) {
-                COMPILE_EXCEPTION(
-                            binding, tr("Cannot assign to non-existent property \"%1\"").arg(name));
-            }
-        }
-
-        if (isDeferred) {
-            binding->setFlag(Binding::IsDeferredBinding);
-            obj->flags |= Object::HasDeferredBindings;
-        }
+        return true;
     }
 
-    return true;
+    QV4::CompiledData::CompilationUnit *unit;
+    QList<QQmlError> errors;
+    bool seenObjectWithId = false;
+};
+
+} // namespace
+
+QList<QQmlError> QQmlTypeCompiler::computeRuntimeData(QV4::CompiledData::CompilationUnit *unit)
+{
+    return RuntimeDataBuilder(unit).build();
 }
 
 QT_END_NAMESPACE

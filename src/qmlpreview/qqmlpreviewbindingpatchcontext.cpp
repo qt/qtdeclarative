@@ -256,7 +256,7 @@ void BindingPatchContext::recordBindingValues(
             attachedContext(unit, binding, seenChildren);
             continue;
         case QV4::CompiledData::Binding::Type_GroupedProperty:
-            childContext(unit, binding, seenChildren);
+            childContext(unit, cuIndex, binding, seenChildren);
             continue;
         default:
             break;
@@ -265,7 +265,7 @@ void BindingPatchContext::recordBindingValues(
         if (binding->isSignalHandler())
             continue;
 
-        if (binding->hasFlag(QV4::CompiledData::Binding::IsCustomParserBinding))
+        if (unit->bindingIsCustomParser(cuIndex, int(binding - obj->bindingsBegin())))
             continue;
 
         const qsizetype size = constantValues->size();
@@ -578,7 +578,7 @@ static QObject *idTarget(QObject *object, const QString &name)
 
 BindingPatchContext *
 BindingPatchContext::childContext(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit,
-                                  const QV4::CompiledData::Binding *binding,
+                                  int objectIndex, const QV4::CompiledData::Binding *binding,
                                   QDuplicateTracker<QObject *> *seenChildren)
 {
     const QString name = unit->stringAt(binding->propertyNameIndex);
@@ -598,7 +598,8 @@ BindingPatchContext::childContext(const QQmlRefPointer<QV4::ExecutableCompilatio
         // QObject-valued property recurses into that object; a value-type property
         // ("font.pixelSize") uses a prefix on m_object (target stays null).
         groupObject = m_object->property(nameUtf8).value<QObject *>();
-    } else if (binding->hasFlag(QV4::CompiledData::Binding::IsDeferredBinding)) {
+    } else if (unit->bindingIsDeferred(
+                       objectIndex, int(binding - unit->objectAt(objectIndex)->bindingTable()))) {
         // Not a property of m_object: a deferred group binding is a generalized grouped
         // property whose first chain part is an id ("someId.x"), targeting an external object.
         //
@@ -688,7 +689,7 @@ bool BindingPatchContext::applyBindingChange(const QQmlRefPointer<QV4::Executabl
         BindingPatchContext *child = nullptr;
         switch (binding->type()) {
         case QV4::CompiledData::Binding::Type_GroupedProperty:
-            child = childContext(unit, binding, &seenChildren);
+            child = childContext(unit, objectIndex, binding, &seenChildren);
             break;
         case QV4::CompiledData::Binding::Type_AttachedProperty:
             child = attachedContext(unit, binding, &seenChildren);
@@ -876,14 +877,11 @@ static int reboundSubObjectIndex(const ReboundBindings &rebound,
 }
 
 void BindingPatchContext::resetBinding(
-        const QV4::CompiledData::Binding *binding, const QString &name,
+        int objectIndex, const QV4::CompiledData::Binding *binding, const QString &name,
         const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit,
         const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit,
         const ReboundBindings &rebound)
 {
-    if (binding->hasFlag(QV4::CompiledData::Binding::IsCustomParserBinding))
-        return;
-
     QQmlProperty prop(m_object, prefix + name);
     QQmlPropertyIndex propIdx = QQmlPropertyPrivate::propertyIndex(prop);
     if (propIdx.coreIndex() < 0) {
@@ -891,7 +889,7 @@ void BindingPatchContext::resetBinding(
         // does not name a property of m_object; it targets an external object resolved by id.
         // Reset the sub-bindings on that target.
         Q_ASSERT(binding->isGroupedProperty());
-        if (BindingPatchContext *child = childContext(oldUnit, binding, nullptr)) {
+        if (BindingPatchContext *child = childContext(oldUnit, objectIndex, binding, nullptr)) {
             child->resetBindings(
                     oldUnit, binding->value.objectIndex, newUnit,
                     reboundSubObjectIndex(rebound, name,
@@ -910,7 +908,7 @@ void BindingPatchContext::resetBinding(
         if (list.clear())
             return;
     } else if (flags.testFlag(QMetaType::PointerToQObject) && binding->isGroupedProperty()) {
-        if (BindingPatchContext *child = childContext(oldUnit, binding, nullptr)) {
+        if (BindingPatchContext *child = childContext(oldUnit, objectIndex, binding, nullptr)) {
             child->resetBindings(
                     oldUnit, binding->value.objectIndex, newUnit,
                     reboundSubObjectIndex(rebound, name,
@@ -956,9 +954,12 @@ void BindingPatchContext::resetBindings(
             continue;
         }
 
+        if (oldUnit->bindingIsCustomParser(cuIndex, int(binding - obj->bindingsBegin())))
+            continue;
+
         // Signal handlers are disconnected centrally.
         if (!binding->isSignalHandler())
-            resetBinding(binding, name, oldUnit, newUnit, rebound);
+            resetBinding(cuIndex, binding, name, oldUnit, newUnit, rebound);
     }
 }
 

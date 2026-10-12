@@ -146,6 +146,27 @@ public:
         return m_compilationUnit->objectAt(index);
     }
 
+    bool objectHasDeferredBindings(int objectIndex) const
+    {
+        return m_compilationUnit->objectHasDeferredBindings(objectIndex);
+    }
+    bool objectHasCustomParserBindings(int objectIndex) const
+    {
+        return m_compilationUnit->objectHasCustomParserBindings(objectIndex);
+    }
+    bool objectIsPopulatedByDeferredBinding(int objectIndex) const
+    {
+        return m_compilationUnit->objectIsPopulatedByDeferredBinding(objectIndex);
+    }
+    bool bindingIsDeferred(int objectIndex, int bindingIndex) const
+    {
+        return m_compilationUnit->bindingIsDeferred(objectIndex, bindingIndex);
+    }
+    bool bindingIsCustomParser(int objectIndex, int bindingIndex) const
+    {
+        return m_compilationUnit->bindingIsCustomParser(objectIndex, bindingIndex);
+    }
+
     Heap::Object *templateObjectAt(int index) const;
 
     Heap::Module *instantiate();
