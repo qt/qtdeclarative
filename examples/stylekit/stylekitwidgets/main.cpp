@@ -7,6 +7,7 @@
 #include <QButtonGroup>
 #include <QCheckBox>
 #include <QComboBox>
+#include <QDial>
 #include <QFormLayout>
 #include <QGridLayout>
 #include <QGroupBox>
@@ -212,8 +213,8 @@ MainWindow::MainWindow()
     miscLayout->addStretch();
     contentLayout->addWidget(miscGroup);
 
-    // Sliders
-    auto *slidersGroup = new QGroupBox(tr("Sliders"));
+    // Sliders and Dials
+    auto *slidersGroup = new QGroupBox(tr("Sliders and Dials"));
     slidersGroup->setMinimumHeight(250);
     auto *slidersLayout = new QHBoxLayout(slidersGroup);
     auto *slider = new QSlider(Qt::Horizontal);
@@ -223,7 +224,11 @@ MainWindow::MainWindow()
     verticalSlider->setRange(0, 100);
     verticalSlider->setValue(30);
     slidersLayout->addWidget(slider);
+    auto *dial = new QDial();
+    dial->setRange(0, 100);
+    dial->setValue(70);
     slidersLayout->addWidget(verticalSlider);
+    slidersLayout->addWidget(dial, 0, Qt::AlignVCenter);
     slidersLayout->addStretch();
     contentLayout->addWidget(slidersGroup);
 
