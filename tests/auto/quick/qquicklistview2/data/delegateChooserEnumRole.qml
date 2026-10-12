@@ -3,7 +3,7 @@
 
 import QtQuick
 import QtQml.Models
-import Test
+import QQuickListView2TestTypes
 
 ListView {
     width: 300; height: 300
