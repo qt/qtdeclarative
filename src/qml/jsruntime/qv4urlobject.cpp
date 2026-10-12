@@ -676,6 +676,7 @@ ReturnedValue UrlSearchParamsCtor::virtualCallAsConstructor(const FunctionObject
 
         uint len = argArray->getLength();
 
+        ScopedArrayObject pairArray(scope);
         for (uint i = 0; i < len; i++) {
             // safe to user fromReturnedValue: Normal array, which will ensure marking
             QV4::Value pair = Value::fromReturnedValue(argArray->get(i));
@@ -687,7 +688,7 @@ ReturnedValue UrlSearchParamsCtor::virtualCallAsConstructor(const FunctionObject
             }
 
 
-            ScopedArrayObject pairArray(scope, pairArrayObject);
+            pairArray = pairArrayObject;
 
 
             uint pairLen = pairArray->getLength();
@@ -822,6 +823,9 @@ void UrlSearchParamsObject::setParams(const QList<QStringList> &params)
 
     ScopedArrayObject scopedKeys(scope, keys);
     ScopedArrayObject scopedValues(scope, values);
+    ScopedArrayObject valuePairObject(scope);
+    ScopedValue key(scope);
+    ScopedValue value(scope);
 
     uint len = 0;
 
@@ -829,10 +833,10 @@ void UrlSearchParamsObject::setParams(const QList<QStringList> &params)
 
         auto *valuePair = engine()->newArrayObject(2);
 
-        ScopedArrayObject valuePairObject(scope, valuePair);
+        valuePairObject =  valuePair;
 
-        ScopedValue key(scope, Value::fromHeapObject(engine()->newString(param[0])));
-        ScopedValue value(scope, Value::fromHeapObject(engine()->newString(param[1])));
+        key = Value::fromHeapObject(engine()->newString(param[0]));
+        value = Value::fromHeapObject(engine()->newString(param[1]));
         valuePairObject->put(uint(0), key);
         valuePairObject->put(uint(1), value);
 
@@ -1308,8 +1312,9 @@ ReturnedValue UrlSearchParamsPrototype::method_getAll(const FunctionObject *b,
     ScopedArrayObject result(scope, arrayObject);
 
     int i = 0;
+    ScopedValue value(scope);
     for (int index = o->indexOf(name); index != -1; index = o->indexOf(name, index)) {
-        ScopedValue value(scope, Value::fromHeapObject(o->valueAtRaw(index)));
+        value = Value::fromHeapObject(o->valueAtRaw(index));
         result->put(i++, value);
     }
 
@@ -1337,11 +1342,12 @@ ReturnedValue UrlSearchParamsPrototype::method_forEach(const FunctionObject *b,
     if (!checkSearchParamsType(v4, o))
         return Encode::undefined();
 
+    Scoped<String> name(scope);
+    Scoped<String> value(scope);
+    QV4::JSCallArguments calldata(scope, 2);
     for (int i = 0; i < o->length(); i++) {
-        Scoped<String> name(scope, o->nameAtRaw(i));
-        Scoped<String> value(scope, o->valueAtRaw(i));
-
-        QV4::JSCallArguments calldata(scope, 2);
+        name = o->nameAtRaw(i);
+        value =  o->valueAtRaw(i);
 
         calldata.args[0] = value;
         calldata.args[1] = name;

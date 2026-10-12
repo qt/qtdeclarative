@@ -343,6 +343,9 @@ ReturnedValue ArrayPrototype::method_toLocaleString(const FunctionObject *b, con
     ScopedPropertyKey tolocaleString(scope, scope.engine->id_toLocaleString()->toPropertyKey());
     Q_ASSERT(!scope.engine->hasException);
 
+    ScopedObject valueAsObject(scope);
+    ScopedFunctionObject function(scope);
+
     for (qint64 k = 0; k < len; ++k) {
         if (k)
             R += separator;
@@ -351,10 +354,10 @@ ReturnedValue ArrayPrototype::method_toLocaleString(const FunctionObject *b, con
         if (v->isNullOrUndefined())
             continue;
 
-        ScopedObject valueAsObject(scope, v->toObject(scope.engine));
+        valueAsObject =  v->toObject(scope.engine);
         Q_ASSERT(valueAsObject); // null and undefined handled above
 
-        ScopedFunctionObject function(scope, valueAsObject->get(tolocaleString));
+        function = valueAsObject->get(tolocaleString);
         if (!function)
             return scope.engine->throwTypeError();
 
@@ -467,9 +470,10 @@ ReturnedValue ArrayPrototype::method_copyWithin(const FunctionObject *b, const V
         to = to + count - 1;
     }
 
+    ScopedValue fromVal(scope);
     while (count > 0) {
         bool fromPresent = false;
-        ScopedValue fromVal(scope, instance->get(from, &fromPresent));
+        fromVal = instance->get(from, &fromPresent);
 
         if (fromPresent) {
             instance->setIndexed(to, fromVal, QV4::Object::DoThrowOnRejection);

@@ -11077,6 +11077,26 @@ void tst_qqmlecmascript::largeLoopsDoNotExhaustJSStack_data()
     };
 
     add("JSON.parse", "JSON.parse('[' + '0,'.repeat(n - 1) + '0]').length === n");
+    add("Array.toLocaleString",
+        "new Array(n).fill(1).toLocaleString().length === 2 * n - 1");
+    add("Array.copyWithin", "new Array(n).fill(1).copyWithin(0, 1).length === n");
+    add("TypedArray.includes", "!new Uint8Array(n).includes(1)");
+    add("TypedArray.toLocaleString",
+        "new Uint8Array(n).toLocaleString().length === 2 * n - 1");
+    add("Object.assign",
+        "var o = {}; for (var i = 0; i < n; ++i) o['k' + i] = i;"
+        "Object.keys(Object.assign({}, o)).length === n");
+    add("String.split", "'a,'.repeat(n).split(/,/).length === n + 1");
+    add("Promise.then",
+        "var resolve; var p = new Promise(function(r) { resolve = r; });"
+        "for (var i = 0; i < n; ++i) p.then(function() {});"
+        "resolve(); true");
+    add("URLSearchParams.constructor",
+        "var pairs = []; for (var i = 0; i < n; ++i) pairs.push(['k', 'v']);"
+        "new URLSearchParams(pairs).getAll('k').length === n");
+    add("URLSearchParams.forEach",
+        "var q = new URLSearchParams(new Array(n).fill(['k', 'v']));"
+        "var count = 0; q.forEach(function() { ++count; }); count === n");
 }
 
 void tst_qqmlecmascript::largeLoopsDoNotExhaustJSStack()

@@ -177,9 +177,10 @@ ReturnedValue QmlListWrapper::createOwned(ExecutionEngine *engine, const QQmlPro
     // into the loop body
     Heap::ArrayData *arrayData = listWrapper->arrayData();
     ArrayData::realloc(listWrapper, Heap::ArrayData::Simple, listSize, false);
+    ScopedObject scopedO(scope);
     for (qsizetype i = 0; i != listSize; ++i) {
         QObject *o = listProp.at(&listProp, i);
-        ScopedObject scopedO(scope, QV4::QObjectWrapper::wrap(engine, o));
+        scopedO = QV4::QObjectWrapper::wrap(engine, o);
         arrayData->vtable()->put(listWrapper, i, scopedO);
     }
     return listWrapper.asReturnedValue();
