@@ -9,9 +9,21 @@
 using namespace QmlIR;
 using namespace Syntax;
 
+void tst_qmljsir::failureMode_data()
+{
+    QTest::addColumn<QString>("source");
+    QTest::addColumn<int>("expectedWarnings");
+
+    QTest::addRow("twoWarnings") << QStringLiteral("QtObject { signal Array() }") << 2;
+    QTest::addRow("twoDuplicateFunctions") << QStringLiteral(
+            "QtObject { function f() {} function f(){} function g(){} function g(){} }")
+                                           << 2;
+}
+
 void tst_qmljsir::failureMode()
 {
-    const QString source = QStringLiteral("QtObject { signal Array() }");
+    QFETCH(QString, source);
+    QFETCH(int, expectedWarnings);
 
     Document stopDocument(QString(), QString(), true);
     IRBuilder stopBuilder;
@@ -21,7 +33,7 @@ void tst_qmljsir::failureMode()
     Document continueDocument(QString(), QString(), true);
     IRBuilder continueBuilder{ IRBuilder::ContinueAfterFailure };
     QVERIFY(!continueBuilder.generateFromQml(source, QString(), &continueDocument));
-    QCOMPARE(continueBuilder.errors.size(), 2);
+    QCOMPARE(continueBuilder.errors.size(), expectedWarnings);
 }
 
 void tst_qmljsir::propertyVirtSpecifiers_data()

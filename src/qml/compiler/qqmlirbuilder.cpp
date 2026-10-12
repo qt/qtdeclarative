@@ -25,11 +25,11 @@ static const quint32 emptyStringIndex = 0;
 using namespace QmlIR;
 using namespace QQmlJS;
 
-#define COMPILE_EXCEPTION(location, desc) \
-    {                                     \
-        recordError(location, desc);      \
-        if (!shouldContinue())            \
-            return false;                 \
+#define COMPILE_EXCEPTION(...)    \
+    {                             \
+        recordError(__VA_ARGS__); \
+        if (!shouldContinue())    \
+            return false;         \
     }
 
 void Object::simplifyRequiredProperties() {
@@ -245,33 +245,53 @@ void Object::init(QQmlJS::MemoryPool *pool, int typeNameIndex, int idIndex,
     declarationsOverride = nullptr;
 }
 
-QString IRBuilder::sanityCheckFunctionNames(Object *obj, QQmlJS::SourceLocation *errorLocation)
+bool IRBuilder::sanityCheckFunctionNames(Object *obj)
 {
+#define EMIT_COMPILE_EXCEPTION(...)     \
+    do {                                \
+        COMPILE_EXCEPTION(__VA_ARGS__); \
+        success = false;                \
+    } while (false);
+
+    bool success = true;
     QSet<int> functionNames;
     for (auto functionit = obj->functionsBegin(); functionit != obj->functionsEnd(); ++functionit) {
         Function *f = functionit.ptr;
-        errorLocation->startLine = f->location.line();
-        errorLocation->startColumn = f->location.column();
+        QQmlJS::SourceLocation errorLocation;
+        errorLocation.startLine = f->location.line();
+        errorLocation.startColumn = f->location.column();
         const QString name = stringAt(f->nameIndex);
         if (f->isQmlFunction) {
-            if (functionNames.contains(f->nameIndex))
-                return tr("Duplicated method name \"%1\", \"%1\" is already a method.").arg(name);
-            functionNames.insert(f->nameIndex);
+            if (functionNames.contains(f->nameIndex)) {
+                EMIT_COMPILE_EXCEPTION(
+                        errorLocation,
+                        tr("Duplicated method name \"%1\", \"%1\" is already a method.").arg(name),
+                        DiagnosticCategory::DuplicatedName);
+            } else {
+                functionNames.insert(f->nameIndex);
+            }
         }
 
         for (auto signalit = obj->signalsBegin(); signalit != obj->signalsEnd(); ++signalit) {
             QmlIR::Signal *s = signalit.ptr;
-            if (s->nameIndex == f->nameIndex)
-                return tr("Duplicated method name \"%1\", \"%1\" is already a signal.").arg(name);
+            if (s->nameIndex == f->nameIndex) {
+                EMIT_COMPILE_EXCEPTION(
+                        errorLocation,
+                        tr("Duplicated method name \"%1\", \"%1\" is already a signal.").arg(name),
+                        DiagnosticCategory::DuplicatedName);
+            }
         }
 
         Q_ASSERT(!f->isQmlFunction || !name.isEmpty());
-        if (!name.isEmpty() && name.at(0).isUpper())
-            return tr("Method names cannot begin with an upper case letter");
+        if (!name.isEmpty() && name.at(0).isUpper()) {
+            EMIT_COMPILE_EXCEPTION(errorLocation,
+                                   tr("Method names cannot begin with an upper case letter"));
+        }
         if (QV4::Compiler::Codegen::isNameGlobal(name))
-            return tr("Illegal method name");
+            EMIT_COMPILE_EXCEPTION(errorLocation, tr("Illegal method name"));
     }
-    return QString(); // no error
+    return success;
+#undef EMIT_COMPILE_EXCEPTION
 }
 
 QString Object::appendEnum(Enum *enumeration)
@@ -753,13 +773,8 @@ bool IRBuilder::defineQMLObject(
     if (!errors.isEmpty() && !shouldContinue())
         return false;
 
-    QQmlJS::SourceLocation loc;
-    QString error = sanityCheckFunctionNames(obj, &loc);
-    if (!error.isEmpty()) {
-        recordError(loc, error);
-        if (!shouldContinue())
-            return false;
-    }
+    if (!sanityCheckFunctionNames(obj))
+        return false;
 
     return true;
 }

@@ -608,7 +608,7 @@ public:
     static bool isStatementNodeScript(QQmlJS::AST::Statement *statement);
     static bool isRedundantNullInitializerForPropertyDeclaration(Property *property, QQmlJS::AST::Statement *statement);
 
-    QString sanityCheckFunctionNames(Object *obj, QQmlJS::SourceLocation *errorLocation);
+    bool sanityCheckFunctionNames(Object *obj);
 
     QList<QQmlJS::DiagnosticMessage> errors;
 
