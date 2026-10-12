@@ -173,12 +173,12 @@ QList<QQmlError> QQmlPropertyValidator::validateObject(
         bool notInRevision = false;
         const QQmlPropertyData *pd = nullptr;
         if (!name.isEmpty()) {
-            if (bindingFlags & QV4::CompiledData::Binding::IsSignalHandlerExpression
-                    || bindingFlags & QV4::CompiledData::Binding::IsSignalHandlerObject) {
+            if (compilationUnit->bindingIsSignalHandlerExpression(objectIndex, i)
+                    || compilationUnit->bindingIsSignalHandlerObject(objectIndex, i)) {
                 pd = propertyResolver.signal(
                         *QQmlSignalNames::anyHandlerNameToSignalName(name), &notInRevision,
                         checkRevision);
-            } else if (bindingFlags & QV4::CompiledData::Binding::IsPropertyObserver) {
+            } else if (compilationUnit->bindingIsPropertyObserver(objectIndex, i)) {
                 pd = propertyResolver.property(
                         *QQmlSignalNames::changedHandlerNameToPropertyName(name), &notInRevision,
                         checkRevision);
@@ -244,11 +244,8 @@ QList<QQmlError> QQmlPropertyValidator::validateObject(
         }
 
         // Signal handlers were resolved and checked earlier in the signal handler conversion pass.
-        if (binding->flags() & (QV4::CompiledData::Binding::IsSignalHandlerExpression
-                              | QV4::CompiledData::Binding::IsSignalHandlerObject
-                              | QV4::CompiledData::Binding::IsPropertyObserver)) {
+        if (compilationUnit->bindingIsSignalHandler(objectIndex, i))
             continue;
-        }
 
         if ((pd && bindingType == QV4::CompiledData::Binding::Type_AttachedProperty)
                 || (!pd && bindingType == QV4::CompiledData::Binding::Type_GroupedProperty)) {
@@ -307,7 +304,9 @@ QList<QQmlError> QQmlPropertyValidator::validateObject(
                 if (bindingError.isValid())
                     return recordError(bindingError);
             } else if (bindingType == QV4::CompiledData::Binding::Type_Object) {
-                QQmlError bindingError = validateObjectBinding(pd, name, binding);
+                QQmlError bindingError = validateObjectBinding(
+                        pd, name, binding,
+                        compilationUnit->bindingIsSignalHandlerObject(objectIndex, i));
                 if (bindingError.isValid())
                     return recordError(bindingError);
             } else if (binding->isGroupedProperty()) {
@@ -699,7 +698,9 @@ QList<QQmlError> QQmlPropertyValidator::recordError(const QQmlError &error) cons
     return errors;
 }
 
-QQmlError QQmlPropertyValidator::validateObjectBinding(const QQmlPropertyData *property, const QString &propertyName, const QV4::CompiledData::Binding *binding) const
+QQmlError QQmlPropertyValidator::validateObjectBinding(
+        const QQmlPropertyData *property, const QString &propertyName,
+        const QV4::CompiledData::Binding *binding, bool isSignalHandlerObject) const
 {
     QQmlError noError;
 
@@ -766,8 +767,7 @@ QQmlError QQmlPropertyValidator::validateObjectBinding(const QQmlPropertyData *p
             }
         }
         return noError;
-    } else if (binding->hasFlag(QV4::CompiledData::Binding::IsSignalHandlerObject)
-               && property->isFunction()) {
+    } else if (isSignalHandlerObject && property->isFunction()) {
         return noError;
     } else if (isPrimitiveType(propType)) {
         auto typeName = QString::fromUtf8(QMetaType(propType).name());

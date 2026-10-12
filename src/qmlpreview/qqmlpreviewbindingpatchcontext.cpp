@@ -262,7 +262,7 @@ void BindingPatchContext::recordBindingValues(
             break;
         }
 
-        if (binding->isSignalHandler())
+        if (unit->bindingIsSignalHandler(cuIndex, int(binding - obj->bindingsBegin())))
             continue;
 
         if (unit->bindingIsCustomParser(cuIndex, int(binding - obj->bindingsBegin())))
@@ -958,7 +958,7 @@ void BindingPatchContext::resetBindings(
             continue;
 
         // Signal handlers are disconnected centrally.
-        if (!binding->isSignalHandler())
+        if (!oldUnit->bindingIsSignalHandler(cuIndex, int(binding - obj->bindingsBegin())))
             resetBinding(cuIndex, binding, name, oldUnit, newUnit, rebound);
     }
 }

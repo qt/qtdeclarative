@@ -317,7 +317,7 @@ public:
     void validate(QQmlBind *binding) const;
     void decodeBinding(
             QQmlBind *q, const QString &propertyPrefix, QQmlData::DeferredData *deferredData,
-            const QV4::CompiledData::Binding *binding,
+            int objectIndex, const QV4::CompiledData::Binding *binding,
             QQmlComponentPrivate::ConstructionState *immediateState);
     void createDelayedValues();
     void onDelayedValueChanged(QString delayedName);
@@ -1003,17 +1003,18 @@ static void initCreator(
 
 void QQmlBindPrivate::decodeBinding(
         QQmlBind *q, const QString &propertyPrefix,
-        QQmlData::DeferredData *deferredData,
+        QQmlData::DeferredData *deferredData, int objectIndex,
         const QV4::CompiledData::Binding *binding,
         QQmlComponentPrivate::ConstructionState  *immediateState)
 {
     const QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit
             = deferredData->compilationUnit;
     QString propertySuffix = compilationUnit->stringAt(binding->propertyNameIndex);
-    if (binding->hasFlag(QV4::CompiledData::Binding::IsSignalHandlerExpression)
-            || binding->hasFlag(QV4::CompiledData::Binding::IsSignalHandlerObject)) {
+    const int bindingIndex = int(binding - compilationUnit->objectAt(objectIndex)->bindingTable());
+    if (compilationUnit->bindingIsSignalHandlerExpression(objectIndex, bindingIndex)
+            || compilationUnit->bindingIsSignalHandlerObject(objectIndex, bindingIndex)) {
         propertySuffix = *QQmlSignalNames::anyHandlerNameToSignalName(propertySuffix);
-    } else if (binding->hasFlag(QV4::CompiledData::Binding::IsPropertyObserver)) {
+    } else if (compilationUnit->bindingIsPropertyObserver(objectIndex, bindingIndex)) {
         propertySuffix = *QQmlSignalNames::changedHandlerNameToPropertyName(propertySuffix);
     }
     const QString propertyName = propertyPrefix + propertySuffix;
@@ -1069,7 +1070,8 @@ void QQmlBindPrivate::decodeBinding(
                 = compilationUnit->objectAt(binding->value.objectIndex);
         const QV4::CompiledData::Binding *subBinding = subObj->bindingTable();
         for (quint32 i = 0; i < subObj->nBindings; ++i, ++subBinding)
-            decodeBinding(q, pre, deferredData, subBinding, immediateState);
+            decodeBinding(q, pre, deferredData, binding->value.objectIndex, subBinding,
+                          immediateState);
         return;
     }
     default:
@@ -1247,7 +1249,8 @@ void QQmlBindPrivate::buildBindEntries(QQmlBind *q, QQmlComponentPrivate::Deferr
             if (deferredState) {
                 QQmlComponentPrivate::ConstructionState constructionState;
                 for (auto it = bindings->cbegin(); it != bindings->cend(); ++it)
-                    decodeBinding(q, QString(), deferredData, *it, &constructionState);
+                    decodeBinding(q, QString(), deferredData, deferredData->deferredIdx, *it,
+                                  &constructionState);
 
 
                 if (constructionState.hasCreator()) {
@@ -1258,7 +1261,8 @@ void QQmlBindPrivate::buildBindEntries(QQmlBind *q, QQmlComponentPrivate::Deferr
                 }
             } else {
                 for (auto it = bindings->cbegin(); it != bindings->cend(); ++it)
-                    decodeBinding(q, QString(), deferredData, *it, nullptr);
+                    decodeBinding(q, QString(), deferredData, deferredData->deferredIdx, *it,
+                                  nullptr);
             }
         }
 

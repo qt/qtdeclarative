@@ -891,6 +891,7 @@ void QQmlObjectCreator::setupBindings(BindingSetupFlags mode)
 
 bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProperty, const QV4::CompiledData::Binding *binding)
 {
+    const int bindingIndex = int(binding - _compiledObject->bindingTable());
     const QV4::CompiledData::Binding::Type bindingType = binding->type();
     if (bindingType == QV4::CompiledData::Binding::Type_AttachedProperty) {
         const QV4::CompiledData::Object *obj = compilationUnit->objectAt(binding->value.objectIndex);
@@ -1058,9 +1059,9 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
 
     const QV4::CompiledData::Binding::Flags bindingFlags = binding->flags();
     const bool allowedToRemoveBinding
-            = !(bindingFlags & QV4::CompiledData::Binding::IsSignalHandlerExpression)
+            = !compilationUnit->bindingIsSignalHandlerExpression(_compiledObjectIndex, bindingIndex)
             && !(bindingFlags & QV4::CompiledData::Binding::IsOnAssignment)
-            && !(bindingFlags & QV4::CompiledData::Binding::IsPropertyObserver)
+            && !compilationUnit->bindingIsPropertyObserver(_compiledObjectIndex, bindingIndex)
             && !_valueTypeProperty;
 
     if (allowedToRemoveBinding) {
@@ -1074,8 +1075,8 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
     }
 
     if (bindingType == QV4::CompiledData::Binding::Type_Script || binding->isTranslationBinding()) {
-        if (bindingFlags & QV4::CompiledData::Binding::IsSignalHandlerExpression
-            || bindingFlags & QV4::CompiledData::Binding::IsPropertyObserver) {
+        if (compilationUnit->bindingIsSignalHandlerExpression(_compiledObjectIndex, bindingIndex)
+            || compilationUnit->bindingIsPropertyObserver(_compiledObjectIndex, bindingIndex)) {
             QV4::Function *runtimeFunction = compilationUnit->runtimeFunctions[binding->value.compiledScriptIndex];
             int signalIndex = _propertyCache->methodIndexToSignalIndex(bindingProperty->coreIndex());
             QQmlBoundSignalExpression *expr = new QQmlBoundSignalExpression(
@@ -1234,7 +1235,7 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
         }
 
         // Assigning object to signal property? ### Qt 7: Remove that functionality
-        if (bindingFlags & QV4::CompiledData::Binding::IsSignalHandlerObject) {
+        if (compilationUnit->bindingIsSignalHandlerObject(_compiledObjectIndex, bindingIndex)) {
             if (!bindingProperty->isFunction()) {
                 recordError(binding->valueLocation, tr("Cannot assign an object to signal property %1").arg(bindingProperty->name(_qobject)));
                 return false;

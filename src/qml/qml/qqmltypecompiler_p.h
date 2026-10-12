@@ -132,7 +132,9 @@ public:
 
     QQmlType qmlTypeForComponent(const QString &inlineComponentName = QString()) const;
 
-    static QList<QQmlError> computeRuntimeData(QV4::CompiledData::CompilationUnit *unit);
+    static QList<QQmlError> computeRuntimeData(
+            QV4::CompiledData::CompilationUnit *unit, QQmlTypeLoader *typeLoader,
+            const QQmlImports *imports);
 
 private:
     QList<QQmlError> errors;
@@ -161,31 +163,6 @@ protected:
     { return compiler->resolvedType(id); }
 
     QQmlTypeCompiler *compiler;
-};
-
-// Resolves signal handlers. Updates the QV4::CompiledData::Binding objects to
-// set the property name to the final signal name (onTextChanged -> textChanged)
-// and sets the IsSignalExpression flag.
-struct SignalHandlerResolver : public QQmlCompilePass
-{
-    Q_DECLARE_TR_FUNCTIONS(SignalHandlerResolver)
-public:
-    SignalHandlerResolver(QQmlTypeCompiler *typeCompiler);
-
-    bool resolveSignalHandlerExpressions();
-
-private:
-    bool resolveSignalHandlerExpressions(
-            const QmlIR::Object *obj, const QString &typeName,
-            const QQmlPropertyCache::ConstPtr &propertyCache,
-            QQmlPropertyResolver::RevisionCheck revisionCheck
-                    = QQmlPropertyResolver::CheckRevision);
-
-    QQmlTypeLoader *typeLoader;
-    const QList<QmlIR::Object*> &qmlObjects;
-    const QQmlImports *imports;
-    const QHash<int, QQmlCustomParser*> &customParsers;
-    const QQmlPropertyCacheVector * const propertyCaches;
 };
 
 // ### This will go away when the codegen resolves all enums to constant expressions

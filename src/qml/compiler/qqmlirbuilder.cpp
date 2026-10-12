@@ -388,7 +388,8 @@ QString Object::appendBinding(Binding *b, bool isListBinding)
             && !b->hasFlag(QV4::CompiledData::Binding::IsOnAssignment)) {
         Binding *existing = findBinding(b->propertyNameIndex);
         if (existing
-                && existing->isValueBinding() == b->isValueBinding()
+                && existing->type() != QV4::CompiledData::Binding::Type_GroupedProperty
+                && existing->type() != QV4::CompiledData::Binding::Type_AttachedProperty
                 && !existing->hasFlag(QV4::CompiledData::Binding::IsOnAssignment)) {
             return tr("Property value set multiple times");
         }

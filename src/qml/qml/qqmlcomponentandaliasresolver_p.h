@@ -182,8 +182,6 @@ QQmlError QQmlComponentAndAliasResolver<ObjectContainer>::findAndRegisterImplici
     for (auto binding = obj->bindingsBegin(), end = obj->bindingsEnd(); binding != end; ++binding) {
         if (binding->type() != QV4::CompiledData::Binding::Type_Object)
             continue;
-        if (binding->hasFlag(QV4::CompiledData::Binding::IsSignalHandlerObject))
-            continue;
 
         auto targetObject = m_compiler->objectAt(binding->value.objectIndex);
         auto typeReference = resolvedType(targetObject->inheritedTypeNameIndex);

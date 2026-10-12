@@ -583,14 +583,11 @@ struct Binding
     };
 
     enum Flag : unsigned int {
-        IsSignalHandlerExpression = 0x1,
-        IsSignalHandlerObject = 0x2,
         IsOnAssignment = 0x4,
         InitializerForReadOnlyDeclaration = 0x8,
         IsResolvedEnum = 0x10,
         IsListItem = 0x20,
-        IsFunctionExpression = 0x200,
-        IsPropertyObserver = 0x400
+        IsFunctionExpression = 0x200
     };
     Q_DECLARE_FLAGS(Flags, Flag);
 
@@ -621,57 +618,8 @@ struct Binding
     Location location;
     Location valueLocation;
 
-    bool hasSignalHandlerBindingFlag() const
-    {
-        const Flags bindingFlags = flags();
-        return bindingFlags & IsSignalHandlerExpression
-                || bindingFlags & IsSignalHandlerObject
-                || bindingFlags & IsPropertyObserver;
-    }
-
-    bool isValueBinding() const
-    {
-        switch (type()) {
-        case Type_AttachedProperty:
-        case Type_GroupedProperty:
-            return false;
-        default:
-            return !hasSignalHandlerBindingFlag();
-        }
-    }
-
-    bool isSignalHandler() const
-    {
-        if (hasSignalHandlerBindingFlag()) {
-            Q_ASSERT(!isValueBinding());
-            Q_ASSERT(!isAttachedProperty());
-            Q_ASSERT(!isGroupedProperty());
-            return true;
-        }
-        return false;
-    }
-
-    bool isAttachedProperty() const
-    {
-        if (type() == Type_AttachedProperty) {
-            Q_ASSERT(!isValueBinding());
-            Q_ASSERT(!isSignalHandler());
-            Q_ASSERT(!isGroupedProperty());
-            return true;
-        }
-        return false;
-    }
-
-    bool isGroupedProperty() const
-    {
-        if (type() == Type_GroupedProperty) {
-            Q_ASSERT(!isValueBinding());
-            Q_ASSERT(!isSignalHandler());
-            Q_ASSERT(!isAttachedProperty());
-            return true;
-        }
-        return false;
-    }
+    bool isAttachedProperty() const { return type() == Type_AttachedProperty; }
+    bool isGroupedProperty() const { return type() == Type_GroupedProperty; }
 
     bool isFunctionExpression() const { return hasFlag(IsFunctionExpression); }
 
@@ -1411,6 +1359,9 @@ struct RuntimeBinding
         IsDeferredBinding = 0x1,
         IsCustomParserBinding = 0x2,
         IsBindingToAlias = 0x4,
+        IsSignalHandlerExpression = 0x8,
+        IsSignalHandlerObject = 0x10,
+        IsPropertyObserver = 0x20,
     };
 
     quint32_le flags;
@@ -1798,6 +1749,31 @@ public:
     {
         return runtimeObjectAt(objectIndex)->bindingTable()[bindingIndex].flags
                 & RuntimeBinding::IsCustomParserBinding;
+    }
+
+    bool bindingIsSignalHandlerExpression(int objectIndex, int bindingIndex) const
+    {
+        return runtimeObjectAt(objectIndex)->bindingTable()[bindingIndex].flags
+                & RuntimeBinding::IsSignalHandlerExpression;
+    }
+
+    bool bindingIsSignalHandlerObject(int objectIndex, int bindingIndex) const
+    {
+        return runtimeObjectAt(objectIndex)->bindingTable()[bindingIndex].flags
+                & RuntimeBinding::IsSignalHandlerObject;
+    }
+
+    bool bindingIsPropertyObserver(int objectIndex, int bindingIndex) const
+    {
+        return runtimeObjectAt(objectIndex)->bindingTable()[bindingIndex].flags
+                & RuntimeBinding::IsPropertyObserver;
+    }
+
+    bool bindingIsSignalHandler(int objectIndex, int bindingIndex) const
+    {
+        return runtimeObjectAt(objectIndex)->bindingTable()[bindingIndex].flags
+                & (RuntimeBinding::IsSignalHandlerExpression | RuntimeBinding::IsSignalHandlerObject
+                   | RuntimeBinding::IsPropertyObserver);
     }
 
     const RuntimeBindingIndex *bindingApplicationOrder(int objectIndex) const

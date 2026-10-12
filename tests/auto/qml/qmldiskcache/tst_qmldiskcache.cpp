@@ -108,6 +108,7 @@ private slots:
     void fileSelectors();
     void localAliases();
     void aliasToAlias();
+    void implicitComponentForHandlerNamedProperty();
     void deepAliasThroughGroupedAliasFromCache();
     void listPropertyReplaceIfNotDefaultFromCache();
     void cacheResources();
@@ -787,6 +788,48 @@ void tst_qmldiskcache::localAliases()
         QVERIFY(!obj.isNull());
         QCOMPARE(obj->property("bar").toInt(), 100);
     }
+}
+
+void tst_qmldiskcache::implicitComponentForHandlerNamedProperty()
+{
+    QQmlEngine engine;
+
+    TestCompiler testCompiler(&engine);
+    QVERIFY(testCompiler.tempDir.isValid());
+
+    // onFoo looks like a signal handler, but there is no signal foo. It's a property.
+    const QByteArray contents = QByteArrayLiteral("import QtQml\n"
+                                                  "QtObject {\n"
+                                                  "    property Component onFoo: QtObject {\n"
+                                                  "        objectName: \"inner\"\n"
+                                                  "    }\n"
+                                                  "}");
+
+    {
+        testCompiler.clearCache();
+        QVERIFY2(testCompiler.compile(contents), qPrintable(testCompiler.lastErrorString));
+        QVERIFY2(testCompiler.verify(), qPrintable(testCompiler.lastErrorString));
+    }
+
+    const auto verifyComponent = [&]() {
+        CleanlyLoadingComponent component(&engine, testCompiler.testFilePath);
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(!obj.isNull());
+        QQmlComponent *inner = obj->property("onFoo").value<QQmlComponent *>();
+        QVERIFY(inner);
+        QScopedPointer<QObject> innerObj(inner->create());
+        QVERIFY(!innerObj.isNull());
+        QCOMPARE(innerObj->objectName(), QStringLiteral("inner"));
+    };
+
+    verifyComponent();
+    if (QTest::currentTestFailed())
+        return;
+
+    engine.clearComponentCache();
+
+    verifyComponent();
 }
 
 void tst_qmldiskcache::aliasToAlias()

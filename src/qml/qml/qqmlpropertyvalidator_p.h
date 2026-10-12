@@ -53,7 +53,7 @@ private:
             const QV4::CompiledData::Binding *binding) const;
     QQmlError validateObjectBinding(
             const QQmlPropertyData *property, const QString &propertyName,
-            const QV4::CompiledData::Binding *binding) const;
+            const QV4::CompiledData::Binding *binding, bool isSignalHandlerObject) const;
 
     bool canCoerce(QMetaType to, QQmlPropertyCache::ConstPtr fromMo) const;
 

@@ -166,6 +166,22 @@ public:
     {
         return m_compilationUnit->bindingIsCustomParser(objectIndex, bindingIndex);
     }
+    bool bindingIsSignalHandlerExpression(int objectIndex, int bindingIndex) const
+    {
+        return m_compilationUnit->bindingIsSignalHandlerExpression(objectIndex, bindingIndex);
+    }
+    bool bindingIsSignalHandlerObject(int objectIndex, int bindingIndex) const
+    {
+        return m_compilationUnit->bindingIsSignalHandlerObject(objectIndex, bindingIndex);
+    }
+    bool bindingIsPropertyObserver(int objectIndex, int bindingIndex) const
+    {
+        return m_compilationUnit->bindingIsPropertyObserver(objectIndex, bindingIndex);
+    }
+    bool bindingIsSignalHandler(int objectIndex, int bindingIndex) const
+    {
+        return m_compilationUnit->bindingIsSignalHandler(objectIndex, bindingIndex);
+    }
     const CompiledData::RuntimeBindingIndex *bindingApplicationOrder(int objectIndex) const
     {
         return m_compilationUnit->bindingApplicationOrder(objectIndex);

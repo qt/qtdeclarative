@@ -84,12 +84,6 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> QQmlTypeCompiler::compile()
     }
 
     {
-        SignalHandlerResolver converter(this);
-        if (!converter.resolveSignalHandlerExpressions())
-            return nullptr;
-    }
-
-    {
         QQmlEnumTypeResolver enumResolver(this);
         if (!enumResolver.resolveEnumBindings())
             return nullptr;
@@ -271,187 +265,6 @@ QQmlCompilePass::QQmlCompilePass(QQmlTypeCompiler *typeCompiler)
 {
 }
 
-SignalHandlerResolver::SignalHandlerResolver(QQmlTypeCompiler *typeCompiler)
-    : QQmlCompilePass(typeCompiler)
-    , typeLoader(typeCompiler->typeLoader())
-    , qmlObjects(*typeCompiler->qmlObjects())
-    , imports(typeCompiler->imports())
-    , customParsers(typeCompiler->customParserCache())
-    , propertyCaches(typeCompiler->propertyCaches())
-{
-}
-
-bool SignalHandlerResolver::resolveSignalHandlerExpressions()
-{
-    for (int objectIndex = 0; objectIndex < qmlObjects.size(); ++objectIndex) {
-        const QmlIR::Object * const obj = qmlObjects.at(objectIndex);
-        QQmlPropertyCache::ConstPtr cache = propertyCaches->at(objectIndex);
-        if (!cache)
-            continue;
-        if (QQmlCustomParser *customParser = customParsers.value(obj->inheritedTypeNameIndex)) {
-            if (!(customParser->flags() & QQmlCustomParser::AcceptsSignalHandlers))
-                continue;
-        }
-        const QString elementName = stringAt(obj->inheritedTypeNameIndex);
-        if (!resolveSignalHandlerExpressions(obj, elementName, cache))
-            return false;
-    }
-    return true;
-}
-
-bool SignalHandlerResolver::resolveSignalHandlerExpressions(
-        const QmlIR::Object *obj, const QString &typeName,
-        const QQmlPropertyCache::ConstPtr &propertyCache,
-        QQmlPropertyResolver::RevisionCheck checkRevision)
-{
-    // map from signal name defined in qml itself to list of parameters
-    QHash<QString, QStringList> customSignals;
-
-    for (QmlIR::Binding *binding = obj->firstBinding(); binding; binding = binding->next) {
-        // Attached objects are visited twice: Once via the attached property and once on their own.
-        if (binding->hasSignalHandlerBindingFlag())
-            continue;
-
-        const QString bindingPropertyName = stringAt(binding->propertyNameIndex);
-        // Attached property?
-        const QV4::CompiledData::Binding::Type bindingType = binding->type();
-        if (bindingType == QV4::CompiledData::Binding::Type_AttachedProperty) {
-            const QmlIR::Object *attachedObj = qmlObjects.at(binding->value.objectIndex);
-            auto *typeRef = resolvedType(binding->propertyNameIndex);
-            QQmlType type = typeRef ? typeRef->type() : QQmlType();
-            if (!type.isValid())
-                imports->resolveType(typeLoader, bindingPropertyName, &type, nullptr, nullptr);
-
-            const QMetaObject *attachedType = type.attachedPropertiesType(typeLoader);
-            if (!attachedType)
-                COMPILE_EXCEPTION(binding, tr("Non-existent attached object"));
-            QQmlPropertyCache::ConstPtr cache = QQmlMetaType::propertyCache(attachedType);
-
-            // Ignore revisions of signals on attached objects. They are not unqualified.
-            if (!resolveSignalHandlerExpressions(
-                        attachedObj, bindingPropertyName, cache,
-                        QQmlPropertyResolver::IgnoreRevision)) {
-                return false;
-            }
-
-            continue;
-        }
-
-        QString qPropertyName;
-        QString signalName;
-        if (auto propertyName =
-                    QQmlSignalNames::changedHandlerNameToPropertyName(bindingPropertyName)) {
-            qPropertyName = *propertyName;
-            signalName = *QQmlSignalNames::changedHandlerNameToSignalName(bindingPropertyName);
-        } else {
-            signalName = QQmlSignalNames::handlerNameToSignalName(bindingPropertyName)
-                                 .value_or(QString());
-        }
-        if (signalName.isEmpty())
-            continue;
-
-        QQmlPropertyResolver resolver(propertyCache);
-
-        bool notInRevision = false;
-        const QQmlPropertyData *const signal
-                = resolver.signal(signalName, &notInRevision, checkRevision);
-        const QQmlPropertyData *const signalPropertyData
-                = resolver.property(signalName, /*notInRevision ptr*/nullptr, checkRevision);
-        const QQmlPropertyData *const qPropertyData = !qPropertyName.isEmpty()
-                ? resolver.property(qPropertyName, nullptr, checkRevision)
-                : nullptr;
-        QV4::CompiledData::Binding::Flag flag
-                = QV4::CompiledData::Binding::IsSignalHandlerExpression;
-
-        const bool isPropertyObserver
-                = !signalPropertyData && qPropertyData && qPropertyData->notifiesViaBindable();
-        if (signal && !(qPropertyData && qPropertyData->isAlias() && isPropertyObserver)) {
-            int sigIndex = propertyCache->methodIndexToSignalIndex(signal->coreIndex());
-            sigIndex = propertyCache->originalClone(sigIndex);
-
-            bool unnamedParameter = false;
-
-            QList<QByteArray> parameterNames = propertyCache->signalParameterNames(sigIndex);
-            for (int i = 0; i < parameterNames.size(); ++i) {
-                const QString param = QString::fromUtf8(parameterNames.at(i));
-                if (param.isEmpty())
-                    unnamedParameter = true;
-                else if (unnamedParameter) {
-                    COMPILE_EXCEPTION(binding, tr("Signal uses unnamed parameter followed by named parameter."));
-                } else if (QV4::Compiler::Codegen::isNameGlobal(param)) {
-                    COMPILE_EXCEPTION(binding, tr("Signal parameter \"%1\" hides global variable.").arg(param));
-                }
-            }
-        } else if (isPropertyObserver) {
-            flag = QV4::CompiledData::Binding::IsPropertyObserver;
-        } else {
-            if (notInRevision) {
-                // Try assinging it as a property later
-                if (signalPropertyData)
-                    continue;
-
-                const QString &originalPropertyName = stringAt(binding->propertyNameIndex);
-
-                auto *typeRef = resolvedType(obj->inheritedTypeNameIndex);
-                const QQmlType type = typeRef ? typeRef->type() : QQmlType();
-                if (type.isValid()) {
-                    COMPILE_EXCEPTION(binding, tr("\"%1.%2\" is not available in %3 %4.%5.")
-                                      .arg(typeName, originalPropertyName, type.module())
-                                      .arg(type.version().majorVersion())
-                                      .arg(type.version().minorVersion()));
-                } else {
-                    COMPILE_EXCEPTION(
-                            binding,
-                            tr("\"%1.%2\" is not available due to component versioning.")
-                                    .arg(typeName, originalPropertyName));
-                }
-            }
-
-            // Try to look up the signal parameter names in the object itself
-
-            // build cache if necessary
-            if (customSignals.isEmpty()) {
-                for (const QmlIR::Signal *signal = obj->firstSignal(); signal; signal = signal->next) {
-                    const QString &signalName = stringAt(signal->nameIndex);
-                    customSignals.insert(signalName, signal->parameterStringList(compiler->stringPool()));
-                }
-
-                for (const QmlIR::Property *property = obj->firstProperty(); property; property = property->next) {
-                    const QString propName = stringAt(property->nameIndex());
-                    customSignals.insert(propName, QStringList());
-                }
-            }
-
-            QHash<QString, QStringList>::ConstIterator entry = customSignals.constFind(signalName);
-            if (entry == customSignals.constEnd() && !qPropertyName.isEmpty())
-                entry = customSignals.constFind(qPropertyName);
-
-            if (entry == customSignals.constEnd()) {
-                // Can't find even a custom signal, then just don't do anything and try
-                // keeping the binding as a regular property assignment.
-                continue;
-            }
-        }
-
-        // Binding object to signal means connect the signal to the object's default method.
-        if (bindingType == QV4::CompiledData::Binding::Type_Object) {
-            binding->setFlag(QV4::CompiledData::Binding::IsSignalHandlerObject);
-            continue;
-        }
-
-        if (bindingType != QV4::CompiledData::Binding::Type_Script) {
-            if (bindingType < QV4::CompiledData::Binding::Type_Script) {
-                COMPILE_EXCEPTION(binding, tr("Cannot assign a value to a signal (expecting a script to be run)"));
-            } else {
-                COMPILE_EXCEPTION(binding, tr("Incorrectly specified signal assignment"));
-            }
-        }
-
-        binding->setFlag(flag);
-    }
-    return true;
-}
-
 QQmlEnumTypeResolver::QQmlEnumTypeResolver(QQmlTypeCompiler *typeCompiler)
     : QQmlCompilePass(typeCompiler)
     , qmlObjects(*typeCompiler->qmlObjects())
@@ -471,12 +284,6 @@ bool QQmlEnumTypeResolver::resolveEnumBindings()
         QQmlPropertyResolver resolver(propertyCache);
 
         for (QmlIR::Binding *binding = obj->firstBinding(); binding; binding = binding->next) {
-            const QV4::CompiledData::Binding::Flags bindingFlags = binding->flags();
-            if (bindingFlags & QV4::CompiledData::Binding::IsSignalHandlerExpression
-                    || bindingFlags & QV4::CompiledData::Binding::IsSignalHandlerObject
-                    || bindingFlags & QV4::CompiledData::Binding::IsPropertyObserver)
-                continue;
-
             if (binding->type() != QV4::CompiledData::Binding::Type_Script)
                 continue;
 
@@ -991,11 +798,20 @@ namespace {
 class RuntimeDataBuilder
 {
 public:
-    explicit RuntimeDataBuilder(QV4::CompiledData::CompilationUnit *unit) : unit(unit) {}
+    RuntimeDataBuilder(QV4::CompiledData::CompilationUnit *unit, QQmlTypeLoader *typeLoader,
+                       const QQmlImports *imports)
+        : unit(unit), typeLoader(typeLoader), imports(imports)
+    {
+    }
 
     QList<QQmlError> build()
     {
         unit->allocateRuntimeData();
+        for (int i = 0, count = unit->objectCount(); i < count; ++i) {
+            if (!classifySignalHandlers(i))
+                return errors;
+        }
+
         for (int i = 0, count = unit->objectCount(); i < count; ++i) {
             if (unit->objectAt(i)->hasFlag(QV4::CompiledData::Object::IsInlineComponentRoot)) {
                 if (!scanObject(i, ScopeDeferred::False))
@@ -1016,6 +832,187 @@ public:
 private:
     enum class ScopeDeferred : bool { False, True };
 
+    bool isValueBinding(int objectIndex, int bindingIndex) const
+    {
+        switch (unit->objectAt(objectIndex)->bindingTable()[bindingIndex].type()) {
+        case QV4::CompiledData::Binding::Type_AttachedProperty:
+        case QV4::CompiledData::Binding::Type_GroupedProperty:
+            return false;
+        default:
+            return !unit->bindingIsSignalHandler(objectIndex, bindingIndex);
+        }
+    }
+
+    bool classifySignalHandlers(int objectIndex)
+    {
+        const QQmlPropertyCache::ConstPtr cache = unit->propertyCaches.at(objectIndex);
+        if (!cache)
+            return true;
+
+        const QV4::CompiledData::Object *obj = unit->objectAt(objectIndex);
+        if (const QV4::ResolvedTypeReference *typeRef
+                    = unit->resolvedType(obj->inheritedTypeNameIndex)) {
+            if (QQmlCustomParser *customParser = typeRef->type().customParser()) {
+                if (!(customParser->flags() & QQmlCustomParser::AcceptsSignalHandlers))
+                    return true;
+            }
+        }
+
+        return classifySignalHandlers(
+                objectIndex, unit->stringAt(obj->inheritedTypeNameIndex), cache,
+                QQmlPropertyResolver::CheckRevision);
+    }
+
+    bool classifySignalHandlers(
+            int objectIndex, const QString &typeName,
+            const QQmlPropertyCache::ConstPtr &propertyCache,
+            QQmlPropertyResolver::RevisionCheck checkRevision)
+    {
+        using namespace QV4::CompiledData;
+
+        const Object *obj = unit->objectAt(objectIndex);
+        RuntimeBinding *runtimeBindings
+                = unit->runtimeDataForWrite()->objectAt(objectIndex)->bindingTable();
+        QSet<QString> customSignals;
+
+        const Binding *binding = obj->bindingTable();
+        for (quint32 i = 0; i < obj->nBindings; ++i, ++binding) {
+            // Attached objects are visited twice: Once via the attached property and once on their
+            // own.
+            if (unit->bindingIsSignalHandler(objectIndex, i))
+                continue;
+
+            const QString bindingPropertyName = unit->stringAt(binding->propertyNameIndex);
+            const Binding::Type bindingType = binding->type();
+
+            if (bindingType == Binding::Type_AttachedProperty) {
+                const QV4::ResolvedTypeReference *typeRef
+                        = unit->resolvedType(binding->propertyNameIndex);
+                QQmlType type = typeRef ? typeRef->type() : QQmlType();
+                if (!type.isValid())
+                    imports->resolveType(typeLoader, bindingPropertyName, &type, nullptr, nullptr);
+                const QMetaObject *attachedType = type.attachedPropertiesType(typeLoader);
+                if (!attachedType) {
+                    return recordError(binding->location,
+                                       QQmlTypeCompiler::tr("Non-existent attached object"));
+                }
+
+                // Ignore revisions of signals on attached objects. They are not unqualified.
+                if (!classifySignalHandlers(binding->value.objectIndex, bindingPropertyName,
+                                            QQmlMetaType::propertyCache(attachedType),
+                                            QQmlPropertyResolver::IgnoreRevision)) {
+                    return false;
+                }
+                continue;
+            }
+
+            const QString qPropertyName
+                    = QQmlSignalNames::changedHandlerNameToPropertyName(bindingPropertyName)
+                              .value_or(QString());
+            const QString signalName
+                    = QQmlSignalNames::anyHandlerNameToSignalName(bindingPropertyName)
+                              .value_or(QString());
+            if (signalName.isEmpty())
+                continue;
+
+            QQmlPropertyResolver resolver(propertyCache);
+            bool notInRevision = false;
+            const QQmlPropertyData *const signal
+                    = resolver.signal(signalName, &notInRevision, checkRevision);
+            const QQmlPropertyData *const signalPropertyData
+                    = resolver.property(signalName, nullptr, checkRevision);
+            const QQmlPropertyData *const qPropertyData = !qPropertyName.isEmpty()
+                    ? resolver.property(qPropertyName, nullptr, checkRevision)
+                    : nullptr;
+
+            RuntimeBinding::Flag flag = RuntimeBinding::IsSignalHandlerExpression;
+            const bool isPropertyObserver
+                    = !signalPropertyData && qPropertyData && qPropertyData->notifiesViaBindable();
+            if (signal && !(qPropertyData && qPropertyData->isAlias() && isPropertyObserver)) {
+                int sigIndex = propertyCache->methodIndexToSignalIndex(signal->coreIndex());
+                sigIndex = propertyCache->originalClone(sigIndex);
+                bool unnamedParameter = false;
+                const QList<QByteArray> parameterNames
+                        = propertyCache->signalParameterNames(sigIndex);
+                for (const QByteArray &parameterName : parameterNames) {
+                    const QString param = QString::fromUtf8(parameterName);
+                    if (param.isEmpty()) {
+                        unnamedParameter = true;
+                    } else if (unnamedParameter) {
+                        return recordError(
+                                binding->location,
+                                QQmlTypeCompiler::tr("Signal uses unnamed parameter followed by "
+                                                     "named parameter."));
+                    } else if (QV4::Compiler::Codegen::isNameGlobal(param)) {
+                        return recordError(
+                                binding->location,
+                                QQmlTypeCompiler::tr("Signal parameter \"%1\" hides global "
+                                                     "variable.").arg(param));
+                    }
+                }
+            } else if (isPropertyObserver) {
+                flag = RuntimeBinding::IsPropertyObserver;
+            } else {
+                if (notInRevision) {
+                    // Try assigning it as a property later
+                    if (signalPropertyData)
+                        continue;
+
+                    if (const QV4::ResolvedTypeReference *typeRef
+                                = unit->resolvedType(obj->inheritedTypeNameIndex);
+                            typeRef && typeRef->type().isValid()) {
+                        const QQmlType type = typeRef->type();
+                        return recordError(
+                                binding->location,
+                                QQmlTypeCompiler::tr("\"%1.%2\" is not available in %3 %4.%5.")
+                                        .arg(typeName, bindingPropertyName, type.module())
+                                        .arg(type.version().majorVersion())
+                                        .arg(type.version().minorVersion()));
+                    }
+                    return recordError(
+                            binding->location,
+                            QQmlTypeCompiler::tr("\"%1.%2\" is not available due to component "
+                                                 "versioning.").arg(typeName, bindingPropertyName));
+                }
+
+                // Try to look up the signal parameter names in the object itself
+
+                // build cache if necessary
+                if (customSignals.isEmpty()) {
+                    for (int s = 0, sc = obj->signalCount(); s < sc; ++s)
+                        customSignals.insert(unit->stringAt(obj->signalAt(s)->nameIndex));
+                    const Property *properties = obj->propertyTable();
+                    for (int p = 0, pc = obj->propertyCount(); p < pc; ++p)
+                        customSignals.insert(unit->stringAt(properties[p].nameIndex()));
+                }
+
+                // if not found, it's not a signal handler but a regular property assignment
+                if (!customSignals.contains(signalName)
+                        && (qPropertyName.isEmpty() || !customSignals.contains(qPropertyName))) {
+                    continue;
+                }
+            }
+
+            // Binding object to signal means connect the signal to the object's default method.
+            if (bindingType == Binding::Type_Object) {
+                runtimeBindings[i].flags |= RuntimeBinding::IsSignalHandlerObject;
+                continue;
+            }
+
+            if (bindingType != Binding::Type_Script) {
+                return recordError(
+                        binding->location,
+                        bindingType < Binding::Type_Script
+                                ? QQmlTypeCompiler::tr("Cannot assign a value to a signal "
+                                                       "(expecting a script to be run)")
+                                : QQmlTypeCompiler::tr("Incorrectly specified signal assignment"));
+            }
+
+            runtimeBindings[i].flags |= flag;
+        }
+        return true;
+    }
+
     void classifyBindingsToAliases(int objectIndex)
     {
         using namespace QV4::CompiledData;
@@ -1033,7 +1030,7 @@ private:
 
         const Binding *binding = obj->bindingTable();
         for (quint32 i = 0; i < obj->nBindings; ++i, ++binding) {
-            if (!binding->isValueBinding())
+            if (!isValueBinding(objectIndex, i))
                 continue;
             bool notInRevision = false;
             const QQmlPropertyData *pd = binding->propertyNameIndex != 0
@@ -1063,11 +1060,11 @@ private:
                     order[n++] = b;
             }
         };
-        collect([&](quint16 b) { return bindings[b].isValueBinding() && !isAlias(b); });
-        collect([&](quint16 b) { return bindings[b].isSignalHandler(); });
+        collect([&](quint16 b) { return isValueBinding(objectIndex, b) && !isAlias(b); });
+        collect([&](quint16 b) { return unit->bindingIsSignalHandler(objectIndex, b); });
         collect([&](quint16 b) { return bindings[b].isAttachedProperty(); });
         collect([&](quint16 b) { return bindings[b].isGroupedProperty(); });
-        collect([&](quint16 b) { return bindings[b].isValueBinding() && isAlias(b); });
+        collect([&](quint16 b) { return isValueBinding(objectIndex, b) && isAlias(b); });
         Q_ASSERT(n == obj->nBindings);
     }
 
@@ -1204,7 +1201,7 @@ private:
                     return false;
 
                 // These signal handlers cannot be custom-parsed. The signal exists.
-                if (binding->hasSignalHandlerBindingFlag())
+                if (unit->bindingIsSignalHandler(objectIndex, i))
                     return false;
 
                 // If the property isn't found, we may want to custom-parse the binding.
@@ -1275,15 +1272,19 @@ private:
     }
 
     QV4::CompiledData::CompilationUnit *unit;
+    QQmlTypeLoader *typeLoader;
+    const QQmlImports *imports;
     QList<QQmlError> errors;
     bool seenObjectWithId = false;
 };
 
 } // namespace
 
-QList<QQmlError> QQmlTypeCompiler::computeRuntimeData(QV4::CompiledData::CompilationUnit *unit)
+QList<QQmlError> QQmlTypeCompiler::computeRuntimeData(
+        QV4::CompiledData::CompilationUnit *unit, QQmlTypeLoader *typeLoader,
+        const QQmlImports *imports)
 {
-    return RuntimeDataBuilder(unit).build();
+    return RuntimeDataBuilder(unit, typeLoader, imports).build();
 }
 
 QT_END_NAMESPACE

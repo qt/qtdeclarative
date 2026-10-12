@@ -672,7 +672,8 @@ void QQmlTypeData::done()
     {
         m_compiledData->inlineComponentData = m_inlineComponentData;
 
-        if (QList<QQmlError> errors = QQmlTypeCompiler::computeRuntimeData(m_compiledData.data());
+        if (QList<QQmlError> errors = QQmlTypeCompiler::computeRuntimeData(
+                    m_compiledData.data(), typeLoader(), m_importCache.data());
                 !errors.isEmpty()) {
             setError(errors);
             return;

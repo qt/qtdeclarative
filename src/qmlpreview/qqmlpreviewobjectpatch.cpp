@@ -164,12 +164,12 @@ static void refreshBindingPropertyData(const QQmlRefPointer<QV4::ExecutableCompi
         if (name.isEmpty())
             continue;
 
-        if (binding->hasFlag(QV4::CompiledData::Binding::IsSignalHandlerExpression)
-                || binding->hasFlag(QV4::CompiledData::Binding::IsSignalHandlerObject)) {
+        if (cu->bindingIsSignalHandlerExpression(objectIndex, i)
+                || cu->bindingIsSignalHandlerObject(objectIndex, i)) {
             bindingData[i] = resolver.signal(
                     *QQmlSignalNames::anyHandlerNameToSignalName(name), nullptr,
                     QQmlPropertyResolver::IgnoreRevision);
-        } else if (binding->hasFlag(QV4::CompiledData::Binding::IsPropertyObserver)) {
+        } else if (cu->bindingIsPropertyObserver(objectIndex, i)) {
             bindingData[i] = resolver.property(
                     *QQmlSignalNames::changedHandlerNameToPropertyName(name), nullptr,
                     QQmlPropertyResolver::IgnoreRevision);

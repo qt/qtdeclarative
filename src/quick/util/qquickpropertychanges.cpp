@@ -272,7 +272,7 @@ void QQuickPropertyChangesPrivate::decodeBinding(const QString &propertyPrefix, 
         break;
     }
 
-    if (binding->isSignalHandler() || QQmlSignalNames::isHandlerName(propertyName)) {
+    if (QQmlSignalNames::isHandlerName(compilationUnit->stringAt(binding->propertyNameIndex))) {
         QQmlProperty prop = property(propertyName);
         if (prop.isSignalProperty()) {
             QQuickReplaceSignalHandler *handler = new QQuickReplaceSignalHandler;
