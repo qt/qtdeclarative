@@ -1,5 +1,5 @@
 import QtQuick
-import Test
+import QQuickListView2TestTypes
 
 ListView {
     id: root
