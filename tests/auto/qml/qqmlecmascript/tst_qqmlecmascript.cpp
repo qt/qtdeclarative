@@ -455,6 +455,8 @@ private slots:
     void deletedContextObjectProperty_data();
     void deletedContextObjectProperty();
     void compositeSingletonInListProperty();
+    void largeLoopsDoNotExhaustJSStack_data();
+    void largeLoopsDoNotExhaustJSStack();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -11063,6 +11065,28 @@ void tst_qqmlecmascript::compositeSingletonInListProperty()
 
     QCOMPARE(o->property("count").toInt(), 1);
     QVERIFY(o->property("first").value<QObject *>() != nullptr);
+}
+
+void tst_qqmlecmascript::largeLoopsDoNotExhaustJSStack_data()
+{
+    QTest::addColumn<QString>("script");
+
+    const QString prelude = QStringLiteral("var n = 700000;\n");
+    auto add = [&](const char *name, const char *script) {
+        QTest::newRow(name) << (prelude + QLatin1String(script));
+    };
+
+    add("JSON.parse", "JSON.parse('[' + '0,'.repeat(n - 1) + '0]').length === n");
+}
+
+void tst_qqmlecmascript::largeLoopsDoNotExhaustJSStack()
+{
+    QFETCH(QString, script);
+
+    QQmlEngine engine;
+    const QJSValue result = engine.evaluate(script);
+    QVERIFY2(!result.isError(), qPrintable(result.toString()));
+    QVERIFY(result.toBool());
 }
 
 QTEST_MAIN(tst_qqmlecmascript)
