@@ -94,6 +94,7 @@ private slots:
     void checkModality();
     void folderBreadcrumbBarDoesntGrow();
     void checkFrameless();
+    void windowAsParent();
 
 private:
     enum DelegateOrderPolicy
@@ -2018,6 +2019,21 @@ void tst_QQuickFileDialogImpl::checkFrameless()
     QVERIFY(dialogHelper.waitForPopupWindowActiveAndPolished());
 
     QVERIFY(dialogHelper.popupWindow()->flags().testFlag(Qt::FramelessWindowHint));
+}
+
+void tst_QQuickFileDialogImpl::windowAsParent()
+{
+    // QTBUG-147240: a dialog whose QObject parent is a window (rather than an item)
+    // should use that window when opening.
+    FileDialogTestHelper dialogHelper(this, "windowAsParent.qml");
+    QVERIFY2(dialogHelper.isWindowInitialized(), dialogHelper.failureMessage());
+    QCOMPARE(dialogHelper.dialog->parent(), dialogHelper.window());
+
+    OPEN_QUICK_DIALOG();
+    QVERIFY(dialogHelper.waitForPopupWindowActiveAndPolished());
+    QCOMPARE(dialogHelper.quickDialog->window(), dialogHelper.window());
+
+    CLOSE_QUICK_DIALOG();
 }
 
 QTEST_QUICKDIALOGS_MAIN(tst_QQuickFileDialogImpl)

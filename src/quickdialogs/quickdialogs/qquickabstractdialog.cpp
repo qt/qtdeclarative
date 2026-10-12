@@ -561,6 +561,9 @@ QWindow *QQuickAbstractDialog::windowForOpen() const
 {
     if (m_parentWindowExplicitlySet)
         return m_parentWindow;
+    QObject *p = parent();
+    if (p && p->isWindowType())
+        return qobject_cast<QWindow *>(p);
     if (auto parentItem = findParentItem())
         return QQuickItemPrivate::get(parentItem)->renderWindow();
     return m_parentWindow;
