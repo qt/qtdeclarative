@@ -5,6 +5,7 @@
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QDir>
+#include <QTemporaryDir>
 
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
@@ -12,6 +13,7 @@
 #include <private/qquickimage_p.h>
 #include <private/qquickimagebase_p.h>
 #include <private/qquickloader_p.h>
+#include <private/qquickwindow_p.h>
 #include <QtQml/qqmlcontext.h>
 #include <QtQml/qqmlexpression.h>
 #include <QtTest/QSignalSpy>
@@ -84,6 +86,7 @@ private slots:
     void multiFrame();
     void colorSpace();
     void devicePixelRatio();
+    void reloadOnWindowDprMismatch_data();
     void reloadOnWindowDprMismatch();
 
 private:
@@ -1351,41 +1354,95 @@ void tst_qquickimage::devicePixelRatio()
     QCOMPARE(obj2->sourceSize(), (devicePixelRatio * origSize).toSize());
 }
 
+void tst_qquickimage::reloadOnWindowDprMismatch_data()
+{
+    QTest::addColumn<QString>("format");
+    QTest::addColumn<bool>("highDpiVariant");
+    QTest::addColumn<qreal>("windowDpr");
+
+    for (const qreal windowDpr : { 1.5, 2.0 }) {
+        const QByteArray dpr = QByteArray::number(windowDpr);
+        QTest::addRow("svg, DPR %s", dpr.constData())
+                << QStringLiteral("svg") << false << windowDpr;
+        QTest::addRow("png, DPR %s", dpr.constData())
+                << QStringLiteral("png") << false << windowDpr;
+        QTest::addRow("png @2x, DPR %s", dpr.constData())
+                << QStringLiteral("png") << true << windowDpr;
+    }
+}
+
 void tst_qquickimage::reloadOnWindowDprMismatch()
 {
+    QFETCH(QString, format);
+    QFETCH(bool, highDpiVariant);
+    QFETCH(qreal, windowDpr);
+
+    const bool scalable = format == QLatin1String("svg");
+    if (scalable && !QImageReader::supportedImageFormats().contains("svg"))
+        QSKIP("svg support not available");
+
+    const QSize naturalSize(100, 50);
+    const QString fileName = QStringLiteral("image.") + format;
+    QTemporaryDir dir;
+    QVERIFY2(dir.isValid(), qPrintable(dir.errorString()));
+    if (scalable) {
+        QFile file(dir.filePath(fileName));
+        QVERIFY(file.open(QIODevice::WriteOnly));
+        file.write("<svg xmlns='http://www.w3.org/2000/svg' width='100' height='50'>"
+                   "<rect width='100' height='50' fill='red'/></svg>");
+    } else {
+        QImage image(naturalSize, QImage::Format_RGB32);
+        image.fill(Qt::red);
+        QVERIFY(image.save(dir.filePath(fileName)));
+        if (highDpiVariant) {
+            QImage highDpiImage(naturalSize * 2, QImage::Format_RGB32);
+            highDpiImage.fill(Qt::blue);
+            QVERIFY(highDpiImage.save(dir.filePath(QStringLiteral("image@2x.png"))));
+        }
+    }
+
+    // Without a window, the image is loaded for qApp->devicePixelRatio().
     QQmlComponent component(&engine);
-    component.setData("import QtQuick\nImage { source: \"heart.svg\" }", testFileUrl(""));
+    component.setData(
+            QStringLiteral("import QtQuick\nImage { source: \"%1\" }").arg(fileName).toUtf8(),
+            QUrl::fromLocalFile(dir.filePath(QStringLiteral("main.qml"))));
     QScopedPointer<QQuickImage> image(qobject_cast<QQuickImage *>(component.create()));
     QVERIFY2(image, qPrintable(component.errorString()));
     QVERIFY(!image->window());
     QCOMPARE(image->status(), QQuickImageBase::Ready);
     QSignalSpy statusSpy(image.get(), &QQuickImageBase::statusChanged);
 
-    // Without a window, the image is loaded for qApp->devicePixelRatio().
-    const QSizeF origSize(595, 841);
-    const qreal appDpr = qApp->devicePixelRatio();
-    QCOMPARE(image->sourceSize(), (appDpr * origSize).toSize());
-
-    // A window whose effective DPR differs from qApp->devicePixelRatio().
-    const qreal windowDpr = appDpr + 1;
     QImage renderTargetImage(QSize(100, 100) * windowDpr, QImage::Format_RGBA8888_Premultiplied);
     QQuickRenderTarget renderTarget = QQuickRenderTarget::fromPaintDevice(&renderTargetImage);
     renderTarget.setDevicePixelRatio(windowDpr);
     QQuickWindow window;
     window.setRenderTarget(renderTarget);
     QCOMPARE(window.effectiveDevicePixelRatio(), windowDpr);
+    auto *windowPrivate = QQuickWindowPrivate::get(&window);
 
+    // Entering a window with a different DPR reloads the image, but only when
+    // polishing, not in the middle of reparenting.
+    const int expectedReloads = windowDpr != qApp->devicePixelRatio() ? 1 : 0;
     image->setParentItem(window.contentItem());
     QCOMPARE(image->window(), &window);
-    QCOMPARE(statusSpy.size(), 1);
+    QCOMPARE(statusSpy.size(), 0);
+    windowPrivate->polishItems();
+    QCOMPARE(statusSpy.size(), expectedReloads);
     QCOMPARE(image->status(), QQuickImageBase::Ready);
-    QCOMPARE(image->sourceSize(), (windowDpr * origSize).toSize());
+    if (scalable)
+        QCOMPARE(image->image().size(), (QSizeF(naturalSize) * windowDpr).toSize());
+    else if (highDpiVariant)
+        QCOMPARE(image->image().size(), naturalSize * 2);
+    QCOMPARE(image->implicitWidth(), naturalSize.width());
+    QCOMPARE(image->implicitHeight(), naturalSize.height());
 
-    // Leaving the window and re-entering it does not trigger another reload,
-    // as the image is already loaded for this window's DPR.
+    // Leaving the window and re-entering it, e.g. when a Popup is closed and
+    // opened again, doesn't reload the image, as it's already loaded for this
+    // window's DPR.
     image->setParentItem(nullptr);
     image->setParentItem(window.contentItem());
-    QCOMPARE(statusSpy.size(), 1);
+    windowPrivate->polishItems();
+    QCOMPARE(statusSpy.size(), expectedReloads);
 }
 
 QTEST_MAIN(tst_qquickimage)

@@ -127,6 +127,7 @@ protected:
     void componentComplete() override;
     virtual void pixmapChange();
     void itemChange(ItemChange change, const ItemChangeData &value) override;
+    void updatePolish() override;
     QQuickImageBase(QQuickImageBasePrivate &dd, QQuickItem *parent);
 
 private Q_SLOTS:

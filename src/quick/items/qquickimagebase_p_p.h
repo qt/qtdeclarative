@@ -47,6 +47,8 @@ public:
     }
 
     virtual bool updateDevicePixelRatio(qreal targetDevicePixelRatio);
+    qreal devicePixelRatioForLoading();
+    bool needsReloadForDevicePixelRatio() const;
 
     void setStatus(QQuickImageBase::Status value);
     void setProgress(qreal value);
@@ -66,6 +68,9 @@ public:
     int frameCount = 0;
     qreal progress = 0;
     qreal devicePixelRatio = 1;
+    // The device pixel ratio the image was last loaded for, or 0 if its loading doesn't
+    // depend on it. Unlike devicePixelRatio, which is the device pixel ratio of the loaded image.
+    qreal loadedForDevicePixelRatio = 0;
     QQuickImageBase::Status status = QQuickImageBase::Null;
 
     bool async : 1;

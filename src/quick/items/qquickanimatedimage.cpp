@@ -417,6 +417,7 @@ void QQuickAnimatedImage::load()
     Q_D(QQuickAnimatedImage);
 
     if (d->url.isEmpty()) {
+        d->loadedForDevicePixelRatio = 0;
         d->setProgress(0);
 
         d->setImage(QImage());
@@ -429,7 +430,7 @@ void QQuickAnimatedImage::load()
         if (isPlaying() != d->oldPlaying)
             emit playingChanged();
     } else {
-        const qreal targetDevicePixelRatio = d->effectiveDevicePixelRatio();
+        const qreal targetDevicePixelRatio = d->devicePixelRatioForLoading();
         d->devicePixelRatio = 1.0;
 
         const auto context = qmlContext(this);

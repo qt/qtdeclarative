@@ -43,7 +43,7 @@ void QQuickIconImage::load()
     if (size.height() <= 0)
         size.setHeight(height());
 
-    const qreal dpr = d->effectiveDevicePixelRatio();
+    const qreal dpr = d->devicePixelRatioForLoading();
 
     if (const auto *entry = QIconLoaderEngine::entryForSize(d->icon, size * dpr, qCeil(dpr))) {
         // First, try to load an icon from the theme (index.theme).
