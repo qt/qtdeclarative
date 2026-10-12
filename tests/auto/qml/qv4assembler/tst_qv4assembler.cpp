@@ -138,6 +138,9 @@ void tst_QV4Assembler::jitEnabled()
 #elif defined(Q_OS_MACOS) && defined(Q_PROCESSOR_ARM)
     /* JIT should be disabled on macOS on ARM/ARM64 for now. */
     QVERIFY(!QT_CONFIG(qml_jit));
+#elif defined(Q_OS_HARMONY)
+    /* JIT should be disabled on HarmonyOS. */
+    QVERIFY(!QT_CONFIG(qml_jit));
 #else
     /* JIT should be enabled on all other architectures/OSes tested in CI. */
     QVERIFY(QT_CONFIG(qml_jit));
