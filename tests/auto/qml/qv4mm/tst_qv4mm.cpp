@@ -7,6 +7,7 @@
 #include <QLoggingCategory>
 #include <QQmlComponent>
 #include <QRandomGenerator>
+#include <QVariantList>
 
 #include <private/qv4mm_p.h>
 #include <private/qv4qobjectwrapper_p.h>
@@ -33,6 +34,13 @@
 #include <private/qv4executablecompilationunit_p.h>
 
 using namespace Qt::StringLiterals;
+
+class IntListBackend : public QObject
+{
+    Q_OBJECT
+public:
+    Q_INVOKABLE QVariantList ids() const { return {1, 2, 3}; }
+};
 
 class tst_qv4mm : public QQmlDataTest
 {
@@ -65,6 +73,7 @@ private slots:
     void constObjectWrapperOnlyConstInSingleEngine();
     void markObjectWrappersAfterMarkWeakValues();
     void variantAssociationObjectMarksMember();
+    void jittedSetLookupDoesNotLeaveGarbageOnJSStack();
 
 #ifdef QT_BUILD_INTERNAL
     void validateIncrementalMarkPhase_data();
@@ -2109,6 +2118,39 @@ void tst_qv4mm::generatorFrameMarking()
 
     runGcUntil(sm, QV4::GCState::Invalid);
     QVERIFY(trackedGeneratorLocal->inUse());
+}
+
+void tst_qv4mm::jittedSetLookupDoesNotLeaveGarbageOnJSStack()
+{
+    QQmlEngine engine;
+    // Run a GC on every allocation
+    engine.handle()->memoryManager->aggressiveGC = true;
+
+    qmlRegisterType<IntListBackend>("Test", 1, 0, "IntListBackend");
+
+    QQmlComponent component(&engine);
+    component.setData(R"(
+        import QtQml
+        import Test
+        QtObject {
+            id: root
+            property var map: ({})
+            property IntListBackend backend: IntListBackend {}
+            function update() {
+                root.map = {};
+                for (const id of backend.ids()) {
+                    root.map[id] = () => id;
+                }
+            }
+        }
+    )", QUrl());
+    std::unique_ptr<QObject> root(component.create());
+    QVERIFY2(root, qPrintable(component.errorString()));
+
+    // Call often enough for update() to get baseline-JIT-compiled (threshold is 3)
+    for (int i = 0; i < 100; ++i)
+        QMetaObject::invokeMethod(root.get(), "update");
+    // should not crassh
 }
 
 QTEST_MAIN(tst_qv4mm)
