@@ -3,6 +3,7 @@
 
 #include <QtTest/QTest>
 #include <QtTest/QSignalSpy>
+#include <QtGui/QInputDevice>
 #include <QtGui/QStyleHints>
 #include <qpa/qwindowsysteminterface.h>
 #include <private/qquickwheelhandler_p.h>
@@ -31,20 +32,32 @@ private slots:
 private:
     void sendWheelEvent(QQuickView &window, QPoint pos, QPoint angleDelta,
                         QPoint pixelDelta = QPoint(), Qt::KeyboardModifiers modifiers = Qt::NoModifier,
-                        Qt::ScrollPhase phase = Qt::NoScrollPhase, bool inverted = false);
+                        Qt::ScrollPhase phase = Qt::NoScrollPhase, bool inverted = false,
+                        const QPointingDevice *device = QPointingDevice::primaryPointingDevice());
+
+    std::unique_ptr<QPointingDevice> mouseDevice { new QPointingDevice(
+            "test mouse", 1000, QInputDevice::DeviceType::Mouse, QPointingDevice::PointerType::Generic,
+            QInputDevice::Capability::Position | QInputDevice::Capability::Hover | QInputDevice::Capability::Scroll,
+            1, 5, QString(), QPointingDeviceUniqueId(), this) };
+    std::unique_ptr<QPointingDevice> touchpad {
+            QTest::createTouchDevice(QInputDevice::DeviceType::TouchPad,
+                                     QInputDevice::Capability::Position | QInputDevice::Capability::PixelScroll) };
 };
 
 void tst_QQuickWheelHandler::sendWheelEvent(QQuickView &window, QPoint pos, QPoint angleDelta,
-                                            QPoint pixelDelta, Qt::KeyboardModifiers modifiers, Qt::ScrollPhase phase, bool inverted)
+                                            QPoint pixelDelta, Qt::KeyboardModifiers modifiers, Qt::ScrollPhase phase, bool inverted,
+                                            const QPointingDevice *device)
 {
     QWheelEvent wheelEvent(pos, window.mapToGlobal(pos), pixelDelta, angleDelta,
-                           Qt::NoButton, modifiers, phase, inverted);
+                           Qt::NoButton, modifiers, phase, inverted,
+                           Qt::MouseEventNotSynthesized, device);
     QGuiApplication::sendEvent(&window, &wheelEvent);
     qApp->processEvents();
 }
 
 void tst_QQuickWheelHandler::singleHandler_data()
 {
+    QTest::addColumn<QPointingDevice *>("device");
     // handler properties
     QTest::addColumn<Qt::Orientation>("orientation");
     QTest::addColumn<bool>("invertible");
@@ -65,62 +78,76 @@ void tst_QQuickWheelHandler::singleHandler_data()
     QTest::addColumn<int>("expectedRotation");
 
     // move the item
-    QTest::newRow("vertical wheel angle delta to adjust x")
+    QTest::newRow("vertical wheel angle delta to adjust x") << mouseDevice.get()
             << Qt::Vertical << false << 1 << "x" << 1.5 << true
             << QPoint(160, 120) << QPoint(-360, 120) << QPoint() << Qt::KeyboardModifiers(Qt::NoModifier) << false << false
             << QPoint(15, 0) << 1.0 << 0;
-    QTest::newRow("horizontal wheel angle delta to adjust y")
+    QTest::newRow("horizontal wheel angle delta to adjust y") << mouseDevice.get()
             << Qt::Horizontal << false << 1 << "y" << 1.5 << false
             << QPoint(160, 120) << QPoint(-360, 120) << QPoint() << Qt::KeyboardModifiers(Qt::NoModifier) << false << false
             << QPoint(0, -45) << 1.0 << 0;
-    QTest::newRow("vertical wheel angle delta to adjust y, amplified and inverted")
+    QTest::newRow("vertical wheel angle delta to adjust y, amplified and inverted") << mouseDevice.get()
             << Qt::Vertical << true << 4 << "y" << 1.5 << true
             << QPoint(160, 120) << QPoint(60, 60) << QPoint() << Qt::KeyboardModifiers(Qt::NoModifier) << false << true
             << QPoint(0, 30) << 1.0 << 0;
-    QTest::newRow("horizontal wheel angle delta to adjust x, amplified and reversed")
+    QTest::newRow("horizontal wheel angle delta to adjust x, amplified and reversed") << mouseDevice.get()
             << Qt::Horizontal << false << -4 << "x" << 1.5 << false
             << QPoint(160, 120) << QPoint(60, 60) << QPoint() << Qt::KeyboardModifiers(Qt::NoModifier) << false << false
             << QPoint(-30, 0) << 1.0 << 0;
-    QTest::newRow("vertical wheel pixel delta to adjust x")
+    QTest::newRow("vertical wheel pixel delta to adjust x") << mouseDevice.get()
             << Qt::Vertical << false << 1 << "x" << 1.5 << true
             << QPoint(160, 120) << QPoint(-360, 120) << QPoint(20, 20) << Qt::KeyboardModifiers(Qt::NoModifier) << true << false
             << QPoint(20, 0) << 1.0 << 0;
-    QTest::newRow("horizontal wheel pixel delta to adjust y")
+    QTest::newRow("horizontal wheel pixel delta to adjust y") << mouseDevice.get()
             << Qt::Horizontal << false << 1 << "y" << 1.5 << false
             << QPoint(160, 120) << QPoint(-360, 120) << QPoint(20, 20) << Qt::KeyboardModifiers(Qt::NoModifier) << true << false
             << QPoint(0, 20) << 1.0 << 0;
-    QTest::newRow("vertical wheel pixel delta to adjust y, amplified and inverted")
+    QTest::newRow("vertical wheel pixel delta to adjust y, amplified and inverted") << mouseDevice.get()
             << Qt::Vertical << true << 4 << "y" << 1.5 << true
             << QPoint(160, 120) << QPoint(60, 60) << QPoint(20, 20) << Qt::KeyboardModifiers(Qt::NoModifier) << true << true
             << QPoint(0, 80) << 1.0 << 0;
-    QTest::newRow("horizontal wheel pixel delta to adjust x, amplified and reversed")
+    QTest::newRow("horizontal wheel pixel delta to adjust x, amplified and reversed") << mouseDevice.get()
             << Qt::Horizontal << false << -4 << "x" << 1.5 << false
             << QPoint(160, 120) << QPoint(60, 60) << QPoint(20, 20) << Qt::KeyboardModifiers(Qt::NoModifier) << true << false
             << QPoint(-80, 0) << 1.0 << 0;
 
     // scale the item
-    QTest::newRow("vertical wheel angle delta to adjust scale")
+    QTest::newRow("vertical wheel angle delta to adjust scale") << mouseDevice.get()
             << Qt::Vertical << false << 1 << "scale" << 1.5 << true
             << QPoint(50, 32) << QPoint(360, 120) << QPoint() << Qt::KeyboardModifiers(Qt::NoModifier) << false << false
             << QPoint(55, 44) << 1.5 << 0;
     QTest::newRow("horizontal wheel angle delta to adjust scale, amplified and reversed, don't adjust position")
+            << mouseDevice.get()
             << Qt::Horizontal << false << -2 << "scale" << 1.5 << false
             << QPoint(50, 32) << QPoint(-240, 360) << QPoint() << Qt::KeyboardModifiers(Qt::NoModifier) << false << false
             << QPoint(0, 0) << 5.0625 << 0;
 
     // rotate the item
-    QTest::newRow("vertical wheel angle delta to adjust rotation")
+    QTest::newRow("vertical wheel angle delta to adjust rotation") << mouseDevice.get()
             << Qt::Vertical << false << 1 << "rotation" << 1.5 << true
             << QPoint(50, 32) << QPoint(360, -120) << QPoint() << Qt::KeyboardModifiers(Qt::NoModifier) << false << false
             << QPoint(19, -31) << 1.0 << -15;
     QTest::newRow("horizontal wheel angle delta to adjust rotation, amplified and reversed, don't adjust position")
+            << mouseDevice.get()
             << Qt::Horizontal << false << -2 << "rotation" << 1.5 << false
             << QPoint(80, 80) << QPoint(240, 360) << QPoint() << Qt::KeyboardModifiers(Qt::NoModifier) << false << false
             << QPoint(0, 0) << 1.0 << -60;
+
+    // trackpad gesture: same as mouse wheel
+    QTest::newRow("touchpad: vertical wheel angle delta to adjust x") << touchpad.get()
+            << Qt::Vertical << false << 1 << "x" << 1.5 << true
+            << QPoint(160, 120) << QPoint(-360, 120) << QPoint() << Qt::KeyboardModifiers(Qt::NoModifier) << false << false
+            << QPoint(15, 0) << 1.0 << 0;
+    QTest::newRow("touchpad: horizontal wheel angle delta to adjust y") << touchpad.get()
+            << Qt::Horizontal << false << 1 << "y" << 1.5 << false
+            << QPoint(160, 120) << QPoint(-360, 120) << QPoint() << Qt::KeyboardModifiers(Qt::NoModifier) << false << false
+            << QPoint(0, -45) << 1.0 << 0;
+
 }
 
 void tst_QQuickWheelHandler::singleHandler()
 {
+    QFETCH(QPointingDevice *, device);
     // handler properties
     QFETCH(Qt::Orientation, orientation);
     QFETCH(bool, invertible);
@@ -150,6 +177,7 @@ void tst_QQuickWheelHandler::singleHandler()
     QVERIFY(rect != nullptr);
     QQuickWheelHandler *handler = rect->findChild<QQuickWheelHandler*>();
     QVERIFY(handler != nullptr);
+    QCOMPARE(handler->acceptedDevices(), QInputDevice::DeviceType::Mouse | QInputDevice::DeviceType::TouchPad);
     handler->setOrientation(orientation);
     handler->setInvertible(invertible);
     handler->setRotationScale(rotationScale);
@@ -159,10 +187,10 @@ void tst_QQuickWheelHandler::singleHandler()
     QSignalSpy activeChangedSpy(handler, SIGNAL(activeChanged()));
 
     if (eventPhases) {
-        sendWheelEvent(window, eventPos, QPoint(), QPoint(), eventModifiers, Qt::ScrollBegin, eventInverted);
-        sendWheelEvent(window, eventPos, eventAngleDelta, eventPixelDelta, eventModifiers, Qt::ScrollUpdate, eventInverted);
+        sendWheelEvent(window, eventPos, QPoint(), QPoint(), eventModifiers, Qt::ScrollBegin, eventInverted, device);
+        sendWheelEvent(window, eventPos, eventAngleDelta, eventPixelDelta, eventModifiers, Qt::ScrollUpdate, eventInverted, device);
     } else {
-        sendWheelEvent(window, eventPos, eventAngleDelta, eventPixelDelta, eventModifiers, Qt::NoScrollPhase, eventInverted);
+        sendWheelEvent(window, eventPos, eventAngleDelta, eventPixelDelta, eventModifiers, Qt::NoScrollPhase, eventInverted, device);
     }
     QCOMPARE(rect->position().toPoint(), expectedPosition);
     QCOMPARE(activeChangedSpy.size(), 1);
@@ -176,10 +204,10 @@ void tst_QQuickWheelHandler::singleHandler()
 
     // restore by rotating backwards
     if (eventPhases) {
-        sendWheelEvent(window, eventPos, eventAngleDelta * -1, eventPixelDelta * -1, eventModifiers, Qt::ScrollUpdate, eventInverted);
-        sendWheelEvent(window, eventPos, QPoint(), QPoint(), eventModifiers, Qt::ScrollEnd, eventInverted);
+        sendWheelEvent(window, eventPos, eventAngleDelta * -1, eventPixelDelta * -1, eventModifiers, Qt::ScrollUpdate, eventInverted, device);
+        sendWheelEvent(window, eventPos, QPoint(), QPoint(), eventModifiers, Qt::ScrollEnd, eventInverted, device);
     } else {
-        sendWheelEvent(window, eventPos, eventAngleDelta * -1, eventPixelDelta * -1, eventModifiers, Qt::NoScrollPhase, eventInverted);
+        sendWheelEvent(window, eventPos, eventAngleDelta * -1, eventPixelDelta * -1, eventModifiers, Qt::NoScrollPhase, eventInverted, device);
     }
     QCOMPARE(activeChangedSpy.size(), eventPhases ? 2 : 3);
     QCOMPARE(handler->active(), !eventPhases);
