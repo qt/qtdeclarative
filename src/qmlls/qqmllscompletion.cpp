@@ -444,7 +444,10 @@ void QQmlLSCompletion::enumerationValueCompletion(const QQmlJSScope::ConstPtr &s
         return;
     }
 
+    const bool enforcesScopedEnums = scope->enforcesScopedEnums();
     for (const QQmlJSMetaEnum &enumerator : scope->enumerations()) {
+        if (enforcesScopedEnums && enumerator.isScoped())
+            continue;
         enumerationValueCompletionHelper(enumerator.keys(), result);
     }
 }

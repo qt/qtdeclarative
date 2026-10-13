@@ -4648,6 +4648,15 @@ void tst_qmlls_utils::completions_data()
             << ExpectedCompletions{ { u"World"_s, CompletionItemKind::EnumMember },
                                     { u"Hello"_s, CompletionItemKind::Enum } }
             << QStringList{};
+    QTest::newRow("enumScoped") << testFile("completions/Enumerations.qml") << 21 << 40
+                                << ExpectedCompletions(
+                                           { { u"FromScoped"_s, CompletionItemKind::EnumMember } })
+                                << QStringList{ u"FromUnscoped"_s };
+
+    QTest::newRow("enumUnscoped") << testFile("completions/Enumerations.qml") << 22 << 31
+                                  << ExpectedCompletions({ { u"FromUnscoped"_s,
+                                                             CompletionItemKind::EnumMember } })
+                                  << QStringList{ u"FromScoped"_s };
 
     QTest::newRow("viaResourceFile")
             << testFile("AdminDialogFromSource.qml") << 4 << 33
