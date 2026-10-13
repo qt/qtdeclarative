@@ -100,5 +100,25 @@ Module {
         Signal { name: "yChanged"; lineNumber: 27 }
     }
     Component { isTypeOpaque: true; name: "std::shared_ptr<int>"; accessSemantics: "value" }
-
+    Component {
+        file: "header.h"
+        lineNumber: 7
+        name: "NS"
+        accessSemantics: "none"
+        exports: ["untitled7/NS 254.0"]
+        isCreatable: false
+        enforcesScopedEnums: true
+        exportMetaObjectRevisions: [65024]
+        Enum {
+            name: "ScopedEnum"
+            isScoped: true
+            lineNumber: 13
+            values: ["FromScoped"]
+        }
+        Enum {
+            name: "UnscopedEnum"
+            lineNumber: 16
+            values: ["FromUnscoped"]
+        }
+    }
 }
