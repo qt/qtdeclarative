@@ -2056,6 +2056,20 @@ function(_qt_internal_target_generate_qmldir target)
     endif()
     set(content "module ${uri}\n")
 
+    get_target_property(version ${target} QT_QML_MODULE_VERSION)
+    if(NOT version)
+        message(FATAL_ERROR "Target ${target} has no version set, cannot create qmldir")
+    endif()
+    string(APPEND content "export ${version}")
+
+    get_target_property(past_major_versions ${target} QT_QML_MODULE_PAST_MAJOR_VERSIONS)
+    if (past_major_versions OR past_major_versions STREQUAL "0")
+        foreach (past_major_version ${past_major_versions})
+            string(APPEND content " ${past_major_version}")
+        endforeach()
+    endif()
+    string(APPEND content "\n")
+
     _qt_internal_qmldir_item(linktarget QT_QML_MODULE_INSTALLED_PLUGIN_TARGET)
 
     get_target_property(plugin_target ${target} QT_QML_MODULE_PLUGIN_TARGET)

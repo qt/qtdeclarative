@@ -262,6 +262,7 @@ QQmlJSImporter::Import QQmlJSImporter::readQmldir(const QString &modulePath)
     result.type = Import::Qmldir;
     result.imports.append(reader.imports());
     result.dependencies.append(reader.dependencies());
+    result.exports.append(reader.exports());
 
     if (result.isSystemModule) {
         // Import jsroot first, so that the builtins override it.

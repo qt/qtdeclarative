@@ -297,6 +297,7 @@ private:
         QHash<QString, QQmlJSExportedScope> scripts;
         QList<QQmlDirParser::Import> imports;
         QList<QQmlDirParser::Import> dependencies;
+        QList<QQmlDirParser::Export> exports;
 
         // Warnings produced when importing
         QList<QQmlJS::DiagnosticMessage> warnings;

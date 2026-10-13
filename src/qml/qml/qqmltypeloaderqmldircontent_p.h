@@ -45,6 +45,7 @@ public:
     QQmlDirScripts scripts() const { return m_parser.scripts(); }
     QQmlDirPlugins plugins() const { return m_parser.plugins(); }
     QQmlDirImports imports() const { return m_parser.imports(); }
+    QQmlDirExports exports() const { return m_parser.exports(); }
 
     QString qmldirLocation() const { return m_location; }
     QString preferredPath() const { return m_parser.preferredPath(); }
