@@ -332,6 +332,11 @@ void tst_qquickimage::mirror()
 {
     SKIP_IF_NO_WINDOW_GRAB;
 
+    QScreen *screen = QGuiApplication::primaryScreen();
+    const qreal dpr = screen->devicePixelRatio();
+    if (dpr != qRound(dpr))
+        QSKIP("GPU and software rendering may produce different images with non-integer DPR.");
+
     QMap<QQuickImage::FillMode, QImage> screenshots;
     const QList<QQuickImage::FillMode> fillModes{QQuickImage::Stretch,
                                                  QQuickImage::PreserveAspectFit,
