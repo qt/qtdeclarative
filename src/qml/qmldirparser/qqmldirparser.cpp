@@ -45,6 +45,7 @@ void QQmlDirParser::clear()
     _components.clear();
     _dependencies.clear();
     _imports.clear();
+    _exports.clear();
     _scripts.clear();
     _plugins.clear();
     _designerSupported = false;
@@ -151,6 +152,38 @@ bool QQmlDirParser::parse(const QString &source)
             _imports.append(import);
         else
             _dependencies.append(import);
+        return true;
+    };
+
+    auto readExport = [&](const QString *sections, int sectionCount) {
+        if (sectionCount < 2) {
+            reportError(lineNumber, 0,
+                        QStringLiteral("export at least 1 argument, but none were provided"));
+            return false;
+        }
+
+        const QTypeRevision version = parseVersion(sections[1]);
+        if (!version.isValid()) {
+            reportError(lineNumber, 0,
+                        QStringLiteral("invalid version %1, expected <major>.<minor>")
+                                .arg(sections[1]));
+            return false;
+        }
+
+        _exports.append(version);
+        for (int i = 2; i < sectionCount; ++i) {
+            bool ok = false;
+            const int major = parseInt(sections[i], &ok);
+            if (!ok) {
+                reportError(lineNumber, 0,
+                            QStringLiteral("invalid major version %1, expected integer")
+                                    .arg(sections[i]));
+                return false;
+            }
+
+            _exports.append(QTypeRevision::fromMajorVersion(major));
+        }
+
         return true;
     };
 
@@ -354,6 +387,9 @@ bool QQmlDirParser::parse(const QString &source)
         } else if (sections[0] == QLatin1String("import")
                    || sections[0] == QLatin1String("depends")) {
             if (!readImport(sections, sectionCount, Import::Default))
+                continue;
+        } else if (sections[0] == QLatin1String("export")) {
+            if (!readExport(sections, sectionCount))
                 continue;
         } else if (sections[0] == QLatin1String("prefer")) {
             if (sectionCount < 2) {

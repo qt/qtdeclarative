@@ -126,9 +126,12 @@ public:
         Q_DECLARE_EQUALITY_COMPARABLE(Import)
     };
 
+    using Export = QTypeRevision;
+
     QMultiHash<QString,Component> components() const { return _components; }
     QList<Import> dependencies() const { return _dependencies; }
     QList<Import> imports() const { return _imports; }
+    QList<Export> exports() const { return _exports; }
     QList<Script> scripts() const { return _scripts; }
     QList<Plugin> plugins() const { return _plugins; }
     bool designerSupported() const { return _designerSupported; }
@@ -159,6 +162,7 @@ private:
     QMultiHash<QString,Component> _components;
     QList<Import> _dependencies;
     QList<Import> _imports;
+    QList<Export> _exports;
     QList<Script> _scripts;
     QList<Plugin> _plugins;
     bool _designerSupported = false;
@@ -173,6 +177,7 @@ using QQmlDirComponents = QMultiHash<QString,QQmlDirParser::Component>;
 using QQmlDirScripts = QList<QQmlDirParser::Script>;
 using QQmlDirPlugins = QList<QQmlDirParser::Plugin>;
 using QQmlDirImports = QList<QQmlDirParser::Import>;
+using QQmlDirExports = QList<QQmlDirParser::Export>;
 
 QDebug &operator<< (QDebug &, const QQmlDirParser::Component &);
 QDebug &operator<< (QDebug &, const QQmlDirParser::Script &);
