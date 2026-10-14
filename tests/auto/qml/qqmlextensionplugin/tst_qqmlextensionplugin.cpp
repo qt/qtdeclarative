@@ -56,11 +56,16 @@ void tst_qqmlextensionplugin::iidCheck_data()
     QList<QString> files;
     // On Android the plugins are located in the APK's libs subdir. They can
     // be distinguished by the name, which starts from "libqml_" and ends with
-    // "plugin_${ARCH}.so"
-#ifdef Q_OS_ANDROID
+    // "plugin_${ARCH}.so". On HarmonyOS they are deployed flat into the
+    // app's libs/<arch> dir, which is the first library path.
+#if defined(Q_OS_ANDROID) || defined(Q_OS_HARMONY)
     const QStringList libraryPaths = QCoreApplication::libraryPaths();
     QVERIFY(!libraryPaths.isEmpty());
-    const QLatin1String nameFilters("libqml_*plugin_" ANDROID_ARCH "*");
+    #ifdef Q_OS_ANDROID
+        const QLatin1String nameFilters("libqml_*plugin_" ANDROID_ARCH "*");
+    #else
+        const QLatin1String nameFilters("lib*plugin.so");
+    #endif
     for (QDirIterator it(libraryPaths.front(), { nameFilters }, QDir::Files); it.hasNext(); ) {
 #else
     for (QDirIterator it(QLibraryInfo::path(QLibraryInfo::QmlImportsPath), QDirIterator::Subdirectories); it.hasNext(); ) {
@@ -68,6 +73,9 @@ void tst_qqmlextensionplugin::iidCheck_data()
         QString file = it.next();
 #if defined(Q_OS_DARWIN)
         if (file.contains(QLatin1String(".dSYM/")))
+            continue;
+#elif defined(Q_OS_HARMONY)
+        if (QFileInfo(file).fileName().startsWith(QLatin1String("libtst_")))
             continue;
 #endif
         if (file.endsWith(SUFFIX)) {
