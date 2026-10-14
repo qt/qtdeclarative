@@ -66,7 +66,9 @@ qt_internal_extend_target(tst_qqmlapplicationengine CONDITION NOT ANDROID AND NO
 )
 
 add_subdirectory(testapp)
-add_subdirectory(androidassets)
+if(ANDROID OR NOT CMAKE_CROSSCOMPILING)
+    add_subdirectory(androidassets)
+endif()
 add_dependencies(tst_qqmlapplicationengine testapp)
 
 add_subdirectory(loadFromModuleTranslationsQmlType)
