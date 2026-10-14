@@ -821,6 +821,7 @@ void QStyleKitStylePrivate::setStyleTranslucency(QWidget *widget)
         return;
     // Enable translucency for popups so that we can draw rounded corners
     widget->setAttribute(Qt::WA_TranslucentBackground, true);
+    widget->setWindowFlag(Qt::FramelessWindowHint, true);
     translucentWidgets.insert(widget);
 }
 
@@ -829,6 +830,7 @@ void QStyleKitStylePrivate::unsetStyleTranslucency(QWidget *widget)
     if (!translucentWidgets.remove(widget))
         return;
     widget->setAttribute(Qt::WA_TranslucentBackground, false);
+    widget->setWindowFlag(Qt::FramelessWindowHint, false);
 }
 
 // Follow the approach in qstylesheetstyle.cpp
