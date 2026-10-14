@@ -232,7 +232,7 @@ BaseStyle {
         hovered.background.visible: true
     }
 
-    horizontalHeaderViewDelegate {
+    headerViewDelegate {
         text.alignment: Qt.AlignHCenter | Qt.AlignVCenter
         text.padding: 5
         background {
@@ -257,6 +257,13 @@ BaseStyle {
             }
             second {
                 foreground.image.source: "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/sort-descending.png"
+            }
+        }
+
+        vertical {
+            background {
+                border.width: 1
+                color: Qt.darker(__baseWhite, 1.05)
             }
         }
     }
@@ -771,13 +778,6 @@ BaseStyle {
             width: 60
             color: __transparent
             border.width: 0
-        }
-    }
-
-    verticalHeaderViewDelegate {
-        background {
-            border.width: 1
-            color: Qt.darker(__baseWhite, 1.05)
         }
     }
 }

@@ -66,7 +66,7 @@ public:
         DialogButtonBox,
         Drawer,
         FlatButton,
-        HorizontalHeaderViewDelegate,
+        HeaderViewDelegate,
         ProgressBar,
         ScrollBar,
         ScrollIndicator,
@@ -104,8 +104,7 @@ public:
         PageIndicator,
         Frame,
         Label,
-        GroupBox,
-        VerticalHeaderViewDelegate
+        GroupBox
     };
     Q_ENUM(ControlType)
 

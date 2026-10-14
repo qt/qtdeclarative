@@ -74,7 +74,7 @@ QT_BEGIN_NAMESPACE
     \value StyleReader.Drawer                           \l {Drawer}
     \value StyleReader.Frame                            \l {Frame}
     \value StyleReader.GroupBox                         \l {GroupBox}
-    \value StyleReader.HorizontalHeaderViewDelegate     \l {HorizontalHeaderViewDelegate}
+    \value StyleReader.HeaderViewDelegate               \l {HorizontalHeaderViewDelegate} and \l {VerticalHeaderViewDelegate}
     \value StyleReader.ItemDelegate                     \l {ItemDelegate}
     \value StyleReader.Label                            \l {Label}
     \value StyleReader.Menu                             \l {Menu}
@@ -109,7 +109,6 @@ QT_BEGIN_NAMESPACE
     \value StyleReader.ToolTip                          \l {ToolTip}
     \value StyleReader.TreeViewDelegate                 \l {TreeViewDelegate}
     \value StyleReader.Tumbler                          \l {Tumbler}
-    \value StyleReader.VerticalHeaderViewDelegate       \l {VerticalHeaderViewDelegate}
 
     \sa {StyleVariation::controlType}{StyleVariation.controlType}
 */

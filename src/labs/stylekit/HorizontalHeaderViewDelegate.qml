@@ -41,7 +41,7 @@ T.HeaderViewDelegate {
     StyleVariation.controlType: styleReader.controlType
     StyleReader {
         id: styleReader
-        controlType: StyleReader.HorizontalHeaderViewDelegate
+        controlType: StyleReader.HeaderViewDelegate
         enabled: control.enabled
         focused: control.activeFocus
         checked: control.checked
@@ -49,6 +49,7 @@ T.HeaderViewDelegate {
         pressed: control.pressed
         highlighted: control.highlighted
         palette: control.palette
+        vertical: false
     }
 
     StyleKitLayout {

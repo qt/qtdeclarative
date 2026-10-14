@@ -34,13 +34,15 @@ T.HeaderViewDelegate {
     StyleVariation.controlType: styleReader.controlType
     StyleReader {
         id: styleReader
-        controlType: StyleReader.VerticalHeaderViewDelegate
+        controlType: StyleReader.HeaderViewDelegate
         enabled: control.enabled
+        focused: control.activeFocus
         checked: control.checked
         hovered: control.hovered
         pressed: control.pressed
         highlighted: control.highlighted
         palette: control.palette
+        vertical: true
     }
 
     contentItem: Label {

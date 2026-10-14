@@ -71,8 +71,7 @@ const QList<QQStyleKitExtendableControlType> QQStyleKitPropertyResolver::baseTyp
         static QList<QQStyleKitExtendableControlType> t =
             { QQStyleKitReader::ItemDelegate, QQStyleKitReader::Control };
         return t; }
-    case QQStyleKitReader::HorizontalHeaderViewDelegate:
-    case QQStyleKitReader::VerticalHeaderViewDelegate: {
+    case QQStyleKitReader::HeaderViewDelegate: {
         static QList<QQStyleKitExtendableControlType> t =
             { QQStyleKitReader::TableViewDelegate, QQStyleKitReader::ItemDelegate, QQStyleKitReader::Control };
         return t;

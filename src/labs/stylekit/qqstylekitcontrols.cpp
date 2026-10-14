@@ -228,19 +228,27 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlStyle StylableControls::horizontalHeaderViewDelegate
+    \qmlproperty ControlStyle StylableControls::headerViewDelegate
 
-    Grouped property for styling \l [QtQuickControls]{HorizontalHeaderViewDelegate}.
+    Grouped property for styling both
+    \l [QtQuickControls]{HorizontalHeaderViewDelegate} and
+    \l [QtQuickControls]{VerticalHeaderViewDelegate}.
+
+    The delegates of a horizontal header view use the style as is. The delegates
+    of a vertical header view additionally apply the
+    \l {ControlStateStyle::vertical}{vertical} state.
 
     For a horizontal header view delegate, the sort indicator is styled through
     the indicator. \l {IndicatorStyle::first}{indicator.first} is shown when the
     column is sorted in ascending order, and \l {IndicatorStyle::second}{indicator.second}
     when it is sorted in descending order. Only one of them is visible at a
     time, and only on the header of the column the view is currently sorted by.
+    A vertical header view does not show a sort indicator, so indicator
+    settings in the \c vertical state have no effect.
 
     Unset properties fall back to \l tableViewDelegate.
 
-    \snippet ControlsSnippets.qml horizontalHeaderViewDelegate
+    \snippet ControlsSnippets.qml headerViewDelegate
 */
 
 /*!
@@ -665,16 +673,6 @@ QT_BEGIN_NAMESPACE
     \snippet ControlsSnippets.qml tumbler
 */
 
-/*
-    \qmlproperty ControlStyle StylableControls::verticalHeaderViewDelegate
-
-    Grouped property for styling \l [QtQuickControls]{VerticalHeaderViewDelegate}.
-
-    Unset properties fall back to \l tableViewDelegate.
-
-    \snippet ControlsSnippets.qml verticalHeaderViewDelegate
-*/
-
 using namespace Qt::StringLiterals;
 
 QQStyleKitControls::QQStyleKitControls(QObject *parent)
@@ -762,7 +760,7 @@ IMPLEMENT_ACCESSORS(dial, QQStyleKitReader::ControlType::Dial)
 IMPLEMENT_ACCESSORS(dialog, QQStyleKitReader::ControlType::Dialog)
 IMPLEMENT_ACCESSORS(dialogButtonBox, QQStyleKitReader::ControlType::DialogButtonBox)
 IMPLEMENT_ACCESSORS(drawer, QQStyleKitReader::ControlType::Drawer)
-IMPLEMENT_ACCESSORS(horizontalHeaderViewDelegate, QQStyleKitReader::ControlType::HorizontalHeaderViewDelegate)
+IMPLEMENT_ACCESSORS(headerViewDelegate, QQStyleKitReader::ControlType::HeaderViewDelegate)
 IMPLEMENT_ACCESSORS(progressBar, QQStyleKitReader::ControlType::ProgressBar)
 IMPLEMENT_ACCESSORS(scrollBar, QQStyleKitReader::ControlType::ScrollBar)
 IMPLEMENT_ACCESSORS(scrollIndicator, QQStyleKitReader::ControlType::ScrollIndicator)
@@ -801,7 +799,6 @@ IMPLEMENT_ACCESSORS(menuBar, QQStyleKitReader::ControlType::MenuBar)
 IMPLEMENT_ACCESSORS(menuBarItem, QQStyleKitReader::ControlType::MenuBarItem)
 IMPLEMENT_ACCESSORS(menuItem, QQStyleKitReader::ControlType::MenuItem)
 IMPLEMENT_ACCESSORS(menuSeparator, QQStyleKitReader::ControlType::MenuSeparator)
-IMPLEMENT_ACCESSORS(verticalHeaderViewDelegate, QQStyleKitReader::ControlType::VerticalHeaderViewDelegate)
 
 #undef IMPLEMENT_ACCESSORS
 

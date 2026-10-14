@@ -286,12 +286,12 @@ ApplicationWindow {
         }
         //! [groupBox]
 
-        //! [horizontalHeaderViewDelegate]
-        horizontalHeaderViewDelegate {
+        //! [headerViewDelegate]
+        headerViewDelegate {
             text.alignment: Qt.AlignHCenter | Qt.AlignVCenter
             background {
                 border.width: 1
-                color: "#fafafa"
+                color: "#f8f8f8"
             }
             indicator {
                 color: "transparent"
@@ -310,8 +310,14 @@ ApplicationWindow {
                     foreground.image.source: "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/sort-descending.png"
                 }
             }
+            vertical {
+                background {
+                    border.width: 1
+                    color: "#d0d0d0"
+                }
+            }
         }
-        //! [horizontalHeaderViewDelegate]
+        //! [headerViewDelegate]
 
         //! [itemDelegate]
         itemDelegate {
@@ -1007,15 +1013,6 @@ ApplicationWindow {
             }
         }
         //! [tumbler]
-
-        //! [verticalHeaderViewDelegate]
-        verticalHeaderViewDelegate {
-            background {
-                border.width: 1
-                color: "#fafafa"
-            }
-        }
-        //! [verticalHeaderViewDelegate]
 
         //! [theme]
         light: Theme {

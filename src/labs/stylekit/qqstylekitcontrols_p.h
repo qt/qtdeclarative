@@ -45,7 +45,7 @@ class QQStyleKitControls : public QObject, public QQmlParserStatus
     Q_PROPERTY(QQStyleKitControl *dialogButtonBox READ dialogButtonBox WRITE set_dialogButtonBox NOTIFY dialogButtonBoxChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *drawer READ drawer WRITE set_drawer NOTIFY drawerChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *flatButton READ flatButton WRITE set_flatButton NOTIFY flatButtonChanged FINAL)
-    Q_PROPERTY(QQStyleKitControl *horizontalHeaderViewDelegate READ horizontalHeaderViewDelegate WRITE set_horizontalHeaderViewDelegate NOTIFY horizontalHeaderViewDelegateChanged FINAL)
+    Q_PROPERTY(QQStyleKitControl *headerViewDelegate READ headerViewDelegate WRITE set_headerViewDelegate NOTIFY headerViewDelegateChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *progressBar READ progressBar WRITE set_progressBar NOTIFY progressBarChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *scrollBar READ scrollBar WRITE set_scrollBar NOTIFY scrollBarChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *scrollIndicator READ scrollIndicator WRITE set_scrollIndicator NOTIFY scrollIndicatorChanged FINAL)
@@ -84,7 +84,6 @@ class QQStyleKitControls : public QObject, public QQmlParserStatus
     Q_PROPERTY(QQStyleKitControl *menuBarItem READ menuBarItem WRITE set_menuBarItem NOTIFY menuBarItemChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *menuItem READ menuItem WRITE set_menuItem NOTIFY menuItemChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *menuSeparator READ menuSeparator WRITE set_menuSeparator NOTIFY menuSeparatorChanged FINAL)
-    Q_PROPERTY(QQStyleKitControl *verticalHeaderViewDelegate READ verticalHeaderViewDelegate WRITE set_verticalHeaderViewDelegate NOTIFY verticalHeaderViewDelegateChanged FINAL)
     QML_UNCREATABLE("This component is abstract, and cannot be instantiated")
     QML_NAMED_ELEMENT(StylableControls)
 
@@ -112,7 +111,7 @@ public:
     IMPLEMENT_ACCESSORS(dialogButtonBox)
     IMPLEMENT_ACCESSORS(drawer)
     IMPLEMENT_ACCESSORS(flatButton)
-    IMPLEMENT_ACCESSORS(horizontalHeaderViewDelegate)
+    IMPLEMENT_ACCESSORS(headerViewDelegate)
     IMPLEMENT_ACCESSORS(progressBar)
     IMPLEMENT_ACCESSORS(scrollBar)
     IMPLEMENT_ACCESSORS(scrollIndicator)
@@ -151,7 +150,6 @@ public:
     IMPLEMENT_ACCESSORS(menuBarItem)
     IMPLEMENT_ACCESSORS(menuItem)
     IMPLEMENT_ACCESSORS(menuSeparator)
-    IMPLEMENT_ACCESSORS(verticalHeaderViewDelegate)
 
 #undef IMPLEMENT_ACCESSORS
 
@@ -176,7 +174,7 @@ signals:
     void dialogButtonBoxChanged();
     void drawerChanged();
     void flatButtonChanged();
-    void horizontalHeaderViewDelegateChanged();
+    void headerViewDelegateChanged();
     void progressBarChanged();
     void scrollBarChanged();
     void scrollIndicatorChanged();
@@ -215,7 +213,6 @@ signals:
     void menuBarItemChanged();
     void menuItemChanged();
     void menuSeparatorChanged();
-    void verticalHeaderViewDelegateChanged();
 
 protected:
     void classBegin() override {}
