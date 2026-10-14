@@ -7,6 +7,8 @@
 
 QT_BEGIN_NAMESPACE
 
+QHash<PropertyPathId, QString> QQStyleKitPropertyPath::s_cachedPathStrings;
+
 QQStyleKitPropertyPath::QQStyleKitPropertyPath(
     const QQStyleKitPropertyGroup *group, QQSK::Property property, Flag flag)
     : m_property(property)
@@ -26,10 +28,14 @@ QQStyleKitPropertyPath::QQStyleKitPropertyPath(
 
 QString QQStyleKitPropertyPath::pathIdToPathString(PropertyPathId pathId)
 {
+    if (s_cachedPathStrings.contains(pathId))
+        return s_cachedPathStrings.value(pathId);
+
     constexpr PropertyPathId rootGroupsSize = nestedGroupsStartSize / nestedGroupCount;
     const auto groupMetaEnum = QMetaEnum::fromType<QQSK::PropertyGroup>();
     const auto propertyMetaEnum = QMetaEnum::fromType<QQSK::Property>();
 
+    const QQSK::PropertyGroup subType = extractSubtype(pathId);
     PropertyPathId nestedGroupStart = pathId % subtypeStorageSpaceSize;
     PropertyPathId nestedGroupSize = rootGroupsSize;
     PropertyPathId nestedGroupIndex = nestedGroupStart / nestedGroupSize;
@@ -41,6 +47,17 @@ QString QQStyleKitPropertyPath::pathIdToPathString(PropertyPathId pathId)
         QString groupName = QString::fromLatin1(groupMetaEnum.valueToKey(static_cast<int>(groupType)));
         groupName[0] = groupName[0].toLower();
         pathString = groupName;
+
+        switch (subType) {
+        case QQSK::PropertyGroup::DelegateSubtype1:
+            pathString += ".first"_L1;
+            break;
+        case QQSK::PropertyGroup::DelegateSubtype2:
+            pathString += ".second"_L1;
+            break;
+        default:
+            break;
+        }
 
         while (true) {
             nestedGroupStart -= nestedGroupIndex * nestedGroupSize;
@@ -56,12 +73,17 @@ QString QQStyleKitPropertyPath::pathIdToPathString(PropertyPathId pathId)
         }
     }
 
-    QString propertyName = QString::fromLatin1(propertyMetaEnum.valueToKey(static_cast<int>(nestedGroupStart)));
-    if (!propertyName.isEmpty())
+    QQSK::Property property = QQSK::Property(nestedGroupStart);
+    if (property != QQSK::Property::NoProperty) {
+        QString propertyName = QString::fromLatin1(propertyMetaEnum.valueToKey(static_cast<int>(property)));
         propertyName[0] = propertyName[0].toLower();
-    if (pathString.isEmpty())
-        return propertyName;
-    return pathString + '.'_L1 + propertyName;
+        if (!pathString.isEmpty())
+            pathString += '.'_L1;
+        pathString += propertyName;
+    }
+
+    s_cachedPathStrings.insert(pathId, pathString);
+    return pathString;
 }
 
 QString QQStyleKitPropertyPath::storageIdToPathString(PropertyStorageId storageId)

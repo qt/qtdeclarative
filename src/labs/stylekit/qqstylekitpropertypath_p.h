@@ -92,7 +92,7 @@ public:
     QQStyleKitPropertyPath() : m_property(QQSK::Property::NoProperty), m_groupStart(0) {}
     QQStyleKitPropertyPath(
         const QQStyleKitPropertyGroup *group,
-        QQSK::Property property,
+        QQSK::Property property = QQSK::Property::NoProperty,
         Flag flag = Flag::IncludeSubtype);
 
     inline QQSK::Property property() const { return m_property; }
@@ -106,8 +106,15 @@ public:
         /* The path ID is the property's identifier when its group path is taken
          * into account. Each property inside QQStyleKitControlProperties has a unique
          * path ID. For example, both 'background.color' and 'indicator.color' use the
-         * same QQSK::Property (Color), but they still have different path IDs. */
+         * same QQSK::Property (Color), but they still have different path IDs.
+         * Whether or not to include the subtype, and therefore prepend it in front of
+         * the group path, was decided already in the constructor. */
         return m_groupStart + PropertyPathId(m_property);
+    }
+
+    inline QQSK::PropertyGroup subType() const
+    {
+        return extractSubtype(m_groupStart);
     }
 
     inline PropertyStorageId createStorageId(QQSK::State state) const
@@ -121,6 +128,16 @@ public:
         const PropertyPathId stateIndex = PropertyPathId(state) - 1;
         const PropertyPathId stateStart = stateIndex * stateStorageSpaceSize;
         return stateStart + pathId();
+    }
+
+    static inline QQSK::PropertyGroup extractSubtype(PropertyPathId pathId)
+    {
+        /* The subtype occupies its own slab at the start of the path ID space, so the
+         * subtype index is recovered by dividing the path ID by the slab size. Both the
+         * group start and the full path ID lie within the same slab, so the result is the
+         * same whether or not the property is included. */
+        const PropertyPathId subtypeIndex = pathId / subtypeStorageSpaceSize;
+        return QQSK::PropertyGroup(int(QQSK::PropertyGroup::DelegateSubtype0) + int(subtypeIndex));
     }
 
     static inline QQSK::State extractState(PropertyStorageId storageId)
@@ -149,6 +166,8 @@ public:
 private:
     QQSK::Property m_property;
     PropertyPathId m_groupStart;
+
+    static QHash<PropertyPathId, QString> s_cachedPathStrings;
 };
 
 QT_END_NAMESPACE

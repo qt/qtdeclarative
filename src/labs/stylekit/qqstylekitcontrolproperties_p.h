@@ -111,8 +111,6 @@ protected:
 private:
     bool shouldEmitLocally();
     bool shouldEmitGlobally();
-
-    static QHash<PropertyPathId, QString> s_pathStrings;
 };
 
 // ************* QQStyleKitImageProperties ****************
