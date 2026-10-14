@@ -962,8 +962,6 @@ QT_BEGIN_NAMESPACE
 
 // ************* QQStyleKitPropertyGroup ****************
 
-QHash<PropertyPathId, QString> QQStyleKitPropertyGroup::s_pathStrings;
-
 QQStyleKitPropertyGroup::QQStyleKitPropertyGroup(QQSK::PropertyGroup, QObject *parent)
     : QObject(parent)
 {
@@ -989,13 +987,11 @@ T *QQStyleKitPropertyGroup::lazyCreateGroup(T * const &ptr, QQSK::PropertyGroup 
     nestedGroup->m_pathFlags = m_pathFlags;
 
     if (group == QQSK::PropertyGroup::DelegateSubtype1) {
-        /* Subtypes, like states, are not part of a property's path ID—they belong to the
-         * storage ID instead. They are therefore prefixed later, during lookup, when
-         * propagation determines which value to read.
-         * For now, we simply record which subtype this group (and any nested groups) is
-         * associated with. The subtype will then be taken into account later when reading
-         * properties from the group. Setting aside space for the sub types was already
-         * taken care of during the construction of the root QQStyleKitControlProperties. */
+        /* The subtype is stripped from a group's core path, and stored as a flag. This is because
+         * during style property look-up, we want to check many different alternative paths where
+         * the core group path can occur, some with, and some without, the subtype included.
+         * Whether or not to include a subtype is therefore decided as late as possible, when
+         * creating a QQStyleKitPropertyPath, and then depending on the usage. */
         nestedGroup->m_pathFlags.setFlag(QQSK::PropertyPathFlag::DelegateSubtype1);
         nestedGroup->m_groupSpace = m_groupSpace;
     } else if (group == QQSK::PropertyGroup::DelegateSubtype2) {
