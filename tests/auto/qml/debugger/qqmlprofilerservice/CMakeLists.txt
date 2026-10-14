@@ -36,16 +36,3 @@ qt_internal_add_test(tst_qqmlprofilerservice
 
 #### Keys ignored in scope 1:.:.:qqmlprofilerservice.pro:<TRUE>:
 # OTHER_FILES = "data/pixmapCacheTest.qml" "data/controlFromJS.qml" "data/test.qml" "data/exit.qml" "data/scenegraphTest.qml" "data/TestImage_2x2.png" "data/signalSourceLocation.qml" "data/javascript.qml" "data/timer.qml" "data/qstr.qml" "data/memory.qml" "data/batchOverflow.qml"
-
-## Scopes:
-#####################################################################
-
-qt_internal_extend_target(tst_qqmlprofilerservice CONDITION ANDROID OR IOS
-    DEFINES
-        QT_QMLTEST_DATADIR=":/data"
-)
-
-qt_internal_extend_target(tst_qqmlprofilerservice CONDITION NOT ANDROID AND NOT IOS
-    DEFINES
-        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
-)

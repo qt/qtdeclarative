@@ -32,16 +32,3 @@ qt_internal_add_test(tst_qqmldebuglocal
         Qt::QmlPrivate
         Qt::QuickTestUtilsPrivate
 )
-
-## Scopes:
-#####################################################################
-
-qt_internal_extend_target(tst_qqmldebuglocal CONDITION ANDROID OR IOS
-    DEFINES
-        QT_QMLTEST_DATADIR=":/data"
-)
-
-qt_internal_extend_target(tst_qqmldebuglocal CONDITION NOT ANDROID AND NOT IOS
-    DEFINES
-        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
-)

@@ -28,13 +28,3 @@ qt_internal_add_test(tst_qqmlnetworkinformation
 if(QT_BUILD_STANDALONE_TESTS)
     qt_import_qml_plugins(tst_qqmlnetworkinformation)
 endif()
-
-qt_internal_extend_target(tst_qqmlnetworkinformation CONDITION ANDROID OR IOS
-    DEFINES
-        QT_QMLTEST_DATADIR=":/data"
-)
-
-qt_internal_extend_target(tst_qqmlnetworkinformation CONDITION NOT ANDROID AND NOT IOS
-    DEFINES
-        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
-)

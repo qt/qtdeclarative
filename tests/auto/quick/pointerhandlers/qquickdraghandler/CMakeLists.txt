@@ -35,16 +35,3 @@ qt_internal_add_test(tst_qquickdraghandler
 
 #### Keys ignored in scope 1:.:.:qquickdraghandler.pro:<TRUE>:
 # OTHER_FILES = "data/DragAnywhereSlider.qml" "data/FlashAnimation.qml" "data/Slider.qml" "data/draggables.qml" "data/grabberstate.qml" "data/multipleSliders.qml" "data/reparenting.qml" "data/snapMode.qml"
-
-## Scopes:
-#####################################################################
-
-qt_internal_extend_target(tst_qquickdraghandler CONDITION ANDROID OR IOS
-    DEFINES
-        QT_QMLTEST_DATADIR=":/data"
-)
-
-qt_internal_extend_target(tst_qquickdraghandler CONDITION NOT ANDROID AND NOT IOS
-    DEFINES
-        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
-)

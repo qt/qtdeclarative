@@ -63,17 +63,3 @@ qt_internal_add_resource(tst_qqmltranslation "translation"
     FILES
         ${translation_resource_files}
 )
-
-
-## Scopes:
-#####################################################################
-
-qt_internal_extend_target(tst_qqmltranslation CONDITION ANDROID OR IOS
-    DEFINES
-        QT_QMLTEST_DATADIR=":/data"
-)
-
-qt_internal_extend_target(tst_qqmltranslation CONDITION NOT ANDROID AND NOT IOS
-    DEFINES
-        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
-)

@@ -36,16 +36,3 @@ qt_internal_add_test(tst_qqmlvaluetypes
 
 #### Keys ignored in scope 1:.:.:qqmlvaluetypes.pro:<TRUE>:
 # DISTFILES = "data/customvaluetype.qml"
-
-## Scopes:
-#####################################################################
-
-qt_internal_extend_target(tst_qqmlvaluetypes CONDITION ANDROID OR IOS
-    DEFINES
-        QT_QMLTEST_DATADIR=":/data"
-)
-
-qt_internal_extend_target(tst_qqmlvaluetypes CONDITION NOT ANDROID AND NOT IOS
-    DEFINES
-        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
-)

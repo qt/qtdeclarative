@@ -36,16 +36,3 @@ qt_internal_add_test(tst_creationtime
 
 #### Keys ignored in scope 1:.:.:creationtime.pro:<TRUE>:
 # TEMPLATE = "app"
-
-## Scopes:
-#####################################################################
-
-qt_internal_extend_target(tst_creationtime CONDITION ANDROID OR IOS
-    DEFINES
-        QT_QMLTEST_DATADIR=":/data"
-)
-
-qt_internal_extend_target(tst_creationtime CONDITION NOT ANDROID AND NOT IOS
-    DEFINES
-        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
-)

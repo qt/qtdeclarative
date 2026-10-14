@@ -41,19 +41,6 @@ endif()
 # QML_IMPORT_MAJOR_VERSION = "1"
 # QML_IMPORT_NAME = "org.qtproject.Test"
 
-## Scopes:
-#####################################################################
-
-qt_internal_extend_target(tst_qqmlinfo CONDITION ANDROID OR IOS
-    DEFINES
-        QT_QMLTEST_DATADIR=":/data"
-)
-
-qt_internal_extend_target(tst_qqmlinfo CONDITION NOT ANDROID AND NOT IOS
-    DEFINES
-        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
-)
-
 set_target_properties(tst_qqmlinfo PROPERTIES
     QT_QML_MODULE_VERSION 1.0
     QT_QML_MODULE_URI org.qtproject.Test

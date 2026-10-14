@@ -48,26 +48,3 @@ qt_internal_add_test(tst_qquickwindow_appless
 
 #### Keys ignored in scope 1:.:.:qquickwindow.pro:<TRUE>:
 # OTHER_FILES = "data/active.qml" "data/AnimationsWhileHidden.qml" "data/Headless.qml" "data/showHideAnimate.qml" "data/windoworder.qml" "data/grabContentItemToImage.qml"
-
-## Scopes:
-#####################################################################
-
-qt_internal_extend_target(tst_qquickwindow CONDITION ANDROID OR IOS
-    DEFINES
-        QT_QMLTEST_DATADIR=":/data"
-)
-
-qt_internal_extend_target(tst_qquickwindow CONDITION NOT ANDROID AND NOT IOS
-    DEFINES
-        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
-)
-
-qt_internal_extend_target(tst_qquickwindow_appless CONDITION ANDROID OR IOS
-    DEFINES
-        QT_QMLTEST_DATADIR=":/data"
-)
-
-qt_internal_extend_target(tst_qquickwindow_appless CONDITION NOT ANDROID AND NOT IOS
-    DEFINES
-        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
-)

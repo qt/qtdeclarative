@@ -25,12 +25,7 @@ qt_internal_add_test(quicktestmain
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/"
     SOURCES
         quicktestmain.cpp
-    DEFINES
-        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}"
     LIBRARIES
         Qt::Gui
     TESTDATA ${test_data}
 )
-
-## Scopes:
-#####################################################################

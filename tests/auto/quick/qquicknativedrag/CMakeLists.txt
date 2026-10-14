@@ -29,16 +29,6 @@ qt_internal_add_test(tst_qquicknativedrag
 ## Scopes:
 #####################################################################
 
-qt_internal_extend_target(tst_qquicknativedrag CONDITION ANDROID OR IOS
-    DEFINES
-        QT_QMLTEST_DATADIR=":/data"
-)
-
-qt_internal_extend_target(tst_qquicknativedrag CONDITION NOT ANDROID AND NOT IOS
-    DEFINES
-        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
-)
-
 # Drag.dragType: Drag.Automatic goes through QDrag::exec(), which runs a nested event
 # loop that only an in-process QPlatformDrag lets synthetic input terminate. The
 # offscreen platform provides one, and implements QCursor::setPos(), which

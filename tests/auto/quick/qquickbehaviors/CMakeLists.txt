@@ -45,16 +45,3 @@ _qt_internal_qml_type_registration(tst_qquickbehaviors)
 
 #### Keys ignored in scope 1:.:.:qquickbehaviors.pro:<TRUE>:
 # DISTFILES = "data/*"
-
-## Scopes:
-#####################################################################
-
-qt_internal_extend_target(tst_qquickbehaviors CONDITION ANDROID OR IOS
-    DEFINES
-        QT_QMLTEST_DATADIR=":/data"
-)
-
-qt_internal_extend_target(tst_qquickbehaviors CONDITION NOT ANDROID AND NOT IOS
-    DEFINES
-        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
-)

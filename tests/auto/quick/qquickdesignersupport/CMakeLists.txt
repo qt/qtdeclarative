@@ -35,16 +35,3 @@ qt_internal_add_test(tst_qquickdesignersupport
 
 #### Keys ignored in scope 1:.:.:qquickdesignersupport.pro:<TRUE>:
 # DISTFILES = "data/TestComponent.qml" "data/test.qml" "data/componentTest.qml" "data/Component01.qml" "data/Component02.qml" "data/bindingTest.qml"
-
-## Scopes:
-#####################################################################
-
-qt_internal_extend_target(tst_qquickdesignersupport CONDITION ANDROID OR IOS
-    DEFINES
-        QT_QMLTEST_DATADIR=":/data"
-)
-
-qt_internal_extend_target(tst_qquickdesignersupport CONDITION NOT ANDROID AND NOT IOS
-    DEFINES
-        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
-)

@@ -35,19 +35,6 @@ qt_internal_add_test(tst_qqmltypeloader
 # QML_IMPORT_NAME = "declarative.import.for.typeloader.test"
 # QML_IMPORT_VERSION = "3.2"
 
-## Scopes:
-#####################################################################
-
-qt_internal_extend_target(tst_qqmltypeloader CONDITION ANDROID OR IOS OR OHOS
-    DEFINES
-        QT_QMLTEST_DATADIR=":/data"
-)
-
-qt_internal_extend_target(tst_qqmltypeloader CONDITION NOT ANDROID AND NOT IOS AND NOT OHOS
-    DEFINES
-        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
-)
-
 set_source_files_properties("${CMAKE_CURRENT_BINARY_DIR}/lazyresource.rcc"
     PROPERTIES QT_RESOURCE_ALIAS "lazyresource.rcc")
 

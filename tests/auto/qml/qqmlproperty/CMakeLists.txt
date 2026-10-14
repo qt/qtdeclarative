@@ -37,19 +37,6 @@ qt_internal_add_test(tst_qqmlproperty
 # QML_IMPORT_NAME = "io.qt.bugreports"
 # QML_IMPORT_VERSION = "2.0"
 
-## Scopes:
-#####################################################################
-
-qt_internal_extend_target(tst_qqmlproperty CONDITION ANDROID OR IOS
-    DEFINES
-        QT_QMLTEST_DATADIR=":/data"
-)
-
-qt_internal_extend_target(tst_qqmlproperty CONDITION NOT ANDROID AND NOT IOS
-    DEFINES
-        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
-)
-
 set_target_properties(tst_qqmlproperty PROPERTIES
     QT_QML_MODULE_VERSION 2.0
     QT_QML_MODULE_URI io.qt.bugreports

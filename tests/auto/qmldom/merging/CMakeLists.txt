@@ -15,8 +15,12 @@ endif()
 
 # Collect test data
 file(GLOB_RECURSE test_data_glob
-    RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/..
-    domdata/dommerging)
+    RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/../domdata/dommerging/*)
+foreach(testdata IN LISTS test_data_glob)
+    string(REGEX REPLACE "^\\.\\./" "" resource_alias "${testdata}")
+    set_source_files_properties("${testdata}" PROPERTIES QT_RESOURCE_ALIAS "${resource_alias}")
+endforeach()
 list(APPEND test_data ${test_data_glob})
 
 qt_internal_add_test(tst_dommerging

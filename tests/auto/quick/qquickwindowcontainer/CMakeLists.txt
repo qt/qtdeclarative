@@ -25,14 +25,3 @@ qt_internal_add_test(tst_qquickwindowcontainer
         Qt::QuickTestUtilsPrivate
     TESTDATA ${test_data}
 )
-
-if(ANDROID OR IOS)
-    set(TESTDATA_DIR ":/data")
-else()
-    set(TESTDATA_DIR "${CMAKE_CURRENT_SOURCE_DIR}/data")
-endif()
-
-qt_internal_extend_target(tst_qquickwindowcontainer
-    DEFINES
-        QT_QMLTEST_DATADIR="${TESTDATA_DIR}"
-)

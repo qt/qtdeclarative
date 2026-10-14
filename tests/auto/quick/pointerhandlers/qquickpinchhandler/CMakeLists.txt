@@ -35,16 +35,3 @@ qt_internal_add_test(tst_qquickpinchhandler
 
 #### Keys ignored in scope 1:.:.:qquickpinchhandler.pro:<TRUE>:
 # OTHER_FILES = "data/pinchproperties.qml" "data/threeFingers.qml" "data/transformedPinchArea.qml"
-
-## Scopes:
-#####################################################################
-
-qt_internal_extend_target(tst_qquickpinchhandler CONDITION ANDROID OR IOS
-    DEFINES
-        QT_QMLTEST_DATADIR=":/data"
-)
-
-qt_internal_extend_target(tst_qquickpinchhandler CONDITION NOT ANDROID AND NOT IOS
-    DEFINES
-        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
-)

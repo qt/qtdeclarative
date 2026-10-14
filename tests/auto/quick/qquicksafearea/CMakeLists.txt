@@ -27,18 +27,7 @@ qt_internal_add_test(tst_qquicksafearea
     TESTDATA ${test_data}
 )
 
-if(ANDROID OR IOS)
-    set(TESTDATA_DIR ":/data")
-else()
-    set(TESTDATA_DIR "${CMAKE_CURRENT_SOURCE_DIR}/data")
-endif()
-
 if(APPLE)
     enable_language(OBJCXX)
     set_source_files_properties(tst_qquicksafearea.cpp PROPERTIES LANGUAGE OBJCXX)
 endif()
-
-qt_internal_extend_target(tst_qquicksafearea
-    DEFINES
-        QT_QMLTEST_DATADIR="${TESTDATA_DIR}"
-)

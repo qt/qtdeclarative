@@ -39,13 +39,3 @@ target_sources(tst_qquickoverlay
     PRIVATE
         ${test_data}
 )
-
-qt_internal_extend_target(tst_qquickoverlay CONDITION ANDROID OR IOS
-    DEFINES
-        QT_QMLTEST_DATADIR=":/data"
-)
-
-qt_internal_extend_target(tst_qquickoverlay CONDITION NOT ANDROID AND NOT IOS
-    DEFINES
-        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
-)

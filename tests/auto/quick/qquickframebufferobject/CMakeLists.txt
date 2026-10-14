@@ -32,16 +32,3 @@ qt_internal_add_test(tst_qquickframebufferobject
 
 #### Keys ignored in scope 1:.:.:qquickframebufferobject.pro:<TRUE>:
 # OTHER_FILES = "data/testStuff.qml"
-
-## Scopes:
-#####################################################################
-
-qt_internal_extend_target(tst_qquickframebufferobject CONDITION ANDROID OR IOS
-    DEFINES
-        QT_QMLTEST_DATADIR=":/data"
-)
-
-qt_internal_extend_target(tst_qquickframebufferobject CONDITION NOT ANDROID AND NOT IOS
-    DEFINES
-        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
-)

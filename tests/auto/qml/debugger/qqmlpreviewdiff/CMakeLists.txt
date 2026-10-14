@@ -32,16 +32,6 @@ qt_internal_add_test(tst_qqmlpreviewdiff
     TESTDATA ${test_data}
 )
 
-qt_internal_extend_target(tst_qqmlpreviewdiff CONDITION ANDROID OR IOS
-    DEFINES
-        QT_QMLTEST_DATADIR=":/data"
-)
-
-qt_internal_extend_target(tst_qqmlpreviewdiff CONDITION NOT ANDROID AND NOT IOS
-    DEFINES
-        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
-)
-
 #####################################################################
 ## tst_qqmlpreviewobjectpatch Test:
 #####################################################################
@@ -60,14 +50,4 @@ qt_internal_add_test(tst_qqmlpreviewobjectpatch
         Qt::QuickTestUtilsPrivate
         Qt::Test
     TESTDATA ${test_data}
-)
-
-qt_internal_extend_target(tst_qqmlpreviewobjectpatch CONDITION ANDROID OR IOS
-    DEFINES
-        QT_QMLTEST_DATADIR=":/data"
-)
-
-qt_internal_extend_target(tst_qqmlpreviewobjectpatch CONDITION NOT ANDROID AND NOT IOS
-    DEFINES
-        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
 )

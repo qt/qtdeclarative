@@ -50,22 +50,3 @@ qt_internal_add_test(tst_qmlformat_cli
 )
 
 add_dependencies(tst_qmlformat_cli Qt::qmlformat)
-
-qt_internal_extend_target(tst_qmlformat CONDITION ANDROID OR IOS
-    DEFINES
-        QT_QMLTEST_DATADIR=":/data"
-)
-
-qt_internal_extend_target(tst_qmlformat CONDITION NOT ANDROID AND NOT IOS
-    DEFINES
-        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
-)
-
-qt_internal_extend_target(tst_qmlformat_cli CONDITION ANDROID OR IOS
-    DEFINES
-        QT_QMLTEST_DATADIR=":/data"
-)
-qt_internal_extend_target(tst_qmlformat_cli CONDITION NOT ANDROID AND NOT IOS
-    DEFINES
-        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
-)
