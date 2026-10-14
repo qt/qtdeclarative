@@ -418,6 +418,10 @@ static QQStyleKitReader::ControlType controlTypeForWidget(const QWidget *widget)
     if (qobject_cast<const QMenu *>(widget))
         return QQStyleKitReader::Menu;
 #endif
+#if QT_CONFIG(tooltip)
+    if (widget->inherits("QTipLabel"))
+        return QQStyleKitReader::ToolTip;
+#endif
     if (widget->windowType() == Qt::Popup)
         return QQStyleKitReader::Popup;
     if (widget->windowType() == Qt::Dialog)
@@ -816,6 +820,9 @@ void QStyleKitStylePrivate::setStyleTranslucency(QWidget *widget)
 #if QT_CONFIG(combobox)
         || widget->inherits("QComboBoxPrivateContainer")
 #endif
+#if QT_CONFIG(tooltip)
+        || widget->inherits("QTipLabel")
+#endif
         ;
     if (!isPopup || widget->testAttribute(Qt::WA_TranslucentBackground))
         return;
@@ -928,7 +935,7 @@ void QStyleKitStylePrivate::refreshStylePalette(QWidget *widget)
     if (!effectiveStyle() || !widget)
         return;
 
-    const bool isWindow = widget->windowType() & (Qt::Popup | Qt::Window | Qt::Dialog);
+    const bool isWindow = widget->isWindow();
     const bool isPaletteManaged = isSelfPaintingWidget(widget) || isWindow;
     if (!isPaletteManaged)
         return;
@@ -945,17 +952,25 @@ void QStyleKitStylePrivate::refreshStylePalette(QWidget *widget)
     const QQSK::State currentState = resolvedStateFor(controlType, opt.state, targetWidget);
 
     QPalette stylePalette;
+    shared->setControlTypeAndState(controlType, currentState, false);
     if (isWindow) {
-        // Windows draw their own background using the QPalette::Window role
-        shared->setControlTypeAndState(controlType, currentState, false);
-        if (const auto *bg = shared->global()->background();
-                bg && bg->isDefined(QQSK::Property::Color)) {
-            stylePalette.setColor(QPalette::Window, bg->color());
-        }
-        shared->setControlTypeAndState(controlType, QQSK::StateFlag::Disabled, false);
-        if (const auto *dbg = shared->global()->background();
-                dbg && dbg->isDefined(QQSK::Property::Color)) {
-            stylePalette.setColor(QPalette::Disabled, QPalette::Window, dbg->color());
+        // Tooltips draw their text using QPalette::ToolTipText role
+        if (controlType == QQStyleKitReader::ControlType::ToolTip) {
+            if (const auto *text = shared->global()->text();
+                    text && text->isDefined(QQSK::Property::Color)) {
+                stylePalette.setColor(QPalette::ToolTipText, text->color());
+            }
+        } else {
+            // Windows draw their own background using the QPalette::Window role
+            if (const auto *bg = shared->global()->background();
+                    bg && bg->isDefined(QQSK::Property::Color)) {
+                stylePalette.setColor(QPalette::Window, bg->color());
+            }
+            shared->setControlTypeAndState(controlType, QQSK::StateFlag::Disabled, false);
+            if (const auto *dbg = shared->global()->background();
+                    dbg && dbg->isDefined(QQSK::Property::Color)) {
+                stylePalette.setColor(QPalette::Disabled, QPalette::Window, dbg->color());
+            }
         }
     } else {
         // The remaining text-based widgets use the QPalette::Text/WindowText roles for their
@@ -1877,6 +1892,15 @@ void QStyleKitStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt,
     Q_D(const QStyleKitStyle);
 
     switch (pe) {
+#if QT_CONFIG(tooltip)
+    case PE_PanelTipLabel: {
+        const auto r = d->resolve(w, QQStyleKitReader::ControlType::ToolTip, opt->state);
+        if (!r.isValid())
+            break;
+        d->drawStyledItemRect(r.background(), opt->rect.marginsRemoved(r.metrics->margins), p);
+        return;
+    }
+#endif
 #if QT_CONFIG(menu)
     case PE_PanelMenu: {
         const auto controlType = w && w->inherits("QComboBoxPrivateContainer")
@@ -4362,6 +4386,17 @@ int QStyleKitStyle::pixelMetric(PixelMetric m, const QStyleOption *opt, const QW
         if (resolved.isValid())
             return resolved.metrics->spacing;
         break;
+    }
+#endif
+#if QT_CONFIG(tooltip)
+    case PM_ToolTipLabelFrameWidth: {
+        // QTipLabel adds 1 to this and applies it uniformly on all sides
+        const auto resolved = d->resolveLayout(QQStyleKitReader::ControlType::ToolTip,
+                                               opt ? opt->state : QStyle::State_None);
+        if (!resolved.isValid())
+            break;
+        const auto *m = resolved.metrics;
+        return qMax(0, m->margins.left() + m->padding.left() + m->textPadding.left() - 1);
     }
 #endif
 #if QT_CONFIG(toolbar)
