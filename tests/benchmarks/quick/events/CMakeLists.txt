@@ -27,19 +27,3 @@ qt_internal_add_benchmark(tst_qevents
         Qt::Test
         Qt::QuickTestUtilsPrivate
 )
-
-#### Keys ignored in scope 1:.:.:events.pro:<TRUE>:
-# TEMPLATE = "app"
-
-## Scopes:
-#####################################################################
-
-qt_internal_extend_target(tst_qevents CONDITION ANDROID OR IOS
-    DEFINES
-        QT_QMLTEST_DATADIR=":/data"
-)
-
-qt_internal_extend_target(tst_qevents CONDITION NOT ANDROID AND NOT IOS
-    DEFINES
-        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
-)

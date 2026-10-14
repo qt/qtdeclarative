@@ -48,16 +48,3 @@ qt_internal_add_test(tst_accessibility
 #### Keys ignored in scope 1:.:.:accessibility.pro:<TRUE>:
 # OTHER_FILES = "data/*.qml"
 # _REQUIREMENTS = "qtConfig(accessibility)"
-
-## Scopes:
-#####################################################################
-
-qt_internal_extend_target(tst_accessibility CONDITION ANDROID OR IOS
-    DEFINES
-        QT_QMLTEST_DATADIR=":/data"
-)
-
-qt_internal_extend_target(tst_accessibility CONDITION NOT ANDROID AND NOT IOS
-    DEFINES
-        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
-)

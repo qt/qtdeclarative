@@ -30,8 +30,6 @@ qt_internal_add_test(tst_qquickvectorimage
         Qt::Svg
     TESTDATA
         ${test_data}
-    DEFINES
-        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
 )
 
 file(GLOB_RECURSE test_data_glob_svg
@@ -44,9 +42,4 @@ qt_add_resources(tst_qquickvectorimage svgs
     BASE ${CMAKE_CURRENT_SOURCE_DIR}/../../../baseline/scenegraph/data/shared/svg/
     FILES
         ${svg_data}
-)
-
-qt_internal_extend_target(tst_qquickvectorimage CONDITION ANDROID OR IOS
-    DEFINES
-    QT_QMLTEST_DATADIR=":/data"
 )

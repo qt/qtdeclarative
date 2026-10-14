@@ -35,16 +35,3 @@ qt_internal_add_test(tst_qquickanimators
 
 #### Keys ignored in scope 1:.:.:qquickanimators.pro:<TRUE>:
 # OTHER_FILES = "data/positionerWithAnimator.qml" "data/windowWithAnimator.qml" "data/animatorImplicitFrom.qml"
-
-## Scopes:
-#####################################################################
-
-qt_internal_extend_target(tst_qquickanimators CONDITION ANDROID OR IOS
-    DEFINES
-        QT_QMLTEST_DATADIR=":/data"
-)
-
-qt_internal_extend_target(tst_qquickanimators CONDITION NOT ANDROID AND NOT IOS
-    DEFINES
-        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
-)

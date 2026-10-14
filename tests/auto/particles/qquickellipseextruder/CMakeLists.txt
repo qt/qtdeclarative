@@ -33,16 +33,3 @@ qt_internal_add_test(tst_qquickellipseextruder
         Qt::QuickTestUtilsPrivate
     TESTDATA ${test_data}
 )
-
-## Scopes:
-#####################################################################
-
-qt_internal_extend_target(tst_qquickellipseextruder CONDITION ANDROID OR IOS
-    DEFINES
-        QT_QMLTEST_DATADIR=":/data"
-)
-
-qt_internal_extend_target(tst_qquickellipseextruder CONDITION NOT ANDROID AND NOT IOS
-    DEFINES
-        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
-)

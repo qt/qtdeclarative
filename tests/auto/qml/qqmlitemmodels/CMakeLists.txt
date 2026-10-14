@@ -33,16 +33,3 @@ qt_internal_add_test(tst_qqmlitemmodels
 
 #### Keys ignored in scope 1:.:.:qqmlitemmodels.pro:<TRUE>:
 # DISTFILES = "data/modelindex.qml" "data/persistentmodelindex.qml" "data/itemselectionrange.qml" "data/modelindexlist.qml" "data/itemselection.qml" "data/modelindexconversion.qml"
-
-## Scopes:
-#####################################################################
-
-qt_internal_extend_target(tst_qqmlitemmodels CONDITION ANDROID OR IOS
-    DEFINES
-        QT_QMLTEST_DATADIR=":/data"
-)
-
-qt_internal_extend_target(tst_qqmlitemmodels CONDITION NOT ANDROID AND NOT IOS
-    DEFINES
-        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
-)

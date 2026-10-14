@@ -37,16 +37,3 @@ qt_internal_add_test(tst_qquickgridview
 
 #### Keys ignored in scope 1:.:.:qquickgridview.pro:<TRUE>:
 # testcase.timeout = "1100"
-
-## Scopes:
-#####################################################################
-
-qt_internal_extend_target(tst_qquickgridview CONDITION ANDROID OR IOS
-    DEFINES
-        QT_QMLTEST_DATADIR=":/data"
-)
-
-qt_internal_extend_target(tst_qquickgridview CONDITION NOT ANDROID AND NOT IOS
-    DEFINES
-        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
-)

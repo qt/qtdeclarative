@@ -52,19 +52,6 @@ endif()
 #### Keys ignored in scope 2:.:.:tst_qqmlapplicationengine.pro:<TRUE>:
 # TRANSLATIONS = "data/i18n/qml_ja.ts"
 
-## Scopes:
-#####################################################################
-
-qt_internal_extend_target(tst_qqmlapplicationengine CONDITION ANDROID OR IOS
-    DEFINES
-        QT_QMLTEST_DATADIR=":/data"
-)
-
-qt_internal_extend_target(tst_qqmlapplicationengine CONDITION NOT ANDROID AND NOT IOS
-    DEFINES
-        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
-)
-
 add_subdirectory(testapp)
 if(ANDROID OR NOT CMAKE_CROSSCOMPILING)
     add_subdirectory(androidassets)

@@ -17,7 +17,6 @@ qt_internal_add_test(tst_qmlls
         tst_qmlls.cpp
     DEFINES
         QT_DEPRECATED_WARNINGS
-        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
     LIBRARIES
         Qt::Core
         Qt::QmlDomPrivate
@@ -25,11 +24,6 @@ qt_internal_add_test(tst_qmlls
         Qt::Test
         Qt::QuickTestUtilsPrivate
     TESTDATA ${test_data}
-)
-
-qt_internal_extend_target(tst_qmlls CONDITION ANDROID OR IOS
-    DEFINES
-        QT_QMLTEST_DATADIR=":/domdata"
 )
 
 # The test spawns qmlls as a subprocess; it needs the qmlls completion plugins

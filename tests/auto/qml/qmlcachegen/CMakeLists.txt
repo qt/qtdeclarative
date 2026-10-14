@@ -190,16 +190,6 @@ qt6_target_qml_sources(tst_qmlcachegen
     QML_FILES ${qml_additional_qml_files}
 )
 
-qt_internal_extend_target(tst_qmlcachegen CONDITION ANDROID OR IOS
-    DEFINES
-        QT_QMLTEST_DATADIR=":/data"
-)
-
-qt_internal_extend_target(tst_qmlcachegen CONDITION NOT ANDROID AND NOT IOS
-    DEFINES
-        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
-)
-
 qt_internal_extend_target(tst_qmlcachegen CONDITION CMAKE_CROSSCOMPILING
     DEFINES
         QTEST_CROSS_COMPILED

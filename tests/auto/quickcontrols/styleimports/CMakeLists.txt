@@ -60,16 +60,3 @@ qt_internal_add_resource(tst_styleimports "qmake_resourcestyle"
 
 #### Keys ignored in scope 1:.:.:styleimports.pro:<TRUE>:
 # OTHER_FILES = "data/*.qml" "data/qmldir" "data/FileSystemStyle/*.qml" "data/FileSystemStyle/qmldir" "data/PlatformStyle/*.qml" "data/PlatformStyle/+linux/*.qml" "data/PlatformStyle/+macos/*.qml" "data/PlatformStyle/+windows/*.qml" "data/PlatformStyle/qmldir"
-
-## Scopes:
-#####################################################################
-
-qt_internal_extend_target(tst_styleimports CONDITION ANDROID OR IOS
-    DEFINES
-        QT_QMLTEST_DATADIR=":/data"
-)
-
-qt_internal_extend_target(tst_styleimports CONDITION NOT ANDROID AND NOT IOS
-    DEFINES
-        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
-)

@@ -30,7 +30,7 @@ public slots:
         // parses the QML files (but doesn't run them). For that to happen, qmlEngineAvailable()
         // must be called before TestCaseCollector does its thing.
         qmlRegisterType<QmlRegisterTypeCppType>("QmlRegisterTypeCppModule", 1, 0, "QmlRegisterTypeCppType");
-        qmlEngine->addImportPath(QString::fromUtf8(QT_QMLTEST_DATADIR) + "/../imports");
+        qmlEngine->addImportPath(QFINDTESTDATA("imports"));
 
         qmlEngine->rootContext()->setContextProperty("qmlEngineAvailableCalled", true);
     }

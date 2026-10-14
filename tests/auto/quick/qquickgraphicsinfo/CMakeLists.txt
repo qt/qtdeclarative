@@ -31,16 +31,3 @@ qt_internal_add_test(tst_qquickgraphicsinfo
 
 #### Keys ignored in scope 1:.:.:qquickgraphicsinfo.pro:<TRUE>:
 # OTHER_FILES = "data/basic.qml"
-
-## Scopes:
-#####################################################################
-
-qt_internal_extend_target(tst_qquickgraphicsinfo CONDITION ANDROID OR IOS
-    DEFINES
-        QT_QMLTEST_DATADIR=":/data"
-)
-
-qt_internal_extend_target(tst_qquickgraphicsinfo CONDITION NOT ANDROID AND NOT IOS
-    DEFINES
-        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
-)

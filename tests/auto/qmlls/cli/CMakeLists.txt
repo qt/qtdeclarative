@@ -15,8 +15,6 @@ qt_internal_add_test(tst_qmlls_cli
     SOURCES
         tst_qmlls_cli.cpp
         tst_qmlls_cli.h
-    DEFINES
-        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
     LIBRARIES
         Qt::Core
         Qt::QmlDomPrivate

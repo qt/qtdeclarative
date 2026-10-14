@@ -36,19 +36,6 @@ qt_internal_add_test(tst_rendernode
 #### Keys ignored in scope 1:.:.:rendernode.pro:<TRUE>:
 # OTHER_FILES = "data/RenderOrder.qml" "data/MessUpState.qml" "data/matrix.qml"
 
-## Scopes:
-#####################################################################
-
-qt_internal_extend_target(tst_rendernode CONDITION ANDROID OR IOS
-    DEFINES
-        QT_QMLTEST_DATADIR=":/data"
-)
-
-qt_internal_extend_target(tst_rendernode CONDITION NOT ANDROID AND NOT IOS
-    DEFINES
-        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
-)
-
 qt_internal_add_shaders(tst_rendernode "rendernode_shaders"
     PREFIX
         /shaders

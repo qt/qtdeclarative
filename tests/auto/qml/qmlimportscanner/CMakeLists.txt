@@ -31,16 +31,6 @@ qt_internal_add_test(tst_qmlimportscanner
 ## Scopes:
 #####################################################################
 
-qt_internal_extend_target(tst_qmlimportscanner CONDITION ANDROID OR IOS
-    DEFINES
-        QT_QMLTEST_DATADIR=":/data"
-)
-
-qt_internal_extend_target(tst_qmlimportscanner CONDITION NOT ANDROID AND NOT IOS
-    DEFINES
-        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
-)
-
 # special case begin
 string(TOLOWER "${QT_LIBINFIX}" infix_lowercase)
 qt_internal_extend_target(tst_qmlimportscanner CONDITION DEFINED QT_LIBINFIX

@@ -40,13 +40,3 @@ qt_internal_extend_target(tst_qqmlparser CONDITION CMAKE_CROSSCOMPILING
     DEFINES
         QTEST_CROSS_COMPILED
 )
-
-qt_internal_extend_target(tst_qqmlparser CONDITION ANDROID OR IOS
-    DEFINES
-        QT_QMLTEST_DATADIR=":/data"
-)
-
-qt_internal_extend_target(tst_qqmlparser CONDITION NOT ANDROID AND NOT IOS
-    DEFINES
-        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
-)

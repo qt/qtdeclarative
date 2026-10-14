@@ -16,9 +16,6 @@ list(APPEND test_data ${test_data_glob})
 qt_internal_add_test(tst_qml
     SOURCES
         tst_qml.cpp
-    DEFINES
-        QT_QMLTEST_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
-        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
     LIBRARIES
         Qt::QuickTestUtilsPrivate
         Qt::Gui

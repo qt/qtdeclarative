@@ -43,16 +43,3 @@ qt_add_qml_module(
     QML_FILES
         "data/TestQml.qml"
 )
-
-## Scopes:
-#####################################################################
-
-qt_internal_extend_target(tst_qquickview CONDITION ANDROID OR IOS
-    DEFINES
-        QT_QMLTEST_DATADIR=":/data"
-)
-
-qt_internal_extend_target(tst_qquickview CONDITION NOT ANDROID AND NOT IOS
-    DEFINES
-        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
-)

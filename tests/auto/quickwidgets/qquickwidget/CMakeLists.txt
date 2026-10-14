@@ -54,16 +54,6 @@ qt_add_qml_module(
 ## Scopes:
 #####################################################################
 
-qt_internal_extend_target(tst_qquickwidget CONDITION ANDROID OR IOS
-    DEFINES
-        QT_QMLTEST_DATADIR=":/data"
-)
-
-qt_internal_extend_target(tst_qquickwidget CONDITION NOT ANDROID AND NOT IOS
-    DEFINES
-        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
-)
-
 qt_internal_extend_target(tst_qquickwidget CONDITION NOT QT6_IS_SHARED_LIBS_BUILD
     LIBRARIES
         Qt::QuickTestplugin

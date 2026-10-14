@@ -70,24 +70,3 @@ set_target_properties(tst_qqmlbinding_no_deferred_properties PROPERTIES
 )
 
 _qt_internal_qml_type_registration(tst_qqmlbinding_no_deferred_properties)
-
-
-qt_internal_extend_target(tst_qqmlbinding CONDITION ANDROID OR IOS
-    DEFINES
-        QT_QMLTEST_DATADIR=":/data"
-)
-
-qt_internal_extend_target(tst_qqmlbinding CONDITION NOT ANDROID AND NOT IOS
-    DEFINES
-        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
-)
-
-qt_internal_extend_target(tst_qqmlbinding_no_deferred_properties CONDITION ANDROID OR IOS
-    DEFINES
-        QT_QMLTEST_DATADIR=":/data"
-)
-
-qt_internal_extend_target(tst_qqmlbinding_no_deferred_properties CONDITION NOT ANDROID AND NOT IOS
-    DEFINES
-        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
-)

@@ -57,16 +57,3 @@ qt_internal_add_resource(tst_qquickstyle "qmake_custom"
 
 #### Keys ignored in scope 1:.:.:qquickstyle.pro:<TRUE>:
 # OTHER_FILES = "data/CmdLineArgStyle/Control.qml" "data/CmdLineArgStyle/qmldir" "data/EnvVarStyle/Control.qml" "data/EnvVarStyle/qmldir" "data/EnvVarFallbackStyle/Control.qml" "data/EnvVarFallbackStyle/qmldir"
-
-## Scopes:
-#####################################################################
-
-qt_internal_extend_target(tst_qquickstyle CONDITION ANDROID OR IOS
-    DEFINES
-        QT_QMLTEST_DATADIR=":/data"
-)
-
-qt_internal_extend_target(tst_qquickstyle CONDITION NOT ANDROID AND NOT IOS
-    DEFINES
-        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
-)

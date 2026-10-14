@@ -54,17 +54,3 @@ qt_internal_add_resource(tst_qquickfolderlistmodel "introspect"
     FILES
         ${introspect_resource_files}
 )
-
-
-## Scopes:
-#####################################################################
-
-qt_internal_extend_target(tst_qquickfolderlistmodel CONDITION ANDROID OR IOS OR OHOS
-    DEFINES
-        QT_QMLTEST_DATADIR=":/data"
-)
-
-qt_internal_extend_target(tst_qquickfolderlistmodel CONDITION NOT ANDROID AND NOT IOS AND NOT OHOS
-    DEFINES
-        QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
-)
