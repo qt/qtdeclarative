@@ -5,8 +5,16 @@
 ## QuickControls2Material Module:
 #####################################################################
 
+set(application_window_qml "ApplicationWindow.qml")
+if(ANDROID)
+    set(application_window_qml "android/${application_window_qml}")
+    set_source_files_properties("${application_window_qml}" PROPERTIES
+        QT_RESOURCE_ALIAS "ApplicationWindow.qml"
+    )
+endif()
+
 set(qml_files
-    "ApplicationWindow.qml"
+    "${application_window_qml}"
     "BusyIndicator.qml"
     "Button.qml"
     "CheckBox.qml"
