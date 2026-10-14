@@ -61,12 +61,12 @@ if (TARGET QuickControls2Basic)
     )
 endif()
 
-if (TARGET quicklintplugin)
-    add_dependencies(tst_qmllint quicklintplugin)
+if (TARGET QmlLintQuickPlugin)
+    add_dependencies(tst_qmllint QmlLintQuickPlugin)
 endif()
 
-if (TARGET qdslintplugin)
-    add_dependencies(tst_qmllint qdslintplugin)
+if (TARGET QmlLintQdsPlugin)
+    add_dependencies(tst_qmllint QmlLintQdsPlugin)
 endif()
 
 if(QT_FEATURE_process)
