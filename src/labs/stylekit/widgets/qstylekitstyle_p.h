@@ -186,6 +186,12 @@ private:
     void setStylePalette(QWidget *widget, const QPalette &stylePalette) const;
     void refreshStylePalette(QWidget *widget);
 
+    void setStyleAutoFill(QWidget *widget);
+    void unsetStyleAutoFill(QWidget *widget);
+
+    void setStyleTranslucency(QWidget *widget);
+    void unsetStyleTranslucency(QWidget *widget);
+
     void unsetStyleMinimumSize(QWidget *widget);
     void refreshStyleMinimumSize(QWidget *widget);
 
@@ -253,12 +259,13 @@ private:
     static constexpr int kMaxSubElementStates = 1024;
     // Cache of resolved metrics per control type and state
     mutable QHash<MetricsCacheKey, ControlMetrics> metricsCache;
+
     QHash<const QWidget *, Tampered<QFont>> customFontWidgets;
     mutable QHash<const QWidget *, Tampered<QPalette>> customPaletteWidgets;
-    // Widgets whose minimum size we raised
     QHash<const QWidget *, QSize> customMinimumSizeWidgets;
-    // Widgets whose automatic background fill we disabled
-    QSet<const QWidget *> bgFillDisabledWidgets;
+    QSet<const QWidget *> autoFillDisabledWidgets;
+    QSet<const QWidget *> translucentWidgets;
+
     QString stylePath;
 };
 
