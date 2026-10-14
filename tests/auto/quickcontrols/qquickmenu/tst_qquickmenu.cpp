@@ -1151,18 +1151,8 @@ void tst_QQuickMenu::order()
 #if QT_CONFIG(cursor)
 void tst_QQuickMenu::popup()
 {
-#if defined(Q_OS_ANDROID)
-    QSKIP("Setting cursor position is not supported on Android");
-#endif
-    if (QGuiApplication::platformName().startsWith(QLatin1String("wayland")))
-        QSKIP("Setting cursor position is not supported on Wayland");
-
-    // Try moving the cursor from the current position
-    // Skip if it fails since the test relies on moving the cursor
-    const QPoint point = QCursor::pos() + QPoint(1, 1);
-    QCursor::setPos(point);
-    if (!QTest::qWaitFor([point]{ return QCursor::pos() == point; }))
-        QSKIP("Setting cursor position is not supported on this platform");
+    if (!QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::MouseCursorPositioning))
+        QSKIP("Platform does not support cursor positioning");
 
     QQuickControlsApplicationHelper helper(this, QLatin1String("popup.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
@@ -3132,11 +3122,8 @@ void tst_QQuickMenu::dontUseNativeMenuWindowsChanges()
     bool couldMoveCursorPos = false;
     const QPoint cursorPos(1, 1);
 #if QT_CONFIG(cursor)
-    // Try moving the cursor from the current position to test if the platform
-    // supports moving the cursor.
-    const QPoint point = QCursor::pos() + QPoint(1, 1);
-    QCursor::setPos(point);
-    if (QTest::qWaitFor([point]{ return QCursor::pos() == point; })) {
+    if (QGuiApplicationPrivate::platformIntegration()->hasCapability(
+                QPlatformIntegration::MouseCursorPositioning)) {
         couldMoveCursorPos = true;
         const QPoint globalCursorPos = window->mapToGlobal(cursorPos);
         QCursor::setPos(globalCursorPos);

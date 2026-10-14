@@ -8,6 +8,8 @@
 #include <QtCore/private/qabstractanimation_p.h>
 #include <QtCore/private/qvariantanimation_p.h>
 #include <QtCore/QDebug>
+#include <QtGui/qpa/qplatformintegration.h>
+#include <QtGui/private/qguiapplication_p.h>
 #include <QtQuick/QQuickItem>
 #include <QtQml/qqmlcomponent.h>
 #if QT_CONFIG(quick_itemview)
@@ -51,7 +53,10 @@ void QQuickVisualTestUtils::moveMouseAway(QQuickWindow *window)
     // Using "bottomRight() + QPoint(100, 100)" was causing issues on Ubuntu,
     // where the window was positioned at the bottom right corner of the window
     // (even after centering the window on the screen), so we use another position.
-    QCursor::setPos(window->frameGeometry().bottomLeft() + QPoint(-10, 10));
+    if (QGuiApplicationPrivate::platformIntegration()->hasCapability(
+                QPlatformIntegration::MouseCursorPositioning)) {
+        QCursor::setPos(window->frameGeometry().bottomLeft() + QPoint(-10, 10));
+    }
 #endif
 
     // make sure hover events from QQuickDeliveryAgentPrivate::flushFrameSynchronousEvents()

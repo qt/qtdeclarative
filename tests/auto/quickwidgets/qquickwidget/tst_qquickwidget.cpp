@@ -25,6 +25,8 @@
 #include <QtGui/QAccessible>
 #include <QtGui/QImage>
 #include <QtGui/qpa/qplatformaccessibility.h>
+#include <QtGui/qpa/qplatformintegration.h>
+#include <QtGui/private/qguiapplication_p.h>
 #include <QtCore/QDebug>
 #include <QtQml/qqmlengine.h>
 
@@ -612,9 +614,9 @@ void tst_qquickwidget::shortcuts()
 
 void tst_qquickwidget::enterLeave()
 {
-#ifdef Q_OS_ANDROID
-    QSKIP("Android has no cursor");
-#endif
+    if (!QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::MouseCursorPositioning))
+        QSKIP("Platform does not support cursor positioning");
+
     QQuickWidget view;
     view.setSource(testFileUrl("enterleave.qml"));
 

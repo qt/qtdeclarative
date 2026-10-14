@@ -8,7 +8,9 @@
 #include <QtQuick/QQuickView>
 #include <QtQuick/QQuickView>
 #include <QtGui/QScreen>
+#include <QtGui/qpa/qplatformintegration.h>
 #include <QtGui/qpa/qwindowsysteminterface.h>
+#include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/private/qhighdpiscaling_p.h>
 
 #include <QtTest/QTest>
@@ -47,7 +49,10 @@ void QQuickViewTestUtils::centerOnScreen(QQuickWindow *window)
 void QQuickViewTestUtils::moveMouseAway(QQuickView *window)
 {
 #if QT_CONFIG(cursor) // Get the cursor out of the way.
-    QCursor::setPos(window->geometry().topRight() + QPoint(100, 100));
+    if (QGuiApplicationPrivate::platformIntegration()->hasCapability(
+                QPlatformIntegration::MouseCursorPositioning)) {
+        QCursor::setPos(window->geometry().topRight() + QPoint(100, 100));
+    }
 #else
     Q_UNUSED(window);
 #endif
@@ -463,8 +468,10 @@ namespace QQuickTest {
             const QPoint offset = QPoint(size.width() / 2, size.height() / 2);
             view.setFramePosition(screenGeometry.center() - offset);
 #if QT_CONFIG(cursor) // Get the cursor out of the way. But it's not possible on Wayland.
-            if (moveMouseOut)
+            if (moveMouseOut && QGuiApplicationPrivate::platformIntegration()->hasCapability(
+                                        QPlatformIntegration::MouseCursorPositioning)) {
                 QCursor::setPos(view.geometry().topRight() + QPoint(100, 100));
+            }
 #else
             Q_UNUSED(moveMouseOut);
 #endif

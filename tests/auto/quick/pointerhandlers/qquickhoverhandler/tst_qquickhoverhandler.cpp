@@ -10,6 +10,7 @@
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickpointerhandler_p_p.h>
 #include <QtQuick/private/qquickmousearea_p.h>
+#include <qpa/qplatformintegration.h>
 #include <qpa/qwindowsysteminterface.h>
 
 #include <private/qguiapplication_p.h>
@@ -380,8 +381,8 @@ void tst_HoverHandler::hoverHandlerOnDisabledItem()
 
 void tst_HoverHandler::movingItemWithHoverHandler()
 {
-   if (isPlatformWayland())
-        QSKIP("Wayland: QCursor::setPos() doesn't work.");
+    if (!QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::MouseCursorPositioning))
+        QSKIP("Platform does not support cursor positioning");
 
     QScopedPointer<QQuickView> windowPtr;
     createView(windowPtr, "lesHoverables.qml");
@@ -509,13 +510,12 @@ void tst_HoverHandler::window() // QTBUG-98717
     QTRY_COMPARE(window->framePosition(), pos);
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
 #if QT_CONFIG(cursor)
-    if (isPlatformWayland())
-         QSKIP("Wayland: QCursor::setPos() doesn't work.");
+    if (!QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::MouseCursorPositioning))
+        QSKIP("Platform does not support cursor positioning");
     auto cursorPos = window->mapToGlobal(QPoint(100, 100));
     qCDebug(lcPointerTests) << "in window @" << window->position() << "setting cursor pos" << cursorPos;
     QCursor::setPos(cursorPos);
-    if (!QTest::qWaitFor([cursorPos]{ return QCursor::pos() == cursorPos; }))
-        QSKIP("QCursor::setPos() doesn't work (QTBUG-76312).");
+    QTRY_COMPARE(QCursor::pos(), cursorPos);
     QTRY_COMPARE(window->cursor().shape(), Qt::OpenHandCursor);
 #endif
 }
