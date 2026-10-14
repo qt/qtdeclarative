@@ -81,6 +81,7 @@ private slots:
     void registerTypesFromImplicitImport();
     void containsAllQtConfEntries();
     void sanitizeUNCPath();
+    void implicitImportOfModuleDependingOnPlugin();
 
 private:
     QQmlModuleRegistration noimportRegistration;
@@ -193,6 +194,14 @@ void tst_QQmlImport::implicitWithDependencies()
     QScopedPointer<QObject> o(component.create());
     QVERIFY(!o.isNull());
     QCOMPARE(o->objectName(), QStringLiteral("notARectangle"));
+}
+
+void tst_QQmlImport::implicitImportOfModuleDependingOnPlugin()
+{
+    QQmlApplicationEngine engine;
+    engine.load(QUrl(u"qrc:/ModuleImportingShapes/Main.qml"_s));
+    QCOMPARE(engine.rootObjects().size(), 1);
+    QCOMPARE(engine.rootObjects().constFirst()->objectName(), u"main"_s);
 }
 
 void tst_QQmlImport::qualifiedScriptImport()

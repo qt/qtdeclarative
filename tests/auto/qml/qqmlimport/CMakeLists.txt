@@ -33,6 +33,7 @@ list(APPEND test_data ${test_data_glob})
 
 add_subdirectory(MyStaticModule)
 add_subdirectory(MyDynamicModule)
+add_subdirectory(ModuleImportingShapes)
 
 qt_internal_add_test(tst_qqmlimport
     SOURCES
@@ -43,7 +44,9 @@ qt_internal_add_test(tst_qqmlimport
         Qt::Qml
         Qt::QmlPrivate
         Qt::Quick
+        Qt::QuickShapes
         Qt::QuickTestUtilsPrivate
+        tst_qqmlimport_shapes_module
         tst_qqmlimport_static_moduleplugin
         tst_qqmlimport_dynamic_module
     TESTDATA ${test_data}

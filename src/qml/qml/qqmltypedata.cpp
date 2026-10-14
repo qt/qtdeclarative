@@ -753,6 +753,7 @@ bool QQmlTypeData::loadImplicitImport()
     QList<QQmlError> implicitImportErrors;
     QString localQmldir;
     m_importCache->addImplicitImport(typeLoader(), &localQmldir, &implicitImportErrors);
+    bool hasError = !implicitImportErrors.isEmpty();
 
     // When loading with QQmlImports::ImportImplicit, the imports are _appended_ to the namespace
     // in the order they are loaded. Therefore, the addImplicitImport above gets the highest
@@ -763,12 +764,14 @@ bool QQmlTypeData::loadImplicitImport()
         const QList<QQmlDirParser::Import> moduleImports
                 = QQmlMetaType::moduleImports(qmldir.typeNamespace(), QTypeRevision())
                 + qmldir.imports();
-        loadDependentImports(moduleImports, QString(), QTypeRevision(),
-                             QQmlImportInstance::Implicit + 1, QQmlImports::ImportNoFlag,
-                             &implicitImportErrors);
+        if (!loadDependentImports(moduleImports, QString(), QTypeRevision(),
+                                  QQmlImportInstance::Implicit + 1, QQmlImports::ImportNoFlag,
+                                  &implicitImportErrors)) {
+            hasError = true;
+        }
     }
 
-    if (!implicitImportErrors.isEmpty()) {
+    if (hasError) {
         setError(implicitImportErrors);
         return false;
     }
