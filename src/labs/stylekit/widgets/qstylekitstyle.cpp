@@ -789,6 +789,48 @@ void QStyleKitStylePrivate::unsetStyleMinimumSize(QWidget *widget)
     widget->setMinimumSize(original);
 }
 
+void QStyleKitStylePrivate::setStyleAutoFill(QWidget *widget)
+{
+    // Disable the viewport's autoFillBackground
+    // so the styled background shows through
+    if (QWidget *vp = managedViewport(widget); vp && vp->autoFillBackground()) {
+        vp->setAutoFillBackground(false);
+        autoFillDisabledWidgets.insert(widget);
+    }
+}
+
+void QStyleKitStylePrivate::unsetStyleAutoFill(QWidget *widget)
+{
+    if (!autoFillDisabledWidgets.remove(widget))
+        return;
+    if (QWidget *vp = managedViewport(widget))
+        vp->setAutoFillBackground(true);
+}
+
+void QStyleKitStylePrivate::setStyleTranslucency(QWidget *widget)
+{
+    const bool isPopup = false
+#if QT_CONFIG(menu)
+        || qobject_cast<QMenu *>(widget)
+#endif
+#if QT_CONFIG(combobox)
+        || widget->inherits("QComboBoxPrivateContainer")
+#endif
+        ;
+    if (!isPopup || widget->testAttribute(Qt::WA_TranslucentBackground))
+        return;
+    // Enable translucency for popups so that we can draw rounded corners
+    widget->setAttribute(Qt::WA_TranslucentBackground, true);
+    translucentWidgets.insert(widget);
+}
+
+void QStyleKitStylePrivate::unsetStyleTranslucency(QWidget *widget)
+{
+    if (!translucentWidgets.remove(widget))
+        return;
+    widget->setAttribute(Qt::WA_TranslucentBackground, false);
+}
+
 // Follow the approach in qstylesheetstyle.cpp
 void QStyleKitStylePrivate::unsetStyleFont(QWidget *widget)
 {
@@ -4477,27 +4519,8 @@ void QStyleKitStyle::polish(QWidget *widget)
     if (isInteractiveControl)
         d->readerForWidget(widget);
 
-    // Disable the viewport's autoFillBackground so the styled background shows through.
-    // Only flip it when it was enabled, and store the widget so unpolish() can restore it
-    // (e.g. when the application switches to a non-StyleKit style).
-    if (QWidget *vp = managedViewport(widget); vp && vp->autoFillBackground()) {
-        vp->setAutoFillBackground(false);
-        d->bgFillDisabledWidgets.insert(widget);
-    }
-#if QT_CONFIG(menu)
-    if (qobject_cast<QMenu *>(widget)
-#  if QT_CONFIG(combobox)
-        || widget->inherits("QComboBoxPrivateContainer")
-#  endif
-    ) {
-        // Enable translucent backgrounds so that we can draw rounded corners on popup menus.
-        // Store it in bgFillDisabledWidgets so that we can restore it in unpolish()
-        if (!widget->testAttribute(Qt::WA_TranslucentBackground)) {
-            widget->setAttribute(Qt::WA_TranslucentBackground, true);
-            d->bgFillDisabledWidgets.insert(widget);
-        }
-    }
-#endif
+    d->setStyleAutoFill(widget);
+    d->setStyleTranslucency(widget);
 
 #if QT_CONFIG(lineedit)
     if (auto *lineEdit = qobject_cast<QLineEdit *>(widget)) {
@@ -4558,19 +4581,8 @@ void QStyleKitStyle::unpolish(QWidget *widget)
 #endif
     if (hasEventFilter)
         widget->removeEventFilter(this);
-    if (d->bgFillDisabledWidgets.remove(widget)) {
-        if (QWidget *vp = managedViewport(widget))
-            vp->setAutoFillBackground(true);
-#if QT_CONFIG(menu)
-        else if (qobject_cast<QMenu *>(widget)
-#  if QT_CONFIG(combobox)
-                 || widget->inherits("QComboBoxPrivateContainer")
-#  endif
-        ) {
-            widget->setAttribute(Qt::WA_TranslucentBackground, false);
-        }
-#endif
-    }
+    d->unsetStyleAutoFill(widget);
+    d->unsetStyleTranslucency(widget);
     d->cleanupWidgetReader(widget);
 #if QT_CONFIG(scrollbar)
     if (qobject_cast<QScrollBar *>(widget))
