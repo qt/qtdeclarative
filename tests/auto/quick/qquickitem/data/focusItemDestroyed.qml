@@ -17,10 +17,10 @@ Rectangle {
             }
             Component.onCompleted: {
                 dlg.open()
-                timer.running = true
             }
             Timer {
                 id: timer
+                objectName: "timer"
                 interval: 100
                 onTriggered: {
                     dlg.close()
