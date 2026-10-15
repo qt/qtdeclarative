@@ -2723,7 +2723,11 @@ void tst_qquickitem::focusItemDestroyed()
     QTRY_VERIFY(focusObject = qApp->focusObject());
     QCOMPARE(window.activeFocusItem(), focusObject);
 
-    // dialog will be closed by timer
+    // close the dialog by timer, started only after focusObject is captured
+    QObject *timer = window.rootObject()->findChild<QObject *>("timer");
+    QVERIFY(timer);
+    timer->setProperty("running", true);
+
     QTRY_VERIFY(!focusObject);
     QVERIFY(!window.activeFocusItem());
 }
