@@ -2,7 +2,13 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 set(qmlmeta_imports
-    QML/1.0
+
+    # Intentionally not auto and not a specific version.
+    # It's 1.0 but if we specify that we allow for searching of version-decorated directories.
+    # If we leave it unspecified, that means "highest available version", which is also 1.0 but
+    # doesn't search version-decorated directories.
+    QML
+
     QtQml.Models/auto
 )
 
