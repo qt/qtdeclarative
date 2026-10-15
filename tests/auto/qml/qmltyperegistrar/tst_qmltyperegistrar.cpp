@@ -1153,7 +1153,7 @@ void tst_qmltyperegistrar::nameExplosion()
             "QmlTypeRegistrarTest/Name2 1.0",
             "QmlTypeRegistrarTest/NameExplosion 1.0"
         ]
-        exportMetaObjectRevisions: [256]
+        exportMetaObjectRevisions: [256, 256, 256]
     })"));
 
     QFETCH(QByteArray, qml);
