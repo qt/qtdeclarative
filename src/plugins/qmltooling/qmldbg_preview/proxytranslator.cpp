@@ -5,6 +5,7 @@
 #include "proxytranslator.h"
 
 #include <QtCore/qlibraryinfo.h>
+#include <QtQml/qqmlfile.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -56,7 +57,8 @@ void ProxyTranslator::setLanguage(const QUrl &context, const QLocale &locale)
 
     m_qmlTranslator.reset(new QTranslator(this));
     if (!m_qmlTranslator->load(locale, QLatin1String("qml"), QLatin1String("_"),
-                              context.toLocalFile() + QLatin1String("/i18n"))) {
+                              QQmlFile::urlToLocalFileOrQrc(context)
+                                      + QLatin1String("/i18n"))) {
         m_qmlTranslator.reset();
     }
 
