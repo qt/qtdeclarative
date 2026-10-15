@@ -985,14 +985,20 @@ void tst_HoverHandler::effectivelyClips() // QTBUG-140340 and QTBUG-136976
     QVERIFY(framePrivate->effectivelyClipsEventHandlingChildren());
 
     // expect to initially hover the pupil of the eye
-    const QPoint cursorGlobalPos = window.mapToGlobal(cursorPos);
-    QCursor::setPos(cursorGlobalPos);
     bool cursorSet = true;
-    if (!QTest::qWaitFor([cursorGlobalPos]() {
-            return QGuiApplicationPrivate::lastCursorPosition.toPoint() == cursorGlobalPos; })) {
-        qCDebug(lcPointerTests) << "QCursor::setPos doesn't work: expected"
-                                << cursorGlobalPos << "got" << QGuiApplicationPrivate::lastCursorPosition;
+    if (isPlatformWayland()) {
+        // QCursor::setPos() doesn't work on Wayland
+        QTest::mouseMove(&window, cursorPos);
         cursorSet = false;
+    } else {
+        const QPoint cursorGlobalPos = window.mapToGlobal(cursorPos);
+        QCursor::setPos(cursorGlobalPos);
+        if (!QTest::qWaitFor([cursorGlobalPos]() {
+                return QGuiApplicationPrivate::lastCursorPosition.toPoint() == cursorGlobalPos; })) {
+            qCDebug(lcPointerTests) << "QCursor::setPos doesn't work: expected"
+                                    << cursorGlobalPos << "got" << QGuiApplicationPrivate::lastCursorPosition;
+            cursorSet = false;
+        }
     }
 
     auto checkPupilHovered = [pupilHandler, goatHandler, frameHandler, shadowHandler, &window]() {
