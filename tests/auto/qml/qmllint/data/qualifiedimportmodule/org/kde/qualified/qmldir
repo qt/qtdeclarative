@@ -1,0 +1,4 @@
+module org.kde.qualified
+Main 254.0 Main.qml
+Bla 254.0 Bla.qml
+NewName 254.0 Renamed.qml
