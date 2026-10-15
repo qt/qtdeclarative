@@ -76,6 +76,17 @@ QSGDistanceFieldGlyphCache::GlyphData &QSGDistanceFieldGlyphCache::glyphData(gly
         QTransform scaleDown;
         scaleDown.scale(scaleFactor, scaleFactor);
         gd.boundingRect = scaleDown.mapRect(gd.path.boundingRect());
+
+        // Guard against corrupt fonts with excessively large glyph bounds, which would cause
+        // us to allocate huge distance fields and atlas textures. Treat them as empty glyphs.
+        const qreal pixelSize = baseFontSize();
+        if (QFontEngine::glyphBoundingBoxExceedsLimit(gd.boundingRect.width(),
+                                                      gd.boundingRect.height(),
+                                                      pixelSize * pixelSize)) {
+            gd.boundingRect = QRectF();
+            gd.path = QPainterPath();
+        }
+
         return gd;
     }
     return data.value();
