@@ -806,23 +806,40 @@ ReturnedValue QQmlContextWrapper::lookupInParentContextHierarchy(Lookup *l, Exec
 
 ReturnedValue QQmlContextWrapper::lookupType(Lookup *l, ExecutionEngine *engine, Value *base)
 {
+    Q_UNUSED(base)
+
     Scope scope(engine);
     Scoped<QmlContext> qmlContext(scope, engine->qmlContext());
     if (!qmlContext)
         return QV4::Encode::undefined();
 
-    QObject *scopeObject = qmlContext->qmlScope();
-    if (scopeObject && QQmlData::wasDeleted(scopeObject))
+    QObject *currentScopeObject = qmlContext->qmlScope();
+    if (currentScopeObject && QQmlData::wasDeleted(currentScopeObject))
         return QV4::Encode::undefined();
 
     Heap::Base *heapObject = l->qmlTypeLookup.qmlTypeWrapper;
-    if (static_cast<Heap::QQmlTypeWrapper *>(heapObject)->object != scopeObject) {
-        l->qmlTypeLookup.qmlTypeWrapper.clear();
-        l->call = Lookup::Call::ContextGetterGeneric;
-        return QQmlContextWrapper::resolveQmlContextPropertyLookupGetter(l, engine, base);
-    }
+    Heap::QQmlTypeWrapper *typeWrapper = static_cast<Heap::QQmlTypeWrapper *>(heapObject);
+    QObject *lookupScopeObject = typeWrapper->object;
+    if (lookupScopeObject == currentScopeObject)
+        return Value::fromHeapObject(heapObject).asReturnedValue();
 
-    return Value::fromHeapObject(heapObject).asReturnedValue();
+    // The type wrapper is still valid. We can simply rebase it onto the new scope.
+    // The type cannot have changed. The only thing that may have changed is the
+    // base object of any attachment.
+    Scoped<QQmlTypeWrapper> newWrapper(scope);
+    switch (typeWrapper->kind()) {
+    case Heap::QQmlTypeWrapper::Type:
+        newWrapper = QQmlTypeWrapper::create(engine, currentScopeObject, typeWrapper->type(),
+                                             typeWrapper->typeNameMode());
+        break;
+    case Heap::QQmlTypeWrapper::Namespace:
+        newWrapper = QQmlTypeWrapper::create(
+                engine, currentScopeObject, typeWrapper->n.typeNamespace,
+                typeWrapper->n.importNamespace, typeWrapper->typeNameMode());
+        break;
+    }
+    l->qmlTypeLookup.qmlTypeWrapper.set(engine, newWrapper->d());
+    return newWrapper.asReturnedValue();
 }
 
 void Heap::QmlContext::init(QV4::ExecutionContext *outerContext, QV4::QQmlContextWrapper *qml)
