@@ -258,6 +258,14 @@ void QmlTypesClassDescription::collect(
             continue;
         }
 
+        if (name == S_EXTRA_VERSION) {
+            const QTypeRevision revision = handleInMinorVersion(
+                    QTypeRevision::fromEncodedVersion(toInt(value)),
+                    defaultRevision.majorVersion());
+            revisions.append(revision);
+            continue;
+        }
+
         if (mode != TopLevel)
             continue;
 

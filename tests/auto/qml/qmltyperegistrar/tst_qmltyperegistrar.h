@@ -1080,6 +1080,7 @@ private slots:
     void foreignNamespacedWithEnum();
     void splitTokenQmlForeign();
     void multiWordQmlForeign();
+    void multiVersion();
 
     void mergeQtConfImportPathOrder();
 

@@ -17,6 +17,7 @@ add_subdirectory(VersionZero)
 add_subdirectory(UnregisteredTypes)
 add_subdirectory(foreign)
 add_subdirectory(Namespaced)
+add_subdirectory(MultiVersion)
 
 qt_manual_moc(moc_files OUTPUT_MOC_JSON_FILES json_list noextheader
               TARGETS Qt6::Qml)
@@ -46,6 +47,7 @@ qt_internal_add_test(tst_qmltyperegistrar
     INCLUDE_DIRECTORIES
         foreign
         Namespaced                               # for namespaced.h
+        MultiVersion
         "${CMAKE_CURRENT_BINARY_DIR}/Namespaced" # for the export header
     LIBRARIES
         # Remove: Lforeign
@@ -56,6 +58,7 @@ qt_internal_add_test(tst_qmltyperegistrar
         Qt::QmlTypeRegistrarPrivate
         tst_qmltyperegistrar_major_version_zero
         tst_qmltyperegistrar_namespaced_module
+        tst_qmltyperegistrar_multi_version
         UnregisteredTypes
 )
 

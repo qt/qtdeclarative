@@ -1617,6 +1617,34 @@ void tst_qmltyperegistrar::multiWordQmlForeign()
     QVERIFY(!qmltypesData.contains("unsignedlonglong"));
 }
 
+void tst_qmltyperegistrar::multiVersion()
+{
+    Q_ASSERT(QCoreApplication::instance());
+    QFile file(QCoreApplication::applicationDirPath()
+               + "/MultiVersion/tst_qmltyperegistrar_multi_version.qmltypes");
+    QVERIFY(file.open(QIODevice::ReadOnly));
+    const QByteArray multiVersionData = file.readAll();
+    QVERIFY(file.atEnd());
+    QCOMPARE(file.error(), QFile::NoError);
+
+    QVERIFY(multiVersionData.contains(R"(Component {
+        file: "multiversion.h"
+        lineNumber: 9
+        name: "MultiVersion"
+        accessSemantics: "reference"
+        prototype: "QObject"
+        exports: [
+            "MultiVersion/Multi 1.4",
+            "MultiVersion/Version 1.4",
+            "MultiVersion/Multi 2.0",
+            "MultiVersion/Version 2.0",
+            "MultiVersion/Multi 6.0",
+            "MultiVersion/Version 6.0"
+        ]
+        exportMetaObjectRevisions: [260, 260, 512, 512, 1536, 1536]
+    })"));
+}
+
 void tst_qmltyperegistrar::mergeQtConfImportPathOrder()
 {
     QTemporaryDir dir;

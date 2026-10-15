@@ -175,6 +175,7 @@ static constexpr QLatin1StringView S_FOREIGN_IS_NAMESPACE         { "QML.Foreign
 static constexpr QLatin1StringView S_HAS_CUSTOM_PARSER            { "QML.HasCustomParser" };
 static constexpr QLatin1StringView S_PRIMITIVE_ALIAS              { "QML.PrimitiveAlias" };
 static constexpr QLatin1StringView S_REMOVED_IN_VERSION           { "QML.RemovedInVersion" };
+static constexpr QLatin1StringView S_EXTRA_VERSION                { "QML.ExtraVersion" };
 static constexpr QLatin1StringView S_ROOT                         { "QML.Root" };
 static constexpr QLatin1StringView S_SEQUENCE                     { "QML.Sequence" };
 static constexpr QLatin1StringView S_SINGLETON                    { "QML.Singleton" };
