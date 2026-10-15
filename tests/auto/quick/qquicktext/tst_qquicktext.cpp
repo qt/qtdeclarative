@@ -197,6 +197,8 @@ private slots:
     void styledTextDirectionNoExtraSignal_data();
     void styledTextDirectionNoExtraSignal();
 
+    void distanceFieldExcessiveGlyphSize();
+
 private:
     QStringList standard;
     QStringList richText;
@@ -5673,6 +5675,31 @@ void tst_qquicktext::styledTextDirectionNoExtraSignal()
 
     QCOMPARE(textItem->effectiveHAlign(), expectedAlignment);
     QCOMPARE(spy.count(), expectedSignalCount);
+}
+
+void tst_qquicktext::distanceFieldExcessiveGlyphSize()
+{
+    SKIP_IF_NO_WINDOW_GRAB;
+
+    // The font has glyphs with excessively large bounding boxes. Rendering them
+    // with distance fields should not attempt to allocate huge glyph images.
+    QQuickView view;
+    view.setSource(testFileUrl("distanceFieldExcessiveGlyphSize.qml"));
+    QTRY_COMPARE(view.status(), QQuickView::Ready);
+
+    auto *fontLoader = view.rootObject()->findChild<QObject *>("fontLoader");
+    QVERIFY(fontLoader);
+    QTRY_COMPARE(fontLoader->property("status").toInt(), 1 /* FontLoader.Ready */);
+
+    auto *text = view.rootObject()->findChild<QQuickText *>("text");
+    QVERIFY(text);
+    QCOMPARE(text->renderType(), QQuickText::QtRendering);
+
+    view.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+
+    QImage img = view.grabWindow();
+    QVERIFY(!img.isNull());
 }
 
 QT_END_NAMESPACE
