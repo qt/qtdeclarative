@@ -148,8 +148,8 @@ void QmlTypesCreator::writeClassProperties(const QmlTypesClassDescription &colle
             exportEntry += '.' + QByteArray::number(revision.minorVersion());
 
             exports.append(exportEntry);
+            metaObjects.append(QByteArray::number(revision.toEncodedVersion<quint16>()));
         }
-        metaObjects.append(QByteArray::number(revision.toEncodedVersion<quint16>()));
     }
 
     QList<QAnyStringView> exportStrings;
