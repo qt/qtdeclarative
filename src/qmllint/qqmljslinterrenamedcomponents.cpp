@@ -10,7 +10,7 @@ namespace QQmlJS {
 
 using namespace Qt::StringLiterals;
 
-static QStringView baseNameOf(const QString &path)
+static QString qmlNameFromFilePath(QStringView path)
 {
     if (!path.endsWith(".qml"_L1))
         return {};
@@ -21,7 +21,15 @@ static QStringView baseNameOf(const QString &path)
         result.chop(".ui"_L1.size());
     const qsizetype start = path.lastIndexOf("/"_L1);
     result.slice(start == -1 ? 0 : start + 1);
-    return result;
+    return result.toString();
+}
+
+static void removeModuleImportQualifiers(QStringList *names)
+{
+    for (QString &name : *names) {
+        if (qsizetype idx = name.lastIndexOf(u'.'); idx != -1)
+            name.slice(idx + 1);
+    }
 }
 
 void LinterRenamedComponents::handleRenamedType(const QQmlJSScope::ConstPtr &scope,
@@ -32,21 +40,24 @@ void LinterRenamedComponents::handleRenamedType(const QQmlJSScope::ConstPtr &sco
     if (scope.isNull())
         return;
 
-    auto [start, end] = m_scopeToName->equal_range(scope);
-    if (start == end || std::next(start) == end)
-        return;
-
-    const QString oldName = baseNameOf(scope->filePath()).toString();
+    const auto factory = scope.factory();
+    const QString oldName = qmlNameFromFilePath(factory ? factory->filePath() : scope->filePath());
     if (oldName != name)
         return;
 
-    QStringList names(start, end);
-    names.erase(std::remove(names.begin(), names.end(), oldName), names.end());
-    std::sort(names.begin(), names.end());
+    QStringList names = m_scopeToName->values(scope);
+    removeModuleImportQualifiers(&names);
+    auto begin = names.begin();
+    auto end = std::remove(begin, names.end(), oldName);
+    std::sort(begin, end);
+    names.erase(std::unique(begin, end), names.end());
+
+    if (names.size() == 0)
+        return;
 
     logger->log(
             "\"%2\" is explicitly renamed to \"%1\" via a qmldir entry or QT_QML_SOURCE_TYPENAME CMake property, use \"%1\" instead."_L1
-                    .arg(names.join("\", \""_L1), name),
+                    .arg(qJoin(names.begin(), names.end(), QString(), "\", \""_L1), name),
             qmlRenamedType, location);
 }
 } // namespace QQmlJS

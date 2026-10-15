@@ -1485,6 +1485,18 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)"_L1,
                          5, 32 },
                } }
             << defaultOptions;
+    {
+        CallQmllintOptions options = defaultOptions;
+        options.importPaths << testFile("qualifiedimportmodule");
+        QTest::newRow("renamedTypeQualifiedModule")
+                << u"qualifiedimportmodule/org/kde/qualified/UseRenamed.qml"_s
+                << Result{ {
+                           { "\"Renamed\" is explicitly renamed to \"NewName\" via a qmldir entry or QT_QML_SOURCE_TYPENAME CMake property, use \"NewName\" instead."_L1,
+                                   6, 5},
+                           { "OKQ.Renamed was not found"_L1, 5, 5},
+                   } }
+                << options;
+    }
     constexpr QLatin1String renameTypeWarning =
             "\"Main\" is explicitly renamed to \"Name1\", \"Name2\", \"Name3\", \"Name4\" via a qmldir entry or QT_QML_SOURCE_TYPENAME CMake property, use \"Name1\", \"Name2\", \"Name3\", \"Name4\" instead."_L1;
     QTest::newRow("renamedTypeUsage") << u"qmldirs/renameFileToMultipleNames/AnotherFile.qml"_s
@@ -3188,6 +3200,12 @@ void TestQmllint::cleanQmlCode_data()
                 << u"mymodulewithsingleton-source/MyModuleWithSingleton/Singleton.qml"_s << options;
         QTest::newRow("singletonWithEmptyPrefix2")
                 << u"mymodulewithsingleton-build/MyModuleWithSingleton/Singleton.qml"_s << options;
+    }
+    {
+        CallQmllintOptions options = defaultOptions;
+        options.importPaths << testFile("qualifiedimportmodule");
+        QTest::newRow("qualifiedImportOfOwnModule")
+                << u"qualifiedimportmodule/org/kde/qualified/Main.qml"_s << options;
     }
 }
 
