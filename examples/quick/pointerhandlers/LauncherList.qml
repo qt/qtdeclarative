@@ -20,6 +20,15 @@ Rectangle {
     function showExample(url) {
         pageComponent.createObject(pageContainer, { exampleUrl: url }).show()
     }
+    function goBack() {
+        pageContainer.children[pageContainer.children.length - 1].exit()
+    }
+
+    Shortcut {
+        sequence: "Back"
+        enabled: root.activePageCount > 0
+        onActivated: root.goBack()
+    }
 
     // The container rectangle here is used to give a nice "feel" when
     // transitioning into an example.
@@ -188,9 +197,7 @@ Rectangle {
                 enabled: root.activePageCount > 0
                 gesturePolicy: TapHandler.ReleaseWithinBounds
                 longPressThreshold: 0
-                onTapped: {
-                    pageContainer.children[pageContainer.children.length - 1].exit()
-                }
+                onTapped: root.goBack()
             }
             Rectangle {
                 anchors.fill: parent
