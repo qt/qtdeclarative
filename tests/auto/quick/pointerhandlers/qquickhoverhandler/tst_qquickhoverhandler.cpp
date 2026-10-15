@@ -38,6 +38,7 @@ public:
     {}
 
 private slots:
+    void cleanup();
     void hoverHandlerAndUnderlyingHoverHandler_data();
     void hoverHandlerAndUnderlyingHoverHandler();
     void mouseAreaAndUnderlyingHoverHandler();
@@ -67,6 +68,13 @@ private:
 
     std::unique_ptr<QPointingDevice> touchscreen{QTest::createTouchDevice()};
 };
+
+void tst_HoverHandler::cleanup()
+{
+    // QCursor::setPos() doesn't work on Wayland: forget the last mouse position
+    if (isPlatformWayland())
+        QGuiApplicationPrivate::lastCursorPosition.reset();
+}
 
 void tst_HoverHandler::createView(QScopedPointer<QQuickView> &window, const char *fileName)
 {
