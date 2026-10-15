@@ -1058,6 +1058,7 @@ private slots:
     void derivedFromInvisible();
     void foreignFileAndLinePointsToNonForeign();
     void foreignNamespacedWithEnum();
+    void multiVersion();
 
     void mergeQtConfImportPathOrder();
 
