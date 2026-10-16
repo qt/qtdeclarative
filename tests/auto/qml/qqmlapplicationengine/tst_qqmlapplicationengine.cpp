@@ -90,7 +90,7 @@ void tst_qqmlapplicationengine::testNonResolvedPath()
     QSKIP("INTEGRITY stores QML files in resources, and the path to a resource cannot be relative in this case");
 #endif
 
-#if defined(Q_OS_ANDROID) || defined(Q_OS_OHOS)
+#if defined(Q_OS_ANDROID) || defined(Q_OS_HARMONY)
     QSKIP("This platform stores QML files in resources, and the path to a resource cannot be relative in this case");
 #endif
     {
