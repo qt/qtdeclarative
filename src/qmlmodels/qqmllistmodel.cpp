@@ -1670,6 +1670,8 @@ bool ModelObject::virtualPut(Managed *m, PropertyKey id, const Value &value, Val
     QString propName = id.toQString();
 
     ModelObject *that = static_cast<ModelObject*>(m);
+    if (!that->object())
+        return false;
 
     ExecutionEngine *eng = that->engine();
     const int elementIndex = that->d()->elementIndex();
@@ -1695,7 +1697,7 @@ ReturnedValue ModelObject::virtualGet(const Managed *m, PropertyKey id, const Va
     Scope scope(that);
     ScopedString name(scope, id.asStringOrSymbol());
     QQmlListModel *model = that->d()->m_model;
-    if (!model)
+    if (!model || !that->object())
         return QObjectWrapper::virtualGet(m, id, receiver, hasProperty);
 
     const ListLayout::Role *role = model->listModel()->getExistingRole(name);

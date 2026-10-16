@@ -2149,6 +2149,8 @@ void tst_qqmllistmodel::deadModelData()
         QCOMPARE(i2->property("ident").value<double>(), double());
         QCOMPARE(i2->property("buttonText").value<QString>(), QString());
     }
+
+    QCOMPARE(o->objectName(), "works");
 }
 
 void tst_qqmllistmodel::valuesOfInnerList()
