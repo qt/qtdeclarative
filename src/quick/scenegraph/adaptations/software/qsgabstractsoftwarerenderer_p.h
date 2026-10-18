@@ -75,6 +75,7 @@ private:
     qreal m_devicePixelRatio = 1;
     bool m_isOpaque = false;
     bool m_clearColorEnabled = true;
+    bool m_renderListDirty = true;
 
     QSGSoftwareRenderableNodeUpdater *m_nodeUpdater;
 };
