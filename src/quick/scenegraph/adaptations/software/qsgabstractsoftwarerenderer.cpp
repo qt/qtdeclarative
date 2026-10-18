@@ -10,6 +10,7 @@
 #include "qsgsoftwarerenderablenode_p.h"
 
 #include <QtCore/QLoggingCategory>
+#include <QtCore/QVarLengthArray>
 #include <QtGui/QWindow>
 #include <QtQuick/QSGSimpleRectNode>
 
@@ -120,8 +121,59 @@ void QSGAbstractSoftwareRenderer::buildRenderList()
     QSGSoftwareRenderListBuilder(this).visitChildren(rootNode());
 }
 
+// Returns the union of the TileSize x TileSize tiles that intersect region.
+static QRegion tiledRegion(const QRegion &region)
+{
+    constexpr int TileSize = 32;
+    static_assert((TileSize & (TileSize - 1)) == 0, "TileSize must be a power of two");
+    const QRect bounds = region.boundingRect();
+    if (bounds.isEmpty())
+        return region;
+    // Align the grid to multiples of TileSize so it stays fixed as the region grows
+    const int x0 = bounds.left() & -TileSize;
+    const int y0 = bounds.top() & -TileSize;
+    const int columns = (bounds.right() - x0) / TileSize + 1;
+    const int rows = (bounds.bottom() - y0) / TileSize + 1;
+
+    // Mark every tile touched by a rect of the region
+    QVarLengthArray<bool, 4096> tiles(columns * rows, false);
+    for (const QRect &r : region) {
+        const int c1 = (r.right() - x0) / TileSize;
+        const int r1 = (r.bottom() - y0) / TileSize;
+        for (int row = (r.top() - y0) / TileSize; row <= r1; ++row) {
+            for (int c = (r.left() - x0) / TileSize; c <= c1; ++c)
+                tiles[row * columns + c] = true;
+        }
+    }
+
+    // Merge each run of marked tiles in a row into one rect
+    QRegion result;
+    for (int row = 0; row < rows; ++row) {
+        for (int c = 0; c < columns; ++c) {
+            if (!tiles[row * columns + c])
+                continue;
+            const int start = c;
+            while (c < columns && tiles[row * columns + c])
+                ++c;
+            result += QRect(x0 + start * TileSize, y0 + row * TileSize,
+                            (c - start) * TileSize, TileSize);
+        }
+    }
+    return result;
+}
+
 QRegion QSGAbstractSoftwareRenderer::optimizeRenderList()
 {
+    // Bounds the rect count of m_dirtyRegion. Enlarging it is only safe in the first pass.
+    const QRect renderArea = m_background->rect().toAlignedRect();
+    int dirtyRectLimit = 32;
+    auto limitDirtyRegion = [&]() {
+        if (m_dirtyRegion.rectCount() <= dirtyRectLimit)
+            return;
+        m_dirtyRegion = tiledRegion(m_dirtyRegion & renderArea);
+        dirtyRectLimit = m_dirtyRegion.rectCount() + 32;
+    };
+
     // Iterate through the renderlist from front to back
     // Objective is to update the dirty status and rects.
     for (auto i = m_renderableNodes.rbegin(); i != m_renderableNodes.rend(); ++i) {
@@ -167,6 +219,8 @@ QRegion QSGAbstractSoftwareRenderer::optimizeRenderList()
             if (!prevDirty.isNull())
                 m_dirtyRegion += prevDirty;
         }
+
+        limitDirtyRegion();
     }
 
     if (m_obscuredRegion.contains(m_background->rect().toAlignedRect())) {
