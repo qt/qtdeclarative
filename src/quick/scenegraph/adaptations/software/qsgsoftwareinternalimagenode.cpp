@@ -389,7 +389,7 @@ void QSGSoftwareInternalImageNode::preprocess()
     }
     if (doDirty)
         markDirty(DirtyMaterial);
-    m_cachedMirroredPixmapIsDirty = doDirty;
+    m_cachedMirroredPixmapIsDirty |= doDirty;
 }
 
 static Qt::TileRule getTileRule(qreal factor)
@@ -411,7 +411,7 @@ void QSGSoftwareInternalImageNode::paint(QPainter *painter)
     painter->setRenderHint(QPainter::Antialiasing, false);
 
     updateCachedMirroredPixmap();
-    const QPixmap &pm = m_mirrorHorizontally || m_mirrorVertically || m_textureIsLayer ? m_cachedMirroredPixmap : pixmap();
+    const QPixmap &pm = flipHorizontally() || flipVertically() ? m_cachedMirroredPixmap : pixmap();
 
     if (m_innerTargetRect != m_targetRect) {
         // border image
@@ -456,15 +456,26 @@ const QPixmap &QSGSoftwareInternalImageNode::pixmap() const
     return nullPixmap;
 }
 
+// Undo the mirroring the layer applied when rendering
+bool QSGSoftwareInternalImageNode::flipHorizontally() const
+{
+    auto layer = m_textureIsLayer ? static_cast<QSGSoftwareLayer *>(m_texture.data()) : nullptr;
+    return m_mirrorHorizontally != (layer && layer->mirrorHorizontal());
+}
+
+bool QSGSoftwareInternalImageNode::flipVertically() const
+{
+    auto layer = m_textureIsLayer ? static_cast<QSGSoftwareLayer *>(m_texture.data()) : nullptr;
+    return m_mirrorVertically != (layer && layer->mirrorVertical());
+}
+
 void QSGSoftwareInternalImageNode::updateCachedMirroredPixmap()
 {
     if (m_cachedMirroredPixmapIsDirty) {
-        if (m_mirrorHorizontally || m_mirrorVertically || m_textureIsLayer) {
-            QTransform transform(
-                (m_mirrorHorizontally ? -1 : 1), 0,
-                0                              , (m_textureIsLayer ? -1 : 1) * (m_mirrorVertically ? -1 : 1),
-                0                              , 0
-                );
+        const bool flipH = flipHorizontally();
+        const bool flipV = flipVertically();
+        if (flipH || flipV) {
+            QTransform transform(flipH ? -1 : 1, 0, 0, flipV ? -1 : 1, 0, 0);
             m_cachedMirroredPixmap = pixmap().transformed(transform);
         } else {
             //Cleanup cached pixmap if necessary

@@ -60,6 +60,9 @@ public:
     void setMirrorVertical(bool mirror) override;
     void setSamples(int) override { }
 
+    bool mirrorHorizontal() const { return m_mirrorHorizontal; }
+    bool mirrorVertical() const { return m_mirrorVertical; }
+
 public Q_SLOTS:
     void markDirtyTexture() override;
     void invalidated() override;
