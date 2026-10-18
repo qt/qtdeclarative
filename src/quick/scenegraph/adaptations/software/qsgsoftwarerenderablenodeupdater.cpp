@@ -39,7 +39,7 @@ bool QSGSoftwareRenderableNodeUpdater::visit(QSGTransformNode *node)
     // Renderables in a blocked subtree (e.g. hidden items) are treated as fully
     // transparent, which skips painting them.
     m_opacityState.push(node->isSubtreeBlocked() ? 0.0f : m_opacityState.top());
-    m_stateMap[node] = currentState(node);
+    storeState(node);
     return true;
 }
 
@@ -59,7 +59,7 @@ bool QSGSoftwareRenderableNodeUpdater::visit(QSGClipNode *node)
         const QRegion transformedClipRect = m_transformState.top().map(QRegion(node->clipRect().toRect()));
         m_clipState.push(transformedClipRect.intersected(m_clipState.top()));
     }
-    m_stateMap[node] = currentState(node);
+    storeState(node);
     return true;
 }
 
@@ -72,6 +72,9 @@ void QSGSoftwareRenderableNodeUpdater::endVisit(QSGClipNode *)
 
 bool QSGSoftwareRenderableNodeUpdater::visit(QSGGeometryNode *node)
 {
+    if (auto *renderableNode = m_renderer->renderableNode(node))
+        return updateRenderableNode(renderableNode, node);
+
     if (QSGSimpleRectNode *rectNode = dynamic_cast<QSGSimpleRectNode *>(node)) {
         return updateRenderableNode(QSGSoftwareRenderableNode::SimpleRect, rectNode);
     } else if (QSGSimpleTextureNode *tn = dynamic_cast<QSGSimpleTextureNode *>(node)) {
@@ -95,7 +98,7 @@ void QSGSoftwareRenderableNodeUpdater::endVisit(QSGGeometryNode *)
 bool QSGSoftwareRenderableNodeUpdater::visit(QSGOpacityNode *node)
 {
     m_opacityState.push(m_opacityState.top() * node->opacity());
-    m_stateMap[node] = currentState(node);
+    storeState(node);
     return true;
 }
 
@@ -142,7 +145,7 @@ void QSGSoftwareRenderableNodeUpdater::endVisit(QSGGlyphNode *)
 
 bool QSGSoftwareRenderableNodeUpdater::visit(QSGRootNode *node)
 {
-    m_stateMap[node] = currentState(node);
+    storeState(node);
     return true;
 }
 
@@ -180,16 +183,19 @@ void QSGSoftwareRenderableNodeUpdater::updateNodes(QSGNode *node, bool isNodeRem
     auto parentNode = node->parent();
     // If the node was deleted, it will have no parent
     // check if the state map has the previous parent
-    if ((!parentNode || isNodeRemoved ) && m_stateMap.contains(node))
-        parentNode = m_stateMap[node].parent;
+    if (!parentNode || isNodeRemoved) {
+        const auto it = m_stateMap.constFind(node);
+        if (it != m_stateMap.cend())
+            parentNode = it->parent;
+    }
 
     // If we find a parent, use its state for updating the new children
-    if (parentNode && m_stateMap.contains(parentNode)) {
-        auto state = m_stateMap[parentNode];
-        m_opacityState.push(state.opacity);
-        m_transformState.push(state.transform);
-        m_clipState.push(state.clip);
-        m_hasClip = state.hasClip;
+    const auto parentState = parentNode ? m_stateMap.constFind(parentNode) : m_stateMap.cend();
+    if (parentState != m_stateMap.cend()) {
+        m_opacityState.push(parentState->opacity);
+        m_transformState.push(parentState->transform);
+        m_clipState.push(parentState->clip);
+        m_hasClip = parentState->hasClip;
     } else {
         // There is no parent, and no previous parent, so likely a root node
         m_opacityState.push(1.0f);
@@ -264,15 +270,23 @@ void QSGSoftwareRenderableNodeUpdater::updateNodes(QSGNode *node, bool isNodeRem
     }
 }
 
-QSGSoftwareRenderableNodeUpdater::NodeState QSGSoftwareRenderableNodeUpdater::currentState(QSGNode *node) const
+bool QSGSoftwareRenderableNodeUpdater::updateRenderableNode(QSGSoftwareRenderableNode *renderableNode,
+                                                            QSGNode *node)
 {
-    NodeState state;
+    renderableNode->setState(m_transformState.top(), m_opacityState.top(), m_clipState.top(),
+                             m_hasClip);
+    storeState(node);
+    return true;
+}
+
+void QSGSoftwareRenderableNodeUpdater::storeState(QSGNode *node)
+{
+    NodeState &state = m_stateMap[node];
     state.opacity = m_opacityState.top();
     state.clip = m_clipState.top();
     state.hasClip = m_hasClip;
     state.transform = m_transformState.top();
     state.parent = node->parent();
-    return state;
 }
 
 QT_END_NAMESPACE
