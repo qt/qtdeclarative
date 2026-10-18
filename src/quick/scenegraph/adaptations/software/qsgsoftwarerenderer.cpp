@@ -95,11 +95,7 @@ void QSGSoftwareRenderer::render()
     const QRect backgroundRect =
             QRectF(QPointF(), QSizeF(paintSize) / paintDevicePixelRatio).toAlignedRect();
     setBackgroundRect(backgroundRect, paintDevicePixelRatio);
-    // If paintDevicePixelRatio is not a whole number, opt to disable the partial update mechanism
-    const bool nonIntegerRatio = !qFuzzyIsNull(paintDevicePixelRatio - qFloor(paintDevicePixelRatio));
-    bool disablePartialUpdates = m_partialUpdateMode == DisablePartialUpdate || nonIntegerRatio;
-    if (m_partialUpdateMode == ForcePartialUpdate)
-        disablePartialUpdates = false;
+    const bool disablePartialUpdates = m_partialUpdateMode == DisablePartialUpdate;
 
     // Force the whole render area to be marked as dirty, avoiding any partial update
     if (disablePartialUpdates)
