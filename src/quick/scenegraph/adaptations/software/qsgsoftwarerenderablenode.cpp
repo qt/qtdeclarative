@@ -352,6 +352,16 @@ void QSGSoftwareRenderableNode::setOpacity(float opacity)
     update();
 }
 
+void QSGSoftwareRenderableNode::setState(const QTransform &transform, float opacity,
+                                         const QRegion &clipRegion, bool hasClipRegion)
+{
+    m_transform = transform;
+    m_opacity = opacity;
+    m_clipRegion = clipRegion;
+    m_hasClipRegion = hasClipRegion;
+    update();
+}
+
 void QSGSoftwareRenderableNode::markGeometryDirty()
 {
     update();

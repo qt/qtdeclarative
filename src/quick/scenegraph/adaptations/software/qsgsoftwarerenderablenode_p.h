@@ -74,6 +74,8 @@ public:
     void setTransform(const QTransform &transform);
     void setClipRegion(const QRegion &clipRegion, bool hasClipRegion = true);
     void setOpacity(float opacity);
+    void setState(const QTransform &transform, float opacity, const QRegion &clipRegion,
+                  bool hasClipRegion);
     QTransform transform() const { return m_transform; }
     QRegion clipRegion() const { return m_clipRegion; }
     float opacity() const { return m_opacity; }
