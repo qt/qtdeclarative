@@ -69,7 +69,8 @@ private:
         QSGNode *parent;
     };
 
-    NodeState currentState(QSGNode *node) const;
+    void storeState(QSGNode *node);
+    bool updateRenderableNode(QSGSoftwareRenderableNode *renderableNode, QSGNode *node);
 
     template<class NODE>
     bool updateRenderableNode(QSGSoftwareRenderableNode::NodeType type, NODE *node);
@@ -92,12 +93,7 @@ bool QSGSoftwareRenderableNodeUpdater::updateRenderableNode(QSGSoftwareRenderabl
         m_renderer->addNodeMapping(node, renderableNode);
     }
 
-    //Update the node
-    renderableNode->setState(m_transformState.top(), m_opacityState.top(), m_clipState.top(),
-                             m_hasClip);
-    m_stateMap[node] = currentState(node);
-
-    return true;
+    return updateRenderableNode(renderableNode, node);
 }
 
 QT_END_NAMESPACE
