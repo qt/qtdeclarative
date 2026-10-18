@@ -4,6 +4,7 @@
 borderimages/SimpleBorderImage.qml
 borderimages/SimpleNoBorder.qml
 shape/OrderedPaths.qml
+partialupdates/Stepper.qml
 
 # This will not stabilize before the timeout
 text/text_2500_chinese_characters.qml
