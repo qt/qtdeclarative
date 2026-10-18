@@ -30,10 +30,10 @@ public:
     void render() final;
 
     void render(QPaintDevice *target);
-    void setProjectionRect(const QRect &projectionRect);
+    void setProjectionRect(const QRectF &projectionRect);
 
 private:
-    QRect m_projectionRect;
+    QRectF m_projectionRect;
 };
 
 QT_END_NAMESPACE

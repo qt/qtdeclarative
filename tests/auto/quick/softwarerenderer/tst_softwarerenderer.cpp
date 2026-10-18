@@ -41,6 +41,8 @@ private slots:
     void nonFiniteGeometry();
     void layerMirroring_data();
     void layerMirroring();
+    void layerFractionalSourceRect_data();
+    void layerFractionalSourceRect();
 
 private:
     void runOracle(const QString &scene, qreal dpr, int seed);
@@ -453,7 +455,7 @@ void tst_SoftwareRenderer::partialUpdates_data()
     const char *scenes[] = {
         "fractionalMove.qml", "moveUnderOpaque.qml", "thinLines.qml", "roundedCorners.qml",
         "layerInvisible.qml", "textStyles.qml", "clippedTextAppears.qml", "listScroll.qml",
-        "listLines.qml", "listLinesWindowColor.qml", "churn.qml"
+        "listLines.qml", "listLinesWindowColor.qml", "churn.qml", "layerOpaqueEdges.qml"
     };
     for (const char *scene : scenes) {
         for (qreal dpr : oracleRatios)
@@ -504,7 +506,7 @@ void tst_SoftwareRenderer::layerMirroring_data()
     // ShaderEffectSource::TextureMirroring
     const char *names[] = { "none", "horizontal", "vertical", "both" };
     for (int mirroring = 0; mirroring < 4; ++mirroring) {
-        for (qreal dpr : { 1.0 })
+        for (qreal dpr : { 1.0, 1.5, 2.0 })
             QTest::addRow("%s@%g", names[mirroring], dpr) << mirroring << dpr;
     }
 }
@@ -531,6 +533,36 @@ void tst_SoftwareRenderer::layerMirroring()
         QCOMPARE(pixel(x + 30, 30), qRgb(255, 255, 0));
     }
     QCOMPARE(pixel(90, 10), qRgb(255, 255, 0));
+}
+
+void tst_SoftwareRenderer::layerFractionalSourceRect_data()
+{
+    QTest::addColumn<int>("mirroring");
+    QTest::addColumn<qreal>("dpr");
+    for (int mirroring : { 0, 2 }) {
+        for (qreal dpr : { 1.0, 1.5, 2.0 })
+            QTest::addRow("%s@%g", mirroring ? "vertical" : "none", dpr) << mirroring << dpr;
+    }
+}
+
+void tst_SoftwareRenderer::layerFractionalSourceRect()
+{
+    if (QQuickWindow::sceneGraphBackend() != "software")
+        QSKIP("Requires the software backend");
+
+    QFETCH(int, mirroring);
+    QFETCH(qreal, dpr);
+    QQmlEngine engine;
+    OracleWindow w;
+    QString error;
+    QVERIFY2(w.load(&engine, testFileUrl("layerFractionalSourceRect.qml"), dpr, 0, &error),
+             qPrintable(error));
+    w.root->setProperty("mirroring", mirroring);
+    w.render(true);
+    const QImage image = w.target;
+    auto pixel = [&](int x, int y) { return image.pixel(qRound(x * dpr), qRound(y * dpr)); };
+    QCOMPARE(pixel(5, 5), qRgb(255, 0, 0));
+    QCOMPARE(pixel(25, 5), qRgb(255, 255, 0));
 }
 
 #include "tst_softwarerenderer.moc"

@@ -39,7 +39,7 @@ void QSGSoftwarePixmapRenderer::render(QPaintDevice *target)
     QElapsedTimer renderTimer;
 
     // Setup background item
-    setBackgroundRect(m_projectionRect.normalized(), qreal(1));
+    setBackgroundRect(m_projectionRect.normalized().toAlignedRect(), qreal(1));
     setBackgroundColor(clearColor());
 
     renderTimer.start();
@@ -60,9 +60,18 @@ void QSGSoftwarePixmapRenderer::render(QPaintDevice *target)
         static_cast<QPixmap *>(target)->fill(Qt::transparent);
     }
 
+    if (m_projectionRect.width() == 0 || m_projectionRect.height() == 0)
+        return;
+
     QPainter painter(target);
     painter.setRenderHint(QPainter::Antialiasing);
-    painter.setWindow(m_projectionRect);
+    // Not setWindow(), which would round the projection rect
+    const qreal dpr = target->devicePixelRatio();
+    QTransform projection;
+    projection.scale(target->width() / dpr / m_projectionRect.width(),
+                     target->height() / dpr / m_projectionRect.height());
+    projection.translate(-m_projectionRect.x(), -m_projectionRect.y());
+    painter.setWorldTransform(projection);
     auto rc = static_cast<QSGSoftwareRenderContext *>(context());
     QPainter *prevPainter = rc->m_activePainter;
     rc->m_activePainter = &painter;
@@ -74,7 +83,7 @@ void QSGSoftwarePixmapRenderer::render(QPaintDevice *target)
     qCDebug(lcPixmapRenderer) << "pixmapRender" << paintedRegion << buildRenderListTime << optimizeRenderListTime << renderTime;
 }
 
-void QSGSoftwarePixmapRenderer::setProjectionRect(const QRect &projectionRect)
+void QSGSoftwarePixmapRenderer::setProjectionRect(const QRectF &projectionRect)
 {
     m_projectionRect = projectionRect;
 }
