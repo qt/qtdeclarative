@@ -8,10 +8,15 @@
 #include <private/qquickanimator_p.h>
 #include <private/qquickitem_p.h>
 #include <private/qsgrenderloop_p.h>
+#include <private/qquickwindow_p.h>
+#include <private/qsgsoftwarerenderer_p.h>
+#include <private/qhighdpiscaling_p.h>
 
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/viewtestutils_p.h>
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
+
+#include <memory>
 
 class tst_SoftwareRenderer : public QQmlDataTest
 {
@@ -28,7 +33,96 @@ private slots:
     void hiddenItem();
     void hiddenItemMultipleReasons_data();
     void hiddenItemMultipleReasons();
+
+    void partialUpdates_data();
+    void partialUpdates();
+    void randomScenes_data();
+    void randomScenes();
+
+private:
+    void runOracle(const QString &scene, qreal dpr, int seed);
 };
+
+namespace {
+
+// Pixels a full repaint never touched keep this color.
+constexpr QRgb Sentinel = 0xffff00ff;
+
+struct OracleWindow
+{
+    QQuickRenderControl control;
+    std::unique_ptr<QQuickWindow> window;
+    std::unique_ptr<QQuickItem> root;
+    QImage target;
+
+    bool load(QQmlEngine *engine, const QUrl &url, qreal dpr, int seed, QString *error)
+    {
+        QQmlComponent component(engine, url);
+        root.reset(qobject_cast<QQuickItem *>(component.create()));
+        if (!root) {
+            *error = component.errorString();
+            return false;
+        }
+        if (root->property("seed").isValid())
+            root->setProperty("seed", seed);
+        window.reset(new QQuickWindow(&control));
+        const QSize size(qRound(root->width()), qRound(root->height()));
+        window->resize(size);
+        const QVariant windowColor = root->property("windowColor");
+        window->setColor(windowColor.isValid() ? windowColor.value<QColor>() : QColor(Qt::white));
+        root->setParentItem(window->contentItem());
+
+        target = QImage((QSizeF(size) * dpr).toSize(), QImage::Format_ARGB32_Premultiplied);
+        target.setDevicePixelRatio(dpr);
+        target.fill(Sentinel);
+        QQuickRenderTarget rt = QQuickRenderTarget::fromPaintDevice(&target);
+        rt.setDevicePixelRatio(dpr);
+        window->setRenderTarget(rt);
+        return true;
+    }
+
+    QSGSoftwareRenderer *renderer() const
+    {
+        return static_cast<QSGSoftwareRenderer *>(QQuickWindowPrivate::get(window.get())->renderer);
+    }
+
+    void step(int frame)
+    {
+        QMetaObject::invokeMethod(root.get(), "step", Q_ARG(QVariant, frame));
+    }
+
+    void render(bool full)
+    {
+        control.polishItems();
+        control.sync();
+        if (full) {
+            target.fill(Sentinel);
+            if (QSGSoftwareRenderer *r = renderer())
+                r->markDirty();
+        }
+        control.render();
+    }
+};
+
+int maxChannelDiff(QRgb a, QRgb b)
+{
+    return qMax(qMax(qAbs(qRed(a) - qRed(b)), qAbs(qGreen(a) - qGreen(b))),
+                qMax(qAbs(qBlue(a) - qBlue(b)), qAbs(qAlpha(a) - qAlpha(b))));
+}
+
+QString saveFailure(const QString &name, const QImage &partial, const QImage &full,
+                    const QImage &diff)
+{
+    const QString dir = QDir::tempPath() + QStringLiteral("/softwarerenderer-oracle");
+    QDir().mkpath(dir);
+    const QString base = dir + QLatin1Char('/') + name;
+    partial.save(base + QStringLiteral("-partial.png"));
+    full.save(base + QStringLiteral("-full.png"));
+    diff.save(base + QStringLiteral("-diff.png"));
+    return base;
+}
+
+} // namespace
 
 tst_SoftwareRenderer::tst_SoftwareRenderer()
     : QQmlDataTest(QT_QMLTEST_DATADIR)
@@ -232,6 +326,143 @@ void tst_SoftwareRenderer::hiddenItemMultipleReasons()
         setHidden(showLast, false);
         QCOMPARE(targetColor(), QColor(Qt::red));
     }
+}
+
+// Compares every partially updated frame with a full repaint, and checks
+// that the flush region covers every changed pixel.
+void tst_SoftwareRenderer::runOracle(const QString &scene, qreal dpr, int seed)
+{
+    if (QQuickWindow::sceneGraphBackend() != "software")
+        QSKIP("Requires the software backend");
+
+    QQmlEngine engine;
+    OracleWindow partial;
+    OracleWindow full;
+    QString error;
+    const QUrl url = testFileUrl(scene);
+    QVERIFY2(partial.load(&engine, url, dpr, seed, &error), qPrintable(error));
+    QVERIFY2(full.load(&engine, url, dpr, seed, &error), qPrintable(error));
+
+    const int frames = partial.root->property("frames").toInt();
+    const int tolerance = partial.root->property("tolerance").toInt();
+    const QString name = QStringLiteral("%1-dpr%2-seed%3")
+            .arg(QFileInfo(scene).baseName()).arg(dpr).arg(seed);
+
+    QImage previous;
+    QStringList failures;
+    int failedFrames = 0;
+    qint64 totalMismatches = 0, totalUnpainted = 0, totalUnflushed = 0;
+    for (int frame = 0; frame < frames; ++frame) {
+        partial.step(frame);
+        full.step(frame);
+        partial.render(false);
+        full.render(true);
+
+        const QImage &p = partial.target;
+        const QImage &f = full.target;
+        QCOMPARE(p.size(), f.size());
+
+        const QRegion flushed = QHighDpi::scale(partial.renderer()->flushRegion(), dpr);
+        QImage diff(p.size(), QImage::Format_ARGB32);
+        diff.fill(Qt::transparent);
+        int mismatches = 0;
+        int unpainted = 0;
+        int unflushed = 0;
+        QRect bounds;
+        for (int y = 0; y < p.height(); ++y) {
+            const QRgb *pl = reinterpret_cast<const QRgb *>(p.constScanLine(y));
+            const QRgb *fl = reinterpret_cast<const QRgb *>(f.constScanLine(y));
+            const QRgb *prevl = previous.isNull()
+                    ? nullptr : reinterpret_cast<const QRgb *>(previous.constScanLine(y));
+            QRgb *dl = reinterpret_cast<QRgb *>(diff.scanLine(y));
+            for (int x = 0; x < p.width(); ++x) {
+                if (fl[x] == Sentinel) {
+                    ++unpainted;
+                    dl[x] = 0xff00ff00;
+                    bounds |= QRect(x, y, 1, 1);
+                } else if (maxChannelDiff(pl[x], fl[x]) > tolerance) {
+                    ++mismatches;
+                    dl[x] = 0xffff0000;
+                    bounds |= QRect(x, y, 1, 1);
+                }
+                if (prevl && prevl[x] != pl[x] && !flushed.contains(QPoint(x, y))) {
+                    ++unflushed;
+                    dl[x] = 0xff0000ff;
+                }
+            }
+        }
+        if (mismatches || unpainted || unflushed) {
+            if (failures.size() < 4) {
+                const QString base = saveFailure(QStringLiteral("%1-f%2").arg(name).arg(frame),
+                                                 p, f, diff);
+                failures << QStringLiteral(
+                        "frame %1: %2 differ, %3 unpainted, %4 unflushed; bounds %5,%6 %7x%8; %9")
+                        .arg(frame).arg(mismatches).arg(unpainted).arg(unflushed)
+                        .arg(bounds.x()).arg(bounds.y()).arg(bounds.width())
+                        .arg(bounds.height()).arg(base);
+            }
+            failedFrames++;
+            totalMismatches += mismatches;
+            totalUnpainted += unpainted;
+            totalUnflushed += unflushed;
+        }
+        previous = p.copy();
+    }
+    if (failedFrames) {
+        QFAIL(qPrintable(QStringLiteral(
+                "%1 of %2 frames failed (pixels: %3 differ from a full repaint, %4 never "
+                "painted by a full repaint, %5 changed outside the flush region)\n    %6")
+                .arg(failedFrames).arg(frames).arg(totalMismatches).arg(totalUnpainted)
+                .arg(totalUnflushed).arg(failures.join(QStringLiteral("\n    ")))));
+    }
+}
+
+static const qreal oracleRatios[] = { 1.0, 1.1, 1.25, 1.5, 1.75, 2.0, 3.0 };
+
+void tst_SoftwareRenderer::partialUpdates_data()
+{
+    QTest::addColumn<QString>("scene");
+    QTest::addColumn<qreal>("dpr");
+
+    const char *scenes[] = {
+        "fractionalMove.qml", "moveUnderOpaque.qml", "thinLines.qml", "roundedCorners.qml",
+        "layerInvisible.qml", "textStyles.qml", "listScroll.qml", "listLines.qml",
+        "listLinesWindowColor.qml"
+    };
+    for (const char *scene : scenes) {
+        for (qreal dpr : oracleRatios)
+            QTest::addRow("%s@%g", scene, dpr) << QString::fromLatin1(scene) << dpr;
+    }
+}
+
+void tst_SoftwareRenderer::partialUpdates()
+{
+    QFETCH(QString, scene);
+    QFETCH(qreal, dpr);
+    runOracle(scene, dpr, 0);
+}
+
+void tst_SoftwareRenderer::randomScenes_data()
+{
+    QTest::addColumn<int>("seed");
+    QTest::addColumn<qreal>("dpr");
+
+    // For longer local runs
+    bool ok = false;
+    int seeds = qEnvironmentVariableIntValue("QT_SOFTWARERENDERER_ORACLE_SEEDS", &ok);
+    if (!ok || seeds <= 0)
+        seeds = 4;
+    for (int seed = 1; seed <= seeds; ++seed) {
+        for (qreal dpr : oracleRatios)
+            QTest::addRow("seed%d@%g", seed, dpr) << seed << dpr;
+    }
+}
+
+void tst_SoftwareRenderer::randomScenes()
+{
+    QFETCH(int, seed);
+    QFETCH(qreal, dpr);
+    runOracle(QStringLiteral("randomScene.qml"), dpr, seed);
 }
 
 #include "tst_softwarerenderer.moc"
