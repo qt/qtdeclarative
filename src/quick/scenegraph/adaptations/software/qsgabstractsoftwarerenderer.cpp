@@ -52,6 +52,7 @@ const QList<QSGSoftwareRenderableNode*> &QSGAbstractSoftwareRenderer::renderable
 void QSGAbstractSoftwareRenderer::addNodeMapping(QSGNode *node, QSGSoftwareRenderableNode *renderableNode)
 {
     m_nodes.insert(node, renderableNode);
+    m_renderListDirty = true;
 }
 
 void QSGAbstractSoftwareRenderer::appendRenderableNode(QSGSoftwareRenderableNode *node)
@@ -113,6 +114,10 @@ QRegion QSGAbstractSoftwareRenderer::renderNodes(QPainter *painter)
 
 void QSGAbstractSoftwareRenderer::buildRenderList()
 {
+    // Only nodes being added or removed change the list
+    if (!m_renderListDirty)
+        return;
+    m_renderListDirty = false;
     // Clear the previous renderlist
     m_renderableNodes.clear();
     // Add the background renderable (always first)
@@ -291,6 +296,7 @@ QRect QSGAbstractSoftwareRenderer::backgroundRect()
 void QSGAbstractSoftwareRenderer::nodeAdded(QSGNode *node)
 {
     qCDebug(lc2DRender, "nodeAdded %p", (void*)node);
+    m_renderListDirty = true;
 
     m_nodeUpdater->updateNodes(node);
 }
@@ -298,6 +304,7 @@ void QSGAbstractSoftwareRenderer::nodeAdded(QSGNode *node)
 void QSGAbstractSoftwareRenderer::nodeRemoved(QSGNode *node)
 {
     qCDebug(lc2DRender, "nodeRemoved %p", (void*)node);
+    m_renderListDirty = true;
 
     auto renderable = renderableNode(node);
     // remove mapping
