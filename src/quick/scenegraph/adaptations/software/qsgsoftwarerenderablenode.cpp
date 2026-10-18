@@ -174,6 +174,14 @@ void QSGSoftwareRenderableNode::update()
         m_isOpaque = false;
 
     const QRectF transformedRect = m_transform.mapRect(boundingRect);
+    if (!qIsFinite(transformedRect.left()) || !qIsFinite(transformedRect.top())
+            || !qIsFinite(transformedRect.right()) || !qIsFinite(transformedRect.bottom())) {
+        m_isOpaque = false;
+        m_boundingRectMin = QRect();
+        m_boundingRectMax = QRect();
+        m_dirtyRegion = QRegion();
+        return;
+    }
     m_boundingRectMin = toRectMin(transformedRect);
     m_boundingRectMax = toRectMax(transformedRect);
 

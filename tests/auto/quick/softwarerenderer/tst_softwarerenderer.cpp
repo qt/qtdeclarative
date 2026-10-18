@@ -38,6 +38,7 @@ private slots:
     void partialUpdates();
     void randomScenes_data();
     void randomScenes();
+    void nonFiniteGeometry();
 
 private:
     void runOracle(const QString &scene, qreal dpr, int seed);
@@ -463,6 +464,12 @@ void tst_SoftwareRenderer::randomScenes()
     QFETCH(int, seed);
     QFETCH(qreal, dpr);
     runOracle(QStringLiteral("randomScene.qml"), dpr, seed);
+}
+
+// QTBUG-117522
+void tst_SoftwareRenderer::nonFiniteGeometry()
+{
+    runOracle(QStringLiteral("nanScale.qml"), 1.0, 0);
 }
 
 #include "tst_softwarerenderer.moc"
