@@ -94,6 +94,8 @@ public:
     const QPixmap &pixmap() const;
 private:
     void updateCachedMirroredPixmap();
+    bool flipHorizontally() const;
+    bool flipVertically() const;
     QRectF m_targetRect;
     QRectF m_innerTargetRect;
     QRectF m_innerSourceRect;
