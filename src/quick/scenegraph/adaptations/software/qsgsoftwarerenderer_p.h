@@ -48,6 +48,10 @@ private:
     QPaintDevice* m_paintDevice;
     QBackingStore* m_backingStore;
     QRegion m_flushRegion;
+    QSize m_backingStoreSize;
+    qreal m_windowDevicePixelRatio = 0;
+    QSize m_backingStorePaintSize;
+    qreal m_backingStorePaintDevicePixelRatio = 1;
 };
 
 QT_END_NAMESPACE
