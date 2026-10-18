@@ -2275,7 +2275,7 @@ void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
         } else if (bool updateClipNode = item->clip() && itemPriv->clipNode() != nullptr;
                    updateClipNode) {
             QQuickDefaultClipNode *clip = itemPriv->clipNode();
-            clip->setClipRect(item->clipRect());
+            clip->setRect(item->clipRect());
             clip->update();
         } else if (bool removeClipNode = !item->clip() && itemPriv->clipNode() != nullptr;
                    removeClipNode) {
