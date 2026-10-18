@@ -105,6 +105,9 @@ void tst_Scenegraph::initTestCase()
         const QString rhiBackend = qEnvironmentVariable("QSG_RHI_BACKEND", QString::fromLatin1(defaultRhiBackend));
         stack = QString::fromLatin1("RHI_%1").arg(rhiBackend);
     }
+    const qreal scaleFactor = qEnvironmentVariable("QT_SCALE_FACTOR").toDouble();
+    if (scaleFactor > 0 && !qFuzzyCompare(scaleFactor, qreal(1)))
+        stack += QStringLiteral("_scale%1").arg(scaleFactor);
     QBaselineTest::addClientProperty(QString::fromLatin1("GraphicsStack"), stack);
 
     QByteArray msg;
