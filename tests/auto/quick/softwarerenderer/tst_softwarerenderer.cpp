@@ -409,6 +409,29 @@ void tst_SoftwareRenderer::runOracle(const QString &scene, qreal dpr, int seed)
         }
         previous = p.copy();
     }
+    // Stale state affects both windows above, so compare with a fresh one
+    if (!partial.root->property("historyDependent").toBool()) {
+        OracleWindow fresh;
+        QVERIFY2(fresh.load(&engine, url, dpr, seed, &error), qPrintable(error));
+        fresh.step(frames - 1);
+        fresh.render(true);
+        int freshMismatches = 0;
+        for (int y = 0; y < fresh.target.height(); ++y) {
+            const QRgb *pl = reinterpret_cast<const QRgb *>(partial.target.constScanLine(y));
+            const QRgb *fl = reinterpret_cast<const QRgb *>(fresh.target.constScanLine(y));
+            for (int x = 0; x < fresh.target.width(); ++x) {
+                if (maxChannelDiff(pl[x], fl[x]) > tolerance)
+                    ++freshMismatches;
+            }
+        }
+        if (freshMismatches) {
+            const QString base = saveFailure(name + QStringLiteral("-fresh"), partial.target,
+                                             fresh.target, fresh.target);
+            failures << QStringLiteral("last frame: %1 pixels differ from a fresh window; %2")
+                        .arg(freshMismatches).arg(base);
+            ++failedFrames;
+        }
+    }
     if (failedFrames) {
         QFAIL(qPrintable(QStringLiteral(
                 "%1 of %2 frames failed (pixels: %3 differ from a full repaint, %4 never "
@@ -427,8 +450,8 @@ void tst_SoftwareRenderer::partialUpdates_data()
 
     const char *scenes[] = {
         "fractionalMove.qml", "moveUnderOpaque.qml", "thinLines.qml", "roundedCorners.qml",
-        "layerInvisible.qml", "textStyles.qml", "listScroll.qml", "listLines.qml",
-        "listLinesWindowColor.qml", "churn.qml"
+        "layerInvisible.qml", "textStyles.qml", "clippedTextAppears.qml", "listScroll.qml",
+        "listLines.qml", "listLinesWindowColor.qml", "churn.qml"
     };
     for (const char *scene : scenes) {
         for (qreal dpr : oracleRatios)

@@ -8,6 +8,7 @@ Item {
     width: 160; height: 120
     property int frames: 40
     property int tolerance: 0
+    property bool historyDependent: true
 
     Rectangle { anchors.fill: parent; color: "black" }
     ListView {
