@@ -92,10 +92,9 @@ void QSGSoftwareRenderer::render()
     QElapsedTimer renderTimer;
 
     setBackgroundColor(clearColor());
-    setBackgroundRect(QRect(0, 0,
-                            paintSize.width() / paintDevicePixelRatio,
-                            paintSize.height() / paintDevicePixelRatio),
-                      paintDevicePixelRatio);
+    const QRect backgroundRect =
+            QRectF(QPointF(), QSizeF(paintSize) / paintDevicePixelRatio).toAlignedRect();
+    setBackgroundRect(backgroundRect, paintDevicePixelRatio);
     // If paintDevicePixelRatio is not a whole number, opt to disable the partial update mechanism
     const bool nonIntegerRatio = !qFuzzyIsNull(paintDevicePixelRatio - qFloor(paintDevicePixelRatio));
     bool disablePartialUpdates = m_partialUpdateMode == DisablePartialUpdate || nonIntegerRatio;

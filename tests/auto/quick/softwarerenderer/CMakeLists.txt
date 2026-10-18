@@ -22,6 +22,7 @@ qt_internal_add_test(tst_softwarerenderer
         tst_softwarerenderer.cpp
     LIBRARIES
         Qt::Gui
+        Qt::GuiPrivate
         Qt::Quick
         Qt::QuickPrivate
         Qt::QuickTestUtilsPrivate
