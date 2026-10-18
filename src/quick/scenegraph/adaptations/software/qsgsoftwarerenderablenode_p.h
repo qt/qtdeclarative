@@ -86,6 +86,7 @@ public:
     void addDirtyRegion(const QRegion &dirtyRegion, bool forceDirty = true);
     void subtractDirtyRegion(const QRegion &dirtyRegion);
 
+    void clearDirty() { m_isDirty = false; m_dirtyRegion = QRegion(); }
     QRegion previousDirtyRegion(bool wasRemoved = false) const;
     QRegion dirtyRegion() const;
 

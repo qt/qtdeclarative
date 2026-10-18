@@ -50,6 +50,8 @@ QPaintDevice *QSGSoftwareRenderer::currentPaintDevice() const
 
 void QSGSoftwareRenderer::setBackingStore(QBackingStore *backingStore)
 {
+    if (backingStore != m_backingStore)
+        m_backingStoreSize = QSize();
     m_backingStore = backingStore;
     m_paintDevice = nullptr;
 }
@@ -79,14 +81,22 @@ void QSGSoftwareRenderer::render()
     } else {
         // For HiDPI QBackingStores, the paint device is valid between calls to
         // beginPaint() and endPaint(). See: QTBUG-55875
+        const QSize size = m_backingStore->size();
+        const qreal windowDpr = m_backingStore->window()->devicePixelRatio();
+        if (size != m_backingStoreSize || windowDpr != m_windowDevicePixelRatio) {
+            m_backingStore->beginPaint(QRegion());
 
-        m_backingStore->beginPaint(QRegion());
+            const QPaintDevice *backingStorePaintDevice = m_backingStore->paintDevice();
+            m_backingStorePaintSize = QSize(backingStorePaintDevice->width(),
+                                            backingStorePaintDevice->height());
+            m_backingStorePaintDevicePixelRatio = backingStorePaintDevice->devicePixelRatio();
 
-        const QPaintDevice *backingStorePaintDevice = m_backingStore->paintDevice();
-        paintSize = QSize(backingStorePaintDevice->width(), backingStorePaintDevice->height());
-        paintDevicePixelRatio = backingStorePaintDevice->devicePixelRatio();
-
-        m_backingStore->endPaint();
+            m_backingStore->endPaint();
+            m_backingStoreSize = size;
+            m_windowDevicePixelRatio = windowDpr;
+        }
+        paintSize = m_backingStorePaintSize;
+        paintDevicePixelRatio = m_backingStorePaintDevicePixelRatio;
     }
 
     QElapsedTimer renderTimer;
@@ -122,6 +132,18 @@ void QSGSoftwareRenderer::render()
     // repainted only paints what is needed, via the use of clip regions.
     const QRegion updateRegion = optimizeRenderList();
     qint64 optimizeRenderListTime = renderTimer.restart();
+
+    // Nothing to paint: render nodes are the only ones that paint without a dirty region
+    const auto &nodes = renderableNodes();
+    if (updateRegion.isEmpty() && std::none_of(nodes.cbegin(), nodes.cend(), [](auto *node) {
+            return node->type() == QSGSoftwareRenderableNode::RenderNode && node->isDirty();
+        })) {
+        for (auto *node : nodes)
+            node->clearDirty();
+        m_flushRegion = QRegion();
+        qCDebug(lcRenderer) << "render: nothing to paint" << buildRenderListTime << optimizeRenderListTime;
+        return;
+    }
 
     // If Rendering to a backingstore, prepare it to be updated
     bool usingBackingStore = false;
