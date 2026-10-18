@@ -453,7 +453,8 @@ void tst_SoftwareRenderer::partialUpdates_data()
     QTest::addColumn<qreal>("dpr");
 
     const char *scenes[] = {
-        "fractionalMove.qml", "moveUnderOpaque.qml", "thinLines.qml", "roundedCorners.qml",
+        "fractionalMove.qml", "moveUnderOpaque.qml", "thinLines.qml",
+        "thinLinesOverDirtyParent.qml", "roundedCorners.qml",
         "layerInvisible.qml", "textStyles.qml", "clippedTextAppears.qml", "listScroll.qml",
         "listLines.qml", "listLinesWindowColor.qml", "churn.qml", "layerOpaqueEdges.qml"
     };
