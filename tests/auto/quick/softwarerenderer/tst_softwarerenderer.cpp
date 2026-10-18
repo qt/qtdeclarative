@@ -427,7 +427,7 @@ void tst_SoftwareRenderer::partialUpdates_data()
     const char *scenes[] = {
         "fractionalMove.qml", "moveUnderOpaque.qml", "thinLines.qml", "roundedCorners.qml",
         "layerInvisible.qml", "textStyles.qml", "listScroll.qml", "listLines.qml",
-        "listLinesWindowColor.qml"
+        "listLinesWindowColor.qml", "churn.qml"
     };
     for (const char *scene : scenes) {
         for (qreal dpr : oracleRatios)
