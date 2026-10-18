@@ -456,7 +456,8 @@ void tst_SoftwareRenderer::partialUpdates_data()
         "fractionalMove.qml", "moveUnderOpaque.qml", "thinLines.qml",
         "thinLinesOverDirtyParent.qml", "roundedCorners.qml",
         "layerInvisible.qml", "textStyles.qml", "clippedTextAppears.qml", "listScroll.qml",
-        "listLines.qml", "listLinesWindowColor.qml", "churn.qml", "layerOpaqueEdges.qml"
+        "listLines.qml", "listLinesWindowColor.qml", "churn.qml", "layerOpaqueEdges.qml",
+        "layersPartlyChanging.qml"
     };
     for (const char *scene : scenes) {
         for (qreal dpr : oracleRatios)

@@ -383,12 +383,10 @@ void QSGSoftwareInternalImageNode::preprocess()
 {
     bool doDirty = false;
     QSGLayer *t = qobject_cast<QSGLayer *>(m_texture);
-    if (t) {
+    if (t)
         doDirty = t->updateTexture();
-        markDirty(DirtyGeometry);
-    }
     if (doDirty)
-        markDirty(DirtyMaterial);
+        markDirty(DirtyGeometry | DirtyMaterial);
     m_cachedMirroredPixmapIsDirty |= doDirty;
 }
 
