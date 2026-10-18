@@ -201,10 +201,11 @@ void QSGSoftwareLayer::grab()
 
     m_renderer->setDeviceRect(m_size);
     m_renderer->setViewportRect(m_size);
-    QRect mirrored(m_mirrorHorizontal ? m_rect.right() * m_device_pixel_ratio : m_rect.left() * m_device_pixel_ratio,
-                   m_mirrorVertical ? m_rect.bottom() * m_device_pixel_ratio : m_rect.top() * m_device_pixel_ratio,
-                   m_mirrorHorizontal ? -m_rect.width() * m_device_pixel_ratio : m_rect.width() * m_device_pixel_ratio,
-                   m_mirrorVertical ? -m_rect.height() * m_device_pixel_ratio : m_rect.height() * m_device_pixel_ratio);
+    // Logical coordinates, the painter applies the device pixel ratio
+    QRectF mirrored(m_mirrorHorizontal ? m_rect.right() : m_rect.left(),
+                    m_mirrorVertical ? m_rect.bottom() : m_rect.top(),
+                    m_mirrorHorizontal ? -m_rect.width() : m_rect.width(),
+                    m_mirrorVertical ? -m_rect.height() : m_rect.height());
     m_renderer->setProjectionRect(mirrored);
     m_renderer->setClearColor(Qt::transparent);
 

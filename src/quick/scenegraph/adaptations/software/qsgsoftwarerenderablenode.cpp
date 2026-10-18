@@ -102,6 +102,7 @@ void QSGSoftwareRenderableNode::update()
     m_isOpaque = false;
 
     QRectF boundingRect;
+    QRectF minBoundingRect;
 
     switch (m_nodeType) {
     case QSGSoftwareRenderableNode::SimpleRect:
@@ -120,6 +121,8 @@ void QSGSoftwareRenderableNode::update()
         m_isOpaque = !m_handle.imageNode->pixmap().hasAlphaChannel();
 
         boundingRect = m_handle.imageNode->rect().toRect();
+        // Rounding may enlarge the rect, which must not claim pixels it doesn't paint
+        minBoundingRect = m_handle.imageNode->rect();
         break;
     case QSGSoftwareRenderableNode::Painter:
         if (m_handle.painterNode->opaquePainting())
@@ -183,6 +186,8 @@ void QSGSoftwareRenderableNode::update()
         return;
     }
     m_boundingRectMin = toRectMin(transformedRect);
+    if (!minBoundingRect.isNull())
+        m_boundingRectMin &= toRectMin(m_transform.mapRect(minBoundingRect));
     m_boundingRectMax = toRectMax(transformedRect);
 
     if (m_hasClipRegion && m_clipRegion.rectCount() <= 1) {
@@ -234,7 +239,7 @@ QRegion QSGSoftwareRenderableNode::renderNode(QPainter *painter, bool forceOpaqu
             return QRegion();
         } else {
             QSGRenderNodePrivate *rd = QSGRenderNodePrivate::get(m_handle.renderNode);
-            rd->m_localMatrix = m_transform;
+            rd->m_localMatrix = m_transform * painter->worldTransform();
             rd->m_matrix = &rd->m_localMatrix;
             rd->m_opacity = m_opacity;
 
@@ -268,7 +273,7 @@ QRegion QSGSoftwareRenderableNode::renderNode(QPainter *painter, bool forceOpaqu
     if (m_clipRegion.rectCount() > 1)
         painter->setClipRegion(m_clipRegion, Qt::IntersectClip);
 
-    painter->setTransform(m_transform, false); //precalculated worldTransform
+    painter->setTransform(m_transform, true); // precalculated worldTransform, after the projection
     if (forceOpaquePainting || m_isOpaque)
         painter->setCompositionMode(QPainter::CompositionMode_Source);
 
