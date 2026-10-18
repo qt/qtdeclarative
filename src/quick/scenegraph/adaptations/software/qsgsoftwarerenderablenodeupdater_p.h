@@ -93,11 +93,8 @@ bool QSGSoftwareRenderableNodeUpdater::updateRenderableNode(QSGSoftwareRenderabl
     }
 
     //Update the node
-    renderableNode->setTransform(m_transformState.top());
-    renderableNode->setOpacity(m_opacityState.top());
-    renderableNode->setClipRegion(m_clipState.top(), m_hasClip);
-
-    renderableNode->update();
+    renderableNode->setState(m_transformState.top(), m_opacityState.top(), m_clipState.top(),
+                             m_hasClip);
     m_stateMap[node] = currentState(node);
 
     return true;
