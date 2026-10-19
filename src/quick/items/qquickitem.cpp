@@ -5449,6 +5449,18 @@ void QQuickItem::classBegin()
 void QQuickItem::componentComplete()
 {
     Q_D(QQuickItem);
+#if QT_CONFIG(quick_shadereffect)
+    /*
+        Complete only a layer that existed before this point. Code that runs below
+        (such as a signal handler or debug output triggered by the anchors update)
+        can read the layer property, which creates a layer that is already complete
+        because componentComplete is set. Completing that layer again would hit the
+        Q_ASSERT in QQuickItemLayer::componentComplete() in a debug build, and in a
+        release build would activate an enabled layer a second time, leaking its
+        first effect source.
+    */
+    QQuickItemLayer *layer = d->extra.isAllocated() ? d->extra->layer : nullptr;
+#endif
     d->componentComplete = true;
     if (d->_stateGroup)
         d->_stateGroup->componentComplete();
@@ -5462,8 +5474,8 @@ void QQuickItem::componentComplete()
 
     if (d->extra.isAllocated()) {
 #if QT_CONFIG(quick_shadereffect)
-        if (d->extra->layer)
-            d->extra->layer->componentComplete();
+        if (layer)
+            layer->componentComplete();
 #endif
 
         if (d->extra->keyHandler)

@@ -7,6 +7,7 @@
 #include <QtQuick/qquickview.h>
 #include <QtQuick/qsgrendererinterface.h>
 #include <QtQuick/private/qquickitem_p.h>
+#include <QtQuick/private/qquickshadereffectsource_p.h>
 #include <qopenglcontext.h>
 #include <qopenglfunctions.h>
 
@@ -61,6 +62,7 @@ private slots:
 
     void toggleLayerAndEffect();
     void disableLayer();
+    void layerCreatedDuringComponentComplete();
     void changeSamplerName();
     void itemEffect();
     void rectangleEffect();
@@ -378,6 +380,30 @@ void tst_QQuickItemLayer::disableLayer()
 
     // This test passes if it doesn't crash.
     runTest("DisableLayer.qml");
+}
+
+void tst_QQuickItemLayer::layerCreatedDuringComponentComplete()
+{
+    /*
+        The anchors change the item's width during QQuickItem::componentComplete(),
+        and the handler creates and enables the layer at that point. The layer
+        must be activated exactly once: completing it again would fail the
+        Q_ASSERT in a debug build and create a second effect source in a release
+        build.
+    */
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("layerCreatedDuringComponentComplete.qml"));
+    QScopedPointer<QQuickItem> root(qobject_cast<QQuickItem *>(component.create()));
+    QVERIFY2(root, qPrintable(component.errorString()));
+
+    auto *layered = root->findChild<QQuickItem *>("layered");
+    QVERIFY(layered);
+    QVERIFY(layered->property("layer").value<QObject *>()->property("enabled").toBool());
+
+    const auto childItems = root->childItems();
+    const auto effectSourceCount = std::count_if(childItems.cbegin(), childItems.cend(),
+        [](QQuickItem *item) { return qobject_cast<QQuickShaderEffectSource *>(item); });
+    QCOMPARE(effectSourceCount, 1);
 }
 
 void tst_QQuickItemLayer::changeSamplerName()
