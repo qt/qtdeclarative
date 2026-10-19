@@ -45,7 +45,8 @@ void QSGRhiDistanceFieldGlyphCache::requestGlyphs(const QSet<glyph_t> &glyphs)
     QList<glyph_t> glyphsToRender;
 
     if (m_areaAllocator == nullptr)
-        m_areaAllocator = new QSGAreaAllocator(QSize(maxTextureSize(), m_maxTextureCount * maxTextureSize()));
+        m_areaAllocator = new QSGAreaAllocator(QSize(maxTextureSize(), m_maxTextureCount * maxTextureSize()),
+                                               maxTextureSize());
 
     for (QSet<glyph_t>::const_iterator it = glyphs.constBegin(); it != glyphs.constEnd() ; ++it) {
         glyph_t glyphIndex = *it;
@@ -87,6 +88,7 @@ void QSGRhiDistanceFieldGlyphCache::requestGlyphs(const QSet<glyph_t> &glyphs)
 
         TextureInfo *tex = textureInfo(alloc.y() / maxTextureSize());
         alloc = QRect(alloc.x(), alloc.y() % maxTextureSize(), alloc.width(), alloc.height());
+        Q_ASSERT(alloc.bottom() < maxTextureSize());
 
         tex->allocatedArea |= alloc;
         Q_ASSERT(tex->padding == padding || tex->padding < 0);
@@ -412,7 +414,7 @@ bool QSGRhiDistanceFieldGlyphCache::loadPregeneratedCache(const QRawFont &font)
 
         const char *allocatorData = qtdfTableStart + Qtdf::HeaderSize;
         {
-            m_areaAllocator = new QSGAreaAllocator(QSize(0, 0));
+            m_areaAllocator = new QSGAreaAllocator(QSize(0, 0), m_maxTextureSize);
             allocatorData = m_areaAllocator->deserialize(allocatorData, qtdfTableEnd - allocatorData);
             if (allocatorData == nullptr)
                 return false;
