@@ -334,6 +334,7 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
                 subNode->setStyle(m_style);
                 subNode->setStyleColor(m_styleColor);
                 subNode->setPreferredAntialiasingMode(m_antialiasingMode);
+                subNode->setRenderTypeQuality(m_renderTypeQuality);
                 subNode->setGlyphs(m_originalPosition, subNodeGlyphRun);
                 subNode->update();
                 subNode->updateGeometry(); // we have to explicitly call this now as preprocess won't be called before it's rendered
