@@ -86,7 +86,8 @@ void QSGRhiDistanceFieldGlyphCache::requestGlyphs(const QSet<glyph_t> &glyphs)
                 continue;
         }
 
-        TextureInfo *tex = textureInfo(alloc.y() / maxTextureSize());
+        const int textureIndex = alloc.y() / maxTextureSize();
+        TextureInfo *tex = textureInfo(textureIndex);
         alloc = QRect(alloc.x(), alloc.y() % maxTextureSize(), alloc.width(), alloc.height());
         Q_ASSERT(alloc.bottom() < maxTextureSize());
 
@@ -100,7 +101,7 @@ void QSGRhiDistanceFieldGlyphCache::requestGlyphs(const QSet<glyph_t> &glyphs)
 
         glyphPositions.append(p);
         glyphsToRender.append(glyphIndex);
-        m_glyphsTexture.insert(glyphIndex, tex);
+        m_glyphsTexture.insert(glyphIndex, textureIndex);
     }
 
     setGlyphsPosition(glyphPositions);
@@ -114,23 +115,23 @@ bool QSGRhiDistanceFieldGlyphCache::isActive() const
 
 void QSGRhiDistanceFieldGlyphCache::storeGlyphs(const QList<QDistanceField> &glyphs)
 {
-    typedef QHash<TextureInfo *, QList<glyph_t> > GlyphTextureHash;
-    typedef GlyphTextureHash::const_iterator GlyphTextureHashConstIt;
-
-    GlyphTextureHash glyphTextures;
+    // Glyphs per texture, indexed like m_textures
+    QList<QList<glyph_t> > glyphTextures(m_textures.size());
 
     for (int i = 0; i < glyphs.size(); ++i) {
         QDistanceField glyph = glyphs.at(i);
         glyph_t glyphIndex = glyph.glyph();
         TexCoord c = glyphTexCoord(glyphIndex);
-        TextureInfo *texInfo = m_glyphsTexture.value(glyphIndex);
+        const int textureIndex = m_glyphsTexture.value(glyphIndex, -1);
+        Q_ASSERT(textureIndex >= 0 && textureIndex < m_textures.size());
+        TextureInfo *texInfo = textureInfo(textureIndex);
 
         resizeTexture(texInfo, texInfo->allocatedArea.width(), texInfo->allocatedArea.height());
 
         if (!texInfo->texture)
             continue;
 
-        glyphTextures[texInfo].append(glyphIndex);
+        glyphTextures[textureIndex].append(glyphIndex);
 
         int padding = texInfo->padding;
         int expectedWidth = qCeil(c.width + c.xMargin * 2);
@@ -155,7 +156,9 @@ void QSGRhiDistanceFieldGlyphCache::storeGlyphs(const QList<QDistanceField> &gly
 
     QRhiResourceUpdateBatch *resourceUpdates = m_rc->glyphCacheResourceUpdates();
     for (int i = 0; i < glyphs.size(); ++i) {
-        TextureInfo *texInfo = m_glyphsTexture.value(glyphs.at(i).glyph());
+        const int textureIndex = m_glyphsTexture.value(glyphs.at(i).glyph(), -1);
+        Q_ASSERT(textureIndex >= 0 && textureIndex < m_textures.size());
+        TextureInfo *texInfo = textureInfo(textureIndex);
         if (!texInfo->uploads.isEmpty() && texInfo->texture) {
             QRhiTextureUploadDescription desc;
             desc.setEntries(texInfo->uploads.cbegin(), texInfo->uploads.cend());
@@ -164,11 +167,16 @@ void QSGRhiDistanceFieldGlyphCache::storeGlyphs(const QList<QDistanceField> &gly
         }
     }
 
-    for (GlyphTextureHashConstIt i = glyphTextures.constBegin(), cend = glyphTextures.constEnd(); i != cend; ++i) {
+    for (int i = 0; i < glyphTextures.size(); ++i) {
+        const QList<glyph_t> &textureGlyphs = glyphTextures.at(i);
+        if (textureGlyphs.isEmpty())
+            continue;
+
+        const TextureInfo *texInfo = textureInfo(i);
         Texture t;
-        t.texture = i.key()->texture;
-        t.size = i.key()->size;
-        setGlyphsTexture(i.value(), t);
+        t.texture = texInfo->texture;
+        t.size = texInfo->size;
+        setGlyphsTexture(textureGlyphs, t);
     }
 }
 
@@ -285,8 +293,16 @@ bool QSGRhiDistanceFieldGlyphCache::createFullSizeTextures() const
 
 int QSGRhiDistanceFieldGlyphCache::maxTextureSize() const
 {
-    if (!m_maxTextureSize)
+    if (!m_maxTextureSize) {
         m_maxTextureSize = m_rhi->resourceLimit(QRhi::TextureSizeMax);
+
+        // Allows testing caches which span multiple textures without having to fill
+        // textures of the maximum size supported by the hardware
+        const int overriddenMaxTextureSize =
+                qEnvironmentVariableIntValue("QSG_DISTANCEFIELD_MAX_TEXTURE_SIZE");
+        if (overriddenMaxTextureSize > 0)
+            m_maxTextureSize = overriddenMaxTextureSize;
+    }
     return m_maxTextureSize;
 }
 
@@ -360,10 +376,6 @@ bool QSGRhiDistanceFieldGlyphCache::loadPregeneratedCache(const QRawFont &font)
     QByteArray qtdfTable = font.fontTable("qtdf");
     if (qtdfTable.isEmpty())
         return false;
-
-    typedef QHash<TextureInfo *, QList<glyph_t> > GlyphTextureHash;
-
-    GlyphTextureHash glyphTextures;
 
     if (uint(qtdfTable.size()) < Qtdf::HeaderSize) {
         qWarning("Invalid qtdf table in font '%s'",
@@ -439,6 +451,9 @@ bool QSGRhiDistanceFieldGlyphCache::loadPregeneratedCache(const QRawFont &font)
         textureCount = m_areaAllocator->size().height() / m_maxTextureSize;
         m_maxTextureCount = qMax(m_maxTextureCount, textureCount);
 
+        // Glyphs per texture, indexed like m_textures
+        QList<QList<glyph_t> > glyphTextures(textureCount);
+
         const char *textureRecord = allocatorData;
         for (int i = 0; i < textureCount; ++i, textureRecord += Qtdf::TextureRecordSize) {
             if (qtdfTableEnd - textureRecord < Qtdf::TextureRecordSize) {
@@ -512,10 +527,9 @@ bool QSGRhiDistanceFieldGlyphCache::loadPregeneratedCache(const QRawFont &font)
             }
 
 
-            TextureInfo *texInfo = textureInfo(textureIndex);
-            m_glyphsTexture.insert(glyph, texInfo);
+            m_glyphsTexture.insert(glyph, textureIndex);
 
-            glyphTextures[texInfo].append(glyph);
+            glyphTextures[textureIndex].append(glyph);
         }
 
         const uchar *textureData = reinterpret_cast<const uchar *>(glyphRecord);
@@ -543,7 +557,7 @@ bool QSGRhiDistanceFieldGlyphCache::loadPregeneratedCache(const QRawFont &font)
             if (!texInfo->texture)
                 continue;
 
-            QList<glyph_t> glyphs = glyphTextures.value(texInfo);
+            const QList<glyph_t> &glyphs = glyphTextures.at(i);
 
             Texture t;
             t.texture = texInfo->texture;

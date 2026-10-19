@@ -196,6 +196,7 @@ private slots:
     void styledTextDirectionNoExtraSignal();
 
     void distanceFieldExcessiveGlyphSize();
+    void glyphCacheMultipleTextures();
 
 private:
     QStringList standard;
@@ -5656,6 +5657,89 @@ void tst_qquicktext::distanceFieldExcessiveGlyphSize()
 
     QImage img = view.grabWindow();
     QVERIFY(!img.isNull());
+}
+
+static bool hasGlyphNodeSpanningTextures(QSGNode *node)
+{
+    // A distance field glyph node creates child glyph nodes for the glyphs that
+    // are in other textures than its own
+    if (node->type() == QSGNode::GeometryNodeType) {
+        for (QSGNode *child = node->firstChild(); child; child = child->nextSibling()) {
+            if (child->type() == QSGNode::GeometryNodeType)
+                return true;
+        }
+    }
+    for (QSGNode *child = node->firstChild(); child; child = child->nextSibling()) {
+        if (hasGlyphNodeSpanningTextures(child))
+            return true;
+    }
+    return false;
+}
+
+void tst_qquicktext::glyphCacheMultipleTextures()
+{
+    SKIP_IF_NO_WINDOW_GRAB;
+
+    // Make the distance field cache spill into multiple textures with only a few glyphs
+    qputenv("QSG_DISTANCEFIELD_MAX_TEXTURE_SIZE", "1024");
+    const auto envGuard = qScopeGuard([] { qunsetenv("QSG_DISTANCEFIELD_MAX_TEXTURE_SIZE"); });
+
+    QScopedPointer<QQuickView> window(new QQuickView);
+    window->setSource(testFileUrl("glyphCacheMultipleTextures.qml"));
+    QTRY_COMPARE(window->status(), QQuickView::Ready);
+
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+    if (window->rendererInterface()->graphicsApi() == QSGRendererInterface::Software)
+        QSKIP("Distance field text is not used with the software renderer");
+
+    QQuickItem *root = window->rootObject();
+    QVERIFY(root);
+    QQuickText *firstStage = root->findChild<QQuickText *>("firstStage");
+    QVERIFY(firstStage);
+    QQuickText *secondStage = root->findChild<QQuickText *>("secondStage");
+    QVERIFY(secondStage);
+
+    // Render the first stage on its own, so that its glyph nodes keep references
+    // to the first texture while the cache is extended with the second stage
+    QImage image = window->grabWindow();
+    QVERIFY(!image.isNull());
+
+    QVERIFY(root->setProperty("stage", 2));
+    image = window->grabWindow();
+    QVERIFY(!image.isNull());
+
+    // Make sure the test actually spans multiple textures
+    QSGNode *secondStageNode = QQuickItemPrivate::get(secondStage)->paintNode;
+    QVERIFY(secondStageNode);
+    QVERIFY(hasGlyphNodeSpanningTextures(secondStageNode));
+
+    // Check that all glyphs are rendered
+    const int columns = root->property("columns").toInt();
+    const int firstStageGlyphs = root->property("firstStageGlyphs").toInt();
+    const int totalGlyphs = root->property("totalGlyphs").toInt();
+    const qreal advance = QFontMetricsF(firstStage->font()).horizontalAdvance(QLatin1Char('M'));
+    const qreal lineHeight = firstStage->lineHeight();
+    const qreal dpr = image.devicePixelRatio();
+    for (int i = 0; i < totalGlyphs; ++i) {
+        const bool inSecondStage = i >= firstStageGlyphs;
+        const int index = inSecondStage ? i - firstStageGlyphs : i;
+        const qreal y = (inSecondStage ? secondStage->y() : firstStage->y())
+                + (index / columns) * lineHeight;
+        const QRect cell = QRectF((index % columns) * advance * dpr, y * dpr,
+                                  advance * dpr, lineHeight * dpr).toAlignedRect()
+                                  .intersected(image.rect());
+
+        int darkPixels = 0;
+        for (int py = cell.top(); py <= cell.bottom(); ++py) {
+            for (int px = cell.left(); px <= cell.right(); ++px) {
+                if (qGray(image.pixel(px, py)) < 128)
+                    ++darkPixels;
+            }
+        }
+        QVERIFY2(darkPixels > 0, qPrintable(QStringLiteral("Glyph '%1' is missing")
+                                            .arg(QChar(33 + i))));
+    }
 }
 
 QT_END_NAMESPACE
