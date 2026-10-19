@@ -60,9 +60,9 @@
 
 /*!
     \qmlmodule QtQml.DesignSupport
-    \title \QDesSup QML Module
+    \title \QDesSup QML Types
     \ingroup qmlmodules
-    \brief QML types for \QDesSup API.
+    \brief QML types for the \QDesSup API.
     \since 6.12
 
     The \QDesSup functionality can be accessed via these QML types.
@@ -72,26 +72,8 @@
     \module QtQmlDesignSupport
     \qtcmakepackage QmlDesignSupport
     \qtvariable qmldesignsupport
-    \title \QDesSup Module
+    \title \QDesSup C++ Classes
     \since 6.12
 
     \brief C++ classes for the \QDesSup API.
-*/
-
-/*!
-    \title \QDesSup QML Types
-    \group qmldesignsupport_qml
-
-    \brief QML types for the \QDesSup API.
-
-    The \QDesSup functionality can be accessed via these QML types.
-*/
-
-/*!
-    \title \QDesSup C++ Classes
-    \group qmldesignsupport
-
-    \brief C++ classes for the \QDesSup API.
-
-    The \QDesSup functionality can be accessed via these C++ classes.
 */
