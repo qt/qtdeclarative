@@ -50,6 +50,7 @@ QSGDistanceFieldGlyphCache::QSGDistanceFieldGlyphCache(const QRawFont &font, int
 
 QSGDistanceFieldGlyphCache::~QSGDistanceFieldGlyphCache()
 {
+    qDeleteAll(m_textures);
 }
 
 int QSGDistanceFieldGlyphCache::baseFontSize() const
@@ -208,8 +209,8 @@ void QSGDistanceFieldGlyphCache::update()
     storeGlyphs(distanceFields);
 
 #if defined(QSG_DISTANCEFIELD_CACHE_DEBUG)
-    for (Texture texture : std::as_const(m_textures))
-        saveTexture(texture.texture, m_referenceFont.familyName());
+    for (const Texture *texture : std::as_const(m_textures))
+        saveTexture(texture->texture, m_referenceFont.familyName());
 #endif
 
     if (QSG_LOG_TIME_GLYPH().isDebugEnabled()) {
@@ -261,14 +262,18 @@ void QSGDistanceFieldGlyphCache::processPendingGlyphs()
 
 void QSGDistanceFieldGlyphCache::setGlyphsTexture(const QList<glyph_t> &glyphs, const Texture &tex)
 {
-    int i = m_textures.indexOf(tex);
-    if (i == -1) {
-        m_textures.append(tex);
-        i = m_textures.size() - 1;
-    } else {
-        m_textures[i].size = tex.size;
+    Texture *texture = nullptr;
+    for (Texture *t : std::as_const(m_textures)) {
+        if (*t == tex) {
+            texture = t;
+            texture->size = tex.size;
+            break;
+        }
     }
-    Texture *texture = &(m_textures[i]);
+    if (texture == nullptr) {
+        texture = new Texture(tex);
+        m_textures.append(texture);
+    }
 
     QList<quint32> invalidatedGlyphs;
 
@@ -297,12 +302,10 @@ void QSGDistanceFieldGlyphCache::markGlyphsToRender(const QList<glyph_t> &glyphs
 
 void QSGDistanceFieldGlyphCache::updateRhiTexture(QRhiTexture *oldTex, QRhiTexture *newTex, const QSize &newTexSize)
 {
-    int count = m_textures.size();
-    for (int i = 0; i < count; ++i) {
-        Texture &tex = m_textures[i];
-        if (tex.texture == oldTex) {
-            tex.texture = newTex;
-            tex.size = newTexSize;
+    for (Texture *tex : std::as_const(m_textures)) {
+        if (tex->texture == oldTex) {
+            tex->texture = newTex;
+            tex->size = newTexSize;
             return;
         }
     }

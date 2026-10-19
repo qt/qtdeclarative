@@ -87,8 +87,8 @@ private:
     mutable int m_maxTextureSize = 0;
     int m_maxTextureCount = 3;
     QSGAreaAllocator *m_areaAllocator = nullptr;
-    QList<TextureInfo> m_textures;
-    QHash<glyph_t, TextureInfo *> m_glyphsTexture;
+    QList<TextureInfo> m_textures; // Must never shrink (indexes are cached)
+    QHash<glyph_t, int> m_glyphsTexture; // Index into m_textures
     QSet<glyph_t> m_unusedGlyphs;
     QSet<glyph_t> m_referencedGlyphs;
     QSet<QRhiTexture *> m_pendingDispose;

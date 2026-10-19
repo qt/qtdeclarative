@@ -416,6 +416,7 @@ typedef QIntrusiveList<QSGDistanceFieldGlyphConsumer, &QSGDistanceFieldGlyphCons
 
 class Q_QUICK_EXPORT QSGDistanceFieldGlyphCache
 {
+    Q_DISABLE_COPY_MOVE(QSGDistanceFieldGlyphCache)
 public:
     QSGDistanceFieldGlyphCache(const QRawFont &font,
                                int renderTypeQuality);
@@ -532,7 +533,8 @@ protected:
 
 private:
     int m_glyphCount;
-    QList<Texture> m_textures;
+    QList<Texture *> m_textures; // Owned. Entries should live for as long as the cache lives
+                                 // (external nodes share the data)
     QHash<glyph_t, GlyphData> m_glyphsData;
     QDataBuffer<glyph_t> m_pendingGlyphs;
     QSet<glyph_t> m_populatingGlyphs;
