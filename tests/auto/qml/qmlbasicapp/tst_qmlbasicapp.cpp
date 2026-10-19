@@ -80,7 +80,7 @@ void tst_basicapp::fileSystemFiles()
 
 void tst_basicapp::qmldirContents()
 {
-#if defined(Q_OS_ANDROID) || defined(Q_OS_OHOS)
+#if defined(Q_OS_ANDROID) || defined(Q_OS_HARMONY)
     const QString basedir = QStringLiteral(":"); // Use qrc resource path on resource-only platforms
 #else
     const QString basedir = QCoreApplication::applicationDirPath();
