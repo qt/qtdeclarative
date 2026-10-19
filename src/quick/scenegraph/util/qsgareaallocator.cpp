@@ -56,7 +56,11 @@ bool QSGAreaAllocatorNode::isLeaf()
 }
 
 
-QSGAreaAllocator::QSGAreaAllocator(const QSize &size) : m_size(size)
+// If sliceHeight is set, the area is treated as a vertical stack of slices of
+// that height, and no allocation will cross the boundary between two slices.
+QSGAreaAllocator::QSGAreaAllocator(const QSize &size, int sliceHeight)
+    : m_size(size)
+    , m_sliceHeight(sliceHeight)
 {
     m_root = new QSGAreaAllocatorNode(nullptr);
 }
@@ -86,6 +90,21 @@ bool QSGAreaAllocator::allocateInNode(const QSize &size, QPoint &result, const Q
     if (node->isLeaf()) {
         if (node->isOccupied)
             return false;
+        if (m_sliceHeight > 0) {
+            // Does this leaf contain the slice boundary? In that case, we pre-split it so
+            // that we never get an allocation that crosses two slices.
+            const int boundary = (currentRect.top() / m_sliceHeight + 1) * m_sliceHeight;
+            if (boundary <= currentRect.bottom()) {
+                node->left = new QSGAreaAllocatorNode(node);
+                node->right = new QSGAreaAllocatorNode(node);
+                node->splitType = HorizontalSplit;
+                node->split = boundary;
+
+                // Re-call function with same arguments now that node is no longer leaf to
+                // trigger the search.
+                return allocateInNode(size, result, currentRect, node);
+            }
+        }
         if (size.width() + maxMargin >= currentRect.width() && size.height() + maxMargin >= currentRect.height()) {
             //Snug fit, occupy entire rectangle.
             node->isOccupied = true;

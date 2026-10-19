@@ -26,7 +26,7 @@ struct QSGAreaAllocatorNode;
 class Q_QUICK_EXPORT QSGAreaAllocator
 {
 public:
-    QSGAreaAllocator(const QSize &size);
+    QSGAreaAllocator(const QSize &size, int sliceHeight = 0);
     ~QSGAreaAllocator();
 
     QRect allocate(const QSize &size);
@@ -44,6 +44,7 @@ private:
 
     QSGAreaAllocatorNode *m_root;
     QSize m_size;
+    int m_sliceHeight;
 };
 
 QT_END_NAMESPACE
