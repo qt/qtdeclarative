@@ -346,8 +346,8 @@ void tst_QQmlImport::uiFormatLoading()
 
 void tst_QQmlImport::importPathOrder()
 {
-#ifdef Q_OS_ANDROID
-    QSKIP("QLibraryInfo::path(QLibraryInfo::QmlImportsPath) returns bogus path on Android, but its nevertheless unusable.");
+#if defined(Q_OS_ANDROID) || defined(Q_OS_HARMONY)
+    QSKIP("QLibraryInfo::path(QLibraryInfo::QmlImportsPath) returns bogus path on this platform, but it's nevertheless unusable.");
 #endif
     QStringList expectedImportPaths;
     QString appDirPath = QCoreApplication::applicationDirPath();
