@@ -14,7 +14,6 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype ObjectRegistry
     \inqmlmodule QtQml.DesignSupport
-    \ingroup qmldesignsupport_qml
     \brief This type is used to register objects for later access based on a key string.
 
     The object registry provides a QML engine-wide reference for objects. You register each object

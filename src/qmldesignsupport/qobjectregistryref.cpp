@@ -12,7 +12,6 @@ QT_BEGIN_NAMESPACE
 /*!
     \class QObjectRegistryRef
     \inmodule QtQmlDesignSupport
-    \ingroup qmldesignsupport
     \brief This class is used to access an object registered with ObjectRegistry QML type from
            C++ code.
 
@@ -28,7 +27,6 @@ QT_BEGIN_NAMESPACE
     \qmltype ObjectRegistryRef
     \nativetype QObjectRegistryRef
     \inqmlmodule QtQml.DesignSupport
-    \ingroup qmldesignsupport_qml
     \inherits AbstractObjectRegistryRef
     \brief This type is used to access an object registered with ObjectRegistry type.
 

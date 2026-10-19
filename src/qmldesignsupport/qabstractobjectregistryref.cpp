@@ -10,7 +10,6 @@ QT_BEGIN_NAMESPACE
 /*!
     \class QAbstractObjectRegistryRef
     \inmodule QtQmlDesignSupport
-    \ingroup qmldesignsupport
     \brief The QAbstractObjectRegistryRef class is a base class for all
            \QDesSup object reference classes.
 
@@ -27,7 +26,6 @@ QT_BEGIN_NAMESPACE
     \qmltype AbstractObjectRegistryRef
     \nativetype QAbstractObjectRegistryRef
     \inqmlmodule QtQml.DesignSupport
-    \ingroup qmldesignsupport_qml
     \brief Base type for all \QDesSup object reference types.
 
     This type cannot be instantiated directly. Instead, use one of the following derived types:
