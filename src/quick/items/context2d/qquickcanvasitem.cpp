@@ -852,8 +852,50 @@ void QQuickCanvasItem::getContext(QQmlV4FunctionPtr args)
 /*!
     \qmlmethod int QtQuick::Canvas::requestAnimationFrame(callback)
 
-    This function schedules \a callback to be invoked before composing the Qt Quick
-    scene.
+    Schedules \a callback to be called before the Qt Quick scene is rendered,
+    and returns a handle that you can pass to cancelRequestAnimationFrame().
+
+    Use this function to animate the content of the canvas. A \l Timer fires
+    at a fixed interval, but the callback is synchronized with rendering, so
+    the canvas is redrawn once per frame. To update properties on every frame
+    without drawing, use \l FrameAnimation instead.
+
+    The canvas calls the callback once, during its next polish, and passes the
+    current time as its only argument. The time is in milliseconds since
+    1970-01-01T00:00:00 UTC. To keep animating, call requestAnimationFrame()
+    again from inside the callback. The canvas calls callbacks only while it's
+    visible. If it's hidden, pending callbacks wait until it's visible again.
+
+    Draw directly in the callback, using the context returned by getContext().
+    The drawing appears on the canvas in the same frame, so you don't need to
+    call requestPaint() or markDirty().
+
+    \note The canvas doesn't emit the \l paint signal in a frame where it calls
+    animation callbacks. While an animation keeps requesting frames, the
+    \c onPaint handler doesn't run, even if you call requestPaint(). Do all the
+    drawing for an animated canvas in the callback.
+
+    \qml
+    Canvas {
+        width: 200; height: 200
+        property real angle: 0
+
+        function drawFrame(timestamp) {
+            var ctx = getContext("2d");
+            ctx.reset();
+            ctx.translate(width / 2, height / 2);
+            ctx.rotate(angle);
+            ctx.fillStyle = "steelblue";
+            ctx.fillRect(-40, -40, 80, 80);
+            angle += 0.05;
+            requestAnimationFrame(drawFrame);
+        }
+
+        onAvailableChanged: if (available) requestAnimationFrame(drawFrame)
+    }
+    \endqml
+
+    \sa cancelRequestAnimationFrame(), FrameAnimation
 */
 
 void QQuickCanvasItem::requestAnimationFrame(QQmlV4FunctionPtr args)
