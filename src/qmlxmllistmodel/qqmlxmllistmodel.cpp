@@ -41,6 +41,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype XmlListModelRole
+    \nativetype QQmlXmlListModelRole
     \inqmlmodule QtQml.XmlListModel
     \brief For specifying a role to an \l XmlListModel.
 
@@ -251,6 +252,7 @@ bool QQmlXmlListModelRole::isValid() const
 
 /*!
     \qmltype XmlListModel
+    \nativetype QQmlXmlListModel
     \inqmlmodule QtQml.XmlListModel
     \brief For specifying a read-only model using XML data.
 
