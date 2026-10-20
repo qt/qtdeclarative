@@ -25,6 +25,7 @@ qt_query_qml_module(
     [TARGET_PATH target_path_var]
     [MODULE_RESOURCE_PATH module_resource_path_var]
     [QMLDIR qmldir_var]
+    [EXTRA_QMLDIRS extra_qmldirs_var]
     [TYPEINFO typeinfo_var]
     [QML_FILES qml_files_var]
     [QML_FILES_DEPLOY_PATHS qml_files_deploy_paths_var]
@@ -82,6 +83,16 @@ matching up resource paths with file system locations, if needed.
 \c QMLDIR provides the path to the \c{qmldir} file. When deploying the QML
 module, this file should be copied to the target path. In a deployment script,
 this location can be obtained using \c{${QT_DEPLOY_PREFIX}/${QT_DEPLOY_QML_DIR}}.
+
+\c EXTRA_QMLDIRS provides a list of absolute paths to the additional
+\c{qmldir} files that are generated for subdirectories containing QML files
+when policy \l{QTP0004} is set to \c NEW. Each of these files should be
+deployed to the corresponding subdirectory below the target path. The paths
+point into the build directory; the subdirectory to deploy a file to is its
+directory relative to the directory of the \c QMLDIR result. Files added using
+\l{qt_target_qml_sources()} with a custom \c PREFIX do not contribute to this
+list. The list is empty if no such files are generated. This option was added
+in Qt 6.13.
 
 \c TYPEINFO provides the path to the module's typeinfo file, if it has one.
 It will be an empty string if the module has no typeinfo file. The typeinfo
@@ -157,6 +168,7 @@ qt_query_qml_module(${module_name}
     PLUGIN_TARGET module_plugin_target
     TARGET_PATH module_target_path
     QMLDIR module_qmldir
+    EXTRA_QMLDIRS module_extra_qmldirs
     TYPEINFO module_typeinfo
     QML_FILES module_qml_files
     QML_FILES_DEPLOY_PATHS qml_files_deploy_paths
@@ -185,6 +197,14 @@ install(TARGETS "${module_plugin_target}"
 # Install the QML module meta information.
 install(FILES "${module_qmldir}"   DESTINATION "${module_dir}")
 install(FILES "${module_typeinfo}" DESTINATION "${module_dir}")
+
+# Install the qmldir files generated for subdirectories under policy QTP0004.
+get_filename_component(module_qmldir_dir "${module_qmldir}" DIRECTORY)
+foreach(extra_qmldir IN LISTS module_extra_qmldirs)
+    get_filename_component(extra_qmldir_dir "${extra_qmldir}" DIRECTORY)
+    file(RELATIVE_PATH dest_dir "${module_qmldir_dir}" "${extra_qmldir_dir}")
+    install(FILES "${extra_qmldir}" DESTINATION "${module_dir}/${dest_dir}")
+endforeach()
 
 # Install QML files, possibly renamed.
 list(LENGTH module_qml_files num_files)

@@ -21,8 +21,10 @@ qt_add_qml_module(MyOtherThings
 qt_query_qml_module(MyOtherThings
     QML_FILES qml_files2
     RESOURCES resources2
+    EXTRA_QMLDIRS extra_qmldirs2
 )
 
 # empty resources and files
 verify_result(RESOURCES "${resources2}" "")
 verify_result(QML_FILES "${qml_files2}" "")
+verify_result(EXTRA_QMLDIRS "${extra_qmldirs2}" "")

@@ -4208,7 +4208,11 @@ Check https://doc.qt.io/qt-6/qt-cmake-policy-qtp0004.html for policy details."
             )
             list(APPEND output_targets ${extra_qmldirs_targets})
 
-            set_property(TARGET ${target} PROPERTY _qt_internal_extra_qmldirs ${extra_qmldirs})
+            # Files with a custom prefix have no deploy path, so neither do their qmldirs.
+            if(NOT prefix_override)
+                set_property(TARGET ${target} APPEND PROPERTY
+                    _qt_internal_extra_qmldirs ${extra_qmldirs})
+            endif()
 
             # Save the resource name in a property so we can reference it later in a qml plugin
             # constructor, to avoid discarding the resource if it's in a static library.
@@ -5687,6 +5691,7 @@ function(qt6_query_qml_module target)
         MODULE_RESOURCE_PATH
         TARGET_PATH
         QMLDIR
+        EXTRA_QMLDIRS
         TYPEINFO
         QML_FILES
         QML_FILES_DEPLOY_PATHS   # relative to target path
@@ -5735,6 +5740,12 @@ function(qt6_query_qml_module target)
 
     if(arg_QMLDIR)
         set(${arg_QMLDIR} "${output_dir}/qmldir" PARENT_SCOPE)
+    endif()
+
+    if(arg_EXTRA_QMLDIRS)
+        get_property(extra_qmldirs TARGET ${target} PROPERTY _qt_internal_extra_qmldirs)
+        list(REMOVE_DUPLICATES extra_qmldirs)
+        set(${arg_EXTRA_QMLDIRS} "${extra_qmldirs}" PARENT_SCOPE)
     endif()
 
     # This should always be set to something non-empty

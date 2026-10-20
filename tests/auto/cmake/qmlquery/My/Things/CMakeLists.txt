@@ -7,6 +7,14 @@ set_source_files_properties(Two.qml PROPERTIES
 set_source_files_properties(Two.txt PROPERTIES
     QT_RESOURCE_ALIAS subdir/Two.txt
 )
+set_source_files_properties(Three.qml PROPERTIES
+    QT_RESOURCE_ALIAS nested/Three.qml
+)
+set_source_files_properties(Four.qml PROPERTIES
+    QT_RESOURCE_ALIAS other/Four.qml
+)
+
+qt_policy(SET QTP0004 NEW)
 
 qt_add_qml_module(MyThings
     URI My.Things
@@ -29,6 +37,9 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.19)
         QML_FILES Three.qml
         RESOURCES Three.txt
     )
+    qt_target_qml_sources(MyThings
+        QML_FILES Four.qml
+    )
 endif()
 
 qt_query_qml_module(MyThings
@@ -38,6 +49,7 @@ qt_query_qml_module(MyThings
     MODULE_RESOURCE_PATH module_resource_path
     TARGET_PATH target_path
     QMLDIR qmldir
+    EXTRA_QMLDIRS extra_qmldirs
     TYPEINFO typeinfo
     QML_FILES qml_files
     QML_FILES_DEPLOY_PATHS qml_files_deploy_paths
@@ -62,6 +74,12 @@ verify_result(PLUGIN_TARGET        "MyThingsplugin" "${plugin_target}")
 verify_result(MODULE_RESOURCE_PATH "/mine.example.com/imports/My/Things" "${module_resource_path}")
 verify_result(TARGET_PATH          "My/Things" "${target_path}")
 verify_result(QMLDIR               "${CMAKE_CURRENT_BINARY_DIR}/qmldir" "${qmldir}")
+set(expected_extra_qmldirs "${CMAKE_CURRENT_BINARY_DIR}/subdir/qmldir")
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.19)
+    # No nested/qmldir: Three.qml has a custom prefix and therefore no deploy path.
+    list(APPEND expected_extra_qmldirs "${CMAKE_CURRENT_BINARY_DIR}/other/qmldir")
+endif()
+verify_result(EXTRA_QMLDIRS        "${expected_extra_qmldirs}" "${extra_qmldirs}")
 verify_result(TYPEINFO             "${CMAKE_CURRENT_BINARY_DIR}/MyThings.qmltypes" "${typeinfo}")
 
 # QML_FILES
@@ -69,9 +87,10 @@ set(expected_files "${CMAKE_CURRENT_SOURCE_DIR}/One.qml" "${CMAKE_CURRENT_SOURCE
 set(expected_deploy_paths "One.qml" "subdir/Two.qml")
 set(expected_prefix_overrides "" "")
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.19)
-    list(APPEND expected_files "${CMAKE_CURRENT_SOURCE_DIR}/Three.qml")
-    list(APPEND expected_deploy_paths "")   # Empty when prefix is overridden
-    list(APPEND expected_prefix_overrides "/somewhere.else.com/nested/rather/deep")
+    list(APPEND expected_files
+        "${CMAKE_CURRENT_SOURCE_DIR}/Three.qml" "${CMAKE_CURRENT_SOURCE_DIR}/Four.qml")
+    list(APPEND expected_deploy_paths "" "other/Four.qml")   # Empty when prefix is overridden
+    list(APPEND expected_prefix_overrides "/somewhere.else.com/nested/rather/deep" "")
 endif()
 verify_result(QML_FILES "${expected_files}" "${qml_files}")
 verify_result(QML_FILES_DEPLOY_PATHS "${expected_deploy_paths}" "${qml_files_deploy_paths}")
