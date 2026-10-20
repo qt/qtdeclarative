@@ -27,7 +27,7 @@ Item {
 }
 \endqml
 
-Building is an Item as it inherits from it but, importantly, the
+Building is an \l Item as it inherits from it but, importantly, the
 \l {Item::rotation}{rotation property} of \l Item has been shadowed
 by the newly introduced rotation property on Building.
 When passing this object to a generic function handling Items, the function will try to
@@ -103,7 +103,7 @@ DerivedMixed {
 
 \note Prefer to use \c final over \c override
 
-Here is also an extensive list of combinations of `virtual`, `override`, and `final` for reference:
+Here is also an extensive list of combinations of \c virtual, \c override, and \c final for reference:
 \code
 // Base.qml
 QtObject {
