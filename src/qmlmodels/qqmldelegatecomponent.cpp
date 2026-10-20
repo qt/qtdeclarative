@@ -9,7 +9,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype DelegateChoice
-//!    \nativetype QQmlDelegateChoice
+    \nativetype QQmlDelegateChoice
     \inqmlmodule QtQml.Models
     \since 6.9
     \brief Encapsulates a delegate and when to use it.
@@ -139,7 +139,7 @@ bool QQmlDelegateChoice::match(int row, int column, const QVariant &value) const
 
 /*!
     \qmltype DelegateChooser
-//!    \nativetype QQmlDelegateChooser
+    \nativetype QQmlDelegateChooser
     \inqmlmodule QtQml.Models
     \since 6.9
     \brief Allows a view to use different delegates for different types of items in the model.
