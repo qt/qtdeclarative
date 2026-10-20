@@ -60,7 +60,7 @@ Style {
             height: 40
             anchors.centerIn: parent
             anchors.verticalCenterOffset: -10
-            scale: delegate.delegateStyle.data.overlayScale
+            scale: (delegate.delegateStyle.data as OverlayData).overlayScale
             Behavior on scale {
                 NumberAnimation {
                     duration: 300
@@ -85,7 +85,7 @@ Style {
         height: parent.height
 
         Star {
-            visible: delegate.control.checked
+            visible: (delegate.control as T.AbstractButton).checked
             anchors.centerIn: parent
             anchors.verticalCenterOffset: -1
             width: 60
@@ -126,14 +126,15 @@ Style {
             font.pixelSize: 12
             font.bold: true
             text: {
-                if (sliderHandle.control instanceof T.RangeSlider) {
+                const rangeSlider = sliderHandle.control as T.RangeSlider
+                if (rangeSlider) {
                     if (sliderHandle.isFirstHandle)
-                        return sliderHandle.control.first.value.toFixed(0)
+                        return rangeSlider.first.value.toFixed(0)
                     else
-                        return sliderHandle.control.second.value.toFixed(0)
+                        return rangeSlider.second.value.toFixed(0)
                 }
 
-                return sliderHandle.control.value.toFixed(0)
+                return (sliderHandle.control as T.Slider).value.toFixed(0)
             }
         }
     }
