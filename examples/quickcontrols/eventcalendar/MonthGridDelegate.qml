@@ -1,6 +1,8 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -26,8 +28,8 @@ ColumnLayout {
         id: dayText
         horizontalAlignment: Text.AlignHCenter
         topPadding: 4
-        opacity: month === root.visibleMonth ? 1 : 0
-        text: day
+        opacity: root.month === root.visibleMonth ? 1 : 0
+        text: root.day
 
         Layout.fillWidth: true
 
@@ -56,7 +58,7 @@ ColumnLayout {
             id: itemDelegate
             width: listView.width
             text: name
-            font.pixelSize: Qt.application.font.pixelSize * 0.8
+            font.pixelSize: Application.font.pixelSize * 0.8
             leftPadding: 4
             rightPadding: 4
             topPadding: 4

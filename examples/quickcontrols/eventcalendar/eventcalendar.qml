@@ -1,6 +1,8 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Controls.Material
@@ -21,8 +23,8 @@ ApplicationWindow {
 
     header: ToolBar {
         Label {
-            text: window.currentDate.toLocaleString(locale, "MMMM yyyy")
-            font.pixelSize: Qt.application.font.pixelSize * 1.25
+            text: window.currentDate.toLocaleString(window.locale, "MMMM yyyy")
+            font.pixelSize: Application.font.pixelSize * 1.25
             anchors.centerIn: parent
         }
     }
@@ -36,7 +38,8 @@ ApplicationWindow {
             locale: grid.locale
             font.bold: false
             delegate: Label {
-                text: model.shortName
+                required property string shortName
+                text: shortName
                 font: dayOfWeekRow.font
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
