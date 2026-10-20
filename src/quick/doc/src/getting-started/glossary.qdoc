@@ -23,7 +23,7 @@
         \li Qt Quick
         \li The standard library of types and functionality for the
             QML language, which is provided by the Qt Quick module,
-            and may be accessed with "import QtQuick".
+            and may be accessed with "import \l[QML]{QtQuick}".
 
     \row
         \li Type
