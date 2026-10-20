@@ -45,7 +45,7 @@ static bool argumentsFromCommandLineAndFile(QStringList& allArguments, const QSt
                 return false;
             }
             while (!f.atEnd()) {
-                QString line = QString::fromLocal8Bit(f.readLine().trimmed());
+                QString line = QString::fromUtf8(f.readLine().trimmed());
                 if (!line.isEmpty())
                     allArguments << line;
             }
