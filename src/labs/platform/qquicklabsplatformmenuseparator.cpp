@@ -9,7 +9,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype MenuSeparator
     \inherits MenuItem
-//!     \nativetype QQuickLabsPlatformMenuSeparator
+    \nativetype QQuickLabsPlatformMenuSeparator
     \inqmlmodule Qt.labs.platform
     \since 5.8
     \brief A native menu separator.

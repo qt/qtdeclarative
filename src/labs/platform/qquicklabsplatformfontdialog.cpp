@@ -11,7 +11,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype FontDialog
     \inherits Dialog
-//!     \nativetype QQuickLabsPlatformFontDialog
+    \nativetype QQuickLabsPlatformFontDialog
     \inqmlmodule Qt.labs.platform
     \since 5.8
     \deprecated [6.9] Use \l [QtQuickDialogs] {FontDialog}{QtQuick.Dialogs FontDialog} instead.

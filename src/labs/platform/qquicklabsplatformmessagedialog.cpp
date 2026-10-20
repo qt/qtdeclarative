@@ -13,7 +13,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype MessageDialog
     \inherits Dialog
-//!     \nativetype QQuickLabsPlatformMessageDialog
+    \nativetype QQuickLabsPlatformMessageDialog
     \inqmlmodule Qt.labs.platform
     \since 5.8
     \deprecated [6.9] Use \l [QtQuickDialogs] {MessageDialog}{QtQuick.Dialogs MessageDialog} instead.

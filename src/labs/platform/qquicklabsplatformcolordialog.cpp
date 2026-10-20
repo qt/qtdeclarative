@@ -11,7 +11,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype ColorDialog
     \inherits Dialog
-//! \nativetype QQuickLabsPlatformColorDialog
+    \nativetype QQuickLabsPlatformColorDialog
     \inqmlmodule Qt.labs.platform
     \since 5.8
     \deprecated [6.9] Use \l [QtQuickDialogs] {ColorDialog}{QtQuick.Dialogs ColorDialog} instead.

@@ -16,7 +16,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Dialog
     \inherits QtObject
-//! \nativetype QQuickLabsPlatformDialog
+    \nativetype QQuickLabsPlatformDialog
     \inqmlmodule Qt.labs.platform
     \since 5.8
     \deprecated [6.11] Use \l [QtQuickDialogs] {Dialog}{QtQuick.Dialogs Dialog} instead.

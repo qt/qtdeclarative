@@ -15,7 +15,7 @@ using namespace Qt::StringLiterals;
 /*!
     \qmltype FileDialog
     \inherits Dialog
-//!     \nativetype QQuickLabsPlatformFileDialog
+    \nativetype QQuickLabsPlatformFileDialog
     \inqmlmodule Qt.labs.platform
     \since 5.8
     \deprecated [6.9] Use \l [QtQuickDialogs] {FileDialog}{QtQuick.Dialogs FileDialog} instead.
