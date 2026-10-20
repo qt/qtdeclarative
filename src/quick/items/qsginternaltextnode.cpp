@@ -581,6 +581,13 @@ void QSGInternalTextNode::discardUnusedNodes(RecycleBin *recycleBin)
                            << recycleBin->unusedNodes.size() - recycleBin->reusedNodes << "nodes"
                            << recycleBin->unusedTextures.size() << "textures";
 
+    // Recycled nodes have had their renderer state (matrix, clip list, opacity) reset, so we
+    // need the renderer to visit them again. If the text node has been turned into a batch
+    // root, a DirtyMatrix alone will make the renderer skip its children, so we have to force
+    // the update. This does not cause any rebuilds in itself.
+    if (recycleBin->reusedNodes > 0)
+        markDirty(QSGNode::DirtyForceUpdate);
+
     for (qsizetype i = recycleBin->reusedNodes; i < recycleBin->unusedNodes.size(); ++i)
         delete recycleBin->unusedNodes.at(i).node;
     recycleBin->unusedNodes = {};

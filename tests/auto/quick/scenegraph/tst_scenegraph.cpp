@@ -120,6 +120,8 @@ private slots:
     void sgTextNode();
     void sgInternalTextNodeRecycle_data();
     void sgInternalTextNodeRecycle();
+    void sgInternalTextNodeRecycleBatchRoot_data();
+    void sgInternalTextNodeRecycleBatchRoot();
 
 private:
     QQuickView *createView(const QString &file, QWindow *parent = nullptr, int x = -1, int y = -1, int w = -1, int h = -1);
@@ -1498,6 +1500,79 @@ void tst_SceneGraph::sgInternalTextNodeRecycle()
         QVERIFY(!d->paintNode);
     }
 
+}
+
+void tst_SceneGraph::sgInternalTextNodeRecycleBatchRoot_data()
+{
+    QTest::addColumn<QQuickText::RenderType>("renderType");
+
+    QTest::newRow("Qt Rendering") << QQuickText::QtRendering;
+    QTest::newRow("Native Rendering") << QQuickText::NativeRendering;
+}
+
+void tst_SceneGraph::sgInternalTextNodeRecycleBatchRoot()
+{
+    // QTBUG-151670: When the text node has more children than the renderer's batch node
+    // threshold, it is turned into a batch root. Recycled glyph nodes still have to get
+    // their renderer state back when the text is updated.
+    QFETCH(QQuickText::RenderType, renderType);
+
+    QQuickView view;
+    view.setSource(testFileUrl("simple.qml"));
+    view.setResizeMode(QQuickView::SizeViewToRootObject);
+    view.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+
+    QQuickText *textItem = view.rootObject()->findChild<QQuickText *>();
+    QVERIFY(textItem);
+    textItem->setRenderType(renderType);
+    textItem->setTextFormat(QQuickText::StyledText);
+
+    // Make sure clip list and inherited opacity are restored as well
+    textItem->setOpacity(0.5);
+    textItem->parentItem()->setClip(true);
+
+    // Default for QSG_RENDERER_BATCH_NODE_THRESHOLD is 64
+    const int runCount = 100;
+    auto makeText = [runCount](int tick) {
+        QString text;
+        for (int i = 0; i < runCount; ++i) {
+            const QColor color = QColor::fromHsl(i * 359 / runCount, 255, 100);
+            text += QStringLiteral("<font color=\"%1\">%2</font>")
+                            .arg(color.name())
+                            .arg((tick + i) % 10);
+        }
+        return text;
+    };
+
+    QQuickItemPrivate *d = QQuickItemPrivate::get(textItem);
+    QVERIFY(d);
+
+    QList<QSGNode *> previousChildren;
+    for (int tick = 0; tick < 4; ++tick) {
+        textItem->setText(makeText(tick));
+        view.grabWindow();
+
+        QVERIFY(d->paintNode);
+        QCOMPARE(d->paintNode->childCount(), runCount);
+
+        QList<QSGNode *> children;
+        for (QSGNode *node = d->paintNode->firstChild(); node != nullptr; node = node->nextSibling()) {
+            QCOMPARE(node->type(), QSGNode::GeometryNodeType);
+            QSGGeometryNode *geometryNode = static_cast<QSGGeometryNode *>(node);
+            if (isRunningOnRhi()) {
+                QVERIFY(geometryNode->matrix() != nullptr);
+                QVERIFY(geometryNode->clipList() != nullptr);
+                QCOMPARE(geometryNode->inheritedOpacity(), 0.5);
+            }
+            children.append(node);
+        }
+
+        // Glyph nodes should be reused
+        if (!previousChildren.isEmpty())
+            QCOMPARE(children, previousChildren);
+        previousChildren = children;
+    }
 }
 
 #include "tst_scenegraph.moc"
