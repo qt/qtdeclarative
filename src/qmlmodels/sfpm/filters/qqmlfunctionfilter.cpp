@@ -132,9 +132,14 @@ bool QQmlFunctionFilter::filterAcceptsRowInternal(int row, const QModelIndex& so
                                     param.roleId);
             if (!value.isValid())
                 return;
-            if (value.metaType() == param.expectedType) {
-               param.value = std::move(value);
-            } else {
+
+            if (param.expectedType == QMetaType::fromType<QVariant>()) {
+                param.value = std::move(value);
+                d->parameterCache->dataArgs[++index] = &param.value;
+                continue;
+            }
+
+            if (value.metaType() != param.expectedType) {
                 // Convert according to the JS coercion rules
                 auto *v4Engine = qmlEngine(this)->handle();
                 QV4::Scope scope(v4Engine);
@@ -145,8 +150,10 @@ bool QQmlFunctionFilter::filterAcceptsRowInternal(int row, const QModelIndex& so
                     return;
                 }
                 param.value = std::move(convertedValue);
+            } else {
+                param.value = std::move(value);
             }
-            index++;
+            d->parameterCache->dataArgs[++index] = param.value.data();
         }
         QMetaObject::metacall(
                 const_cast<QQmlFunctionFilter *>(this), QMetaObject::InvokeMetaMethod,

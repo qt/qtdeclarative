@@ -39,6 +39,8 @@ private slots:
     void validateFunctionFilterProperties();
     void verifyDynamicSortFilterProperty();
     void functionFilterSuperClassMethod();
+    void functionFilterParameterTypes_data();
+    void functionFilterParameterTypes();
 
     void validateSorters_data();
     void validateSorters();
@@ -1006,6 +1008,117 @@ void tst_QQmlSortFilterProxyModel::functionSorterSuperClassMethod()
     row = 0;
     for (const auto &data : expectedDescending)
         QCOMPARE(sfpmOverrideModel->data(sfpmOverrideModel->index(row++, 0, QModelIndex()), Qt::DisplayRole), data);
+}
+
+class FunctionFilterTestModel : public QAbstractListModel
+{
+public:
+    enum Roles {
+        HashDataRole = Qt::UserRole + 1,
+        MapDataRole,
+        ListDataRole,
+        NestedDataRole,
+        IntDataRole
+    };
+
+    explicit FunctionFilterTestModel(const QList<int> &values, QObject *parent = nullptr)
+        : QAbstractListModel(parent), m_values(values)
+    {}
+
+    int rowCount(const QModelIndex &parent = QModelIndex()) const override
+    {
+        return parent.isValid() ? 0 : int(m_values.size());
+    }
+
+    QVariant data(const QModelIndex &index, int role) const override
+    {
+        if (!checkIndex(index, CheckIndexOption::IndexIsValid))
+            return {};
+
+        const int value = m_values.at(index.row());
+        switch (role) {
+        case Qt::DisplayRole:
+            return QString::number(value);
+        case HashDataRole: {
+            QVariantHash hash;
+            hash.insert(QStringLiteral("testValue"), value);
+            return hash;
+        }
+        case MapDataRole: {
+            const QVariantMap map = { { QStringLiteral("testValue"), value } };
+            return map;
+        }
+        case ListDataRole:
+            return QVariantList{ value, value };
+        case NestedDataRole: {
+            const QVariantMap map = { { QStringLiteral("testValue"), value } };
+            return QVariantMap{ { QStringLiteral("items"), QVariantList{ map } } };
+        }
+        case IntDataRole:
+            return value;
+        }
+        return {};
+    }
+
+    QHash<int, QByteArray> roleNames() const override
+    {
+        return { { Qt::DisplayRole, "display" },
+                 { HashDataRole, "hashData" },
+                 { MapDataRole, "mapData" },
+                 { ListDataRole, "listData" },
+                 { NestedDataRole, "nestedData" },
+                 { IntDataRole, "intData" } };
+    }
+
+private:
+    QList<int> m_values;
+};
+
+QStringList displayedRows(const QAbstractItemModel *model)
+{
+    QStringList rows;
+    for (int row = 0; row < model->rowCount(); ++row)
+        rows << model->data(model->index(row, 0), Qt::DisplayRole).toString();
+    return rows;
+}
+
+void tst_QQmlSortFilterProxyModel::functionFilterParameterTypes_data()
+{
+    QTest::addColumn<QString>("proxyName");
+
+    QTest::newRow("var: QVariantHash") << QStringLiteral("hashModel");
+    QTest::newRow("var: QVariantMap") << QStringLiteral("mapModel");
+    QTest::newRow("var: QVariantList") << QStringLiteral("listModel");
+    QTest::newRow("var: nested containers") << QStringLiteral("nestedModel");
+    QTest::newRow("var: int") << QStringLiteral("varIntModel");
+    QTest::newRow("int") << QStringLiteral("intModel");
+}
+
+void tst_QQmlSortFilterProxyModel::functionFilterParameterTypes()
+{
+    QFETCH(QString, proxyName);
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("sfpmFunctionFilterParameterTypes.qml"));
+    QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    FunctionFilterTestModel sourceModel({ 42, 7, 42 });
+    auto *sfpmModel = object->property(proxyName.toUtf8()).value<QQmlSortFilterProxyModel *>();
+    QVERIFY(sfpmModel);
+    sfpmModel->setSourceModel(&sourceModel);
+
+    // The filter accepts the rows whose value equals its searchValue (42)
+    QCOMPARE(displayedRows(sfpmModel), QStringList({ QStringLiteral("42"), QStringLiteral("42") }));
+
+    // The filter receives the values again after a change of searchValue
+    auto filters = sfpmModel->filters();
+    QCOMPARE(filters.count(&filters), 1);
+    QQmlFilterBase *filter = filters.at(&filters, 0);
+    QVERIFY(filter->setProperty("searchValue", 7));
+    sfpmModel->invalidate();
+    QCOMPARE(displayedRows(sfpmModel), QStringList({ QStringLiteral("7") }));
 }
 
 void tst_QQmlSortFilterProxyModel::functionFilterSuperClassMethod()
