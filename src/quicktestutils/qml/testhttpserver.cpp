@@ -304,56 +304,57 @@ bool TestHTTPServer::reply(QTcpSocket *socket, const QByteArray &fileNameIn)
         return true;
     }
 
-    for (int ii = 0; ii < m_directories.size(); ++ii) {
-        const QString &dir = m_directories.at(ii).first;
-        const Mode mode = m_directories.at(ii).second;
+    if (!fileName.contains(QLatin1StringView(".."))) {
+        for (int ii = 0; ii < m_directories.size(); ++ii) {
+            const QString &dir = m_directories.at(ii).first;
+            const Mode mode = m_directories.at(ii).second;
 
-        QString dirFile = dir + QLatin1Char('/') + fileName;
+            QString dirFile = dir + QLatin1Char('/') + fileName;
 
-        if (!QFile::exists(dirFile)) {
-            const QHash<QString, QString>::const_iterator it = m_aliases.constFind(fileName);
-            if (it != m_aliases.constEnd())
-                dirFile = dir + QLatin1Char('/') + it.value();
-        }
+            if (!QFile::exists(dirFile)) {
+                const QHash<QString, QString>::const_iterator it = m_aliases.constFind(fileName);
+                if (it != m_aliases.constEnd())
+                    dirFile = dir + QLatin1Char('/') + it.value();
+            }
 
-        QFile file(dirFile);
-        if (file.open(QIODevice::ReadOnly)) {
+            QFile file(dirFile);
+            if (file.open(QIODevice::ReadOnly)) {
 
-            if (mode == Disconnect)
-                return true;
+                if (mode == Disconnect)
+                    return true;
 
-            QByteArray data = file.readAll();
-            if (m_contentSubstitutedFileNames.contains(QLatin1Char('/') + fileName))
-                data.replace(QByteArrayLiteral("{{ServerBaseUrl}}"), baseUrl().toString().toUtf8());
+                QByteArray data = file.readAll();
+                if (m_contentSubstitutedFileNames.contains(QLatin1Char('/') + fileName))
+                    data.replace(QByteArrayLiteral("{{ServerBaseUrl}}"), baseUrl().toString().toUtf8());
 
-            QByteArray response
-                = "HTTP/1.0 200 OK\r\nContent-type: text/html; charset=UTF-8\r\nContent-length: ";
-            response += QByteArray::number(data.size());
-            response += "\r\n\r\n";
-            response += data;
+                QByteArray response
+                    = "HTTP/1.0 200 OK\r\nContent-type: text/html; charset=UTF-8\r\nContent-length: ";
+                response += QByteArray::number(data.size());
+                response += "\r\n\r\n";
+                response += data;
 
-            if (mode == Delay) {
-                m_toSend.append(std::make_pair(socket, response));
-                QTimer::singleShot(500, this, &TestHTTPServer::sendOne);
+                if (mode == Delay) {
+                    m_toSend.append(std::make_pair(socket, response));
+                    QTimer::singleShot(500, this, &TestHTTPServer::sendOne);
+                    return false;
+                }
+
+                if (response.length() <= m_chunkSize) {
+                    socket->write(response);
+                    return true;
+                }
+
+                socket->write(response.left(m_chunkSize));
+                for (qsizetype offset = m_chunkSize, end = response.length(); offset < end;
+                    offset += m_chunkSize) {
+                    m_toSend.append(std::make_pair(socket, response.mid(offset, m_chunkSize)));
+                }
+
+                QTimer::singleShot(1, this, &TestHTTPServer::sendChunk);
                 return false;
             }
-
-            if (response.length() <= m_chunkSize) {
-                socket->write(response);
-                return true;
-            }
-
-            socket->write(response.left(m_chunkSize));
-            for (qsizetype offset = m_chunkSize, end = response.length(); offset < end;
-                 offset += m_chunkSize) {
-                m_toSend.append(std::make_pair(socket, response.mid(offset, m_chunkSize)));
-            }
-
-            QTimer::singleShot(1, this, &TestHTTPServer::sendChunk);
-            return false;
         }
     }
-
     socket->write("HTTP/1.0 404 Not found\r\nContent-type: text/html; charset=UTF-8\r\n\r\n");
 
     return true;
