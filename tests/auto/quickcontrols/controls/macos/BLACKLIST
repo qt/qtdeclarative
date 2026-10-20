@@ -9,18 +9,24 @@ macos arm ci # QTBUG-102817
 
 [Switch::test_mouseDrag]
 macos-26 # QTBUG-142189
+macos-27 # QTBUG-142189
 
 [Switch::test_touchDrag]
 macos-26 # QTBUG-142189
+macos-27 # QTBUG-142189
 
 [SwitchDelegate::test_mouseDrag]
 macos-26 # QTBUG-142189
+macos-27 # QTBUG-142189
 
 [SwitchDelegate::test_touchDrag]
 macos-26 # QTBUG-142189
+macos-27 # QTBUG-142189
 
 [Switch::test_mouse]
 macos-26 # QTBUG-142189
+macos-27 # QTBUG-142189
 
 [Switch::test_touch]
 macos-26 # QTBUG-142189
+macos-27 # QTBUG-142189
