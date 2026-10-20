@@ -94,7 +94,11 @@ qmlcache.variable_out = GENERATED_SOURCES
 qmlcache.dependency_type = TYPE_C
 
 qmlcache_loader.input = QMLCACHE_RESOURCE_FILES
-qmlcache_loader.output = $$QMLCACHE_DIR/qmlcache_loader.cpp
+# The target name keeps projects sharing an output directory from overwriting each other's loader.
+# qmlcachegen detects loader generation by the qmlcache_loader.cpp suffix.
+qmlcache_loader_prefix = $$basename(TARGET)
+qmlcache_loader_prefix = $$replace(qmlcache_loader_prefix, [^a-zA-Z0-9_], _)
+qmlcache_loader.output = $$QMLCACHE_DIR/$${qmlcache_loader_prefix}_qmlcache_loader.cpp
 qmlcache_loader.commands = $$QML_CACHEGEN $$QMLCACHE_LOADER_FLAGS $$QMLCACHE_FLAGS -o ${QMAKE_FILE_OUT} ${QMAKE_FILE_IN}
 qmlcache_loader.name = qmlcachengen_loader ${QMAKE_FILE_IN}
 qmlcache_loader.variable_out = SOURCES
