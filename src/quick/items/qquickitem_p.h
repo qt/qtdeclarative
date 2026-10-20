@@ -806,13 +806,13 @@ public:
     QLayoutPolicy szPolicy;
 
 #ifdef QT_BUILD_INTERNAL
-    inline static quint32 item_counter = 0;
-    inline static quint32 itemExtra_counter = 0;
-    inline static quint32 eventHandlingChildrenWithinBounds_counter = 0;
-    inline static quint64 itemToParentTransform_counter = 0;
-    inline static quint64 itemToWindowTransform_counter = 0;
-    inline static quint64 windowToItemTransform_counter = 0;
-    inline static quint64 effectiveClippingSkips_counter = 0;
+    static quint32 item_counter;
+    static quint32 itemExtra_counter;
+    static quint32 eventHandlingChildrenWithinBounds_counter;
+    static quint64 itemToParentTransform_counter;
+    static quint64 itemToWindowTransform_counter;
+    static quint64 windowToItemTransform_counter;
+    static quint64 effectiveClippingSkips_counter;
 #endif
 };
 
