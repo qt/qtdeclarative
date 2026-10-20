@@ -19,6 +19,7 @@
 
 //! [status-docs]
     \qmlproperty Qt::PermissionStatus \1::status
+    \readonly
 
     This property holds the current status of the permission.
 
