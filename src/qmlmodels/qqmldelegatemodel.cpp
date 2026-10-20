@@ -137,7 +137,7 @@ QQmlDelegateModelParts::QQmlDelegateModelParts(QQmlDelegateModel *parent)
 
 /*!
     \qmltype DelegateModel
-//!    \nativetype QQmlDelegateModel
+    \nativetype QQmlDelegateModel
     \inqmlmodule QtQml.Models
     \brief Encapsulates a model and delegate.
 

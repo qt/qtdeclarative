@@ -15,7 +15,7 @@ Q_LOGGING_CATEGORY (lcSortFilterProxyModel, "qt.qml.sortfilterproxymodel")
 
 /*!
     \qmltype SortFilterProxyModel
-    //! \nativetype QQmlSortFilterProxyModel
+    \nativetype QQmlSortFilterProxyModel
     \inqmlmodule QtQml.Models
     \since 6.10
     \preliminary
