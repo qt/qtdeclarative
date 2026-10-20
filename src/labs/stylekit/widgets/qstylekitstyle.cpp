@@ -554,6 +554,208 @@ static bool applyDelegateTransform(QPainter *painter,
     return true;
 }
 
+static void drawStyledItemImage(const QQStyleKitImageProperties *image, const QRectF &rect,
+                                qreal opacity, QPainter *painter)
+{
+    if (!image || image->source().isEmpty() || image->color().alpha() <= 0)
+        return;
+
+    QString imageSource = image->source().toString();
+    if (imageSource.startsWith(QLatin1String("qrc:/")))
+        imageSource = imageSource.mid(3);
+    QUrl imageUrl(imageSource);
+    QString imagePath = imageUrl.isLocalFile() ? imageUrl.toLocalFile() : imageSource;
+    QPixmap pixmap(imagePath);
+    if (pixmap.isNull())
+        return;
+
+    if (image->color().isValid()) {
+        QImage coloredImage = pixmap.toImage();
+        QPainter imagePainter(&coloredImage);
+        imagePainter.setCompositionMode(QPainter::CompositionMode_SourceIn);
+        imagePainter.fillRect(coloredImage.rect(), image->color());
+        imagePainter.end();
+        pixmap = QPixmap::fromImage(coloredImage);
+    }
+    painter->setOpacity(opacity);
+    const QSizeF pixmapSize = pixmap.deviceIndependentSize();
+
+    switch (image->fillMode()) {
+    case QQuickImage::PreserveAspectFit: {
+        const QSize scaled = pixmapSize.scaled(rect.size(), Qt::KeepAspectRatio).toSize();
+        const QPointF topLeft(rect.x() + (rect.width() - scaled.width()) / 2.0,
+                              rect.y() + (rect.height() - scaled.height()) / 2.0);
+        painter->drawPixmap(QRectF(topLeft, scaled), pixmap, QRectF(QPointF(0, 0), pixmapSize));
+        break;
+    }
+    case QQuickImage::PreserveAspectCrop: {
+        const QSize scaled = pixmapSize
+            .scaled(rect.size(), Qt::KeepAspectRatioByExpanding)
+            .toSize();
+        const QPointF topLeft(rect.x() + (rect.width() - scaled.width()) / 2.0,
+                              rect.y() + (rect.height() - scaled.height()) / 2.0);
+        QPainterStateGuard stateGuard(painter);
+        painter->setClipRect(rect);
+        painter->drawPixmap(QRectF(topLeft, scaled), pixmap, QRectF(QPointF(0, 0), pixmapSize));
+        break;
+    }
+    // TODO: Support remaining fill modes
+    case QQuickImage::Stretch:
+    default:
+        painter->drawPixmap(rect, pixmap, QRectF(QPointF(0, 0), pixmapSize));
+        break;
+    }
+}
+
+static void drawStyledItemContents(const QQStyleKitDelegateProperties *props, const QRectF &rect,
+                                   QPainter *painter)
+{
+    if (!props || !props->visible() || props->opacity() <= 0 || !rect.isValid())
+        return;
+
+    QPainterStateGuard stateGuard(painter);
+    painter->setRenderHint(QPainter::Antialiasing, true);
+    if (props->clip())
+        painter->setClipping(true);
+
+    // opacity
+    const auto opacity = props->opacity();
+
+    // border
+    const auto *border = props->border();
+    auto borderWidth = 0;
+    auto inset = 0.0;
+    QColor borderColor;
+    if (border) {
+        borderWidth = border->width();
+        borderColor = border->color();
+        inset = borderWidth / 2.0;
+    }
+    if (borderWidth > 0 && borderColor.isValid() && borderColor.alpha() > 0) {
+        QPen pen(borderColor, borderWidth);
+        painter->setPen(pen);
+    } else {
+        painter->setPen(Qt::NoPen);
+    }
+
+    // radius
+    // TODO: support different radius for each corner
+    const qreal minDimension = qMin(rect.width(), rect.height());
+    const qreal xRadius = qMax(0.0, qMin(props->topLeftRadius() - inset, minDimension / 2.0));
+    const qreal yRadius = qMax(0.0, qMin(props->bottomLeftRadius() - inset, minDimension / 2.0));
+
+    QRectF adjustedRect = rect.adjusted(inset, inset, -inset, -inset);
+
+    // gradients/color
+    // TODO: support palette roles for colors and gradients
+    QColor color = props->color();
+    QBrush colorBrush(color);
+    painter->setBrush(colorBrush);
+    if (color.isValid()) {
+        painter->setOpacity(opacity);
+        painter->drawRoundedRect(adjustedRect, xRadius, yRadius, Qt::AbsoluteSize);
+    }
+    if (QQuickGradient *gradient = props->gradient()) {
+        QLinearGradient linearGradient(rect.topLeft(), rect.bottomLeft());
+        QQmlListProperty<QQuickGradientStop> stops = gradient->stops();
+        const int stopCount = stops.count(&stops);
+        for (int i = 0; i < stopCount; i++) {
+            QQuickGradientStop *stop = static_cast<QQuickGradientStop *>(stops.at(&stops, i));
+            linearGradient.setColorAt(stop->position(), stop->color());
+        }
+        QBrush gradientBrush(linearGradient);
+        painter->setBrush(gradientBrush);
+        painter->setOpacity(opacity);
+        painter->drawRoundedRect(adjustedRect, xRadius, yRadius, Qt::AbsoluteSize);
+    }
+
+    // image
+    drawStyledItemImage(props->image(), adjustedRect, opacity, painter);
+}
+
+static void drawStyledItemRect(const QQStyleKitDelegateProperties *props, const QRectF &rect,
+                               QPainter *painter)
+{
+    if (!props || !props->visible() || props->opacity() <= 0 || !rect.isValid())
+        return;
+
+    QPainterStateGuard stateGuard(painter);
+    if (!applyDelegateTransform(painter, props, rect))
+        return;
+    drawStyledItemContents(props, rect, painter);
+}
+
+static void drawControlIndicator(const QQStyleKitDelegateProperties *indicator,
+                                 const QRectF &rect, QPainter *painter)
+{
+    if (!indicator || !indicator->visible() || indicator->opacity() <= 0 || !rect.isValid())
+        return;
+
+    // The foreground is a "child" of the indicator container so it
+    // inherits the indicator's transform. Apply it here and let the foreground stack its
+    // own on top.
+    QPainterStateGuard stateGuard(painter);
+    if (!applyDelegateTransform(painter, indicator, rect))
+        return;
+
+    // indicator (background)
+    QRectF indicatorRect = rect;
+    drawStyledItemContents(indicator, indicatorRect, painter);
+
+    const QQStyleKitDelegateProperties *foreground = nullptr;
+    if (auto *indicatorWithSubTypes =
+            qobject_cast<const QQStyleKitIndicatorWithSubTypes *>(indicator)) {
+        foreground = indicatorWithSubTypes->foreground();
+    } else if (auto *indicatorProps =
+                   qobject_cast<const QQStyleKitIndicatorProperties *>(indicator)) {
+        foreground = indicatorProps->foreground();
+    } else {
+        return;
+    }
+    if (!foreground || !foreground->visible() || foreground->opacity() <= 0)
+        return;
+
+    // foreground
+    QRectF foregroundRect;
+    const uint foregroundAlign = resolvedAlignment(foreground->alignment(), Qt::AlignHCenter,
+                                                   Qt::AlignVCenter);
+    const auto foregroundW = resolvedWidth(
+        foreground, indicatorRect.width() - foreground->leftMargin() - foreground->rightMargin());
+    const auto foregroundH = resolvedHeight(
+        foreground, indicatorRect.height() - foreground->topMargin() - foreground->bottomMargin());
+    foregroundRect.setSize(QSizeF(foregroundW, foregroundH));
+    if (foregroundAlign & Qt::AlignLeft)
+        foregroundRect.moveLeft(indicatorRect.left() + foreground->leftMargin());
+    else if (foregroundAlign & Qt::AlignHCenter)
+        foregroundRect.moveLeft(indicatorRect.left() + (indicatorRect.width() - foregroundW) / 2.0);
+    else if (foregroundAlign & Qt::AlignRight)
+        foregroundRect.moveLeft(indicatorRect.right() - foreground->rightMargin() - foregroundW);
+    if (foregroundAlign & Qt::AlignTop)
+        foregroundRect.moveTop(indicatorRect.top() + foreground->topMargin());
+    else if (foregroundAlign & Qt::AlignVCenter)
+        foregroundRect.moveTop(indicatorRect.top() + (indicatorRect.height() - foregroundH) / 2.0);
+    else if (foregroundAlign & Qt::AlignBottom)
+        foregroundRect.moveTop(indicatorRect.bottom() - foreground->bottomMargin() - foregroundH);
+    drawStyledItemRect(foreground, foregroundRect, painter);
+}
+
+static void drawControlText(const QQStyleKitTextProperties *textProps, const QFont &font,
+                            const QRect &rect, const QString &text, uint textFlags, QPainter *p,
+                            Qt::Alignment defaultAlignment = Qt::AlignHCenter | Qt::AlignVCenter)
+{
+    uint flags = textFlags;
+    flags |= textProps
+        ? resolvedAlignment(textProps->alignment(), defaultAlignment & Qt::AlignHorizontal_Mask,
+                            defaultAlignment & Qt::AlignVertical_Mask)
+        : uint(defaultAlignment);
+
+    const QFont oldFont = p->font();
+    p->setFont(font.resolve(oldFont));
+    p->setBrush(Qt::NoBrush);
+    p->setPen(textProps ? textProps->color() : QColor());
+    p->drawText(rect, flags, text, nullptr);
+}
+
 #if QT_CONFIG(dial)
 static qreal dialAngle(const QStyleOptionSlider *dial)
 {
@@ -1367,6 +1569,38 @@ QFont QStyleKitStylePrivate::QQStyleKitResolved::font() const
     return reader ? reader->font() : QFont();
 }
 
+void QStyleKitStylePrivate::QQStyleKitResolved::drawBackground(const QRectF &rect,
+                                                               QPainter *p) const
+{
+    drawStyledItemRect(background(), rect, p);
+}
+
+void QStyleKitStylePrivate::QQStyleKitResolved::drawIndicator(const QRectF &rect,
+                                                              QPainter *p) const
+{
+    drawControlIndicator(indicator(), rect, p);
+}
+
+void QStyleKitStylePrivate::QQStyleKitResolved::drawSubIndicator(bool first, const QRectF &rect,
+                                                                 QPainter *p) const
+{
+    const auto *ind = indicator();
+    if (ind)
+        drawControlIndicator(first ? ind->first() : ind->second(), rect, p);
+}
+
+void QStyleKitStylePrivate::QQStyleKitResolved::drawHandle(const QRectF &rect, QPainter *p) const
+{
+    drawStyledItemRect(handle(), rect, p);
+}
+
+void QStyleKitStylePrivate::QQStyleKitResolved::drawText(const QRect &rect, const QString &text,
+                                                         uint textFlags, QPainter *p,
+                                                         Qt::Alignment defaultAlignment) const
+{
+    drawControlText(this->text(), font(), rect, text, textFlags, p, defaultAlignment);
+}
+
 QQStyleKitReader *QStyleKitStylePrivate::ensureSharedReader() const
 {
     if (sharedReader)
@@ -1451,210 +1685,6 @@ QStyleKitStylePrivate::QQStyleKitLayoutResolved::indicator() const
 void QStyleKitStylePrivate::clearMetricsCache()
 {
     metricsCache.clear();
-}
-
-void QStyleKitStylePrivate::drawControlIndicator(const QQStyleKitDelegateProperties *indicator,
-                                                 const QRectF &rect, QPainter *painter) const
-{
-    if (!indicator || !indicator->visible() || indicator->opacity() <= 0 || !rect.isValid())
-        return;
-
-    // The foreground is a "child" of the indicator container so it
-    // inherits the indicator's transform. Apply it here and let the foreground stack its
-    // own on top.
-    QPainterStateGuard stateGuard(painter);
-    if (!applyDelegateTransform(painter, indicator, rect))
-        return;
-
-    // indicator (background)
-    QRectF indicatorRect = rect;
-    drawStyledItemContents(indicator, indicatorRect, painter);
-
-    const QQStyleKitDelegateProperties *foreground = nullptr;
-    if (auto *indicatorWithSubTypes =
-            qobject_cast<const QQStyleKitIndicatorWithSubTypes *>(indicator)) {
-        foreground = indicatorWithSubTypes->foreground();
-    } else if (auto *indicatorProps =
-                   qobject_cast<const QQStyleKitIndicatorProperties *>(indicator)) {
-        foreground = indicatorProps->foreground();
-    } else {
-        return;
-    }
-    if (!foreground || !foreground->visible() || foreground->opacity() <= 0)
-        return;
-
-    // foreground
-    QRectF foregroundRect;
-    const uint foregroundAlign = resolvedAlignment(foreground->alignment(), Qt::AlignHCenter,
-                                                   Qt::AlignVCenter);
-    const auto foregroundW = resolvedWidth(
-        foreground, indicatorRect.width() - foreground->leftMargin() - foreground->rightMargin());
-    const auto foregroundH = resolvedHeight(
-        foreground, indicatorRect.height() - foreground->topMargin() - foreground->bottomMargin());
-    foregroundRect.setSize(QSizeF(foregroundW, foregroundH));
-    if (foregroundAlign & Qt::AlignLeft)
-        foregroundRect.moveLeft(indicatorRect.left() + foreground->leftMargin());
-    else if (foregroundAlign & Qt::AlignHCenter)
-        foregroundRect.moveLeft(indicatorRect.left() + (indicatorRect.width() - foregroundW) / 2.0);
-    else if (foregroundAlign & Qt::AlignRight)
-        foregroundRect.moveLeft(indicatorRect.right() - foreground->rightMargin() - foregroundW);
-    if (foregroundAlign & Qt::AlignTop)
-        foregroundRect.moveTop(indicatorRect.top() + foreground->topMargin());
-    else if (foregroundAlign & Qt::AlignVCenter)
-        foregroundRect.moveTop(indicatorRect.top() + (indicatorRect.height() - foregroundH) / 2.0);
-    else if (foregroundAlign & Qt::AlignBottom)
-        foregroundRect.moveTop(indicatorRect.bottom() - foreground->bottomMargin() - foregroundH);
-    drawStyledItemRect(foreground, foregroundRect, painter);
-}
-
-void QStyleKitStylePrivate::drawControlText(const QQStyleKitTextProperties *textProps,
-                                            const QFont &font, const QRect &rect,
-                                            const QString &text, uint textFlags, QPainter *p,
-                                            Qt::Alignment defaultAlignment) const
-{
-    uint flags = textFlags;
-    flags |= textProps
-        ? resolvedAlignment(textProps->alignment(), defaultAlignment & Qt::AlignHorizontal_Mask,
-                            defaultAlignment & Qt::AlignVertical_Mask)
-        : uint(defaultAlignment);
-
-    const QFont oldFont = p->font();
-    p->setFont(font.resolve(oldFont));
-    p->setBrush(Qt::NoBrush);
-    p->setPen(textProps ? textProps->color() : QColor());
-    p->drawText(rect, flags, text, nullptr);
-}
-
-void QStyleKitStylePrivate::drawStyledItemRect(const QQStyleKitDelegateProperties *props,
-                                               const QRectF &rect, QPainter *painter) const
-{
-    if (!props || !props->visible() || props->opacity() <= 0 || !rect.isValid())
-        return;
-
-    QPainterStateGuard stateGuard(painter);
-    if (!applyDelegateTransform(painter, props, rect))
-        return;
-    drawStyledItemContents(props, rect, painter);
-}
-
-void QStyleKitStylePrivate::drawStyledItemContents(const QQStyleKitDelegateProperties *props,
-                                                   const QRectF &rect, QPainter *painter) const
-{
-    if (!props || !props->visible() || props->opacity() <= 0 || !rect.isValid())
-        return;
-
-    QPainterStateGuard stateGuard(painter);
-    painter->setRenderHint(QPainter::Antialiasing, true);
-    if (props->clip())
-        painter->setClipping(true);
-
-    // opacity
-    const auto opacity = props->opacity();
-
-    // border
-    const auto *border = props->border();
-    auto borderWidth = 0;
-    auto inset = 0.0;
-    QColor borderColor;
-    if (border) {
-        borderWidth = border->width();
-        borderColor = border->color();
-        inset = borderWidth / 2.0;
-    }
-    if (borderWidth > 0 && borderColor.isValid() && borderColor.alpha() > 0) {
-        QPen pen(borderColor, borderWidth);
-        painter->setPen(pen);
-    } else {
-        painter->setPen(Qt::NoPen);
-    }
-
-    // radius
-    // TODO: support different radius for each corner
-    const qreal minDimension = qMin(rect.width(), rect.height());
-    const qreal xRadius = qMax(0.0, qMin(props->topLeftRadius() - inset, minDimension / 2.0));
-    const qreal yRadius = qMax(0.0, qMin(props->bottomLeftRadius() - inset, minDimension / 2.0));
-
-    QRectF adjustedRect = rect.adjusted(inset, inset, -inset, -inset);
-
-    // gradients/color
-    // TODO: support palette roles for colors and gradients
-    QColor color = props->color();
-    QBrush colorBrush(color);
-    painter->setBrush(colorBrush);
-    if (color.isValid()) {
-        painter->setOpacity(opacity);
-        painter->drawRoundedRect(adjustedRect, xRadius, yRadius, Qt::AbsoluteSize);
-    }
-    if (QQuickGradient *gradient = props->gradient()) {
-        QLinearGradient linearGradient(rect.topLeft(), rect.bottomLeft());
-        QQmlListProperty<QQuickGradientStop> stops = gradient->stops();
-        const int stopCount = stops.count(&stops);
-        for (int i = 0; i < stopCount; i++) {
-            QQuickGradientStop *stop = static_cast<QQuickGradientStop *>(stops.at(&stops, i));
-            linearGradient.setColorAt(stop->position(), stop->color());
-        }
-        QBrush gradientBrush(linearGradient);
-        painter->setBrush(gradientBrush);
-        painter->setOpacity(opacity);
-        painter->drawRoundedRect(adjustedRect, xRadius, yRadius, Qt::AbsoluteSize);
-    }
-
-    // image
-    drawStyledItemImage(props->image(), adjustedRect, opacity, painter);
-}
-
-void QStyleKitStylePrivate::drawStyledItemImage(const QQStyleKitImageProperties *image,
-                                                const QRectF &rect, qreal opacity,
-                                                QPainter *painter) const
-{
-    if (!image || image->source().isEmpty() || image->color().alpha() <= 0)
-        return;
-
-    QString imageSource = image->source().toString();
-    if (imageSource.startsWith(QLatin1String("qrc:/")))
-        imageSource = imageSource.mid(3);
-    QUrl imageUrl(imageSource);
-    QString imagePath = imageUrl.isLocalFile() ? imageUrl.toLocalFile() : imageSource;
-    QPixmap pixmap(imagePath);
-    if (pixmap.isNull())
-        return;
-
-    if (image->color().isValid()) {
-        QImage coloredImage = pixmap.toImage();
-        QPainter imagePainter(&coloredImage);
-        imagePainter.setCompositionMode(QPainter::CompositionMode_SourceIn);
-        imagePainter.fillRect(coloredImage.rect(), image->color());
-        imagePainter.end();
-        pixmap = QPixmap::fromImage(coloredImage);
-    }
-    painter->setOpacity(opacity);
-    const QSizeF pixmapSize = pixmap.deviceIndependentSize();
-
-    switch (image->fillMode()) {
-    case QQuickImage::PreserveAspectFit: {
-        const QSize scaled = pixmapSize.scaled(rect.size(), Qt::KeepAspectRatio).toSize();
-        const QPointF topLeft(rect.x() + (rect.width() - scaled.width()) / 2.0,
-                              rect.y() + (rect.height() - scaled.height()) / 2.0);
-        painter->drawPixmap(QRectF(topLeft, scaled), pixmap, QRectF(QPointF(0, 0), pixmapSize));
-        break;
-    }
-    case QQuickImage::PreserveAspectCrop: {
-        const QSize scaled = pixmapSize
-            .scaled(rect.size(), Qt::KeepAspectRatioByExpanding)
-            .toSize();
-        const QPointF topLeft(rect.x() + (rect.width() - scaled.width()) / 2.0,
-                              rect.y() + (rect.height() - scaled.height()) / 2.0);
-        QPainterStateGuard stateGuard(painter);
-        painter->setClipRect(rect);
-        painter->drawPixmap(QRectF(topLeft, scaled), pixmap, QRectF(QPointF(0, 0), pixmapSize));
-        break;
-    }
-    // TODO: Support remaining fill modes
-    case QQuickImage::Stretch:
-    default:
-        painter->drawPixmap(rect, pixmap, QRectF(QPointF(0, 0), pixmapSize));
-        break;
-    }
 }
 
 QRect QStyleKitStylePrivate::getAlignedRectInContainer(const QRect &container, const QSize &size,
@@ -1897,7 +1927,7 @@ void QStyleKitStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt,
         const auto r = d->resolve(w, QQStyleKitReader::ControlType::ToolTip, opt->state);
         if (!r.isValid())
             break;
-        d->drawStyledItemRect(r.background(), opt->rect.marginsRemoved(r.metrics->margins), p);
+        r.drawBackground(opt->rect.marginsRemoved(r.metrics->margins), p);
         return;
     }
 #endif
@@ -1909,7 +1939,7 @@ void QStyleKitStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt,
         const auto r = d->resolve(w, controlType, opt->state);
         if (!r.isValid())
             break;
-        d->drawStyledItemRect(r.background(), opt->rect.marginsRemoved(r.metrics->margins), p);
+        r.drawBackground(opt->rect.marginsRemoved(r.metrics->margins), p);
         return;
     }
     case PE_FrameMenu:
@@ -1921,7 +1951,7 @@ void QStyleKitStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt,
         const auto r = d->resolve(w, QQStyleKitReader::ControlType::MenuBar, opt->state);
         if (!r.isValid())
             break;
-        d->drawStyledItemRect(r.background(), opt->rect.marginsRemoved(r.metrics->margins), p);
+        r.drawBackground(opt->rect.marginsRemoved(r.metrics->margins), p);
         return;
     }
 #endif // QT_CONFIG(menubar)
@@ -1933,7 +1963,7 @@ void QStyleKitStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt,
             const auto r = d->resolve(w, controlType, btn->state);
             if (!r.isValid())
                 break;
-            d->drawStyledItemRect(r.background(), opt->rect, p);
+            r.drawBackground(opt->rect, p);
             return;
         }
         break;
@@ -1956,7 +1986,7 @@ void QStyleKitStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt,
         const auto r = d->resolve(w, controlType, opt->state);
         if (!r.isValid())
             break;
-        d->drawStyledItemRect(r.background(), opt->rect, p);
+        r.drawBackground(opt->rect, p);
         return;
     }
 #if QT_CONFIG(lineedit)
@@ -1997,7 +2027,7 @@ void QStyleKitStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt,
             if (isInSpinBox || isInComboBox)
                 return;
 
-            d->drawStyledItemRect(r.background(), opt->rect, p);
+            r.drawBackground(opt->rect, p);
             return;
         }
         break;
@@ -2007,7 +2037,7 @@ void QStyleKitStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt,
         const auto r = d->resolveSubElement(w, opt, itemViewControlType(opt), opt->state);
         if (!r.isValid())
             break;
-        d->drawStyledItemRect(r.background(), opt->rect, p);
+        r.drawBackground(opt->rect, p);
         return;
     }
 #endif // QT_CONFIG(itemviews)
@@ -2019,14 +2049,14 @@ void QStyleKitStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt,
         const auto r = d->resolve(w, controlType, opt->state);
         if (!r.isValid())
             break;
-        d->drawControlIndicator(r.indicator(), opt->rect, p);
+        r.drawIndicator(opt->rect, p);
         return;
     }
     case PE_IndicatorArrowDown: {
         const auto r = d->resolve(w, QQStyleKitReader::ControlType::ComboBox, opt->state);
         if (!r.isValid())
             break;
-        d->drawControlIndicator(r.indicator(), opt->rect, p);
+        r.drawIndicator(opt->rect, p);
         return;
     }
     case PE_IndicatorItemViewItemCheck: {
@@ -2034,7 +2064,7 @@ void QStyleKitStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt,
         const auto r = d->resolveSubElement(w, opt, itemViewControlType(opt), opt->state, false);
         if (!r.isValid())
             break;
-        d->drawControlIndicator(r.indicator(), opt->rect, p);
+        r.drawIndicator(opt->rect, p);
         return;
     }
 #if QT_CONFIG(spinbox)
@@ -2043,11 +2073,7 @@ void QStyleKitStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt,
         const auto r = d->resolve(w, QQStyleKitReader::ControlType::SpinBox, opt->state);
         if (!r.isValid())
             break;
-        const auto *indicator = r.indicator();
-        const auto *upDownIndicator = indicator
-            ? (pe == PE_IndicatorSpinUp ? indicator->first() : indicator->second())
-            : nullptr;
-        d->drawControlIndicator(upDownIndicator, opt->rect, p);
+        r.drawSubIndicator(pe == PE_IndicatorSpinUp, opt->rect, p);
         return;
     }
 #endif // QT_CONFIG(spinbox)
@@ -2056,7 +2082,7 @@ void QStyleKitStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt,
         const auto r = d->resolve(w, QQStyleKitReader::ControlType::GroupBox, opt->state);
         if (!r.isValid())
             break;
-        d->drawStyledItemRect(r.background(), opt->rect, p);
+        r.drawBackground(opt->rect, p);
         return;
     }
 #endif // QT_CONFIG(groupbox)
@@ -2065,7 +2091,7 @@ void QStyleKitStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt,
         const auto r = d->resolve(w, QQStyleKitReader::ControlType::Page, opt->state);
         if (!r.isValid())
             break;
-        d->drawStyledItemRect(r.background(), opt->rect, p);
+        r.drawBackground(opt->rect, p);
         return;
     }
 #endif // QT_CONFIG(tabwidget)
@@ -2082,7 +2108,7 @@ void QStyleKitStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt,
         const auto r = d->resolve(w, QQStyleKitReader::ControlType::ToolButton, opt->state);
         if (!r.isValid())
             break;
-        d->drawStyledItemRect(r.background(), opt->rect, p);
+        r.drawBackground(opt->rect, p);
         return;
     }
 #endif // QT_CONFIG(toolbutton)
@@ -2096,7 +2122,7 @@ void QStyleKitStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt,
         const auto &metrics = *r.metrics;
         // background
         QRect frameRect = opt->rect.marginsRemoved(metrics.margins);
-        d->drawStyledItemRect(r.background(), frameRect, p);
+        r.drawBackground(frameRect, p);
         // indicator
         const auto *indicator = r.indicator();
         if (!indicator || !indicator->visible() || indicator->opacity() == 0)
@@ -2116,8 +2142,7 @@ void QStyleKitStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt,
                                                  Qt::AlignVCenter);
         const QRect indicatorRect = d->getAlignedRectInContainer(
             contentRect, QSize(iw, ih), alignment, QMargins(), metrics.indicatorMargins);
-        d->drawControlIndicator(indicator, visualRect(opt->direction, contentRect, indicatorRect),
-                                p);
+        r.drawIndicator(visualRect(opt->direction, contentRect, indicatorRect), p);
         return;
     }
 #endif
@@ -2224,7 +2249,7 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
                 else
                     textRect = textRect.adjusted(indicatorSize, 0, 0, 0);
             }
-            d->drawControlText(r.text(), r.font(), textRect, btn->text, textFlags, p);
+            r.drawText(textRect, btn->text, textFlags, p);
             return;
         }
         break;
@@ -2239,7 +2264,7 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
                 break;
             QRect backgroundRect = btn->rect.marginsRemoved(r.metrics->margins);
             // background
-            d->drawStyledItemRect(r.background(), backgroundRect, p);
+            r.drawBackground(backgroundRect, p);
             // label
             QStyleOptionButton btnContent(*btn);
             const auto contentElement = element == CE_CheckBox
@@ -2275,7 +2300,7 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
             uint textFlags = Qt::TextShowMnemonic;
             if (!styleHint(SH_UnderlineShortcut, opt, w))
                 textFlags |= Qt::TextHideMnemonic;
-            d->drawControlText(r.text(), r.font(), opt->rect, btn->text, textFlags, p);
+            r.drawText(opt->rect, btn->text, textFlags, p);
             return;
         }
         break;
@@ -2292,7 +2317,7 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
             uint textFlags = Qt::TextShowMnemonic;
             if (!styleHint(SH_UnderlineShortcut, opt, w))
                 textFlags |= Qt::TextHideMnemonic;
-            d->drawControlText(r.text(), r.font(), textRect, comboBox->currentText, textFlags, p);
+            r.drawText(textRect, comboBox->currentText, textFlags, p);
             return;
         }
         break;
@@ -2307,7 +2332,7 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
                 break;
             QRect backgroundRect = progressBar->rect.marginsRemoved(r.metrics->margins);
             // background
-            d->drawStyledItemRect(r.background(), backgroundRect, p);
+            r.drawBackground(backgroundRect, p);
             // groove
             QStyleOptionProgressBar contents(*progressBar);
             contents.rect = subElementRect(SE_ProgressBarGroove, progressBar, w);
@@ -2329,7 +2354,7 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
         const auto r = d->resolve(w, QQStyleKitReader::ControlType::ProgressBar, opt->state);
         if (!r.isValid())
             break;
-        d->drawStyledItemRect(r.indicator(), opt->rect, p);
+        drawStyledItemRect(r.indicator(), opt->rect, p);
         return;
     }
     case CE_ProgressBarContents:
@@ -2354,7 +2379,7 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
             if (foreground && foreground->visible() && foreground->opacity() > 0) {
                 QPainterStateGuard stateGuard(p);
                 if (applyDelegateTransform(p, foreground, progressBar->rect))
-                    d->drawStyledItemContents(foreground, contentsRect, p);
+                    drawStyledItemContents(foreground, contentsRect, p);
             }
             return;
         }
@@ -2415,7 +2440,7 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
             uint textFlags = Qt::TextShowMnemonic;
             if (!styleHint(SH_UnderlineShortcut, opt, w))
                 textFlags |= Qt::TextHideMnemonic;
-            d->drawControlText(itemTextProps, itemFont, textRect, itemViewOption->text, textFlags,
+            drawControlText(itemTextProps, itemFont, textRect, itemViewOption->text, textFlags,
                                p, Qt::AlignLeft | Qt::AlignVCenter);
             return;
         }
@@ -2447,7 +2472,7 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
             if (!r.isValid())
                 break;
             QRect backgroundRect = opt->rect.marginsRemoved(r.metrics->margins);
-            d->drawStyledItemRect(r.background(), backgroundRect, p);
+            r.drawBackground(backgroundRect, p);
             return;
         }
         break;
@@ -2458,7 +2483,7 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
         const auto r = d->resolve(w, QQStyleKitReader::ControlType::ScrollBar, opt->state);
         if (!r.isValid())
             break;
-        d->drawControlIndicator(r.indicator(), opt->rect, p);
+        r.drawIndicator(opt->rect, p);
         return;
     }
 #endif // QT_CONFIG(scrollbar)
@@ -2478,7 +2503,7 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
             const bool hasArrow = tool->features & QStyleOptionToolButton::Arrow;
             if ((!hasArrow && tool->icon.isNull() && !tool->text.isEmpty())
                 || tool->toolButtonStyle == Qt::ToolButtonTextOnly) {
-                d->drawControlText(r.text(), r.font(), rect, tool->text, textFlags, p);
+                r.drawText(rect, tool->text, textFlags, p);
                 return;
             }
 
@@ -2516,11 +2541,10 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
                     p->drawPixmap(visualRect(tool->direction, rect, pr), pm);
                     QRect tr = rect;
                     tr.setTop(rect.y() + pmSize.height() + metrics->spacing);
-                    d->drawControlText(r.text(), r.font(), visualRect(tool->direction, rect, tr),
-                                       tool->text, textFlags, p, Qt::AlignCenter);
+                    r.drawText(visualRect(tool->direction, rect, tr), tool->text, textFlags, p,
+                               Qt::AlignCenter);
                 } else {
-                    d->drawControlText(r.text(), r.font(), rect, tool->text, textFlags, p,
-                                       Qt::AlignCenter);
+                    r.drawText(rect, tool->text, textFlags, p, Qt::AlignCenter);
                 }
             } else {
                 if (!pm.isNull()) {
@@ -2529,11 +2553,10 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
                     p->drawPixmap(visualRect(tool->direction, rect, pr), pm);
                     QRect tr = rect;
                     tr.setLeft(rect.x() + pmSize.width() + metrics->spacing);
-                    d->drawControlText(r.text(), r.font(), visualRect(tool->direction, rect, tr),
-                                       tool->text, textFlags, p, Qt::AlignLeft | Qt::AlignVCenter);
+                    r.drawText(visualRect(tool->direction, rect, tr), tool->text, textFlags, p,
+                               Qt::AlignLeft | Qt::AlignVCenter);
                 } else {
-                    d->drawControlText(r.text(), r.font(), rect, tool->text, textFlags, p,
-                                       Qt::AlignLeft | Qt::AlignVCenter);
+                    r.drawText(rect, tool->text, textFlags, p, Qt::AlignLeft | Qt::AlignVCenter);
                 }
             }
             return;
@@ -2566,8 +2589,7 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
                                                          Qt::AlignVCenter);
                     const QRect indicatorRect = d->getAlignedRectInContainer(
                         contentRect, QSize(w, h), align, QMargins(), elementMargins(indicator));
-                    d->drawControlIndicator(
-                        indicator, visualRect(opt->direction, contentRect, indicatorRect), p);
+                    r.drawIndicator(visualRect(opt->direction, contentRect, indicatorRect), p);
                 }
                 return;
             }
@@ -2582,7 +2604,7 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
                 break;
 
             // background
-            d->drawStyledItemRect(r.background(), opt->rect.marginsRemoved(r.metrics->margins), p);
+            r.drawBackground(opt->rect.marginsRemoved(r.metrics->margins), p);
 
             // indicators
             const QRect contentRect = opt->rect.marginsRemoved(r.metrics->padding);
@@ -2618,13 +2640,13 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
 
             if (first && menuItem->checkType != QStyleOptionMenuItem::NotCheckable
                     && menuItem->checked) {
-                d->drawControlIndicator(
-                    first, visualRect(menuItem->direction, contentRect, firstDrawRect), p);
+                r.drawSubIndicator(
+                    true, visualRect(menuItem->direction, contentRect, firstDrawRect), p);
             }
 
             if (second && menuItem->menuItemType == QStyleOptionMenuItem::SubMenu) {
-                d->drawControlIndicator(
-                    second, visualRect(menuItem->direction, contentRect, secondDrawRect), p);
+                r.drawSubIndicator(
+                    false, visualRect(menuItem->direction, contentRect, secondDrawRect), p);
             }
 
             // text
@@ -2675,9 +2697,8 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
                             shortcut);
                 p->restore();
             }
-            d->drawControlText(r.text(), r.font(),
-                               visualRect(menuItem->direction, textRect, labelRect), label,
-                               textFlags, p, Qt::AlignLeft | Qt::AlignVCenter);
+            r.drawText(visualRect(menuItem->direction, textRect, labelRect), label, textFlags, p,
+                       Qt::AlignLeft | Qt::AlignVCenter);
             return;
         }
         break;
@@ -2701,13 +2722,13 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
                                                 adjustedState);
             if (!r.isValid())
                 break;
-            d->drawStyledItemRect(r.background(), opt->rect.marginsRemoved(r.metrics->margins), p);
+            r.drawBackground(opt->rect.marginsRemoved(r.metrics->margins), p);
             const QRect textRect = opt->rect.marginsRemoved(
                 r.metrics->margins + r.metrics->padding + r.metrics->textPadding);
             uint textFlags = Qt::TextShowMnemonic;
             if (!styleHint(SH_UnderlineShortcut, opt, w))
                 textFlags |= Qt::TextHideMnemonic;
-            d->drawControlText(r.text(), r.font(), textRect, menuItem->text, textFlags, p);
+            r.drawText(textRect, menuItem->text, textFlags, p);
             return;
         }
         break;
@@ -2722,7 +2743,7 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
             const auto &m = *r.metrics;
 
             const QRect backgroundRect = opt->rect.marginsRemoved(m.margins);
-            d->drawStyledItemRect(r.background(), backgroundRect, p);
+            r.drawBackground(backgroundRect, p);
 
             const QRect contentRect = backgroundRect.marginsRemoved(m.padding);
             uint textFlags = Qt::TextShowMnemonic;
@@ -2745,11 +2766,10 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
                 p->drawPixmap(visualRect(tab->direction, contentRect, pr), pm);
                 QRect tr = contentRect;
                 tr.setLeft(contentRect.x() + pmSize.width() + m.spacing);
-                d->drawControlText(r.text(), r.font(), visualRect(tab->direction, contentRect, tr),
-                                   tab->text, textFlags, p, Qt::AlignCenter);
+                r.drawText(visualRect(tab->direction, contentRect, tr), tab->text, textFlags, p,
+                           Qt::AlignCenter);
             } else {
-                d->drawControlText(r.text(), r.font(), contentRect, tab->text, textFlags, p,
-                                   Qt::AlignCenter);
+                r.drawText(contentRect, tab->text, textFlags, p, Qt::AlignCenter);
             }
             return;
         }
@@ -2761,7 +2781,7 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
             const auto r = d->resolve(w, QQStyleKitReader::ControlType::ToolBar, toolBar->state);
             if (!r.isValid())
                 break;
-            d->drawStyledItemRect(r.background(), opt->rect.marginsRemoved(r.metrics->margins), p);
+            r.drawBackground(opt->rect.marginsRemoved(r.metrics->margins), p);
             return;
         }
         break;
@@ -3205,14 +3225,14 @@ void QStyleKitStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCom
             QRect backgroundRect = opt->rect.marginsRemoved(metrics.margins);
 
             // background
-            d->drawStyledItemRect(r.background(), backgroundRect, p);
+            r.drawBackground(backgroundRect, p);
 
             // groove
             if (slider->subControls & SC_SliderGroove) {
                 // groove
                 const auto grooveRect = proxy()->subControlRect(CC_Slider, opt, SC_SliderGroove, w);
                 const auto *indicator = r.indicator();
-                d->drawStyledItemRect(indicator, grooveRect, p);
+                drawStyledItemRect(indicator, grooveRect, p);
 
                 // track
                 const auto *foreground = indicator ? indicator->foreground() : nullptr;
@@ -3265,7 +3285,7 @@ void QStyleKitStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCom
                     QPainterStateGuard stateGuard(p);
                     if (applyDelegateTransform(p, indicator, grooveRect)
                         && applyDelegateTransform(p, foreground, foregroundBox)) {
-                        d->drawStyledItemContents(
+                        drawStyledItemContents(
                             foreground,
                             visualRect(opt->direction, grooveRect, trackRect.toAlignedRect()), p);
                     }
@@ -3276,9 +3296,7 @@ void QStyleKitStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCom
             if (slider->subControls & SC_SliderHandle) {
                 QStyleOptionSlider handleOpt(*slider);
                 handleOpt.rect = subControlRect(CC_Slider, opt, SC_SliderHandle, w);
-                const auto *handle = r.handle();
-                if (handle && handle->visible() && handle->opacity() > 0)
-                    d->drawStyledItemRect(handle, handleOpt.rect, p);
+                r.drawHandle(handleOpt.rect, p);
             }
             return;
         }
@@ -3291,7 +3309,7 @@ void QStyleKitStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCom
             if (!r.isValid())
                 break;
             const QRectF backgroundRect = QRectF(opt->rect).marginsRemoved(r.metrics->margins);
-            d->drawStyledItemRect(r.background(), backgroundRect, p);
+            r.drawBackground(backgroundRect, p);
 
             const auto *handle = r.handle();
             if (handle && handle->visible() && handle->opacity() > 0) {
@@ -3299,7 +3317,7 @@ void QStyleKitStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCom
                 p->translate(backgroundRect.center());
                 p->rotate(dialAngle(dial));
                 p->translate(dialHandleOffset(backgroundRect, handle));
-                d->drawStyledItemRect(handle, QRectF(-handle->width() / 2, -handle->height() / 2,
+                drawStyledItemRect(handle, QRectF(-handle->width() / 2, -handle->height() / 2,
                                                      handle->width(), handle->height()), p);
             }
             return;
@@ -3315,7 +3333,7 @@ void QStyleKitStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCom
             if (!r.isValid())
                 break;
             QRect frameRect = subControlRect(CC_ComboBox, opt, SC_ComboBoxFrame, w);
-            d->drawStyledItemRect(r.background(), frameRect, p);
+            r.drawBackground(frameRect, p);
 
             // indicator
             if (combo->subControls & SC_ComboBoxArrow) {
@@ -3345,7 +3363,7 @@ void QStyleKitStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCom
                 break;
             QRect frameRect = opt->rect.marginsRemoved(r.metrics->margins);
             // background
-            d->drawStyledItemRect(r.background(), frameRect, p);
+            r.drawBackground(frameRect, p);
             // up/down buttons
             if (spin->subControls & SC_SpinBoxUp) {
                 QStyleOptionSpinBox upOpt(*spin);
@@ -3396,7 +3414,7 @@ void QStyleKitStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCom
                 const auto *textProps = r.text();
                 const QFont textFont = r.font();
                 QRect titleRect = subControlRect(CC_GroupBox, opt, SC_GroupBoxLabel, w);
-                d->drawControlText(textProps, textFont,
+                drawControlText(textProps, textFont,
                                    titleRect.marginsRemoved(r.metrics->textPadding), groupBox->text,
                                    Qt::TextShowMnemonic, p, Qt::AlignLeft | Qt::AlignVCenter);
             }
@@ -3418,7 +3436,7 @@ void QStyleKitStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCom
             if (scrollbar->subControls & SC_ScrollBarGroove) {
                 QRect backgroundRect = proxy()->subControlRect(
                     CC_ScrollBar, opt, SC_ScrollBarGroove, w);
-                d->drawStyledItemRect(r.background(), backgroundRect, p);
+                r.drawBackground(backgroundRect, p);
             }
 
             // TODO: increase button
@@ -3444,7 +3462,7 @@ void QStyleKitStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCom
                 break;
 
             // background
-            d->drawStyledItemRect(r.background(), opt->rect, p);
+            r.drawBackground(opt->rect, p);
 
             // menu arrow indicator
             if ((tool->features
@@ -3452,7 +3470,7 @@ void QStyleKitStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCom
                     == QStyleOptionToolButton::MenuButtonPopup
                 && (tool->subControls & SC_ToolButtonMenu)) {
                 const QRect menuRect = subControlRect(CC_ToolButton, opt, SC_ToolButtonMenu, w);
-                d->drawControlIndicator(r.indicator(), menuRect, p);
+                r.drawIndicator(menuRect, p);
             }
 
             // label

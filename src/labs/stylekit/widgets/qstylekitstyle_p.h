@@ -135,6 +135,13 @@ class QStyleKitStylePrivate : public QCommonStylePrivate
         const QQStyleKitHandleProperties *handle() const;
         const QQStyleKitIndicatorWithSubTypes *indicator() const;
         QFont font() const;
+
+        void drawBackground(const QRectF &rect, QPainter *p) const;
+        void drawIndicator(const QRectF &rect, QPainter *p) const;
+        void drawSubIndicator(bool first, const QRectF &rect, QPainter *p) const;
+        void drawHandle(const QRectF &rect, QPainter *p) const;
+        void drawText(const QRect &rect, const QString &text, uint textFlags, QPainter *p,
+                      Qt::Alignment defaultAlignment = Qt::AlignHCenter | Qt::AlignVCenter) const;
     };
     // Stores the resolved properties for layout purposes.
     // Accessors read static values via the shared reader (transitions disabled),
@@ -225,16 +232,6 @@ private:
     void clearMetricsCache();
 
     ControlMetrics metricsForReader(QQStyleKitReader *reader) const;
-
-    void drawControlIndicator(const QQStyleKitDelegateProperties *indicator, const QRectF &rect, QPainter *p) const;
-    void drawControlText(const QQStyleKitTextProperties *textProps, const QFont &font,
-                         const QRect &rect, const QString &text, uint textFlags,
-                         QPainter *p,
-                         Qt::Alignment defaultAlignment = Qt::AlignHCenter | Qt::AlignVCenter) const;
-    void drawStyledItemRect(const QQStyleKitDelegateProperties *, const QRectF &rect, QPainter *p) const;
-    void drawStyledItemContents(const QQStyleKitDelegateProperties *, const QRectF &rect, QPainter *p) const;
-    void drawStyledItemImage(const QQStyleKitImageProperties *image, const QRectF &rect,
-                             qreal opacity, QPainter *p) const;
 
     QRect getAlignedRectInContainer(const QRect &container, const QSize &indicatorSize,
                                        uint alignment, const QMargins &padding,
