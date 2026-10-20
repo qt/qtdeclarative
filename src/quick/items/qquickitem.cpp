@@ -3213,6 +3213,16 @@ qreal QQuickItemPrivate::effectiveDevicePixelRatio() const
     return (window ? window->effectiveDevicePixelRatio() : qApp->devicePixelRatio());
 }
 
+#ifdef QT_BUILD_INTERNAL
+quint32 QQuickItemPrivate::item_counter = 0;
+quint32 QQuickItemPrivate::itemExtra_counter = 0;
+quint32 QQuickItemPrivate::eventHandlingChildrenWithinBounds_counter = 0;
+quint64 QQuickItemPrivate::itemToParentTransform_counter = 0;
+quint64 QQuickItemPrivate::itemToWindowTransform_counter = 0;
+quint64 QQuickItemPrivate::windowToItemTransform_counter = 0;
+quint64 QQuickItemPrivate::effectiveClippingSkips_counter = 0;
+#endif
+
 /*!
     Returns a transform that maps points from window space into item space.
 */
