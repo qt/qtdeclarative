@@ -233,10 +233,6 @@ private:
 
     ControlMetrics metricsForReader(QQStyleKitReader *reader) const;
 
-    QRect getAlignedRectInContainer(const QRect &container, const QSize &indicatorSize,
-                                       uint alignment, const QMargins &padding,
-                                       const QMargins &indicatorMargins) const;
-
     QQmlEngine *qmlEngine = nullptr;
     QQStyleKitStyle *style = nullptr;
     QQStyleKitStyle *defaultStyle = nullptr;
