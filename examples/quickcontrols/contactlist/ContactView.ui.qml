@@ -30,7 +30,12 @@ ListView {
 
         required property int index
 
-        onPressAndHold: listView.pressAndHold(index)
+        Connections {
+            target: delegate
+            function onPressAndHold() {
+                listView.pressAndHold(delegate.index)
+            }
+        }
     }
 
     model: ContactModel {
