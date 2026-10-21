@@ -558,6 +558,7 @@ private slots:
     void listIsNotAType();
 
     void multiTypeResolution();
+    void objectInSignal();
 
     void multiValueTypeBinding();
 
@@ -10618,6 +10619,20 @@ void tst_qqmllanguage::multiValueTypeBinding()
     QVERIFY(case2);
     QCOMPARE(case2->property("width").toInt(), 30);
     QCOMPARE(case2->property("height").toInt(), 700);
+}
+
+void tst_qqmllanguage::objectInSignal()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("objectInSignal.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    std::unique_ptr<QObject> object(component.create());
+    QVERIFY(object);
+    const QVariant result = object->property("result");
+    QCOMPARE(result.metaType(), QMetaType::fromType<QJSValue>());
+    const QJSValue jsval = result.value<QJSValue>();
+    QVERIFY(jsval.isObject());
+    QCOMPARE(jsval.property("value").toString(), QLatin1String("Hello"));
 }
 
 QTEST_MAIN(tst_qqmllanguage)

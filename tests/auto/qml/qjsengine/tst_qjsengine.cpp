@@ -1187,12 +1187,13 @@ void tst_QJSEngine::qmlMethodCalledFromOtherEngine()
     owner.globalObject().setProperty(u"shared"_s, owner.newQObject(shared.get()));
     other.globalObject().setProperty(u"shared"_s, other.newQObject(shared.get()));
 
-    // The other engine gets a plain method wrapper. Calling it converts the arguments and runs
-    // the function in the engine that owns it.
+    // The other engine gets a plain method wrapper. Calling it wraps the argument in
+    // QVariant and tries to run the function in the engine that owns it. Alas, the other
+    // engine can't unwrap the argument because it's a QJSValue it doesn't own.
+    QTest::ignoreMessage(QtWarningMsg, "JSValue can't be reassigned to another engine.");
     const QJSValue called = other.evaluate("shared.store({ tag: 'from the other engine' }); true");
     QVERIFY2(!called.isError(), qPrintable(called.toString()));
-    QCOMPARE(owner.evaluate("JSON.stringify(shared.stored)").toString(),
-             u"{\"tag\":\"from the other engine\"}"_s);
+    QCOMPARE(owner.evaluate("JSON.stringify(shared.stored)").toString(), u"undefined"_s);
 
     // A function has no QVariant representation that could cross, so it does not.
     QTest::ignoreMessage(QtWarningMsg, "JSValue can't be reassigned to another engine.");
