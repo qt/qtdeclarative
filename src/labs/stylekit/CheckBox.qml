@@ -29,6 +29,9 @@ T.CheckBox {
 
     spacing: styleReader.spacing
 
+    icon.width: 24
+    icon.height: 24
+
     font: styleReader.font
 
     StyleVariation.controlType: styleReader.controlType
@@ -80,13 +83,16 @@ T.CheckBox {
         height: indicatorItem.height
     }
 
-    contentItem: CheckLabel {
+    contentItem: IconLabel {
+        spacing: control.spacing
+        mirrored: control.mirrored
+        display: control.display
+        icon: control.icon
         text: control.text
         font: control.font
-        color: styleReader.text.color
-        horizontalAlignment: styleReader.text.alignment & Qt.AlignHorizontal_Mask
-        verticalAlignment: styleReader.text.alignment & Qt.AlignVertical_Mask
-        padding: styleReader.text.padding
+        defaultIconColor: styleReader.text.color
+        color: defaultIconColor
+        alignment: styleReader.text.alignment
         topPadding: styleReader.text.topPadding
         bottomPadding: styleReader.text.bottomPadding
         leftPadding: styleReader.text.leftPadding
