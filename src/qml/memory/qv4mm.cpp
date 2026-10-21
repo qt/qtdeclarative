@@ -1503,7 +1503,7 @@ void MemoryManager::collectFromJSStack(MarkStack *markStack) const
         if (frame->isJSTypesFrame()) {
             // Generator frames don't live on the JS stack, but in a heap object that the
             // interpreter writes to without write barrier.
-            if (frame->v4Function->isGenerator())
+            if (frame->v4Function && frame->v4Function->isGenerator())
                 static_cast<const JSTypesStackFrame *>(frame)->markJSFrame(markStack);
             continue;
         }
