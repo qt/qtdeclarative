@@ -31,7 +31,6 @@ T.ItemDelegate {
 
     icon.width: 16
     icon.height: 16
-    icon.color: styleReader.text.color
 
     font: styleReader.font
 
@@ -55,7 +54,8 @@ T.ItemDelegate {
         icon: control.icon
         text: control.text
         font: control.font
-        color: styleReader.text.color
+        defaultIconColor: styleReader.text.color
+        color: defaultIconColor
         alignment: styleReader.text.alignment
         topPadding: styleReader.text.topPadding
         bottomPadding: styleReader.text.bottomPadding
