@@ -550,13 +550,13 @@ static QRect alignedRectInContainer(const QRect &container, const QSize &size, u
 /*! \internal
     Returns the rect of \a delegate inside \a container: sized from the width/height or fill
     properties after deducting \a padding and the delegate's margins, then aligned (falling back
-    to \a hDefault and \a vDefault).
+    to \a hDefault and \a vDefault). Returns a null rect if \a delegate is null or not visible.
 */
 static QRect delegateRect(const QQStyleKitDelegateProperties *delegate, const QRect &container,
                           Qt::Alignment hDefault, Qt::Alignment vDefault,
                           const QMargins &padding = QMargins())
 {
-    if (!delegate)
+    if (!delegate || !delegate->visible())
         return QRect();
     using QtPrivate::qSaturateRound;
     const int w = qSaturateRound(resolvedWidth(
@@ -2147,8 +2147,6 @@ void QStyleKitStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt,
         r.drawBackground(frameRect, p);
         // indicator
         const auto *indicator = r.indicator();
-        if (!indicator || !indicator->visible() || indicator->opacity() == 0)
-            return;
         QRect contentRect = frameRect.marginsRemoved(metrics.padding);
         const QRect indicatorRect = delegateRect(indicator, contentRect, Qt::AlignHCenter,
                                                  Qt::AlignVCenter);
@@ -2588,11 +2586,9 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
                     .marginsRemoved(metrics->margins)
                     .marginsRemoved(metrics->padding);
                 const auto *indicator = r.indicator();
-                if (indicator && indicator->visible() && indicator->opacity() > 0) {
-                    const QRect indicatorRect = delegateRect(
-                        indicator, contentRect, Qt::AlignHCenter, Qt::AlignVCenter);
-                    r.drawIndicator(visualRect(opt->direction, contentRect, indicatorRect), p);
-                }
+                const QRect indicatorRect = delegateRect(
+                    indicator, contentRect, Qt::AlignHCenter, Qt::AlignVCenter);
+                r.drawIndicator(visualRect(opt->direction, contentRect, indicatorRect), p);
                 return;
             }
             // MenuItem
