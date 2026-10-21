@@ -544,16 +544,36 @@ void fillUniformArrayFromImage(float* array, const QImage& img, int size)
 /*!
     \qmlproperty url QtQuick.Particles::ImageParticle::sizeTable
 
-    An image whose opacity will be used as a 1D texture to determine size over life.
+    An image whose alpha channel is used as a 1D lookup table to scale the particle's size over
+    its lifetime.
 
-    This property is expected to be removed shortly, in favor of custom easing curves to determine size over life.
+    The image is read from left to right: the left edge corresponds to the start of the
+    particle's life, and the right edge to its end. Only the alpha channel is used. A fully
+    opaque pixel leaves the size unchanged, and a fully transparent pixel scales the particle
+    down to nothing. The image is scaled to 64 samples wide and one pixel high, so a narrow
+    image with a horizontal alpha gradient is sufficient.
+
+    The value from the table multiplies the size that the particle has at that point in its
+    life, as determined by the \l Emitter's \l {Emitter::}{size} and \l {Emitter::}{endSize}.
+
+    \sa opacityTable, colorTable, entryEffect
 */
 /*!
     \qmlproperty url QtQuick.Particles::ImageParticle::opacityTable
 
-    An image whose opacity will be used as a 1D texture to determine size over life.
+    An image whose alpha channel is used as a 1D lookup table to scale the particle's opacity
+    over its lifetime.
 
-    This property is expected to be removed shortly, in favor of custom easing curves to determine opacity over life.
+    The image is read from left to right: the left edge corresponds to the start of the
+    particle's life, and the right edge to its end. Only the alpha channel is used. A fully
+    opaque pixel leaves the opacity unchanged, and a fully transparent pixel makes the particle
+    invisible. The image is scaled to 64 samples wide and one pixel high, so a narrow image
+    with a horizontal alpha gradient is sufficient.
+
+    The value from the table is combined with the particle's \l alpha and with any fading
+    applied by \l entryEffect.
+
+    \sa sizeTable, colorTable, entryEffect
 */
 /*!
     \qmlproperty color QtQuick.Particles::ImageParticle::color
