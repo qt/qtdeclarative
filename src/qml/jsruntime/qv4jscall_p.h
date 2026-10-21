@@ -161,6 +161,14 @@ ReturnedValue convertAndCall(
     Q_ALLOCA_VAR(void *, values, numTypes * sizeof(void *));
 
     for (qsizetype i = 1; i < numTypes; ++i) {
+        const auto failConversion = [&]() {
+            for (qsizetype j = 1; j < i; ++j) {
+                if (types[j].flags() & QMetaType::NeedsDestruction)
+                    types[j].destruct(values[j]);
+            }
+            return Encode::undefined();
+        };
+
         const QMetaType argumentType = types[i];
         if (const qsizetype argumentSize = argumentType.sizeOf()) {
             Q_ALLOCA_VAR(void, argument, argumentSize);
@@ -168,15 +176,18 @@ ReturnedValue convertAndCall(
             if (argumentType.flags() & QMetaType::NeedsConstruction)
                 argumentType.construct(argument);
 
-            if (argIndex >= argc
-                    || !ExecutionEngine::metaTypeFromJS(argv[argIndex], argumentType, argument)) {
-                if (!errorHandler(argumentType, argument, argIndex)) {
-                    for (qsizetype j = 1; j < i; ++j) {
-                        if (types[j].flags() & QMetaType::NeedsDestruction)
-                            types[j].destruct(values[j]);
-                    }
-                    return Encode::undefined();
+            if (argIndex < argc) {
+                if (argumentType == QMetaType::fromType<QVariant>()) {
+                    // When the argument type is QVariant, JS objects are to be passed as
+                    // QJSValue wrapped in QVariant. metaTypeFromJS unwraps them, unfortunately.
+                    *static_cast<QVariant *>(argument) =
+                            ExecutionEngine::toVariant(argv[argIndex], QMetaType{ });
+                } else if (!ExecutionEngine::metaTypeFromJS(argv[argIndex], argumentType, argument)
+                           && !errorHandler(argumentType, argument, argIndex)) {
+                    return failConversion();
                 }
+            } else {
+                return failConversion();
             }
 
             values[i] = argument;
