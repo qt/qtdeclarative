@@ -1147,12 +1147,8 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                         int flags = *reinterpret_cast<int*>(a[3]);
                         if (flags & QQmlPropertyData::RemoveBindingOnAliasWrite) {
                             QQmlData *targetData = QQmlData::get(target);
-                            if (targetData && targetData->hasBindingBit(coreIndex)) {
-                                if (QQmlPropertyPrivate::removeBinding(
-                                            target, encodedIndex, QQmlPropertyPrivate::None)) {
-                                    targetData->clearBindingBit(coreIndex);
-                                }
-                            }
+                            if (targetData && targetData->hasBindingBit(coreIndex))
+                                QQmlPropertyPrivate::removeBinding(target, encodedIndex);
                         }
                     }
                 };

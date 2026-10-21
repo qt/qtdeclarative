@@ -559,6 +559,8 @@ private slots:
 
     void multiTypeResolution();
 
+    void multiValueTypeBinding();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -10597,6 +10599,25 @@ void tst_qqmllanguage::multiTypeResolution()
     std::unique_ptr<QObject> o4(c4.create());
     QVERIFY(o4);
     QCOMPARE(o4->objectName(), "2 2");
+}
+
+void tst_qqmllanguage::multiValueTypeBinding()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("multiValueTypeBinding.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    std::unique_ptr<QObject> object(component.create());
+    QVERIFY(object);
+
+    QObject *case1 = object->property("case1").value<QObject *>();
+    QVERIFY(case1);
+    QCOMPARE(case1->property("width").toInt(), 30);
+    QCOMPARE(case1->property("height").toInt(), 700);
+
+    QObject *case2 = object->property("case2").value<QObject *>();
+    QVERIFY(case2);
+    QCOMPARE(case2->property("width").toInt(), 30);
+    QCOMPARE(case2->property("height").toInt(), 700);
 }
 
 QTEST_MAIN(tst_qqmllanguage)
