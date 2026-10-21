@@ -118,6 +118,8 @@ private slots:
     void loopsChangeWhilePlaying();
     void loopsZeroDoesNotPlay_data();
     void loopsZeroDoesNotPlay();
+    void loopsReload_data();
+    void loopsReload();
 };
 
 void tst_qquickanimatedimage::cleanup()
@@ -1111,6 +1113,36 @@ void tst_qquickanimatedimage::loopsZeroDoesNotPlay()
     QVERIFY(!anim->isPlaying());
     QCOMPARE(finishedSpy.size(), 0);
     QCOMPARE(frameSpy.size(), 0);
+}
+
+void tst_qquickanimatedimage::loopsReload_data()
+{
+    loopsTestData();
+}
+
+void tst_qquickanimatedimage::loopsReload()
+{
+    QFETCH(QString, imageFile);
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    QScopedPointer<QQuickAnimatedImage> anim(createAnimatedImage(component, imageFile));
+    QVERIFY(anim);
+    anim->setLoops(2);
+    QVERIFY(anim->isPlaying());
+
+    // Reload the image in the middle of the first loop. The reloaded
+    // animation starts from the first frame and plays all the loops.
+    QTRY_VERIFY_WITH_TIMEOUT(anim->currentFrame() >= 1, 10000);
+    QSignalSpy finishedSpy(anim.data(), &QQuickAnimatedImage::finished);
+    QSignalSpy frameSpy(anim.data(), &QQuickAnimatedImage::frameChanged);
+    anim->setCache(!anim->cache());
+
+    QTRY_VERIFY_WITH_TIMEOUT(!anim->isPlaying(), 30000);
+    QCOMPARE(finishedSpy.size(), 1);
+    // 3 frames per cycle * 2 loops after reloading.
+    QVERIFY2(frameSpy.size() >= 6,
+             qPrintable(QString("Expected >= 6 frame changes for 2 loops, got %1")
+                                .arg(frameSpy.size())));
 }
 
 QTEST_MAIN(tst_qquickanimatedimage)

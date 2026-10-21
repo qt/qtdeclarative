@@ -635,6 +635,8 @@ void QQuickAnimatedImagePrivate::setMovie(QMovie *m)
     }
 
     movie = m;
+    currentLoop = 0;
+    lastFrameNumber = 0;
     clearCache();
 
     if (movie)
