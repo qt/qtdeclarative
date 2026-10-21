@@ -270,6 +270,8 @@ struct Buffer {
     uint nonDynamicChangeCount;
 };
 
+struct ElementPreparedState;
+
 struct Element {
     Element()
         : boundsComputed(false)
@@ -307,6 +309,7 @@ struct Element {
     QRhiShaderResourceBindings *srb = nullptr;
     QRhiGraphicsPipeline *ps = nullptr;
     QRhiGraphicsPipeline *depthPostPassPs = nullptr;
+    ElementPreparedState *prepared = nullptr;
 
     uint boundsComputed : 1;
     uint boundsOutsideFloatRange : 1;
@@ -669,6 +672,20 @@ struct ShaderManagerShader
     float lastOpacity;
 };
 
+struct ElementPreparedState
+{
+    const QSGMaterialShader *srbShader = nullptr;
+    QRhiBuffer *ubuf = nullptr;
+    QRhiTexture *texture = nullptr;
+    QRhiSampler *sampler = nullptr;
+    uint srbGeneration = 0;
+    bool srbValid = false;
+
+    const ShaderManagerShader *psSms = nullptr;
+    GraphicsState psState;
+    uint psGeneration = 0;
+};
+
 class ShaderManager : public QObject
 {
     Q_OBJECT
@@ -687,6 +704,8 @@ public:
 
     QMultiHash<QList<quint32>, QRhiShaderResourceBindings *> srbPool;
     QList<quint32> srbLayoutDescSerializeWorkspace;
+
+    uint pipelineCacheGeneration = 0;
 
 public Q_SLOTS:
     void invalidated();
@@ -819,6 +838,7 @@ private:
     void uploadMergedElement(Element *e, int vaOffset, char **vertexData, char **zData, char **indexData, void *iBasePtr, int *indexCount);
 
     bool ensurePipelineState(Element *e, const ShaderManager::Shader *sms, bool depthPostPass = false);
+    void updatePipelineGeneration();
     QRhiTexture *dummyTexture();
     bool updateMaterialDynamicData(ShaderManager::Shader *sms, QSGMaterialShader::RenderState &renderState,
                                    QSGMaterial *material, Element *e);
@@ -910,6 +930,11 @@ private:
     QSGMaterialShader *m_currentProgram;
     ShaderManager::Shader *m_currentShader;
     ClipState m_currentClipState;
+
+    uint m_pipelineGeneration = 1;
+    uint m_seenPipelineCacheGeneration = 0;
+    const QRhiRenderPassDescriptor *m_lastRpDesc = nullptr;
+    QList<quint32> m_lastRpDescFormat;
 
     QDataBuffer<char> m_vertexUploadPool;
     QDataBuffer<char> m_indexUploadPool;

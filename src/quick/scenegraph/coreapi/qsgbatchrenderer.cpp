@@ -10,6 +10,7 @@
 
 #include <QtCore/QElapsedTimer>
 #include <QtCore/QtNumeric>
+#include <QtCore/qalgorithms.h>
 
 #include <QtGui/QGuiApplication>
 
@@ -296,6 +297,7 @@ void ShaderManager::invalidated()
 
     qDeleteAll(pipelineCache);
     pipelineCache.clear();
+    ++pipelineCacheGeneration;
 
     qDeleteAll(srbPool);
     srbPool.clear();
@@ -2754,10 +2756,25 @@ bool Renderer::ensurePipelineState(Element *e, const ShaderManager::Shader *sms,
     // for comparison we only rely on the serialized blob in order decide if the
     // render target is compatible with the pipeline.
 
+    ElementPreparedState *prepared = depthPostPass ? nullptr : e->prepared;
+    if (prepared && e->ps && prepared->psGeneration == m_pipelineGeneration
+            && prepared->psSms == sms && prepared->psState == m_gstate)
+    {
+        return true;
+    }
+
     const GraphicsPipelineStateKey k = GraphicsPipelineStateKey::create(m_gstate, sms, renderTarget().rpDesc, e->srb);
 
     // Note: dynamic state (viewport rect, scissor rect, stencil ref, blend
     // constant) is never a part of GraphicsState/QRhiGraphicsPipeline.
+
+    auto remember = [this, prepared, sms] {
+        if (prepared) {
+            prepared->psGeneration = m_pipelineGeneration;
+            prepared->psSms = sms;
+            prepared->psState = m_gstate;
+        }
+    };
 
     // See if there is an existing, matching pipeline state object.
     auto it = m_shaderManager->pipelineCache.constFind(k);
@@ -2766,6 +2783,7 @@ bool Renderer::ensurePipelineState(Element *e, const ShaderManager::Shader *sms,
             e->depthPostPassPs = *it;
         else
             e->ps = *it;
+        remember();
         return true;
     }
 
@@ -2835,7 +2853,31 @@ bool Renderer::ensurePipelineState(Element *e, const ShaderManager::Shader *sms,
         e->depthPostPassPs = ps;
     else
         e->ps = ps;
+    remember();
     return true;
+}
+
+void Renderer::updatePipelineGeneration()
+{
+    // the descriptor may have been recreated at the same address
+    const QRhiRenderPassDescriptor *rpDesc = renderTarget().rpDesc;
+    bool changed = m_seenPipelineCacheGeneration != m_shaderManager->pipelineCacheGeneration;
+    if (rpDesc != m_lastRpDesc) {
+        changed = true;
+        m_lastRpDesc = rpDesc;
+        m_lastRpDescFormat = rpDesc ? rpDesc->serializedFormat() : QList<quint32>();
+    } else if (rpDesc) {
+        const QList<quint32> format = rpDesc->serializedFormat();
+        if (format != m_lastRpDescFormat) {
+            changed = true;
+            m_lastRpDescFormat = format;
+        }
+    }
+    if (changed) {
+        m_seenPipelineCacheGeneration = m_shaderManager->pipelineCacheGeneration;
+        if (++m_pipelineGeneration == 0)
+            m_pipelineGeneration = 1;
+    }
 }
 
 static QRhiSampler *newSampler(QRhi *rhi, const QSGSamplerDescription &desc)
@@ -3037,7 +3079,6 @@ bool Renderer::updateMaterialDynamicData(ShaderManager::Shader *sms,
 
     QSGMaterialShader *shader = sms->materialShader;
     QSGMaterialShaderPrivate *pd = QSGMaterialShaderPrivate::get(shader);
-    QVarLengthArray<QRhiShaderResourceBinding, 8> bindings;
 
     if (pd->ubufBinding >= 0) {
         const quint32 size = quint32(pd->masterUniformData.size());
@@ -3051,17 +3092,12 @@ bool Renderer::updateMaterialDynamicData(ShaderManager::Shader *sms,
         m_current_uniform_data = nullptr;
 
         memcpy(m_uniformData.data() + e->ubufOffset, pd->masterUniformData.constData(), size);
-
-        bindings.append(QRhiShaderResourceBinding::uniformBufferWithDynamicOffset(pd->ubufBinding,
-                                                                                  pd->ubufStages,
-                                                                                  m_uniformBuffer,
-                                                                                  size));
     }
 
-    for (int binding = 0; binding < QSGMaterialShaderPrivate::MAX_SHADER_RESOURCE_BINDINGS; ++binding) {
-        const QRhiShaderResourceBinding::StageFlags stages = pd->combinedImageSamplerBindings[binding];
-        if (!stages)
-            continue;
+    quint32 validSamplerBindings = 0;
+
+    for (quint32 mask = pd->combinedImageSamplerMask; mask; mask &= mask - 1) {
+        const int binding = qCountTrailingZeroBits(mask);
 
         const QVarLengthArray<QSGTexture *, 4> &prevTex(pd->textureBindingTable[binding]);
         QVarLengthArray<QSGTexture *, 4> nextTex = prevTex;
@@ -3092,15 +3128,19 @@ bool Renderer::updateMaterialDynamicData(ShaderManager::Shader *sms,
             // The QSGTexture, and so the sampler parameters, may have changed.
             // The rhiTexture is not relevant here.
             pd->textureBindingTable[binding] = nextTex; // does not own
-            pd->samplerBindingTable[binding].clear();
 
             if (isAnisotropic) // ###
                 qWarning("QSGTexture anisotropy levels are not currently supported");
 
-            QVarLengthArray<QRhiSampler *, 4> samplers;
-
+            auto &descs(pd->samplerDescTable[pd->combinedImageSamplerIndex(binding)]);
+            QVarLengthArray<QRhiSampler *, 4> &samplers(pd->samplerBindingTable[binding]);
+            int n = 0;
             for (QSGTexture *t : nextTex) {
                 const QSGSamplerDescription samplerDesc = QSGSamplerDescription::fromTexture(t);
+                if (n < samplers.size() && descs[n] == samplerDesc) {
+                    ++n;
+                    continue;
+                }
 
                 QRhiSampler *sampler = m_samplers[samplerDesc];
 
@@ -3113,37 +3153,85 @@ bool Renderer::updateMaterialDynamicData(ShaderManager::Shader *sms,
                     }
                     m_samplers[samplerDesc] = sampler;
                 }
-                samplers.append(sampler);
+                if (n >= samplers.size()) {
+                    descs.resize(n + 1);
+                    samplers.resize(n + 1);
+                }
+                descs[n] = samplerDesc;
+                samplers[n] = sampler; // does not own
+                ++n;
             }
-
-            pd->samplerBindingTable[binding] = samplers; // does not own
+            descs.resize(n);
+            samplers.resize(n);
         }
 
-        if (pd->textureBindingTable[binding].size() == pd->samplerBindingTable[binding].size()) {
-
-            QVarLengthArray<QRhiShaderResourceBinding::TextureAndSampler, 4> textureSamplers;
-
-            for (int i = 0; i < pd->textureBindingTable[binding].size(); ++i) {
-
-                QRhiTexture *texture = pd->textureBindingTable[binding].at(i)->rhiTexture();
-
-                // texture may be null if the update above failed for any reason,
-                // or if the QSGTexture chose to return null intentionally. This is
-                // valid and we still need to provide something to the shader.
-                if (!texture)
-                    texture = dummyTexture();
-
-                QRhiSampler *sampler = pd->samplerBindingTable[binding].at(i);
-
-                textureSamplers.append(
-                        QRhiShaderResourceBinding::TextureAndSampler { texture, sampler });
-            }
-
-            if (!textureSamplers.isEmpty())
-                bindings.append(QRhiShaderResourceBinding::sampledTextures(
-                        binding, stages, count, textureSamplers.constData()));
-        }
+        if (pd->textureBindingTable[binding].size() == pd->samplerBindingTable[binding].size())
+            validSamplerBindings |= 1u << binding;
     }
+
+    auto textureAt = [this, pd](int binding, int i) {
+        // texture may be null if the update above failed for any reason,
+        // or if the QSGTexture chose to return null intentionally. This is
+        // valid and we still need to provide something to the shader.
+        QRhiTexture *texture = pd->textureBindingTable[binding].at(i)->rhiTexture();
+        return texture ? texture : dummyTexture();
+    };
+
+    const bool singleTexture = pd->combinedImageSamplerSingle
+            && (validSamplerBindings == pd->combinedImageSamplerMask);
+    QRhiTexture *singleTex = nullptr;
+    QRhiSampler *singleSampler = nullptr;
+    if (singleTexture && validSamplerBindings) {
+        const int binding = qCountTrailingZeroBits(validSamplerBindings);
+        singleTex = textureAt(binding, 0);
+        singleSampler = pd->samplerBindingTable[binding].at(0);
+    }
+    QRhiBuffer *ubuf = pd->ubufBinding >= 0 ? m_uniformBuffer : nullptr;
+    ElementPreparedState *prepared = e->prepared;
+    if (singleTexture && e->srb && prepared && prepared->srbValid
+            && prepared->srbGeneration == m_shaderManager->pipelineCacheGeneration
+            && prepared->srbShader == shader
+            && prepared->ubuf == ubuf
+            && prepared->texture == singleTex
+            && prepared->sampler == singleSampler)
+    {
+        return true;
+    }
+
+    QVarLengthArray<QRhiShaderResourceBinding, 8> bindings;
+
+    if (pd->ubufBinding >= 0) {
+        bindings.append(QRhiShaderResourceBinding::uniformBufferWithDynamicOffset(pd->ubufBinding,
+                                                                                  pd->ubufStages,
+                                                                                  m_uniformBuffer,
+                                                                                  pd->masterUniformData.size()));
+    }
+
+    for (quint32 mask = validSamplerBindings; mask; mask &= mask - 1) {
+        const int binding = qCountTrailingZeroBits(mask);
+        const int count = pd->combinedImageSamplerCount[binding];
+        QVarLengthArray<QRhiShaderResourceBinding::TextureAndSampler, 4> textureSamplers;
+
+        for (int i = 0; i < pd->textureBindingTable[binding].size(); ++i) {
+            QRhiSampler *sampler = pd->samplerBindingTable[binding].at(i);
+            textureSamplers.append(
+                    QRhiShaderResourceBinding::TextureAndSampler { textureAt(binding, i), sampler });
+        }
+
+        if (!textureSamplers.isEmpty())
+            bindings.append(QRhiShaderResourceBinding::sampledTextures(
+                    binding, pd->combinedImageSamplerBindings[binding], count,
+                    textureSamplers.constData()));
+    }
+
+    if (!prepared)
+        prepared = e->prepared = new ElementPreparedState;
+    prepared->srbValid = singleTexture;
+    prepared->srbGeneration = m_shaderManager->pipelineCacheGeneration;
+    prepared->srbShader = shader;
+    prepared->ubuf = ubuf;
+    prepared->texture = singleTex;
+    prepared->sampler = singleSampler;
 
 #ifndef QT_NO_DEBUG
     if (bindings.isEmpty())
@@ -3165,6 +3253,7 @@ bool Renderer::updateMaterialDynamicData(ShaderManager::Shader *sms,
         layoutDesc.clear();
         QRhiShaderResourceBinding::serializeLayoutDescription(bindings.cbegin(), bindings.cend(), std::back_inserter(layoutDesc));
         e->srb = m_shaderManager->srbPool.take(layoutDesc);
+        prepared->psGeneration = 0;
         if (e->srb) {
             // Here we know layout compatibility is satisfied, but do not spend time on full
             // comparison. The chance of getting an srb that refers to the same resources
@@ -3217,6 +3306,7 @@ bool Renderer::updateMaterialDynamicData(ShaderManager::Shader *sms,
     }
         break;
     case SrbAction::Rebake:
+        prepared->psGeneration = 0;
         e->srb->setBindings(bindings.cbegin(), bindings.cend());
         if (!e->srb->create())
             qWarning("Failed to build srb");
@@ -3540,6 +3630,11 @@ bool Renderer::prepareRenderUnmergedBatch(Batch *batch, PreparedRenderBatch *ren
             }
         } else {
             e->ps = ps;
+            if (ElementPreparedState *prepared = e->prepared) {
+                prepared->psGeneration = m_pipelineGeneration;
+                prepared->psSms = sms;
+                prepared->psState = m_gstate;
+            }
             if (m_renderMode == QSGRendererInterface::RenderMode3D)
                 e->depthPostPassPs = depthPostPassPs;
         }
@@ -3667,6 +3762,8 @@ void Renderer::releaseElement(Element *e, bool inDestructor)
             }
             e->srb = nullptr;
         }
+        delete e->prepared;
+        e->prepared = nullptr;
         m_elementAllocator.release(e);
     }
 }
@@ -3761,6 +3858,7 @@ void Renderer::prepareRenderPass(RenderPassContext *ctx)
     }
 
     m_resourceUpdates = m_rhi->nextResourceUpdateBatch();
+    updatePipelineGeneration();
 
     if (m_rebuild & (BuildRenderLists | BuildRenderListsForTaggedRoots)) {
         bool complete = (m_rebuild & BuildRenderLists) != 0;

@@ -6,6 +6,7 @@
 #include "qsgrenderer_p.h"
 #include "qsgmaterialshader_p.h"
 #include <QtCore/QFile>
+#include <QtCore/qalgorithms.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -180,6 +181,8 @@ void QSGMaterialShaderPrivate::clearCachedRendererData()
         textureBindingTable[i].clear();
     for (int i = 0; i < MAX_SHADER_RESOURCE_BINDINGS; ++i)
         samplerBindingTable[i].clear();
+    for (auto &descs : samplerDescTable)
+        descs.clear();
 }
 
 static inline QRhiShaderResourceBinding::StageFlags toSrbStage(QShader::Stage stage)
@@ -203,6 +206,8 @@ void QSGMaterialShaderPrivate::prepare(QShader::Variant vertexShaderVariant)
     ubufStages = { };
     memset(static_cast<void *>(combinedImageSamplerBindings), 0, sizeof(combinedImageSamplerBindings));
     memset(static_cast<void *>(combinedImageSamplerCount), 0, sizeof(combinedImageSamplerCount));
+    combinedImageSamplerMask = 0;
+    combinedImageSamplerSingle = true;
     vertexShader = fragmentShader = nullptr;
     masterUniformData.clear();
 
@@ -294,6 +299,7 @@ void QSGMaterialShaderPrivate::prepare(QShader::Variant vertexShaderVariant)
                     count *= dim;
 
                 combinedImageSamplerCount[var.binding] = count;
+                combinedImageSamplerMask |= 1u << var.binding;
             } else {
                 qWarning("Encountered invalid combined image sampler (%s) binding %d",
                          var.name.constData(), var.binding);
@@ -305,6 +311,11 @@ void QSGMaterialShaderPrivate::prepare(QShader::Variant vertexShaderVariant)
         else if (it.key() == QShader::FragmentStage)
             fragmentShader = &it.value();
     }
+
+    samplerDescTable.resize(qPopulationCount(combinedImageSamplerMask));
+    combinedImageSamplerSingle = samplerDescTable.size() <= 1;
+    if (combinedImageSamplerMask)
+        combinedImageSamplerSingle &= combinedImageSamplerCount[qCountTrailingZeroBits(combinedImageSamplerMask)] == 1;
 
     if (vertexShader && vertexShaderVariant == QShader::BatchableVertexShader && vertexShader->qt_order_attrib_location == -1)
         qWarning("No rewriter-inserted attribute found, this should not happen.");

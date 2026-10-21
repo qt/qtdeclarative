@@ -21,6 +21,8 @@
 #include "qsgmaterial.h"
 #include <rhi/qrhi.h>
 #include <rhi/qshader.h>
+#include <private/qsgtexture_p.h>
+#include <QtCore/qalgorithms.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -63,6 +65,8 @@ public:
     QRhiShaderResourceBinding::StageFlags ubufStages;
     QRhiShaderResourceBinding::StageFlags combinedImageSamplerBindings[MAX_SHADER_RESOURCE_BINDINGS];
     int combinedImageSamplerCount[MAX_SHADER_RESOURCE_BINDINGS];
+    quint32 combinedImageSamplerMask = 0;
+    bool combinedImageSamplerSingle = true;
 
     ShaderStageData *vertexShader = nullptr;
     ShaderStageData *fragmentShader = nullptr;
@@ -71,6 +75,13 @@ public:
 
     QVarLengthArray<QSGTexture *, 4> textureBindingTable[MAX_SHADER_RESOURCE_BINDINGS];
     QVarLengthArray<QRhiSampler *, 4> samplerBindingTable[MAX_SHADER_RESOURCE_BINDINGS];
+    // one entry per set bit in combinedImageSamplerMask
+    QList<QVarLengthArray<QSGSamplerDescription, 1>> samplerDescTable;
+
+    int combinedImageSamplerIndex(int binding) const
+    {
+        return qPopulationCount(combinedImageSamplerMask & ((1u << binding) - 1));
+    }
 };
 
 Q_DECLARE_TYPEINFO(QSGMaterialShaderPrivate::ShaderStageData, Q_RELOCATABLE_TYPE);
