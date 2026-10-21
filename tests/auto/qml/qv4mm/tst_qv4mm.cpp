@@ -101,6 +101,8 @@ private slots:
     void destroyOnEngineShutdown();
     void generatorFrameMarking_data();
     void generatorFrameMarking();
+    void defaultDerivedConstructorDuringGc_data();
+    void defaultDerivedConstructorDuringGc();
 };
 
 tst_qv4mm::tst_qv4mm()
@@ -2151,6 +2153,45 @@ void tst_qv4mm::jittedSetLookupDoesNotLeaveGarbageOnJSStack()
     for (int i = 0; i < 100; ++i)
         QMetaObject::invokeMethod(root.get(), "update");
     // should not crassh
+}
+
+void tst_qv4mm::defaultDerivedConstructorDuringGc_data()
+{
+    QTest::addColumn<QString>("source");
+    QTest::addRow("base finishes gc") << uR"(
+        class Base { constructor() { __finishGc(); } }
+        class Derived extends Base {}
+        new Derived();
+    )"_s;
+    QTest::addRow("two levels") << uR"(
+        class Base { constructor() { __finishGc(); } }
+        class Middle extends Base {}
+        class Derived extends Middle {}
+        new Derived();
+    )"_s;
+    QTest::addRow("inside generator") << uR"(
+        class Base { constructor() { __finishGc(); } }
+        class Derived extends Base {}
+        function* g() { const d = new Derived(); yield d; }
+        g().next();
+    )"_s;
+}
+
+void tst_qv4mm::defaultDerivedConstructorDuringGc()
+{
+    QFETCH(QString, source);
+
+    QJSEngine jsEngine;
+    QV4::ExecutionEngine *v4 = jsEngine.handle();
+    v4->globalObject->defineDefaultProperty(u"__finishGc"_s, method_finish_gc);
+
+    auto *sm = v4->memoryManager->gcStateMachine.get();
+    sm->reset();
+    v4->memoryManager->gcBlocked = QV4::MemoryManager::Unblocked;
+    runGcUntil(sm, QV4::GCState::MarkReady);
+
+    const QJSValue result = jsEngine.evaluate(source);
+    QVERIFY2(!result.isError(), qPrintable(result.toString()));
 }
 
 QTEST_MAIN(tst_qv4mm)
