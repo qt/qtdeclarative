@@ -2870,7 +2870,7 @@ QRect QStyleKitStyle::subElementRect(SubElement r, const QStyleOption *opt,
         const auto &metrics = *resolved.metrics;
         QRect rect = opt->rect.marginsRemoved(metrics.margins);
         const auto *indicator = resolved.indicator();
-        if (!indicator || !indicator->visible() || indicator->opacity() == 0)
+        if (!indicator || !indicator->visible())
             return rect;
 
         return visualRect(opt->direction, rect,
@@ -2885,7 +2885,7 @@ QRect QStyleKitStyle::subElementRect(SubElement r, const QStyleOption *opt,
         const auto &metrics = *resolved.metrics;
         QRect rect = opt->rect.marginsRemoved(metrics.margins);
         const auto *indicator = resolved.indicator();
-        if (!indicator || !indicator->visible() || indicator->opacity() == 0)
+        if (!indicator || !indicator->visible())
             return rect;
 
         return visualRect(opt->direction, rect,
@@ -3034,7 +3034,7 @@ QRect QStyleKitStyle::subElementRect(SubElement r, const QStyleOption *opt,
         const auto &metrics = *resolved.metrics;
         QRect rect = opt->rect.marginsRemoved(metrics.margins);
         const auto *indicator = resolved.indicator();
-        if (!indicator || !indicator->visible() || indicator->opacity() == 0)
+        if (!indicator || !indicator->visible())
             return rect;
 
         return visualRect(opt->direction, rect,
@@ -3050,7 +3050,7 @@ QRect QStyleKitStyle::subElementRect(SubElement r, const QStyleOption *opt,
             const auto *foreground = resolved.indicator()
                 ? resolved.indicator()->foreground()
                 : nullptr;
-            if (!foreground || !foreground->visible() || foreground->opacity() == 0)
+            if (!foreground || !foreground->visible())
                 return QRect();
 
             QRect indicatorRect = subElementRect(SE_ProgressBarGroove, opt, widget);
@@ -3197,7 +3197,7 @@ void QStyleKitStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCom
 
                 // track
                 const auto *foreground = indicator ? indicator->foreground() : nullptr;
-                if (foreground && foreground->visible() && foreground->opacity() > 0) {
+                if (foreground && foreground->visible()) {
                     const bool isHorizontal = slider->orientation == Qt::Horizontal;
                     const qreal availableW = grooveRect.width()
                         - foreground->leftMargin() - foreground->rightMargin();
@@ -3536,7 +3536,7 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
             }
             case SC_SliderHandle: {
                 const auto *handle = resolved.handle();
-                if (!handle || !handle->visible() || handle->opacity() == 0)
+                if (!handle || !handle->visible())
                     return contentsRect;
 
                 const qreal handleW = resolvedWidth(
@@ -3629,7 +3629,7 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
             case SC_ComboBoxArrow: {
                 QRect contentsRect = frameRect.marginsRemoved(metrics.padding);
                 const auto *indicator = r.indicator();
-                if (!indicator || !indicator->visible() || indicator->opacity() == 0)
+                if (!indicator || !indicator->visible())
                     return QRect();
 
                 return visualRect(opt->direction, opt->rect,
@@ -3666,10 +3666,8 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
                 const int spacing = metrics.spacing;
                 const auto *upIndicator = r.indicator() ? r.indicator()->first() : nullptr;
                 const auto *downIndicator = r.indicator() ? r.indicator()->second() : nullptr;
-                const bool hasUpIndicator = upIndicator
-                    && upIndicator->visible() && upIndicator->opacity() > 0;
-                const bool hasDownIndicator = downIndicator
-                    && downIndicator->visible() && downIndicator->opacity() > 0;
+                const bool hasUpIndicator = upIndicator && upIndicator->visible();
+                const bool hasDownIndicator = downIndicator && downIndicator->visible();
                 const uint upAlign = hasUpIndicator
                     ? resolvedAlignment(upIndicator->alignment(), Qt::AlignLeft, Qt::AlignVCenter)
                     : uint(Qt::AlignLeft | Qt::AlignVCenter);
@@ -3701,7 +3699,7 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
             }
             case SC_SpinBoxUp: {
                 const auto *upIndicator = r.indicator() ? r.indicator()->first() : nullptr;
-                if (!upIndicator || !upIndicator->visible() || upIndicator->opacity() == 0)
+                if (!upIndicator || !upIndicator->visible())
                     return contentsRect;
 
                 return visualRect(opt->direction, opt->rect,
@@ -3710,7 +3708,7 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
             }
             case SC_SpinBoxDown: {
                 const auto *downIndicator = r.indicator() ? r.indicator()->second() : nullptr;
-                if (!downIndicator || !downIndicator->visible() || downIndicator->opacity() == 0)
+                if (!downIndicator || !downIndicator->visible())
                     return frameRect;
 
                 return visualRect(opt->direction, opt->rect,
@@ -3787,7 +3785,7 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
                 return visualRect(opt->direction, opt->rect, grooveRect.toAlignedRect());
             case SC_ScrollBarSlider: {
                 const auto *indicator = resolved.indicator();
-                if (!indicator || !indicator->visible() || indicator->opacity() == 0)
+                if (!indicator || !indicator->visible())
                     return QRect();
                 const QRectF contentsRect = grooveRect.marginsRemoved(metrics.padding);
 
@@ -3849,8 +3847,7 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
                     & (QStyleOptionToolButton::MenuButtonPopup | QStyleOptionToolButton::HasMenu))
                     != 0;
                 const auto *indicator = resolved.indicator();
-                if (hasMenuButton && indicator && indicator->visible()
-                    && indicator->opacity() > 0) {
+                if (hasMenuButton && indicator && indicator->visible()) {
                     const QRect menuRect = subControlRect(CC_ToolButton, opt, SC_ToolButtonMenu, w);
                     const int spacing = metrics.spacing;
                     const uint indicatorAlign = resolvedAlignment(indicator->alignment(),
@@ -3872,7 +3869,7 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
                 }
 
                 const auto *indicator = resolved.indicator();
-                if (!indicator || !indicator->visible() || indicator->opacity() == 0)
+                if (!indicator || !indicator->visible())
                     return QRect();
 
                 return visualRect(opt->direction, opt->rect,
