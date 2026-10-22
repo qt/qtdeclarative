@@ -2533,38 +2533,47 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
                 pmSize = pm.size() / pm.devicePixelRatio();
             }
 
+            const auto *textProps = r.text();
+            const auto alignment = Qt::Alignment(resolvedAlignment(
+                textProps ? textProps->alignment() : 0u, Qt::AlignHCenter, Qt::AlignVCenter));
+
             if (tool->toolButtonStyle == Qt::ToolButtonIconOnly || tool->text.isEmpty()) {
-                if (!pm.isNull()) {
-                    p->drawPixmap(visualRect(tool->direction, rect,
-                                             QRect(rect.x() + (rect.width() - pmSize.width()) / 2,
-                                                   rect.y() + (rect.height() - pmSize.height()) / 2,
-                                                   pmSize.width(), pmSize.height())),
-                                  pm);
-                }
+                if (!pm.isNull())
+                    p->drawPixmap(alignedRect(tool->direction, alignment, pmSize, rect), pm);
                 return;
             }
 
+            // Align icon + text as one group, like IconLabel
+            const QSize textSize = QFontMetrics(r.font().resolve(p->font()))
+                .size(textFlags, tool->text);
+
             if (tool->toolButtonStyle == Qt::ToolButtonTextUnderIcon) {
                 if (!pm.isNull()) {
-                    const QRect pr(rect.x() + (rect.width() - pmSize.width()) / 2, rect.y(),
-                                   pmSize.width(), pmSize.height());
-                    p->drawPixmap(visualRect(tool->direction, rect, pr), pm);
-                    QRect tr = rect;
-                    tr.setTop(rect.y() + pmSize.height() + metrics->spacing);
-                    r.drawText(visualRect(tool->direction, rect, tr), tool->text, textFlags, p,
-                               Qt::AlignCenter);
+                    const QSize labelSize(qMax(pmSize.width(), textSize.width()),
+                                          pmSize.height() + metrics->spacing + textSize.height());
+                    const QRect labelRect = alignedRect(tool->direction, alignment, labelSize,
+                                                        rect);
+                    p->drawPixmap(alignedRect(tool->direction, Qt::AlignHCenter | Qt::AlignTop,
+                                              pmSize, labelRect),
+                                  pm);
+                    r.drawText(alignedRect(tool->direction, Qt::AlignHCenter | Qt::AlignBottom,
+                                           textSize, labelRect),
+                               tool->text, textFlags, p, Qt::AlignCenter);
                 } else {
                     r.drawText(rect, tool->text, textFlags, p, Qt::AlignCenter);
                 }
             } else {
                 if (!pm.isNull()) {
-                    const QRect pr(rect.x(), rect.y() + (rect.height() - pmSize.height()) / 2,
-                                   pmSize.width(), pmSize.height());
-                    p->drawPixmap(visualRect(tool->direction, rect, pr), pm);
-                    QRect tr = rect;
-                    tr.setLeft(rect.x() + pmSize.width() + metrics->spacing);
-                    r.drawText(visualRect(tool->direction, rect, tr), tool->text, textFlags, p,
-                               Qt::AlignLeft | Qt::AlignVCenter);
+                    const QSize labelSize(pmSize.width() + metrics->spacing + textSize.width(),
+                                          qMax(pmSize.height(), textSize.height()));
+                    const QRect labelRect = alignedRect(tool->direction, alignment, labelSize,
+                                                        rect);
+                    p->drawPixmap(alignedRect(tool->direction, Qt::AlignLeft | Qt::AlignVCenter,
+                                              pmSize, labelRect),
+                                  pm);
+                    r.drawText(alignedRect(tool->direction, Qt::AlignRight | Qt::AlignVCenter,
+                                           textSize, labelRect),
+                               tool->text, textFlags, p, Qt::AlignLeft | Qt::AlignVCenter);
                 } else {
                     r.drawText(rect, tool->text, textFlags, p, Qt::AlignLeft | Qt::AlignVCenter);
                 }
@@ -2746,7 +2755,7 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
             const QRect backgroundRect = opt->rect.marginsRemoved(m.margins);
             r.drawBackground(backgroundRect, p);
 
-            const QRect contentRect = backgroundRect.marginsRemoved(m.padding);
+            const QRect contentRect = backgroundRect.marginsRemoved(m.padding + m.textPadding);
             uint textFlags = Qt::TextShowMnemonic;
             if (!styleHint(SH_UnderlineShortcut, opt, w))
                 textFlags |= Qt::TextHideMnemonic;
@@ -2761,14 +2770,23 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
                 const QPixmap pm = tab->icon.pixmap(tab->iconSize, p->device()->devicePixelRatio(),
                                                     mode, iconState);
                 const QSize pmSize = pm.size() / pm.devicePixelRatio();
-                const QRect pr(contentRect.x(),
-                               contentRect.y() + (contentRect.height() - pmSize.height()) / 2,
-                               pmSize.width(), pmSize.height());
-                p->drawPixmap(visualRect(tab->direction, contentRect, pr), pm);
-                QRect tr = contentRect;
-                tr.setLeft(contentRect.x() + pmSize.width() + m.spacing);
-                r.drawText(visualRect(tab->direction, contentRect, tr), tab->text, textFlags, p,
-                           Qt::AlignCenter);
+                // Align icon + text as one group, like IconLabel
+                const auto *textProps = r.text();
+                const auto alignment = Qt::Alignment(resolvedAlignment(
+                    textProps ? textProps->alignment() : 0u, Qt::AlignHCenter, Qt::AlignVCenter));
+                const QSize textSize = QFontMetrics(r.font().resolve(p->font()))
+                    .size(textFlags, tab->text);
+                const int spacing = tab->text.isEmpty() ? 0 : m.spacing;
+                const QSize labelSize(pmSize.width() + spacing + textSize.width(),
+                                      qMax(pmSize.height(), textSize.height()));
+                const QRect labelRect = alignedRect(tab->direction, alignment, labelSize,
+                                                    contentRect);
+                p->drawPixmap(alignedRect(tab->direction, Qt::AlignLeft | Qt::AlignVCenter,
+                                          pmSize, labelRect),
+                              pm);
+                r.drawText(alignedRect(tab->direction, Qt::AlignRight | Qt::AlignVCenter,
+                                       textSize, labelRect),
+                           tab->text, textFlags, p, Qt::AlignCenter);
             } else {
                 r.drawText(contentRect, tab->text, textFlags, p, Qt::AlignCenter);
             }
