@@ -4467,7 +4467,16 @@ function(_qt_internal_qml_type_registration target)
     # The consequence is that the ${target}_qmllint target will now first build ${effective_target}
     # when using the Xcode generator (mostly only relevant for projects using Qt for iOS).
     # See QTBUG-95763.
-    if(CMAKE_GENERATOR STREQUAL "Xcode")
+    #
+    # Visual Studio and Makefile generators need the same treatment, otherwise the commands
+    # (moc --collect-json, automoc json extraction, cmake_autogen) of
+    # ${target}_qmltyperegistration and ${effective_target} might run in parallel and fail
+    # at build time.
+    # Ninja doesn't need this, because it has one build edge per output.
+    # See QTBUG-151727.
+    if(CMAKE_GENERATOR STREQUAL "Xcode"
+            OR CMAKE_GENERATOR MATCHES "^Visual Studio"
+            OR CMAKE_GENERATOR MATCHES "Makefiles")
         add_dependencies(${target}_qmltyperegistration ${effective_target})
     endif()
 
