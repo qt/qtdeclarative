@@ -2197,6 +2197,14 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
             if (!styleHint(SH_UnderlineShortcut, opt, w))
                 textFlags |= Qt::TextHideMnemonic;
 
+            if (btn->features & QStyleOptionButton::HasMenu) {
+                int indicatorSize = pixelMetric(PM_MenuButtonIndicator, btn, w);
+                if (btn->direction == Qt::LeftToRight)
+                    textRect = textRect.adjusted(0, 0, -indicatorSize, 0);
+                else
+                    textRect = textRect.adjusted(indicatorSize, 0, 0, 0);
+            }
+
             // icon
             const QIcon icon = btn->icon;
             if (!icon.isNull()) {
@@ -2215,13 +2223,11 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
                 int pixmapHeight = pixmap.height() / pixmap.devicePixelRatio();
                 int labelWidth = pixmapWidth;
                 int iconSpacing = metrics->spacing;
-                int textWidth = btn->fontMetrics
+                int textWidth = QFontMetrics(r.font().resolve(p->font()))
                     .boundingRect(opt->rect, iconTextFlags, btn->text)
                     .width();
-                if (!btn->text.isEmpty()) {
-                    labelWidth += (textWidth
-                        + iconSpacing + textProps->leftPadding() + textProps->rightPadding());
-                }
+                if (!btn->text.isEmpty())
+                    labelWidth += textWidth + iconSpacing;
 
                 QRect iconRect;
                 if (iconTextFlags & Qt::AlignLeft) {
@@ -2239,24 +2245,18 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
                 }
                 iconRect = visualRect(btn->direction, textRect, iconRect);
 
-                // After placing the icon, left-align the text relative to it
-                textFlags &= ~Qt::AlignHorizontal_Mask;
-                textFlags |= Qt::AlignLeft;
-                if (btn->direction == Qt::RightToLeft)
+                // After placing the icon, fit the text rect to the text so it follows the icon
+                if (btn->direction == Qt::RightToLeft) {
                     textRect.setRight(iconRect.left() - iconSpacing);
-                else
+                    textRect.setLeft(textRect.right() - textWidth + 1);
+                } else {
                     textRect.setLeft(iconRect.left() + iconRect.width() + iconSpacing);
+                    textRect.setWidth(textWidth);
+                }
 
                 p->drawPixmap(iconRect, pixmap);
             }
 
-            if (btn->features & QStyleOptionButton::HasMenu) {
-                int indicatorSize = pixelMetric(PM_MenuButtonIndicator, btn, w);
-                if (btn->direction == Qt::LeftToRight)
-                    textRect = textRect.adjusted(0, 0, -indicatorSize, 0);
-                else
-                    textRect = textRect.adjusted(indicatorSize, 0, 0, 0);
-            }
             r.drawText(textRect, btn->text, textFlags, p);
             return;
         }
@@ -2309,6 +2309,7 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
             if (!styleHint(SH_UnderlineShortcut, opt, w))
                 textFlags |= Qt::TextHideMnemonic;
             r.drawText(opt->rect, btn->text, textFlags, p);
+            // TODO: Draw icon
             return;
         }
         break;
@@ -2326,6 +2327,7 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
             if (!styleHint(SH_UnderlineShortcut, opt, w))
                 textFlags |= Qt::TextHideMnemonic;
             r.drawText(textRect, comboBox->currentText, textFlags, p);
+            // TODO: Draw icon
             return;
         }
         break;
@@ -2727,6 +2729,7 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
             if (!styleHint(SH_UnderlineShortcut, opt, w))
                 textFlags |= Qt::TextHideMnemonic;
             r.drawText(textRect, menuItem->text, textFlags, p);
+            // TODO: Draw icon
             return;
         }
         break;
