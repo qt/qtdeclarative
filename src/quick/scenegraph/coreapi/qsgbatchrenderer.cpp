@@ -1086,6 +1086,7 @@ void Renderer::unmap(Buffer *buffer, bool isIndexBuf)
             for (qsizetype i = 0; i < bufferPool->size(); ++i) {
                 QRhiBuffer *testBuffer = bufferPool->at(i);
                 if (!buffer->buf
+                    || (testBuffer->size() >= expectedSize && buffer->buf->size() < expectedSize)
                     || (testBuffer->size() >= expectedSize && testBuffer->size() < buffer->buf->size())
                     || (testBuffer->size() < expectedSize && testBuffer->size() > buffer->buf->size())) {
                     foundBufferIndex = i;
