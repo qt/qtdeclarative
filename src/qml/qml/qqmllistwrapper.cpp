@@ -276,7 +276,7 @@ bool QmlListWrapper::virtualPut(Managed *m, PropertyKey id, const Value &value, 
             if (!prop->append)
                 return false;
 
-            for (uint times = uint(count); times < index; ++times)
+            for (uint times = uint(count); times <= index; ++times)
                 prop->append(prop, nullptr);
         }
 

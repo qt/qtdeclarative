@@ -1166,6 +1166,8 @@ void tst_qqmllistreference::listWrapperIncreaseLengthWhenWritingOutOfBoundsArray
     QVERIFY(!root.isNull());
 
     QCOMPARE(root->property("actualLength").toInt(), root->property("expectedLength").toInt());
+    QCOMPARE(root->property("actualLengthStates").toInt(),
+             root->property("expectedLength").toInt());
 }
 
 // A QmlListWrapper stored in a var can outlive the object owning the list.
