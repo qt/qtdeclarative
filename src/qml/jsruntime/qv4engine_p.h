@@ -696,6 +696,8 @@ public:
     QV4::ReturnedValue fromVariant(const QVariant &);
     QV4::ReturnedValue fromVariant(
             const QVariant &variant, Heap::Object *parent, int property, uint flags);
+    static bool isUndefinedVariant(const QVariant &variant);
+    static bool isEquivalentToUndefinedData(QMetaType metaType, const void *data);
 
     static QVariantMap variantMapFromJS(const QV4::Object *o);
     static QVariantHash variantHashFromJS(const QV4::Object *o);

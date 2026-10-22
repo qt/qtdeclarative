@@ -2026,6 +2026,38 @@ ReturnedValue ExecutionEngine::fromVariant(
     return fromData(variant.metaType(), variant.constData(), parent, property, flags);
 }
 
+// Returns true if fromVariant() would produce undefined for the given variant.
+bool ExecutionEngine::isUndefinedVariant(const QVariant &variant)
+{
+    const QMetaType metaType = variant.metaType();
+    return isEquivalentToUndefinedData(metaType, variant.constData());
+}
+
+// Assumes that data points to data of type metaType
+// Returns true if it would convert to undefined in QML
+bool ExecutionEngine::isEquivalentToUndefinedData(QMetaType metaType, const void *data)
+{
+    switch (metaType.id()) {
+    case QMetaType::UnknownType:
+    case QMetaType::Void:
+        return true;
+    case QMetaType::QJsonValue:
+        return static_cast<const QJsonValue *>(data)->isUndefined();
+    default:
+        break;
+    }
+
+    if (metaType == QMetaType::fromType<QJSValue>())
+        return static_cast<const QJSValue *>(data)->isUndefined();
+    if (metaType == QMetaType::fromType<QJSPrimitiveValue>()) {
+        return static_cast<const QJSPrimitiveValue *>(data)->type()
+        == QJSPrimitiveValue::Undefined;
+    }
+    if (metaType == QMetaType::fromType<QJSManagedValue>())
+        return static_cast<const QJSManagedValue *>(data)->isUndefined();
+    return false;
+}
+
 QVariantMap ExecutionEngine::variantMapFromJS(const Object *o)
 {
     Q_ASSERT(o);
