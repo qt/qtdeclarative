@@ -3253,8 +3253,9 @@ void QStyleKitStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCom
                 p->translate(backgroundRect.center());
                 p->rotate(dialAngle(dial));
                 p->translate(dialHandleOffset(backgroundRect, handle));
-                drawStyledItemRect(handle, QRectF(-handle->width() / 2, -handle->height() / 2,
-                                                     handle->width(), handle->height()), p);
+                r.drawHandle(QRectF(-handle->width() / 2, -handle->height() / 2, handle->width(),
+                                    handle->height()),
+                             p);
             }
             return;
         }
@@ -3333,6 +3334,10 @@ void QStyleKitStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCom
     case CC_GroupBox:
         if (const QStyleOptionGroupBox *groupBox =
                 qstyleoption_cast<const QStyleOptionGroupBox *>(opt)) {
+            // FIXME: Resolve only after querying the sub-control rects,
+            // as these layout queries can invalidate r.metrics
+            const QRect frameRect = subControlRect(CC_GroupBox, opt, SC_GroupBoxFrame, w);
+            const QRect titleRect = subControlRect(CC_GroupBox, opt, SC_GroupBoxLabel, w);
             const auto r = d->resolve(w, QQStyleKitReader::ControlType::GroupBox, groupBox->state);
             if (!r.isValid())
                 break;
@@ -3341,18 +3346,14 @@ void QStyleKitStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCom
             if (groupBox->subControls & SC_GroupBoxFrame) {
                 QStyleOptionFrame frameOpt;
                 frameOpt.QStyleOption::operator=(*groupBox);
-                frameOpt.rect = subControlRect(CC_GroupBox, opt, SC_GroupBoxFrame, w);
+                frameOpt.rect = frameRect;
                 drawPrimitive(PE_FrameGroupBox, &frameOpt, p, w);
             }
 
             // title
             if (groupBox->subControls & SC_GroupBoxLabel && !groupBox->text.isEmpty()) {
-                const auto *textProps = r.text();
-                const QFont textFont = r.font();
-                QRect titleRect = subControlRect(CC_GroupBox, opt, SC_GroupBoxLabel, w);
-                drawControlText(textProps, textFont,
-                                   titleRect.marginsRemoved(r.metrics->textPadding), groupBox->text,
-                                   Qt::TextShowMnemonic, p, Qt::AlignLeft | Qt::AlignVCenter);
+                r.drawText(titleRect.marginsRemoved(r.metrics->textPadding), groupBox->text,
+                           Qt::TextShowMnemonic, p, Qt::AlignLeft | Qt::AlignVCenter);
             }
             // don't draw checkmark as the Controls style doesn't draw it
             // and StyleKit doesn't provide a way to style it
