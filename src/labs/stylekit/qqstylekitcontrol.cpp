@@ -9,6 +9,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype ControlStyle
+    \nativetype QQStyleKitControl
     \inqmlmodule Qt.labs.StyleKit
     \inherits ControlStateStyle
     \brief Defines the style for a control in the \c normal state.

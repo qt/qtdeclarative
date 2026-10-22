@@ -9,6 +9,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype StylableControls
+    \nativetype QQStyleKitControls
     \inqmlmodule Qt.labs.StyleKit
     \brief Abstract base type containing the control types that can be styled.
 

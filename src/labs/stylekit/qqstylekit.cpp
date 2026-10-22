@@ -15,6 +15,7 @@ bool QQStyleKitAttached::s_transitionsEnabled = true;
 
 /*!
     \qmltype StyleKit
+    \nativetype QQStyleKit
     \inqmlmodule Qt.labs.StyleKit
     \brief A singleton for setting and accessing the current style.
 

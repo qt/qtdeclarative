@@ -12,6 +12,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype ControlStyleProperties
+    \nativetype QQStyleKitControlProperties
     \inqmlmodule Qt.labs.StyleKit
     \brief Defines the stylable properties for a control.
 
@@ -163,6 +164,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype DelegateStyle
+    \nativetype QQStyleKitDelegateProperties
     \inqmlmodule Qt.labs.StyleKit
     \brief Defines the visual appearance of an element within a control.
 
@@ -519,6 +521,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype ImageStyle
+    \nativetype QQStyleKitImageProperties
     \inqmlmodule Qt.labs.StyleKit
     \brief Defines the image style for a delegate.
 
@@ -557,6 +560,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype BorderStyle
+    \nativetype QQStyleKitBorderProperties
     \inqmlmodule Qt.labs.StyleKit
     \brief Defines the border style for a delegate.
 
@@ -586,6 +590,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype ShadowStyle
+    \nativetype QQStyleKitShadowProperties
     \inqmlmodule Qt.labs.StyleKit
     \brief Defines the drop shadow style for a delegate.
 
@@ -676,6 +681,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype HandleStyle
+    \nativetype QQStyleKitHandleProperties
     \inqmlmodule Qt.labs.StyleKit
     \inherits DelegateStyle
     \brief Defines the handle style for controls such as \l [QtQuickControls]{Switch},
@@ -716,6 +722,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype SubIndicatorStyle
+    \nativetype QQStyleKitIndicatorProperties
     \inqmlmodule Qt.labs.StyleKit
     \inherits DelegateStyle
     \brief Defines the style for a sub-indicator delegate.
@@ -748,6 +755,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype IndicatorStyle
+    \nativetype QQStyleKitIndicatorWithSubTypes
     \inqmlmodule Qt.labs.StyleKit
     \inherits DelegateStyle
     \brief Defines the style for a control's indicator.
@@ -838,6 +846,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype TextStyle
+    \nativetype QQStyleKitTextProperties
     \inqmlmodule Qt.labs.StyleKit
     \brief Defines the text style for a control's label.
 

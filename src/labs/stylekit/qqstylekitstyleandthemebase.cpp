@@ -8,6 +8,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype AbstractStyle
+    \nativetype QQStyleKitStyleAndThemeBase
     \inqmlmodule Qt.labs.StyleKit
     \inherits StylableControls
     \brief Abstract base type with properties common to both \l Style and \l Theme.
