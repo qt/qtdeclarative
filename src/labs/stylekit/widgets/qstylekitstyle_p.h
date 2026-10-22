@@ -142,6 +142,11 @@ class QStyleKitStylePrivate : public QCommonStylePrivate
         void drawHandle(const QRectF &rect, QPainter *p) const;
         void drawText(const QRect &rect, const QString &text, uint textFlags, QPainter *p,
                       Qt::Alignment defaultAlignment = Qt::AlignHCenter | Qt::AlignVCenter) const;
+        void drawLabel(const QRect &rect, const QString &str, const QIcon &icon,
+                       const QSize &iconSize, QStyle::State state, uint textFlags,
+                       Qt::LayoutDirection direction, QPainter *p,
+                       Qt::Alignment defaultAlignment = Qt::AlignHCenter | Qt::AlignVCenter,
+                       bool textUnderIcon = false) const;
     };
     // Stores the resolved properties for layout purposes.
     // Accessors read static values via the shared reader (transitions disabled),
