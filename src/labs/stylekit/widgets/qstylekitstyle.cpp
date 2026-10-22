@@ -516,6 +516,16 @@ static qreal resolvedHeight(const QQStyleKitDelegateProperties *element, qreal a
     return qMax(0.0, element->fillHeight() ? availableH : element->height());
 }
 
+
+static QPixmap iconPixmap(const QIcon &icon, const QSize &size, QStyle::State state,
+                          const QPainter *p)
+{
+    if (icon.isNull())
+        return QPixmap();
+    const QIcon::Mode mode = state & QStyle::State_Enabled ? QIcon::Normal : QIcon::Disabled;
+    return icon.pixmap(size, p->device()->devicePixelRatio(), mode, QIcon::Off);
+}
+
 static QMargins elementMargins(const QQStyleKitDelegateProperties *element)
 {
     using QtPrivate::qSaturateRound;
@@ -1650,6 +1660,60 @@ void QStyleKitStylePrivate::QQStyleKitResolved::drawText(const QRect &rect, cons
     drawControlText(this->text(), font(), rect, text, textFlags, p, defaultAlignment);
 }
 
+/*! \internal
+    Draws \a icon and \a str in \a rect as one group aligned by the text alignment, with the
+    text beside or under the icon.
+*/
+void QStyleKitStylePrivate::QQStyleKitResolved::drawLabel(const QRect &rect, const QString &str,
+                                                          const QIcon &icon, const QSize &iconSize,
+                                                          QStyle::State state, uint textFlags,
+                                                          Qt::LayoutDirection direction,
+                                                          QPainter *p,
+                                                          Qt::Alignment defaultAlignment,
+                                                          bool textUnderIcon) const
+{
+    const QPixmap pixmap = iconPixmap(icon, iconSize, state, p);
+    if (pixmap.isNull()) {
+        drawText(rect, str, textFlags, p, defaultAlignment);
+        return;
+    }
+
+    const auto *textProps = text();
+    const auto alignment = Qt::Alignment(resolvedAlignment(
+        textProps ? textProps->alignment() : 0u, defaultAlignment & Qt::AlignHorizontal_Mask,
+        defaultAlignment & Qt::AlignVertical_Mask));
+    const QSize pixmapSize = pixmap.deviceIndependentSize().toSize().boundedTo(rect.size());
+    if (str.isEmpty()) {
+        p->drawPixmap(QStyle::alignedRect(direction, alignment, pixmapSize, rect), pixmap);
+        return;
+    }
+
+    const int spacing = pixmapSize.isEmpty() ? 0 : metrics->spacing;
+    QSize textSize = QFontMetrics(font().resolve(p->font())).size(textFlags, str);
+    QSize labelSize;
+    Qt::Alignment iconAlignment;
+    Qt::Alignment textAlignment;
+    if (textUnderIcon) {
+        textSize = textSize.boundedTo(
+            QSize(rect.width(), qMax(0, rect.height() - pixmapSize.height() - spacing)));
+        labelSize = QSize(qMax(pixmapSize.width(), textSize.width()),
+                          pixmapSize.height() + spacing + textSize.height());
+        iconAlignment = Qt::AlignHCenter | Qt::AlignTop;
+        textAlignment = Qt::AlignHCenter | Qt::AlignBottom;
+    } else {
+        textSize = textSize.boundedTo(
+            QSize(qMax(0, rect.width() - pixmapSize.width() - spacing), rect.height()));
+        labelSize = QSize(pixmapSize.width() + spacing + textSize.width(),
+                          qMax(pixmapSize.height(), textSize.height()));
+        iconAlignment = Qt::AlignLeft | Qt::AlignVCenter;
+        textAlignment = Qt::AlignRight | Qt::AlignVCenter;
+    }
+    const QRect labelRect = QStyle::alignedRect(direction, alignment, labelSize, rect);
+    p->drawPixmap(QStyle::alignedRect(direction, iconAlignment, pixmapSize, labelRect), pixmap);
+    drawText(QStyle::alignedRect(direction, textAlignment, textSize, labelRect), str,
+             textFlags, p, defaultAlignment);
+}
+
 QQStyleKitReader *QStyleKitStylePrivate::ensureSharedReader() const
 {
     if (sharedReader)
@@ -2194,7 +2258,6 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
             const auto r = d->resolve(w, controlType, btn->state);
             if (!r.isValid())
                 break;
-            const auto metrics = r.metrics;
 
             QRect textRect = opt->rect;
             uint textFlags = Qt::TextShowMnemonic;
@@ -2209,59 +2272,8 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
                     textRect = textRect.adjusted(indicatorSize, 0, 0, 0);
             }
 
-            // icon
-            const QIcon icon = btn->icon;
-            if (!icon.isNull()) {
-                const auto *textProps = r.text();
-                uint iconTextFlags = textFlags;
-                iconTextFlags |= textProps
-                    ? resolvedAlignment(textProps->alignment(), Qt::AlignHCenter, Qt::AlignVCenter)
-                    : uint(Qt::AlignHCenter | Qt::AlignVCenter);
-                QIcon::Mode mode = btn->state & State_Enabled ? QIcon::Normal : QIcon::Disabled;
-                if (mode == QIcon::Normal && btn->state & State_HasFocus)
-                    mode = QIcon::Active;
-                QIcon::State iconState = btn->state & State_On ? QIcon::On : QIcon::Off;
-                const auto paintDeviceDpr = p->device()->devicePixelRatio();
-                QPixmap pixmap = icon.pixmap(btn->iconSize, paintDeviceDpr, mode, iconState);
-                int pixmapWidth = pixmap.width() / pixmap.devicePixelRatio();
-                int pixmapHeight = pixmap.height() / pixmap.devicePixelRatio();
-                int labelWidth = pixmapWidth;
-                int iconSpacing = metrics->spacing;
-                int textWidth = QFontMetrics(r.font().resolve(p->font()))
-                    .boundingRect(opt->rect, iconTextFlags, btn->text)
-                    .width();
-                if (!btn->text.isEmpty())
-                    labelWidth += textWidth + iconSpacing;
-
-                QRect iconRect;
-                if (iconTextFlags & Qt::AlignLeft) {
-                    iconRect = QRect(textRect.x(),
-                                     textRect.y() + (textRect.height() - pixmapHeight) / 2,
-                                     pixmapWidth, pixmapHeight);
-                } else if (iconTextFlags & Qt::AlignHCenter) {
-                    iconRect = QRect(textRect.x() + (textRect.width() - labelWidth) / 2,
-                                     textRect.y() + (textRect.height() - pixmapHeight) / 2,
-                                     pixmapWidth, pixmapHeight);
-                } else {
-                    iconRect = QRect(textRect.x() + textRect.width() - labelWidth,
-                                     textRect.y() + (textRect.height() - pixmapHeight) / 2,
-                                     pixmapWidth, pixmapHeight);
-                }
-                iconRect = visualRect(btn->direction, textRect, iconRect);
-
-                // After placing the icon, fit the text rect to the text so it follows the icon
-                if (btn->direction == Qt::RightToLeft) {
-                    textRect.setRight(iconRect.left() - iconSpacing);
-                    textRect.setLeft(textRect.right() - textWidth + 1);
-                } else {
-                    textRect.setLeft(iconRect.left() + iconRect.width() + iconSpacing);
-                    textRect.setWidth(textWidth);
-                }
-
-                p->drawPixmap(iconRect, pixmap);
-            }
-
-            r.drawText(textRect, btn->text, textFlags, p);
+            r.drawLabel(textRect, btn->text, btn->icon, btn->iconSize, btn->state, textFlags,
+                        btn->direction, p);
             return;
         }
         break;
@@ -2312,31 +2324,8 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
             uint textFlags = Qt::TextShowMnemonic;
             if (!styleHint(SH_UnderlineShortcut, opt, w))
                 textFlags |= Qt::TextHideMnemonic;
-            if (btn->icon.isNull()) {
-                r.drawText(opt->rect, btn->text, textFlags, p);
-                return;
-            }
-            const QIcon::Mode mode = btn->state & State_Enabled ? QIcon::Normal : QIcon::Disabled;
-            const QIcon::State iconState = btn->state & State_On ? QIcon::On : QIcon::Off;
-            const QPixmap pm = btn->icon.pixmap(btn->iconSize, p->device()->devicePixelRatio(),
-                                                mode, iconState);
-            const QSize pmSize = pm.size() / pm.devicePixelRatio();
-            // Align icon + text as one group, like IconLabel
-            const auto *textProps = r.text();
-            const auto alignment = Qt::Alignment(resolvedAlignment(
-                textProps ? textProps->alignment() : 0u, Qt::AlignHCenter, Qt::AlignVCenter));
-            const QSize textSize = QFontMetrics(r.font().resolve(p->font()))
-                .size(textFlags, btn->text);
-            const int spacing = btn->text.isEmpty() ? 0 : r.metrics->spacing;
-            const QSize labelSize(pmSize.width() + spacing + textSize.width(),
-                                  qMax(pmSize.height(), textSize.height()));
-            const QRect labelRect = alignedRect(btn->direction, alignment, labelSize, opt->rect);
-            p->drawPixmap(alignedRect(btn->direction, Qt::AlignLeft | Qt::AlignVCenter, pmSize,
-                                      labelRect),
-                          pm);
-            r.drawText(alignedRect(btn->direction, Qt::AlignRight | Qt::AlignVCenter, textSize,
-                                   labelRect),
-                       btn->text, textFlags, p);
+            r.drawLabel(opt->rect, btn->text, btn->icon, btn->iconSize, btn->state, textFlags,
+                        btn->direction, p);
             return;
         }
         break;
@@ -2353,42 +2342,20 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
             uint textFlags = Qt::TextShowMnemonic;
             if (!styleHint(SH_UnderlineShortcut, opt, w))
                 textFlags |= Qt::TextHideMnemonic;
-            if (comboBox->currentIcon.isNull()) {
-                r.drawText(textRect, comboBox->currentText, textFlags, p);
-                return;
-            }
-            const QIcon::Mode mode = comboBox->state & State_Enabled
-                ? QIcon::Normal
-                : QIcon::Disabled;
-            const QPixmap pm = comboBox->currentIcon.pixmap(
-                comboBox->iconSize, p->device()->devicePixelRatio(), mode);
-            const QSize pmSize = pm.size() / pm.devicePixelRatio();
             if (comboBox->editable) {
+                const QPixmap pm = iconPixmap(comboBox->currentIcon, comboBox->iconSize,
+                                              comboBox->state, p);
                 // QComboBox leaves iconSize + 4 free for the icon, in front of the line edit
                 const QRect iconSlot = alignedRect(
                     comboBox->direction, Qt::AlignLeft | Qt::AlignVCenter,
                     QSize(comboBox->iconSize.width() + 4, editRect.height()), editRect);
-                p->drawPixmap(alignedRect(comboBox->direction, Qt::AlignCenter, pmSize, iconSlot),
+                p->drawPixmap(alignedRect(comboBox->direction, Qt::AlignCenter,
+                                          pm.deviceIndependentSize().toSize(), iconSlot),
                               pm);
                 return;
             }
-            // Align icon + text as one group, like IconLabel
-            const auto *textProps = r.text();
-            const auto alignment = Qt::Alignment(resolvedAlignment(
-                textProps ? textProps->alignment() : 0u, Qt::AlignHCenter, Qt::AlignVCenter));
-            const QSize textSize = QFontMetrics(r.font().resolve(p->font()))
-                .size(textFlags, comboBox->currentText);
-            const int spacing = comboBox->currentText.isEmpty() ? 0 : r.metrics->spacing;
-            const QSize labelSize(pmSize.width() + spacing + textSize.width(),
-                                  qMax(pmSize.height(), textSize.height()));
-            const QRect labelRect = alignedRect(comboBox->direction, alignment, labelSize,
-                                                textRect);
-            p->drawPixmap(alignedRect(comboBox->direction, Qt::AlignLeft | Qt::AlignVCenter,
-                                      pmSize, labelRect),
-                          pm);
-            r.drawText(alignedRect(comboBox->direction, Qt::AlignRight | Qt::AlignVCenter,
-                                   textSize, labelRect),
-                       comboBox->currentText, textFlags, p);
+            r.drawLabel(textRect, comboBox->currentText, comboBox->currentIcon, comboBox->iconSize,
+                        comboBox->state, textFlags, comboBox->direction, p);
             return;
         }
         break;
@@ -2580,67 +2547,20 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
                 return;
             }
 
-            QPixmap pm;
-            QSize pmSize;
-            if (!hasArrow && !tool->icon.isNull()) {
-                const QIcon::State iconState = tool->state & State_On ? QIcon::On : QIcon::Off;
-                QIcon::Mode mode;
-                if (!(tool->state & State_Enabled))
-                    mode = QIcon::Disabled;
-                else if ((tool->state & State_MouseOver) && (tool->state & State_AutoRaise))
-                    mode = QIcon::Active;
-                else
-                    mode = QIcon::Normal;
-                pm = tool->icon.pixmap(tool->iconSize, p->device()->devicePixelRatio(), mode,
-                                       iconState);
-                pmSize = pm.size() / pm.devicePixelRatio();
-            }
-
-            const auto *textProps = r.text();
-            const auto alignment = Qt::Alignment(resolvedAlignment(
-                textProps ? textProps->alignment() : 0u, Qt::AlignHCenter, Qt::AlignVCenter));
-
-            if (tool->toolButtonStyle == Qt::ToolButtonIconOnly || tool->text.isEmpty()) {
-                if (!pm.isNull())
-                    p->drawPixmap(alignedRect(tool->direction, alignment, pmSize, rect), pm);
+            const bool textUnderIcon = tool->toolButtonStyle == Qt::ToolButtonTextUnderIcon;
+            if (hasArrow || tool->icon.isNull()) {
+                if (tool->toolButtonStyle != Qt::ToolButtonIconOnly && !tool->text.isEmpty()) {
+                    r.drawText(rect, tool->text, textFlags, p,
+                               textUnderIcon ? Qt::AlignCenter : Qt::AlignLeft | Qt::AlignVCenter);
+                }
                 return;
             }
 
-            // Align icon + text as one group, like IconLabel
-            const QSize textSize = QFontMetrics(r.font().resolve(p->font()))
-                .size(textFlags, tool->text);
-
-            if (tool->toolButtonStyle == Qt::ToolButtonTextUnderIcon) {
-                if (!pm.isNull()) {
-                    const QSize labelSize(qMax(pmSize.width(), textSize.width()),
-                                          pmSize.height() + metrics->spacing + textSize.height());
-                    const QRect labelRect = alignedRect(tool->direction, alignment, labelSize,
-                                                        rect);
-                    p->drawPixmap(alignedRect(tool->direction, Qt::AlignHCenter | Qt::AlignTop,
-                                              pmSize, labelRect),
-                                  pm);
-                    r.drawText(alignedRect(tool->direction, Qt::AlignHCenter | Qt::AlignBottom,
-                                           textSize, labelRect),
-                               tool->text, textFlags, p, Qt::AlignCenter);
-                } else {
-                    r.drawText(rect, tool->text, textFlags, p, Qt::AlignCenter);
-                }
-            } else {
-                if (!pm.isNull()) {
-                    const QSize labelSize(pmSize.width() + metrics->spacing + textSize.width(),
-                                          qMax(pmSize.height(), textSize.height()));
-                    const QRect labelRect = alignedRect(tool->direction, alignment, labelSize,
-                                                        rect);
-                    p->drawPixmap(alignedRect(tool->direction, Qt::AlignLeft | Qt::AlignVCenter,
-                                              pmSize, labelRect),
-                                  pm);
-                    r.drawText(alignedRect(tool->direction, Qt::AlignRight | Qt::AlignVCenter,
-                                           textSize, labelRect),
-                               tool->text, textFlags, p, Qt::AlignLeft | Qt::AlignVCenter);
-                } else {
-                    r.drawText(rect, tool->text, textFlags, p, Qt::AlignLeft | Qt::AlignVCenter);
-                }
-            }
+            const QString text = tool->toolButtonStyle == Qt::ToolButtonIconOnly
+                ? QString()
+                : tool->text;
+            r.drawLabel(rect, text, tool->icon, tool->iconSize, tool->state, textFlags,
+                        tool->direction, p, Qt::AlignHCenter | Qt::AlignVCenter, textUnderIcon);
             return;
         }
         break;
@@ -2727,11 +2647,8 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
             if (menuItem->maxIconWidth > 0) {
                 const int iconExtent = proxy()->pixelMetric(PM_SmallIconSize, opt, w);
                 if (!menuItem->icon.isNull()) {
-                    const QIcon::Mode mode = (menuItem->state & State_Enabled)
-                        ? QIcon::Normal
-                        : QIcon::Disabled;
-                    const QPixmap pm = menuItem->icon.pixmap(
-                        QSize(iconExtent, iconExtent), p->device()->devicePixelRatio(), mode);
+                    const QPixmap pm = iconPixmap(menuItem->icon, QSize(iconExtent, iconExtent),
+                                                  menuItem->state, p);
                     const QSize pmSize = pm.size() / pm.devicePixelRatio();
                     const QRect iconColumn(textRect.left(), textRect.top(), iconExtent,
                                            textRect.height());
@@ -2799,23 +2716,11 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
             uint textFlags = Qt::TextShowMnemonic;
             if (!styleHint(SH_UnderlineShortcut, opt, w))
                 textFlags |= Qt::TextHideMnemonic;
-            if (menuItem->icon.isNull()) {
-                r.drawText(textRect, menuItem->text, textFlags, p);
-                return;
-            }
-            // QMenuBar sizes items with an icon to show only the icon
-            const QIcon::Mode mode = menuItem->state & State_Enabled
-                ? QIcon::Normal
-                : QIcon::Disabled;
             const int iconExtent = proxy()->pixelMetric(PM_SmallIconSize, opt, w);
-            const QPixmap pm = menuItem->icon.pixmap(QSize(iconExtent, iconExtent),
-                                                     p->device()->devicePixelRatio(), mode);
-            const auto *textProps = r.text();
-            const auto alignment = Qt::Alignment(resolvedAlignment(
-                textProps ? textProps->alignment() : 0u, Qt::AlignHCenter, Qt::AlignVCenter));
-            p->drawPixmap(alignedRect(menuItem->direction, alignment,
-                                      pm.size() / pm.devicePixelRatio(), textRect),
-                          pm);
+            // QMenuBar sizes items with an icon to show only the icon
+            r.drawLabel(textRect, menuItem->icon.isNull() ? menuItem->text : QString(),
+                        menuItem->icon, QSize(iconExtent, iconExtent), adjustedState, textFlags,
+                        menuItem->direction, p);
             return;
         }
         break;
@@ -2837,36 +2742,8 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
             if (!styleHint(SH_UnderlineShortcut, opt, w))
                 textFlags |= Qt::TextHideMnemonic;
 
-            if (!tab->icon.isNull()) {
-                const QIcon::Mode mode = (tab->state & State_Enabled)
-                    ? QIcon::Normal
-                    : QIcon::Disabled;
-                const QIcon::State iconState = (tab->state & State_Selected)
-                    ? QIcon::On
-                    : QIcon::Off;
-                const QPixmap pm = tab->icon.pixmap(tab->iconSize, p->device()->devicePixelRatio(),
-                                                    mode, iconState);
-                const QSize pmSize = pm.size() / pm.devicePixelRatio();
-                // Align icon + text as one group, like IconLabel
-                const auto *textProps = r.text();
-                const auto alignment = Qt::Alignment(resolvedAlignment(
-                    textProps ? textProps->alignment() : 0u, Qt::AlignHCenter, Qt::AlignVCenter));
-                const QSize textSize = QFontMetrics(r.font().resolve(p->font()))
-                    .size(textFlags, tab->text);
-                const int spacing = tab->text.isEmpty() ? 0 : m.spacing;
-                const QSize labelSize(pmSize.width() + spacing + textSize.width(),
-                                      qMax(pmSize.height(), textSize.height()));
-                const QRect labelRect = alignedRect(tab->direction, alignment, labelSize,
-                                                    contentRect);
-                p->drawPixmap(alignedRect(tab->direction, Qt::AlignLeft | Qt::AlignVCenter,
-                                          pmSize, labelRect),
-                              pm);
-                r.drawText(alignedRect(tab->direction, Qt::AlignRight | Qt::AlignVCenter,
-                                       textSize, labelRect),
-                           tab->text, textFlags, p, Qt::AlignCenter);
-            } else {
-                r.drawText(contentRect, tab->text, textFlags, p, Qt::AlignCenter);
-            }
+            r.drawLabel(contentRect, tab->text, tab->icon, tab->iconSize, tab->state, textFlags,
+                        tab->direction, p, Qt::AlignCenter);
             return;
         }
         break;
