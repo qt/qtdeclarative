@@ -2441,8 +2441,10 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
                     / static_cast<qreal>(progressBar->maximum - progressBar->minimum)
                 : 0;
             const auto width = static_cast<int>(progressBar->rect.width() * ratio);
-            const auto x = progressBar->invertedAppearance
-                ? progressBar->rect.right() - width
+            const bool reverse = (progressBar->direction == Qt::RightToLeft)
+                != progressBar->invertedAppearance;
+            const auto x = reverse
+                ? progressBar->rect.x() + progressBar->rect.width() - width
                 : progressBar->rect.left();
             const auto contentsRect = QRect(x, progressBar->rect.y(),
                                             width, progressBar->rect.height());
@@ -2980,7 +2982,7 @@ QRect QStyleKitStyle::subElementRect(SubElement r, const QStyleOption *opt,
         if (!indicator || !indicator->visible())
             return rect;
 
-        return visualRect(opt->direction, rect,
+        return visualRect(opt->direction, opt->rect,
                           delegateRect(indicator, rect, Qt::AlignLeft, Qt::AlignVCenter,
                                        metrics.padding));
     }
@@ -2994,8 +2996,9 @@ QRect QStyleKitStyle::subElementRect(SubElement r, const QStyleOption *opt,
             const auto &metrics = *resolved.metrics;
             QRect contentsRect = opt->rect.marginsRemoved(metrics.margins + metrics.padding);
             if (itemViewOption->features & QStyleOptionViewItem::HasCheckIndicator) {
-                const QRect indicatorRect = subElementRect(
-                    SE_ItemViewItemCheckIndicator, opt, widget);
+                // Map back to logical coordinates, the result is mirrored below
+                const QRect indicatorRect = visualRect(opt->direction, opt->rect,
+                    subElementRect(SE_ItemViewItemCheckIndicator, opt, widget));
                 const auto *checkIndicator = resolved.indicator();
                 const uint checkAlign = checkIndicator
                     ? resolvedAlignment(checkIndicator->alignment(), Qt::AlignLeft,
@@ -3051,8 +3054,9 @@ QRect QStyleKitStyle::subElementRect(SubElement r, const QStyleOption *opt,
             const int spacing = metrics.spacing;
 
             if (itemViewOption->features & QStyleOptionViewItem::HasCheckIndicator) {
-                const QRect indicatorRect = subElementRect(
-                    SE_ItemViewItemCheckIndicator, opt, widget);
+                // Map back to logical coordinates, the result is mirrored below
+                const QRect indicatorRect = visualRect(opt->direction, opt->rect,
+                    subElementRect(SE_ItemViewItemCheckIndicator, opt, widget));
                 const auto *checkIndicator = resolved.indicator();
                 const uint checkAlign = checkIndicator
                     ? resolvedAlignment(checkIndicator->alignment(), Qt::AlignLeft,
@@ -3069,8 +3073,8 @@ QRect QStyleKitStyle::subElementRect(SubElement r, const QStyleOption *opt,
 
             QRect textRect = contentsRect;
             if (itemViewOption->features & QStyleOptionViewItem::HasDecoration) {
-                const QRect decorationRect = subElementRect(
-                    SE_ItemViewItemDecoration, opt, widget);
+                const QRect decorationRect = visualRect(opt->direction, opt->rect,
+                    subElementRect(SE_ItemViewItemDecoration, opt, widget));
                 switch (itemViewOption->decorationPosition) {
                 case QStyleOptionViewItem::Top:
                     textRect.setTop(decorationRect.bottom() + spacing);
@@ -3128,7 +3132,7 @@ QRect QStyleKitStyle::subElementRect(SubElement r, const QStyleOption *opt,
         if (!indicator || !indicator->visible())
             return rect;
 
-        return visualRect(opt->direction, rect,
+        return visualRect(opt->direction, opt->rect,
                           delegateRect(indicator, rect, Qt::AlignLeft, Qt::AlignVCenter,
                                        metrics.padding));
     }
@@ -3145,6 +3149,8 @@ QRect QStyleKitStyle::subElementRect(SubElement r, const QStyleOption *opt,
                 return QRect();
 
             QRect indicatorRect = subElementRect(SE_ProgressBarGroove, opt, widget);
+            // Map back to logical coordinates, the result is mirrored below
+            indicatorRect = visualRect(opt->direction, opt->rect, indicatorRect);
             const QRect foregroundRect = delegateRect(
                 foreground, indicatorRect, Qt::AlignLeft, Qt::AlignVCenter);
             return visualRect(opt->direction, opt->rect, foregroundRect);
@@ -3705,6 +3711,8 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
             case SC_ComboBoxEditField: {
                 QRect contentsRect = frameRect.marginsRemoved(metrics.padding);
                 QRect indicatorRect = subControlRect(CC_ComboBox, opt, SC_ComboBoxArrow, w);
+                // Map back to logical coordinates, the result is mirrored below
+                indicatorRect = visualRect(opt->direction, opt->rect, indicatorRect);
                 const int spacing = metrics.spacing;
                 const auto *indicator = r.indicator();
                 const uint indicatorAlign = indicator
@@ -3754,6 +3762,9 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
             case SC_SpinBoxEditField: {
                 QRect upIndicatorRect = subControlRect(CC_SpinBox, opt, SC_SpinBoxUp, w);
                 QRect downIndicatorRect = subControlRect(CC_SpinBox, opt, SC_SpinBoxDown, w);
+                // Map back to logical coordinates, the result is mirrored below
+                upIndicatorRect = visualRect(opt->direction, opt->rect, upIndicatorRect);
+                downIndicatorRect = visualRect(opt->direction, opt->rect, downIndicatorRect);
                 const int spacing = metrics.spacing;
                 const auto *upIndicator = r.indicator() ? r.indicator()->first() : nullptr;
                 const auto *downIndicator = r.indicator() ? r.indicator()->second() : nullptr;
@@ -3939,7 +3950,9 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
                     != 0;
                 const auto *indicator = resolved.indicator();
                 if (hasMenuButton && indicator && indicator->visible()) {
-                    const QRect menuRect = subControlRect(CC_ToolButton, opt, SC_ToolButtonMenu, w);
+                    QRect menuRect = subControlRect(CC_ToolButton, opt, SC_ToolButtonMenu, w);
+                    // Map back to logical coordinates, the result is mirrored below
+                    menuRect = visualRect(opt->direction, opt->rect, menuRect);
                     const int spacing = metrics.spacing;
                     const uint indicatorAlign = resolvedAlignment(indicator->alignment(),
                                                                   Qt::AlignRight, Qt::AlignVCenter);
