@@ -1640,14 +1640,15 @@ QQuickItemGenerator::generateFilterColorMatrix(const FilterNodeInfo::FilterStep 
             u"qrc:/qt-project.org/quickvectorimage/helpers/shaders_ng/fecolormatrix.frag.qsb"_s);
     auto *effect = makeFilterEffect(input, m_rootItem);
 
-    const auto matrix = step.filterParameter.value<QGenericMatrix<5, 5, qreal>>();
+    const auto matrix = std::make_shared<QGenericMatrix<5, 5, qreal>>(
+                        step.filterParameter.value<QGenericMatrix<5, 5, qreal>>());
     initializeQmlObject(effect, [effect, input, matrix]() {
         effect->setFragmentShader(shader);
         effect->setProperty("source", QVariant::fromValue(input));
         for (int row = 0; row < 4; ++row) {
             for (int col = 0; col < 5; ++col) {
                 effect->setProperty(QStringLiteral("m_%1_%2").arg(row).arg(col).toLatin1(),
-                                    matrix(col, row));
+                                    (*matrix)(col, row));
             }
         }
     });
