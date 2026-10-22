@@ -534,7 +534,9 @@ static QRectF alignedRectInContainer(const QRectF &container, const QSizeF &size
     if (alignment & Qt::AlignLeft)
         pos.setX(container.x() + padding.left() + margins.left());
     else if (alignment & Qt::AlignHCenter)
-        pos.setX(container.x() + (container.width() - size.width()) / 2);
+        pos.setX(container.x() + padding.left() + margins.left()
+                 + (container.width() - padding.left() - padding.right() - margins.left()
+                    - margins.right() - size.width()) / 2);
     else // AlignRight
         pos.setX(container.x() + container.width() - padding.right() - margins.right()
                  - size.width());
@@ -542,7 +544,9 @@ static QRectF alignedRectInContainer(const QRectF &container, const QSizeF &size
     if (alignment & Qt::AlignTop)
         pos.setY(container.y() + padding.top() + margins.top());
     else if (alignment & Qt::AlignVCenter)
-        pos.setY(container.y() + (container.height() - size.height()) / 2);
+        pos.setY(container.y() + padding.top() + margins.top()
+                 + (container.height() - padding.top() - padding.bottom() - margins.top()
+                    - margins.bottom() - size.height()) / 2);
     else // AlignBottom
         pos.setY(container.y() + container.height() - padding.bottom() - margins.bottom()
                  - size.height());
@@ -771,26 +775,16 @@ static void drawControlIndicator(const QQStyleKitDelegateProperties *indicator,
         return;
 
     // foreground
-    QRectF foregroundRect;
     const uint foregroundAlign = resolvedAlignment(foreground->alignment(), Qt::AlignHCenter,
                                                    Qt::AlignVCenter);
     const auto foregroundW = resolvedWidth(
         foreground, indicatorRect.width() - foreground->leftMargin() - foreground->rightMargin());
     const auto foregroundH = resolvedHeight(
         foreground, indicatorRect.height() - foreground->topMargin() - foreground->bottomMargin());
-    foregroundRect.setSize(QSizeF(foregroundW, foregroundH));
-    if (foregroundAlign & Qt::AlignLeft)
-        foregroundRect.moveLeft(indicatorRect.left() + foreground->leftMargin());
-    else if (foregroundAlign & Qt::AlignHCenter)
-        foregroundRect.moveLeft(indicatorRect.left() + (indicatorRect.width() - foregroundW) / 2.0);
-    else if (foregroundAlign & Qt::AlignRight)
-        foregroundRect.moveLeft(indicatorRect.right() - foreground->rightMargin() - foregroundW);
-    if (foregroundAlign & Qt::AlignTop)
-        foregroundRect.moveTop(indicatorRect.top() + foreground->topMargin());
-    else if (foregroundAlign & Qt::AlignVCenter)
-        foregroundRect.moveTop(indicatorRect.top() + (indicatorRect.height() - foregroundH) / 2.0);
-    else if (foregroundAlign & Qt::AlignBottom)
-        foregroundRect.moveTop(indicatorRect.bottom() - foreground->bottomMargin() - foregroundH);
+    const QRectF foregroundRect = alignedRectInContainer(
+        indicatorRect, QSizeF(foregroundW, foregroundH), foregroundAlign, QMarginsF(),
+        QMarginsF(foreground->leftMargin(), foreground->topMargin(), foreground->rightMargin(),
+                  foreground->bottomMargin()));
     drawStyledItemRect(foreground, foregroundRect, painter);
 }
 
