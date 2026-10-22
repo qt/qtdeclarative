@@ -303,6 +303,7 @@ struct Element {
     Rect bounds; // in device coordinates
 
     int order = 0;
+    quint32 ubufOffset = 0;
     QRhiShaderResourceBindings *srb = nullptr;
     QRhiGraphicsPipeline *ps = nullptr;
     QRhiGraphicsPipeline *depthPostPassPs = nullptr;
@@ -429,7 +430,6 @@ struct Batch
         positionAttribute = -1;
         uploadedThisFrame = false;
         isRenderNode = false;
-        ubufDataValid = false;
         needsPurge = false;
         clipState.reset();
         blendConstant = QColor();
@@ -449,14 +449,12 @@ struct Batch
     uint needsUpload : 1;
     uint merged : 1;
     uint isRenderNode : 1;
-    uint ubufDataValid : 1;
     uint needsPurge : 1;
 
     mutable uint uploadedThisFrame : 1; // solely for debugging purposes
 
     Buffer vbo;
     Buffer ibo;
-    QRhiBuffer *ubuf;
     ClipState clipState;
     StencilClipState stencilClipState;
     QColor blendConstant;
@@ -822,9 +820,10 @@ private:
 
     bool ensurePipelineState(Element *e, const ShaderManager::Shader *sms, bool depthPostPass = false);
     QRhiTexture *dummyTexture();
-    void updateMaterialDynamicData(ShaderManager::Shader *sms, QSGMaterialShader::RenderState &renderState,
-                                   QSGMaterial *material, const Batch *batch, Element *e, int ubufOffset,
-                                   char *directUpdatePtr);
+    bool updateMaterialDynamicData(ShaderManager::Shader *sms, QSGMaterialShader::RenderState &renderState,
+                                   QSGMaterial *material, Element *e);
+    bool allocateUniformData(quint32 size, quint32 *offset);
+    void shrinkUniformBuffer(quint32 size);
     void updateMaterialStaticData(ShaderManager::Shader *sms, QSGMaterialShader::RenderState &renderState,
                                   QSGMaterial *material, Batch *batch, bool *gstateChanged);
     void checkLineWidth(QSGGeometry *g);
@@ -833,7 +832,8 @@ private:
     bool prepareRenderUnmergedBatch(Batch *batch, PreparedRenderBatch *renderBatch);
     void renderUnmergedBatch(PreparedRenderBatch *renderBatch, bool depthPostPass = false);
     void setViewportAndScissors(QRhiCommandBuffer *cb, const Batch *batch);
-    void setGraphicsPipeline(QRhiCommandBuffer *cb, const Batch *batch, Element *e, bool depthPostPass = false);
+    void setGraphicsPipeline(QRhiCommandBuffer *cb, const Batch *batch, Element *e,
+                             const ShaderManager::Shader *sms, bool depthPostPass = false);
     ClipState::ClipType updateStencilClip(const QSGClipNode *clip);
     void updateClip(const QSGClipNode *clipList, const Batch *batch);
     void applyClipStateToGraphicsState();
@@ -919,6 +919,10 @@ private:
 
     RenderPassContext m_mainRenderPassContext;
     QRhiResourceUpdateBatch *m_resourceUpdates = nullptr;
+    QRhiBuffer *m_uniformBuffer = nullptr;
+    QByteArray m_uniformData;
+    quint32 m_uniformDataSize = 0;
+    bool m_uniformBufferFailed = false;
     uint m_ubufAlignment;
     bool m_uint32IndexForRhi;
     GraphicsState m_gstate;
@@ -948,13 +952,12 @@ Batch *Renderer::newBatch()
     int size = m_batchPool.size();
     if (size) {
         b = m_batchPool.at(size - 1);
-        // vbo, ibo, ubuf, stencil-related buffers are reused
+        // vbo, ibo, stencil-related buffers are reused
         m_batchPool.resize(size - 1);
     } else {
         b = new Batch();
         Q_ASSERT(offsetof(Batch, ibo) == sizeof(Buffer) + offsetof(Batch, vbo));
         memset(&b->vbo, 0, sizeof(Buffer) * 2); // Clear VBO & IBO
-        b->ubuf = nullptr;
         b->stencilClipState.reset();
     }
     // initialize (when new batch) or reset (when reusing a batch) the non-reusable fields

@@ -88,6 +88,8 @@ const float VIEWPORT_MAX_DEPTH = 1.0f;
 
 const quint32 DEFAULT_BUFFER_POOL_SIZE_LIMIT = 2 * 1024 * 1024; // 2 MB for m_vboPool and m_iboPool each
 
+const quint32 MIN_UNIFORM_BUFFER_SIZE = 4096;
+
 template <class Int>
 inline Int aligned(Int v, Int byteAlign)
 {
@@ -937,7 +939,6 @@ static void qsg_wipeBatch(Batch *batch)
 {
     qsg_wipeBuffer(&batch->vbo);
     qsg_wipeBuffer(&batch->ibo);
-    delete batch->ubuf;
     batch->stencilClipState.reset();
     delete batch;
 }
@@ -956,6 +957,7 @@ Renderer::~Renderer()
             delete m_vboPool.at(i);
         for (int i = 0; i < m_iboPool.size(); ++i)
             delete m_iboPool.at(i);
+        delete m_uniformBuffer;
     }
 
     for (Node *n : std::as_const(m_nodes)) {
@@ -1012,6 +1014,10 @@ void Renderer::releaseCachedResources()
     m_vertexUploadPool.reset();
     m_indexUploadPool.shrink(0);
     m_indexUploadPool.reset();
+
+    // m_uniformBuffer stays, the elements' srbs refer to it
+    shrinkUniformBuffer(MIN_UNIFORM_BUFFER_SIZE);
+    m_uniformData = QByteArray();
 
     for (int i = 0; i < m_vboPool.size(); ++i)
         delete m_vboPool.at(i);
@@ -2974,13 +2980,57 @@ static void materialToRendererGraphicsState(GraphicsState *dst,
     dst->polygonMode = QRhiGraphicsPipeline::PolygonMode(src->polygonMode);
 }
 
-void Renderer::updateMaterialDynamicData(ShaderManager::Shader *sms,
+bool Renderer::allocateUniformData(quint32 size, quint32 *offset)
+{
+    if (m_uniformBufferFailed)
+        return false;
+
+    const quint32 start = aligned(m_uniformDataSize, quint32(m_ubufAlignment));
+    const quint32 end = start + aligned(size, quint32(m_ubufAlignment));
+    if (end > quint32(m_uniformData.size()))
+        m_uniformData.resize(qMax(end, 2 * quint32(m_uniformData.size())));
+
+    if (!m_uniformBuffer || m_uniformBuffer->size() < end) {
+        const quint32 bufferSize = qMax(end, m_uniformBuffer ? 2 * m_uniformBuffer->size() : MIN_UNIFORM_BUFFER_SIZE);
+        if (m_uniformBuffer)
+            m_uniformBuffer->setSize(bufferSize);
+        else
+            m_uniformBuffer = m_rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, bufferSize);
+        if (!m_uniformBuffer->create()) {
+            qWarning("Failed to build uniform buffer of size %u bytes", bufferSize);
+            // The batches prepared so far in this frame refer to the buffer as
+            // well, prepareRenderPass() drops them. Retried in the next frame.
+            delete m_uniformBuffer;
+            m_uniformBuffer = nullptr;
+            m_uniformBufferFailed = true;
+            return false;
+        }
+    }
+
+    *offset = start;
+    m_uniformDataSize = end;
+    return true;
+}
+
+// Not to be called between prepareRenderPass() and recordRenderPass(), the
+// contents is lost.
+void Renderer::shrinkUniformBuffer(quint32 size)
+{
+    if (!m_uniformBuffer || m_uniformBuffer->size() <= size)
+        return;
+
+    m_uniformBuffer->setSize(size);
+    if (!m_uniformBuffer->create()) {
+        // recreated on the next allocateUniformData()
+        delete m_uniformBuffer;
+        m_uniformBuffer = nullptr;
+    }
+}
+
+bool Renderer::updateMaterialDynamicData(ShaderManager::Shader *sms,
                                          QSGMaterialShader::RenderState &renderState,
                                          QSGMaterial *material,
-                                         const Batch *batch,
-                                         Element *e,
-                                         int ubufOffset,
-                                         char *directUpdatePtr)
+                                         Element *e)
 {
     m_current_resource_update_batch = m_resourceUpdates;
 
@@ -2989,22 +3039,22 @@ void Renderer::updateMaterialDynamicData(ShaderManager::Shader *sms,
     QVarLengthArray<QRhiShaderResourceBinding, 8> bindings;
 
     if (pd->ubufBinding >= 0) {
+        const quint32 size = quint32(pd->masterUniformData.size());
+        if (!allocateUniformData(size, &e->ubufOffset))
+            return false;
+
         m_current_uniform_data = &pd->masterUniformData;
-        const bool changed = shader->updateUniformData(renderState, material, m_currentMaterial);
+        // The return value ('changed') is no longer used, and did not have much value to
+        // begin with due to mostly being true (due to the matrix being dirty).
+        shader->updateUniformData(renderState, material, m_currentMaterial);
         m_current_uniform_data = nullptr;
 
-        if (changed || !batch->ubufDataValid) {
-            if (directUpdatePtr)
-                memcpy(directUpdatePtr + ubufOffset, pd->masterUniformData.constData(), pd->masterUniformData.size());
-            else
-                m_resourceUpdates->updateDynamicBuffer(batch->ubuf, ubufOffset, pd->masterUniformData);
-        }
+        memcpy(m_uniformData.data() + e->ubufOffset, pd->masterUniformData.constData(), size);
 
-        bindings.append(QRhiShaderResourceBinding::uniformBuffer(pd->ubufBinding,
-                                                                 pd->ubufStages,
-                                                                 batch->ubuf,
-                                                                 ubufOffset,
-                                                                 pd->masterUniformData.size()));
+        bindings.append(QRhiShaderResourceBinding::uniformBufferWithDynamicOffset(pd->ubufBinding,
+                                                                                  pd->ubufStages,
+                                                                                  m_uniformBuffer,
+                                                                                  size));
     }
 
     for (int binding = 0; binding < QSGMaterialShaderPrivate::MAX_SHADER_RESOURCE_BINDINGS; ++binding) {
@@ -3173,6 +3223,8 @@ void Renderer::updateMaterialDynamicData(ShaderManager::Shader *sms,
     default:
         Q_ASSERT_X(false, "updateMaterialDynamicData", "No srb action set, this cannot happen");
     }
+
+    return true;
 }
 
 void Renderer::updateMaterialStaticData(ShaderManager::Shader *sms,
@@ -3273,43 +3325,16 @@ bool Renderer::prepareRenderMergedBatch(Batch *batch, PreparedRenderBatch *rende
         sms->lastOpacity = m_current_opacity;
     }
 
-    QSGMaterialShaderPrivate *pd = QSGMaterialShaderPrivate::get(sms->materialShader);
-    const quint32 ubufSize = quint32(pd->masterUniformData.size());
-    if (pd->ubufBinding >= 0) {
-        bool ubufRebuild = false;
-        if (!batch->ubuf) {
-            batch->ubuf = m_rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, ubufSize);
-            ubufRebuild = true;
-        } else {
-            if (batch->ubuf->size() < ubufSize) {
-                batch->ubuf->setSize(ubufSize);
-                ubufRebuild = true;
-            }
-        }
-        if (ubufRebuild) {
-            batch->ubufDataValid = false;
-            if (!batch->ubuf->create()) {
-                qWarning("Failed to build uniform buffer of size %u bytes", ubufSize);
-                delete batch->ubuf;
-                batch->ubuf = nullptr;
-                return false;
-            }
-        }
-    }
-
     QSGMaterialShader::RenderState renderState = state(QSGMaterialShader::RenderState::DirtyStates(int(dirty)));
 
     bool pendingGStatePop = false;
     updateMaterialStaticData(sms, renderState, material, batch, &pendingGStatePop);
 
-    char *directUpdatePtr = nullptr;
-    if (batch->ubuf->nativeBuffer().slotCount == 0)
-        directUpdatePtr = batch->ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
-
-    updateMaterialDynamicData(sms, renderState, material, batch, e, 0, directUpdatePtr);
-
-    if (directUpdatePtr)
-        batch->ubuf->endFullDynamicBufferUpdateForCurrentFrame();
+    if (!updateMaterialDynamicData(sms, renderState, material, e)) {
+        if (pendingGStatePop)
+            m_gstate = m_gstateStack.pop();
+        return false;
+    }
 
     m_gstate.drawMode = QSGGeometry::DrawingMode(g->drawingMode());
     m_gstate.lineWidth = g->lineWidth();
@@ -3328,8 +3353,6 @@ bool Renderer::prepareRenderMergedBatch(Batch *batch, PreparedRenderBatch *rende
         ensurePipelineState(e, sms, true);
         m_gstate = m_gstateStack.pop();
     }
-
-    batch->ubufDataValid = true;
 
     m_currentMaterial = material;
 
@@ -3379,7 +3402,7 @@ void Renderer::renderMergedBatch(PreparedRenderBatch *renderBatch, bool depthPos
         enqueueStencilDraw(batch);
 
     QRhiCommandBuffer *cb = renderTarget().cb;
-    setGraphicsPipeline(cb, batch, e, depthPostPass);
+    setGraphicsPipeline(cb, batch, e, renderBatch->sms, depthPostPass);
 
     for (int i = 0, ie = batch->drawSets.size(); i != ie; ++i) {
         const DrawSet &draw = batch->drawSets.at(i);
@@ -3455,48 +3478,14 @@ bool Renderer::prepareRenderUnmergedBatch(Batch *batch, PreparedRenderBatch *ren
 
     QMatrix4x4 rootMatrix = batch->root ? qsg_matrixForRoot(batch->root) : QMatrix4x4();
 
-    QSGMaterialShaderPrivate *pd = QSGMaterialShaderPrivate::get(sms->materialShader);
-    const quint32 ubufSize = quint32(pd->masterUniformData.size());
-    if (pd->ubufBinding >= 0) {
-        quint32 totalUBufSize = 0;
-        while (e) {
-            totalUBufSize += aligned(ubufSize, m_ubufAlignment);
-            e = e->nextInBatch;
-        }
-        bool ubufRebuild = false;
-        if (!batch->ubuf) {
-            batch->ubuf = m_rhi->newBuffer(QRhiBuffer::Dynamic, QRhiBuffer::UniformBuffer, totalUBufSize);
-            ubufRebuild = true;
-        } else {
-            if (batch->ubuf->size() < totalUBufSize) {
-                batch->ubuf->setSize(totalUBufSize);
-                ubufRebuild = true;
-            }
-        }
-        if (ubufRebuild) {
-            batch->ubufDataValid = false;
-            if (!batch->ubuf->create()) {
-                qWarning("Failed to build uniform buffer of size %u bytes", totalUBufSize);
-                delete batch->ubuf;
-                batch->ubuf = nullptr;
-                return false;
-            }
-        }
-    }
-
     QSGMaterialShader::RenderState renderState = state(QSGMaterialShader::RenderState::DirtyStates(int(dirty)));
     bool pendingGStatePop = false;
     updateMaterialStaticData(sms, renderState,
                              material, batch, &pendingGStatePop);
 
-    int ubufOffset = 0;
     QRhiGraphicsPipeline *ps = nullptr;
     QRhiGraphicsPipeline *depthPostPassPs = nullptr;
     e = batch->first;
-
-    char *directUpdatePtr = nullptr;
-    if (batch->ubuf->nativeBuffer().slotCount == 0)
-        directUpdatePtr = batch->ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
 
     while (e) {
         gn = e->node;
@@ -3520,9 +3509,11 @@ bool Renderer::prepareRenderUnmergedBatch(Batch *batch, PreparedRenderBatch *ren
         }
 
         QSGMaterialShader::RenderState renderState = state(QSGMaterialShader::RenderState::DirtyStates(int(dirty)));
-        updateMaterialDynamicData(sms, renderState, material, batch, e, ubufOffset, directUpdatePtr);
-
-        ubufOffset += aligned(ubufSize, m_ubufAlignment);
+        if (!updateMaterialDynamicData(sms, renderState, material, e)) {
+            if (pendingGStatePop)
+                m_gstate = m_gstateStack.pop();
+            return false;
+        }
 
         const QSGGeometry::DrawingMode prevDrawMode = m_gstate.drawMode;
         const float prevLineWidth = m_gstate.lineWidth;
@@ -3562,13 +3553,8 @@ bool Renderer::prepareRenderUnmergedBatch(Batch *batch, PreparedRenderBatch *ren
         e = e->nextInBatch;
     }
 
-    if (directUpdatePtr)
-        batch->ubuf->endFullDynamicBufferUpdateForCurrentFrame();
-
     if (pendingGStatePop)
         m_gstate = m_gstateStack.pop();
-
-    batch->ubufDataValid = true;
 
     renderBatch->batch = batch;
     renderBatch->sms = sms;
@@ -3596,7 +3582,7 @@ void Renderer::renderUnmergedBatch(PreparedRenderBatch *renderBatch, bool depthP
         checkLineWidth(g);
         const int effectiveIndexSize = m_uint32IndexForRhi ? sizeof(quint32) : g->sizeOfIndex();
 
-        setGraphicsPipeline(cb, batch, e, depthPostPass);
+        setGraphicsPipeline(cb, batch, e, renderBatch->sms, depthPostPass);
 
         const QRhiCommandBuffer::VertexInput vbufBinding(batch->vbo.buf, vOffset);
         if (g->indexCount()) {
@@ -3641,7 +3627,8 @@ void Renderer::setViewportAndScissors(QRhiCommandBuffer *cb, const Batch *batch)
 }
 
 
-void Renderer::setGraphicsPipeline(QRhiCommandBuffer *cb, const Batch *batch, Element *e, bool depthPostPass)
+void Renderer::setGraphicsPipeline(QRhiCommandBuffer *cb, const Batch *batch, Element *e,
+                                   const ShaderManager::Shader *sms, bool depthPostPass)
 {
     cb->setGraphicsPipeline(depthPostPass ? e->depthPostPassPs : e->ps);
 
@@ -3654,7 +3641,13 @@ void Renderer::setGraphicsPipeline(QRhiCommandBuffer *cb, const Batch *batch, El
     if (!depthPostPass && e->ps->flags().testFlag(QRhiGraphicsPipeline::UsesBlendConstants))
         cb->setBlendConstants(batch->blendConstant);
 
-    cb->setShaderResources(e->srb);
+    const int ubufBinding = QSGMaterialShaderPrivate::get(sms->materialShader)->ubufBinding;
+    if (ubufBinding >= 0) {
+        const QRhiCommandBuffer::DynamicOffset ubufOffset(ubufBinding, e->ubufOffset);
+        cb->setShaderResources(e->srb, 1, &ubufOffset);
+    } else {
+        cb->setShaderResources(e->srb);
+    }
 }
 
 void Renderer::releaseElement(Element *e, bool inDestructor)
@@ -3909,6 +3902,9 @@ void Renderer::prepareRenderPass(RenderPassContext *ctx)
     m_gstate.sampleCount = renderTarget().rt->sampleCount();
     m_gstate.multiViewCount = renderTarget().multiViewCount;
 
+    m_uniformDataSize = 0;
+    m_uniformBufferFailed = false;
+
     ctx->opaqueRenderBatches.clear();
     if (Q_LIKELY(renderOpaque)) {
         for (int i = 0, ie = m_opaqueBatches.size(); i != ie; ++i) {
@@ -3965,6 +3961,16 @@ void Renderer::prepareRenderPass(RenderPassContext *ctx)
 
     if (m_visualizer->mode() != Visualizer::VisualizeNothing)
         m_visualizer->prepareVisualize();
+
+    if (m_uniformBufferFailed) {
+        // the batches prepared before the failure refer to the uniform buffer too
+        ctx->opaqueRenderBatches.clear();
+        ctx->alphaRenderBatches.clear();
+    } else if (m_uniformDataSize) {
+        // All regions read by this frame's draws are written here, every
+        // frame, so the direct update of the current frame slot is sufficient.
+        m_uniformBuffer->fullDynamicBufferUpdateForCurrentFrame(m_uniformData.constData(), m_uniformDataSize);
+    }
 
     renderTarget().cb->resourceUpdate(m_resourceUpdates);
     m_resourceUpdates = nullptr;
