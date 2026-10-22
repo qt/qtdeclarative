@@ -349,6 +349,9 @@ private slots:
 
     void uiLanguage();
     void urlObject();
+    void isEquivalentToUndefinedData();
+    void isUndefinedVariant_data();
+    void isUndefinedVariant();
     void thisInConstructor();
     void forOfAndGc();
     void jsExponentiate();
@@ -6122,6 +6125,62 @@ void tst_QJSEngine::urlObject()
     QVERIFY(QV4::ExecutionEngine::metaTypeFromJS(urlVariantValue, QMetaType::fromType<QUrl>(),
                                                  &result2));
     QCOMPARE(result2, url);
+}
+
+void tst_QJSEngine::isEquivalentToUndefinedData()
+{
+    QJSEngine engine;
+    QJSManagedValue val(QJSPrimitiveValue{ QJSPrimitiveUndefined() },  &engine);
+    auto managedValueMetatype = QMetaType::fromType<QJSManagedValue>();
+    QVERIFY(QV4::ExecutionEngine::isEquivalentToUndefinedData(managedValueMetatype, &val));
+    val = QJSManagedValue{QJSPrimitiveValue{ QJSPrimitiveNull() }, &engine};
+    QVERIFY(!QV4::ExecutionEngine::isEquivalentToUndefinedData(managedValueMetatype, &val));
+    // most other interesting cases are indirectly tested by isUndefinedVariant
+}
+
+void tst_QJSEngine::isUndefinedVariant_data()
+{
+    QTest::addColumn<QVariant>("variant");
+    QTest::addColumn<bool>("undefined");
+
+    QTest::newRow("invalid") << QVariant() << true;
+    QTest::newRow("int") << QVariant(5) << false;
+    QTest::newRow("nullptr") << QVariant::fromValue(nullptr) << false;
+    QTest::newRow("null QObject") << QVariant::fromValue<QObject *>(nullptr) << false;
+
+    QTest::newRow("undefined QJSValue")
+            << QVariant::fromValue(QJSValue(QJSValue::UndefinedValue)) << true;
+    QTest::newRow("null QJSValue") << QVariant::fromValue(QJSValue(QJSValue::NullValue)) << false;
+    QTest::newRow("int QJSValue") << QVariant::fromValue(QJSValue(5)) << false;
+
+    QTest::newRow("undefined QJSPrimitiveValue")
+            << QVariant::fromValue(QJSPrimitiveValue(QJSPrimitiveUndefined())) << true;
+    QTest::newRow("null QJSPrimitiveValue")
+            << QVariant::fromValue(QJSPrimitiveValue(QJSPrimitiveNull())) << false;
+    QTest::newRow("int QJSPrimitiveValue") << QVariant::fromValue(QJSPrimitiveValue(5)) << false;
+
+    QTest::newRow("undefined QJsonValue")
+            << QVariant::fromValue(QJsonValue(QJsonValue::Undefined)) << true;
+    QTest::newRow("null QJsonValue") << QVariant::fromValue(QJsonValue(QJsonValue::Null)) << false;
+
+    // QJSManagedValue is not copyable and therefore cannot be stored in a QVariant.
+
+    const QVariant invalid;
+    QTest::newRow("nested invalid")
+            << QVariant(QMetaType::fromType<QVariant>(), &invalid) << false;
+}
+
+void tst_QJSEngine::isUndefinedVariant()
+{
+    QFETCH(QVariant, variant);
+    QFETCH(bool, undefined);
+
+    QCOMPARE(QV4::ExecutionEngine::isUndefinedVariant(variant), undefined);
+
+    QJSEngine engine;
+    engine.globalObject().setProperty(QStringLiteral("value"), engine.toScriptValue(variant));
+    const QJSValue type = engine.evaluate(QStringLiteral("typeof value"));
+    QCOMPARE(type.toString() == QLatin1String("undefined"), undefined);
 }
 
 void tst_QJSEngine::thisInConstructor()
