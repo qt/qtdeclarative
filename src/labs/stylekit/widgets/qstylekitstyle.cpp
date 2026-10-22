@@ -2733,7 +2733,7 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
                     const QSize pmSize = pm.size() / pm.devicePixelRatio();
                     const QRect iconColumn(textRect.left(), textRect.top(), iconExtent,
                                            textRect.height());
-                    p->drawPixmap(visualRect(menuItem->direction, textRect,
+                    p->drawPixmap(visualRect(menuItem->direction, contentRect,
                                              alignedRect(Qt::LeftToRight, Qt::AlignCenter, pmSize,
                                                          iconColumn)),
                                   pm);
@@ -2762,11 +2762,11 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
                 p->setBrush(Qt::NoBrush);
                 if (const auto *shortcutText = r.text())
                     p->setPen(shortcutText->color());
-                p->drawText(visualRect(menuItem->direction, textRect, shortcutRect), shortcutFlags,
-                            shortcut);
+                p->drawText(visualRect(menuItem->direction, contentRect, shortcutRect),
+                            shortcutFlags, shortcut);
                 p->restore();
             }
-            r.drawText(visualRect(menuItem->direction, textRect, labelRect), label, textFlags, p,
+            r.drawText(visualRect(menuItem->direction, contentRect, labelRect), label, textFlags, p,
                        Qt::AlignLeft | Qt::AlignVCenter);
             return;
         }
