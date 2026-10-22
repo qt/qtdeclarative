@@ -525,26 +525,29 @@ static QMargins elementMargins(const QQStyleKitDelegateProperties *element)
                     qSaturateRound(element->bottomMargin()));
 }
 
-static QRect alignedRectInContainer(const QRect &container, const QSize &size, uint alignment,
-                                    const QMargins &padding, const QMargins &margins)
+static QRectF alignedRectInContainer(const QRectF &container, const QSizeF &size,
+                                     uint alignment, const QMarginsF &padding,
+                                     const QMarginsF &margins)
 {
-    QRect r(QPoint(0, 0), size);
+    QPointF pos;
 
     if (alignment & Qt::AlignLeft)
-        r.moveLeft(container.x() + padding.left() + margins.left());
+        pos.setX(container.x() + padding.left() + margins.left());
     else if (alignment & Qt::AlignHCenter)
-        r.moveLeft(container.x() + (container.width() - size.width()) / 2);
+        pos.setX(container.x() + (container.width() - size.width()) / 2);
     else // AlignRight
-        r.moveLeft(container.right() + 1 - padding.right() - margins.right() - size.width());
+        pos.setX(container.x() + container.width() - padding.right() - margins.right()
+                 - size.width());
 
     if (alignment & Qt::AlignTop)
-        r.moveTop(container.y() + padding.top() + margins.top());
+        pos.setY(container.y() + padding.top() + margins.top());
     else if (alignment & Qt::AlignVCenter)
-        r.moveTop(container.y() + (container.height() - size.height()) / 2);
+        pos.setY(container.y() + (container.height() - size.height()) / 2);
     else // AlignBottom
-        r.moveTop(container.bottom() + 1 - padding.bottom() - margins.bottom() - size.height());
+        pos.setY(container.y() + container.height() - padding.bottom() - margins.bottom()
+                 - size.height());
 
-    return r;
+    return QRectF(pos, size);
 }
 
 /*! \internal
@@ -558,16 +561,23 @@ static QRect delegateRect(const QQStyleKitDelegateProperties *delegate, const QR
 {
     if (!delegate || !delegate->visible())
         return QRect();
-    using QtPrivate::qSaturateRound;
-    const int w = qSaturateRound(resolvedWidth(
+    const qreal w = resolvedWidth(
         delegate, container.width() - padding.left() - padding.right()
-            - delegate->leftMargin() - delegate->rightMargin()));
-    const int h = qSaturateRound(resolvedHeight(
+            - delegate->leftMargin() - delegate->rightMargin());
+    const qreal h = resolvedHeight(
         delegate, container.height() - padding.top() - padding.bottom()
-            - delegate->topMargin() - delegate->bottomMargin()));
-    return alignedRectInContainer(container, QSize(w, h),
-                                  resolvedAlignment(delegate->alignment(), hDefault, vDefault),
-                                  padding, elementMargins(delegate));
+            - delegate->topMargin() - delegate->bottomMargin());
+    const uint alignment = resolvedAlignment(delegate->alignment(), hDefault, vDefault);
+
+    const QRectF r = alignedRectInContainer(
+        container, QSizeF(w, h), alignment, QMarginsF(padding),
+        QMarginsF(delegate->leftMargin(), delegate->topMargin(), delegate->rightMargin(),
+                  delegate->bottomMargin()));
+
+    using QtPrivate::qSaturateRound;
+    const int left = qSaturateRound(r.left());
+    const int top = qSaturateRound(r.top());
+    return QRect(left, top, qSaturateRound(r.right()) - left, qSaturateRound(r.bottom()) - top);
 }
 
 /*! \internal
@@ -2684,20 +2694,16 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
                                          QRect &drawRect) {
                 if (!sub)
                     return;
-                const QSize sz(qSaturateRound(sub->width()), qSaturateRound(sub->height()));
-                const QMargins subMargins = elementMargins(sub);
                 const int slotW = qSaturateRound(sub->leftMargin() + sub->width() + sub->rightMargin());
                 if (sub->alignment() & Qt::AlignRight) {
                     const QRect slot(contentRect.right() - rightOffset - slotW, contentRect.top(),
                                      slotW, contentRect.height());
-                    drawRect = alignedRectInContainer(
-                        slot, sz, Qt::AlignRight | Qt::AlignVCenter, { }, subMargins);
+                    drawRect = delegateRect(sub, slot, Qt::AlignRight, Qt::AlignVCenter);
                     rightOffset += slotW + spacing;
                 } else {
                     const QRect slot(contentRect.left() + leftOffset, contentRect.top(), slotW,
                                      contentRect.height());
-                    drawRect = alignedRectInContainer(
-                        slot, sz, Qt::AlignLeft | Qt::AlignVCenter, { }, subMargins);
+                    drawRect = delegateRect(sub, slot, Qt::AlignLeft, Qt::AlignVCenter);
                     leftOffset += slotW + spacing;
                 }
             };
@@ -3036,9 +3042,8 @@ QRect QStyleKitStyle::subElementRect(SubElement r, const QStyleOption *opt,
             }
             const uint decorationAlign = resolvedAlignment(itemViewOption->decorationAlignment,
                                                            Qt::AlignLeft, Qt::AlignVCenter);
-            decorationRect = alignedRectInContainer(
-                    decorationRect, decorationSize, decorationAlign, QMargins(0, 0, 0, 0),
-                    QMargins(0, 0, 0, 0));
+            decorationRect = alignedRect(Qt::LeftToRight, Qt::Alignment(decorationAlign),
+                                         decorationSize, decorationRect);
             return visualRect(opt->direction, opt->rect, decorationRect);
         }
         break;
