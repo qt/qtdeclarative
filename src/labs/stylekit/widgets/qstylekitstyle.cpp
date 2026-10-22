@@ -2701,8 +2701,10 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
                     leftOffset += slotW + spacing;
                 }
             };
-            placeSubIndicator(first, firstDrawRect);
-            placeSubIndicator(second, secondDrawRect);
+            if (menuItem->menuHasCheckableItems)
+                placeSubIndicator(first, firstDrawRect);
+            if (menuItem->menuItemType == QStyleOptionMenuItem::SubMenu)
+                placeSubIndicator(second, secondDrawRect);
 
             if (first && menuItem->checkType != QStyleOptionMenuItem::NotCheckable
                     && menuItem->checked) {
@@ -2719,23 +2721,24 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
             QRect textRect = contentRect
                 .adjusted(leftOffset, 0, -rightOffset, 0)
                 .marginsRemoved(r.metrics->textPadding);
-            if (!menuItem->icon.isNull()) {
-                const int iconW = menuItem->maxIconWidth;
-                const QIcon::Mode mode = (menuItem->state & State_Enabled)
-                    ? QIcon::Normal
-                    : QIcon::Disabled;
+            // Reserve the icon column in all items if any item in the menu has an icon
+            if (menuItem->maxIconWidth > 0) {
                 const int iconExtent = proxy()->pixelMetric(PM_SmallIconSize, opt, w);
-                const QPixmap pm = menuItem->icon.pixmap(
-                    QSize(iconExtent, iconExtent), p->device()->devicePixelRatio(), mode);
-                const QSize pmSize = pm.size() / pm.devicePixelRatio();
-                const int pmW = pmSize.width();
-                const int pmH = pmSize.height();
-                p->drawPixmap(
-                    visualRect(menuItem->direction, textRect,
-                               QRect(textRect.left(),
-                                     textRect.top() + (textRect.height() - pmH) / 2, pmW, pmH)),
-                    pm);
-                textRect.setLeft(textRect.left() + iconW + r.metrics->spacing);
+                if (!menuItem->icon.isNull()) {
+                    const QIcon::Mode mode = (menuItem->state & State_Enabled)
+                        ? QIcon::Normal
+                        : QIcon::Disabled;
+                    const QPixmap pm = menuItem->icon.pixmap(
+                        QSize(iconExtent, iconExtent), p->device()->devicePixelRatio(), mode);
+                    const QSize pmSize = pm.size() / pm.devicePixelRatio();
+                    const QRect iconColumn(textRect.left(), textRect.top(), iconExtent,
+                                           textRect.height());
+                    p->drawPixmap(visualRect(menuItem->direction, textRect,
+                                             alignedRect(Qt::LeftToRight, Qt::AlignCenter, pmSize,
+                                                         iconColumn)),
+                                  pm);
+                }
+                textRect.setLeft(textRect.left() + iconExtent + r.metrics->spacing);
             }
 
             const int tabIdx = menuItem->text.indexOf(QLatin1Char('\t'));
@@ -4312,7 +4315,7 @@ QSize QStyleKitStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt,
             int indicatorW = 0;
             int indicatorH = 0;
             using QtPrivate::qSaturateRound;
-            if (first && menuItem->checkType != QStyleOptionMenuItem::NotCheckable) {
+            if (first && menuItem->menuHasCheckableItems) {
                 indicatorW += qSaturateRound(
                     first->leftMargin() + first->width() + first->rightMargin()) + m.spacing;
                 indicatorH = std::max(
@@ -4328,7 +4331,7 @@ QSize QStyleKitStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt,
             }
             const int bgH = m.bgImplicitSize.height() + m.margins.top() + m.margins.bottom();
             const int iconReserved = menuItem->maxIconWidth > 0
-                ? menuItem->maxIconWidth + m.spacing
+                ? proxy()->pixelMetric(PM_SmallIconSize, opt, widget) + m.spacing
                 : 0;
             const int contentW = contentsSize.width()
                 + m.padding.left() + m.padding.right()
