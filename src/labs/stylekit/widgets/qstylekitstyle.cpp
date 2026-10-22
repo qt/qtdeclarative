@@ -2339,18 +2339,52 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
 #if QT_CONFIG(combobox)
     case CE_ComboBoxLabel:
         if (const auto *comboBox = qstyleoption_cast<const QStyleOptionComboBox *>(opt)) {
-            if (comboBox->editable)
+            if (comboBox->editable && comboBox->currentIcon.isNull())
                 return;
             const auto r = d->resolve(w, QQStyleKitReader::ControlType::ComboBox, comboBox->state);
             if (!r.isValid())
                 break;
-            const QRect textRect = subControlRect(CC_ComboBox, comboBox, SC_ComboBoxEditField, w)
-                .marginsRemoved(r.metrics->textPadding);
+            const QRect editRect = subControlRect(CC_ComboBox, comboBox, SC_ComboBoxEditField, w);
+            const QRect textRect = editRect.marginsRemoved(r.metrics->textPadding);
             uint textFlags = Qt::TextShowMnemonic;
             if (!styleHint(SH_UnderlineShortcut, opt, w))
                 textFlags |= Qt::TextHideMnemonic;
-            r.drawText(textRect, comboBox->currentText, textFlags, p);
-            // TODO: Draw icon
+            if (comboBox->currentIcon.isNull()) {
+                r.drawText(textRect, comboBox->currentText, textFlags, p);
+                return;
+            }
+            const QIcon::Mode mode = comboBox->state & State_Enabled
+                ? QIcon::Normal
+                : QIcon::Disabled;
+            const QPixmap pm = comboBox->currentIcon.pixmap(
+                comboBox->iconSize, p->device()->devicePixelRatio(), mode);
+            const QSize pmSize = pm.size() / pm.devicePixelRatio();
+            if (comboBox->editable) {
+                // QComboBox leaves iconSize + 4 free for the icon, in front of the line edit
+                const QRect iconSlot = alignedRect(
+                    comboBox->direction, Qt::AlignLeft | Qt::AlignVCenter,
+                    QSize(comboBox->iconSize.width() + 4, editRect.height()), editRect);
+                p->drawPixmap(alignedRect(comboBox->direction, Qt::AlignCenter, pmSize, iconSlot),
+                              pm);
+                return;
+            }
+            // Align icon + text as one group, like IconLabel
+            const auto *textProps = r.text();
+            const auto alignment = Qt::Alignment(resolvedAlignment(
+                textProps ? textProps->alignment() : 0u, Qt::AlignHCenter, Qt::AlignVCenter));
+            const QSize textSize = QFontMetrics(r.font().resolve(p->font()))
+                .size(textFlags, comboBox->currentText);
+            const int spacing = comboBox->currentText.isEmpty() ? 0 : r.metrics->spacing;
+            const QSize labelSize(pmSize.width() + spacing + textSize.width(),
+                                  qMax(pmSize.height(), textSize.height()));
+            const QRect labelRect = alignedRect(comboBox->direction, alignment, labelSize,
+                                                textRect);
+            p->drawPixmap(alignedRect(comboBox->direction, Qt::AlignLeft | Qt::AlignVCenter,
+                                      pmSize, labelRect),
+                          pm);
+            r.drawText(alignedRect(comboBox->direction, Qt::AlignRight | Qt::AlignVCenter,
+                                   textSize, labelRect),
+                       comboBox->currentText, textFlags, p);
             return;
         }
         break;
@@ -4117,8 +4151,12 @@ QSize QStyleKitStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt,
             if (!resolved.isValid())
                 break;
             const auto &metrics = *resolved.metrics;
-            const QSize textSize = opt->fontMetrics.size(
+            QSize textSize = opt->fontMetrics.size(
                 Qt::TextShowMnemonic, comboBox->currentText);
+            if (!comboBox->currentIcon.isNull()) {
+                textSize.rwidth() += comboBox->iconSize.width() + metrics.spacing;
+                textSize.setHeight(qMax(textSize.height(), comboBox->iconSize.height()));
+            }
             const int bgW = metrics.bgImplicitSize.width()
                 + metrics.margins.left() + metrics.margins.right();
             const int bgH = metrics.bgImplicitSize.height()
