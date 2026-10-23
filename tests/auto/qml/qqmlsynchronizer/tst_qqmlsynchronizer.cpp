@@ -25,6 +25,17 @@ private slots:
     void valueTypes();
     void modelObject();
     void warnings();
+    void unnotified();
+};
+
+class Unnotified : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    Q_PROPERTY(int unnotified READ unnotified CONSTANT)
+public:
+    Unnotified(QObject *parent = nullptr) : QObject(parent) {}
+    int unnotified() const { return 12; }
 };
 
 class BindablePoint : public QObject
@@ -45,6 +56,7 @@ tst_qqmlsynchronizer::tst_qqmlsynchronizer()
     : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
     qmlRegisterTypesAndRevisions<BindablePoint>("Test", 1);
+    qmlRegisterTypesAndRevisions<Unnotified>("Test", 1);
 }
 
 void tst_qqmlsynchronizer::basics_data()
@@ -246,6 +258,22 @@ void tst_qqmlsynchronizer::warnings()
                 + ":25:43: QML Synchronizer: Cannot convert from QPointF to QObject*"));
 
     o->setProperty("point", QPointF(13, 14));
+}
+
+void tst_qqmlsynchronizer::unnotified()
+{
+    QQmlEngine engine;
+    const QUrl url = testFileUrl("unnotified.qml");
+    QQmlComponent c(&engine, url);
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QCOMPARE(o->property("count").toInt(), 12);
+
+    // Don't crash when disconnecting
+    o->setProperty("sourceProperty", QStringLiteral("objectName"));
+    o->setObjectName("17");
+    QCOMPARE(o->property("count").toInt(), 17);
 }
 
 QTEST_MAIN(tst_qqmlsynchronizer)
