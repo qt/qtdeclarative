@@ -249,8 +249,10 @@ void QSGRhiDistanceFieldGlyphCache::resizeTexture(TextureInfo *texInfo, int widt
     createTexture(texInfo, width, height);
 
     if (!texInfo->texture) {
-        if (oldTexture)
+        if (oldTexture) {
+            updateRhiTexture(oldTexture, nullptr, QSize());
             m_rc->deferredReleaseGlyphCacheTexture(oldTexture);
+        }
         return;
     }
 
