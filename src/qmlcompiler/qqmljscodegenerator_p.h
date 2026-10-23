@@ -331,7 +331,7 @@ private:
     void generateJumpCodeWithTypeConversions(int relativeOffset);
     void generateUnaryOperation(const QString &cppOperator);
     void generateInPlaceOperation(const QString &cppOperator);
-    void generateMoveOutVarAfterCall(const QString &outVar);
+    void generateMoveOutVarAfterCall(const QQmlJSScope::ConstPtr &scope, const QString &outVar);
     void generateTypeLookup(int index);
     void generateVariantEqualityComparison(
             QQmlJSRegisterContent nonStorable, const QString &registerName, bool invert);

@@ -1241,11 +1241,21 @@ void tst_QmlCppCodegen::callFactoryFunction()
     QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/callFactory.qml"_s));
     QVERIFY2(c.isReady(), qPrintable(c.errorString()));
 
-    QTest::ignoreMessage(QtDebugMsg, "Object created: 0");
+    QTest::failOnWarning();
+
+    QTest::ignoreMessage(QtWarningMsg, "Object created: 0");
+    QTest::ignoreMessage(QtWarningMsg, "Object created: 53");
     std::unique_ptr<QObject> o(c.create());
     QVERIFY(o);
 
-    QTest::ignoreMessage(QtDebugMsg, "Object destroyed: 0");
+    QCOMPARE(o->objectName(), "owned"_L1);
+
+    QTest::ignoreMessage(QtWarningMsg, "Object destroyed: 0");
+    engine.collectGarbage();
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+
+    // Only when the singleton goes down we want to see the owned object destroyed
+    QTest::ignoreMessage(QtWarningMsg, "Object destroyed: 53");
 }
 
 void tst_QmlCppCodegen::callObjectLookupOnNull()
