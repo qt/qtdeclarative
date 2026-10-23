@@ -614,8 +614,8 @@ void QQmlSynchronizerPrivate::disconnectObjectProperty(
             return handler.contains(synchronizerProperty);
         });
 
-        Q_ASSERT(handler != changeHandlers.end());
-        changeHandlers.erase(handler);
+        if (handler != changeHandlers.end())
+            changeHandlers.erase(handler);
     } else {
         slotObjects.erase(slot);
     }
