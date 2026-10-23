@@ -922,6 +922,8 @@ private:
     QRhiBuffer *m_uniformBuffer = nullptr;
     QByteArray m_uniformData;
     quint32 m_uniformDataSize = 0;
+    quint32 m_uniformDataPeak = 0;
+    int m_uniformDataPeakFrames = 0;
     bool m_uniformBufferFailed = false;
     uint m_ubufAlignment;
     bool m_uint32IndexForRhi;

@@ -89,6 +89,7 @@ const float VIEWPORT_MAX_DEPTH = 1.0f;
 const quint32 DEFAULT_BUFFER_POOL_SIZE_LIMIT = 2 * 1024 * 1024; // 2 MB for m_vboPool and m_iboPool each
 
 const quint32 MIN_UNIFORM_BUFFER_SIZE = 4096;
+const int UNIFORM_BUFFER_SHRINK_FRAMES = 300;
 
 template <class Int>
 inline Int aligned(Int v, Int byteAlign)
@@ -3901,6 +3902,23 @@ void Renderer::prepareRenderPass(RenderPassContext *ctx)
 
     m_gstate.sampleCount = renderTarget().rt->sampleCount();
     m_gstate.multiViewCount = renderTarget().multiViewCount;
+
+    // Give back memory when the scene has become much smaller: if the peak
+    // usage in the last UNIFORM_BUFFER_SHRINK_FRAMES frames is less than a
+    // quarter of the uniform buffer size, shrink to twice the peak. Done
+    // before anything refers to the buffer in this frame.
+    m_uniformDataPeak = qMax(m_uniformDataPeak, m_uniformDataSize);
+    if (++m_uniformDataPeakFrames == UNIFORM_BUFFER_SHRINK_FRAMES) {
+        const quint32 size = qMax(2 * m_uniformDataPeak, MIN_UNIFORM_BUFFER_SIZE);
+        if (m_uniformBuffer && m_uniformBuffer->size() > 2 * size)
+            shrinkUniformBuffer(size);
+        if (quint32(m_uniformData.size()) > 2 * size) {
+            m_uniformData.resize(size);
+            m_uniformData.squeeze();
+        }
+        m_uniformDataPeak = 0;
+        m_uniformDataPeakFrames = 0;
+    }
 
     m_uniformDataSize = 0;
     m_uniformBufferFailed = false;
