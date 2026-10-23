@@ -226,6 +226,8 @@ void QQStyleKitStyle::setFallbackStyle(QQStyleKitStyle *fallbackStyle)
     if (fonts())
         fonts()->setFallbackFont(m_fallbackStyle ? m_fallbackStyle->fonts() : nullptr);
 
+    if (loaded())
+        reapplyStyle();
 }
 
 void QQStyleKitStyle::setLight(QQmlComponent *lightTheme)

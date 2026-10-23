@@ -6,6 +6,7 @@
 #include <QtCore/qcoreapplication.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
+#include <QtQml/qqmlparserstatus.h>
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <QtQuick/private/qquicktransition_p.h>
 #include <QtQuick/private/qquickimage_p.h>
@@ -13,6 +14,7 @@
 #include <QtLabsStyleKit/private/qqstylekit_p.h>
 #include <QtLabsStyleKit/private/qqstylekitstyle_p.h>
 #include <QtLabsStyleKit/private/qqstylekitreader_p.h>
+#include <QtLabsStyleKit/private/qqstylekitcontrol_p.h>
 
 using namespace Qt::StringLiterals;
 
@@ -44,6 +46,7 @@ class tst_StyleKit : public QObject
 
 private slots:
     void setNullptrStyle();
+    void changeFallbackStyleAtRunTime();
     void propagationStyleAndFallback();
     void propagationThemeAndStyle();
     void propagationThemeStyleFallbackStyle_data();
@@ -80,6 +83,35 @@ void tst_StyleKit::setNullptrStyle()
     QCOMPARE(attached->style(), nullptr);
     QCOMPARE(styleChangedSpy.count(), 2);
     QCOMPARE(reader.spacing(), 0);
+}
+
+void tst_StyleKit::changeFallbackStyleAtRunTime()
+{
+    // A fallback style that is set (or cleared) after the style has been loaded
+    // must cause the style to be reapplied, so that readers see the new values.
+    QQStyleKitStyle style;
+    QQStyleKitStyle fallbackStyle;
+    static_cast<QQmlParserStatus *>(&style)->componentComplete();
+    static_cast<QQmlParserStatus *>(&fallbackStyle)->componentComplete();
+
+    QQStyleKitReader reader;
+    reader.setExplicitStyle(&style);
+    reader.setControlType(QQStyleKitReader::ControlType::Button);
+
+    QSignalSpy fallbackChangedSpy(&style, &QQStyleKitStyle::fallbackStyleChanged);
+
+    fallbackStyle.button()->setSpacing(3);
+    style.setFallbackStyle(&fallbackStyle);
+    QCOMPARE(fallbackChangedSpy.count(), 1);
+    QCOMPARE(reader.spacing(), 3);
+
+    style.setFallbackStyle(nullptr);
+    QCOMPARE(fallbackChangedSpy.count(), 2);
+    QCOMPARE(reader.spacing(), 0);
+
+    style.setFallbackStyle(&fallbackStyle);
+    QCOMPARE(fallbackChangedSpy.count(), 3);
+    QCOMPARE(reader.spacing(), 3);
 }
 
 void tst_StyleKit::propagationStyleAndFallback()
