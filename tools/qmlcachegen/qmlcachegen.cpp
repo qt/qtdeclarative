@@ -315,16 +315,6 @@ int main(int argc, char **argv)
                 return EXIT_FAILURE;
             }
 
-            QList<QQmlJS::DiagnosticMessage> warnings = importer.takeGlobalWarnings();
-
-            if (!warnings.isEmpty()) {
-                logger.log("Type warnings occurred while compiling file:"_L1,
-                           qmlImport, QQmlJS::SourceLocation());
-                logger.processMessages(warnings, qmlImport);
-                if (parser.isSet(warningsAreErrorsOption))
-                    return EXIT_FAILURE;
-            }
-
             if (parser.isSet(dumpAotStatsOption))
                 QQmlJS::QQmlJSAotCompilerStats::instance()->saveToDisk(outputFileName + u".aotstats"_s);
         }

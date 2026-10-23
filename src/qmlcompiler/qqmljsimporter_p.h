@@ -199,13 +199,6 @@ public:
 
     ImportedTypes builtinInternalNames();
 
-    QList<QQmlJS::DiagnosticMessage> takeGlobalWarnings()
-    {
-        const auto result = std::move(m_globalWarnings);
-        m_globalWarnings.clear();
-        return result;
-    }
-
     QStringList importPaths() const { return m_importPaths; }
     void setImportPaths(const QStringList &importPaths);
 
@@ -384,7 +377,6 @@ private:
 
     // The imports through which documents see a type, by file path of the type
     QHash<QString, QList<VersionedImport>> m_versionedImports;
-    QList<QQmlJS::DiagnosticMessage> m_globalWarnings;
     std::optional<AvailableTypes> m_builtins;
 
     const QQmlJSResourceFileMapper *m_mapper = nullptr;

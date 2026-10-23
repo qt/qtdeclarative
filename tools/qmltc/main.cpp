@@ -301,15 +301,6 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
 
-    QList<QQmlJS::DiagnosticMessage> warnings = importer.takeGlobalWarnings();
-    if (!warnings.isEmpty()) {
-        logger.log(QStringLiteral("Type warnings occurred while compiling file:"), qmlImport,
-                   QQmlJS::SourceLocation());
-        logger.processMessages(warnings, qmlImport);
-        // Log_Import is critical for the compiler
-        return EXIT_FAILURE;
-    }
-
     QQmltc::Compiler compiler(url, &typeResolver, &visitor, &logger);
     compiler.compile(info);
 

@@ -860,14 +860,6 @@ void QQmlJSLinter::lintFileImpl(const QString &filename)
     qCompileQmlFile(filename, saveFunction, &codegen, &error, true, &warningInterface,
                     lintInfo.fileContents);
 
-    QList<QQmlJS::DiagnosticMessage> globalWarnings = m_importer.takeGlobalWarnings();
-
-    if (!globalWarnings.isEmpty()) {
-        lintInfo.result.logger->log(QStringLiteral("Type warnings occurred while evaluating file:"),
-                                    qmlImport, QQmlJS::SourceLocation());
-        lintInfo.result.logger->processMessages(globalWarnings, qmlImport);
-    }
-
     checkMaxWarnings(lintInfo.result.logger.get(), lintInfo.maxWarnings);
     lintInfo.result.setStatusFromLogger();
 }
@@ -924,9 +916,7 @@ QQmlJSLinter::Result QQmlJSLinter::lintModuleImpl(const QString &module, LintOpt
     const QQmlJSImporter::ImportedTypes types =
             m_importer.importModule(module, quint8(QQmlJS::PrecedenceValues::Default));
 
-    QList<QQmlJS::DiagnosticMessage> importWarnings =
-            m_importer.takeGlobalWarnings() + types.warnings();
-
+    QList<QQmlJS::DiagnosticMessage> importWarnings = types.warnings();
     if (!importWarnings.isEmpty()) {
         result.logger->log(QStringLiteral("Warnings occurred while importing module:"), qmlImport,
                            QQmlJS::SourceLocation());
