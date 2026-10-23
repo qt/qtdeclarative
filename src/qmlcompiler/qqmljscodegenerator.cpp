@@ -1975,12 +1975,18 @@ QString QQmlJSCodeGenerator::initAndCall(
             + u"};\n"_s;
 }
 
-void QQmlJSCodeGenerator::generateMoveOutVarAfterCall(const QString &outVar)
+void QQmlJSCodeGenerator::generateMoveOutVarAfterCall(const QQmlJSScope::ConstPtr &scope,
+                                                      const QString &outVar)
 {
     if (m_state.accumulatorVariableOut.isEmpty() || outVar.isEmpty())
         return;
 
     m_body += m_state.accumulatorVariableOut + u" = "_s + u"std::move(" + outVar + u");\n";
+
+    // Don't transfer ownership if we've called a JavaScript function.
+    if (scope->isComposite())
+        return;
+
     m_body += u"aotContext->setImplicitDestructible("_s
             + m_state.accumulatorVariableOut + u");\n"_s;
 }
@@ -2509,10 +2515,10 @@ void QQmlJSCodeGenerator::generate_CallPropertyLookup(int index, int base, int a
     const QString lookup = u"doCall()"_s;
     const QString initialization = u"doInit()"_s;
     const QString preparation = getLookupPreparation(m_state.accumulatorOut(), outVar, index);
-    recordMethodLookup(m_typeResolver->originalContainedType(m_state.accumulatorOut().scope()),
+    recordMethodLookup(m_typeResolver->originalContainedType(scopeContent),
                        originalMethod(m_state.accumulatorOut()));
     generateLookup(lookup, initialization, preparation);
-    generateMoveOutVarAfterCall(outVar);
+    generateMoveOutVarAfterCall(scope, outVar);
 
     m_body += u"}\n"_s;
 
@@ -2551,7 +2557,8 @@ void QQmlJSCodeGenerator::generate_CallQmlContextPropertyLookup(int index, int a
 {
     INJECT_TRACE_INFO(generate_CallQmlContextPropertyLookup);
 
-    if (m_state.accumulatorOut().scope().contains(m_typeResolver->jsGlobalObject())) {
+    const QQmlJSRegisterContent scope = m_state.accumulatorOut().scope();
+    if (scope.contains(m_typeResolver->jsGlobalObject())) {
         const QString name = m_jsUnitGenerator->stringForIndex(
                 m_jsUnitGenerator->lookupNameIndex(index));
         if (inlineTranslateMethod(name, argc, argv))
@@ -2572,10 +2579,10 @@ void QQmlJSCodeGenerator::generate_CallQmlContextPropertyLookup(int index, int a
     const QString lookup = u"doCall()"_s;
     const QString initialization = u"doInit()"_s;
     const QString preparation = getLookupPreparation(m_state.accumulatorOut(), outVar, index);
-    recordMethodLookup(m_typeResolver->originalContainedType(m_state.accumulatorOut().scope()),
+    recordMethodLookup(m_typeResolver->originalContainedType(scope),
                        originalMethod(m_state.accumulatorOut()));
     generateLookup(lookup, initialization, preparation);
-    generateMoveOutVarAfterCall(outVar);
+    generateMoveOutVarAfterCall(scope.containedType(), outVar);
 
     m_body += u"}\n"_s;
 }

@@ -19,10 +19,10 @@ public:
         : QObject(parent)
         , m_identifier(identifier)
     {
-        qDebug() << "Object created:" << m_identifier;
+        qWarning() << "Object created:" << m_identifier;
     }
 
-    ~CppObj() { qDebug() << "Object destroyed:" << m_identifier; }
+    ~CppObj() { qWarning() << "Object destroyed:" << m_identifier; }
 
 private:
     int m_identifier = -1;
@@ -33,14 +33,25 @@ class CppBridge : public QObject
     Q_OBJECT
     QML_ELEMENT
     QML_SINGLETON
+    Q_PROPERTY(CppObj *ownedObject READ ownedObject CONSTANT)
 
 public:
-    explicit CppBridge(QObject *parent = nullptr) : QObject{parent} {}
+    explicit CppBridge(QObject *parent = nullptr)
+        : QObject{parent}
+        , m_ownedObject(std::make_unique<CppObj>(53))
+    {
+        m_ownedObject->setObjectName("owned");
+    }
 
     Q_INVOKABLE CppObj *singleObj(int identifier) const
     {
         return new CppObj(identifier);
     }
+
+    CppObj *ownedObject() const { return m_ownedObject.get(); }
+
+private:
+    std::unique_ptr<CppObj> m_ownedObject;
 };
 
 #endif // CPPOBJ_H
