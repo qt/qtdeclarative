@@ -990,10 +990,10 @@ public:
     int replyStatus() const;
     QString replyStatusText() const;
 
-    ReturnedValue open(Object *thisObject, const QString &, const QUrl &, LoadType);
-    ReturnedValue send(Object *thisObject, const QQmlRefPointer<QQmlContextData> &context,
+    ReturnedValue open(Heap::Object *thisObject, const QString &, const QUrl &, LoadType);
+    ReturnedValue send(Heap::Object *thisObject, const QQmlRefPointer<QQmlContextData> &context,
                        const QByteArray &);
-    ReturnedValue abort(Object *thisObject);
+    ReturnedValue abort(Heap::Object *thisObject);
 
     void addHeader(const QString &, const QString &);
     QString header(const QString &name) const;
@@ -1015,12 +1015,12 @@ public:
     QV4::ReturnedValue jsonResponseBody(QV4::ExecutionEngine*);
     QV4::ReturnedValue xmlResponseBody(QV4::ExecutionEngine*);
 private slots:
-    void readyRead();
-    void error(QNetworkReply::NetworkError);
-    void finished();
+    void readyRead(QV4::Heap::Object *thisObject);
+    void error(QV4::Heap::Object *thisObject, QNetworkReply::NetworkError);
+    void finished(QV4::Heap::Object *thisObject);
 
 private:
-    void requestFromUrl(const QUrl &url);
+    void requestFromUrl(QV4::Heap::Object *thisObject, const QUrl &url);
 
     State m_state;
     bool m_errorFlag;
@@ -1049,9 +1049,21 @@ private:
     QQmlRefPointer<QQmlContextData> m_qmlContext;
     bool m_wasConstructedWithQmlContext = true;
 
-    void dispatchCallbackNow(Object *thisObj);
-    static void dispatchCallbackNow(Object *thisObj, bool done, bool error);
-    void dispatchCallbackSafely();
+    void dispatchCallbackNow(Heap::Object *thisObj);
+    static void dispatchCallbackNow(Heap::Object *thisObj, bool done, bool error);
+    void dispatchCallbackSafely(Heap::Object *thisObject);
+
+    template<typename F>
+    void withThisObjectIfValid(Heap::Object *expected, F &&f) const
+    {
+        Object *thisObject = m_thisObject.as<Object>();
+        if (thisObject && thisObject->d() == expected) {
+            // Scope it one more time, in case the callback clears m_thisObject.
+            QV4::Scope scope(thisObject->engine());
+            QV4::ScopedObject scoped(scope, thisObject);
+            f(expected);
+        }
+    }
 
     int m_status;
     QString m_statusText;
@@ -1104,7 +1116,7 @@ QString QQmlXMLHttpRequest::replyStatusText() const
     return m_statusText;
 }
 
-ReturnedValue QQmlXMLHttpRequest::open(Object *thisObject, const QString &method, const QUrl &url, LoadType loadType)
+ReturnedValue QQmlXMLHttpRequest::open(Heap::Object *thisObject, const QString &method, const QUrl &url, LoadType loadType)
 {
     destroyNetwork();
     m_sendFlag = false;
@@ -1171,7 +1183,7 @@ void QQmlXMLHttpRequest::fillHeadersList()
     }
 }
 
-void QQmlXMLHttpRequest::requestFromUrl(const QUrl &url)
+void QQmlXMLHttpRequest::requestFromUrl(Heap::Object *thisObject, const QUrl &url)
 {
     m_url = url;
     QNetworkRequest request = m_request;
@@ -1257,41 +1269,49 @@ void QQmlXMLHttpRequest::requestFromUrl(const QUrl &url)
 
     if (m_request.attribute(QNetworkRequest::SynchronousRequestAttribute).toBool()) {
         if (m_network->bytesAvailable() > 0)
-            readyRead();
+            readyRead(thisObject);
 
         QNetworkReply::NetworkError networkError = m_network->error();
         if (networkError != QNetworkReply::NoError) {
-            error(networkError);
+            error(thisObject, networkError);
         } else {
-            finished();
+            finished(thisObject);
         }
     } else {
-        QObject::connect(m_network, SIGNAL(readyRead()),
-                         this, SLOT(readyRead()));
-        QObject::connect(m_network, SIGNAL(errorOccurred(QNetworkReply::NetworkError)),
-                         this, SLOT(error(QNetworkReply::NetworkError)));
-        QObject::connect(m_network, SIGNAL(finished()),
-                         this, SLOT(finished()));
+        QObject::connect(m_network, &QNetworkReply::readyRead, this, [this, thisObject]() {
+            withThisObjectIfValid(thisObject,
+                                  [this](Heap::Object *thisObject) { readyRead(thisObject); });
+        });
+        QObject::connect(m_network, &QNetworkReply::errorOccurred, this,
+                         [this, thisObject](QNetworkReply::NetworkError networkError) {
+            withThisObjectIfValid(thisObject, [this, networkError](Heap::Object *thisObject) {
+                error(thisObject, networkError);
+            });
+        });
+        QObject::connect(m_network, &QNetworkReply::finished, this, [this, thisObject]() {
+            withThisObjectIfValid(thisObject,
+                                  [this](Heap::Object *thisObject) { finished(thisObject); });
+        });
     }
 }
 
 ReturnedValue QQmlXMLHttpRequest::send(
-        Object *thisObject, const QQmlRefPointer<QQmlContextData> &context, const QByteArray &data)
+        Heap::Object *thisObject, const QQmlRefPointer<QQmlContextData> &context, const QByteArray &data)
 {
     m_errorFlag = false;
     m_sendFlag = true;
     m_redirectCount = 0;
     m_data = data;
 
-    m_thisObject = thisObject;
+    m_thisObject.set(thisObject->internalClass->engine, thisObject);
     m_qmlContext = context;
 
-    requestFromUrl(m_url);
+    requestFromUrl(thisObject, m_url);
 
     return Encode::undefined();
 }
 
-ReturnedValue QQmlXMLHttpRequest::abort(Object *thisObject)
+ReturnedValue QQmlXMLHttpRequest::abort(Heap::Object *thisObject)
 {
     destroyNetwork();
     m_responseEntityBody = QByteArray();
@@ -1308,11 +1328,12 @@ ReturnedValue QQmlXMLHttpRequest::abort(Object *thisObject)
     }
 
     m_state = Unsent;
+    m_thisObject.clear();
 
     return Encode::undefined();
 }
 
-void QQmlXMLHttpRequest::readyRead()
+void QQmlXMLHttpRequest::readyRead(Heap::Object *thisObject)
 {
     m_status =
         m_network->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
@@ -1323,7 +1344,7 @@ void QQmlXMLHttpRequest::readyRead()
     if (m_state < HeadersReceived) {
         m_state = HeadersReceived;
         fillHeadersList();
-        dispatchCallbackSafely();
+        dispatchCallbackSafely(thisObject);
     }
 
     bool wasEmpty = m_responseEntityBody.isEmpty();
@@ -1331,7 +1352,7 @@ void QQmlXMLHttpRequest::readyRead()
     if (wasEmpty && !m_responseEntityBody.isEmpty())
         m_state = Loading;
 
-    dispatchCallbackSafely();
+    dispatchCallbackSafely(thisObject);
 }
 
 static const char *errorToString(QNetworkReply::NetworkError error)
@@ -1346,7 +1367,7 @@ static const char *errorToString(QNetworkReply::NetworkError error)
     else return name;
 }
 
-void QQmlXMLHttpRequest::error(QNetworkReply::NetworkError error)
+void QQmlXMLHttpRequest::error(Heap::Object *thisObject, QNetworkReply::NetworkError error)
 {
     m_status =
         m_network->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
@@ -1376,18 +1397,19 @@ void QQmlXMLHttpRequest::error(QNetworkReply::NetworkError error)
         error == QNetworkReply::ServiceUnavailableError ||
         error == QNetworkReply::UnknownServerError) {
         m_state = Loading;
-        dispatchCallbackSafely();
+        dispatchCallbackSafely(thisObject);
     } else {
         m_errorFlag = true;
         m_responseEntityBody = QByteArray();
     }
 
     m_state = Done;
-    dispatchCallbackSafely();
+    m_thisObject.clear();
+    dispatchCallbackSafely(thisObject);
 }
 
 #define XMLHTTPREQUEST_MAXIMUM_REDIRECT_RECURSION 15
-void QQmlXMLHttpRequest::finished()
+void QQmlXMLHttpRequest::finished(Heap::Object *thisObject)
 {
     m_redirectCount++;
     if (m_redirectCount < XMLHTTPREQUEST_MAXIMUM_REDIRECT_RECURSION) {
@@ -1405,7 +1427,7 @@ void QQmlXMLHttpRequest::finished()
                 // Discard redirect response body
                 m_responseEntityBody = QByteArray();
 
-                requestFromUrl(url);
+                requestFromUrl(thisObject, url);
                 return;
             }
         }
@@ -1419,7 +1441,7 @@ void QQmlXMLHttpRequest::finished()
     if (m_state < HeadersReceived) {
         m_state = HeadersReceived;
         fillHeadersList ();
-        dispatchCallbackSafely();
+        dispatchCallbackSafely(thisObject);
     }
     m_responseEntityBody.append(m_network->readAll());
     readEncoding();
@@ -1436,14 +1458,13 @@ void QQmlXMLHttpRequest::finished()
     destroyNetwork();
     if (m_state < Loading) {
         m_state = Loading;
-        dispatchCallbackSafely();
+        dispatchCallbackSafely(thisObject);
     }
+
     m_state = Done;
 
-    dispatchCallbackSafely();
-
     m_thisObject.clear();
-    m_qmlContext.reset();
+    dispatchCallbackSafely(thisObject);
 }
 
 
@@ -1572,19 +1593,20 @@ const QByteArray &QQmlXMLHttpRequest::rawResponseBody() const
     return m_responseEntityBody;
 }
 
-void QQmlXMLHttpRequest::dispatchCallbackNow(Object *thisObj)
+void QQmlXMLHttpRequest::dispatchCallbackNow(Heap::Object *thisObj)
 {
     dispatchCallbackNow(thisObj, m_state == Done, m_errorFlag);
 }
 
-void QQmlXMLHttpRequest::dispatchCallbackNow(Object *thisObj, bool done, bool error)
+void QQmlXMLHttpRequest::dispatchCallbackNow(Heap::Object *thisObj, bool done, bool error)
 {
     Q_ASSERT(thisObj);
 
     const auto dispatch = [thisObj](const QString &eventName) {
-        QV4::Scope scope(thisObj->engine());
+        QV4::Scope scope(thisObj->internalClass->engine);
         ScopedString s(scope, scope.engine->newString(eventName));
-        ScopedFunctionObject callback(scope, thisObj->get(s));
+        QV4::ScopedObject callbackOwner(scope, thisObj);
+        ScopedFunctionObject callback(scope, callbackOwner->get(s));
         // not an error, but no event handler to call.
         if (!callback)
             return;
@@ -1609,7 +1631,7 @@ void QQmlXMLHttpRequest::dispatchCallbackNow(Object *thisObj, bool done, bool er
     }
 }
 
-void QQmlXMLHttpRequest::dispatchCallbackSafely()
+void QQmlXMLHttpRequest::dispatchCallbackSafely(Heap::Object *thisObject)
 {
     if (m_wasConstructedWithQmlContext && m_qmlContext.isNull()) {
         // if the calling context object is no longer valid, then it has been
@@ -1619,7 +1641,7 @@ void QQmlXMLHttpRequest::dispatchCallbackSafely()
         return;
     }
 
-    dispatchCallbackNow(m_thisObject.as<Object>());
+    dispatchCallbackNow(thisObject);
 }
 
 void QQmlXMLHttpRequest::destroyNetwork()
@@ -1821,7 +1843,9 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_open(const FunctionObject *b, const
     if (!username.isNull()) url.setUserName(username);
     if (!password.isNull()) url.setPassword(password);
 
-    return r->open(w, method, url, async ? QQmlXMLHttpRequest::AsynchronousLoad : QQmlXMLHttpRequest::SynchronousLoad);
+    return r->open(w->d(), method, url,
+                   async ? QQmlXMLHttpRequest::AsynchronousLoad
+                         : QQmlXMLHttpRequest::SynchronousLoad);
 }
 
 ReturnedValue QQmlXMLHttpRequestCtor::method_setRequestHeader(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
@@ -1891,7 +1915,7 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_send(const FunctionObject *b, const
         }
     }
 
-    return r->send(w, scope.engine->callingQmlContext(), data);
+    return r->send(w->d(), scope.engine->callingQmlContext(), data);
 }
 
 ReturnedValue QQmlXMLHttpRequestCtor::method_abort(const FunctionObject *b, const Value *thisObject, const Value *, int)
@@ -1902,7 +1926,7 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_abort(const FunctionObject *b, cons
         V4THROW_REFERENCE("Not an XMLHttpRequest object");
     QQmlXMLHttpRequest *r = w->d()->request;
 
-    return r->abort(w);
+    return r->abort(w->d());
 }
 
 ReturnedValue QQmlXMLHttpRequestCtor::method_getResponseHeader(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)

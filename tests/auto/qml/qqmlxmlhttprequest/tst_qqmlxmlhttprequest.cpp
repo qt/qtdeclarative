@@ -114,6 +114,7 @@ private slots:
     // void readyState()
 
     void stateChangeCallingContext();
+    void reopen_on_done();
 
 private:
     void doFileRequest(std::function<void(QObject *component, QTemporaryFile &writeFile)> verifyFunction);
@@ -1544,6 +1545,18 @@ void tst_qqmlxmlhttprequest::stateChangeCallingContext()
     component.completeCreate();
     server.sendDelayedItem();
     QTRY_VERIFY_WITH_TIMEOUT(object->property("success").toBool(), 3s);
+}
+
+void tst_qqmlxmlhttprequest::reopen_on_done()
+{
+    TestHTTPServer server;
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
+    server.serveDirectory(dataDirectory());
+    QQmlComponent component(engine.get(), testFileUrl("reopen_on_done.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(object);
+    QTRY_VERIFY(object->property("dataOK").toBool());
 }
 
 void tst_qqmlxmlhttprequest::overrideMime()
