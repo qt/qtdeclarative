@@ -70,11 +70,6 @@ QQmlFunctionSorter::QQmlFunctionSorter(QObject *parent)
 
 QQmlFunctionSorter::~QQmlFunctionSorter()
 {
-    Q_D(QQmlFunctionSorter);
-    if (d->m_lhsParameterData.metaType().flags() & QMetaType::PointerToQObject)
-        delete d->m_lhsParameterData.value<QObject *>();
-    if (d->m_rhsParameterData.metaType().flags() & QMetaType::PointerToQObject)
-        delete d->m_rhsParameterData.value<QObject *>();
 }
 
 void QQmlFunctionSorter::componentComplete()
@@ -168,6 +163,18 @@ void QQmlFunctionSorter::componentComplete()
             created0 = parameterQmlType.metaObject()->newInstance();
             created1 = parameterQmlType.metaObject()->newInstance();
         }
+
+        if (!created0 || !created1) {
+            qmlWarning(this) << d->m_method.name() << " could not create its parameter objects.";
+            delete created0;
+            delete created1;
+            return;
+        }
+
+        QQmlEngine::setObjectOwnership(created0, QQmlEngine::CppOwnership);
+        QQmlEngine::setObjectOwnership(created1, QQmlEngine::CppOwnership);
+        created0->setParent(this);
+        created1->setParent(this);
 
         const auto names = d->m_method.parameterNames();
         created0->setObjectName(names[0]);

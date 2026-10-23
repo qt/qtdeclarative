@@ -1,6 +1,7 @@
 // Copyright (C) 2025 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
+#include <QPointer>
 #include <QStandardItemModel>
 #include <QAbstractItemModelTester>
 #include <QSignalSpy>
@@ -93,6 +94,8 @@ private slots:
 
     void crashUntypedCompare_data();
     void crashUntypedCompare();
+
+    void functionSorterCrashWhenOutlivesEngine();
 };
 
 class CustomTableModel : public QAbstractTableModel
@@ -2409,6 +2412,75 @@ void tst_QQmlSortFilterProxyModel::crashUntypedCompare()
     if (!errorMessage.isEmpty()) {
         QVERIFY(warnings.first().description().contains(errorMessage));
     }
+}
+
+
+void tst_QQmlSortFilterProxyModel::functionSorterCrashWhenOutlivesEngine()
+{
+    const QStringList initial = {"cherry", "apple", "banana"};
+    QStandardItemModel standardModel;
+    for (const auto &data : initial)
+        standardModel.appendRow(new QStandardItem(data));
+
+    std::unique_ptr<QQmlEngine> engine(new QQmlEngine);
+    std::unique_ptr<QObject> object;
+    {
+        QQmlComponent component(engine.get(), testFileUrl("sfpmSuperClassFilterSorter.qml"));
+        QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
+        object.reset(component.create());
+        QVERIFY(object);
+    }
+
+    auto *sfpmModel = object->property("sfpmProxyModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(sfpmModel);
+    sfpmModel->setSourceModel(&standardModel);
+
+    auto *sorter = object->property("derivedSorter").value<QQmlSorterBase *>();
+    QVERIFY(sorter);
+
+    auto sorters = sfpmModel->property("sorters").value<QQmlListProperty<QQmlSorterBase>>();
+    sorters.append(&sorters, sorter);
+    QCOMPARE(sorters.count(&sorters), 1);
+
+    const QStringList expected = {"apple", "banana", "cherry"};
+    const auto sortedData = [sfpmModel] {
+        QStringList actual;
+        for (int row = 0; row < sfpmModel->rowCount(); ++row) {
+            actual += sfpmModel->data(sfpmModel->index(row, 0, QModelIndex()),
+                                      Qt::DisplayRole).toString();
+        }
+        return actual;
+    };
+
+    QCOMPARE(sortedData(), expected);
+
+    QPointer<QObject> lhsObj =
+            sorter->findChild<QObject *>(QStringLiteral("lhsData"), Qt::FindDirectChildrenOnly);
+    QPointer<QObject> rhsObj =
+            sorter->findChild<QObject *>(QStringLiteral("rhsData"), Qt::FindDirectChildrenOnly);
+
+    QVERIFY2(!lhsObj.isNull(), "the compare() parameter objects not parented to the sorter");
+    QVERIFY2(!rhsObj.isNull(), "the compare() parameter objects not parented to the sorter");
+
+    gc(*engine);
+    QVERIFY2(!lhsObj.isNull(), "the engine destroys parameter object owned by the sorter");
+    QVERIFY2(!rhsObj.isNull(), "the engine destroys parameter object owned by the sorter");
+
+    QCOMPARE(QQmlEngine::objectOwnership(lhsObj), QQmlEngine::CppOwnership);
+    QCOMPARE(QQmlEngine::objectOwnership(rhsObj), QQmlEngine::CppOwnership);
+
+    sfpmModel->invalidateSorter();
+    QCOMPARE(sortedData(), expected);
+
+    // Since the parameter objects owned by the sorter, those shouldnt be destroyed by the engine
+    engine.reset();
+    QVERIFY2(!lhsObj.isNull(), "the engine destroys parameter object owned by sorter");
+    QVERIFY2(!rhsObj.isNull(), "the engine destroys parameter object owned by sorter");
+
+    // Destroy the sorter instance and check whether the parameter objects been destroyed
+    object.reset();
+    QVERIFY(lhsObj.isNull());
+    QVERIFY(rhsObj.isNull());
 }
 
 QTEST_MAIN(tst_QQmlSortFilterProxyModel)
