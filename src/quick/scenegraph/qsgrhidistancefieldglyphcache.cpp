@@ -209,7 +209,16 @@ void QSGRhiDistanceFieldGlyphCache::createTexture(TextureInfo *texInfo,
 
     if (useTextureResizeWorkaround() && texInfo->image.isNull()) {
         texInfo->image = QDistanceField(width, height);
-        memcpy(texInfo->image.bits(), pixels, width * height);
+        if (texInfo->image.isNull()) {
+            qWarning("Failed to create distance field glyph cache");
+            delete newTexture;
+            texInfo->texture = nullptr;
+            texInfo->size = QSize();
+            texInfo->image = QDistanceField();
+            return;
+        } else {
+            memcpy(texInfo->image.bits(), pixels, width * height);
+        }
     }
 
     texInfo->texture = newTexture;
