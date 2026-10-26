@@ -252,8 +252,11 @@ void tst_qquickimage::imageSource()
 
     if (error.isEmpty()) {
         QTRY_COMPARE(obj->status(), QQuickImage::Ready);
-        QCOMPARE(obj->width(), qreal(width));
-        QCOMPARE(obj->height(), qreal(height));
+        const qreal dpr = qApp->devicePixelRatio();
+        const QString fileName = QUrl(source).fileName();
+        const bool scalable = fileName.endsWith(".svg"_L1) || fileName.endsWith(".svgz"_L1);
+        QCOMPARE(obj->width(), scalable ? qRound(width * dpr) / dpr : qreal(width));
+        QCOMPARE(obj->height(), scalable ? qRound(height * dpr) / dpr : qreal(height));
         QCOMPARE(obj->fillMode(), QQuickImage::Stretch);
         QCOMPARE(obj->progress(), 1.0);
     } else {
