@@ -1011,8 +1011,9 @@ void tst_qquicktextedit::hAlignVisual()
 
     // Try to check whether alignment works by checking the number of black
     // pixels in the thirds of the grabbed image.
-    const int windowWidth = view.width();
-    const int textWidth = qCeil(text->implicitWidth());
+    const qreal dpr = view.devicePixelRatio();
+    const int windowWidth = view.width() * dpr;
+    const int textWidth = qCeil(text->implicitWidth() * dpr);
     QVERIFY2(textWidth < windowWidth, "System font too large.");
     const int sectionWidth = textWidth / 3;
     const int centeredSection1 = (windowWidth - textWidth) / 2;
@@ -1055,7 +1056,7 @@ void tst_qquicktextedit::hAlignVisual()
     {
         // Right Align
         QImage image = view.grabWindow();
-        const int x = image.width() - qCeil(text->implicitWidth() * view.devicePixelRatio());
+        const int x = image.width() - qCeil(text->implicitWidth() * dpr);
         const int left = numberOfNonWhitePixels(0, x, image);
         const int right = numberOfNonWhitePixels(x, image.width() - x, image);
         QCOMPARE(left, 0);
@@ -1065,7 +1066,7 @@ void tst_qquicktextedit::hAlignVisual()
         // HCenter Align
         text->setHAlign(QQuickTextEdit::AlignHCenter);
         QImage image = view.grabWindow();
-        const int x1 = qFloor(image.width() - text->implicitWidth() * view.devicePixelRatio()) / 2;
+        const int x1 = qFloor(image.width() - text->implicitWidth() * dpr) / 2;
         const int x2 = image.width() - x1;
         const int left = numberOfNonWhitePixels(0, x1, image);
         const int mid = numberOfNonWhitePixels(x1, x2 - x1, image);
@@ -1078,7 +1079,7 @@ void tst_qquicktextedit::hAlignVisual()
         // Left Align
         text->setHAlign(QQuickTextEdit::AlignLeft);
         QImage image = view.grabWindow();
-        const int x = qCeil(text->implicitWidth() * view.devicePixelRatio());
+        const int x = qCeil(text->implicitWidth() * dpr);
         const int left = numberOfNonWhitePixels(0, x, image);
         const int right = numberOfNonWhitePixels(x, image.width() - x, image);
         QVERIFY2(left > 0, msgNotGreaterThan(left, 0).constData());
