@@ -105,6 +105,7 @@ public:
     void enteringFunction() override;
     void leavingFunction(const QV4::ReturnedValue &retVal) override;
     void aboutToThrow() override;
+    QV4::Compiler::CompilationMode compilationMode() const override;
 
     bool pauseAtNextOpportunity() const override;
 

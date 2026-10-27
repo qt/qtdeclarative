@@ -977,7 +977,7 @@ static void calcEscapingVariablesImpl(Module *m, ForEach &&forEach)
         }
         if (c->allVarsEscape && c->contextType == ContextType::Block && c->members.isEmpty())
             c->allVarsEscape = false;
-        if (c->contextType == ContextType::Global || c->contextType == ContextType::ScriptImportedByQML || (!c->isStrict && c->contextType == ContextType::Eval) || m->debugMode)
+        if (c->contextType == ContextType::Global || c->contextType == ContextType::ScriptImportedByQML || (!c->isStrict && c->contextType == ContextType::Eval) || m->compilationMode == CompilationMode::Debug)
             c->allVarsEscape = true;
         if (c->allVarsEscape) {
             if (c->parent) {

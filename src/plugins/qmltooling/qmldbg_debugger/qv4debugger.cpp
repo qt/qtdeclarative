@@ -234,6 +234,11 @@ void QV4Debugger::aboutToThrow()
     pauseAndWait(Throwing);
 }
 
+QV4::Compiler::CompilationMode QV4Debugger::compilationMode() const
+{
+    return QV4::Compiler::CompilationMode::Debug;
+}
+
 QV4::Function *QV4Debugger::getFunction() const
 {
     if (m_engine->currentStackFrame)

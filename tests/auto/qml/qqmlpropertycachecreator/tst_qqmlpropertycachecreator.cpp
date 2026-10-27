@@ -49,7 +49,7 @@ public:
     // -----------------------------------------------------
 private:
     std::unique_ptr<QmlIR::Document> m_document =
-            std::make_unique<QmlIR::Document>(QString(), QString(), true);
+            std::make_unique<QmlIR::Document>(QString(), QString(), QV4::Compiler::CompilationMode::Debug);
     QV4::CompiledData::ResolvedTypeReferenceMap m_resolvedTypes;
 };
 

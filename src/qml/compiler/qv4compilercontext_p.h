@@ -103,10 +103,10 @@ struct ImportEntry
 };
 
 struct Module {
-    Module(const QString &fileName, const QString &finalUrl, bool debugMode)
+    Module(const QString &fileName, const QString &finalUrl, CompilationMode compilationMode)
         : fileName(fileName)
         , finalUrl(finalUrl)
-        , debugMode(debugMode)
+        , compilationMode(compilationMode)
     {}
     ~Module() {
         qDeleteAll(contextMap);
@@ -124,7 +124,7 @@ struct Module {
     QString finalUrl;
     QDateTime sourceTimeStamp;
     uint unitFlags = 0; // flags merged into CompiledData::Unit::flags
-    bool debugMode = false;
+    CompilationMode compilationMode = CompilationMode::Release;
     QList<ExportEntry> localExportEntries;
     QList<ExportEntry> indirectExportEntries;
     QList<ExportEntry> starExportEntries;

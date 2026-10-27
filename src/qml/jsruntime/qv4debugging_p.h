@@ -50,6 +50,7 @@ public:
     virtual void enteringFunction() = 0;
     virtual void leavingFunction(const ReturnedValue &retVal) = 0;
     virtual void aboutToThrow() = 0;
+    virtual Compiler::CompilationMode compilationMode() const = 0;
 };
 
 #endif // QT_NO_QML_DEBUGGING

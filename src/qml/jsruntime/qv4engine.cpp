@@ -935,6 +935,11 @@ void ExecutionEngine::setDebugger(Debugging::Debugger *debugger)
     m_debugger.reset(debugger);
 }
 
+Compiler::CompilationMode ExecutionEngine::compilationMode() const
+{
+    return m_debugger ? m_debugger->compilationMode() : Compiler::CompilationMode::Release;
+}
+
 void ExecutionEngine::setProfiler(Profiling::Profiler *profiler)
 {
     Q_ASSERT(!m_profiler);
@@ -2225,7 +2230,7 @@ ExecutionEngine::Module ExecutionEngine::registerNativeModule(
     Q_ASSERT(!m_compilationUnits.contains(url));
 
     const QV4::CompiledData::Unit *unit = Compiler::Codegen::generateNativeModuleUnitData(
-            /*debugMode*/debugger() != nullptr, url.toString(), value);
+            compilationMode(), url.toString(), value);
     if (!unit)
         return Module();
 

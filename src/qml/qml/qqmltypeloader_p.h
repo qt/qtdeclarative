@@ -304,7 +304,7 @@ public:
 
     bool writeCacheFile();
     bool readCacheFile();
-    bool isDebugging();
+    QV4::Compiler::CompilationMode compilationMode();
 
     static bool isResource(const QString &path);
 

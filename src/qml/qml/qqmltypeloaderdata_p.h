@@ -121,7 +121,7 @@ public:
 
     QV4::ExecutionEngine::DiskCacheOptions diskCacheOptions
             = QV4::ExecutionEngine::DiskCache::Enabled;
-    bool isDebugging = false;
+    QV4::Compiler::CompilationMode compilationMode = QV4::Compiler::CompilationMode::Release;
     bool initialized = false;
 };
 

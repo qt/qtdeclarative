@@ -165,6 +165,7 @@ public:
     void enteringFunction() override;
     void leavingFunction(const QV4::ReturnedValue &retVal) override;
     void aboutToThrow() override;
+    QV4::Compiler::CompilationMode compilationMode() const override;
 
     void handleCommand(QJsonObject *response, const QString &cmd, const QJsonObject &arguments);
 
@@ -625,6 +626,11 @@ void NativeDebugger::aboutToThrow()
     // TODO: complete this!
     event.insert(QStringLiteral("event"), QStringLiteral("exception"));
     m_service->emitAsynchronousMessageToClient(event);
+}
+
+QV4::Compiler::CompilationMode NativeDebugger::compilationMode() const
+{
+    return QV4::Compiler::CompilationMode::Debug;
 }
 
 QV4::Function *NativeDebugger::getFunction() const

@@ -65,7 +65,7 @@ void QQmlScriptBlob::dataReceived(const SourceCodeData &data)
     if (m_isModule) {
         QList<QQmlJS::DiagnosticMessage> diagnostics;
         unit = QV4::Compiler::Codegen::compileModule(
-                m_typeLoader->isDebugging(), urlString(), source, data.sourceTimeStamp(),
+                m_typeLoader->compilationMode(), urlString(), source, data.sourceTimeStamp(),
                 &diagnostics);
         QList<QQmlError> errors = QQmlEnginePrivate::qmlErrorFromDiagnostics(urlString(), diagnostics);
         if (!errors.isEmpty()) {
@@ -73,7 +73,7 @@ void QQmlScriptBlob::dataReceived(const SourceCodeData &data)
             return;
         }
     } else {
-        QmlIR::Document irUnit(urlString(), finalUrlString(), m_typeLoader->isDebugging());
+        QmlIR::Document irUnit(urlString(), finalUrlString(), m_typeLoader->compilationMode());
 
         irUnit.jsModule.sourceTimeStamp = data.sourceTimeStamp();
 

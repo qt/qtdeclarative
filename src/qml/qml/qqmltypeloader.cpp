@@ -703,7 +703,7 @@ static void initializeConfiguredData(
         const QQmlTypeLoaderConfiguredDataPtr &data, QV4::ExecutionEngine *engine)
 {
     data->diskCacheOptions = engine->diskCacheOptions();
-    data->isDebugging = engine->debugger() != nullptr;
+    data->compilationMode = engine->compilationMode();
     data->initialized = true;
 }
 
@@ -1220,9 +1220,9 @@ static QQmlTypeLoaderConfiguredDataConstPtr configuredData(QQmlTypeLoaderLockedD
     return QQmlTypeLoaderConfiguredDataConstPtr(m_data);
 }
 
-bool QQmlTypeLoader::isDebugging()
+QV4::Compiler::CompilationMode QQmlTypeLoader::compilationMode()
 {
-    return configuredData(&m_data)->isDebugging;
+    return configuredData(&m_data)->compilationMode;
 }
 
 bool QQmlTypeLoader::readCacheFile()

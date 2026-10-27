@@ -38,8 +38,9 @@ namespace Moth {
 
 class BytecodeGenerator {
 public:
-    BytecodeGenerator(int line, bool debug, bool storeSourceLocation = false)
-        : startLine(line), debugMode(debug)
+    BytecodeGenerator(int line, Compiler::CompilationMode compilationMode,
+                      bool storeSourceLocation = false)
+        : startLine(line), compilationMode(compilationMode)
     {
         if (storeSourceLocation)
             m_sourceLocationTable.reset(new QV4::Compiler::Context::SourceLocationTable {});
@@ -309,7 +310,7 @@ private:
     int currentStatement = 0;
     QQmlJS::SourceLocation currentSourceLocation;
     std::unique_ptr<QV4::Compiler::Context::SourceLocationTable> m_sourceLocationTable;
-    bool debugMode = false;
+    Compiler::CompilationMode compilationMode = Compiler::CompilationMode::Release;
     bool hasError = false;
 
     int lastInstrType = -1;
