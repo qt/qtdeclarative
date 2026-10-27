@@ -424,11 +424,17 @@ void QQmlTypePrivate::insertEnumsFromPropertyCache(
         Enums *enums, const QQmlPropertyCache::ConstPtr &cache) const
 {
     const QMetaObject *cppMetaObject = cache->firstCppMetaObject();
+    insertEnums(enums, cppMetaObject);
 
-    for (const QQmlPropertyCache *currentCache = cache.data();
-         currentCache && currentCache->metaObject() != cppMetaObject;
-         currentCache = currentCache->parent().data()) {
+    QVarLengthArray<const QQmlPropertyCache *, 8> caches;
+    for (const QQmlPropertyCache *c = cache.data(); c && c->metaObject() != cppMetaObject;
+         c = c->parent().data()) {
+        caches.append(c);
+    }
 
+    // Iterate in reverse so more derived enum keys override base ones
+    for (auto it = caches.crbegin(); it != caches.crend(); ++it) {
+        const QQmlPropertyCache *currentCache = *it;
         int count = currentCache->ownEnumCount();
         for (int ii = 0; ii < count; ++ii) {
             QStringHash<int> *scoped = new QStringHash<int>();
@@ -443,7 +449,6 @@ void QQmlTypePrivate::insertEnumsFromPropertyCache(
             enums->scopedEnumIndex.insert(enumData->name, enums->scopedEnums.size()-1);
         }
     }
-    insertEnums(enums, cppMetaObject);
 }
 
 void QQmlTypePrivate::setName(const QString &uri, const QString &element)

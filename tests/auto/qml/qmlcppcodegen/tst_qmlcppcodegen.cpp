@@ -141,6 +141,7 @@ private slots:
     void enumMarkedAsFlag();
     void enumProblems();
     void enumScope();
+    void enumShadowing();
     void enums();
     void enforceSignature();
     void enumsInOtherObject();
@@ -2399,6 +2400,24 @@ void tst_QmlCppCodegen::enumScope()
     QVERIFY2(!component.isError(), component.errorString().toUtf8());
     std::unique_ptr<QObject> object(component.create());
     QCOMPARE(object->property("flow").toInt(), 1);
+}
+
+void tst_QmlCppCodegen::enumShadowing()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/EnumShadowingUser.qml"_s));
+    QVERIFY2(!component.isError(), component.errorString().toUtf8());
+    std::unique_ptr<QObject> object(component.create());
+    QVERIFY(object);
+
+    for (const char *propName : { "mixedDerived", "cppDerived", "qmlDerived" }) {
+        const QObject *derived = object->property(propName).value<QObject *>();
+        QVERIFY(derived);
+        bool ok;
+        int value = derived->property("i").toInt(&ok);
+        QVERIFY(ok);
+        QCOMPARE(value, 2);
+    }
 }
 
 void tst_QmlCppCodegen::enums()
