@@ -1,6 +1,7 @@
 // Copyright (C) 2024 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
+#include <QtCore/qscopeguard.h>
 #include <QtGui/qclipboard.h>
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qpa/qplatformtheme.h>
@@ -50,6 +51,7 @@ private slots:
     void menuItemShouldntTriggerOnRelease();
     void textControlsMenuKey();
     void mouseAreaUnderTextArea();
+    void textFieldNativeMenuOnRequested();
     void textEditingContextMenuUndoRedo_data();
     void textEditingContextMenuUndoRedo();
     void textEditingContextMenuCut_data();
@@ -528,6 +530,35 @@ void tst_QQuickContextMenu::mouseAreaUnderTextArea()
     QTRY_COMPARE(menuItemTriggeredSpy.size(), 1);
     QCOMPARE(mouseAreaPressedSpy.size(), 0);
     QTRY_COMPARE(menuPrivate->popupWindow->isVisible(), false);
+}
+
+void tst_QQuickContextMenu::textFieldNativeMenuOnRequested()
+{
+#ifdef Q_OS_WIN
+    QSKIP("Native popup menus can't be dismissed programmatically on Windows");
+#endif
+    // Without native menus the menu falls back to a popup window. Wayland
+    // grants a popup grab only for a serial from real input, which the
+    // synthetic click in this test lacks.
+    if (QGuiApplication::platformName().startsWith(QLatin1String("wayland")))
+        QSKIP("Wayland refuses popup grabs triggered by synthetic input");
+
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows, false);
+    const auto restoreAttribute = qScopeGuard([]{
+        QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows);
+    });
+
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("textFieldNativeMenuOnRequested.qml")));
+    auto *textField = window.findChild<QQuickTextField *>("textField");
+    QVERIFY(textField);
+
+    QTest::mouseClick(&window, Qt::RightButton, Qt::NoModifier, mapCenterToWindow(textField));
+    QTRY_VERIFY(window.rootObject()->property("menuOpened").toBool());
+
+    auto *contextMenu = textField->findChild<QQuickContextMenu *>();
+    QVERIFY(contextMenu);
+    QTRY_VERIFY(!contextMenu->menu()->isVisible());
 }
 
 void tst_QQuickContextMenu::textEditingContextMenuData()
