@@ -10,6 +10,7 @@
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/private/qquickpointerhandler_p.h>
 #include <QtQuick/private/qquicktaphandler_p.h>
+#include <QtQuick/private/qquickwheelhandler_p.h>
 #include <qpa/qwindowsysteminterface.h>
 
 #include <private/qquickwindow_p.h>
@@ -53,7 +54,10 @@ private slots:
     void longPress();
     void buttonsMultiTouch();
     void componentUserBehavioralOverride();
+    void rightLongPressIgnoreWheel_data();
     void rightLongPressIgnoreWheel();
+    void tapIgnoreWheel_data();
+    void tapIgnoreWheel();
     void negativeZStackingOrder();
     void nonTopLevelParentWindow();
     void deactivatedOnPress();
@@ -1113,14 +1117,27 @@ void tst_TapHandler::componentUserBehavioralOverride()
     QCOMPARE(userGrabChangedSpy.size(), 2);
 }
 
+void tst_TapHandler::rightLongPressIgnoreWheel_data()
+{
+    QTest::addColumn<QQuickTapHandler::GesturePolicy>("gesturePolicy");
+
+    QTest::newRow("DragThreshold") << QQuickTapHandler::GesturePolicy::DragThreshold;
+    QTest::newRow("WithinBounds") << QQuickTapHandler::GesturePolicy::WithinBounds;
+    QTest::newRow("ReleaseWithinBounds") << QQuickTapHandler::GesturePolicy::ReleaseWithinBounds;
+    QTest::newRow("DragWithinBounds") << QQuickTapHandler::GesturePolicy::DragWithinBounds;
+}
+
 void tst_TapHandler::rightLongPressIgnoreWheel()
 {
+    QFETCH(QQuickTapHandler::GesturePolicy, gesturePolicy);
+
     QScopedPointer<QQuickView> windowPtr;
     createView(windowPtr, "rightTapHandler.qml");
     QQuickView * window = windowPtr.data();
 
     QQuickTapHandler *tap = window->rootObject()->findChild<QQuickTapHandler*>();
     QVERIFY(tap);
+    tap->setGesturePolicy(gesturePolicy);
     QSignalSpy tappedSpy(tap, &QQuickTapHandler::tapped);
     QSignalSpy longPressedSpy(tap, &QQuickTapHandler::longPressed);
     QPoint p1(100, 100);
@@ -1137,9 +1154,9 @@ void tst_TapHandler::rightLongPressIgnoreWheel()
     QTest::mousePress(window, Qt::RightButton, Qt::NoModifier, p1);
     QTRY_COMPARE(tap->isPressed(), true);
 
-    // Mouse wheel ScrollEnd phase
+    // Mouse wheel ScrollEnd phase, while the button is still held
     QWheelEvent wheelEvent(p1, p1, QPoint(0, 0), QPoint(0, 0),
-                           Qt::NoButton, Qt::NoModifier, Qt::ScrollEnd, false, Qt::MouseEventNotSynthesized);
+                           Qt::RightButton, Qt::NoModifier, Qt::ScrollEnd, false, Qt::MouseEventNotSynthesized);
     QGuiApplication::sendEvent(window, &wheelEvent);
     QTRY_COMPARE(longPressedSpy.size(), 1);
     QCOMPARE(tap->isPressed(), true);
@@ -1149,6 +1166,75 @@ void tst_TapHandler::rightLongPressIgnoreWheel()
     QTest::mouseRelease(window, Qt::RightButton, Qt::NoModifier, p1, 500);
     QTRY_COMPARE(tap->isPressed(), false);
     QCOMPARE(tappedSpy.size(), 0);
+}
+
+void tst_TapHandler::tapIgnoreWheel_data()
+{
+    QTest::addColumn<QQuickTapHandler::GesturePolicy>("gesturePolicy");
+    QTest::addColumn<Qt::ScrollPhase>("phase");
+    QTest::addColumn<bool>("withWheelHandler");
+
+    for (Qt::ScrollPhase phase : { Qt::NoScrollPhase, Qt::ScrollEnd }) {
+        const char *phaseName = phase == Qt::NoScrollPhase ? "NoScrollPhase" : "ScrollEnd";
+        for (bool withWheelHandler : { false, true }) {
+            const char *suffix = withWheelHandler ? " + WheelHandler" : "";
+            QTest::addRow("DragThreshold, %s%s", phaseName, suffix)
+                    << QQuickTapHandler::GesturePolicy::DragThreshold << phase << withWheelHandler;
+            QTest::addRow("WithinBounds, %s%s", phaseName, suffix)
+                    << QQuickTapHandler::GesturePolicy::WithinBounds << phase << withWheelHandler;
+            QTest::addRow("ReleaseWithinBounds, %s%s", phaseName, suffix)
+                    << QQuickTapHandler::GesturePolicy::ReleaseWithinBounds << phase
+                    << withWheelHandler;
+            QTest::addRow("DragWithinBounds, %s%s", phaseName, suffix)
+                    << QQuickTapHandler::GesturePolicy::DragWithinBounds << phase
+                    << withWheelHandler;
+        }
+    }
+}
+
+void tst_TapHandler::tapIgnoreWheel()
+{
+    QFETCH(QQuickTapHandler::GesturePolicy, gesturePolicy);
+    QFETCH(Qt::ScrollPhase, phase);
+    QFETCH(bool, withWheelHandler);
+
+    QScopedPointer<QQuickView> windowPtr;
+    createView(windowPtr, "simpleTapHandler.qml");
+    QQuickView *window = windowPtr.data();
+
+    QQuickTapHandler *tap = window->rootObject()->findChild<QQuickTapHandler *>();
+    QVERIFY(tap);
+    tap->setGesturePolicy(gesturePolicy);
+    QQuickWheelHandler *wheelHandler = nullptr;
+    if (withWheelHandler)
+        wheelHandler = new QQuickWheelHandler(window->rootObject());
+    QSignalSpy tappedSpy(tap, &QQuickTapHandler::tapped);
+    QSignalSpy canceledSpy(tap, &QQuickTapHandler::canceled);
+    const QPoint p1(50, 50);
+
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, p1);
+    QTRY_COMPARE(tap->isPressed(), true);
+    const bool activeAfterPress = tap->active();
+    QSignalSpy grabChangedSpy(tap, &QQuickPointerHandler::grabChanged);
+
+    // While the button is still held, turn the mouse wheel by one step,
+    // or end a trackpad scroll as a two-finger click does on macOS
+    const QPoint angleDelta = phase == Qt::NoScrollPhase ? QPoint(0, -120) : QPoint(0, 0);
+    QWheelEvent wheelEvent(p1, window->mapToGlobal(p1), QPoint(0, 0), angleDelta, Qt::LeftButton,
+                           Qt::NoModifier, phase, false, Qt::MouseEventNotSynthesized);
+    QGuiApplication::sendEvent(window, &wheelEvent);
+    if (wheelHandler)
+        QCOMPARE(wheelHandler->active(), phase == Qt::NoScrollPhase);
+    QCOMPARE(tap->isPressed(), true);
+    QCOMPARE(tap->active(), activeAfterPress);
+    QCOMPARE(grabChangedSpy.size(), 0);
+    QCOMPARE(tappedSpy.size(), 0);
+
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, p1);
+    QTRY_COMPARE(tap->isPressed(), false);
+    QCOMPARE(tappedSpy.size(), 1);
+    QCOMPARE(tappedSpy.first().at(1).value<Qt::MouseButton>(), Qt::LeftButton);
+    QCOMPARE(canceledSpy.size(), 0);
 }
 
 void tst_TapHandler::negativeZStackingOrder() // QTBUG-83114
