@@ -125,6 +125,7 @@ set(qmake_immediate_qml_files
     "data/parameterAdjustment.qml"
     "data/script.js"
     "data/script.mjs"
+    "data/ternaryObjectLiteral.qml"
     "data/utils.mjs"
     "data/versionchecks.qml"
     "data/scriptstring.qml"

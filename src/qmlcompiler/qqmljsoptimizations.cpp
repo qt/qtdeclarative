@@ -440,8 +440,8 @@ void QQmlJSOptimizations::adjustTypes()
     // Handle the object definitions.
     // Changing the object type changes the expected property types.
     const auto adjustObject = [&](const ObjectOrArrayDefinition &object) {
-        auto it = m_readerLocations.find(object.instructionOffset);
-        if (it == m_readerLocations.end())
+        auto it = m_readerLocations.constFind(object.instructionOffset);
+        if (it == m_readerLocations.constEnd())
             return;
 
         const InstructionAnnotation &annotation = m_annotations[object.instructionOffset];
@@ -455,6 +455,7 @@ void QQmlJSOptimizations::adjustTypes()
         if (!m_typeResolver->adjustTrackedType(resultType, it->typeReaders.values()))
             addError(adjustErrorMessage(resultType, it->typeReaders.values()));
 
+        handleRegisterReadersAndConversions(it);
         m_readerLocations.erase(it);
 
         if (resultType.contains(m_typeResolver->varType())

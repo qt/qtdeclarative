@@ -82,6 +82,7 @@ private slots:
     void reproducibleCache();
 
     void parameterAdjustment();
+    void ternaryObjectLiteral();
     void inlineComponent();
     void posthocRequired();
 
@@ -896,6 +897,16 @@ void tst_qmlcachegen::parameterAdjustment()
     QVERIFY(!obj.isNull()); // Doesn't crash
 }
 
+void tst_qmlcachegen::ternaryObjectLiteral()
+{
+    QQmlEngine engine;
+    CleanlyLoadingComponent component(&engine, QUrl("qrc:///data/ternaryObjectLiteral.qml"));
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(!obj.isNull());
+    QCOMPARE(obj->property("objects").toMap().value("a"), 1);
+    obj->setProperty("cond", false);
+    QCOMPARE(obj->property("objects").toMap().value("a"), 2);
+}
 
 void tst_qmlcachegen::inlineComponent()
 {
