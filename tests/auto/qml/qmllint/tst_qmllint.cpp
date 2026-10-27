@@ -3353,6 +3353,7 @@ void TestQmllint::cleanQmlCode_data()
             << QStringLiteral("qmldirImport/duplicate.qml") << defaultOptions;
     QTest::newRow("enumFromQtQml") << QStringLiteral("enumFromQtQml.qml") << defaultOptions;
     QTest::newRow("enumList") << QStringLiteral("enumListTest.qml") << defaultOptions;
+    QTest::newRow("opaqueSequence") << QStringLiteral("opaqueSequenceUser/main.qml") << defaultOptions;
     QTest::newRow("enumProperty") << QStringLiteral("enumProperty.qml") << defaultOptions;
     QTest::newRow("enumsOfScrollBar") << QStringLiteral("enumsOfScrollBar.qml") << defaultOptions;
     QTest::newRow("esmodule") << QStringLiteral("esmodule.mjs") << defaultOptions;

@@ -743,6 +743,12 @@ void QQmlJSImporter::processImport(const QQmlJS::Import &importDescription,
         }
 
         if (val.exports.isEmpty()) {
+            // Opaque placeholders must not shadow the real type of a dependency
+            if (!object.scope.factory() && object.scope->isOpaqueType() // current is opaque
+                && types->cppNames.hasType(cppName) // there already is an entry for the type
+                && !types->cppNames.type(cppName).scope->isOpaqueType()) { // and it's not opaque
+                continue;
+            }
             const QQmlJS::ContextualType unresolvableDummyName{ val.scope, QTypeRevision(),
                                                                 precedence };
             types->qmlNames.setType(prefixedName(internalPrefix, cppName), unresolvableDummyName);
