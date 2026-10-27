@@ -148,7 +148,8 @@ public:
         WindowData()
             : updatePending(false),
               rhiDeviceLost(false),
-              rhiDoomed(false)
+              rhiDoomed(false),
+              swapchainOutOfDate(false)
         { }
         QRhi *rhi = nullptr;
         bool ownRhi = true;
@@ -158,6 +159,7 @@ public:
         bool updatePending : 1;
         bool rhiDeviceLost : 1;
         bool rhiDoomed : 1;
+        bool swapchainOutOfDate : 1;
     };
 
     bool ensureRhi(QQuickWindow *window, WindowData &data);
@@ -633,9 +635,11 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
         Q_ASSERT(!effectiveOutputSize.isEmpty());
         QSGRhiSupport *rhiSupport = QSGRhiSupport::instance();
         const QSize previousOutputSize = cd->swapchain->currentPixelSize();
-        if (previousOutputSize != effectiveOutputSize || cd->swapchainJustBecameRenderable) {
+        if (previousOutputSize != effectiveOutputSize || cd->swapchainJustBecameRenderable || data.swapchainOutOfDate) {
             if (cd->swapchainJustBecameRenderable)
                 qCDebug(QSG_LOG_RENDERLOOP, "just became exposed");
+            if (data.swapchainOutOfDate)
+                qCDebug(QSG_LOG_RENDERLOOP, "swapchain out of date");
 
             cd->hasActiveSwapchain = cd->swapchain->createOrResize();
             if (!cd->hasActiveSwapchain) {
@@ -652,6 +656,7 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
             }
 
             cd->swapchainJustBecameRenderable = false;
+            data.swapchainOutOfDate = false;
             cd->hasRenderableSwapchain = cd->hasActiveSwapchain;
 
             if (cd->hasActiveSwapchain) {
@@ -676,6 +681,10 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
                 qWarning("Failed to start frame");
             // out of date is not worth warning about - it may happen even during resizing on some platforms
             emit window->afterFrameEnd();
+            if (frameResult == QRhi::FrameOpSwapChainOutOfDate) {
+                data.swapchainOutOfDate = true;
+                maybeUpdate(window);
+            }
             return;
         }
     }
@@ -718,6 +727,10 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
                 handleDeviceLoss();
             else if (frameResult == QRhi::FrameOpError)
                 qWarning("Failed to end frame");
+            if (frameResult == QRhi::FrameOpSwapChainOutOfDate) {
+                data.swapchainOutOfDate = true;
+                data.updatePending = true;
+            }
         } else {
             lastCompletedGpuTime = cd->swapchain->currentFrameCommandBuffer()->lastCompletedGpuTime();
         }
