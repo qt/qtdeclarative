@@ -509,6 +509,8 @@ private slots:
     // binding calling the shifted VME method lands at a stale index and asserts in vmeMethod().
     void changedBaseTypeRelinksDerivedInstanceCaches();
 
+    void changedBaseTypeRelinksSharedInstanceCaches();
+
     // Reproduces coffee demo crash 3: changing a function body in a derived type
     // (that has states with PropertyChanges targeting form aliases) should not
     // trigger an assert in "canGetTypeFromVariant<T>(this)" during rebuild.
@@ -5152,6 +5154,67 @@ void tst_QQmlPreviewObjectPatch::changedBaseTypeRelinksDerivedInstanceCaches()
         QCOMPARE(item->property("reported").toInt(), 22);
         QVERIFY2(item->property("color").isValid(), qPrintable(name + " is not a Rectangle"));
     }
+}
+
+void tst_QQmlPreviewObjectPatch::changedBaseTypeRelinksSharedInstanceCaches()
+{
+    const QString moduleDir = dataDirectory() + QStringLiteral("/HotReloadBaseChangeShared");
+    const QString patchedDir = dataDirectory() + QStringLiteral("/HotReloadBaseChangeSharedPatched");
+
+    QQmlComponent host(&engine, QUrl::fromLocalFile(moduleDir + "/Host.qml"));
+    QVERIFY2(host.isReady(), qPrintable(host.errorString()));
+    std::unique_ptr<QObject> root(host.create());
+    QVERIFY(root);
+
+    QCOMPARE(root->property("seen1").toInt(), 11);
+    QCOMPARE(root->property("seen2").toInt(), 11);
+    for (const char *name : { "b1", "b2" }) {
+        QObject *item = root->findChild<QObject *>(QLatin1String(name));
+        QVERIFY2(item, name);
+        QVERIFY(!item->property("color").isValid()); // Item base, no color yet
+    }
+
+    QQmlComponent baseOld(&engine, QUrl::fromLocalFile(moduleDir + "/Base.qml"));
+    QVERIFY2(baseOld.isReady(), qPrintable(baseOld.errorString()));
+    QQmlComponent baseNew(&engine, QUrl::fromLocalFile(patchedDir + "/Base.qml"));
+    QVERIFY2(baseNew.isReady(), qPrintable(baseNew.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&baseOld)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&baseNew)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    // Base's non-composite base changed (Item -> Rectangle), so the instances are recreated by
+    // rebuilding the enclosing Host root. The Base instances share Base's property cache in Host's
+    // unit; it has to be replaced with the new one, or the "seenN: bN.valueAlias" bindings resolve
+    // the alias through the stale cache at an index the new VME chain doesn't cover.
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QVERIFY(!objects.empty());
+    QCOMPARE(updateObjects(objects, oldExecUnit, newExecUnit), QQmlPreview::PatchResult::Rebuilt);
+
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+
+    for (const char *name : { "b1", "b2" }) {
+        QObject *item = root->findChild<QObject *>(QLatin1String(name));
+        QVERIFY2(item, name);
+        QVERIFY2(item->property("color").isValid(), name); // now a Rectangle
+        QCOMPARE(item->property("valueAlias").toInt(), 22);
+
+        // The instance's property cache must match the layout of its VME meta-object.
+        const QQmlData *ddata = QQmlData::get(item);
+        QVERIFY(ddata);
+        QVERIFY(ddata->propertyCache);
+        QCOMPARE(ddata->propertyCache->propertyOffset(), item->metaObject()->propertyOffset());
+        QCOMPARE(ddata->propertyCache->methodOffset(), item->metaObject()->methodOffset());
+    }
+
+    QCOMPARE(root->property("seen1").toInt(), 22);
+    QCOMPARE(root->property("seen2").toInt(), 22);
+
+    // Changing the aliased value notifies the capturing bindings.
+    root->findChild<QObject *>(QStringLiteral("b1"))->setProperty("value", 33);
+    QCOMPARE(root->property("seen1").toInt(), 33);
+    QCOMPARE(root->property("seen2").toInt(), 22);
 }
 
 void tst_QQmlPreviewObjectPatch::compositePropertyDefaultChangeExternalDeferredContent()
