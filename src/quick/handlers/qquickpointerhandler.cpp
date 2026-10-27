@@ -753,10 +753,14 @@ void QQuickPointerHandler::handlePointerEvent(QPointerEvent *event)
                                       << "on" << parent()->metaObject()->className() << parent()->objectName()
                                       << (wants ? "WANTS" : "DECLINES") << event;
     d->currentEvent = event;
+    // A wheel event shares the event point with the mouse, so such a grab
+    // belongs to a mouse press that is still in progress. Don't end it.
+    const bool grabbedByMouse = event->type() == QEvent::Wheel
+            && event->exclusiveGrabber(event->point(0)) == this;
     if (wants) {
         handlePointerEventImpl(event);
         d->lastEventTime = event->timestamp();
-    } else {
+    } else if (!grabbedByMouse) {
 #if QT_CONFIG(gestures)
         if (event->type() != QEvent::NativeGesture)
 #endif
