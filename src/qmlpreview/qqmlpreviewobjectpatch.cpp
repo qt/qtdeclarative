@@ -227,6 +227,17 @@ static void relinkDerivedCaches(const QQmlRefPointer<QV4::ExecutableCompilationU
     QHash<const QQmlPropertyCache *, QQmlPropertyCache::ConstPtr> replacements;
     replacements.insert(oldBaseCache.data(), newBaseCache);
 
+    // An instance of the type that needs no VME meta-object of its own shares the type's property
+    // cache. Such an entry is the old base cache itself, not derived from it, so the loop below
+    // would miss it. Objects created later from this unit would then get the stale cache as their
+    // QQmlData::propertyCache while their VME meta-objects use the new layout.
+    for (int i = 0, end = caches->count(); i < end; ++i) {
+        if (caches->at(i) != oldBaseCache)
+            continue;
+        caches->set(i, newBaseCache);
+        refreshBindingPropertyData(cu, i, newBaseCache);
+    }
+
     for (bool changed = true; changed;) {
         changed = false;
         for (int i = 0, end = caches->count(); i < end; ++i) {
