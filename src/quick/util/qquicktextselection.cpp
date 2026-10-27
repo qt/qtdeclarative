@@ -187,7 +187,7 @@ void QQuickTextSelection::setText(const QString &text)
 }
 
 /*!
-    \qmlproperty color QtQuick::TextSelection::font
+    \qmlproperty font QtQuick::TextSelection::font
 
     The font of the selected text.
 
