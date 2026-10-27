@@ -305,6 +305,7 @@ public:
     bool rhiDoomed = false;
     bool guiNotifiedAboutRhiFailure = false;
     bool swRastFallbackDueToSwapchainFailure = false;
+    bool swapchainOutOfDate = false;
 
     // Local event queue stuff...
     bool stopEventProcessing;
@@ -649,9 +650,11 @@ void QSGRenderThread::syncAndRender()
         }
 
         const QSize previousOutputSize = cd->swapchain->currentPixelSize();
-        if (previousOutputSize != effectiveOutputSize || cd->swapchainJustBecameRenderable) {
+        if (previousOutputSize != effectiveOutputSize || cd->swapchainJustBecameRenderable || swapchainOutOfDate) {
             if (cd->swapchainJustBecameRenderable)
                 qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "just became exposed");
+            if (swapchainOutOfDate)
+                qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "swapchain out of date");
 
             cd->hasActiveSwapchain = cd->swapchain->createOrResize();
             if (!cd->hasActiveSwapchain) {
@@ -680,6 +683,7 @@ void QSGRenderThread::syncAndRender()
             }
 
             cd->swapchainJustBecameRenderable = false;
+            swapchainOutOfDate = false;
             cd->hasRenderableSwapchain = cd->hasActiveSwapchain;
 
             if (!cd->hasActiveSwapchain)
@@ -697,6 +701,8 @@ void QSGRenderThread::syncAndRender()
                 handleDeviceLoss();
             else if (frameResult == QRhi::FrameOpError)
                 qWarning("Failed to start frame");
+            else if (frameResult == QRhi::FrameOpSwapChainOutOfDate)
+                swapchainOutOfDate = true;
             // try again later
             if (frameResult == QRhi::FrameOpDeviceLost || frameResult == QRhi::FrameOpSwapChainOutOfDate)
                 QCoreApplication::postEvent(window, new QEvent(QEvent::Type(QQuickWindowPrivate::FullUpdateRequest)));
@@ -777,6 +783,8 @@ void QSGRenderThread::syncAndRender()
                 handleDeviceLoss();
             else if (frameResult == QRhi::FrameOpError)
                 qWarning("Failed to end frame");
+            else if (frameResult == QRhi::FrameOpSwapChainOutOfDate)
+                swapchainOutOfDate = true;
             if (frameResult == QRhi::FrameOpDeviceLost || frameResult == QRhi::FrameOpSwapChainOutOfDate)
                 QCoreApplication::postEvent(window, new QEvent(QEvent::Type(QQuickWindowPrivate::FullUpdateRequest)));
         } else {
