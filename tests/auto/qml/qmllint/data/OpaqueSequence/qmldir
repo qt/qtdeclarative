@@ -1,0 +1,3 @@
+module OpaqueSequence
+typeinfo opaquesequence.qmltypes
+depends QtQml.Models

@@ -1,0 +1,18 @@
+import QtQuick.tooling 1.2
+
+Module {
+    Component {
+        name: "Base"
+        accessSemantics: "reference"
+        prototype: "QObject"
+        Method { name: "indexes"; type: "QModelIndexList" }
+    }
+    Component {
+        name: "Derived"
+        accessSemantics: "reference"
+        prototype: "Base"
+        exports: ["OpaqueSequence/Derived 1.0"]
+        exportMetaObjectRevisions: [256]
+    }
+    Component { isTypeOpaque: true; name: "QModelIndexList"; accessSemantics: "value" }
+}
