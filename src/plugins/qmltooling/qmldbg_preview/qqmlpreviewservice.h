@@ -67,8 +67,10 @@ public:
 
 Q_SIGNALS:
     void error(const QString &file);
-    void file(const QString &file, const QByteArray &contents);
-    void directory(const QString &file, const QStringList &entries);
+    void file(const QString &file, const QByteArray &contents,
+              QFileDevice::Permissions permissions);
+    void directory(const QString &file, const QStringList &entries,
+                   QFileDevice::Permissions permissions);
     void load(const QUrl &url);
     void drop(const QUrl &url);
     void rerun();

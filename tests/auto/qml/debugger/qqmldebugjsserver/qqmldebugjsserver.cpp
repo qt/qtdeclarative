@@ -5,15 +5,34 @@
 #include <QtQml/qqmlapplicationengine.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlengine.h>
+#include <QtQml/qqml.h>
 
 #include <QtCore/qdebug.h>
 #include <QtCore/qdir.h>
+#include <QtCore/qfileinfo.h>
 #include <QtCore/qtemporarydir.h>
 #include <QtCore/qtenvironmentvariables.h>
+
+// Lets a QML test document report what QFileInfo says about files that the preview file engine
+// serves.
+class PermissionReporter : public QObject
+{
+    Q_OBJECT
+public:
+    Q_INVOKABLE void report(const QUrl &file, const QUrl &directory) const
+    {
+        qDebug("permissions file=%x directory=%x",
+               int(QFileInfo(file.toLocalFile()).permissions().toInt()),
+               int(QFileInfo(directory.toLocalFile()).permissions().toInt()));
+    }
+};
 
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
+    PermissionReporter permissionReporter;
+    qmlRegisterSingletonInstance("PermissionReporter", 1, 0, "PermissionReporter",
+                                 &permissionReporter);
     QQmlEngine engine0; // add another engine to cause some trouble
 
     if (qEnvironmentVariableIsSet("TEST_MKDIR_RMDIR")) {
@@ -39,3 +58,5 @@ int main(int argc, char *argv[])
 
 }
 
+
+#include "qqmldebugjsserver.moc"
