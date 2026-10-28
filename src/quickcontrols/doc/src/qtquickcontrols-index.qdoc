@@ -9,15 +9,9 @@
 
     \brief Provides a set of UI controls for Qt Quick.
 
-    Qt Quick Controls provides a set of controls that can be used
-    to build complete interfaces in Qt Quick.
-
-    \image qtquickcontrols-styles.png
-           {Gallery of controls in Basic style}
-
-    Qt Quick Controls comes with a selection of customizable styles.
-    See \l {Styling Qt Quick Controls} for more details.
-
+    Qt Quick Controls provides a set of controls that can be used to build complete
+    user interfaces that can be styled with
+    \l {Styling Qt Quick Controls}{a selection of customizable styles}.
 
     \section1 Using the Module
 
