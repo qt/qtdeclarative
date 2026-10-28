@@ -250,6 +250,9 @@ void QQmlIncubationController::incubatingObjectCountChanged(int incubatingObject
 
 void QQmlIncubatorPrivate::forceCompletion(QQmlInstantiationInterrupt &i)
 {
+    // after calling incubate below, the incubator might reach refcount 0
+    // if we don't protect here, causing a use-after-free on status
+    QExplicitlySharedDataPointer<QQmlIncubatorPrivate> protectThis(this);
     while (QQmlIncubator::Loading == status) {
         while (QQmlIncubator::Loading == status && !waitingFor.isEmpty())
             waitingFor.first()->forceCompletion(i);
