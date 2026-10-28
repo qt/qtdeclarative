@@ -30,6 +30,7 @@ private:
     ConnectResult startQmlProcess(const QString &qmlFile, QStringList environmentVariables = QStringList());
     void serveRequest(const QString &path);
     void serveFile(const QString &path, const QByteArray &contents);
+    QFileDevice::Permissions servedPermissions(const QString &path) const;
     void enableInPlaceUpdates();
     struct Replacement {
         QByteArray from;
@@ -45,6 +46,7 @@ private:
     QStringList m_files;
     QStringList m_filesNotFound;
     QStringList m_directories;
+    QHash<QString, QFileDevice::Permissions> m_permissionOverrides;
     QStringList m_serviceErrors;
     QQmlPreviewClient::FpsInfo m_frameStats;
     QQmlPreviewClient::Settings m_confirmedSettings;
@@ -70,6 +72,7 @@ private slots:
     void replayEventsWithoutHotReload();
     void setAnimationSpeed();
     void createDirectory();
+    void permissions();
 
     // In-place update tests (Configuration + LoadResponse + loadPatch)
     void configurationMessage();
@@ -148,7 +151,7 @@ void tst_QQmlPreview::serveRequest(const QString &path)
 
     if (info.isDir()) {
         m_directories.append(path);
-        m_client->sendDirectory(path, QDir(path).entryList());
+        m_client->sendDirectory(path, QDir(path).entryList(), servedPermissions(path));
     } else {
         QFile file(path);
         if (file.open(QIODevice::ReadOnly)) {
@@ -163,7 +166,12 @@ void tst_QQmlPreview::serveRequest(const QString &path)
 void tst_QQmlPreview::serveFile(const QString &path, const QByteArray &contents)
 {
     m_files.append(path);
-    m_client->sendFile(path, contents);
+    m_client->sendFile(path, contents, servedPermissions(path));
+}
+
+QFileDevice::Permissions tst_QQmlPreview::servedPermissions(const QString &path) const
+{
+    return m_permissionOverrides.value(path, QFileInfo(path).permissions());
 }
 
 QList<QQmlDebugClient *> tst_QQmlPreview::createClients()
@@ -715,6 +723,32 @@ void tst_QQmlPreview::createDirectory()
     QTRY_VERIFY(m_files.contains(testFile(file)));
 
     verifyProcessOutputContains("mkdir rmdir ok");
+}
+
+void tst_QQmlPreview::permissions()
+{
+    const QString file("permissions.qml");
+
+    // Permissions that no file in the source tree has, so we can tell them from the fallback.
+    const QFileDevice::Permissions filePermissions = QFileDevice::ReadOwner | QFileDevice::ReadUser;
+    const QFileDevice::Permissions directoryPermissions = QFileDevice::ReadOwner
+            | QFileDevice::ReadUser | QFileDevice::ExeOwner | QFileDevice::ExeUser;
+    m_permissionOverrides.insert(testFile(file), filePermissions);
+    m_permissionOverrides.insert(QFileInfo(testFile(file)).absolutePath(), directoryPermissions);
+
+    QCOMPARE(QQmlDebugTest::connectTo(
+                     debugJsServerPath("qqmlpreview"),
+                     QStringLiteral("QmlPreview,CanvasFrameRate,EventReplay,EngineControl"),
+                     testFile(file), true, {}),
+             ConnectSuccess);
+    QVERIFY(m_client);
+    QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
+    m_client->triggerLoad(testFileUrl(file));
+    QTRY_VERIFY(m_files.contains(testFile(file)));
+
+    verifyProcessOutputContains(QStringLiteral("permissions file=%1 directory=%2")
+                                        .arg(filePermissions.toInt(), 0, 16)
+                                        .arg(directoryPermissions.toInt(), 0, 16));
 }
 
 void tst_QQmlPreview::configurationMessage()

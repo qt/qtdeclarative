@@ -158,7 +158,10 @@ QAbstractFileEngine::FileFlags QQmlPreviewFileEngine::fileFlags(
     QAbstractFileEngine::FileFlags ret;
 
     if (type & PermsMask) {
-        ret |= QAbstractFileEngine::FileFlags(
+        if (m_result == QQmlPreviewFileLoader::File || m_result == QQmlPreviewFileLoader::Directory)
+            ret |= QAbstractFileEngine::FileFlags(m_permissions.toInt());
+        else
+            ret |= QAbstractFileEngine::FileFlags(
                     ReadOwnerPerm | ReadUserPerm | ReadGroupPerm | ReadOtherPerm);
     }
 
@@ -378,13 +381,16 @@ void QQmlPreviewFileEngine::load() const
     // mutex never calls load(). It's the QML debug server thread that handles the debug protocol.
     QMutexLocker loadLocker(m_loader->loadMutex());
 
-    m_result = m_loader->load(m_absolute);
+    const QQmlPreviewFileLoader::Data data = m_loader->load(m_absolute);
+    m_result = data.result();
     switch (m_result) {
     case QQmlPreviewFileLoader::File:
-        m_contents.setData(m_loader->contents());
+        m_contents.setData(data.contents());
+        m_permissions = data.permissions();
         break;
     case QQmlPreviewFileLoader::Directory:
-        m_entries = m_loader->entries();
+        m_entries = data.entries();
+        m_permissions = data.permissions();
         break;
     case QQmlPreviewFileLoader::Fallback:
         m_fallback = QAbstractFileEngine::create(m_name);

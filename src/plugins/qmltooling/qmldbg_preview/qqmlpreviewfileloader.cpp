@@ -76,45 +76,23 @@ QQmlPreviewFileLoader::QQmlPreviewFileLoader(QQmlPreviewServiceImpl *service)
             Qt::DirectConnection);
 }
 
-QQmlPreviewFileLoader::Result QQmlPreviewFileLoader::load(const QString &path)
+QQmlPreviewFileLoader::Data QQmlPreviewFileLoader::load(const QString &path)
 {
     QMutexLocker locker(&m_contentMutex);
     m_path = path;
 
     auto fileIterator = m_fileCache.constFind(path);
-    if (fileIterator != m_fileCache.constEnd()) {
-        m_result = File;
-        m_contents = *fileIterator;
-        m_entries.clear();
-        return m_result;
-    }
+    if (fileIterator != m_fileCache.constEnd())
+        return Data(fileIterator->contents, fileIterator->permissions);
 
     auto dirIterator = m_directoryCache.constFind(path);
-    if (dirIterator != m_directoryCache.constEnd()) {
-        m_result = Directory;
-        m_contents.clear();
-        m_entries = *dirIterator;
-        return m_result;
-    }
+    if (dirIterator != m_directoryCache.constEnd())
+        return Data(dirIterator->entries, dirIterator->permissions);
 
-    m_result = Unknown;
-    m_entries.clear();
-    m_contents.clear();
+    m_requestedData = Data();
     emit request(path);
     m_waitCondition.wait(&m_contentMutex);
-    return m_result;
-}
-
-QByteArray QQmlPreviewFileLoader::contents()
-{
-    QMutexLocker locker(&m_contentMutex);
-    return m_contents;
-}
-
-QStringList QQmlPreviewFileLoader::entries()
-{
-    QMutexLocker locker(&m_contentMutex);
-    return m_entries;
+    return std::move(m_requestedData);
 }
 
 void QQmlPreviewFileLoader::whitelist(const QUrl &url)
@@ -132,26 +110,26 @@ bool QQmlPreviewFileLoader::isBlacklisted(const QString &path)
     return m_blacklist.isBlacklisted(path);
 }
 
-void QQmlPreviewFileLoader::file(const QString &path, const QByteArray &contents)
+void QQmlPreviewFileLoader::file(const QString &path, const QByteArray &contents,
+                                 QFileDevice::Permissions permissions)
 {
     QMutexLocker locker(&m_contentMutex);
     m_blacklist.whitelist(path);
-    m_fileCache[path] = contents;
+    m_fileCache[path] = { contents, permissions };
     if (path == m_path) {
-        m_contents = contents;
-        m_result = File;
+        m_requestedData = Data(contents, permissions);
         m_waitCondition.wakeOne();
     }
 }
 
-void QQmlPreviewFileLoader::directory(const QString &path, const QStringList &entries)
+void QQmlPreviewFileLoader::directory(const QString &path, const QStringList &entries,
+                                      QFileDevice::Permissions permissions)
 {
     QMutexLocker locker(&m_contentMutex);
     m_blacklist.whitelist(path);
-    m_directoryCache[path] = entries;
+    m_directoryCache[path] = { entries, permissions };
     if (path == m_path) {
-        m_entries = entries;
-        m_result = Directory;
+        m_requestedData = Data(entries, permissions);
         m_waitCondition.wakeOne();
     }
 }
@@ -161,7 +139,7 @@ void QQmlPreviewFileLoader::error(const QString &path)
     QMutexLocker locker(&m_contentMutex);
     m_blacklist.blacklist(path);
     if (path == m_path) {
-        m_result = Fallback;
+        m_requestedData = Data(Fallback);
         m_waitCondition.wakeOne();
     }
 }

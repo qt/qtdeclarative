@@ -70,17 +70,19 @@ void QQmlPreviewClient::messageReceived(const QByteArray &message)
     }
 }
 
-void QQmlPreviewClient::sendDirectory(const QString &path, const QStringList &entries)
+void QQmlPreviewClient::sendDirectory(const QString &path, const QStringList &entries,
+                                      QFileDevice::Permissions permissions)
 {
     QPacket packet(connection()->currentDataStreamVersion());
-    packet << static_cast<qint8>(Directory) << path << entries;
+    packet << static_cast<qint8>(Directory) << path << entries << permissions;
     sendMessage(packet.data());
 }
 
-void QQmlPreviewClient::sendFile(const QString &path, const QByteArray &contents)
+void QQmlPreviewClient::sendFile(const QString &path, const QByteArray &contents,
+                                 QFileDevice::Permissions permissions)
 {
     QPacket packet(connection()->currentDataStreamVersion());
-    packet << static_cast<qint8>(File) << path << contents;
+    packet << static_cast<qint8>(File) << path << contents << permissions;
     sendMessage(packet.data());
 }
 

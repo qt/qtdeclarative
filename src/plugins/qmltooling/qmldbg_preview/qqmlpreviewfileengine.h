@@ -83,6 +83,7 @@ private:
     QPointer<QQmlPreviewFileLoader> m_loader;
 
     mutable QBuffer m_contents;
+    mutable QFileDevice::Permissions m_permissions = QQmlPreviewFileLoader::DefaultPermissions;
     mutable QStringList m_entries;
     mutable std::unique_ptr<QAbstractFileEngine> m_fallback;
     mutable QQmlPreviewFileLoader::Result m_result = QQmlPreviewFileLoader::Unknown;

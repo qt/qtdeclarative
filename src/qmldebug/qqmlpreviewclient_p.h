@@ -24,7 +24,8 @@
 #include <private/qqmlprofilerclient_p.h>
 #include <private/qquickeventreplayclient_p.h>
 
-#include <QtCore/QTimer>
+#include <QtCore/qfiledevice.h>
+#include <QtCore/qtimer.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -69,8 +70,10 @@ public:
     QQmlPreviewClient(QQmlDebugConnection *parent);
     void messageReceived(const QByteArray &message) override;
 
-    void sendDirectory(const QString &path, const QStringList &entries);
-    void sendFile(const QString &path, const QByteArray &contents);
+    void sendDirectory(const QString &path, const QStringList &entries,
+                       QFileDevice::Permissions permissions);
+    void sendFile(const QString &path, const QByteArray &contents,
+                  QFileDevice::Permissions permissions);
     void sendError(const QString &path);
     void sendConfiguration(const Settings &settings);
 

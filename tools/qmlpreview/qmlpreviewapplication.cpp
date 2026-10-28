@@ -478,7 +478,7 @@ void QmlPreviewApplication::serveFileRequest(const QString &remotePath, const QS
 {
     QFile file(localPath);
     if (file.open(QIODevice::ReadOnly)) {
-        m_qmlPreviewClient->sendFile(remotePath, file.readAll());
+        m_qmlPreviewClient->sendFile(remotePath, file.readAll(), file.permissions());
         m_watcher.addFile(localPath);
         return;
     }
@@ -537,7 +537,7 @@ void QmlPreviewApplication::serveResourceRequest(const QString &path)
     QStringList directory;
     for (const auto &entry : entries)
         directory.append(entry.resourcePath.mid(prefixLength));
-    m_qmlPreviewClient->sendDirectory(path, directory);
+    m_qmlPreviewClient->sendDirectory(path, directory, QFileInfo(path).permissions());
 }
 
 void QmlPreviewApplication::serveRequest(const QString &path)
@@ -549,7 +549,7 @@ void QmlPreviewApplication::serveRequest(const QString &path)
 
     const QFileInfo info(path);
     if (info.isDir()) {
-        m_qmlPreviewClient->sendDirectory(path, QDir(path).entryList());
+        m_qmlPreviewClient->sendDirectory(path, QDir(path).entryList(), info.permissions());
         m_watcher.addDirectory(path);
     } else {
         serveFileRequest(path, path);
@@ -562,7 +562,7 @@ bool QmlPreviewApplication::sendFile(const QString &path)
 
     QFile file(path);
     if (file.open(QIODevice::ReadOnly)) {
-        m_qmlPreviewClient->sendFile(effectivePath, file.readAll());
+        m_qmlPreviewClient->sendFile(effectivePath, file.readAll(), file.permissions());
         // Defer the Load, because files tend to change multiple times in a row.
         m_loadTimer.start();
         return true;
@@ -574,6 +574,7 @@ bool QmlPreviewApplication::sendFile(const QString &path)
 void QmlPreviewApplication::sendDirectory(const QString &path)
 {
     const QString effectivePath = m_localToResourcePath.value(path, path);
-    m_qmlPreviewClient->sendDirectory(effectivePath, QDir(path).entryList());
+    m_qmlPreviewClient->sendDirectory(effectivePath, QDir(path).entryList(),
+                                      QFileInfo(path).permissions());
     m_loadTimer.start();
 }

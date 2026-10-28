@@ -72,7 +72,10 @@ void QQmlPreviewServiceImpl::messageReceived(const QByteArray &data)
     case File: {
         QString path;
         QByteArray contents;
+        QFileDevice::Permissions permissions = QQmlPreviewFileLoader::DefaultPermissions;
         packet >> path >> contents;
+        if (!packet.atEnd())
+            packet >> permissions;
 
         const QUrl url = path.startsWith(QLatin1Char(':'))
                 ? QUrl(QLatin1String("qrc") + path)
@@ -86,7 +89,7 @@ void QQmlPreviewServiceImpl::messageReceived(const QByteArray &data)
             emit drop(url);
         else
             m_servedUrls.insert(url);
-        emit file(path, contents);
+        emit file(path, contents, permissions);
 
         // Remember the first .qml file as the current URL, so that a Load command
         // without an explicit URL can fall back to it.
@@ -102,8 +105,11 @@ void QQmlPreviewServiceImpl::messageReceived(const QByteArray &data)
     case Directory: {
         QString path;
         QStringList entries;
+        QFileDevice::Permissions permissions = QQmlPreviewFileLoader::DefaultPermissions;
         packet >> path >> entries;
-        emit directory(path, entries);
+        if (!packet.atEnd())
+            packet >> permissions;
+        emit directory(path, entries, permissions);
         break;
     }
     case Load: {
