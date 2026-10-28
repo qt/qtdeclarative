@@ -47,6 +47,7 @@ private slots:
     void garbageCollection();
     void requiredProperties();
     void deleteInSetInitialState();
+    void deleteInResponseToStatusChange();
 
 private:
     QQmlIncubationController controller;
@@ -1244,6 +1245,40 @@ void tst_qqmlincubator::deleteInSetInitialState()
     incubator.forceCompletion(); // no crash
     QVERIFY(incubator.isNull());
     QCOMPARE(incubator.object(), nullptr); // object was deleted
+}
+
+void tst_qqmlincubator::deleteInResponseToStatusChange()
+{
+    class Incubator : public QQmlIncubator {
+    public:
+        Incubator() : QQmlIncubator(Asynchronous) { }
+
+    protected:
+        void statusChanged(Status status) override
+        {
+            if (status == Ready)
+                delete object();
+        }
+    };
+
+
+    QQmlEngine engine;
+    QQmlIncubationController controller;
+    engine.setIncubationController(&controller);
+
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick\n"
+                      "Item { Loader { sourceComponent: Component { Item { } } } }",
+                      QUrl("file:///repro.qml"));
+
+    Incubator incubator;
+    component.create(incubator);
+
+    incubator.forceCompletion(); // must not crash
+    // deleting the object after the ready transition is fine and we stay in ready
+    QCOMPARE(incubator.status(), QQmlIncubator::Status::Ready);
+    // but we don't return a stale pointer to a deleted object
+    QVERIFY(!incubator.object());
 }
 
 QTEST_MAIN(tst_qqmlincubator)
