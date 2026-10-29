@@ -162,36 +162,36 @@ V4_DEFINE_EXTENSION(QQmlComponentExtension, componentExtension);
 
     Components are reusable, encapsulated QML types with well-defined interfaces.
 
-    Components are often defined by \l {{QML Documents}}{component files} -
-    that is, \c .qml files. The \e Component type essentially allows QML components
-    to be defined inline, within a \l {QML Documents}{QML document}, rather than as a separate QML file.
-    This may be useful for reusing a small component within a QML file, or for defining
-    a component that logically belongs with other QML components within a file.
+    QML objects used as components are often defined in component files, which are
+    regular \l{QML Documents} stored as \c .qml files. The Component type also
+    allows QML components to be defined inline, within a QML document, instead of
+    as a separate QML file. This is a useful way to define a small component for
+    reuse within a QML file, or for defining a component that logically belongs
+    with other QML components within a file.
 
     For example, here is a component that is used by multiple \l Loader objects.
     It contains a single item, a \l Rectangle:
 
     \snippet qml/component.qml 0
 
-    Notice that while a \l Rectangle by itself would be automatically
-    rendered and displayed, this is not the case for the above rectangle
-    because it is defined inside a \c Component. The component encapsulates the
-    QML types within, as if they were defined in a separate QML
-    file, and is not loaded until requested (in this case, by the
-    two \l Loader objects). Because Component is not derived from Item, you cannot
-    anchor anything to it.
+    Notice that, while a \l Rectangle by itself would be automatically rendered and
+    displayed, this is not the case for the above rectangle because it is defined
+    inside a Component. The component encapsulates the QML types within, as if they
+    were defined in a separate QML file, and is not loaded until requested, in this
+    case, by the two \l Loader objects. Because Component is not derived from Item,
+    you cannot anchor anything to it.
 
-    Defining a \c Component is similar to defining a \l {QML Documents}{QML document}.
+    Defining a component is similar to defining a \l {QML Documents}{QML document}.
     A QML document has a single top-level item that defines the behavior and
     properties of that component, and cannot define properties or behavior outside
-    of that top-level item. In the same way, a \c Component definition contains a single
-    top level item (which in the above example is a \l Rectangle) and cannot define any
-    data outside of this item, with the exception of an \e id (which in the above example
-    is \e redSquare).
+    of that top-level item. In the same way, a Component definition contains a single
+    top level item, which in the above example is a \l Rectangle, and cannot define
+    any data outside of this item, with the exception of an \e id, which in the
+    above example is \e redSquare.
 
-    The \c Component type is commonly used to provide graphical components
-    for views. For example, the ListView::delegate property requires a \c Component
-    to specify how each list item is to be displayed.
+    The Component type is commonly used to provide graphical components for views.
+    For example, the \l{ListView.delegate} property requires a Component to specify
+    how each list item is to be displayed.
 
     \c Component objects can also be created dynamically using
     \l{QtQml::Qt::createComponent()}{Qt.createComponent()}.
@@ -200,18 +200,20 @@ V4_DEFINE_EXTENSION(QQmlComponentExtension, componentExtension);
     instance of the type without having to add an entire new file. However,
     you cannot name this type and consequently can't use it to declare a
     property or use it in a type annotation. If you need this, prefer using
-    \l{Defining Object Types through QML Documents#Inline Components}{inline components}.
+    \l{Defining Object Types with QML Documents#Inline Components}{inline components}.
 
     \section1 Creation Context
 
-    The creation context of a Component corresponds to the context where the Component was declared.
-    This context is used as the parent context (creating a \l{qtqml-documents-scope.html#component-instance-hierarchy}{context hierarchy})
+    The creation context of a Component corresponds to the context where the
+    Component was declared. This context is used as the parent context (creating a
+    \l{Scope and Naming Resolution#component-instance-hierarchy}{context hierarchy})
     when the component is instantiated by an object such as a ListView or a Loader.
 
-    In the following example, \c comp1 is created within the root context of MyItem.qml, and any objects
-    instantiated from this component will have access to the ids and properties within that context,
-    such as \c internalSettings.color. When \c comp1 is used as a ListView delegate in another context
-    (as in main.qml below), it will continue to have access to the properties of its creation context
+    In the following example, \c comp1 is created within the root context of
+    MyItem.qml, and any objects instantiated from this component will have access
+    to the ids and properties within that context, such as \c internalSettings.color.
+    When \c comp1 is used as a ListView delegate in another context (as in main.qml
+    below), it will continue to have access to the properties of its creation context
     (which would otherwise be private to external users).
 
     \table

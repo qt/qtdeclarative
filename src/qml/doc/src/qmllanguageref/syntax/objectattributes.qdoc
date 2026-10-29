@@ -108,7 +108,7 @@ an object declaration in a QML document with the following syntax:
     [default] [virtual] [override] [final] [required] [readonly] property <propertyType> <propertyName>
 \endcode
 
-In this way an object declaration may \l {Defining Object Types from QML}
+In this way an object declaration may \l {Defining Object Types}
 {expose a particular value} to outside objects or maintain some internal
 state more easily.
 
@@ -181,7 +181,7 @@ property Item someItem
 property Rectangle someRectangle
 \endcode
 
-This applies to \l {Defining Object Types from QML}{custom QML types} as well.
+This applies to \l {Defining Object Types}{custom QML types} as well.
 If a QML type was defined in a file named \c ColorfulButton.qml (in a directory
 which was then imported by the client), then a property of type
 \c ColorfulButton would also be valid.

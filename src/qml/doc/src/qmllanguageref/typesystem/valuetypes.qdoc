@@ -9,17 +9,11 @@
 QML supports built-in and custom value types.
 
 A \e{value type} is one that is conceptually passed by value rather than by
-reference, such as an \c int or a \c string. This contrasts with
-\l{qtqml-typesystem-topic.html#qml-object-types}{QML Object Types}. Object types
-are passed by reference. If you assign an instance of an object type to two
-different properties, both properties carry the same value. Modifying the object
-is reflected in both properties. If you assign an instance of a value type to
-two different properties, the properties carry separate values. If you modify
-one of them, the other one stays the same. Value types are only conceptually
-passed by value since it must still be possible to interact with them as if they
-were JavaScript objects. To facilitate this, in reality they are passed as
-\l{QML Value Type and Sequence References}{Value Type References} when you access
-them from JavaScript code.
+reference, such as an \c int or a \c string, in contrast to
+\l{QML Object Types}{object types} which are passed by reference.
+If you assign an instance of a value type to two different properties, the
+properties hold separate values. If you modify one of them, the other one
+stays the same.
 
 Unlike an object type, a value type cannot be used to declare QML objects:
 it is not possible, for example, to declare an \c int{} object or a \c size{} object.
@@ -35,14 +29,14 @@ Value types can be used to refer to:
 When a variable or property holds a value type and it is assigned to another
 variable or property, then a copy of the value is made.
 
-\sa {qtqml-typesystem-topic.html}{The QML Type System}
-
+\sa {The QML Type System}
 
 \section1 Available Value Types
 
 Some value types are supported by the engine by default and do not require an
-\l {Import Statements}{import statement} to be used, while others do require
-the client to import the module which provides them.
+\l {Import Statements}{import statement} to be used, while others require the
+client to import the module which provides them.
+
 All of the value types listed below may be used as a \c property type in a QML
 document, with the following exceptions:
 \list
@@ -50,12 +44,13 @@ document, with the following exceptions:
   \li \c list must be used in conjunction with an object or value type as element
 \endlist
 
-\section2 Built-in Value Types Provided By The QML Language
+\section2 Built-in Value Types Provided by the QML Language
 
-The built-in value types supported natively in the \l{The QML Reference}{QML language} are listed below:
+The built-in value types supported natively in the
+\l{The QML Reference}{QML language} are listed below:
 \annotatedlist qmlvaluetypes
 
-\section2 Value Types Provided By QML Modules
+\section2 Value Types Provided by QML Modules
 
 QML modules may extend the QML language with more value types.
 
@@ -83,20 +78,20 @@ Some value types have properties: for example, the \l font type has
 value types do not provide their own property change signals. It is only possible
 to create a property change signal handler for the value type property itself:
 
-\code
+\qml
 Text {
-    // invalid!
+    // Invalid: change handlers only exist for non-grouped properties
     onFont.pixelSizeChanged: doSomething()
 
-    // also invalid!
+    // Invalid: change handlers do not exist for properties of value types
     font {
         onPixelSizeChanged: doSomething()
     }
 
-    // but this is ok
+    // Valid: a handler for the font value type itself
     onFontChanged: doSomething()
 }
-\endcode
+\endqml
 
 Be aware, however, that a property change signal for a value type is emitted
 whenever \e any of its attributes have changed, as well as when the property itself
@@ -122,6 +117,13 @@ In contrast, properties of an \l{qtqml-typesystem-topic.html#qml-object-types}{o
 emit their own property change signals, and a property change signal handler for an object-type
 property is only invoked when the property is reassigned to a different object value.
 
+\section1 Implementation Notes
+
+Value types are only conceptually passed by value since it must still be
+possible to interact with them as if they are JavaScript objects. To facilitate
+this, they are passed as
+\l{QML Value Type and Sequence References}{Value Type References} when you
+access them from JavaScript code.
 */
 
 /*!
