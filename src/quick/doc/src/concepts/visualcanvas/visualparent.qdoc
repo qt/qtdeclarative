@@ -85,7 +85,7 @@ below.
 
 \section2 Item Coordinates
 As item coordinates are relative to the visual parent, they can be affected by changes to the visual hierarchy. See
-the \l{qtquick-visualcanvas-coordinates.html}{Visual Coordinates} concept page for more detail.
+the \l{Concepts - Visual Coordinates in Qt Quick}{Visual Coordinates} concept page for more detail.
 
 \section2 Stacking Order
 

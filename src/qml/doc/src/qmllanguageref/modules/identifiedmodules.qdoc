@@ -30,7 +30,7 @@ characters of the latin alphabet, underscores, and dots.
 \section1 Locally Installed Identified Modules
 
 A directory of QML and/or C++ files can be shared as an identified module if it
-contains a \l{qtqml-modules-qmldir.html}{qmldir file} with the module metadata
+contains a \l{qmldir}{qmldir file} with the module metadata
 and is installed into the QML import path.  Any QML file on the local file
 system can import this directory as a module by using an
 \l{qtqml-syntax-imports.html}{import} statement that refers to the module's
@@ -74,7 +74,7 @@ myapp
 \endcode
 
 To make the \c mycomponents directory available as an identified module, the
-directory must include a \l{qtqml-modules-qmldir.html}{qmldir file} that
+directory must include a \l{qmldir}{qmldir file} that
 defines the module identifier, and describes the object types made available by
 the module. For example, to make the \c CheckBox, \c DialogBox and \c Slider
 types available for version 1.0 of the module, the \c qmldir file would contain
@@ -147,7 +147,7 @@ An identified module has several restrictions upon it:
 \list
 \li an identified module must be installed into the
     \l{qtqml-syntax-imports.html#qml-import-path}{QML import path}
-\li the module identifier specified in the \l{qtqml-modules-qmldir.html}
+\li the module identifier specified in the \l{qmldir}
     {module identifier directive} must match the install path of the module
     (relative to the QML import path, where directory separators are replaced
     with period characters)

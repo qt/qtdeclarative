@@ -12,9 +12,8 @@ into JavaScript files (known as \c {JavaScript Resources} in QML).
 
 There are two different kinds of JavaScript resources which are supported in
 QML: code-behind implementation files, and shared (library) files.  Both kinds
-of JavaScript resource may be \l{qtqml-javascript-imports.html}{imported} by
-other JavaScript resources, or included in \l{qtqml-modules-topic.html}
-{QML modules}.
+of JavaScript resource may be \l{Importing JavaScript Resources in QML}{imported}
+by other JavaScript resources, or included in \l{QML modules}.
 
 \section1 Code-Behind Implementation Resource
 

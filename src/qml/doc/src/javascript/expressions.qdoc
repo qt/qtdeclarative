@@ -235,7 +235,7 @@ as an argument. For example, the following code connects the TapHandler's
 The \c jsFunction() is called whenever the TapHandler's \c tapped signal
 is emitted.
 
-See \l{qtqml-syntax-signals.html}
+See \l{qml-connect-signals-to-method}
 {Connecting Signals to Methods and Signals} for more information.
 
 \section1 JavaScript in application startup code

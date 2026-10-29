@@ -100,7 +100,7 @@ To visualize data, bind the view's \c model property to a model and the
     \snippet qml/listview-sections.qml delegate
 
     The ListView type has the \c section
-    \l{qtqml-syntax-objectattributes.html#Attached-properties-and-attached-signal-handlers}
+    \l{QML Object Attributes#Attached Properties and Attached Signal Handlers}
     {attached property} that can combine adjacent and related types into a
     section.  The \c section.property determines which list
     type property to use as sections. The \c section.criteria can dictate how the
@@ -268,12 +268,10 @@ To visualize data, bind the view's \c model property to a model and the
     properties with matching names.
 
     QML provides several types of data models among the built-in set of QML
-    types. In addition, models can be created with Qt C++ and then made
-    available to \l{QQmlEngine} for use by
-    QML components. For information about creating these models, visit the
-    \l{Using C++ Models with Qt Quick Views}
-    and \l{qtqml-typesystem-topic.html#qml-object-types}
-    {creating QML types} articles.
+    types. In addition, models can be created with C++ and then made
+    available to \l{QQmlEngine} for QML components to use. For information
+    about creating these models, see \l{Using C++ Models with Qt Quick Views}
+    and \l{Defining QML Types from C++}.
 
     Positioning of items from a model can be achieved using a \l{Repeater}.
 
@@ -478,7 +476,8 @@ property. It is not possible to set this property to determine the number of
 items to be created. Instead, as in the above example, we use an integer as
 the model.
 
-For more details, see the \l{qtquick-modelviewsdata-modelview.html#integers-as-models}{QML Data Models} document.
+For more details, see the \l{#Integers as Models}{Integers as Models} example
+above.
 
 If the model is a string list, the delegate is also exposed to the usual
 read-only \c modelData property that holds the string. For example:
@@ -600,8 +599,9 @@ ListView {
 \note The \c edit role is equal to \l Qt::EditRole. See \l{QAbstractItemModel::}{roleNames}()
 for the built-in role names. However, real life models would usually register custom roles.
 
-For more information, visit the \l{qtquick-modelviewsdata-cppmodels.html#changing-model-data}{Using C++ Models with Qt Quick Views}
-article.
+For more information, see the
+\l{Using C++ Models with Qt Quick Views#Changing Model Data}{Changing Model Data}
+section of \l{Using C++ Models with Qt Quick Views}.
 
 \section1 Using Transitions
 
