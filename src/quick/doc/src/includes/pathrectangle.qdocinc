@@ -118,7 +118,5 @@ used instead.
 These properties are unset by default. Assign \c undefined to them to
 return them to the unset state.
 
-\snippet \2 \3
-
 \sa cornerShape
 //! [corner-shape-properties]

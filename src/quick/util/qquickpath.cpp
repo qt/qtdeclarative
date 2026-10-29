@@ -2721,6 +2721,12 @@ void QQuickPathRectangle::resetCornerBevel(Qt::Corner corner)
     \since 6.13
 */
 
+/*!
+    \include pathrectangle.qdocinc {corner-shape-properties}
+        {QtQuick::PathRectangle}
+    \since 6.13
+*/
+
 QQuickPathRectangle::CornerShape QQuickPathRectangle::cornerShape() const
 {
     return _extra.isAllocated() ? _extra->shape : Rounded;
