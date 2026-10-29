@@ -1583,6 +1583,7 @@ void Heap::QObjectWrapper::markObjects(Heap::Base *that, MarkStack *markStack)
                 // ddata->compilationUnit can be different from the VME compilation units
                 // if the "topmost" instantiation of the object is inaddressible.
                 if (!recordVMEObjectForCompilationUnits(o, vme, recorded)
+                        && ddata->compilationUnit
                         && ddata->compilationUnit != vme->compilationUnit()) {
                     recordObjectForCompilationUnits(o, ddata->compilationUnit, recorded);
                 }

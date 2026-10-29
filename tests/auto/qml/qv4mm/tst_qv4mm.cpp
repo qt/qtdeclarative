@@ -42,6 +42,28 @@ public:
     Q_INVOKABLE QVariantList ids() const { return {1, 2, 3}; }
 };
 
+class GroupedObject : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int value MEMBER m_value NOTIFY valueChanged)
+public:
+    using QObject::QObject;
+signals:
+    void valueChanged();
+private:
+    int m_value = 0;
+};
+
+class GroupedHolder : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(GroupedObject *child READ child CONSTANT)
+public:
+    GroupedObject *child() { return &m_child; }
+private:
+    GroupedObject m_child{this};
+};
+
 class tst_qv4mm : public QQmlDataTest
 {
     Q_OBJECT
@@ -110,6 +132,9 @@ tst_qv4mm::tst_qv4mm()
 {
     QV4::ExecutionEngine engine;
     QV4::Scope scope(engine.rootContext());
+
+    qmlRegisterType<GroupedHolder>("Test", 1, 0, "GroupedHolder");
+    qmlRegisterUncreatableType<GroupedObject>("Test", 1, 0, "GroupedObject", u"grouped"_s);
 }
 
 void tst_qv4mm::gcStats()
@@ -1819,6 +1844,16 @@ void tst_qv4mm::findObjectsForCompilationUnit_data()
             << 1      // component2InstanceCount
             << 1      // expectedUnit1ObjectCount
             << 2      // expectedUnit2ObjectCount (root + non-VME child)
+            << true   // component2HasChildObject
+            << false; // component2InheritsComponent1
+
+    QTest::newRow("grouped_child_without_compilation_unit")
+            << "recordTest1.qml"
+            << "recordTestGroupedNoUnit.qml"
+            << 1      // component1InstanceCount
+            << 1      // component2InstanceCount
+            << 1      // expectedUnit1ObjectCount
+            << 3      // expectedUnit2ObjectCount (root + grouped child + Binding)
             << true   // component2HasChildObject
             << false; // component2InheritsComponent1
 }
