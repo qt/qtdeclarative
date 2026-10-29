@@ -16,7 +16,7 @@
 
 \section1 Synopsis
 
-\badcode
+\code [text]
 qt_add_qml_module(
     target
     URI uri
