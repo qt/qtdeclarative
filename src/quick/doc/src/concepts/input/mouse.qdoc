@@ -23,7 +23,7 @@ interfaces.
 
 \section1 Mouse Event Handling
 
-QML uses \l{qtqml-syntax-signals.html}{signals and handlers} to
+QML uses \l{Signal and Handler Event System}{signals and handlers} to
 deliver mouse interactions. Specifically, Qt Quick provides the \l MouseArea
 and \l MouseEvent types that allow developers to define JavaScript callbacks
 (also called signal handlers), which accept mouse events within a defined area.
@@ -41,7 +41,7 @@ definable.
 \section1 Receiving Events
 
 The MouseArea type emits
-\l{qtqml-syntax-signals.html}{signals} in response to different
+\l{Signal and Handler Event System}{signals} in response to different
 mouse events. The \l MouseArea type documentation describes these
 gestures in greater detail:
 
@@ -95,7 +95,7 @@ Many of the signals are sent multiple times to reflect various mouse events
 such as double clicking. To facilitate the classification of mouse clicks, the
 MouseEvent object has an \c accepted property to disable the event propagation.
 
-To learn more about QML's event system, please read the
-\l{qtqml-syntax-signals.html}{signals and handlers, and event system} document.
+To learn more about QML's event system, see the
+\l{Signal and Handler Event System} document.
 
 */

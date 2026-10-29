@@ -12,7 +12,7 @@
 \section1 Unused import
 
 \section2 What happened?
-You used an \l{qtqml-syntax-imports.html}{import statement} to import a QML module,
+You used an \l{Import Statements}{import statement} to import a QML module,
 but did not use any of its types.
 
 \section2 Why is this bad?

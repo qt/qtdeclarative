@@ -14,7 +14,7 @@ input, including mouse and touch events, text input, and key-press events.
 Other modules provide support for other types of user input.
 
 This article covers how to handle basic user input. For information about
-audio-visual input, see the \l {qtmultimedia-index.html}{Qt Multimedia}
+audio-visual input, see the \l{Qt Multimedia}
 documentation.
 
 \section2 Mouse and touch events

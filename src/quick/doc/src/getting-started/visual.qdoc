@@ -36,7 +36,7 @@ and \l SpriteSequence play animations comprised of multiple frames stored
 adjacently in a non-animated image format.
 
 For displaying video files and camera data, see the
-\l {qtmultimedia-index.html}{Qt Multimedia} module.
+\l{Qt Multimedia} module.
 
 \section1 Shared Visual Properties
 

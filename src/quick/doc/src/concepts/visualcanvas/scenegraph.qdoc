@@ -41,7 +41,7 @@ thread is preparing the next frame's state.
 default behavior of the Qt Quick Scene graph. When using an alternative scene
 graph adaptation, such as, the \c software adaptation, not all concepts may
 apply. For more information about the different scene graph adaptations see
-\l{qtquick-visualcanvas-adaptations.html}{Scene Graph Adaptations}.
+\l{Scene Graph Adaptations}.
 
 
 \section1 Qt Quick Scene Graph Structure
