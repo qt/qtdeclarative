@@ -26,8 +26,7 @@ The Qt Qml module contains the QML framework and important QML types used in
 applications. The constructs of QML are described in the \l{The QML Reference}.
 
 The \l{Qt Qml QML Types}{QML API} of the Qt Qml module provides a number of
-\l{qtqml-typesystem-objecttypes.html}{QML Object Types},
-\l{qtqml-typesystem-valuetypes.html}{QML Value Types} and namespaces.
+\l{QML Object Types}, \l{QML Value Types} and namespaces.
 
 \section2 C++ API
 

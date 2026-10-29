@@ -27,7 +27,7 @@ on whether you are using or writing a QML module.
 
 \section2 What happened?
 You used a type that was not found by QML tooling.
-It usually indicates a potential typo, a missing \l{qtqml-syntax-imports.html}{import},
+It usually indicates a potential typo, a missing \l{Import Statements}{import},
 or improperly set up import paths.
 
 \section2 Why is this bad?
@@ -77,11 +77,11 @@ directly or indirectly by using it as a:
     \li \c Q_INVOKABLE return type
 \endlist
 
-You might be missing a \l{qtqml-cppintegration-definetypes.html}{declarative type registration}
+You might be missing a \l{Defining QML Types from C++}{declarative type registration}
 if the unresolved type is exposed by your module.
 
 Otherwise, your QML module might have undeclared
-\l{qt-add-qml-module.html#declaring-module-dependencies}{dependencies}
+\l{qt_add_qml_module#declaring-module-dependencies}{dependencies}
 to the QML module exposing the unresolved type.
 
 \section2 Why is this bad?
@@ -113,7 +113,7 @@ The QML tooling can't resolve \c MyItem correctly if it can't resolve \c QQuickI
 or \c SomeType first. If \c QQuickItem lives in the \c QtQuick QML module and \c SomeType
 in \c SomeModule, then you need to state these C++ dependencies in the QML module definition.
 
-To achieve that, \l{qt-add-qml-module.html#declaring-module-dependencies}{add the dependencies}
+To achieve that, \l{qt_add_qml_module#declaring-module-dependencies}{add the dependencies}
 to the QML module definition. This can be done with \c DEPENDENCIES, for example:
 \code [cmake]
 qt_add_qml_module(
@@ -125,7 +125,7 @@ qt_add_qml_module(
 \endcode
 
 Refer to
-\l{qt-add-qml-module.html#declaring-module-dependencies}{declaring C++ dependencies between QML modules}
+\l{qt_add_qml_module#declaring-module-dependencies}{declaring C++ dependencies between QML modules}
 for more information.
 
 */
