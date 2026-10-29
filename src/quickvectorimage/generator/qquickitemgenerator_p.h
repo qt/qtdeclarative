@@ -117,6 +117,13 @@ private:
         QQuickMatrix4x4 *linkedMatrix;
     };
 
+    struct OpacityGroup
+    {
+        QQuickItem *wrapper = nullptr;
+        QRectF bounds;
+        int graphicItemCount = 0;
+    };
+
     QQuickItem *m_rootItem = nullptr;
     QStack<QQuickItem *> m_itemStack;
     QQmlContext *m_context = nullptr;
@@ -139,6 +146,8 @@ private:
     QList<PendingLinkedTransform> m_pendingLinkedTransforms;
     std::unique_ptr<QQuickGeneratorAnimationProvider> m_animationProvider;
     QStack<bool> m_scopePushed;
+    QStack<OpacityGroup> m_opacityGroups;
+    QStack<bool> m_opacityGroupPushed;
     QMap<std::array<qreal, 4>, QEasingCurve> m_easingCache;
 
     bool m_deferGuiThreadCalls = false;
@@ -146,6 +155,9 @@ private:
     const std::atomic<bool> *m_cancelled = nullptr;
 
     bool isStopped();
+    bool generateStructureNodeItem(const StructureNodeInfo &info);
+    void beginOpacityGroup(const StructureNodeInfo &info);
+    void endOpacityGroup();
     void deferToGuiThread(std::function<void()> call);
     void initializeQmlObject(QObject *object, std::function<void()> setup);
     void startMasterAnimation(QQuickAbstractAnimation *animation);

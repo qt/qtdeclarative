@@ -432,6 +432,69 @@ bool QQuickItemGenerator::generateStructureNode(const StructureNodeInfo &info)
     if (!isNodeVisible(info))
         return false;
 
+    const bool isStart = (info.stage == StructureNodeStage::Start);
+    if (isStart)
+        m_opacityGroupPushed.push(!info.opacityGroupBounds.isNull());
+
+    const bool inOpacityGroup = !m_opacityGroupPushed.isEmpty() && m_opacityGroupPushed.top();
+    std::optional<StructureNodeInfo> groupedInfo;
+    if (inOpacityGroup) {
+        groupedInfo = info;
+        groupedInfo->isDefaultOpacity = true;
+        groupedInfo->opacity = QQuickAnimatedProperty(QVariant::fromValue(1.0));
+        if (isStart)
+            beginOpacityGroup(info);
+    }
+
+    const bool res = generateStructureNodeItem(groupedInfo ? *groupedInfo : info);
+
+    if (!isStart && !m_opacityGroupPushed.isEmpty()) {
+        m_opacityGroupPushed.pop();
+        if (inOpacityGroup)
+            endOpacityGroup();
+    }
+    return res;
+}
+
+void QQuickItemGenerator::beginOpacityGroup(const StructureNodeInfo &info)
+{
+    auto *wrapper = new QQuickItem;
+    pushItem(wrapper);
+    wrapper->setOpacity(info.opacity.defaultValue().toReal());
+    bindAnimatedProperty(wrapper, QStringLiteral("opacity"), info.opacity);
+    m_opacityGroups.push({ wrapper, info.opacityGroupBounds, 0 });
+}
+
+void QQuickItemGenerator::endOpacityGroup()
+{
+    const OpacityGroup group = m_opacityGroups.pop();
+    popItem();
+
+    if (group.graphicItemCount <= 1)
+        return;
+
+    deferToGuiThread([wrapper = group.wrapper, bounds = group.bounds]() {
+        wrapper->setPosition(bounds.topLeft());
+        wrapper->setSize(bounds.size());
+
+        auto *spy = new QQuickItemSpy(wrapper);
+        spy->setSize(bounds.size());
+
+        QQuickItemLayer *layer = QQuickItemPrivate::get(wrapper)->layer();
+        layer->setSourceRect(bounds);
+        auto updateTextureSize = [layer, spy]() {
+            const QSizeF size = spy->requiredTextureSize();
+            layer->setSize(QSize(qRound(size.width()), qRound(size.height())));
+        };
+        QObject::connect(spy, &QQuickItemSpy::requiredTextureSizeChanged, wrapper,
+                         updateTextureSize);
+        updateTextureSize();
+        layer->setEnabled(true);
+    });
+}
+
+bool QQuickItemGenerator::generateStructureNodeItem(const StructureNodeInfo &info)
+{
     if (info.stage == StructureNodeStage::Start) {
         if (!info.clipBox.isEmpty()) {
             auto *clipItem = new QQuickItem;
@@ -644,6 +707,8 @@ void QQuickItemGenerator::outputShapePath(const PathNodeInfo &info, const QPaint
     if (noPen && noFill)
         return;
 
+    if (!m_opacityGroups.isEmpty())
+        m_opacityGroups.top().graphicItemCount++;
     auto *shapePath = new QQuickShapePath;
     shapePath->setParent(shape);
 
@@ -833,6 +898,8 @@ void QQuickItemGenerator::generateImageNode(const ImageNodeInfo &info)
     if (!isNodeVisible(info))
         return;
 
+    if (!m_opacityGroups.isEmpty())
+        m_opacityGroups.top().graphicItemCount++;
     auto *image = new QQuickImage;
     pushItem(image);
     generateNodeBase(info);
@@ -870,6 +937,8 @@ void QQuickItemGenerator::generateTextNode(const TextNodeInfo &info)
     if (!isNodeVisible(info))
         return;
 
+    if (!m_opacityGroups.isEmpty())
+        m_opacityGroups.top().graphicItemCount++;
     auto *item = new QQuickItem;
     pushItem(item);
     generateNodeBase(info);
@@ -1067,8 +1136,12 @@ void QQuickItemGenerator::replayDefsRecord(const QString &id)
     auto *container = new QQuickItem;
     container->setParent(m_rootItem);
     m_itemStack.push(container);
+    // Replayed def content is not drawn inside the enclosing opacity group
+    QStack<OpacityGroup> outerOpacityGroups;
+    outerOpacityGroups.swap(m_opacityGroups);
     for (const auto &step : *it)
         step();
+    m_opacityGroups.swap(outerOpacityGroups);
     m_itemStack.pop();
 }
 
