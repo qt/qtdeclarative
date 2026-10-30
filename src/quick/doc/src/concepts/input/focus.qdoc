@@ -45,6 +45,23 @@ type whose text is determined by whether or not it has active focus.
 
 \snippet qml/focus/rectangle.qml active focus
 
+More than one item can have active focus at the same time: the item that
+receives key events, and every \l FocusScope that contains it. For more
+information, see \l {Acquiring Focus and Focus Scopes}.
+
+To find the single item that receives key events, use the
+\l [attached] {Window::activeFocusItem}{Window.activeFocusItem} attached
+property, or QQuickWindow::activeFocusItem() from C++. For example, a focus
+scope can check whether it has active focus itself, rather than through one
+of its children:
+
+\qml
+FocusScope {
+    id: scope
+    readonly property bool hasOwnActiveFocus: Window.activeFocusItem === scope
+}
+\endqml
+
 \section1 Acquiring Focus and Focus Scopes
 
 An \l Item requests focus by setting the \c focus property to \c true.
