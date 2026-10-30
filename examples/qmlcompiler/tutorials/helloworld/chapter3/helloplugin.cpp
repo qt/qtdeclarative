@@ -43,8 +43,10 @@ void HelloWorldElementPass::run(const QQmlSA::Element &element)
         if (currentBinding == u"Hello world!"_s)
             continue;
         if (currentBinding == u"Goodbye world!"_s) {
+            QQmlSA::DocumentEdit edit(element.filePath(), textBinding.sourceLocation(),
+                                      u"\"Hello world!\""_s);
             QQmlSA::FixSuggestion suggestion(u"Replace 'Goodbye' with 'Hello'"_s,
-                                             textBinding.sourceLocation(), u"\"Hello world!\""_s);
+                                             textBinding.sourceLocation(), edit);
             suggestion.setAutoApplicable(true);
             emitWarning("Incorrect greeting", helloWorld, textBinding.sourceLocation(), suggestion);
         }
