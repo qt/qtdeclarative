@@ -1216,10 +1216,13 @@ void QQuickShaderEffectPrivate::disconnectSignals(Shader shaderType)
             if (source) {
                 if (q->window())
                     QQuickItemPrivate::get(source)->derefWindow();
-                QObject::disconnect(m_destroyedConnections.take(source));
+                // All variables in this shader are about to be removed.
+                if (sourceIsUnique(source, shaderType, -1))
+                    QObject::disconnect(m_destroyedConnections.take(source));
             }
         }
     }
+    m_shaders[shaderType].varData.clear();
 }
 
 void QQuickShaderEffectPrivate::clearMappers(QQuickShaderEffectPrivate::Shader shaderType)
@@ -1263,7 +1266,6 @@ bool QQuickShaderEffectPrivate::updateShader(Shader shaderType, const QUrl &file
     disconnectSignals(shaderType);
 
     m_shaders[shaderType].shaderInfo.variables.clear();
-    m_shaders[shaderType].varData.clear();
 
     if (!fileUrl.isEmpty()) {
         const QQmlContext *context = qmlContext(q);
@@ -1484,11 +1486,12 @@ bool QQuickShaderEffectPrivate::sourceIsUnique(QQuickItem *source, Shader typeTo
 {
     for (int shaderType = 0; shaderType < NShader; ++shaderType) {
         for (int idx = 0; idx < m_shaders[shaderType].varData.size(); ++idx) {
-            if (shaderType != typeToSkip || idx != indexToSkip) {
-                const auto &vd(m_shaders[shaderType].varData[idx]);
-                if (vd.specialType == QSGShaderEffectNode::VariableData::Source && qvariant_cast<QObject *>(vd.value) == source)
-                    return false;
-            }
+            if (shaderType == typeToSkip && (indexToSkip < 0 || idx == indexToSkip))
+                continue;
+            const auto &vd(m_shaders[shaderType].varData[idx]);
+            if (vd.specialType == QSGShaderEffectNode::VariableData::Source
+                    && qvariant_cast<QObject *>(vd.value) == source)
+                return false;
         }
     }
     return true;

@@ -66,6 +66,7 @@ private slots:
     void deleteSourceItem();
     void deleteShaderEffectSource();
     void twoImagesOneShaderEffect();
+    void sharedSourceAfterVertexShaderReset();
 
     void withoutQmlEngine();
 
@@ -149,6 +150,29 @@ void tst_qquickshadereffect::twoImagesOneShaderEffect()
     QVERIFY(QQuickTest::showView(view, QUrl{u"qrc:/data/twoImagesOneShaderEffect.qml"_s}));
     QObject *obj = view.rootObject();
     QVERIFY(obj);
+}
+
+void tst_qquickshadereffect::sharedSourceAfterVertexShaderReset()
+{
+    QQuickView view;
+    QSignalSpy frameSwapped(&view, &QQuickWindow::frameSwapped);
+    QVERIFY(QQuickTest::showView(view, QUrl{u"qrc:/data/sharedSourceVertexShaderReset.qml"_s}));
+    QTRY_VERIFY(frameSwapped.count() > 0);
+
+    if (!QSGRendererInterface::isApiRhiBased(view.rendererInterface()->graphicsApi()))
+        QSKIP("ShaderEffect requires an RHI-based scene graph backend");
+
+    QQuickItem *root = view.rootObject();
+    QVERIFY(root);
+    QPointer<QQuickItem> effect = root->findChild<QQuickItem *>("effect");
+    QVERIFY(effect);
+    QCOMPARE(effect->property("vertexShader").toUrl().fileName(), u"sharedSource.vert.qsb"_s);
+
+    root->setProperty("useVertexShader", false);
+    QCOMPARE(effect->property("vertexShader").toUrl(), QUrl());
+
+    QVERIFY(QMetaObject::invokeMethod(root, "destroyContainer"));
+    QTRY_VERIFY(effect.isNull());
 }
 
 void tst_qquickshadereffect::withoutQmlEngine()
