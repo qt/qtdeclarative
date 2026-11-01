@@ -34,6 +34,8 @@ public:
 private slots:
     void propagation_variations();
     void engineRecreated();
+    void popupPadding_data();
+    void popupPadding();
 };
 
 tst_StyleKit::tst_StyleKit()
@@ -89,6 +91,34 @@ void tst_StyleKit::engineRecreated()
         QTRY_COMPARE(button->background()->color(), QColor(QStringLiteral("blue")));
         QTest::mouseRelease(view.get(), Qt::LeftButton, {}, center);
     }
+}
+
+void tst_StyleKit::popupPadding_data()
+{
+    QTest::addColumn<QByteArray>("control");
+    QTest::newRow("ComboBox") << QByteArray("comboBox");
+    QTest::newRow("SearchField") << QByteArray("searchField");
+}
+
+void tst_StyleKit::popupPadding()
+{
+    /* The popup's height includes its padding, so that its list has room
+     * for all its items. */
+    QFETCH(QByteArray, control);
+    LOAD_STYLEKIT_FILE("popupPadding.qml")
+
+    auto *item = view->rootObject()->property(control.constData()).value<QQuickItem *>();
+    QVERIFY(item);
+    auto *popup = item->property("popup").value<QObject *>();
+    QVERIFY(popup);
+    QCOMPARE(popup->property("topPadding").toReal(), 10);
+    QVERIFY(QMetaObject::invokeMethod(popup, "open"));
+    QTRY_VERIFY(popup->property("opened").toBool());
+
+    auto *list = popup->property("contentItem").value<QQuickItem *>();
+    QVERIFY(list);
+    QVERIFY(list->property("contentHeight").toReal() > 0);
+    QCOMPARE(list->height(), list->property("contentHeight").toReal());
 }
 
 QTEST_MAIN(tst_StyleKit)

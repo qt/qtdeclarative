@@ -125,7 +125,8 @@ T.ComboBox {
     popup: Popup {
         y: control.height
         width: control.width
-        height: Math.min(contentItem.implicitHeight, control.Window.height - topMargin - bottomMargin)
+        height: Math.min(contentItem.implicitHeight + topPadding + bottomPadding,
+                         control.Window.height - topMargin - bottomMargin)
 
         palette.text: control.palette.text
         palette.highlight: control.palette.highlight
