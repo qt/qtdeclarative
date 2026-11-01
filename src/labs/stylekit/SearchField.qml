@@ -188,7 +188,8 @@ T.SearchField {
     popup: Popup {
         y: control.height
         width: control.width
-        height: Math.min(contentItem.implicitHeight, control.Window.height - control.y - control.height - control.padding)
+        height: Math.min(contentItem.implicitHeight + topPadding + bottomPadding,
+                         control.Window.height - control.y - control.height - control.padding)
 
         palette.text: control.palette.text
         palette.windowText: control.palette.windowText
