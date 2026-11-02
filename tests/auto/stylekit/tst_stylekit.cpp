@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <QtTest/QTest>
+#include <QtTest/QSignalSpy>
 #include <QtCore/qcoreapplication.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
@@ -42,6 +43,7 @@ class tst_StyleKit : public QObject
     Q_OBJECT
 
 private slots:
+    void setNullptrStyle();
     void propagationStyleAndFallback();
     void propagationThemeAndStyle();
     void propagationThemeStyleFallbackStyle_data();
@@ -49,6 +51,36 @@ private slots:
     void controlProperties_data();
     void controlProperties();
 };
+
+void tst_StyleKit::setNullptrStyle()
+{
+    // Setting a nullptr style must not crash, neither when no style is set
+    // nor when a style is set and then cleared.
+    QQStyleKitAttached *attached = QQStyleKit::qmlAttachedProperties();
+    QVERIFY(attached);
+
+    QSignalSpy styleChangedSpy(attached, &QQStyleKitAttached::styleChanged);
+
+    QCOMPARE(attached->style(), nullptr);
+    attached->setStyle(nullptr);
+    QCOMPARE(attached->style(), nullptr);
+    QCOMPARE(styleChangedSpy.count(), 0);
+
+    QQStyleKitReader reader;
+    reader.setControlType(QQStyleKitReader::ControlType::Button);
+    QCOMPARE(reader.spacing(), 0);
+
+    LOAD_STYLE(propagationThemeAndStyle.qml)
+    attached->setStyle(style.data());
+    QCOMPARE(attached->style(), style.data());
+    QCOMPARE(styleChangedSpy.count(), 1);
+    QCOMPARE(reader.spacing(), 6);
+
+    attached->setStyle(nullptr);
+    QCOMPARE(attached->style(), nullptr);
+    QCOMPARE(styleChangedSpy.count(), 2);
+    QCOMPARE(reader.spacing(), 0);
+}
 
 void tst_StyleKit::propagationStyleAndFallback()
 {

@@ -403,16 +403,15 @@ void QQStyleKitStyle::recreateTheme()
     if (m_theme->palettes())
         m_theme->palettes()->setFallbackPalette(palettes());
 
-    reapplyStyle();
+    if (loaded())
+        reapplyStyle();
 
     emit themeChanged();
 }
 
 void QQStyleKitStyle::reapplyStyle()
 {
-    if (!loaded())
-        return;
-
+    Q_ASSERT(loaded());
     m_theme->updateThemePalettes();
     m_theme->updateThemeFonts();
     QQStyleKitVariation::resetVariationsForStyle(this);
