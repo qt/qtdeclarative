@@ -169,7 +169,10 @@ QString QQStyleKitDebug::objectPath(const QQStyleKitControlProperties *propertie
             path.prepend(theme->name() + kDot);
         } else if (auto *theme = qobject_cast<const QQStyleKitTheme *>(obj)) {
             // Note: only one theme is instantiated at a time
-            path.prepend("Theme("_L1 + theme->style()->m_effectiveThemeName + ")"_L1);
+            if (theme->style())
+                path.prepend("Theme("_L1 + theme->style()->m_effectiveThemeName + ")"_L1);
+            else
+                path.prepend("Theme(Unknown Style)"_L1);
         } else if (auto *variation = qobject_cast<const QQStyleKitVariation *>(obj)) {
             path.prepend("StyleVariation("_L1 + variation->name() + ")"_L1);
         } else if (auto *control = qobject_cast<const QQStyleKitControl *>(obj)) {

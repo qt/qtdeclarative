@@ -125,14 +125,16 @@ QQStyleKitStyle *QQStyleKitAttached::style() const
 
 void QQStyleKitAttached::setStyle(QQStyleKitStyle *style)
 {
-    if (m_style == style)
+    if (m_style.get() == style)
         return;
 
     if (m_ownsStyle)
         m_style->deleteLater();
 
     m_style = style;
-    m_style->reapplyStyle();
+
+    if (m_style && m_style->loaded())
+        m_style->reapplyStyle();
 
     emit styleChanged();
 }
