@@ -93,7 +93,7 @@ static_assert(QQmlJSScope::sizeofQQmlSAElement() == sizeof(Element));
     \enum QQmlSA::ScopeType
     \brief Describes the type of QML scope.
     \value JSFunctionScope          The scope is a JavaScript function:
-                                    \badcode
+                                    \code [text]
                                     Item {
                                         function f() : int { <- begin
                                             return 1
@@ -101,7 +101,7 @@ static_assert(QQmlJSScope::sizeofQQmlSAElement() == sizeof(Element));
                                     }
                                     \endcode
     \value JSLexicalScope           The scope is a JavaScript lexical scope:
-                                    \badcode
+                                    \code [text]
                                     property int i: { <- begin
                                         let a = 1
                                         { <- begin
@@ -111,13 +111,13 @@ static_assert(QQmlJSScope::sizeofQQmlSAElement() == sizeof(Element));
                                     } <- end
                                     \endcode
     \value QMLScope                 The scope is a QML Object:
-                                    \badcode
+                                    \code [text]
                                     Item { <- begin
                                         x: 50
                                     } <- end
                                     \endcode
     \value GroupedPropertyScope     The scope is a \l{QML Object Attributes#Grouped Properties}{grouped property}:
-                                    \badcode
+                                    \code [text]
                                     Text {
                                         font { <- begin
                                             pixelSize: 12
@@ -126,7 +126,7 @@ static_assert(QQmlJSScope::sizeofQQmlSAElement() == sizeof(Element));
                                     }
                                     \endcode
     \value AttachedPropertyScope    The scope is an \l{QML Object Attributes#Attached Properties and Attached Signal Handlers}{attached property}:
-                                    \badcode
+                                    \code [text]
                                     Item {
                                         Component.onCompleted: console.log("Hello")
                                         ^^^^^^^^^
@@ -134,7 +134,7 @@ static_assert(QQmlJSScope::sizeofQQmlSAElement() == sizeof(Element));
                                     }
                                     \endcode
     \value EnumScope                The scope is a QML \l{QML Enumerations}{enum}:
-                                    \badcode
+                                    \code [text]
                                     enum E { <- begin
                                         A,
                                         B,
@@ -142,7 +142,7 @@ static_assert(QQmlJSScope::sizeofQQmlSAElement() == sizeof(Element));
                                     } <- end
                                     \endcode
     \value [since 6.11] BindingFunctionScope     The scope represents the expression of a binding:
-                                                \badcode
+                                                \code [text]
                                                 Item {
                                                     width: <- begin 10 +
                                                         2 *parent.width <- end
@@ -150,7 +150,7 @@ static_assert(QQmlJSScope::sizeofQQmlSAElement() == sizeof(Element));
                                                 \endcode
                                                 Before Qt 6.11, this was reported as a JSFunctionScope
     \value [since 6.11] SignalHandlerFunctionScope     The scope represents a function used as a signal handler:
-                                                \badcode
+                                                \code [text]
                                                 Timer {
                                                     onTriggered: <- begin console.log("hi") <- end
                                                 }
