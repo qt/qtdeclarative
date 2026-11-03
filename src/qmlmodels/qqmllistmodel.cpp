@@ -423,45 +423,37 @@ bool ListModel::sync(ListModel *src, ListModel *target)
     //
     // to ensure things are kept in the correct order, emit inserts and moves first. This shouls ensure all persistent
     // model indices are updated correctly
-    int rowsInserted = 0;
-    const int targetElementCount = target->elements.count();
+    //
+    // All rows before i are in their final place, so s.targetIndex always tracks the current
+    // position of a row that still has to be placed, and that position is never before i.
+    const int targetElementCount = target->elementCount();
     for (int i = 0 ; i < targetElementCount ; ++i) {
         ListElement *element = target->elements.at(i);
         ElementSync &s = elementHash.find(element->getUid()).value();
         Q_ASSERT(s.srcIndex >= 0);
-        s.srcIndex += rowsInserted;
-        if (s.srcIndex != s.targetIndex) {
+        const bool inserted = s.targetIndex == -1;
+        if (s.targetIndex != i) {
+            // rows between i and the old position (all rows, for an insertion) move down by one
+            const int oldIndex = s.targetIndex;
             if (targetModel) {
-                if (s.targetIndex == -1) {
+                if (inserted) {
                     targetModel->beginInsertRows(QModelIndex(), i, i);
                     targetModel->endInsertRows();
-                    ++rowsInserted;
-                } else if (targetModel->beginMoveRows(QModelIndex(), s.targetIndex,
-                                                      s.targetIndex, QModelIndex(), i)) {
+                } else {
+                    Q_ASSERT(oldIndex > i);
+                    targetModel->beginMoveRows(QModelIndex(), oldIndex, oldIndex, QModelIndex(), i);
                     targetModel->endMoveRows();
-                    // fixup target indices of elements that still need to move
-                    for (int j=i+1; j < targetElementCount; ++j) {
-                        ListElement *eToFix = target->elements.at(j);
-                        ElementSync &sToFix = elementHash.find(eToFix->getUid()).value();
-                        if (i < s.targetIndex) {
-                            // element was moved down
-                            if (sToFix.targetIndex > s.targetIndex || sToFix.targetIndex < i)
-                                continue; // unaffected by reordering
-                            else
-                                sToFix.targetIndex += 1;
-                        } else {
-                            // element was moved up
-                            if (sToFix.targetIndex < s.targetIndex || sToFix.targetIndex > i)
-                                continue; // unaffected by reordering
-                            else
-                                sToFix.targetIndex -= 1;
-                        }
-                    }
                 }
             }
+            for (int j = i + 1; j < targetElementCount; ++j) {
+                ElementSync &sToFix = elementHash.find(target->elements[j]->getUid()).value();
+                if (sToFix.targetIndex != -1 && (inserted || sToFix.targetIndex < oldIndex))
+                    sToFix.targetIndex += 1;
+            }
             hasChanges = true;
+            s.targetIndex = i;
         }
-        if (s.targetIndex != -1 && !s.changedRoles.isEmpty()) {
+        if (!inserted && !s.changedRoles.isEmpty()) {
             QModelIndex idx = targetModel->createIndex(i, 0);
             if (targetModel)
                 targetModel->dataChanged(idx, idx, s.changedRoles);
@@ -2204,24 +2196,36 @@ bool QQmlListModel::sync(QQmlListModel *src, QQmlListModel *target)
     //
     // to ensure things are kept in the correct order, emit inserts and moves first. This shouls ensure all persistent
     // model indices are updated correctly
-    int rowsInserted = 0;
-    for (int i = 0 ; i < target->m_modelObjects.size() ; ++i) {
+    //
+    // All rows before i are in their final place, so s.targetIndex always tracks the current
+    // position of a row that still has to be placed, and that position is never before i.
+    const int targetElementCount = target->m_modelObjects.size();
+    for (int i = 0 ; i < targetElementCount ; ++i) {
         DynamicRoleModelNode *element = target->m_modelObjects.at(i);
         ElementSync &s = elementHash.find(element->getUid()).value();
         Q_ASSERT(s.srcIndex >= 0);
-        s.srcIndex += rowsInserted;
-        if (s.srcIndex != s.targetIndex) {
-            if (s.targetIndex == -1) {
+        const bool inserted = s.targetIndex == -1;
+        if (s.targetIndex != i) {
+            // rows between i and the old position (all rows, for an insertion) move down by one
+            const int oldIndex = s.targetIndex;
+            if (inserted) {
                 target->beginInsertRows(QModelIndex(), i, i);
                 target->endInsertRows();
             } else {
-                target->beginMoveRows(QModelIndex(), i, i, QModelIndex(), s.srcIndex);
+                Q_ASSERT(oldIndex > i);
+                target->beginMoveRows(QModelIndex(), oldIndex, oldIndex, QModelIndex(), i);
                 target->endMoveRows();
             }
+            for (int j = i + 1; j < targetElementCount; ++j) {
+                ElementSync &sToFix
+                        = elementHash.find(target->m_modelObjects.at(j)->getUid()).value();
+                if (sToFix.targetIndex != -1 && (inserted || sToFix.targetIndex < oldIndex))
+                    sToFix.targetIndex += 1;
+            }
             hasChanges = true;
-            ++rowsInserted;
+            s.targetIndex = i;
         }
-        if (s.targetIndex != -1 && !s.changedRoles.isEmpty()) {
+        if (!inserted && !s.changedRoles.isEmpty()) {
             QModelIndex idx = target->createIndex(i, 0);
             emit target->dataChanged(idx, idx, s.changedRoles);
             hasChanges = true;
