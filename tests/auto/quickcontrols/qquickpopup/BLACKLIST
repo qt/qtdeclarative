@@ -21,3 +21,6 @@ macos # QTBUG-131695
 
 [activeFocusItemAfterWindowInactive]
 wayland
+
+[popupWindowPositioning]
+macos-27 # QTBUG-151983
