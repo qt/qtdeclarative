@@ -2923,10 +2923,11 @@ void tst_QQuickListView::orphanedSectionContext()
     // setSectionHelper() must not dereference it.
     QQmlEngine engine;
     QQmlContext *outerContext = new QQmlContext(engine.rootContext());
-    QQmlContext *innerContext = new QQmlContext(outerContext);
+    // Deleting outerContext orphans innerContext rather than deleting it, so we own it.
+    QScopedPointer<QQmlContext> innerContext(new QQmlContext(outerContext));
 
     QQmlComponent component(&engine, testFileUrl("orphanedSectionContext.qml"));
-    QScopedPointer<QObject> root(component.create(innerContext));
+    QScopedPointer<QObject> root(component.create(innerContext.data()));
     QVERIFY2(root, qPrintable(component.errorString()));
     auto *listView = qobject_cast<QQuickListView *>(root.data());
     QVERIFY(listView != nullptr);
