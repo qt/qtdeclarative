@@ -75,7 +75,10 @@ private slots:
     void property_changes_worker_data();
     void worker_sync_data();
     void worker_sync();
+    void worker_sync_prepend_data();
     void worker_sync_prepend();
+    void worker_sync_order_data();
+    void worker_sync_order();
     void worker_remove_element_data();
     void worker_remove_element();
     void worker_remove_list_data();
@@ -674,12 +677,20 @@ void tst_qqmllistmodelworkerscript::worker_sync()
 }
 
 
+void tst_qqmllistmodelworkerscript::worker_sync_prepend_data()
+{
+    worker_sync_data();
+}
+
 void tst_qqmllistmodelworkerscript::worker_sync_prepend()
 {
     // Inserting in front of existing rows makes ListModel::sync() compute a move whose
     // destination equals the (stale) source row. beginMoveRows() rejects such a no-op move
     // and endMoveRows() must not be called for it.
+    QFETCH(bool, dynamicRoles);
+
     QQmlListModel model;
+    model.setDynamicRoles(dynamicRoles);
     QQmlEngine eng;
     QQmlComponent component(&eng, testFileUrl("workersync.qml"));
     std::unique_ptr<QQuickItem> item = createWorkerTest(&eng, &component, &model);
@@ -695,6 +706,115 @@ void tst_qqmllistmodelworkerscript::worker_sync_prepend()
     QVERIFY(QMetaObject::invokeMethod(item.get(), "doSync"));
     waitForWorker(item.get());
     QCOMPARE(model.count(), 3);
+
+    item.reset();
+    qApp->processEvents();
+}
+
+struct SyncOp
+{
+    QString op;
+    int from = 0;
+    int to = 0;
+    QString name;
+
+    QVariantMap toMap() const
+    {
+        return { { "op", op }, { "index", from }, { "from", from }, { "to", to },
+                 { "name", name } };
+    }
+};
+
+static QVariantList toVariantList(const QList<SyncOp> &ops)
+{
+    QVariantList result;
+    for (const SyncOp &op : ops)
+        result.append(op.toMap());
+    return result;
+}
+
+void tst_qqmllistmodelworkerscript::worker_sync_order_data()
+{
+    QTest::addColumn<bool>("dynamicRoles");
+    QTest::addColumn<QStringList>("initial");
+    QTest::addColumn<QVariantList>("ops");
+    // Inserted rows are expected as "?": their content is not known when the signal arrives.
+    QTest::addColumn<QStringList>("expected");
+
+    const QList<SyncOp> moveFirstToLast = { { "move", 0, 2, {} } };
+    const QList<SyncOp> moveLastToFirst = { { "move", 2, 0, {} } };
+    const QList<SyncOp> swapEnds = { { "move", 0, 2, {} }, { "move", 1, 0, {} } };
+    const QList<SyncOp> reverse = { { "move", 2, 0, {} }, { "move", 2, 1, {} } };
+    const QList<SyncOp> prependAndMove = { { "insert", 0, 0, "X" }, { "move", 1, 3, {} } };
+    const QList<SyncOp> removeAndMove = { { "remove", 1, 0, {} }, { "move", 0, 1, {} } };
+    const QList<SyncOp> insertMiddleAndMove = { { "move", 0, 2, {} }, { "insert", 1, 0, "X" } };
+
+    for (bool dynamicRoles : { false, true }) {
+        const char *mode = dynamicRoles ? "dynamic" : "static";
+        const QStringList abc = { "A", "B", "C" };
+        auto row = [&](const char *name, const QList<SyncOp> &ops, const QStringList &expected) {
+            QTest::newRow(qPrintable(QLatin1StringView(name) + u'-' + QLatin1StringView(mode)))
+                    << dynamicRoles << abc << toVariantList(ops) << expected;
+        };
+        row("moveFirstToLast", moveFirstToLast, { "B", "C", "A" });
+        row("moveLastToFirst", moveLastToFirst, { "C", "A", "B" });
+        row("swapEnds", swapEnds, { "C", "B", "A" });
+        row("reverse", reverse, { "C", "B", "A" });
+        row("prependAndMove", prependAndMove, { "?", "B", "C", "A" });
+        row("removeAndMove", removeAndMove, { "C", "A" });
+        row("insertMiddleAndMove", insertMiddleAndMove, { "B", "?", "C", "A" });
+    }
+}
+
+void tst_qqmllistmodelworkerscript::worker_sync_order()
+{
+    QFETCH(bool, dynamicRoles);
+    QFETCH(QStringList, initial);
+    QFETCH(QVariantList, ops);
+    QFETCH(QStringList, expected);
+
+    QQmlListModel model;
+    model.setDynamicRoles(dynamicRoles);
+    QQmlEngine eng;
+    QQmlComponent component(&eng, testFileUrl("syncorder.qml"));
+    std::unique_ptr<QQuickItem> item = createWorkerTest(&eng, &component, &model);
+    QVERIFY(item);
+
+    QVERIFY(QMetaObject::invokeMethod(item.get(), "fill", Q_ARG(QVariant, initial)));
+    QCOMPARE(model.count(), initial.size());
+    const int role = model.roleNames().key("name");
+
+    // Replay all notifications on a shadow list. If the target indices are fixed up
+    // correctly, the shadow ends up in the same order as the model.
+    QStringList shadow = initial;
+    connect(&model, &QAbstractItemModel::rowsRemoved, &model,
+            [&](const QModelIndex &, int first, int last) {
+        shadow.remove(first, last - first + 1);
+    });
+    connect(&model, &QAbstractItemModel::rowsInserted, &model,
+            [&](const QModelIndex &, int first, int last) {
+        for (int i = first; i <= last; ++i)
+            shadow.insert(i, "?");
+    });
+    connect(&model, &QAbstractItemModel::rowsMoved, &model,
+            [&](const QModelIndex &, int start, int end, const QModelIndex &, int row) {
+        QCOMPARE(start, end);
+        shadow.move(start, row > start ? row - 1 : row);
+    });
+
+    QVERIFY(QMetaObject::invokeMethod(item.get(), "runOps", Q_ARG(QVariant, ops)));
+    waitForWorker(item.get());
+
+    QCOMPARE(model.count(), expected.size());
+    QStringList actual;
+    for (int i = 0; i < model.count(); ++i) {
+        const QString name = model.data(i, role).toString();
+        // Inserted rows are named "X" in the model
+        actual.append(name == "X" ? QStringLiteral("?") : name);
+    }
+    QCOMPARE(actual, expected);
+
+    QCOMPARE(shadow, expected);
 
     item.reset();
     qApp->processEvents();
