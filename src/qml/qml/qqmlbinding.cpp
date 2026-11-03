@@ -13,6 +13,7 @@
 
 #include <private/qqmlprofiler_p.h>
 #include <private/qqmlexpression_p.h>
+#include <private/qqmlmetatype_p.h>
 #include <private/qqmlscriptstring_p.h>
 #include <private/qqmlbuiltinfunctions_p.h>
 #include <private/qqmlvmemetaobject_p.h>
@@ -425,6 +426,20 @@ QQmlBinding *QQmlBinding::createTranslationBinding(
     return b;
 }
 
+// keep in sync with QQmlMetaType::canLosslesslyHoldUndefined
+static QVariant undefinedAs(QMetaType metaType)
+{
+    Q_ASSERT(QQmlMetaType::canLosslesslyHoldUndefined(metaType));
+    if (metaType == QMetaType::fromType<QVariant>())
+        return QVariant();
+    QVariant result(metaType);
+    const bool ok = QV4::ExecutionEngine::metaTypeFromJS(
+            QV4::Value::undefinedValue(), metaType, result.data());
+    Q_ASSERT(ok);
+    Q_UNUSED(ok);
+    return result;
+}
+
 bool QQmlBinding::slowWrite(
         const QQmlPropertyData &core, const QQmlPropertyData &valueTypeData, const void *result,
         QMetaType resultType, bool isUndefined, QQmlPropertyData::WriteFlags flags)
@@ -450,9 +465,9 @@ bool QQmlBinding::slowWrite(
     } else if (isUndefined && core.isResettable()) {
         void *args[] = { nullptr };
         QMetaObject::metacall(m_target.data(), QMetaObject::ResetProperty, core.coreIndex(), args);
-    } else if (isUndefined && metaType == QMetaType::fromType<QVariant>()) {
+    } else if (isUndefined && QQmlMetaType::canLosslesslyHoldUndefined(metaType)) {
         QQmlPropertyPrivate::writeValueProperty(
-                    m_target.data(), core, valueTypeData, QVariant(), context(), flags);
+                    m_target.data(), core, valueTypeData, undefinedAs(metaType), context(), flags);
     } else if (metaType == QMetaType::fromType<QJSValue>()) {
         QQmlPropertyPrivate::writeValueProperty(
                     m_target.data(), core, valueTypeData,
@@ -529,8 +544,9 @@ Q_NEVER_INLINE bool QQmlBinding::slowWrite(const QQmlPropertyData &core,
                && (valueTypeData.isValid() ? valueTypeData.isResettable() : core.isResettable())) {
         QQmlPropertyPrivate::resetValueProperty(
                     m_target.data(), core, valueTypeData, context(), flags);
-    } else if (isUndefined && type == QMetaType::QVariant) {
-        QQmlPropertyPrivate::writeValueProperty(m_target.data(), core, valueTypeData, QVariant(), context(), flags);
+    } else if (isUndefined && QQmlMetaType::canLosslesslyHoldUndefined(metaType)) {
+        QQmlPropertyPrivate::writeValueProperty(
+                    m_target.data(), core, valueTypeData, undefinedAs(metaType), context(), flags);
     } else if (metaType == QMetaType::fromType<QJSValue>()) {
         const QV4::FunctionObject *f = result.as<QV4::FunctionObject>();
         if (f && f->isBinding()) {

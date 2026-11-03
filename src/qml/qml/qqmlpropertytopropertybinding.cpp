@@ -123,9 +123,6 @@ void QQmlPropertyToUnbindablePropertyBinding::update(QQmlPropertyData::WriteFlag
            undefined should reset if possible, be stored as is if possible, and
            create a warning if not; we especially don't want to coerce to string
            even though that is possible
-           There are a few cases where being consistent currently yields potentially
-           unexpected results: QJsonValue and QJSPrimitiveValue are unsupported
-           (there can't be QJSManagedValue properties); this will be fixed in slowWrite
          */
         if (vtd.isValid() ? vtd.isResettable() : d->isResettable()) {
             QQmlPropertyPrivate::resetValueProperty(target, *d, vtd, {}, flags);

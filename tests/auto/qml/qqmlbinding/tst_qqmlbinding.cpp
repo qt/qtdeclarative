@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include "WithBindableProperties.h"
+#include "UndefinedHolder.h"
 
 #include <private/qmlutils_p.h>
 #include <private/qqmlanybinding_p.h>
@@ -63,6 +64,7 @@ private slots:
     void objectBindingToId();
     void resolvedEnumValue();
     void setFunction();
+    void undefinedToLosslessTypes();
 
 private:
     QQmlEngine engine;
@@ -1036,6 +1038,22 @@ void tst_qqmlbinding::setFunction()
 
     const QVariant forty3 = binding1->evaluate();
     QCOMPARE(forty3.toInt(), 43);
+}
+
+void tst_qqmlbinding::undefinedToLosslessTypes()
+{
+    using namespace Qt::StringLiterals;
+
+    QTest::failOnWarning(QRegularExpression(u"Unable to assign"_s));
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("undefinedToLosslessTypes.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    auto *holder = qobject_cast<UndefinedHolder *>(o.data());
+    QVERIFY(holder);
+
+    QVERIFY(holder->m_json.isUndefined());
+    QCOMPARE(holder->m_primitive.type(), QJSPrimitiveValue::Undefined);
 }
 
 QTEST_MAIN(tst_qqmlbinding)

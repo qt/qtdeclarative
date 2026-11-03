@@ -23,6 +23,7 @@ qt_internal_add_test(tst_qqmlbinding
     SOURCES
         tst_qqmlbinding.cpp
         WithBindableProperties.h
+        UndefinedHolder.h
     LIBRARIES
         Qt::CorePrivate
         Qt::Gui
@@ -39,6 +40,7 @@ qt_internal_add_test(tst_qqmlbinding_no_deferred_properties
     SOURCES
         tst_qqmlbinding.cpp
         WithBindableProperties.h
+        UndefinedHolder.h
     LIBRARIES
         Qt::CorePrivate
         Qt::Gui
