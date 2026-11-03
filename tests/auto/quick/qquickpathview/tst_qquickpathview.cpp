@@ -3078,11 +3078,12 @@ private:
 
 void tst_QQuickPathView::qtbug46487()
 {
+    // Declared before the view so that it outlives the view that uses it.
+    CustomModel model;
     QScopedPointer<QQuickView> window(createView());
 
-    CustomModel* model = new CustomModel;
     QQmlContext *ctxt = window->rootContext();
-    ctxt->setContextProperty("customModel", model);
+    ctxt->setContextProperty("customModel", &model);
 
     window->setSource(testFileUrl("qtbug46487.qml"));
     window->show();
@@ -3097,7 +3098,7 @@ void tst_QQuickPathView::qtbug46487()
     QCOMPARE(pathview->property("delegatesDestroyed").toInt(), 0);
 
     // Resets the model and removes 2 items.
-    model->shrink();
+    model.shrink();
 
     // Should destroy previous items (begin/endResetModel) and
     // (re)create 3 new items.
