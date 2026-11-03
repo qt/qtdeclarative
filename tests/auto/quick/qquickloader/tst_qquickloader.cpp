@@ -1605,7 +1605,7 @@ static void qTestForOverflow(const QUrl &url)
 
 void tst_QQuickLoader::stackOverflow()
 {
-    auto t = QThread::create(qTestForOverflow, testFileUrl("overflow.qml"));
+    std::unique_ptr<QThread> t(QThread::create(qTestForOverflow, testFileUrl("overflow.qml")));
     t->setStackSize(1024 * 1024);
     t->start();
     t->wait();
@@ -1613,7 +1613,7 @@ void tst_QQuickLoader::stackOverflow()
 
 void tst_QQuickLoader::stackOverflow2()
 {
-    auto t = QThread::create(qTestForOverflow, testFileUrl("overflow2.qml"));
+    std::unique_ptr<QThread> t(QThread::create(qTestForOverflow, testFileUrl("overflow2.qml")));
     t->setStackSize(1024 * 1024);
     t->start();
     t->wait();
