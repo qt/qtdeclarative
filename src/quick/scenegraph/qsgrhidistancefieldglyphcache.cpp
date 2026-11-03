@@ -5,6 +5,7 @@
 #include "qsgrhidistancefieldglyphcache_p.h"
 #include "qsgcontext_p.h"
 #include "qsgdefaultrendercontext_p.h"
+#include <QtGui/private/qa8image_p.h>
 #include <QtGui/private/qdistancefield_p.h>
 #include <QtCore/qelapsedtimer.h>
 #include <QtQml/private/qqmlglobal_p.h>
@@ -211,18 +212,18 @@ void QSGRhiDistanceFieldGlyphCache::createTexture(TextureInfo *texInfo,
         delete newTexture;
         texInfo->texture = nullptr;
         texInfo->size = QSize();
-        texInfo->image = QDistanceField();
+        texInfo->image = QA8Image();
         return;
     }
 
     if (useTextureResizeWorkaround() && texInfo->image.isNull()) {
-        texInfo->image = QDistanceField(width, height);
+        texInfo->image = QA8Image(width, height);
         if (texInfo->image.isNull()) {
             qWarning("Failed to create distance field glyph cache");
             delete newTexture;
             texInfo->texture = nullptr;
             texInfo->size = QSize();
-            texInfo->image = QDistanceField();
+            texInfo->image = QA8Image();
             return;
         } else {
             memcpy(texInfo->image.bits(), pixels, width * height);

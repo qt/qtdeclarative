@@ -59,7 +59,7 @@ private:
         QRhiTexture *texture;
         QSize size;
         QRect allocatedArea;
-        QDistanceField image;
+        QA8Image image;
         int padding = -1;
         QVarLengthArray<QRhiTextureUploadEntry, 16> uploads;
 
