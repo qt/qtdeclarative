@@ -23,7 +23,7 @@ Item {
         id: tableViewDelegate
         Rectangle {
             objectName: "tableViewDelegate"
-            implicitWidth: tableView.width
+            implicitWidth: Math.min(tableView.width, 100)
             implicitHeight: 50
         }
     }
