@@ -2055,14 +2055,16 @@ void tst_qquickstates::bindingProperlyRemovedWithTransition()
     if (QSysInfo::productType() == "rhel" && QSysInfo::productVersion() == QLatin1String("10.0"))
         QEXPECT_FAIL("", "Fails on RHEL 10 - QTBUG-144177", Continue);
 
+    // SmoothedAnimation at 200 px/s needs about 1 second for each 200 px distance, so the
+    // default QTRY timeout of 1 second is borderline. Allow several times that.
     item->setProperty("toggle", false);
-    QTRY_COMPARE(item->width(), 300);
+    QTRY_COMPARE_WITH_TIMEOUT(item->width(), 300, 5000);
 
     item->setProperty("state1Width", 100);
     QCOMPARE(item->width(), 300);
 
     item->setProperty("toggle", true);
-    QTRY_COMPARE(item->width(), 100);
+    QTRY_COMPARE_WITH_TIMEOUT(item->width(), 100, 5000);
 }
 
 void tst_qquickstates::doNotCrashOnBroken()
