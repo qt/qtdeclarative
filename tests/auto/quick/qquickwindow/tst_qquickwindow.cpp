@@ -19,6 +19,7 @@
 #include <QtQuickTestUtils/private/viewtestutils_p.h>
 #include <QSignalSpy>
 #include <private/qquickwindow_p.h>
+#include <private/qsgrenderloop_p.h>
 #include <private/qquickscreen_p.h>
 #include <private/qguiapplication_p.h>
 #include <QtGui/qpa/qplatformintegration.h>
@@ -508,6 +509,8 @@ private slots:
     void attachedProperty();
 
     void testRenderJob();
+    void renderJobWithDifferentSurfaceFormats_data();
+    void renderJobWithDifferentSurfaceFormats();
 
     void testHoverChildMouseEventFilter();
     void testHoverTimestamp();
@@ -2687,6 +2690,82 @@ void tst_qquickwindow::testRenderJob()
     }
     QTRY_COMPARE(RenderJob::deleted, numJobs);
     QCOMPARE(completedJobs.size(), 0);
+}
+
+void tst_qquickwindow::renderJobWithDifferentSurfaceFormats_data()
+{
+    QTest::addColumn<bool>("translucentFirst");
+    QTest::addColumn<bool>("destroyFirstWindowFirst");
+    QTest::newRow("opaque-first-destroy-first") << false << true;
+    QTest::newRow("opaque-first-destroy-second") << false << false;
+    QTest::newRow("translucent-first-destroy-first") << true << true;
+    QTest::newRow("translucent-first-destroy-second") << true << false;
+}
+
+void tst_qquickwindow::renderJobWithDifferentSurfaceFormats()
+{
+#if QT_CONFIG(opengl)
+    if (QQuickWindow::graphicsApi() != QSGRendererInterface::OpenGL)
+        QSKIP("Requires the OpenGL backend");
+    if (!QSGRenderLoop::instance()->inherits("QSGGuiThreadRenderLoop"))
+        QSKIP("Requires the basic render loop");
+
+    QTest::failOnWarning();
+
+    QFETCH(bool, translucentFirst);
+    QFETCH(bool, destroyFirstWindowFirst);
+
+    auto initializeWindow = [](QQuickWindow *window, bool translucent) {
+        QSurfaceFormat format = window->requestedFormat();
+        format.setAlphaBufferSize(translucent ? 8 : 0);
+        window->setFormat(format);
+        window->setColor(translucent ? Qt::transparent : Qt::white);
+        window->resize(160, 120);
+        window->show();
+        QVERIFY(QTest::qWaitForWindowExposed(window));
+        QTRY_VERIFY(window->isSceneGraphInitialized());
+    };
+
+    auto checkRenderJob = [](QQuickWindow *window) {
+        auto *context = static_cast<QOpenGLContext *>(window->rendererInterface()->getResource(
+                window, QSGRendererInterface::OpenGLContextResource));
+        QVERIFY(context);
+        if (auto *current = QOpenGLContext::currentContext())
+            current->doneCurrent();
+        bool ran = false;
+        window->scheduleRenderJob(QRunnable::create([&] {
+            ran = true;
+            QCOMPARE(QOpenGLContext::currentContext(), context);
+            QVERIFY(context->surface());
+            // A fallback surface must support the context's alpha channel.
+            QVERIFY(context->surface()->format().alphaBufferSize()
+                    >= context->format().alphaBufferSize());
+        }), QQuickWindow::NoStage);
+        QVERIFY(ran);
+    };
+
+    auto first = std::make_unique<QQuickWindow>();
+    initializeWindow(first.get(), translucentFirst);
+    auto second = std::make_unique<QQuickWindow>();
+    initializeWindow(second.get(), !translucentFirst);
+    checkRenderJob(first.get());
+    checkRenderJob(second.get());
+
+    auto &destroyed = destroyFirstWindowFirst ? first : second;
+    auto &survivor = destroyFirstWindowFirst ? second : first;
+    destroyed->destroy();
+    destroyed.reset();
+    checkRenderJob(survivor.get());
+
+    auto replacement = std::make_unique<QQuickWindow>();
+    initializeWindow(replacement.get(), translucentFirst);
+    checkRenderJob(replacement.get());
+    survivor->destroy();
+    survivor.reset();
+    checkRenderJob(replacement.get());
+#else
+    QSKIP("Requires OpenGL support");
+#endif
 }
 
 class EventCounter : public QQuickRectangle

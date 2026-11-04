@@ -153,6 +153,7 @@ public:
         { }
         QRhi *rhi = nullptr;
         bool ownRhi = true;
+        QOffscreenSurface *offscreenSurface = nullptr;
         QSGRenderContext *rc = nullptr;
         QElapsedTimer timeBetweenRenders;
         int sampleCount = 1;
@@ -166,7 +167,6 @@ public:
 
     QHash<QQuickWindow *, WindowData> m_windows;
 
-    QOffscreenSurface *offscreenSurface = nullptr;
     QSGContext *sg;
     mutable QSet<QSGRenderContext *> pendingRenderContexts;
 
@@ -378,10 +378,7 @@ void QSGGuiThreadRenderLoop::windowDestroyed(QQuickWindow *window)
 
     d->animationController.reset();
 
-    if (m_windows.isEmpty()) {
-        delete offscreenSurface;
-        offscreenSurface = nullptr;
-    }
+    delete data.offscreenSurface;
 }
 
 void QSGGuiThreadRenderLoop::teardownGraphics()
@@ -470,11 +467,12 @@ bool QSGGuiThreadRenderLoop::ensureRhi(QQuickWindow *window, WindowData &data)
         if (data.rhiDoomed) // no repeated attempts if the initial attempt failed
             return false;
 
-        if (!offscreenSurface)
-            offscreenSurface = rhiSupport->maybeCreateOffscreenSurface(window);
+        if (!data.offscreenSurface)
+            data.offscreenSurface = rhiSupport->maybeCreateOffscreenSurface(window);
 
         const bool forcePreferSwRenderer = swRastFallbackDueToSwapchainFailure;
-        QSGRhiSupport::RhiCreateResult rhiResult = rhiSupport->createRhi(window, offscreenSurface, forcePreferSwRenderer);
+        QSGRhiSupport::RhiCreateResult rhiResult =
+                rhiSupport->createRhi(window, data.offscreenSurface, forcePreferSwRenderer);
         data.rhi = rhiResult.rhi;
         data.ownRhi = rhiResult.own;
 
@@ -486,8 +484,6 @@ bool QSGGuiThreadRenderLoop::ensureRhi(QQuickWindow *window, WindowData &data)
             // emitted with a context current, if running with OpenGL.
             data.rhi->makeThreadLocalNativeContextCurrent();
 
-            // The sample count cannot vary between windows as we use the same
-            // rendercontext for all of them. Decide it here and now.
             data.sampleCount = rhiSupport->chooseSampleCountForWindowWithRhi(window, data.rhi);
 
             cd->rhi = data.rhi; // set this early in case something hooked up to rc initialized() accesses it
@@ -508,13 +504,8 @@ bool QSGGuiThreadRenderLoop::ensureRhi(QQuickWindow *window, WindowData &data)
     }
 
     if (data.rhi && !cd->swapchain) {
-        // if it's not the first window then the rhi is not yet stored to
-        // QQuickWindowPrivate, do it now
         cd->rhi = data.rhi;
 
-        // Unlike the threaded render loop, we use the same rhi for all windows
-        // and so createRhi() is called only once. Certain initialization may
-        // need to be done on a per window basis still, so make sure it is done.
         rhiSupport->prepareWindowForRhi(window);
 
         QRhiSwapChain::Flags flags = QRhiSwapChain::UsedAsTransferSource; // may be used in a grab
