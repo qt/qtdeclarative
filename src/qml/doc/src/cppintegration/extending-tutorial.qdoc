@@ -69,6 +69,7 @@ We want this \c PieChart type to be usable from QML like this:
         color: "red"
     }
 \endqml
+
 \note You might need to enable \QMLLS and its semantic
 highlighting (\l {\QC: Configure \QMLLS}{in \QC} or
 \l{\QVSC: Turn on \QMLLS}{in \QVSC}) to make Qt Creator highlight
@@ -221,7 +222,7 @@ repaints the chart, then emits the \c chartCleared() signal:
 Now when we run the application and click the window, the pie chart
 disappears, and the application outputs:
 
-\badcode
+\code [text]
     qml: The chart has been cleared
 \endcode
 
@@ -508,17 +509,23 @@ For example, we could use
 \l{QML Object Attributes#Default Properties}{default properties} to allow
 slices to be added without using the \c slices property:
 
-\badcode
+\code [qml]
     PieChart {
-        PieSlice { ... }
-        PieSlice { ... }
-        PieSlice { ... }
+        PieSlice {
+            // ...
+        }
+        PieSlice {
+            // ...
+        }
+        PieSlice {
+            // ...
+        }
     }
 \endcode
 
 Or randomly add and remove slices from time to time using \l{Property Value Sources}{property value sources}:
 
-\badcode
+\code [qml]
     PieChart {
         PieSliceRandomizer on slices {}
     }

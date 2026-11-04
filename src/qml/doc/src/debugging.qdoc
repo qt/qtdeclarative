@@ -178,7 +178,7 @@ If you use CMake, you can pass \c{-DCMAKE_CXX_FLAGS_INIT=-DQT_QML_DEBUG} as an
 argument to \c cmake on the command line to enable it only for a specific build. You can also permanently enable
 it in your CMakeLists.txt file by adding the following snippet:
 
-\badcode
+\code [cmake]
     qt_add_executable(MyApp
     ...
     )

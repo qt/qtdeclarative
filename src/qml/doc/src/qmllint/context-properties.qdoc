@@ -148,7 +148,7 @@ If you can't replace the context property, create a
 \l{Context property settings}{.contextProperties.ini} file in your project
 source directory if there is none, and write the following content:
 
-\badcode
+\code [ini]
 [General]
 disableUnqualifiedAccess = "myProperty"
 warnOnUsage = "myProperty"
@@ -158,7 +158,7 @@ disableHeuristic = false
 To silence this warning if the \c{.contextProperties.ini} file already exists,
 append the context property name to the already existing lists:
 
-\badcode
+\code [ini]
 [General]
 disableUnqualifiedAccess = "someOtherProperty,myProperty"
 warnOnUsage = "someOtherProperty,myProperty"

@@ -60,7 +60,7 @@ signals:
 \endcode
 
 with following \c{CMakeLists.txt}:
-\badcode
+\code [cmake]
 project(mymodule VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -104,7 +104,7 @@ attributes in different modules: \c{mymodule} actually has to be precise about t
 \c{myProperty}.
 
 To fix this warning, add the dependency in the \c{CMakeLists.txt}:
-\badcode
+\code [cmake]
 qt_add_qml_module(mymodule
     URI mymodule
     ...
@@ -174,7 +174,7 @@ signals:
 \endcode
 
 with following \c{CMakeLists.txt}:
-\badcode
+\code [cmake]
 project(mymodule VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -218,7 +218,7 @@ and its QML counterpart \c{Item} are not known: the dependency \c QtQuick of mym
 declared in the \c{CMakeLists.txt}.
 
 To fix this warning, add the dependency in the \c{CMakeLists.txt}:
-\badcode
+\code [cmake]
 qt_add_qml_module(mymodule
     URI mymodule
     ...

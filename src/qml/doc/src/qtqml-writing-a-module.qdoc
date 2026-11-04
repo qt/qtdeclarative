@@ -34,26 +34,29 @@ If the extra targets are all static libraries, the result will be one binary,
 which contains multiple QML modules. In short you can create an application
 like this:
 
-\badcode
+\code [text]
 myProject
-    | - CMakeLists.txt
-    | - main.cpp
-    | - main.qml
-    | - onething.h
-    | - onething.cpp
-    | - ExtraModule
-        | - CMakeLists.txt
-        | - Extra.qml
-        | - extrathing.h
-        | - extrathing.cpp
+    ├── CMakeLists.txt
+    ├── main.cpp
+    ├── main.qml
+    ├── onething.h
+    ├── onething.cpp
+    └── ExtraModule
+        ├── CMakeLists.txt
+        ├── Extra.qml
+        ├── extrathing.h
+        └── extrathing.cpp
 \endcode
 
 To begin, let's assume main.qml contains an instantiation of Extra.qml:
 
-    \badcode
-    import ExtraModule
-    Extra { ... }
-    \endcode
+\code [qml]
+import ExtraModule
+
+Extra {
+    // ...
+}
+\endcode
 
 The extra module has to be a static library so that you can link it
 into the main program. Therefore, state as much in ExtraModule/CMakeLists.txt:
@@ -91,7 +94,7 @@ QML plugins contain a symbol you can use for this purpose.
 You can use the \l Q_IMPORT_QML_PLUGIN macro to create a reference to this symbol.
 Add the following code to the main.cpp:
 
-\badcode
+\code
 #include <QtQml/QQmlExtensionPlugin>
 Q_IMPORT_QML_PLUGIN(ExtraModulePlugin)
 \endcode
@@ -340,7 +343,7 @@ To collect QML modules into a specific output directory, for example a
 subdirectory "qml" in the build directory \l QT_QML_OUTPUT_DIRECTORY, set the
 following in the top-level CMakeLists.txt:
 
-\badcode
+\code [cmake]
 set(QT_QML_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/qml)
 \endcode
 
@@ -382,7 +385,7 @@ run time, tooling like \c qmllint does not have access to it, and might fail to
 find the correct dependencies. Use \c IMPORT_PATH to tell tooling about the
 additional paths it has to consider. For example:
 
-\badcode
+\code [cmake]
 qt_add_qml_module(
     URI My.Dependent.Module
     VERSION 1.0
@@ -407,7 +410,7 @@ If you have instead specified a custom \c RESOURCE_PREFIX, you have to add the
 custom resource prefix to the \l{QML Import Path}. You can also add multiple
 resource prefixes:
 
-\badcode
+\code
 QQmlEngine qmlEngine;
 qmlEngine.addImportPath(QStringLiteral(":/my/resource/prefix"));
 qmlEngine.addImportPath(QStringLiteral(":/other/resource/prefix"));
@@ -440,10 +443,10 @@ Let's consider a module that provides its own plugin source:
 
 You may declare an image provider in myimageprovider.h, like this:
 
-\badcode
+\code
 class MyImageProvider : public QQuickImageProvider
 {
-    [...]
+    // ...
 };
 \endcode
 
