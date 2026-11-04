@@ -7,7 +7,7 @@ if(NOT QT_BUILD_STANDALONE_TESTS AND NOT QT_BUILDING_QT)
     find_package(Qt6BuildInternals REQUIRED COMPONENTS STANDALONE_TEST)
 endif()
 
-find_package(Qt COMPONENTS OPTIONAL Qt::QmlLSPrivate)
+find_package(Qt6 ${PROJECT_VERSION} CONFIG OPTIONAL_COMPONENTS QmlLSPrivate)
 
 if (NOT TARGET Qt::QmlLSPrivate)
     return()
