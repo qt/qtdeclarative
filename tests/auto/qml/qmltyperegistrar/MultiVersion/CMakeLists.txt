@@ -8,6 +8,7 @@ qt_enable_autogen_tool(tst_qmltyperegistrar_multi_version "moc" ON)
 qt_add_qml_module(tst_qmltyperegistrar_multi_version
     URI MultiVersion
     VERSION 6.2
+    RESOURCE_PREFIX "/"
     PAST_MAJOR_VERSIONS 1 2
     SOURCES
         multiversion.h
