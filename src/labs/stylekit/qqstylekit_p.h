@@ -24,7 +24,7 @@ QT_BEGIN_NAMESPACE
 
 class QQStyleKitAttached;
 
-class QQStyleKit : public QObject
+class Q_LABSSTYLEKIT_EXPORT QQStyleKit : public QObject
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(StyleKit)
@@ -38,7 +38,7 @@ private:
     Q_DISABLE_COPY(QQStyleKit)
 };
 
-class QQStyleKitAttached : public QObject
+class Q_LABSSTYLEKIT_EXPORT QQStyleKitAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QQStyleKitStyle *style READ style WRITE setStyle NOTIFY styleChanged FINAL)

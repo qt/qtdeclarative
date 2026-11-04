@@ -21,7 +21,6 @@
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <QtQuick/private/qquickimage_p.h>
 #include <QtQuick/private/qquicktransition_p.h>
-#include <QtQuick/private/qquicktext_p.h>
 
 #include "qqstylekitpropertypath_p.h"
 #include "qqstylekitpropertyresolver_p.h"
@@ -399,7 +398,7 @@ private:
 
 // ************* QQStyleKitHandleProperties ****************
 
-class QQStyleKitHandleProperties : public QQStyleKitDelegateProperties
+class Q_LABSSTYLEKIT_EXPORT QQStyleKitHandleProperties : public QQStyleKitDelegateProperties
 {
     Q_OBJECT
     Q_PROPERTY(QQStyleKitDelegateProperties *first READ first NOTIFY firstChanged FINAL)
@@ -430,7 +429,7 @@ private:
 
 // ************* QQStyleKitIndicatorProperties ****************
 
-class QQStyleKitIndicatorProperties : public QQStyleKitDelegateProperties
+class Q_LABSSTYLEKIT_EXPORT QQStyleKitIndicatorProperties : public QQStyleKitDelegateProperties
 {
     Q_OBJECT
     Q_PROPERTY(QQStyleKitDelegateProperties *foreground READ foreground NOTIFY foregroundChanged FINAL)
@@ -461,7 +460,7 @@ private:
 
 // ************* QQStyleKitIndicatorWithSubTypes ****************
 
-class QQStyleKitIndicatorWithSubTypes : public QQStyleKitDelegateProperties
+class Q_LABSSTYLEKIT_EXPORT QQStyleKitIndicatorWithSubTypes : public QQStyleKitDelegateProperties
 {
     Q_OBJECT
     Q_PROPERTY(QQStyleKitDelegateProperties *foreground READ foreground NOTIFY foregroundChanged FINAL)
@@ -507,7 +506,7 @@ private:
 
 // ************* QQStyleKitTextProperties ****************
 
-class QQStyleKitTextProperties : public QQStyleKitPropertyGroup
+class Q_LABSSTYLEKIT_EXPORT QQStyleKitTextProperties : public QQStyleKitPropertyGroup
 {
     Q_OBJECT
     Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged FINAL)

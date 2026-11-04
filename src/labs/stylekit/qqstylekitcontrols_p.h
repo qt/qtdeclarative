@@ -26,7 +26,7 @@ class QQStyleKitStyle;
 class QQStyleKitControl;
 class QQStyleKitCustomControl;
 
-class QQStyleKitControls : public QObject, public QQmlParserStatus
+class Q_LABSSTYLEKIT_EXPORT QQStyleKitControls : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
     Q_INTERFACES(QQmlParserStatus)

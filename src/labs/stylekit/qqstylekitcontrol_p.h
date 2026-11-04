@@ -25,7 +25,7 @@ QT_BEGIN_NAMESPACE
 
 class QQStyleKitVariation;
 
-class QQStyleKitControl : public QQStyleKitControlState
+class Q_LABSSTYLEKIT_EXPORT QQStyleKitControl : public QQStyleKitControlState
 {
     Q_OBJECT
     Q_PROPERTY(QQmlListProperty<QQStyleKitVariation> variations READ variations FINAL)

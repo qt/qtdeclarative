@@ -123,4 +123,4 @@ void tst_StyleKit::popupPadding()
 
 QTEST_MAIN(tst_StyleKit)
 
-#include "tst_stylekit.moc"
+#include "tst_stylekitandcontrols.moc"

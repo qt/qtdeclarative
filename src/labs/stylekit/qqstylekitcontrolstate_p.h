@@ -24,7 +24,7 @@ QT_BEGIN_NAMESPACE
 
 class QQStyleKitControl;
 
-class QQStyleKitControlState : public QQStyleKitControlProperties
+class Q_LABSSTYLEKIT_EXPORT QQStyleKitControlState : public QQStyleKitControlProperties
 {
     Q_OBJECT
     Q_PROPERTY(QQStyleKitControlState *pressed READ pressed NOTIFY pressedChanged FINAL)
