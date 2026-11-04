@@ -16,11 +16,12 @@
 // We mean it.
 //
 
+#include <QtLabsStyleKit/qtlabsstylekitexports.h>
 #include <QtQml/QtQml>
 
 QT_BEGIN_NAMESPACE
 
-class QQSK: public QObject
+class Q_LABSSTYLEKIT_EXPORT QQSK: public QObject
 {
     Q_OBJECT
 
