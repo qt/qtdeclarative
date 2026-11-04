@@ -17,7 +17,7 @@
 
 \section1 Synopsis
 
-\badcode
+\code [cmake]
 qt_add_qml_preview(target)
 \endcode
 

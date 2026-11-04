@@ -54,7 +54,7 @@ CMake calls by \QMLLS.
 
 As this variable is used for IDE integration, it should normally not be set in a project itself, but
 passed to CMake via an IDE or manually by passing
-\badcode
+\code [text]
 -DQT_QML_GENERATE_QMLLS_INI=ON -DQT_QML_GENERATE_QMLLS_INI_NO_CMAKE_CALLS=ON
 \endcode
 to the cmake executable.
@@ -86,10 +86,9 @@ These \c{.qmlls.ini} files contain the path to the last configured build directo
 and is needed by \l{\QMLLS} to find user defined modules. See also
 \l{\QMLLS} about the other ways of passing build folders to \QMLLS.
 
-
 As this variable is used for IDE integration, it should normally not be set in a project itself, but
 passed to CMake via an IDE or manually by passing
-\badcode
+\code [text]
 -DQT_QML_GENERATE_QMLLS_INI=ON
 \endcode
 to the cmake executable.
@@ -129,7 +128,7 @@ To minimize application size, turn off this option, and instead use
 resource system.
 
 The variable can be set in the project's CMakeLists.txt as follows:
-\badcode
+\code [cmake]
 set(QT_QML_NO_CACHEGEN TRUE)
 qt_add_qml_module(MyModule
     URI MyModule
@@ -155,12 +154,12 @@ When a QML project is configured using \l qt_add_qml_module(), by default,
 from the compilation of QML code will be collected. You can explicitly opt in
 or out of this by setting the \c{QT_QML_GENERATE_AOTSTATS} variable. It can be
 set project-wide by passing
-\badcode
+\code [text]
 -DQT_QML_GENERATE_AOTSTATS=OFF
 \endcode
 to the CMake executable, or by setting it directly in the corresponding
 CMakeLists.txt file before the first call to \l qt_add_qml_module().
-\badcode
+\code [cmake]
 set(QT_QML_GENERATE_AOTSTATS OFF)
 \endcode
 
@@ -185,13 +184,13 @@ one of the following methods:
 
 \list
     \li Pass the option to the CMake executable:
-        \badcode
+        \code [text]
         -DQT_QMLLINT_CONTEXT_PROPERTY_DUMP=ON
         \endcode
 
     \li Add the setting to your \c CMakeLists.txt file before the first call to
         \l qt_add_qml_module():
-        \badcode
+        \code [cmake]
         set(QT_QMLLINT_CONTEXT_PROPERTY_DUMP ON)
         \endcode
 \endlist
@@ -220,7 +219,7 @@ creating a preview target for each executable, which is worthwhile for projects
 that don't use \l qmlpreview, for example applications that only drive QML
 through a \l QJSEngine for scripting, or release and CI builds where live reload
 is irrelevant. Disable it for an entire build by passing
-\badcode
+\code [text]
 -DQT_QML_NO_QML_PREVIEW=ON
 \endcode
 to the cmake executable, or set it in the project's \c CMakeLists.txt if preview

@@ -14,7 +14,7 @@
 
 \section1 Synopsis
 
-\badcode
+\code [cmake]
 qt_add_qml_plugin(
     target
     [BACKING_TARGET backing_target]

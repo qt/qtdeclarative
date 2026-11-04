@@ -20,7 +20,7 @@ deployment script. It cannot be called directly by the project.
 
 \section1 Synopsis
 
-\badcode
+\code [cmake]
 qt_deploy_qml_imports(
     TARGET target
     [QML_DIR qml_dir]
@@ -70,7 +70,7 @@ named by the \c{PLUGINS_FOUND} option, if given. This is often passed as the
 
 \section1 Example
 
-\badcode
+\code [cmake]
 cmake_minimum_required(VERSION 3.16...3.22)
 project(MyThings)
 

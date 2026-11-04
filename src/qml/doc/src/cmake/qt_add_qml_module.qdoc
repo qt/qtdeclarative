@@ -16,7 +16,7 @@
 
 \section1 Synopsis
 
-\code [text]
+\code [cmake]
 qt_add_qml_module(
     target
     URI uri

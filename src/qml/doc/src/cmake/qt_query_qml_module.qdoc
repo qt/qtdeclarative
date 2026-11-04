@@ -16,7 +16,7 @@
 
 \section1 Synopsis
 
-\badcode
+\code [cmake]
 qt_query_qml_module(
     target
     [URI uri_var]
@@ -133,7 +133,7 @@ absolute. The meaning and usage of \c RESOURCES_DEPLOY_PATHS and
 
 \section1 Example
 
-\badcode
+\code [cmake]
 cmake_minimum_required(VERSION 3.16...3.22)
 project(MyThings)
 

@@ -18,7 +18,7 @@
 
 \section1 Synopsis
 
-\badcode
+\code [cmake]
 qt_generate_deploy_qml_app_script(
     TARGET <target>
     OUTPUT_SCRIPT <var>
@@ -147,7 +147,7 @@ same target.
 
 The following example shows how to deploy a Qt Quick app.
 
-\badcode
+\code [cmake]
 cmake_minimum_required(VERSION 3.16...3.22)
 project(MyThings)
 
@@ -178,7 +178,7 @@ install(SCRIPT ${deploy_script})
 The following example shows how to pass additional options to the underlying
 deployment tool.
 
-\badcode
+\code [cmake]
 # Pass the values on to the deploy tool unchanged, see \l {QTP0007}.
 qt_policy(SET QTP0007 NEW)
 

@@ -16,7 +16,7 @@
 
 \section1 Synopsis
 
-\badcode
+\code [cmake]
 qt_import_qml_plugins(target)
 \endcode
 

@@ -274,13 +274,13 @@ an uppercase letter and define a QML component. This property is valid only if
 
 The source file property can be set like so:
 
-\badcode
+\code [cmake]
 set_source_files_properties(MyMainItem.qml
     PROPERTIES QT_QML_GENERATE_ANDROID_JAVA_CLASS TRUE)
 \endcode
 
 You can pass multiple files at once to set_source_files_properties:
-\badcode
+\code [cmake]
 set(plain_qml_files
     MyItem1.qml
     MyItem2.qml

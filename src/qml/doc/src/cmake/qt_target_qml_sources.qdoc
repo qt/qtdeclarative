@@ -16,7 +16,7 @@
 
 \section1 Synopsis
 
-\badcode
+\code [cmake]
 qt_target_qml_sources(
     target
     [QML_FILES ...]
@@ -84,7 +84,7 @@ The final resource path of each file will be the prefix, plus the path of the
 file below the \c CMAKE_CURRENT_SOURCE_DIR. The \l{QT_RESOURCE_ALIAS} source
 file property can also be used to override that relative path.
 
-\badcode
+\code [cmake]
 qt_add_qml_module(backing
     URI Example
     VERSION 1.0
@@ -202,7 +202,7 @@ will end up with the following contents:
 
 The generated \c qmldir file will contain the following type entries:
 
-\badcode
+\code [text]
 File 2.0 File.qml
 singleton FunnySingleton 2.0 FunnySingleton.qml
 OldThing 1.1 some_old_thing.qml

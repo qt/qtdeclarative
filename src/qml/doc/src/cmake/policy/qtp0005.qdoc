@@ -50,7 +50,7 @@ Consider a module that depends on another module defined in the same project.
 With the \c OLD behavior (or before Qt 6.8), the URI must be spelled out
 explicitly:
 
-\badcode
+\code [cmake]
 qt_add_qml_module(my_module
     URI MyModule
     VERSION 1.0
@@ -62,7 +62,7 @@ qt_add_qml_module(my_module
 With the \c NEW behavior (policy QTP0005 set to \c NEW), you can refer to the
 dependency by its CMake target name:
 
-\badcode
+\code [cmake]
 qt_policy(SET QTP0005 NEW)
 
 qt_add_qml_module(other_module
