@@ -2564,7 +2564,7 @@ import QtQuick.Controls as QQC
 Item { id: root; Component.onCompleted: { root.QQC.ToolTip.text = "Hola" }})"_s
                                   << withUnusedImports;
     QTest::newRow("usefulExpressionStatement") << u"x: y + 3;"_s << defaultOptions;
-    QTest::newRow("usefulExpressionStatement") << u"x: 3;"_s << defaultOptions;
+    QTest::newRow("usefulExpressionStatementLiteral") << u"x: 3;"_s << defaultOptions;
     QTest::newRow("void") << u"function f(): void {}"_s << defaultOptions;
     QTest::newRow("ambiguity-enum-and-chained-attached-property")
             << u"import EnumList\nFlexboxLayout { direction: FlexboxLayout.Row; }"_s
@@ -3000,7 +3000,7 @@ void TestQmllint::cleanJsSnippet_data()
                     }
                 case -1: return; // dummy
                 })"_s << defaultOptions;
-    QTest::newRow("usefulExpressionStatement") << u"x += 3;"_s << defaultOptions;
+    QTest::newRow("usefulExpressionStatementCompoundAssignment") << u"x += 3;"_s << defaultOptions;
     QTest::newRow("usefulExpressionStatement2")
             << u"for (;;) { x /= 3; return x; }"_s << defaultOptions;
     QTest::newRow("varUsedBeforeDeclarationWithIgnore")
