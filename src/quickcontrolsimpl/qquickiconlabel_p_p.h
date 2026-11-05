@@ -63,6 +63,8 @@ public:
 
     virtual void textChange();
     virtual void displayChange();
+    virtual void fontChange();
+    virtual void colorChange();
 
     static void beginClass(QQuickItem *item);
     static void completeComponent(QQuickItem *item);

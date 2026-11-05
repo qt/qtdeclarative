@@ -252,6 +252,18 @@ void QQuickMenuItemIconLabelPrivate::displayChange()
     updateOrSyncShortcutLabel();
 }
 
+void QQuickMenuItemIconLabelPrivate::fontChange()
+{
+    if (shortcutLabel)
+        shortcutLabel->setFont(font);
+}
+
+void QQuickMenuItemIconLabelPrivate::colorChange()
+{
+    if (shortcutLabel)
+        shortcutLabel->setColor(color);
+}
+
 bool QQuickMenuItemIconLabelPrivate::updateShortcutLabel()
 {
     if (!hasShortcut())
