@@ -10,9 +10,12 @@
 #include <QMatrix4x4>
 #include <QtQml/QQmlEngine>
 #include <QtQuick/QQuickView>
+#include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickshadereffectsource_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/viewtestutils_p.h>
+
+#include <memory>
 
 using namespace Qt::StringLiterals;
 
@@ -69,6 +72,7 @@ private slots:
     void sharedSourceAfterVertexShaderReset();
 
     void withoutQmlEngine();
+    void sourceItemSetBeforeWindow();
 
     void hideParent();
     void testPropertyMappings();
@@ -182,6 +186,35 @@ void tst_qquickshadereffect::withoutQmlEngine()
     auto shaderEffect = new TestShaderEffect(window.contentItem());
     shaderEffect->setVertexShader(QUrl());
     QVERIFY(shaderEffect->isComponentComplete());
+}
+
+void tst_qquickshadereffect::sourceItemSetBeforeWindow()
+{
+    // A ShaderEffectSource that gets its sourceItem before it has a window (for example when
+    // it is created by an asynchronous Loader) must not leave a reference on the source item's
+    // window, or the source item keeps pointing at the window after it is removed from it.
+    QQuickWindow window;
+    auto *source = new QQuickItem(window.contentItem());
+    const auto refCount = [source] { return QQuickItemPrivate::get(source)->windowRefCount; };
+    QCOMPARE(refCount(), 1);
+
+    auto effectSource = std::make_unique<QQuickShaderEffectSource>();
+    effectSource->setSourceItem(source);
+    effectSource->setParentItem(window.contentItem());
+    QCOMPARE(refCount(), 2);
+
+    effectSource->setParentItem(nullptr);
+    QCOMPARE(refCount(), 1);
+    effectSource->setParentItem(window.contentItem());
+    QCOMPARE(refCount(), 2);
+
+    effectSource.reset();
+    QCOMPARE(refCount(), 1);
+
+    source->setParentItem(nullptr);
+    QCOMPARE(source->window(), nullptr);
+    QCOMPARE(refCount(), 0);
+    delete source;
 }
 
 // QTBUG-86402: hiding the parent of an item that uses an effect should not cause a crash.
