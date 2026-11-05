@@ -42,7 +42,7 @@
     \li \l{qtqml-modules-topic.html}{QML Modules}
         \list
         \li \l{qtqml-documents-definetypes.html}{Defining Object Types through QML Documents}
-        \li \l{qtqml-cppintegration-overview.html}{Defining QML Types from C++}
+        \li \l{qtqml-cppintegration-overview.html}{QML and C++ Integration}
             \list
             \li \l{qtqml-cppintegration-definetypes.html}{Registering Types}
             \li \l{qtqml-cppintegration-exposecppattributes.html}{Exposing Attributes of C++ Types to QML}
