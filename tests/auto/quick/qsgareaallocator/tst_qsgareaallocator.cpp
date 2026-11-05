@@ -14,6 +14,7 @@ private slots:
     void allocationsStayWithinSlice_data();
     void allocationsStayWithinSlice();
     void allocationsStayWithinSliceAfterDeallocation();
+    void compactSlicedAllocation();
 
 private:
     static void verifyAllocations(const QList<QRect> &allocations, const QSize &size, int sliceHeight);
@@ -128,6 +129,33 @@ void tst_QSGAreaAllocator::allocationsStayWithinSliceAfterDeallocation()
             remaining.append(rect);
     }
     verifyAllocations(remaining, size, sliceHeight);
+}
+
+void tst_QSGAreaAllocator::compactSlicedAllocation()
+{
+    const int sliceHeight = 4096;
+    const QSize size(sliceHeight, sliceHeight * 3);
+    QSGAreaAllocator allocator(size, sliceHeight);
+    QList<QRect> allocations;
+    QRect bounds;
+    qint64 glyphArea = 0;
+    for (const QSize request : {QSize(20, 40), QSize(40, 20)}) {
+        for (int i = 0; i < 64; ++i) {
+            const QRect rect = allocator.allocate(request);
+            QVERIFY(rect.isValid());
+            QCOMPARE(rect.size(), request);
+            allocations.append(rect);
+            bounds |= rect;
+            glyphArea += qint64(request.width()) * request.height();
+        }
+    }
+    verifyAllocations(allocations, size, sliceHeight);
+    if (QTest::currentTestFailed())
+        return;
+    const qint64 textureArea = qint64(bounds.width()) * bounds.height();
+    QVERIFY2(textureArea <= glyphArea * 4,
+             qPrintable(QStringLiteral("Atlas area %1 for glyph area %2")
+                        .arg(textureArea).arg(glyphArea)));
 }
 
 QTEST_APPLESS_MAIN(tst_QSGAreaAllocator)
