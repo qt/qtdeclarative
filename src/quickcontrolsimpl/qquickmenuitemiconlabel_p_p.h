@@ -50,6 +50,8 @@ public:
 
     void textChange() override;
     void displayChange() override;
+    void fontChange() override;
+    void colorChange() override;
 
     QQuickMenuItem *menuItem = nullptr;
     QQuickText *shortcutLabel = nullptr;

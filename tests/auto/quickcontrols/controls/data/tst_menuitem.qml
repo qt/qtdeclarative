@@ -229,6 +229,39 @@ TestCase {
         verify(!shortcutLabel.visible)
     }
 
+    function test_shortcutFollowsColorChange() {
+        if (!testCase.platformSupportsShortcuts)
+            skip("Shortcuts are not shown on this platform")
+
+        ApplicationAttributes.set(Qt.AA_DontShowShortcutsInContextMenus, false)
+        let control = createTemporaryObject(menuItemWithActionComponent, testCase,
+                                            { text: "MenuItem" })
+        verify(control)
+        let shortcutLabel = findChild(control.contentItem, "shortcutLabel")
+        verify(shortcutLabel)
+
+        control.contentItem.color = "#ff00ff"
+        compare(shortcutLabel.color, "#ff00ff")
+    }
+
+    function test_shortcutFollowsFontChange() {
+        if (!testCase.platformSupportsShortcuts)
+            skip("Shortcuts are not shown on this platform")
+
+        ApplicationAttributes.set(Qt.AA_DontShowShortcutsInContextMenus, false)
+        let control = createTemporaryObject(menuItemWithActionComponent, testCase,
+                                            { text: "MenuItem" })
+        verify(control)
+        let shortcutLabel = findChild(control.contentItem, "shortcutLabel")
+        verify(shortcutLabel)
+        const implicitWidthBefore = shortcutLabel.implicitWidth
+
+        control.font.pixelSize = 64
+        compare(shortcutLabel.font.pixelSize, 64)
+        verify(shortcutLabel.implicitWidth > implicitWidthBefore,
+               `${shortcutLabel.implicitWidth} > ${implicitWidthBefore}`)
+    }
+
     function test_menu() {
         let control = createTemporaryObject(menu, testCase)
         verify(control)

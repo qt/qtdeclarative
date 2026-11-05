@@ -356,6 +356,14 @@ void QQuickIconLabelPrivate::displayChange()
 {
 }
 
+void QQuickIconLabelPrivate::fontChange()
+{
+}
+
+void QQuickIconLabelPrivate::colorChange()
+{
+}
+
 QQuickIconLabel::QQuickIconLabel(QQuickItem *parent)
     : QQuickItem(*(new QQuickIconLabelPrivate), parent)
 {
@@ -457,6 +465,7 @@ void QQuickIconLabel::setFont(const QFont &font)
     d->font = font;
     if (d->label)
         d->label->setFont(font);
+    d->fontChange();
 }
 
 QColor QQuickIconLabel::color() const
@@ -474,6 +483,7 @@ void QQuickIconLabel::setColor(const QColor &color)
     d->color = color;
     if (d->label)
         d->label->setColor(color);
+    d->colorChange();
 }
 
 QQuickIconLabel::Display QQuickIconLabel::display() const
