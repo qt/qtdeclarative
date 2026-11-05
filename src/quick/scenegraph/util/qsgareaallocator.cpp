@@ -116,7 +116,14 @@ bool QSGAreaAllocator::allocateInNode(const QSize &size, QPoint &result, const Q
         node->left = new QSGAreaAllocatorNode(node);
         node->right = new QSGAreaAllocatorNode(node);
         QRect splitRect = currentRect;
-        if ((currentRect.width() - size.width()) * currentRect.height() < (currentRect.height() - size.height()) * currentRect.width()) {
+        // When sliced, start a new row in a full-width region to avoid narrow columns
+        // spanning the whole slice.
+        const bool startsSlicedRow = m_sliceHeight > 0 && currentRect.width() == m_size.width()
+                && currentRect.height() > size.height();
+        // Otherwise, cut a row if the request fills relatively more of the width than height.
+        const bool fillsMoreOfWidth = (currentRect.width() - size.width()) * currentRect.height()
+                < (currentRect.height() - size.height()) * currentRect.width();
+        if (startsSlicedRow || fillsMoreOfWidth) {
             node->splitType = HorizontalSplit;
             node->split = currentRect.top() + size.height();
             splitRect.setHeight(size.height());
