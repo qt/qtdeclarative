@@ -2774,6 +2774,51 @@ are eliminated, then only the last set of arguments will be passed to the
 function.
 */
 
+/*!
+\qmlmethod void Qt::callLater(object, function)
+\qmlmethod void Qt::callLater(object, function, argument1, argument2, ...)
+\since 6.13
+\overload
+
+Use this overload to tie a delayed call to the lifetime of \a object, for
+example when \a function belongs to another object.
+
+Like Qt.callLater(function), this calls \a function later, once the QML engine
+returns to the event loop, and passes on any additional arguments. The call is
+skipped if, by then, \a object has been deleted or scheduled for deletion, for
+example with \c destroy(), or if the QML context of \a object has been
+invalidated, as when a \l Loader unloads it. If \a object has no
+QML context, only its lifetime is checked. \a object guards \a function
+whatever kind of function it is, including a JavaScript closure or a method of
+a C++ object.
+
+When this overload is called multiple times in quick succession with the same
+\a object, \a function, and arguments, that function is called only once,
+after any calls scheduled in between. Arguments are compared with \c ===, so
+calls with different arguments, or with distinct but equal objects, are all
+made. Functions are compared the same way: a function defined inside a signal
+handler, such as an arrow function, is a new function each time the handler
+runs. The same function scheduled with two different objects is called once
+for each object. In this example, each delegate gets its own call, which is
+skipped once the delegate is destroyed:
+
+\qml
+ListView {
+    id: view
+    function relayout(row) { console.log("relayout", row.width) }
+    delegate: Item {
+        id: row
+        onWidthChanged: Qt.callLater(row, view.relayout, row)
+    }
+}
+\endqml
+
+Calls scheduled with and without an object are never combined.
+
+Throws an error if \a object is not a QObject, for example \c null or
+\c undefined, or if \a function is not a function or signal.
+*/
+
 QT_END_NAMESPACE
 
 #include "moc_qqmlbuiltinfunctions_p.cpp"

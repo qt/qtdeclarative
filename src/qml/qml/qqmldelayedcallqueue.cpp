@@ -9,6 +9,8 @@
 #include <private/qv4jscall_p.h>
 #include <private/qv4qobjectwrapper_p.h>
 #include <private/qv4qmlcontext_p.h>
+#include <private/qv4runtime_p.h>
+#include <private/qobject_p.h>
 
 #include <QQmlError>
 
@@ -18,13 +20,25 @@ QT_BEGIN_NAMESPACE
 // struct QQmlDelayedCallQueue::DelayedFunctionCall
 //
 
+static bool isAlive(const QObject *object)
+{
+    return !QQmlData::wasDeleted(object) && QQmlData::get(object);
+}
+
+// deleteLater(), and so destroy(), doesn't set isQueuedForDeletion, and an object's context
+// can be invalidated while the object stays alive.
+static bool isAliveInValidContext(const QObject *object)
+{
+    if (QQmlData::wasDeleted(object) || QObjectPrivate::get(object)->deleteLaterCalled)
+        return false;
+    const QQmlData *ddata = QQmlData::get(object);
+    return ddata && (!ddata->context || ddata->context->isValid());
+}
+
 void QQmlDelayedCallQueue::DelayedFunctionCall::execute(QV4::ExecutionEngine *engine) const
 {
-    if (!m_guarded ||
-            (!m_objectGuard.isNull() &&
-             !QQmlData::wasDeleted(m_objectGuard) &&
-             QQmlData::get(m_objectGuard) &&
-             !QQmlData::get(m_objectGuard)->isQueuedForDeletion)) {
+    if ((!m_guarded || isAlive(m_objectGuard))
+            && (!m_hasExplicitObject || isAliveInValidContext(m_explicitObject))) {
 
         QV4::Scope scope(engine);
 
@@ -47,6 +61,26 @@ void QQmlDelayedCallQueue::DelayedFunctionCall::execute(QV4::ExecutionEngine *en
             QQmlEnginePrivate::warning(QQmlEnginePrivate::get(scope.engine->qmlEngine()), error);
         }
     }
+}
+
+bool QQmlDelayedCallQueue::DelayedFunctionCall::argumentsEqual(
+        QQmlV4FunctionPtr args, int offset) const
+{
+    QV4::ArrayObject *array = m_args.as<QV4::ArrayObject>();
+    const int argCount = array ? array->getLength() : 0;
+    if (argCount != args->length() - offset)
+        return false;
+
+    QV4::Scope scope(args->v4engine());
+    QV4::ScopedValue storedArgument(scope);
+    QV4::ScopedValue argument(scope);
+    for (int i = 0; i < argCount; ++i) {
+        storedArgument = array->get(i);
+        argument = (*args)[offset + i];
+        if (!QV4::RuntimeHelpers::strictEqual(storedArgument, argument))
+            return false;
+    }
+    return true;
 }
 
 //
@@ -80,13 +114,30 @@ QV4::ReturnedValue QQmlDelayedCallQueue::addUniquelyAndExecuteLater(QV4::Executi
         THROW_GENERIC_ERROR("Qt.callLater: no arguments given");
 
     QV4::ScopedValue firstArgument(scope, (*args)[0]);
+    QObject *explicitObject = nullptr;
+    int functionIndex = 0;
+    if (!firstArgument->as<QV4::FunctionObject>()) {
+        // Qt.callLater(object, function, ...)
+        const QV4::QObjectWrapper *wrapper = firstArgument->as<QV4::QObjectWrapper>();
+        explicitObject = wrapper ? wrapper->object() : nullptr;
+        if (!explicitObject)
+            THROW_GENERIC_ERROR("Qt.callLater: first argument not a function, signal, or QObject");
+        functionIndex = 1;
+    }
 
-    const QV4::FunctionObject *func = firstArgument->as<QV4::FunctionObject>();
+    QV4::ScopedValue function(scope, (*args)[functionIndex]);
+    const QV4::FunctionObject *func = function->as<QV4::FunctionObject>();
 
     if (!func)
-        THROW_GENERIC_ERROR("Qt.callLater: first argument not a function or signal");
+        THROW_GENERIC_ERROR("Qt.callLater: second argument not a function or signal");
 
     std::pair<QObject *, int> functionData = QV4::QObjectMethod::extractQtMethod(func);
+
+    // Calls with an object merge only if their arguments are strictly equal, too
+    const auto matchesObjectAndArguments = [&](const DelayedFunctionCall &dfc) {
+        return dfc.matchesExplicitObject(explicitObject)
+                && (!explicitObject || dfc.argumentsEqual(args, functionIndex + 1));
+    };
 
     QList<DelayedFunctionCall>::Iterator iter;
     if (functionData.second != -1) {
@@ -95,7 +146,7 @@ QV4::ReturnedValue QQmlDelayedCallQueue::addUniquelyAndExecuteLater(QV4::Executi
         while (iter != self->m_delayedFunctionCalls.end()) {
             DelayedFunctionCall& dfc = *iter;
             std::pair<QObject *, int> storedFunctionData = QV4::QObjectMethod::extractQtMethod(dfc.m_function.as<QV4::FunctionObject>());
-            if (storedFunctionData == functionData) {
+            if (matchesObjectAndArguments(dfc) && storedFunctionData == functionData) {
                 break; // Already stored!
             }
             ++iter;
@@ -105,7 +156,8 @@ QV4::ReturnedValue QQmlDelayedCallQueue::addUniquelyAndExecuteLater(QV4::Executi
         iter = self->m_delayedFunctionCalls.begin();
         while (iter != self->m_delayedFunctionCalls.end()) {
             DelayedFunctionCall& dfc = *iter;
-            if (firstArgument->asReturnedValue() == dfc.m_function.value()) {
+            if (matchesObjectAndArguments(dfc)
+                    && function->asReturnedValue() == dfc.m_function.value()) {
                 break; // Already stored!
             }
             ++iter;
@@ -118,7 +170,8 @@ QV4::ReturnedValue QQmlDelayedCallQueue::addUniquelyAndExecuteLater(QV4::Executi
         self->m_delayedFunctionCalls.erase(iter);
         self->m_delayedFunctionCalls.append(dfc);
     } else {
-        self->m_delayedFunctionCalls.append(QV4::PersistentValue(engine, firstArgument));
+        self->m_delayedFunctionCalls.append(
+                DelayedFunctionCall(QV4::PersistentValue(engine, function), explicitObject));
     }
 
     DelayedFunctionCall& dfc = self->m_delayedFunctionCalls.last();
@@ -135,7 +188,9 @@ QV4::ReturnedValue QQmlDelayedCallQueue::addUniquelyAndExecuteLater(QV4::Executi
             dfc.m_guarded = true;
         }
     }
-    self->storeAnyArguments(dfc, args, 1, engine);
+    // A merged call with an object already has these arguments
+    if (!functionAlreadyStored || !explicitObject)
+        self->storeAnyArguments(dfc, args, functionIndex + 1, engine);
 
     if (!self->m_callbackOutstanding) {
         self->m_tickedMethod.invoke(self, Qt::QueuedConnection);

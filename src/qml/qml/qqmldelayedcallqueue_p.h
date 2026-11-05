@@ -44,15 +44,27 @@ private:
     struct DelayedFunctionCall
     {
         DelayedFunctionCall() {}
-        DelayedFunctionCall(QV4::PersistentValue function)
-            : m_function(function), m_guarded(false) { }
+        DelayedFunctionCall(QV4::PersistentValue function, QObject *explicitObject)
+            : m_function(function), m_explicitObject(explicitObject), m_guarded(false),
+              m_hasExplicitObject(explicitObject != nullptr) { }
+
+        bool matchesExplicitObject(const QObject *explicitObject) const
+        {
+            return m_hasExplicitObject == (explicitObject != nullptr)
+                    && m_explicitObject.data() == explicitObject;
+        }
+
+        bool argumentsEqual(QQmlV4FunctionPtr args, int offset) const;
 
         void execute(QV4::ExecutionEngine *engine) const;
 
         QV4::PersistentValue m_function;
         QV4::PersistentValue m_args;
         QQmlGuard<QObject> m_objectGuard;
+        // The object passed to Qt.callLater(object, function, ...)
+        QQmlGuard<QObject> m_explicitObject;
         bool m_guarded;
+        bool m_hasExplicitObject = false;
     };
 
     void storeAnyArguments(DelayedFunctionCall& dfc, QQmlV4FunctionPtr args, int offset, QV4::ExecutionEngine *engine);

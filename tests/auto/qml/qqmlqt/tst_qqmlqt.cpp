@@ -87,6 +87,9 @@ private slots:
     void later_data();
     void later();
     void laterInvalidatedContext();
+    void laterWithObject_data();
+    void laterWithObject();
+    void laterWithObjectWithoutContext();
     void qtObjectContents();
 
     void timeRoundtrip_data();
@@ -1488,6 +1491,103 @@ void tst_qqmlqt::laterInvalidatedContext()
                     "\\(exception occurred during delayed function evaluation\\)"));
     QCoreApplication::processEvents();
     // should not crash
+}
+
+void tst_qqmlqt::laterWithObject_data()
+{
+    QTest::addColumn<QString>("caseName");
+    QTest::addColumn<bool>("deleteBeforeFlush");
+    QTest::addColumn<QString>("expectedError");
+    QTest::addColumn<QString>("expectedCalls");
+
+    QTest::newRow("repeated requests coalesce")
+            << u"scheduleRepeatedly"_s << false << QString() << u"once;"_s;
+    QTest::newRow("repeated request runs after calls in between")
+            << u"rescheduleAroundOtherCall"_s << false << QString() << u"between;repeated;"_s;
+    QTest::newRow("different arguments")
+            << u"scheduleWithDifferentArguments"_s << false << QString() << u"a;b;"_s;
+    QTest::newRow("different argument counts")
+            << u"scheduleWithDifferentArgumentCounts"_s << false << QString() << u"a;a;"_s;
+    QTest::newRow("equal but distinct objects as arguments")
+            << u"scheduleWithEqualButDistinctObjects"_s << false << QString() << u"x;x;"_s;
+    QTest::newRow("one function for two objects")
+            << u"scheduleForTwoObjects"_s << false << QString() << u"same;same;"_s;
+    QTest::newRow("calls with and without object stay separate")
+            << u"scheduleInBothForms"_s << false << QString() << u"same;same;"_s;
+    QTest::newRow("object deleted")
+            << u"scheduleThenDestroy"_s << true << QString() << u"deleted;"_s;
+    QTest::newRow("object destroyed, deletion pending")
+            << u"scheduleThenDestroy"_s << false << QString() << u"alive;"_s;
+    QTest::newRow("closure guarded by object")
+            << u"scheduleClosureThenDestroy"_s << true << QString() << u"deleted;"_s;
+    QTest::newRow("object unloaded by Loader")
+            << u"loadScheduleUnload"_s << false << QString() << QString();
+    QTest::newRow("object inside item unloaded by Loader")
+            << u"loadScheduleForPageChildUnload"_s << false << QString() << QString();
+    QTest::newRow("own function of item unloaded by Loader")
+            << u"loadScheduleOwnFunctionUnload"_s << false << QString() << QString();
+    QTest::newRow("C++ method")
+            << u"scheduleCppMethod"_s << false << QString() << u"between;count=1;row;"_s;
+    QTest::newRow("non-function with object")
+            << u"passNonFunction"_s << false
+            << u"Qt.callLater: second argument not a function or signal"_s << QString();
+    QTest::newRow("null object")
+            << u"passNullObject"_s << false
+            << u"Qt.callLater: first argument not a function, signal, or QObject"_s << QString();
+    QTest::newRow("undefined object")
+            << u"passUndefinedObject"_s << false
+            << u"Qt.callLater: first argument not a function, signal, or QObject"_s << QString();
+}
+
+void tst_qqmlqt::laterWithObject()
+{
+    QFETCH(QString, caseName);
+    QFETCH(bool, deleteBeforeFlush);
+    QFETCH(QString, expectedError);
+    QFETCH(QString, expectedCalls);
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("laterWithObject.qml"));
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY2(root, qPrintable(component.errorString()));
+
+    // A call that runs in an invalidated context warns instead of failing
+    QTest::failOnWarning();
+
+    QMetaObject::invokeMethod(root.data(), "run", Q_ARG(QString, caseName));
+    QCOMPARE(root->property("errors").toString(), expectedError);
+    QCOMPARE(root->property("calls").toString(), QString());
+
+    if (deleteBeforeFlush)
+        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+    QCOMPARE(root->property("calls").toString(), expectedCalls);
+}
+
+void tst_qqmlqt::laterWithObjectWithoutContext()
+{
+    QQmlEngine engine;
+    QObject objectWithoutContext;
+    engine.rootContext()->setContextProperty("objectWithoutContext", &objectWithoutContext);
+
+    QQmlComponent component(&engine);
+    component.setData(
+            "import QtQml\n"
+            "QtObject {\n"
+            "    property int calls: 0\n"
+            "    function schedule() { Qt.callLater(objectWithoutContext, () => ++calls); }\n"
+            "}\n",
+            QUrl("LaterWithObjectWithoutContext.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY(root);
+    QTest::failOnWarning();
+    QMetaObject::invokeMethod(root.data(), "schedule");
+    QVERIFY(!qmlContext(&objectWithoutContext));
+
+    QCoreApplication::processEvents();
+    QCOMPARE(root->property("calls").toInt(), 1);
 }
 
 void tst_qqmlqt::qtObjectContents()
