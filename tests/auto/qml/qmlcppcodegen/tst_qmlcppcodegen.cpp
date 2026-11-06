@@ -4185,8 +4185,8 @@ void tst_QmlCppCodegen::lookupSignatureOnObjectLiteral()
     std::unique_ptr<QObject> o(c.create());
     QVERIFY(o);
 
-    // TODO crashes at runtime
-    // QMetaObject::invokeMethod(o.get(), "f");
+    QTest::ignoreMessage(QtDebugMsg, "force if condition eval");
+    QMetaObject::invokeMethod(o.get(), "f");
 }
 
 void tst_QmlCppCodegen::lostContextObject_data()

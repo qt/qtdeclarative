@@ -1694,8 +1694,12 @@ void QQmlJSCodeGenerator::generate_GetLookupHelper(int index)
         } else {
             REJECT(u"access to 'length' property of sequence wrapped in non-sequence"_s);
         }
-    } else if (accumulatorIn.isStoredIn(m_typeResolver->variantMapType())) {
-        m_body += generateVariantMapGetLookup(m_state.accumulatorVariableIn, index);
+    } else if (accumulatorIn.isStoredIn(m_typeResolver->variantMapType())
+               || accumulatorIn.original().contains(m_typeResolver->variantMapType())) {
+        const QString converted =
+                conversion(accumulatorIn.storedType(), m_typeResolver->variantMapType(),
+                           m_state.accumulatorVariableIn);
+        m_body += generateVariantMapGetLookup(converted, index);
     } else {
         if (m_state.isRegisterAffectedBySideEffects(Accumulator))
             REJECT(u"reading from a value that's potentially affected by side effects"_s);
