@@ -119,7 +119,9 @@ bool QQmlJSLookupSignaturesRecorder::cantDesync(const QQmlJSScope::ConstPtr &typ
 bool QQmlJSLookupSignaturesRecorder::safeBase(const QQmlJSScope::ConstPtr &base) const
 {
     return base == m_typeResolver->varType() || base == m_typeResolver->jsValueType()
-            || base->inherits(m_typeResolver->qmlPropertyMapType());
+            || base->inherits(m_typeResolver->qmlPropertyMapType())
+            || base->inherits(m_typeResolver->variantMapType())
+            || base->inherits(m_typeResolver->jsPrimitiveType());
 }
 
 bool QQmlJSLookupSignaturesRecorder::isUnnamedCompositeType(const QQmlJSScope::ConstPtr &type) const

@@ -263,6 +263,7 @@ set(qml_files
     listPropertyAsModel.qml
     listToString.qml
     listlength.qml
+    lookupSignatureOnObjectLiteral.qml
     lostContextObject.qml
     markJSValue.qml
     markRecursive.qml
