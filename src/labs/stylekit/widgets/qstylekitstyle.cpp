@@ -2260,9 +2260,8 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
                 break;
 
             QRect textRect = opt->rect;
-            uint textFlags = Qt::TextShowMnemonic;
-            if (!styleHint(SH_UnderlineShortcut, opt, w))
-                textFlags |= Qt::TextHideMnemonic;
+            const uint textFlags = styleHint(SH_UnderlineShortcut, opt, w)
+                ? Qt::TextShowMnemonic : Qt::TextHideMnemonic;
 
             if (btn->features & QStyleOptionButton::HasMenu) {
                 int indicatorSize = pixelMetric(PM_MenuButtonIndicator, btn, w);
@@ -2321,9 +2320,8 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
             const auto r = d->resolve(w, controlType, btn->state);
             if (!r.isValid())
                 break;
-            uint textFlags = Qt::TextShowMnemonic;
-            if (!styleHint(SH_UnderlineShortcut, opt, w))
-                textFlags |= Qt::TextHideMnemonic;
+            const uint textFlags = styleHint(SH_UnderlineShortcut, opt, w)
+                ? Qt::TextShowMnemonic : Qt::TextHideMnemonic;
             r.drawLabel(opt->rect, btn->text, btn->icon, btn->iconSize, btn->state, textFlags,
                         btn->direction, p);
             return;
@@ -2339,9 +2337,8 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
                 break;
             const QRect editRect = subControlRect(CC_ComboBox, comboBox, SC_ComboBoxEditField, w);
             const QRect textRect = editRect.marginsRemoved(r.metrics->textPadding);
-            uint textFlags = Qt::TextShowMnemonic;
-            if (!styleHint(SH_UnderlineShortcut, opt, w))
-                textFlags |= Qt::TextHideMnemonic;
+            const uint textFlags = styleHint(SH_UnderlineShortcut, opt, w)
+                ? Qt::TextShowMnemonic : Qt::TextHideMnemonic;
             if (comboBox->editable) {
                 const QPixmap pm = iconPixmap(comboBox->currentIcon, comboBox->iconSize,
                                               comboBox->state, p);
@@ -2536,9 +2533,8 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
             const auto *metrics = r.metrics;
             QRect rect = tool->rect.marginsRemoved(metrics->textPadding);
 
-            uint textFlags = Qt::TextShowMnemonic;
-            if (!styleHint(SH_UnderlineShortcut, opt, w))
-                textFlags |= Qt::TextHideMnemonic;
+            const uint textFlags = styleHint(SH_UnderlineShortcut, opt, w)
+                ? Qt::TextShowMnemonic : Qt::TextHideMnemonic;
 
             const bool hasArrow = tool->features & QStyleOptionToolButton::Arrow;
             if ((!hasArrow && tool->icon.isNull() && !tool->text.isEmpty())
@@ -2663,9 +2659,8 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
             const int tabIdx = menuItem->text.indexOf(QLatin1Char('\t'));
             const QString label = tabIdx >= 0 ? menuItem->text.left(tabIdx) : menuItem->text;
             const QString shortcut = tabIdx >= 0 ? menuItem->text.mid(tabIdx + 1) : QString();
-            uint textFlags = Qt::TextShowMnemonic;
-            if (!styleHint(SH_UnderlineShortcut, opt, w))
-                textFlags |= Qt::TextHideMnemonic;
+            const uint textFlags = styleHint(SH_UnderlineShortcut, opt, w)
+                ? Qt::TextShowMnemonic : Qt::TextHideMnemonic;
             QRect labelRect = textRect;
             if (!shortcut.isEmpty() && menuItem->reservedShortcutWidth > 0) {
                 const QRect shortcutRect(textRect.right() - menuItem->reservedShortcutWidth + 1,
@@ -2713,9 +2708,8 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
             r.drawBackground(opt->rect.marginsRemoved(r.metrics->margins), p);
             const QRect textRect = opt->rect.marginsRemoved(
                 r.metrics->margins + r.metrics->padding + r.metrics->textPadding);
-            uint textFlags = Qt::TextShowMnemonic;
-            if (!styleHint(SH_UnderlineShortcut, opt, w))
-                textFlags |= Qt::TextHideMnemonic;
+            const uint textFlags = styleHint(SH_UnderlineShortcut, opt, w)
+                ? Qt::TextShowMnemonic : Qt::TextHideMnemonic;
             const int iconExtent = proxy()->pixelMetric(PM_SmallIconSize, opt, w);
             // QMenuBar sizes items with an icon to show only the icon
             r.drawLabel(textRect, menuItem->icon.isNull() ? menuItem->text : QString(),
@@ -2738,9 +2732,8 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
             r.drawBackground(backgroundRect, p);
 
             const QRect contentRect = backgroundRect.marginsRemoved(m.padding + m.textPadding);
-            uint textFlags = Qt::TextShowMnemonic;
-            if (!styleHint(SH_UnderlineShortcut, opt, w))
-                textFlags |= Qt::TextHideMnemonic;
+            const uint textFlags = styleHint(SH_UnderlineShortcut, opt, w)
+                ? Qt::TextShowMnemonic : Qt::TextHideMnemonic;
 
             r.drawLabel(contentRect, tab->text, tab->icon, tab->iconSize, tab->state, textFlags,
                         tab->direction, p, Qt::AlignCenter);
@@ -3352,8 +3345,10 @@ void QStyleKitStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCom
 
             // title
             if (groupBox->subControls & SC_GroupBoxLabel && !groupBox->text.isEmpty()) {
+                const uint textFlags = styleHint(SH_UnderlineShortcut, opt, w)
+                    ? Qt::TextShowMnemonic : Qt::TextHideMnemonic;
                 r.drawText(titleRect.marginsRemoved(r.metrics->textPadding), groupBox->text,
-                           Qt::TextShowMnemonic, p, Qt::AlignLeft | Qt::AlignVCenter);
+                           textFlags, p, Qt::AlignLeft | Qt::AlignVCenter);
             }
             // don't draw checkmark as the Controls style doesn't draw it
             // and StyleKit doesn't provide a way to style it
