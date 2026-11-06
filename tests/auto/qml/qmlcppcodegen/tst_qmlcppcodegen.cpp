@@ -222,6 +222,7 @@ private slots:
     void listOfInlineComponent();
     void listPropertyAsModel();
     void listToString();
+    void lookupSignatureOnObjectLiteral();
     void lostContextObject_data();
     void lostContextObject();
     void lotsOfRegisters();
@@ -4174,6 +4175,18 @@ void tst_QmlCppCodegen::listToString()
     QTest::ignoreMessage(QtDebugMsg, "[a,b]");
 
     std::unique_ptr<QObject> o(c.create());
+}
+
+void tst_QmlCppCodegen::lookupSignatureOnObjectLiteral()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/lookupSignatureOnObjectLiteral.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    std::unique_ptr<QObject> o(c.create());
+    QVERIFY(o);
+
+    // TODO crashes at runtime
+    // QMetaObject::invokeMethod(o.get(), "f");
 }
 
 void tst_QmlCppCodegen::lostContextObject_data()
