@@ -37,13 +37,16 @@ void tst_sharedimage::initTestCase()
 void tst_sharedimage::compareToPlainLoad_data()
 {
     QString imagePath = QFINDTESTDATA("data/yellow.png");
+    const QString plainUrl = imagePath.startsWith(QLatin1Char(':'))
+            ? QLatin1String("qrc") + imagePath
+            : QUrl::fromLocalFile(imagePath).toString();
     if (imagePath.startsWith(QLatin1Char('/')))
         imagePath.remove(0, 1);
-    QString plainImage("Image { source: \"file:///%1\"; cache: false; %2 }");
+    QString plainImage("Image { source: \"%1\"; cache: false; %2 }");
     QString sharedImage("Image { source: \"image://shared/%1\"; cache: false; %2 }");
     QString script("import QtQuick 2.0\nimport Qt.labs.sharedimage 1.0\n%1\n");
 
-    QString plain = script.arg(plainImage).arg(imagePath);
+    QString plain = script.arg(plainImage).arg(plainUrl);
     QString shared = script.arg(sharedImage).arg(imagePath);
 
     QTest::addColumn<QByteArray>("plainScript");
@@ -55,11 +58,15 @@ void tst_sharedimage::compareToPlainLoad_data()
     opts = QStringLiteral("asynchronous: true");
     QTest::newRow("async") << plain.arg(opts).toLatin1() << shared.arg(opts).toLatin1();
 
-    opts = QStringLiteral("sourceSize: Qt.size(50, 50)");
-    QTest::newRow("scaled, stretch") << plain.arg(opts).toLatin1() << shared.arg(opts).toLatin1();
+    const int scaledSize = qRound(50 * qGuiApp->devicePixelRatio());
 
-    opts = QStringLiteral("sourceSize: Qt.size(50, 50); fillMode: Image.PreserveAspectFit");
-    QTest::newRow("scaled, aspectfit") << plain.arg(opts).toLatin1() << shared.arg(opts).toLatin1();
+    opts = QStringLiteral("sourceSize: Qt.size(%1, %1)");
+    QTest::newRow("scaled, stretch") << plain.arg(opts.arg(scaledSize)).toLatin1()
+                                     << shared.arg(opts.arg(50)).toLatin1();
+
+    opts = QStringLiteral("sourceSize: Qt.size(%1, %1); fillMode: Image.PreserveAspectFit");
+    QTest::newRow("scaled, aspectfit") << plain.arg(opts.arg(scaledSize)).toLatin1()
+                                       << shared.arg(opts.arg(50)).toLatin1();
 }
 
 void tst_sharedimage::compareToPlainLoad()
