@@ -569,7 +569,7 @@ QT_BEGIN_NAMESPACE
     \snippet ControlsSnippets.qml tabButton
 */
 
-/*
+/*!
     \qmlproperty ControlStyle StylableControls::tableViewDelegate
 
     Grouped property for styling \l [QtQuickControls]{TableViewDelegate}.
