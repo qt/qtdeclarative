@@ -746,11 +746,13 @@ void QQmlJSLinter::typeReader(const QString &filename)
     }
 
     result.logger->setCode(code);
+    lintInfo.irDocument.code = code;
 
     const QQmlJS::Parser::Goal goal = !lintInfo.isJavaScript ? QQmlJS::Parser::Goal::QmlDocument
             : lintInfo.isESModule                            ? QQmlJS::Parser::Goal::Module
                                                              : QQmlJS::Parser::Goal::Script;
-    const QQmlJS::Parser::Result parsed = QQmlJS::Parser::parseCode(&lintInfo.engine, code, goal);
+    const QQmlJS::Parser::Result parsed = QQmlJS::Parser::parseCode(lintInfo.engine(), code, goal);
+    lintInfo.irDocument.program = QQmlJS::AST::cast<QQmlJS::AST::UiProgram *>(parsed.rootNode);
     for (const QQmlJS::DiagnosticMessage &m : parsed.diagnosticMessages)
         result.logger->log(m.message, qmlSyntax, m.loc);
 
@@ -781,9 +783,9 @@ void QQmlJSLinter::typeReader(const QString &filename)
     }
 
     lintInfo.visitor.emplace(&m_importer, result.logger.get(), implicitImportDirectory,
-                             lintInfo.qmldirFiles, &lintInfo.engine);
+                             lintInfo.qmldirFiles, lintInfo.engine());
 
-    parseComments(result.logger.get(), lintInfo.engine.comments());
+    parseComments(result.logger.get(), lintInfo.engine()->comments());
     parsed.rootNode->accept(&*lintInfo.visitor);
 }
 
@@ -885,11 +887,7 @@ void QQmlJSLinter::lintFileImpl(const QString &filename)
     QLoggingCategory::setFilterRules(u"qt.qml.compiler=false"_s);
 
     CodegenWarningInterface warningInterface(lintInfo.result.logger.get());
-    QmlIR::Document irDocument(QString(), QString(), false);
-    if (qParseQmlFile(irDocument, filename, &error, &warningInterface, lintInfo.fileContents)) {
-        qCompileQmlFile(irDocument, filename, saveFunction, &codegen, &error, true,
-                        &warningInterface);
-    }
+    qCompileQmlFile(lintInfo.irDocument, filename, saveFunction, &codegen, &error, true, &warningInterface);
 
     checkMaxWarnings(lintInfo.result.logger.get(), lintInfo.maxWarnings);
     lintInfo.result.setStatusFromLogger();

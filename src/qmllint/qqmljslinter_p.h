@@ -169,7 +169,9 @@ private:
 
     struct LintInfo
     {
+        QQmlJS::Engine *engine() { return &irDocument.jsParserEngine; }
         const QString *fileContents;
+
         LintOptions options;
         QStringList qmlImportPaths;
         QStringList qmldirFiles;
@@ -180,7 +182,10 @@ private:
         std::optional<QQmlJS::LinterVisitor> visitor;
         Result result;
 
-        QQmlJS::Engine engine; // needs to outlive the lintFileInBatch() call.
+        QmlIR::Document irDocument =
+                QmlIR::Document(QString(), QString(),
+                                QV4::Compiler::CompilationMode::
+                                        Release); // needs to outlive the lintFileInBatch() call.
 
         qsizetype maxWarnings;
         bool isESModule;
