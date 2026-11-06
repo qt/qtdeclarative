@@ -237,12 +237,15 @@ public:
         f->glGetIntegerv(GL_VIEWPORT, viewport);
         QCOMPARE(viewport[0], 0);
         QCOMPARE(viewport[1], 0);
-        QCOMPARE(viewport[2], 320);
-        QCOMPARE(viewport[3], 200);
+        QCOMPARE(viewport[2], qRound(m_windowSize.width() * m_dpr));
+        QCOMPARE(viewport[3], qRound(m_windowSize.height() * m_dpr));
 
         f->glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
         f->glClear(GL_COLOR_BUFFER_BIT);
     }
+
+    QSizeF m_windowSize;
+    qreal m_dpr = 1.0;
 };
 
 class GLItem : public QQuickItem
@@ -264,6 +267,9 @@ protected:
         GLNode *node = static_cast<GLNode *>(oldNode);
         if (!node)
             node = new GLNode;
+
+        node->m_windowSize = window()->size();
+        node->m_dpr = window()->effectiveDevicePixelRatio();
 
         return node;
     }
