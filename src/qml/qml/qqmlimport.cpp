@@ -575,10 +575,10 @@ bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader, const QHashedSt
         return true;
     }
 
-    const QString typeStr = type.toString();
+    const QStringView typeView(type.constData(), type.length());
     if (isInlineComponent) {
         Q_ASSERT(type_return);
-        bool ret = uri == typeStr;
+        bool ret = type == uri;
         if (ret) {
             Q_ASSERT(!type_return->isValid());
             *type_return = QQmlMetaType::findOrCreateSpeculativeInlineComponentType(QUrl(url));
@@ -588,12 +588,13 @@ bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader, const QHashedSt
         }
         return ret;
     }
-    QQmlDirComponents::ConstIterator it = qmlDirComponents.find(typeStr), end = qmlDirComponents.end();
+    QQmlDirComponents::ConstIterator it = qmlDirComponents.constFind(typeView);
+    const QQmlDirComponents::ConstIterator end = qmlDirComponents.constEnd();
     if (it != end) {
         QString componentUrl;
         QQmlMetaType::CompositeTypeLookupMode lookupMode = QQmlMetaType::NonSingleton;
         QQmlDirComponents::ConstIterator candidate = end;
-        for ( ; it != end && it.key() == typeStr; ++it) {
+        for ( ; it != end && type == it.key(); ++it) {
             const QQmlDirParser::Component &c = *it;
             switch (registrationType) {
             case QQmlType::AnyRegistrationType:
@@ -673,8 +674,8 @@ bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader, const QHashedSt
         QString qmlUrl;
 
         const QString urlsToTry[2] = {
-            typeStr + dotqml_string, // Type -> Type.qml
-            typeStr + dotuidotqml_string // Type -> Type.ui.qml
+            typeView + dotqml_string, // Type -> Type.qml
+            typeView + dotuidotqml_string // Type -> Type.ui.qml
         };
         for (const QString &urlToTry : urlsToTry) {
             if (typeLoader->fileExists(localDirectoryPath, urlToTry)) {
