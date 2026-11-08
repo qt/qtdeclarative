@@ -507,6 +507,8 @@ public:
     const Current *asCurrent() const { return std::get_if<Current>(&m_data); }
 
     static int cmp(const PathComponent &p1, const PathComponent &p2);
+    // Consistent with cmp(): components comparing equal hash equally.
+    size_t hash(size_t seed) const;
 
     PathComponent(Index &&o): m_data(std::move(o)) {}
     PathComponent(Key &&o): m_data(std::move(o)) {}
@@ -565,7 +567,7 @@ public:
 
 
 class Source;
-size_t qHash(const Path &, size_t);
+QMLDOM_EXPORT size_t qHash(const Path &, size_t seed = 0);
 class PathIterator;
 struct PathSentinel;
 class QMLDOM_EXPORT Path{
@@ -634,7 +636,7 @@ private:
     friend class QQmlJS::Dom::PathEls::TestPaths;
     friend class FieldFilter;
     friend class PathIterator;
-    friend size_t qHash(const Path &, size_t);
+    friend QMLDOM_EXPORT size_t qHash(const Path &, size_t);
 
     // The path consists of the m_length nodes ending in m_lastNode. Further
     // ancestors of m_lastNode may exist, but are not part of this path.
@@ -742,31 +744,6 @@ public:
     Path pathToSource;
     Path pathFromSource;
 };
-
-inline size_t qHash(const Path &path, size_t seed)
-{
-    const size_t bufSize = 256;
-    size_t buf[bufSize];
-    size_t *it = &buf[0];
-    *it++ = path.length();
-    if (path.length()>0) {
-        int iPath = path.length();
-        size_t maxPath = bufSize / 2 - 1;
-        size_t endPath = (size_t(iPath) > maxPath) ? maxPath - iPath : 0;
-        while (size_t(iPath) > endPath) {
-            Path p = path[--iPath];
-            Path::Kind k = p.headKind();
-            *it++ = size_t(k);
-            const size_t rootBits = p.headRoot() ? size_t(*p.headRoot()) : 0;
-            const size_t currentBits = p.headCurrent() ? size_t(*p.headCurrent()) : 0;
-            *it++ = qHash(p.component(0).stringView(), seed) ^ rootBits ^ currentBits;
-        }
-    }
-
-    // TODO: Get rid of the reinterpret_cast.
-    // Rather hash the path components in a more structured way.
-    return qHash(QByteArray::fromRawData(reinterpret_cast<char *>(&buf[0]), (it - &buf[0])*sizeof(size_t)), seed);
-}
 
 inline QDebug operator<<(QDebug debug, const Path &p)
 {

@@ -162,6 +162,32 @@ int PathComponent::cmp(const PathComponent &p1, const PathComponent &p2)
     return 0;
 }
 
+size_t PathComponent::hash(size_t seed) const
+{
+    QtPrivate::QHashCombineWithSeed combine(seed);
+    const size_t kindHash = combine(seed, int(kind()));
+    switch (kind()) {
+    case Kind::Empty:
+        return kindHash;
+    case Kind::Field:
+        return combine(kindHash, int(std::get<Field>(m_data).fieldName));
+    case Kind::Index:
+        return combine(kindHash, std::get<Index>(m_data).indexValue);
+    case Kind::Key:
+        return combine(kindHash, std::get<Key>(m_data).keyValue);
+    case Kind::Root: {
+        // Mirror cmp(), which treats Env and Universe like Top.
+        PathRoot r = std::get<Root>(m_data).contextKind;
+        if (r == PathRoot::Env || r == PathRoot::Universe)
+            r = PathRoot::Top;
+        return combine(kindHash, int(r));
+    }
+    case Kind::Current:
+        return combine(kindHash, int(std::get<Current>(m_data).contextKind));
+    }
+    Q_UNREACHABLE_RETURN(kindHash);
+}
+
 } // namespace PathEls
 
 namespace PathEls {
@@ -438,6 +464,16 @@ Path Path::mid(int offset, int length) const
 Path Path::mid(int offset) const
 {
     return mid(offset, m_length - offset);
+}
+
+size_t qHash(const Path &path, size_t seed)
+{
+    QtPrivate::QHashCombineWithSeed combine(seed);
+    size_t hash = combine(seed, path.length());
+    const Path::Node *node = path.m_lastNode.data();
+    for (int i = path.length(); i > 0; --i, node = node->parent.data())
+        hash = combine(hash, node->component.hash(seed));
+    return hash;
 }
 
 } // end namespace Dom

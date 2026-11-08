@@ -242,7 +242,7 @@ private slots:
                 << base.withKey(u"x").mid(1, 2) << Path::fromField(Fields::children).withIndex(0)
                 << 0;
         QTest::addRow("dropTailVsPrefix") << base.withKey(u"x").dropTail() << baseCopy << 0;
-        // cmp() treats $env and $universe like $top.
+        // cmp() treats $env and $universe like $top
         QTest::addRow("envIsTop") << Path::fromRoot(PathRoot::Env).withKey(u"x")
                                   << Path::fromRoot(PathRoot::Top).withKey(u"x") << 0;
         QTest::addRow("empty") << Path() << Path() << 0;
@@ -259,6 +259,9 @@ private slots:
         QCOMPARE(sign(Path::cmp(lhs, rhs)), expected);
         QCOMPARE(sign(Path::cmp(rhs, lhs)), -expected);
         QCOMPARE(lhs == rhs, expected == 0);
+        // check that qHash is consistent with cmp
+        if (expected == 0)
+            QCOMPARE(qHash(lhs, 42), qHash(rhs, 42));
     }
 
     void iterateFrontToBack()
