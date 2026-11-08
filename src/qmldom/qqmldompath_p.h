@@ -20,6 +20,7 @@
 #include "qqmldom_global.h"
 
 #include <QtCore/QCoreApplication>
+#include <QtCore/QtCompare>
 #include <QtCore/QList>
 #include <QtCore/QMetaEnum>
 #include <QtCore/QSharedData>
@@ -566,6 +567,7 @@ public:
 class Source;
 size_t qHash(const Path &, size_t);
 class PathIterator;
+struct PathSentinel;
 class QMLDOM_EXPORT Path{
 public:
     using Kind = PathEls::Kind;
@@ -578,7 +580,7 @@ public:
     explicit operator bool() const;
 
     PathIterator begin() const;
-    PathIterator end() const;
+    PathSentinel end() const;
 
     std::optional<PathRoot> headRoot() const;
     std::optional<PathCurrent> headCurrent() const;
@@ -617,13 +619,6 @@ public:
     Path withCurrent(PathCurrent s) const;
     Path withPath(const Path &toAdd) const;
 
-    // iterator traits
-    using difference_type = long;
-    using value_type = Path;
-    using pointer = const Component*;
-    using reference = const Path&;
-    using iterator_category = std::forward_iterator_tag;
-
     static int cmp(const Path &p1, const Path &p2);
 
 private:
@@ -638,6 +633,7 @@ private:
 
     friend class QQmlJS::Dom::PathEls::TestPaths;
     friend class FieldFilter;
+    friend class PathIterator;
     friend size_t qHash(const Path &, size_t);
 
     // The path consists of the m_length nodes ending in m_lastNode. Further
@@ -672,14 +668,73 @@ inline bool operator>=(const Path &lhs, const Path &rhs)
     return Path::cmp(lhs, rhs) >= 0;
 }
 
-class PathIterator {
+struct PathSentinel {};
+
+class QMLDOM_EXPORT PathIterator {
 public:
-    Path currentEl;
-    Path operator *() const { return currentEl.head(); }
-    PathIterator operator ++() { currentEl = currentEl.dropFront(); return *this; }
-    PathIterator operator ++(int) { PathIterator res{currentEl}; currentEl = currentEl.dropFront(); return res; }
-    bool operator ==(const PathIterator &o) const { return currentEl == o.currentEl; }
-    bool operator !=(const PathIterator &o) const { return currentEl != o.currentEl; }
+    using difference_type = qsizetype;
+    using value_type = Path;
+    using pointer = void;
+    using reference = Path;
+    using iterator_category = std::random_access_iterator_tag;
+
+    PathIterator() = default;
+    explicit PathIterator(const Path &path) : m_path(path), m_nodes(path.nodes()) { }
+
+    Path operator *() const { return (*this)[0]; }
+    Path operator [](difference_type n) const
+    {
+        return Path(Path::Node::Ptr(m_nodes[m_index + n]), 1);
+    }
+
+    PathIterator &operator ++() { ++m_index; return *this; }
+    PathIterator operator ++(int) { PathIterator res = *this; ++m_index; return res; }
+    PathIterator &operator --() { --m_index; return *this; }
+    PathIterator operator --(int) { PathIterator res = *this; --m_index; return res; }
+    PathIterator &operator +=(difference_type n) { m_index += n; return *this; }
+    PathIterator &operator -=(difference_type n) { m_index -= n; return *this; }
+    friend PathIterator operator +(PathIterator it, difference_type n) { return it += n; }
+    friend PathIterator operator +(difference_type n, PathIterator it) { return it += n; }
+    friend PathIterator operator -(PathIterator it, difference_type n) { return it -= n; }
+    friend difference_type operator -(const PathIterator &a, const PathIterator &b)
+    {
+        return b.remaining() - a.remaining();
+    }
+    friend difference_type operator -(PathSentinel, const PathIterator &it)
+    {
+        return it.remaining();
+    }
+    friend difference_type operator -(const PathIterator &it, PathSentinel)
+    {
+        return -it.remaining();
+    }
+
+private:
+    friend bool comparesEqual(const PathIterator &a, const PathIterator &b) noexcept
+    {
+        return a.remaining() == b.remaining();
+    }
+    friend Qt::strong_ordering compareThreeWay(const PathIterator &a,
+                                               const PathIterator &b) noexcept
+    {
+        return Qt::compareThreeWay(b.remaining(), a.remaining());
+    }
+    Q_DECLARE_STRONGLY_ORDERED(PathIterator)
+    friend bool comparesEqual(const PathIterator &it, PathSentinel) noexcept
+    {
+        return it.remaining() == 0;
+    }
+    friend Qt::strong_ordering compareThreeWay(const PathIterator &it, PathSentinel) noexcept
+    {
+        return Qt::compareThreeWay(qsizetype(0), it.remaining());
+    }
+    Q_DECLARE_STRONGLY_ORDERED(PathIterator, PathSentinel)
+
+    qsizetype remaining() const { return m_nodes.size() - m_index; }
+
+    Path m_path; // keeps m_nodes alive by ensuring that there's a strong reference
+    Path::NodeArray m_nodes;
+    qsizetype m_index = 0;
 };
 
 class Source {

@@ -40,13 +40,15 @@ the node of the component before it:
 
 Nodes are immutable and reference counted.
 
-The path consists of the \c m_length nodes ending in \c m_tail. Ancestors
+The path consists of the \c m_length nodes ending in \c m_lastNode. Ancestors
 beyond that are not part of the path, which makes \c dropFront() O(1).
 \c dropTail(n) and \c mid() walk up from the tail, which is O(n) in the
 number of dropped components. That's often cheap, as they mostly drop the
 last one or two components.
 
 As the links point backwards, accessing the front of a path is O(length).
+Operations that traverse the components in order therefore first collect
+the nodes into an array.
 
 Each \c PathComponent owns the data it stores, there are no references to outside
 data strutures.
@@ -224,9 +226,9 @@ PathIterator Path::begin() const
     return PathIterator{*this};
 }
 
-PathIterator Path::end() const
+PathSentinel Path::end() const
 {
-    return PathIterator();
+    return {};
 }
 
 std::optional<PathRoot> Path::headRoot() const
@@ -296,9 +298,10 @@ follows it. If neither is present, the entire path is \c pathFromSource.
 */
 Source Path::split() const
 {
+    const NodeArray nodes = this->nodes();
     int i = length();
     while (i>0) {
-        const PathEls::PathComponent &c=component(--i);
+        const PathEls::PathComponent &c = nodes[--i]->component;
         if (c.kind() == Kind::Field || c.kind() == Kind::Current) {
             return Source{mid(0, i), mid(i)};
         }
@@ -372,9 +375,10 @@ int Path::cmp(const Path &p1, const Path &p2)
 
 void Path::dump(const Sink &sink) const
 {
+    const NodeArray nodes = this->nodes();
     bool first = true;
-    for (int i = 0; i < m_length; ++i) {
-        auto &c = component(i);
+    for (const Node *node : nodes) {
+        const Component &c = node->component;
         if (!c.hasSquareBrackets()) {
             if (!first || (c.kind() != Kind::Root && c.kind() != Kind::Current))
                 sink(u".");

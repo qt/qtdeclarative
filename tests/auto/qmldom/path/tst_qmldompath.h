@@ -274,6 +274,19 @@ private slots:
         QVERIFY(p.begin() == p.begin());
         QVERIFY(p.begin() != p.end());
         QVERIFY(Path().begin() == Path().end());
+
+        const PathIterator begin = p.begin();
+        const PathSentinel end = p.end();
+        QCOMPARE(end - begin, p.length());
+        QCOMPARE(begin[2].headName(), u"b");
+        QCOMPARE((*(begin + 1)).headName(), u"1");
+        QVERIFY(begin < end);
+        QVERIFY(begin + 3 == end);
+        QCOMPARE((*(begin + 2 - 1)).headName(), u"1");
+        PathIterator it = begin;
+        it += 2;
+        --it;
+        QCOMPARE((*it).headName(), u"1");
     }
 
     void releaseLongPath()
