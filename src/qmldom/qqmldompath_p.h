@@ -22,9 +22,11 @@
 #include <QtCore/QCoreApplication>
 #include <QtCore/QList>
 #include <QtCore/QMetaEnum>
+#include <QtCore/QSharedData>
 #include <QtCore/QString>
 #include <QtCore/QStringView>
 #include <QtCore/QStringList>
+#include <QtCore/QVarLengthArray>
 #include <QtCore/QDebug>
 
 #include <functional>
@@ -541,18 +543,21 @@ inline bool operator> (const PathComponent& lhs, const PathComponent& rhs){ retu
 inline bool operator<=(const PathComponent& lhs, const PathComponent& rhs){ return PathComponent::cmp(lhs,rhs) <= 0; }
 inline bool operator>=(const PathComponent& lhs, const PathComponent& rhs){ return PathComponent::cmp(lhs,rhs) >= 0; }
 
-class PathData {
+// One component of a Path, linked to the component before it. Nodes are
+// immutable once created, so any number of Paths can share a prefix.
+class PathNode : public QSharedData
+{
+    Q_DISABLE_COPY_MOVE(PathNode)
 public:
-    PathData(const QList<PathComponent> &components)
-        : components(components)
-    {}
-    PathData(const QList<PathComponent> &components,
-             const std::shared_ptr<PathData> &parent)
-        : components(components), parent(parent)
-    {}
+    using Ptr = QExplicitlySharedDataPointer<const PathNode>;
 
-    QList<PathComponent> components;
-    std::shared_ptr<PathData> parent;
+    PathNode(PathComponent component, Ptr parent)
+        : component(std::move(component)), parent(std::move(parent))
+    {}
+    ~PathNode();
+
+    const PathComponent component;
+    Ptr parent;
 };
 
 } // namespace PathEls
@@ -561,8 +566,6 @@ public:
 class Source;
 size_t qHash(const Path &, size_t);
 class PathIterator;
-// Define a iterator for it?
-// begin() can basically be itself, end() the empty path (zero length), iteration though dropFront()
 class QMLDOM_EXPORT Path{
 public:
     using Kind = PathEls::Kind;
@@ -593,7 +596,7 @@ public:
     Path dropTail(int n = 1) const;
     Path mid(int offset, int length) const;
     Path mid(int offset) const;
-    Path withComponent(const PathEls::PathComponent &c);
+    Path withComponent(PathEls::PathComponent c) const;
 
     // # Path construction
     // To parse a Path from its textual form, see parsePath()
@@ -614,9 +617,6 @@ public:
     Path withCurrent(PathCurrent s) const;
     Path withPath(const Path &toAdd) const;
 
-    Path expandFront() const;
-    Path expandBack() const;
-
     // iterator traits
     using difference_type = long;
     using value_type = Path;
@@ -627,18 +627,24 @@ public:
     static int cmp(const Path &p1, const Path &p2);
 
 private:
+    using Node = PathEls::PathNode;
+    // Enough for the paths seen in practice without allocating.
+    using NodeArray = QVarLengthArray<const Node *, 32>;
+
+    Path(Node::Ptr tail, int length) : m_lastNode(std::move(tail)), m_length(quint16(length)) { }
+
     const Component &component(int i) const;
-    explicit Path(quint16 endOffset, quint16 length,
-                  const std::shared_ptr<PathEls::PathData> &data);
+    NodeArray nodes() const;
+
     friend class QQmlJS::Dom::PathEls::TestPaths;
     friend class FieldFilter;
     friend size_t qHash(const Path &, size_t);
 
-    Path noEndOffset() const;
-
-    quint16 m_endOffset = 0;
+    // The path consists of the m_length nodes ending in m_lastNode. Further
+    // ancestors of m_lastNode may exist, but are not part of this path.
+    // m_lastNode is null iff m_length is 0.
+    Node::Ptr m_lastNode;
     quint16 m_length = 0;
-    std::shared_ptr<PathEls::PathData> m_data = {};
 };
 
 inline bool operator==(const Path &lhs, const Path &rhs)

@@ -25,98 +25,31 @@ namespace PathEls {
 
 \section1 Implementation Details
 
-The Path class is implemented as a linked list tree where components of the path can be shared
-between multiple paths.
-
-We will represent a list of components with
-\badcode
-[a] // one element "a" in the list
-[a,b,c] // three elements in the list
-\endcode
-and the linked list tree structure with arrows:
-\badcode
-[a,b,c] <- [y,z] // one linked list made up of two nodes consisting of a, b, c, y and z
-   ^
-   |______ [q] <- [w] // one linked list made up of three nodes consisting of a, b, c, q and w,
-                      // sharing the a,b and c part with the above list
-\endcode
-
-Appending components to the path will create a new linked list node, for example when appending \c d
-to \c{[a,b,c]}:
-\badcode
-[a,b,c] <- [d]
-\endcode
-This allows to share the path prefix when constructing paths recursively, for example.
-
-\section2 PathData as elements of the linked list trees
-
-Each node of the linked list tree is stored as \c PathData. It contains a vector of
-\c PathComponents and a pointer to the previous element in the path (called parent).
-
-\section3 PathComponents
-
-The path can also be "compressed", as the linked list structure contains vectors of components:
-\c {a.b.c.d} could be represented by
-\badcode
-[a] <- [b] <- [c] <- [d]
-\endcode
-(which is the default) or also
-\badcode
-[a, b] <- [c, d]
-\endcode
-when \c{[c,d]} got appended to \c{[a, b]} via \c withPath, for example.
-
-\section3 Component string ownership
-
-No \c PathComponent refers to external string storage: \c Field stores a
-\c FieldName enum value, and \c Key owns its \c QString. Paths are therefore
-self-contained.
-
-\section2 Appending
-
-Appending one component to the Path allows to share the "parent" path in the memory and should be
-the preferred way of constructing paths for DomItems.
-
-\section2 Iteration
-
-To iterate through the path, you need two iterators. One for the current data (that contains the
-vector of components and the pointer to the "parent") and one for the current idx in the vector of
-components.
-
-To access \c d in that path:
-\badcode
-[a, b] <- [c, d]
-\endcode
-you need to do
-\badcode
-path.m_data->components[1].
-\endcode
-to access \c b instead, you need to do:
-\badcode
-path.m_data->parent->components[1]
-\endcode
-
-Note that all kind of forward iterations (getting the components a, b, c, and d in this order from
-a.b.c.d) is a bit more involved, and backward iteration is much faster/easier.
-
-\section2 Slicing
-
-The path also supports slicing via the \c m_length and \c m_endOffset members. \c m_endOffset
-ignores the n last components, for example \c{a.b.c.d} can be stored as
+A Path is a pointer to the node holding its last component, plus the path length.
+Each node (\c PathEls::PathNode) holds one \c PathComponent and a pointer to
+the node of the component before it:
 
 \badcode
-[root] <- [a] <- [b] <- [c] <- [d] <- [e] <- [f] <- [g]
+
+                      __[.e] a.e (node e, length 2)
+                     /
+  [$root] <- [.a] <- [.b] <- [.c]        $root.a.b.c: (node c, length 4)
+              ^
+               \___ [.d]        $root.a.d: (node d, length 3)
 \endcode
-with m_endOffset = 3 and m_length = 4.
 
-\section2 Lifetime in the DOM
+Nodes are immutable and reference counted.
 
-Paths are usually created during the Dom construction, and destroyed when the DomItem or Dom
-element holding it is destroyed.
+The path consists of the \c m_length nodes ending in \c m_tail. Ancestors
+beyond that are not part of the path, which makes \c dropFront() O(1).
+\c dropTail(n) and \c mid() walk up from the tail, which is O(n) in the
+number of dropped components. That's often cheap, as they mostly drop the
+last one or two components.
 
-The underlying PathData, on the other hand, is managed by a std::shared_ptr. It is destroyed when
-all Paths referencing it are destroyed. PathData can be referenced either directly through Path's \c
-m_data member, or indirectly through another PathData's \c m_parent member.
+As the links point backwards, accessing the front of a path is O(length).
+
+Each \c PathComponent owns the data it stores, there are no references to outside
+data strutures.
 
 \section1 Usage
 
@@ -228,35 +161,52 @@ int PathComponent::cmp(const PathComponent &p1, const PathComponent &p2)
 
 } // namespace PathEls
 
+namespace PathEls {
+
+PathNode::~PathNode()
+{
+    // Release the chain of ancestors iteratively, to avoid recursive destruction
+    // blowing up stack space
+    const PathNode *node = parent.take();
+    while (node && !node->ref.deref()) {
+        const PathNode *next = const_cast<PathNode *>(node)->parent.take();
+        delete node;
+        node = next;
+    }
+}
+
+} // namespace PathEls
+
 /*!
 \internal
-\brief Returns the n.th component in linear(!) time.
+\brief Returns the nodes of this path, front to back.
+*/
+Path::NodeArray Path::nodes() const
+{
+    NodeArray result(m_length);
+    const Node *node = m_lastNode.data();
+    for (qsizetype i = m_length; i > 0; node = node->parent.data())
+        result[--i] = node;
+    return result;
+}
 
-Especially component(0)-calls have to iterate through the entire path.
-Example: returns \c d for 3 on
-\badcode
-a.b <- c.d <- e <- f
-\endcode
+/*!
+\internal
+\brief Returns the \a i th component, in O(length - i).
 */
 const PathEls::PathComponent &Path::component(int i) const
 {
-    static Component emptyComponent;
+    static const Component emptyComponent;
     if (i < 0)
         i += m_length;
     if (i >= m_length || i < 0) {
         Q_ASSERT(false && "index out of bounds");
         return emptyComponent;
     }
-    i = i - m_length - m_endOffset;
-    auto data = m_data.get();
-    while (data) {
-        i += data->components.size();
-        if (i >= 0)
-            return std::as_const(data)->components[i];
-        data = data->parent.get();
-    }
-    Q_ASSERT(false && "Invalid data reached while resolving a seemengly valid index in Path (inconsisten Path object)");
-    return emptyComponent;
+    const Node *node = m_lastNode.data();
+    for (int toSkip = m_length - 1 - i; toSkip > 0; --toSkip)
+        node = node->parent.data();
+    return node->component;
 }
 
 Path Path::operator[](int i) const
@@ -362,225 +312,51 @@ Source Path::split() const
 
 Path Path::fromComponent(Component c)
 {
-    return Path(0, 1, std::make_shared<PathEls::PathData>(QList<Component>(1, std::move(c))));
+    return Path().withComponent(std::move(c));
 }
 
-Path Path::fromRoot(PathRoot s)
+Path Path::fromRoot(PathRoot s)         { return fromComponent(s); }
+Path Path::fromIndex(index_type i)      { return fromComponent(PathEls::Index(i)); }
+Path Path::fromField(FieldName name)    { return fromComponent(name); }
+Path Path::fromKey(const QString &s)    { return fromComponent(PathEls::Key(s)); }
+Path Path::fromKey(QStringView s)       { return fromKey(s.toString()); }
+Path Path::fromCurrent(PathCurrent s)   { return fromComponent(s); }
+
+Path Path::withComponent(PathEls::PathComponent c) const
 {
-    return Path(0,1,std::make_shared<PathEls::PathData>(
-                    QList<Component>(1,Component(s))));
+    Q_ASSERT(m_length < std::numeric_limits<quint16>::max());
+    return Path(Node::Ptr(new Node(std::move(c), m_lastNode)), m_length + 1);
 }
 
-Path Path::fromIndex(index_type i)
-{
-    return Path(0,1,std::make_shared<PathEls::PathData>(
-                    QList<Component>(1,Component(PathEls::Index(i)))));
-}
-
-Path Path::fromField(FieldName name)
-{
-    return Path(0, 1,
-                std::make_shared<PathEls::PathData>(
-                        QList<Component>(1, Component(name))));
-}
-
-Path Path::fromKey(QStringView s)
-{
-    return Path(
-            0, 1,
-            std::make_shared<PathEls::PathData>(
-                    QList<Component>(1, Component(PathEls::Key(s.toString())))));
-}
-
-Path Path::fromKey(const QString &s)
-{
-    return Path(0, 1,
-                std::make_shared<PathEls::PathData>(
-                        QList<Component>(1, Component(PathEls::Key(s)))));
-}
-
-Path Path::fromCurrent(PathCurrent s)
-{
-    return Path(0,1,std::make_shared<PathEls::PathData>(
-                    QList<Component>(1,Component(s))));
-}
-
-Path Path::withEmpty() const
-{
-    if (m_endOffset != 0)
-        return noEndOffset().withEmpty();
-    return Path(0,m_length+1,std::make_shared<PathEls::PathData>(
-                    QList<Component>(1,Component()), m_data));
-}
-
-Path Path::withField(FieldName name) const
-{
-    if (m_endOffset != 0)
-        return noEndOffset().withField(name);
-    return Path(0, m_length + 1,
-                std::make_shared<PathEls::PathData>(
-                        QList<Component>(1, Component(name)), m_data));
-}
-
-Path Path::withKey(const QString &name) const
-{
-    if (m_endOffset != 0)
-        return noEndOffset().withKey(name);
-    return Path(0,m_length+1,std::make_shared<PathEls::PathData>(
-                    QList<Component>(1,Component(PathEls::Key(name))), m_data));
-}
-
-Path Path::withKey(QStringView name) const
-{
-    return withKey(name.toString());
-}
-
-Path Path::withIndex(index_type i) const
-{
-    if (m_endOffset != 0)
-        return noEndOffset().withIndex(i);
-    return Path(0,m_length+1,std::make_shared<PathEls::PathData>(
-                    QList<Component>(1,Component(i)), m_data));
-}
-
-Path Path::withCurrent(PathCurrent s) const
-{
-    if (m_endOffset != 0)
-        return noEndOffset().withCurrent(s);
-    return Path(0,m_length+1,std::make_shared<PathEls::PathData>(
-                    QList<Component>(1,Component(s)), m_data));
-}
-
-static QList<Path::Component>
-reverseAndConcat(const std::vector<QList<Path::Component> *> &list, qsizetype size)
-{
-    using Component = Path::Component;
-
-    QList<Component> components;
-    components.reserve(size);
-    for (auto it = list.crbegin(), end = list.crend(); it != end; ++it) {
-        for (auto it2 = (**it).cbegin(), end2 = (**it).cend(); it2 != end2; ++it2) {
-            components.append(*it2);
-            if (components.size() >= size)
-                return components;
-        }
-    }
-    return components;
-}
-
-static std::vector<QList<Path::Component> *>
-collectBackwards(PathEls::PathData *pathStart, qsizetype size)
-{
-    using Component = Path::Component;
-    std::vector<QList<Component> *> componentList;
-    qsizetype foundComponents = 0;
-    for (auto data = pathStart; data; data = data->parent.get()) {
-        componentList.push_back(&data->components);
-        foundComponents += data->components.size();
-
-        if (foundComponents >= size)
-            return componentList;
-    }
-    return componentList;
-}
+Path Path::withEmpty() const                  { return withComponent(PathEls::PathComponent()); }
+Path Path::withField(FieldName name) const    { return withComponent(name); }
+Path Path::withKey(const QString &name) const { return withComponent(PathEls::Key(name)); }
+Path Path::withKey(QStringView name) const    { return withKey(name.toString()); }
+Path Path::withIndex(index_type i) const      { return withComponent(PathEls::Index(i)); }
+Path Path::withCurrent(PathCurrent s) const   { return withComponent(s); }
 
 /*!
 \internal
-\brief Returns a copy of this with \c toAdd appended to it
+\brief Returns a copy of this with \c toAdd appended to it.
 
-Compresses \c toAdd into one vector of components before adding it to \c this.
+This allocates one node per component of \a toAdd. If this path is empty,
+\a toAdd is returned as is.
 */
 Path Path::withPath(const Path &toAdd) const
 {
-    if (toAdd.length() == 0)
-        return *this;
-    const int resLength = length() + toAdd.length();
-    if (m_endOffset != 0) {
-        Path thisExtended = this->expandBack();
-        if (thisExtended.length() > resLength)
-            thisExtended = thisExtended.mid(0, resLength);
-        Path added = thisExtended.mid(length(), thisExtended.length() - length());
-        if (added == toAdd.mid(0, toAdd.length())) {
-            if (resLength == thisExtended.length())
-                return thisExtended;
-            else
-                return thisExtended.withPath(toAdd.mid(added.length(), resLength - thisExtended.length()));
-        }
-    }
-    {
-        Path toAddExtended = toAdd.expandFront();
-        if (toAddExtended.length() >= resLength) {
-            toAddExtended = toAddExtended.mid(toAddExtended.length() - resLength, resLength);
-            if (toAddExtended.mid(0,length()) == *this)
-                return toAddExtended;
-        }
-    }
-
-    const Path toAddNoEndOffset = toAdd.noEndOffset();
-    auto componentListList = collectBackwards(toAddNoEndOffset.m_data.get(), toAdd.length());
-
-    QList<Component> componentList = reverseAndConcat(componentListList, toAdd.length());
-
-    Path result(
-            0, resLength,
-            std::make_shared<PathEls::PathData>(componentList, noEndOffset().m_data));
+    if (m_length == 0)
+        return toAdd;
+    Path result = *this;
+    for (const Node *node : toAdd.nodes())
+        result = result.withComponent(node->component);
     return result;
-}
-
-/*!
-\internal
-\brief Expand a path prefix hidden by slicing
-
-This sets m_length to the maximum length this path can have.
-
-For example, for a path
-\badcode
-b -> c -> d when encoded as a -> b -> c -> d -> e -> f, m_endOffset = 2, m_length = 3
-\endcode
-expandFront() will return
-\badcode
-a -> b -> c -> d when encoded as a -> b -> c -> d -> e -> f, m_endOffset = 2, m_length = 4
-\endcode
-*/
-Path Path::expandFront() const
-{
-    int newLen = 0;
-    auto data = m_data.get();
-    while (data) {
-        newLen += data->components.size();
-        data = data->parent.get();
-    }
-    newLen -= m_endOffset;
-    return Path(m_endOffset, newLen, m_data);
-}
-
-/*!
-\internal
-\brief Expand a path suffix hidden by slicing.
-
-This sets m_endOffset to 0.
-
-For example, for a path
-\badcode
-c -> d when encoded as a -> b -> c -> d -> e -> f -> g, m_endOffset = 3, m_length = 2
-\endcode
-expandBack() will return
-\badcode
-c -> d -> e -> f -> g when encoded as a -> b -> c -> d -> e -> f -> g, m_endOffset = 0, m_length = 5
-\endcode
-*/
-Path Path::expandBack() const
-{
-    if (m_endOffset > 0)
-        return Path(0, m_length + m_endOffset, m_data);
-    return *this;
 }
 
 int Path::cmp(const Path &p1, const Path &p2)
 {
     // lexicographic ordering
     const int lMin = qMin(p1.m_length, p2.m_length);
-    if (p1.m_data.get() == p2.m_data.get() && p1.m_endOffset == p2.m_endOffset && p1.m_length == p2.m_length)
+    if (p1.m_lastNode == p2.m_lastNode && p1.m_length == p2.m_length)
         return 0;
     for (int i = 0; i < lMin; ++i) {
         int c = Component::cmp(p1.component(i), p2.component(i));
@@ -592,64 +368,6 @@ int Path::cmp(const Path &p1, const Path &p2)
     if (p1.m_length > lMin)
         return 1;
     return 0;
-}
-
-Path::Path(quint16 endOffset, quint16 length, const std::shared_ptr<PathEls::PathData> &data)
-    :m_endOffset(endOffset), m_length(length), m_data(data)
-{
-}
-
-Path Path::noEndOffset() const
-{
-    if (m_length == 0)
-        return Path();
-    if (m_endOffset == 0)
-        return *this;
-    // peel back
-    qint16 endOffset = m_endOffset;
-    std::shared_ptr<PathEls::PathData> lastData = m_data;
-    while (lastData && endOffset >= lastData->components.size()) {
-        endOffset -= lastData->components.size();
-        lastData = lastData->parent;
-    }
-    if (endOffset > 0) {
-        Q_ASSERT(lastData && "Internal problem, reference to non existing PathData");
-        return Path(0, m_length, std::make_shared<PathEls::PathData>(
-                        lastData->components.mid(0, lastData->components.size() - endOffset), lastData->parent));
-    }
-    return Path(0, m_length, lastData);
-}
-
-Path Path::withComponent(const PathEls::PathComponent &c)
-{
-    if (m_endOffset != 0) {
-        Path newP = noEndOffset();
-        return newP.withComponent(c);
-    }
-    if (m_data && m_data.use_count() != 1) {
-        // create a new path (otherwise paths linking to this will change)
-        Path newP = fromComponent(c);
-        newP.m_data->parent = m_data;
-        newP.m_length = static_cast<quint16>(m_length + 1);
-        return newP;
-    }
-    auto my_data =
-            (m_data ? m_data
-                    : std::make_shared<PathEls::PathData>(QList<PathEls::PathComponent>()));
-    switch (c.kind()) {
-    case PathEls::Kind::Empty:
-    case PathEls::Kind::Index:
-    case PathEls::Kind::Field:
-        // string assumed to stay valid (Fields::...)
-    case PathEls::Kind::Current:
-    case PathEls::Kind::Key:
-    case PathEls::Kind::Root:
-        my_data->components.append(c);
-        break;
-    }
-    if (m_data)
-        m_endOffset = 1;
-    return Path { 0, static_cast<quint16>(m_length + 1), my_data };
 }
 
 void Path::dump(const Sink &sink) const
@@ -678,14 +396,18 @@ QString Path::toString() const
 Path Path::dropFront(int n) const
 {
     if (m_length > n && n >= 0)
-        return Path(m_endOffset, m_length - n, m_data);
+        return Path(m_lastNode, m_length - n);
     return Path();
 }
 
 Path Path::dropTail(int n) const
 {
-    if (m_length > n && n >= 0)
-        return Path(m_endOffset + n, m_length - n, m_data);
+    if (m_length > n && n >= 0) {
+        const Node *node = m_lastNode.data();
+        for (int i = 0; i < n; ++i)
+            node = node->parent.data();
+        return Path(Node::Ptr(node), m_length - n);
+    }
     return Path();
 }
 
@@ -694,8 +416,7 @@ Path Path::mid(int offset, int length) const
     length = qMin(m_length - offset, length);
     if (offset < 0 || offset >= m_length || length <= 0 || length > m_length)
         return Path();
-    int newEndOffset = m_endOffset + m_length - offset - length;
-    return Path(newEndOffset, length, m_data);
+    return dropTail(m_length - offset - length).dropFront(offset);
 }
 
 Path Path::mid(int offset) const

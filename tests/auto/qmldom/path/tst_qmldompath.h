@@ -207,6 +207,86 @@ private slots:
         Path p = lhs.withPath(rhs);
         QCOMPARE(p, expected);
     }
+
+    void compare_data()
+    {
+        QTest::addColumn<Path>("lhs");
+        QTest::addColumn<Path>("rhs");
+        QTest::addColumn<int>("expected");
+
+        const Path base = Path::fromRoot(PathRoot::Top).withField(Fields::children).withIndex(0);
+        const Path baseCopy =
+                Path::fromRoot(PathRoot::Top).withField(Fields::children).withIndex(0);
+
+        QTest::addRow("same") << base << base << 0;
+        QTest::addRow("equalButNotShared") << base.withKey(u"x") << baseCopy.withKey(u"x") << 0;
+        QTest::addRow("siblings") << base.withKey(u"a") << base.withKey(u"b") << -1;
+        QTest::addRow("siblingsNotShared") << base.withKey(u"a") << baseCopy.withKey(u"b") << -1;
+        QTest::addRow("prefix") << base << base.withKey(u"a") << -1;
+        QTest::addRow("prefixNotShared") << base << baseCopy.withKey(u"a") << -1;
+        QTest::addRow("sharedThenLonger")
+                << base.withKey(u"x") << base.withKey(u"x").withKey(u"y") << -1;
+        // Walking from the back finds the difference at "z"/"a" first, but
+        // the one at the front decides.
+        QTest::addRow("frontmostDifferenceDecides")
+                << Path::fromKey(u"a").withKey(u"z") << Path::fromKey(u"b").withKey(u"a") << -1;
+        QTest::addRow("differenceBeforeSharedPart")
+                << Path::fromKey(u"a").withKey(u"m") << Path::fromKey(u"b").withKey(u"m") << -1;
+        // The nodes hidden by dropFront() are not part of the path.
+        QTest::addRow("dropFrontVsFresh")
+                << base.withKey(u"x").dropFront() << Path::fromField(Fields::children)
+                                                             .withIndex(0)
+                                                             .withKey(u"x")
+                << 0;
+        QTest::addRow("midVsFresh")
+                << base.withKey(u"x").mid(1, 2) << Path::fromField(Fields::children).withIndex(0)
+                << 0;
+        QTest::addRow("dropTailVsPrefix") << base.withKey(u"x").dropTail() << baseCopy << 0;
+        // cmp() treats $env and $universe like $top.
+        QTest::addRow("envIsTop") << Path::fromRoot(PathRoot::Env).withKey(u"x")
+                                  << Path::fromRoot(PathRoot::Top).withKey(u"x") << 0;
+        QTest::addRow("empty") << Path() << Path() << 0;
+        QTest::addRow("emptyVsNonEmpty") << Path() << base << -1;
+    }
+
+    void compare()
+    {
+        QFETCH(Path, lhs);
+        QFETCH(Path, rhs);
+        QFETCH(int, expected);
+
+        const auto sign = [](int i) { return (i > 0) - (i < 0); };
+        QCOMPARE(sign(Path::cmp(lhs, rhs)), expected);
+        QCOMPARE(sign(Path::cmp(rhs, lhs)), -expected);
+        QCOMPARE(lhs == rhs, expected == 0);
+    }
+
+    void iterateFrontToBack()
+    {
+        const Path p = Path::fromRoot(PathRoot::Top).withKey(u"a").withIndex(1).withKey(u"b")
+                               .dropFront();
+        QStringList names;
+        for (const Path &component : p) {
+            QCOMPARE(component.length(), 1);
+            names.append(component.headName());
+        }
+        QCOMPARE(names, QStringList({ QStringLiteral("a"), QStringLiteral("1"), QStringLiteral("b") }));
+        QVERIFY(p.begin() == p.begin());
+        QVERIFY(p.begin() != p.end());
+        QVERIFY(Path().begin() == Path().end());
+    }
+
+    void releaseLongPath()
+    {
+        // Releasing a path must not recurse once per component.
+        Path p = Path::fromRoot(PathRoot::Top);
+        for (int i = 0; i < 60000; ++i)
+            p = p.withIndex(i);
+        const Path shorter = p.dropTail(30000);
+        p = Path();
+        QCOMPARE(shorter.length(), 30001);
+        QCOMPARE(shorter.last().headIndex(), 29999);
+    }
 };
 
 } // namespace PathEls
