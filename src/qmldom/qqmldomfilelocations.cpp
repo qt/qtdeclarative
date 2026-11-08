@@ -63,13 +63,11 @@ Tree ensure(const Tree &base, const Path &basePath)
 
 Tree find(const Tree &self, const Path &p)
 {
-    Path rest = p;
     Tree res = self;
-    while (rest) {
+    for (const Path &component : p) {
         if (!res)
             break;
-        res = res->subItems().value(rest.head());
-        rest = rest.dropFront();
+        res = res->subItems().value(component);
     }
     return res;
 }
