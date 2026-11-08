@@ -211,6 +211,7 @@ struct Context {
     mutable bool argumentsCanEscape = false;
     bool requiresExecutionContext = false;
     bool isWithBlock = false;
+    bool escapingVariablesCalculated = false;
     bool isCatchBlock = false;
     QString caughtVariable;
     QQmlJS::SourceLocation lastBlockInitializerLocation;

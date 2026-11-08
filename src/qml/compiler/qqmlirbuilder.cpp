@@ -2303,9 +2303,10 @@ QList<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(
            deal with them.
          */
         scan.handleTopLevelFunctionFormals(function);
-        scan(function ? function->body : f.node);
+        scan.scanWithoutEscapingVariables(function ? function->body : f.node);
         scan.leaveEnvironment();
     }
+    scan.calcEscapingVariablesForNewContexts();
     scan.leaveEnvironment();
 
     if (hasError())

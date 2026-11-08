@@ -49,6 +49,14 @@ public:
     ScanFunctions(Codegen *cg, const QString &sourceCode, ContextType defaultProgramType);
     void operator()(QQmlJS::AST::Node *node);
 
+    // Scanning repeatedly into one module: call calcEscapingVariablesForNewContexts() after.
+    void scanWithoutEscapingVariables(QQmlJS::AST::Node *node)
+    {
+        if (node)
+            node->accept(this);
+    }
+    void calcEscapingVariablesForNewContexts();
+
     // see comment at its call site in generateJSCodeForFunctionsAndBindings
     // for why this function is necessary
     void handleTopLevelFunctionFormals(QQmlJS::AST::FunctionExpression *node) {
@@ -147,7 +155,6 @@ protected:
                        QQmlJS::AST::FormalParameterList *formals,
                        QQmlJS::AST::StatementList *body, FunctionNameContext nameContext);
 
-    void calcEscapingVariables();
 // fields:
     Codegen *_cg;
     const QString _sourceCode;

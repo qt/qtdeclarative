@@ -36,14 +36,6 @@ ScanFunctions::ScanFunctions(Codegen *cg, const QString &sourceCode, ContextType
 {
 }
 
-void ScanFunctions::operator()(Node *node)
-{
-    if (node)
-        node->accept(this);
-
-    calcEscapingVariables();
-}
-
 void ScanFunctions::enterGlobalEnvironment(ContextType compilationMode)
 {
     enterEnvironment(astNodeForGlobalEnvironment, compilationMode, QStringLiteral("%GlobalCode"));
@@ -803,11 +795,65 @@ void forEachContext(Module *m, Action &&action)
     } while (!stack.empty());
 }
 
-void ScanFunctions::calcEscapingVariables()
+template<typename ForEach>
+static void calcEscapingVariablesImpl(Module *m, ForEach &&forEach);
+
+void ScanFunctions::operator()(Node *node)
+{
+    if (node)
+        node->accept(this);
+
+    Module *m = _cg->_module;
+    calcEscapingVariablesImpl(m, [m](auto &&action) { forEachContext(m, action); });
+}
+
+// New contexts can only affect their ancestors, so visit those and the new ones.
+void ScanFunctions::calcEscapingVariablesForNewContexts()
 {
     Module *m = _cg->_module;
 
-    forEachContext(m, [](Context *inner) {
+    QVarLengthArray<Context *, 8> ancestors;
+    for (Context *c = _context; c; c = c->parent)
+        ancestors.append(c);
+
+    QVarLengthArray<Context *, 32> contexts;
+    QVarLengthArray<Context *, 32> stack;
+    for (qsizetype i = ancestors.size() - 1; i >= 0; --i) {
+        contexts.append(ancestors[i]);
+        Context *next = i ? ancestors[i - 1] : nullptr;
+        for (Context *child : std::as_const(ancestors[i]->nestedContexts)) {
+            if (child != next && !child->escapingVariablesCalculated)
+                stack.append(child);
+        }
+    }
+    while (!stack.empty()) {
+        Context *current = stack.back();
+        stack.pop_back();
+        for (Context *child : std::as_const(current->nestedContexts))
+            stack.append(child);
+        contexts.append(current);
+    }
+
+    auto forEach = [&contexts](auto &&action) {
+        for (Context *c : std::as_const(contexts)) {
+            if (action(c) == Iteration::Break)
+                return;
+        }
+    };
+    // Run twice for code like  function f() { if (c) { eval(s) } }
+    // The block marks f as using eval, but f was visited before the block
+    // (parents come first), so f's own eval handling needs a second pass.
+    calcEscapingVariablesImpl(m, forEach);
+    calcEscapingVariablesImpl(m, forEach);
+
+    for (Context *c : std::as_const(contexts))
+        c->escapingVariablesCalculated = true;
+}
+
+template<typename ForEach>
+static void calcEscapingVariablesImpl(Module *m, ForEach &&forEach)
+{
+    forEach([](Context *inner) {
         if (inner->usesArgumentsObject != Context::UsesArgumentsObject::Used)
             return Iteration::Continue;
         if (inner->contextType != ContextType::Block && !inner->isArrowFunction)
@@ -821,7 +867,7 @@ void ScanFunctions::calcEscapingVariables()
         return Iteration::Continue;
     });
 
-    forEachContext(m, [](Context *inner) {
+    forEach([](Context *inner) {
         if (!inner->parent || inner->usesArgumentsObject == Context::UsesArgumentsObject::Unknown)
             inner->usesArgumentsObject = Context::UsesArgumentsObject::NotUsed;
         if (inner->usesArgumentsObject == Context::UsesArgumentsObject::Used) {
@@ -835,7 +881,7 @@ void ScanFunctions::calcEscapingVariables()
         return Iteration::Continue;
     });
 
-    forEachContext(m, [](Context *c) {
+    forEach([](Context *c) {
         if (c->contextType != ContextType::ESModule)
             return Iteration::Continue;
         for (const auto &entry: std::as_const(c->exportEntries)) {
@@ -846,7 +892,7 @@ void ScanFunctions::calcEscapingVariables()
         return Iteration::Break;
     });
 
-    forEachContext(m, [](Context *inner) {
+    forEach([](Context *inner) {
         for (const QString &var : std::as_const(inner->usedVariables)) {
             Context *c = inner;
             while (c) {
@@ -912,7 +958,7 @@ void ScanFunctions::calcEscapingVariables()
         return Iteration::Continue;
     });
 
-    forEachContext(m, [m](Context *c) {
+    forEach([m](Context *c) {
         if (c->innerFunctionAccessesThis) {
             // add an escaping 'this' variable
             c->addLocalVar(QStringLiteral("this"), Context::VariableDefinition, VariableScope::Let);
