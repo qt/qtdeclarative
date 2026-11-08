@@ -6,6 +6,7 @@
 #include <QtCore/QTextStream>
 #include <QtCore/QChar>
 
+#include <algorithm>
 #include <cstdint>
 
 QT_BEGIN_NAMESPACE
@@ -355,22 +356,33 @@ Path Path::withPath(const Path &toAdd) const
     return result;
 }
 
+/*!
+\internal
+\brief Compares \a p1 and \a p2 lexicographically.
+*/
 int Path::cmp(const Path &p1, const Path &p2)
 {
-    // lexicographic ordering
-    const int lMin = qMin(p1.m_length, p2.m_length);
     if (p1.m_lastNode == p2.m_lastNode && p1.m_length == p2.m_length)
         return 0;
-    for (int i = 0; i < lMin; ++i) {
-        int c = Component::cmp(p1.component(i), p2.component(i));
-        if (c != 0)
-            return c;
+    const Node *n1 = p1.m_lastNode.data();
+    const Node *n2 = p2.m_lastNode.data();
+    // Lexicographic order only depends on the first min(length) components.
+    for (int l = p1.m_length; l > p2.m_length; --l)
+        n1 = n1->parent.data();
+    for (int l = p2.m_length; l > p1.m_length; --l)
+        n2 = n2->parent.data();
+    // Walk towards the front; the last mismatch seen is the first one in path order.
+    // Shared nodes are equal by pointer, which ends the walk early.
+    int result = 0;
+    for (int l = qMin(p1.m_length, p2.m_length); l > 0 && n1 != n2; --l) {
+        if (const int c = Component::cmp(n1->component, n2->component))
+            result = c;
+        n1 = n1->parent.data();
+        n2 = n2->parent.data();
     }
-    if (lMin < p2.m_length)
-        return -1;
-    if (p1.m_length > lMin)
-        return 1;
-    return 0;
+    if (result != 0)
+        return result;
+    return p1.m_length - p2.m_length;
 }
 
 void Path::dump(const Sink &sink) const
