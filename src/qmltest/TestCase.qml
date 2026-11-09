@@ -2066,7 +2066,7 @@ Item {
         // Run the initTestCase function.
         qtest_results.functionName = "initTestCase"
         let runTests = true
-        if (!qtest_runInternal("initTestCase"))
+        if (!qtest_runInternal("initTestCase") || qtest_results.skipped)
             runTests = false
         qtest_results.finishTestData()
         qtest_results.finishTestDataCleanup()
