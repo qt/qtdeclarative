@@ -1356,6 +1356,11 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("unqualifiedAfterUnreachableJump.qml")
             << ResultBuilder().addExpected("Unqualified access"_L1, 8, 20).build()
             << defaultOptions;
+    // The catch block is only reachable through the exception handler.
+    QTest::newRow("unqualifiedInCatchAfterThrow")
+            << QStringLiteral("unqualifiedInCatchAfterThrow.qml")
+            << ResultBuilder().addExpected("Unqualified access"_L1, 8, 20).build()
+            << defaultOptions;
     QTest::newRow("duplicateImportsDirty")
             << QStringLiteral("duplicateImportsDirty.qml")
             << ResultBuilder()

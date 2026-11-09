@@ -488,6 +488,21 @@ protected:
         addSkip(message, currentInstructionOffset());
     }
 
+    // The code generator does not emit unreachable instructions. Therefore, the instruction after
+    // one that does not fall through is the target of some jump or exception handler.
+    static bool instructionFallsThrough(QV4::Moth::Instr::Type type)
+    {
+        using Type = QV4::Moth::Instr::Type;
+        switch (type) {
+        case Type::Ret:
+        case Type::Jump:
+        case Type::ThrowException:
+            return false;
+        default:
+            return true;
+        }
+    }
+
     static bool instructionManipulatesContext(QV4::Moth::Instr::Type type)
     {
         using Type = QV4::Moth::Instr::Type;

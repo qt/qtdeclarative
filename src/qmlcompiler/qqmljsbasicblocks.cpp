@@ -142,8 +142,6 @@ QQmlJSBasicBlocks::run(const Function *function, QQmlJSAotCompiler::Flags compil
             it->second.jumpIsUnconditional = false;
         }
 
-        m_skipUntilNextLabel = false;
-
         reset();
         decode(byteCode.constData(), static_cast<uint>(byteCode.size()));
         for (auto it = m_basicBlocks.begin(), end = m_basicBlocks.end(); it != end; ++it)
@@ -165,21 +163,14 @@ QQmlJSBasicBlocks::run(const Function *function, QQmlJSAotCompiler::Flags compil
     return { std::move(m_basicBlocks), std::move(m_annotations) };
 }
 
-QV4::Moth::ByteCodeHandler::Verdict QQmlJSBasicBlocks::startInstruction(QV4::Moth::Instr::Type type)
+QV4::Moth::ByteCodeHandler::Verdict QQmlJSBasicBlocks::startInstruction(QV4::Moth::Instr::Type)
 {
-    auto it = m_basicBlocks.find(currentInstructionOffset());
-    if (it != m_basicBlocks.end()) {
-        m_skipUntilNextLabel = false;
-    } else if (m_skipUntilNextLabel && !instructionManipulatesContext(type)) {
-        return SkipInstruction;
-    }
-
     return ProcessInstruction;
 }
 
-void QQmlJSBasicBlocks::endInstruction(QV4::Moth::Instr::Type)
+void QQmlJSBasicBlocks::endInstruction(QV4::Moth::Instr::Type type)
 {
-    if (m_skipUntilNextLabel)
+    if (!instructionFallsThrough(type))
         return;
     auto it = m_basicBlocks.find(nextInstructionOffset());
     if (it != m_basicBlocks.end())
@@ -223,18 +214,24 @@ void QQmlJSBasicBlocks::generate_GetOptionalLookup(int index, int offset)
     processJump(offset, Conditional);
 }
 
+void QQmlJSBasicBlocks::generate_SetUnwindHandler(int offset)
+{
+    // An exception handler may only be reachable from where it is installed.
+    // Offset 0 means "no handler", or the handler is the next instruction anyway.
+    if (offset != 0)
+        processJump(offset, Conditional);
+}
+
 void QQmlJSBasicBlocks::generate_Ret()
 {
     auto currentBlock = basicBlockForInstruction(m_basicBlocks, currentInstructionOffset());
     currentBlock.value().isReturnBlock = true;
-    m_skipUntilNextLabel = true;
 }
 
 void QQmlJSBasicBlocks::generate_ThrowException()
 {
     auto currentBlock = basicBlockForInstruction(m_basicBlocks, currentInstructionOffset());
     currentBlock.value().isThrowBlock = true;
-    m_skipUntilNextLabel = true;
 }
 
 void QQmlJSBasicBlocks::generate_DefineArray(int argc, int argv)
@@ -281,9 +278,7 @@ void QQmlJSBasicBlocks::processJump(int offset, JumpMode mode)
     currentBlock->second.jumpTarget = jumpTarget;
     currentBlock->second.jumpIsUnconditional = (mode == Unconditional);
     m_basicBlocks[jumpTarget].jumpOrigins.append(currentInstructionOffset());
-    if (mode == Unconditional)
-        m_skipUntilNextLabel = true;
-    else
+    if (mode == Conditional)
         m_basicBlocks.insert(nextInstructionOffset(), BasicBlock());
 }
 

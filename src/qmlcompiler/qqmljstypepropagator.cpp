@@ -1692,7 +1692,10 @@ void QQmlJSTypePropagator::generate_ConstructWithSpread(int func, int argc, int 
 void QQmlJSTypePropagator::generate_SetUnwindHandler(int offset)
 {
     m_state.setHasInternalSideEffects();
-    Q_UNUSED(offset)
+
+    // See QQmlJSBasicBlocks::generate_SetUnwindHandler()
+    if (offset != 0)
+        saveRegisterStateForJump(offset);
     INSTR_PROLOGUE_NOT_IMPLEMENTED_IGNORE();
 }
 

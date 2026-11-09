@@ -400,7 +400,6 @@ void QQmlJSCodeGenerator::generate_Ret()
 
     const auto finalizeReturn = qScopeGuard([this]() {
         m_body += u"return;\n"_s;
-        m_skipUntilNextLabel = true;
         resetState();
     });
 
@@ -2758,7 +2757,6 @@ void QQmlJSCodeGenerator::generate_ThrowException()
                     m_typeResolver->jsValueType(),
                     m_state.accumulatorVariableIn) + u");\n"_s;
     generateReturnError();
-    m_skipUntilNextLabel = true;
     resetState();
 }
 
@@ -3128,7 +3126,6 @@ void QQmlJSCodeGenerator::generate_Jump(int offset)
     INJECT_TRACE_INFO(generate_Jump);
 
     generateJumpCodeWithTypeConversions(offset);
-    m_skipUntilNextLabel = true;
     resetState();
 }
 
@@ -3604,8 +3601,7 @@ void QQmlJSCodeGenerator::generate_GetTemplateObject(int index)
     BYTECODE_UNIMPLEMENTED();
 }
 
-QV4::Moth::ByteCodeHandler::Verdict QQmlJSCodeGenerator::startInstruction(
-        QV4::Moth::Instr::Type type)
+QV4::Moth::ByteCodeHandler::Verdict QQmlJSCodeGenerator::startInstruction(QV4::Moth::Instr::Type)
 {
     m_state.State::operator=(nextStateFromAnnotations(m_state, m_annotations));
     const auto accumulatorIn = m_state.registers.find(Accumulator);
@@ -3619,12 +3615,8 @@ QV4::Moth::ByteCodeHandler::Verdict QQmlJSCodeGenerator::startInstruction(
     }
 
     auto labelIt = m_labels.constFind(currentInstructionOffset());
-    if (labelIt != m_labels.constEnd()) {
+    if (labelIt != m_labels.constEnd())
         m_body += *labelIt + u":;\n"_s;
-        m_skipUntilNextLabel = false;
-    } else if (m_skipUntilNextLabel && !instructionManipulatesContext(type)) {
-        return SkipInstruction;
-    }
 
     if (m_state.changedRegisterIndex() == Accumulator)
         m_state.accumulatorVariableOut = changedRegisterVariable();
@@ -3649,9 +3641,9 @@ QV4::Moth::ByteCodeHandler::Verdict QQmlJSCodeGenerator::startInstruction(
     return ProcessInstruction;
 }
 
-void QQmlJSCodeGenerator::endInstruction(QV4::Moth::Instr::Type)
+void QQmlJSCodeGenerator::endInstruction(QV4::Moth::Instr::Type type)
 {
-    if (!m_skipUntilNextLabel)
+    if (instructionFallsThrough(type))
         generateJumpCodeWithTypeConversions(0);
     m_pool->clearTemporaries();
 }
