@@ -7002,6 +7002,51 @@ void tst_QJSEngine::finallyWithPendingCompletion_data()
                u"yield 'y' + i } } return 'e' } var it = g(); var a = it.next(); var b = "
                u"it.next(); return a.value + a.done + b.value + b.done"_s
             << u"y0falseetrue"_s;
+
+    // The iterator's return() throws, which replaces the pending return, break or continue. The
+    // blocks with closures have their own contexts and end in UnwindDispatch.
+    const QString iterablePrefix =
+            u"var iterable = { [Symbol.iterator]() { return { next() { return { value: 1, "
+            u"done: false } }, return() { throw new Error('r') } } } }; "_s;
+
+    QTest::newRow("return through for-of whose return() throws, caught")
+            << iterablePrefix +
+               u"function f() { try { for (var x of iterable) { { let y = x; log += (()"
+               u" => y)() } return 'ret' } } catch (e) { log += 'c' } { let z = 2; log "
+               u"+= (() => z)() } return 'after' } return f() + log"_s
+            << u"after1c2"_s;
+    QTest::newRow("labeled break through for-of whose return() throws, caught")
+            << iterablePrefix +
+               u"outer: for (var i = 0; i < 2; ++i) { try { for (var x of iterable) { {"
+               u" let y = x; log += (() => y)() } break outer } } catch (e) { log += 'c"
+               u"' } { let z = 2; log += (() => z)() } log += 'n' } return i + log"_s
+            << u"21c2n1c2n"_s;
+    QTest::newRow("labeled continue through for-of whose return() throws, caught")
+            << iterablePrefix +
+               u"outer: for (var i = 0; i < 2; ++i) { try { for (var x of iterable) { {"
+               u" let y = x; log += (() => y)() } continue outer } } catch (e) { log +="
+               u" 'c' } { let z = 2; log += (() => z)() } log += 'n' } return i + log"_s
+            << u"21c2n1c2n"_s;
+    QTest::newRow("throwing for-of close, caught inside try, then finally")
+            << iterablePrefix +
+               u"function f() { try { try { for (var x of iterable) { { let y = x; log "
+               u"+= (() => y)() } return 'ret' } } catch (e) { log += 'c' } } finally {"
+               u" log += 'f' } return 'after' } return f() + log"_s
+            << u"after1cf"_s;
+    QTest::newRow("throwing for-of close, caught inside try with block, finally with block")
+            << iterablePrefix +
+               u"function f() { try { try { for (var x of iterable) { return 'ret' } } "
+               u"catch (e) { log += 'c' } { let z = 2; log += (() => z)() } } finally {"
+               u" { let w = 3; log += (() => w)() } log += 'f' } return 'after' } retur"
+               u"n f() + log"_s
+            << u"afterc23f"_s;
+    QTest::newRow("throwing for-of close, finally, then caught outside")
+            << iterablePrefix +
+               u"function f() { try { try { for (var x of iterable) { { let y = x; log "
+               u"+= (() => y)() } return 'ret' } } finally { log += 'f' } } catch (e) {"
+               u" log += 'c' } { let z = 2; log += (() => z)() } return 'after' } retur"
+               u"n f() + log"_s
+            << u"after1fc2"_s;
 }
 
 void tst_QJSEngine::finallyWithPendingCompletion()
@@ -7009,9 +7054,15 @@ void tst_QJSEngine::finallyWithPendingCompletion()
     QFETCH(QString, code);
     QFETCH(QString, expected);
 
-    QJSEngine engine;
-    const QJSValue result = engine.evaluate(u"(function() { var log = ''; %1 })()"_s.arg(code));
-    QCOMPARE(result.toString(), expected);
+    // Run everything interpreted, and again JIT-compiled on the first call.
+    for (const int jitThreshold : { 1 << 24, 0 }) {
+        const QString mode = jitThreshold ? u"interpreted: "_s : u"jit: "_s;
+        TemporaryJitThreshold threshold(jitThreshold);
+        QJSEngine engine;
+        const QJSValue result
+                = engine.evaluate(u"(function() { var log = ''; %1 })()"_s.arg(code));
+        QCOMPARE(mode + result.toString(), mode + expected);
+    }
 }
 
 void tst_QJSEngine::deleteDefineCycle()
