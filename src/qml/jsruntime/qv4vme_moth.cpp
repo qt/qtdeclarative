@@ -1455,6 +1455,10 @@ QV4::ReturnedValue VME::interpret(JSTypesStackFrame *frame, ExecutionEngine *eng
         // immediately abort, due to the same isInterrupted. We don't skip the exception handler
         // because the current behavior is easier to implement in the JIT.
         Q_ASSERT(engine->hasException || engine->isInterrupted.loadRelaxed() || frame->unwindLevel);
+        // An exception replaces the pending break, continue or return. Don't let UnwindDispatch
+        // resume it after the exception was caught.
+        if (engine->hasException)
+            frame->unwindLevel = 0;
         if (!frame->unwindHandler) {
             acc = Encode::undefined();
             return acc;

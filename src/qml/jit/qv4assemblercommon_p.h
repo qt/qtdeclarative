@@ -587,6 +587,15 @@ public:
         for (Jump j : catchyJumps)
             j.link(this);
 
+        // An exception replaces the pending break, continue or return. Don't let unwindDispatch
+        // resume it after the exception was caught.
+        Jump noException =
+                branch8(Equal, Address(EngineRegister, offsetof(EngineBase, hasException)),
+                        TrustedImm32(0));
+        store32(TrustedImm32(0),
+                Address(CppStackFrameRegister, offsetof(JSTypesStackFrame, unwindLevel)));
+        noException.link(this);
+
         loadUndefined();
         // We don't need to check for isInterrupted here because if that is set,
         // then the first checkException() in any exception handler will find another "exception"
