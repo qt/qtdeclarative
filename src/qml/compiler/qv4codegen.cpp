@@ -3635,7 +3635,7 @@ bool Codegen::visit(BreakStatement *ast)
         return false;
     }
 
-    bytecodeGenerator->unwindToLabel(target.unwindLevel, target.linkLabel);
+    controlFlow->unwind(target);
 
     return false;
 }
@@ -3662,7 +3662,7 @@ bool Codegen::visit(ContinueStatement *ast)
         return false;
     }
 
-    bytecodeGenerator->unwindToLabel(target.unwindLevel, target.linkLabel);
+    controlFlow->unwind(target);
 
     return false;
 }
@@ -3950,10 +3950,10 @@ bool Codegen::visit(LabelledStatement *ast)
 void Codegen::emitReturn(const Reference &expr)
 {
     ControlFlow::UnwindTarget target = controlFlow ? controlFlow->unwindTarget(ControlFlow::Return) : ControlFlow::UnwindTarget();
-    if (target.linkLabel.isValid() && target.unwindLevel) {
+    if (target.linkLabel.isValid() && (target.unwindLevel || target.completionRegister >= 0)) {
         Q_ASSERT(_returnAddress >= 0);
         (void) expr.storeOnStack(_returnAddress);
-        bytecodeGenerator->unwindToLabel(target.unwindLevel, target.linkLabel);
+        controlFlow->unwind(target);
     } else {
         expr.loadInAccumulator();
         bytecodeGenerator->addInstruction(Instruction::Ret());
