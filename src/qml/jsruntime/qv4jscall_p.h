@@ -157,6 +157,11 @@ ReturnedValue convertAndCall(
         ConvertReturnValue &&convertReturnValue = defaultConvertReturnValue,
         ConversionErrorHandler &&errorHandler = defaultConversionErrorHandler)
 {
+    // There's one type more than argc: The return type.
+    // We can have more arguments than necessary, but not less.
+    if (numTypes - 1 > argc)
+        return Encode::undefined();
+
     Q_ALLOCA_INIT();
     Q_ALLOCA_VAR(void *, values, numTypes * sizeof(void *));
 
@@ -169,25 +174,24 @@ ReturnedValue convertAndCall(
             return Encode::undefined();
         };
 
+        const int argIndex = i - 1;
+        Q_ASSERT(argIndex < argc);
+
         const QMetaType argumentType = types[i];
         if (const qsizetype argumentSize = argumentType.sizeOf()) {
             Q_ALLOCA_VAR(void, argument, argumentSize);
-            const int argIndex = i - 1;
-            if (argumentType.flags() & QMetaType::NeedsConstruction)
-                argumentType.construct(argument);
 
-            if (argIndex < argc) {
-                if (argumentType == QMetaType::fromType<QVariant>()) {
-                    // When the argument type is QVariant, JS objects are to be passed as
-                    // QJSValue wrapped in QVariant. metaTypeFromJS unwraps them, unfortunately.
-                    *static_cast<QVariant *>(argument) =
-                            ExecutionEngine::toVariant(argv[argIndex], QMetaType{ });
-                } else if (!ExecutionEngine::metaTypeFromJS(argv[argIndex], argumentType, argument)
-                           && !errorHandler(argumentType, argument, argIndex)) {
+            if (argumentType == QMetaType::fromType<QVariant>()) {
+                // When the argument type is QVariant, JS objects are to be passed as
+                // QJSValue wrapped in QVariant. metaTypeFromJS unwraps them, unfortunately.
+                new (argument) QVariant(ExecutionEngine::toVariant(argv[argIndex], QMetaType()));
+            } else {
+                if (argumentType.flags() & QMetaType::NeedsConstruction)
+                    argumentType.construct(argument);
+                if (!ExecutionEngine::metaTypeFromJS(argv[argIndex], argumentType, argument)
+                        && !errorHandler(argumentType, argument, argIndex)) {
                     return failConversion();
                 }
-            } else {
-                return failConversion();
             }
 
             values[i] = argument;
@@ -211,7 +215,7 @@ ReturnedValue convertAndCall(
             ? convertReturnValue(engine, types[0], returnValue)
             : Encode::undefined();
 
-    for (qsizetype i = 1, end = numTypes; i < end; ++i) {
+    for (qsizetype i = 1; i < numTypes; ++i) {
         if (types[i].flags() & QMetaType::NeedsDestruction)
             types[i].destruct(values[i]);
     }
