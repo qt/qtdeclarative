@@ -48,6 +48,11 @@ struct ControlFlow {
     struct UnwindTarget {
         BytecodeGenerator::Label linkLabel;
         int unwindLevel;
+
+        // If the unwind has to pass a finally block, the finally block continues
+        // the unwind afterwards, depending on the value of completionRegister.
+        int completionRegister = -1;
+        int completion = 0;
     };
 
     Codegen *cg;
@@ -73,6 +78,9 @@ struct ControlFlow {
             BytecodeGenerator::Label l = flow->getUnwindTarget(type, label);
             if (l.isValid())
                 return UnwindTarget{l, level};
+            UnwindTarget intercepted;
+            if (flow->interceptUnwind(type, label, level, &intercepted))
+                return intercepted;
             if (flow->requiresUnwind())
                 ++level;
             flow = flow->parent;
@@ -80,6 +88,17 @@ struct ControlFlow {
         if (type == Return)
             return UnwindTarget{ cg->returnLabel(), level };
         return UnwindTarget();
+    }
+
+    // Jumps to the target, passing the handlers in between.
+    // Remembers pending completion in completionRegister.
+    void unwind(const UnwindTarget &target)
+    {
+        if (target.completionRegister >= 0) {
+            Reference::fromConst(cg, QV4::Encode(target.completion))
+                    .storeOnStack(target.completionRegister);
+        }
+        generator()->unwindToLabel(target.unwindLevel, target.linkLabel);
     }
 
     virtual QString label() const { return QString(); }
@@ -101,6 +120,7 @@ protected:
     virtual bool requiresUnwind() {
         return false;
     }
+    virtual bool interceptUnwind(UnwindType, const QString &, int, UnwindTarget *) { return false; }
 
 public:
     BytecodeGenerator::ExceptionHandler *parentUnwindHandler() {
@@ -340,14 +360,29 @@ struct ControlFlowCatch : public ControlFlowUnwind
 
 struct ControlFlowFinally : public ControlFlowUnwind
 {
+    // A break, continue or return that passes the finally block does not leave anything in the
+    // stack frame while the finally block runs. Instead, it stores a number identifying itself in
+    // completionRegister and unwinds to the start of the finally block. After the finally block,
+    // we find the original unwind by that number and continue it.
+    struct Completion
+    {
+        QString label;
+        UnwindType type;
+    };
+
     QQmlJS::AST::Finally *finally;
     bool insideFinally = false;
+    int completionRegister;
+    QVarLengthArray<Completion, 4> completions;
 
     ControlFlowFinally(Codegen *cg, QQmlJS::AST::Finally *finally, bool hasCatchBlock)
         : ControlFlowUnwind(cg, Finally), finally(finally)
     {
         Q_ASSERT(finally != nullptr);
         setupUnwindHandler();
+
+        // The register has to live as long as the finally block, not just the try block.
+        completionRegister = generator()->newRegister();
 
         // No need to set the handler for the finally now if there is a catch block.
         // In that case, a handler for the latter will be set immediately after this.
@@ -360,11 +395,36 @@ struct ControlFlowFinally : public ControlFlowUnwind
         return !insideFinally;
     }
 
+    bool interceptUnwind(UnwindType type, const QString &label, int level,
+                         UnwindTarget *target) override
+    {
+        if (insideFinally)
+            return false;
+
+        const auto it =
+                std::find_if(completions.cbegin(), completions.cend(), [&](const Completion &c) {
+                    return c.type == type && c.label == label;
+                });
+        const qsizetype index =
+                it == completions.cend() ? completions.size() : it - completions.cbegin();
+        if (it == completions.cend())
+            completions.append({ label, type });
+
+        target->linkLabel = unwindLabel;
+        target->unwindLevel = level;
+        target->completionRegister = completionRegister;
+        target->completion = int(index) + 1;
+        return true;
+    }
+
     BytecodeGenerator::ExceptionHandler *unwindHandler() override {
         return insideFinally ? parentUnwindHandler() : ControlFlowUnwind::unwindHandler();
     }
 
     ~ControlFlowFinally() {
+        if (!completions.isEmpty())
+            Reference::fromConst(cg, QV4::Encode(0)).storeOnStack(completionRegister);
+
         // emit code for unwinding
         unwindLabel.link();
 
@@ -399,6 +459,22 @@ struct ControlFlowFinally : public ControlFlowUnwind
         generator()->addInstruction(setException);
 
         emitUnwindHandler();
+
+        // A pending exception is thrown by the UnwindDispatch above. Otherwise, continue with
+        // the break, continue or return that brought us here, if any.
+        insideFinally = true;
+        for (qsizetype i = 0, end = completions.size(); i != end; ++i) {
+            const Completion &completion = completions.at(i);
+            BytecodeGenerator::Label next = generator()->newLabel();
+            Reference::fromConst(cg, QV4::Encode(int(i) + 1)).loadInAccumulator();
+            generator()->jumpStrictNotEqual(Moth::StackSlot::createRegister(completionRegister),
+                                            next);
+            const UnwindTarget target = unwindTarget(completion.type, completion.label);
+            Q_ASSERT(target.linkLabel.isValid());
+            unwind(target);
+            next.link();
+        }
+        insideFinally = false;
     }
 };
 

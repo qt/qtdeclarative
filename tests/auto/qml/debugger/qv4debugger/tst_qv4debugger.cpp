@@ -339,6 +339,8 @@ private slots:
     void pauseOnThrow();
     void breakInCatch();
     void breakInWith();
+    void breakInFinallyAfterBlock_data();
+    void breakInFinallyAfterBlock();
 
     void evaluateExpression();
     void stepToEndOfScript();
@@ -949,6 +951,43 @@ void tst_qv4debugger::breakInCatch()
     QV4Debugger::ExecutionState state = m_debuggerAgent->m_statesWhenPaused.first();
     QCOMPARE(state.fileName, QString("breakInCatch"));
     QCOMPARE(state.lineNumber, 4);
+}
+
+void tst_qv4debugger::breakInFinallyAfterBlock_data()
+{
+    QTest::addColumn<QString>("script");
+
+    // Under the debugger, the block inside the finally block has its own context.
+    QTest::newRow("return")
+            << QString("function f() {\n"
+                       "    try {\n"
+                       "        return 1;\n"
+                       "    } finally {\n"
+                       "        { let x = 1; }\n"
+                       "        var y = 2;\n"
+                       "    }\n"
+                       "}\n"
+                       "f();\n");
+    QTest::newRow("break")
+            << QString("for (var i = 0; i < 2; ++i) {\n"
+                       "    try {\n"
+                       "        break;\n"
+                       "    } finally {\n"
+                       "        { let x = 1; }\n"
+                       "        var y = 2;\n"
+                       "    }\n"
+                       "}\n");
+}
+
+void tst_qv4debugger::breakInFinallyAfterBlock()
+{
+    QFETCH(QString, script);
+
+    debugger()->addBreakPoint("breakInFinallyAfterBlock", 6);
+    evaluateJavaScript(script, "breakInFinallyAfterBlock");
+    QVERIFY(m_debuggerAgent->m_wasPaused);
+    QCOMPARE(m_debuggerAgent->m_statesWhenPaused.size(), 1);
+    QCOMPARE(m_debuggerAgent->m_statesWhenPaused.first().lineNumber, 6);
 }
 
 void tst_qv4debugger::breakInWith()

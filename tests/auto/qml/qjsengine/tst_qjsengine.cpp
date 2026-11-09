@@ -379,6 +379,8 @@ private slots:
     void optionalChainWithElementLookup();
     void jittedLookupOnNullOrUndefined_data();
     void jittedLookupOnNullOrUndefined();
+    void finallyWithPendingCompletion_data();
+    void finallyWithPendingCompletion();
 
     void deleteDefineCycle();
     void deleteFromSparseArray();
@@ -6837,6 +6839,179 @@ void tst_QJSEngine::jittedLookupOnNullOrUndefined()
     QVERIFY(function.call({engine.toScriptValue(bad)}).isUndefined());
     QVERIFY(engine.hasError());
     QCOMPARE(engine.catchError().toString(), error);
+}
+
+void tst_QJSEngine::finallyWithPendingCompletion_data()
+{
+    QTest::addColumn<QString>("code");
+    QTest::addColumn<QString>("expected");
+
+    // The closure gives the block inside the finally block its own context. The expected results
+    // are what other engines produce.
+    QTest::newRow("return, block")
+            << u"function f() { try { return 'r' } finally { { let y = 1; log += (() => "
+               u"y)() } log += 'a' } } return f() + log"_s
+            << u"r1a"_s;
+    QTest::newRow("break, block")
+            << u"for (var i = 0; i < 2; ++i) { try { break } finally { { let y = i; log += "
+               u"(() => y)() } log += 'a' } } return i + log"_s
+            << u"00a"_s;
+    QTest::newRow("continue, block")
+            << u"for (var i = 0; i < 2; ++i) { try { continue } finally { { let y = i; log "
+               u"+= (() => y)() } log += 'a' } log += 'x' } return log"_s
+            << u"0a1a"_s;
+    QTest::newRow("return, nested try/catch")
+            << u"function f() { try { return 'r' } finally { try { log += 't' } catch (e) "
+               u"{} log += 'a' } } return f() + log"_s
+            << u"rta"_s;
+    QTest::newRow("break, nested try/catch")
+            << u"for (var i = 0; i < 2; ++i) { try { break } finally { try { log += 't' } "
+               u"catch (e) {} log += 'a' } } return i + log"_s
+            << u"0ta"_s;
+    QTest::newRow("return, for-of")
+            << u"function f() { try { return 'r' } finally { for (var v of [1, 2]) log += "
+               u"v; log += 'a' } } return f() + log"_s
+            << u"r12a"_s;
+    QTest::newRow("continue, for-of")
+            << u"for (var i = 0; i < 2; ++i) { try { continue } finally { for (var v of "
+               u"[1, 2]) log += v; log += 'a' } log += 'x' } return log"_s
+            << u"12a12a"_s;
+    QTest::newRow("return, with")
+            << u"function f() { try { return 'r' } finally { with ({ w: 'w' }) { log += w "
+               u"} log += 'a' } } return f() + log"_s
+            << u"rwa"_s;
+    QTest::newRow("break, with")
+            << u"for (var i = 0; i < 2; ++i) { try { break } finally { with ({ w: 'w' }) { "
+               u"log += w } log += 'a' } } return i + log"_s
+            << u"0wa"_s;
+    QTest::newRow("return, nested finally")
+            << u"function f() { try { return 'r' } finally { try { log += 't' } finally { "
+               u"log += 'f' } log += 'a' } } return f() + log"_s
+            << u"rtfa"_s;
+    QTest::newRow("break, nested finally")
+            << u"for (var i = 0; i < 2; ++i) { try { break } finally { try { log += 't' } "
+               u"finally { log += 'f' } log += 'a' } } return i + log"_s
+            << u"0tfa"_s;
+    QTest::newRow("return, finally returns")
+            << u"function f() { try { return 'r' } finally { return 's' } } return f() + "
+               u"log"_s
+            << u"s"_s;
+    QTest::newRow("return, block, finally returns")
+            << u"function f() { try { return 'r' } finally { { let y = 1; log += (() => "
+               u"y)() } return 's' } } return f() + log"_s
+            << u"s1"_s;
+    QTest::newRow("break, finally returns")
+            << u"function f() { for (;;) { try { break } finally { return 's' } } return "
+               u"'n' } return f() + log"_s
+            << u"s"_s;
+    QTest::newRow("continue, finally breaks")
+            << u"for (var i = 0; i < 3; ++i) { try { continue } finally { { let y = i; log "
+               u"+= (() => y)() } break } } return i + log"_s
+            << u"00"_s;
+    QTest::newRow("return, finally throws")
+            << u"function f() { try { try { return 'r' } finally { throw 'e' } } catch (e) "
+               u"{ log += e } log += 'a'; return 'z' } return f() + log"_s
+            << u"zea"_s;
+    QTest::newRow("return, finally throws, block after")
+            << u"function f() { try { try { return 'r' } finally { throw 'e' } } catch (e) "
+               u"{ log += e } { let y = 1; log += (() => y)() } log += 'a'; return 'z' } "
+               u"return f() + log"_s
+            << u"ze1a"_s;
+    QTest::newRow("return, finally throws, caller")
+            << u"function f() { try { return 'r' } finally { throw 'e' } } try { f() } "
+               u"catch (e) { log += e } { let y = 1; log += (() => y)() } for (var i = 0; "
+               u"i < 2; ++i) { { let z = i; log += (() => z)() } } return log"_s
+            << u"e101"_s;
+    QTest::newRow("return past catch, block")
+            << u"function f() { try { return 'r' } catch (e) { log += e } finally { { let "
+               u"y = 1; log += (() => y)() } log += 'a' } } return f() + log"_s
+            << u"r1a"_s;
+    QTest::newRow("return from catch, block")
+            << u"function f() { try { throw 'e' } catch (e) { return 'c' } finally { { let "
+               u"y = 1; log += (() => y)() } log += 'a' } } return f() + log"_s
+            << u"c1a"_s;
+    QTest::newRow("throw, block")
+            << u"function f() { try { throw 'e' } finally { { let y = 1; log += (() => "
+               u"y)() } log += 'a' } } try { f() } catch (e) { log += e } return log"_s
+            << u"1ae"_s;
+    QTest::newRow("nested finallys")
+            << u"function f() { try { try { return 1 } finally { log += 'A' } } finally { "
+               u"log += 'B' } } return f() + log"_s
+            << u"1AB"_s;
+    QTest::newRow("nested finallys, blocks")
+            << u"function f() { try { try { return 1 } finally { { let y = 'A'; log += (() "
+               u"=> y)() } } } finally { { let y = 'B'; log += (() => y)() } } } return "
+               u"f() + log"_s
+            << u"1AB"_s;
+    QTest::newRow("nested finallys, inner overrides")
+            << u"function f() { try { try { return 1 } finally { return 2 } } finally { "
+               u"log += 'B' } } return f() + log"_s
+            << u"2B"_s;
+    QTest::newRow("nested finallys, outer overrides")
+            << u"function f() { try { try { return 1 } finally { log += 'A' } } finally { "
+               u"return 3 } } return f() + log"_s
+            << u"3A"_s;
+    QTest::newRow("finally in finally, return")
+            << u"function f() { try { return 1 } finally { try { return 2 } finally { log "
+               u"+= 'I' } } } return f() + log"_s
+            << u"2I"_s;
+    QTest::newRow("labeled break and continue")
+            << u"outer: for (var i = 0; i < 3; ++i) { for (var j = 0; j < 3; ++j) { try { "
+               u"if (j == 1) continue outer; if (i == 2) break outer; log += 'b' } finally "
+               u"{ log += 'f'; { let y = i + '' + j; log += (() => y)() } } } } return log"_s
+            << u"bf00f01bf10f11f20"_s;
+    QTest::newRow("labeled break out of block")
+            << u"a: { try { break a } finally { { let y = 1; log += (() => y)() } log += "
+               u"'f' } log += 'not' } return log"_s
+            << u"1f"_s;
+    QTest::newRow("several completions")
+            << u"function f() { for (var i = 0; i < 4; ++i) { try { if (i == 0) continue; "
+               u"if (i == 1) { log += 'x'; continue } if (i == 2) break; return 'r' } "
+               u"finally { { let y = i; log += (() => y)() } } } return 'e' } return f() + "
+               u"log"_s
+            << u"e0x12"_s;
+    QTest::newRow("several completions, nested")
+            << u"function f() { for (var i = 0; i < 4; ++i) { try { try { if (i == 0) "
+               u"continue; if (i == 1) break; return 'r' } finally { { let y = 'a' + i; "
+               u"log += (() => y)() } } } finally { log += 'B' } } return 'e' } return f() "
+               u"+ log"_s
+            << u"ea0Ba1B"_s;
+    QTest::newRow("return, nested loops")
+            << u"function f() { for (var i = 0; i < 2; ++i) { for (var j = 0; j < 2; ++j) "
+               u"{ try { return i + '' + j } finally { { let y = 1; log += (() => y)() } } "
+               u"} } } return f() + log"_s
+            << u"001"_s;
+    QTest::newRow("return, yield in finally")
+            << u"function* g() { try { return 'r' } finally { yield 'y' } } var it = g(); "
+               u"var a = it.next(); var b = it.next(); return a.value + a.done + b.value + "
+               u"b.done"_s
+            << u"yfalsertrue"_s;
+    QTest::newRow("return, block and yield in finally")
+            << u"function* g() { try { return 'r' } finally { { let y = 1; log += (() => "
+               u"y)() } yield 'y'; log += 'a' } } var it = g(); var a = it.next(); var b = "
+               u"it.next(); return a.value + a.done + b.value + b.done + log"_s
+            << u"yfalsertrue1a"_s;
+    QTest::newRow("generator return() in try")
+            << u"function* g() { try { yield 1 } finally { { let y = 2; log += (() => y)() "
+               u"} yield 'f'; log += 'after' } } var it = g(); it.next(); var a = "
+               u"it.return('x'); var b = it.next(); return a.value + a.done + b.value + "
+               u"b.done + log"_s
+            << u"ffalsextrue2after"_s;
+    QTest::newRow("generator break, yield in finally")
+            << u"function* g() { for (var i = 0; i < 2; ++i) { try { break } finally { "
+               u"yield 'y' + i } } return 'e' } var it = g(); var a = it.next(); var b = "
+               u"it.next(); return a.value + a.done + b.value + b.done"_s
+            << u"y0falseetrue"_s;
+}
+
+void tst_QJSEngine::finallyWithPendingCompletion()
+{
+    QFETCH(QString, code);
+    QFETCH(QString, expected);
+
+    QJSEngine engine;
+    const QJSValue result = engine.evaluate(u"(function() { var log = ''; %1 })()"_s.arg(code));
+    QCOMPARE(result.toString(), expected);
 }
 
 void tst_QJSEngine::deleteDefineCycle()
