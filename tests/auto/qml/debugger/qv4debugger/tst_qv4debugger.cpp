@@ -320,6 +320,8 @@ private slots:
     void breakPointNotMovedIntoLaterFragment();
     void breakPointNotMovedIntoLaterFunction();
     void breakPointOnCommentAboveCallback();
+    void breakPointOnClosingBrace_data();
+    void breakPointOnClosingBrace();
     void executableLinesReleasedWithLastBreakPoint();
     void addBreakPointWhilePaused();
     void removeBreakPointForNextInstruction();
@@ -591,6 +593,42 @@ void tst_qv4debugger::breakPointOnCommentAboveCallback()
     const auto &states = m_debuggerAgent->m_statesWhenPaused;
     for (const QV4Debugger::ExecutionState &state : states)
         QCOMPARE(state.lineNumber, 3);
+}
+
+void tst_qv4debugger::breakPointOnClosingBrace_data()
+{
+    QTest::addColumn<QString>("body");
+    QTest::addColumn<int>("pausedAt");
+
+    // Falling off the end runs the implicit return on the closing brace.
+    QTest::newRow("no return")      << "    var y = x;\n"                        << 3;
+    // After a return, the closing brace has no reachable code, so the breakpoint
+    // moves to the next line with code.
+    QTest::newRow("return")         << "    return x;\n"                         << 4;
+    QTest::newRow("if-else return") << "    if (x) return 1; else return 2;\n" << 4;
+    QTest::newRow("loop return")    << "    while (true) return x;\n"            << 4;
+    QTest::newRow("endless loop")   << "    while (true) if (x) return 1;\n"     << 4;
+    QTest::newRow("throw")          << "    if (x) return 1; else throw 2;\n"    << 4;
+    QTest::newRow("dead code")      << "    return x; x = 2;\n"                  << 4;
+    QTest::newRow("unreachable loop")
+            << "    while (true) return x; while (x) x = 1;\n" << 4;
+}
+
+void tst_qv4debugger::breakPointOnClosingBrace()
+{
+    QFETCH(QString, body);
+    QFETCH(int, pausedAt);
+
+    QString script =
+            "function f(x) {\n"  // 1
+            + body +             // 2
+            "}\n"                // 3 (breakpoint here)
+            "f(true);\n";        // 4
+    debugger()->addBreakPoint("breakPointOnClosingBrace", 3);
+    evaluateJavaScript(script, "breakPointOnClosingBrace");
+    QVERIFY(m_debuggerAgent->m_wasPaused);
+    QCOMPARE(m_debuggerAgent->m_statesWhenPaused.size(), 1);
+    QCOMPARE(m_debuggerAgent->m_statesWhenPaused.first().lineNumber, pausedAt);
 }
 
 void tst_qv4debugger::executableLinesReleasedWithLastBreakPoint()

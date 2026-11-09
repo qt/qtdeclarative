@@ -56,6 +56,7 @@ public:
             : generator(generator),
               index(generator->labels.size()) {
             generator->labels.append(-1);
+            generator->labelReachable.append(false);
             if (mode == LinkNow)
                 link();
         }
@@ -65,6 +66,10 @@ public:
             Q_ASSERT(generator->labels[index] == -1);
             generator->labels[index] = generator->instructions.size();
             generator->clearLastInstruction();
+            if (generator->labelReachable[index])
+                generator->reachable = true;
+            else
+                generator->labelReachable[index] = generator->reachable;
         }
         bool isValid() const { return generator != nullptr; }
 
@@ -73,10 +78,11 @@ public:
     };
 
     struct Jump {
+        // instruction is -1 if the jump was not emitted because it is unreachable.
         Jump(BytecodeGenerator *generator, int instruction)
             : generator(generator),
               index(instruction)
-        { Q_ASSERT(generator && index != -1); }
+        { Q_ASSERT(generator); }
 
         ~Jump() {
             Q_ASSERT(index == -1 || generator->hasError || generator->instructions[index].linkedLabel != -1); // make sure link() got called
@@ -91,12 +97,23 @@ public:
         int index = -1;
 
         void link() {
-            link(generator->label());
+            // Link the jump first, so that the label knows it is reachable.
+            Label l = generator->newLabel();
+            link(l);
+            l.link();
         }
         void link(Label l) {
             Q_ASSERT(l.index >= 0);
+            if (index == -1)
+                return;
             Q_ASSERT(generator->instructions[index].linkedLabel == -1);
             generator->instructions[index].linkedLabel = l.index;
+
+            // We only drop code that cannot be reached when we see it. Therefore, the target of a
+            // backward jump has to be reachable already. Code generation has to make sure of
+            // this by entering loops by fall-through.
+            Q_ASSERT(generator->labels[l.index] == -1 || generator->labelReachable[l.index]);
+            generator->labelReachable[l.index] = true;
         }
 
     private:
@@ -300,6 +317,9 @@ private:
 
     QList<I> instructions;
     QList<int> labels;
+
+    // Whether a label can be reached. Before it is linked, whether a reachable jump targets it.
+    QList<bool> labelReachable;
     ExceptionHandler *currentExceptionHandler = nullptr;
     int regCount = 0;
 public:
@@ -312,6 +332,9 @@ private:
     std::unique_ptr<QV4::Compiler::Context::SourceLocationTable> m_sourceLocationTable;
     Compiler::CompilationMode compilationMode = Compiler::CompilationMode::Release;
     bool hasError = false;
+
+    // Whether control flow can reach the next instruction. Unreachable instructions are dropped.
+    bool reachable = true;
 
     int lastInstrType = -1;
     Moth::Instr lastInstr;

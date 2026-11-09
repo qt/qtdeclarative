@@ -213,6 +213,10 @@ QT_WARNING_POP
     decode(byteCode.constData(), static_cast<uint>(byteCode.size()));
     m_pool->setAllocationMode(QQmlJSRegisterContentPool::Permanent);
 
+    // A function that returns from within a context does not pop it.
+    for (; m_openContextBlocks > 0; --m_openContextBlocks)
+        m_body += u"}\n"_s;
+
     QQmlJSAotFunction result;
     result.includes.swap(m_includes);
 
@@ -2773,6 +2777,7 @@ void QQmlJSCodeGenerator::generate_CreateCallContext()
     INJECT_TRACE_INFO(generate_CreateCallContext);
 
     m_body += u"{\n"_s;
+    ++m_openContextBlocks;
 }
 
 void QQmlJSCodeGenerator::generate_PushCatchContext(int index, int nameIndex)
@@ -2815,6 +2820,7 @@ void QQmlJSCodeGenerator::generate_PopContext()
 
     // Add an empty block before the closing brace, in case there was a bare label before it.
     m_body += u"{}\n}\n"_s;
+    --m_openContextBlocks;
 }
 
 void QQmlJSCodeGenerator::generate_GetIterator(int iterator)

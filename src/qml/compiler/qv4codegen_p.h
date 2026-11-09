@@ -817,7 +817,6 @@ protected:
     bool requiresReturnValue = false;
     bool insideSwitch = false;
     bool inFormalParameterList = false;
-    bool functionEndsWithReturn = false;
     bool _tailCallsAreAllowed = true;
     bool storeSourceLocations = false;
 

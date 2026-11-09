@@ -10,6 +10,19 @@ QT_USE_NAMESPACE
 using namespace QV4;
 using namespace Moth;
 
+static bool endsFlow(Instr::Type type)
+{
+    switch (type) {
+    case Instr::Type::Ret:
+    case Instr::Type::Jump:
+    case Instr::Type::UnwindToLabel:
+    case Instr::Type::ThrowException:
+        return true;
+    default:
+        return false;
+    }
+}
+
 void BytecodeGenerator::setLocation(const QQmlJS::SourceLocation &loc)
 {
     currentLine = static_cast<int>(loc.startLine);
@@ -163,11 +176,16 @@ void BytecodeGenerator::finalize(Compiler::Context *context)
     context->sourceLocationTable = std::move(m_sourceLocationTable);
 
     context->labelInfo.reserve(context->labelInfo.size() + _labelInfos.size());
-    for (const auto &li : _labelInfos)
-        context->labelInfo.push_back(instructions.at(labels.at(li.labelIndex)).position);
+    for (const auto &li : _labelInfos) {
+        if (labelReachable.at(li.labelIndex))
+            context->labelInfo.push_back(instructions.at(labels.at(li.labelIndex)).position);
+    }
 }
 
 int BytecodeGenerator::addInstructionHelper(Instr::Type type, const Instr &i, int offsetOfOffset) {
+    if (!reachable)
+        return -1;
+
     if (lastInstrType == int(Instr::Type::StoreReg)) {
         if (type == Instr::Type::LoadReg) {
             if (i.LoadReg.reg == lastInstr.StoreReg.reg) {
@@ -228,6 +246,9 @@ QT_WARNING_POP
     instructions.append(instr);
     if (m_sourceLocationTable)
         m_sourceLocationTable->entries.append({ 0, currentSourceLocation });
+
+    if (endsFlow(type))
+        reachable = false;
 
     return pos;
 }

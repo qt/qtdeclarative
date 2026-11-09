@@ -1350,6 +1350,12 @@ void TestQmllint::dirtyQmlCode_data()
                .addFix("Did you mean \"func\""_L1, Edit{ "func"_L1 })
                .build()
             << defaultOptions;
+    // The jump over the else branch follows a return and is removed as unreachable code;
+    // the warning must still point into the else branch.
+    QTest::newRow("unqualifiedAfterUnreachableJump")
+            << QStringLiteral("unqualifiedAfterUnreachableJump.qml")
+            << ResultBuilder().addExpected("Unqualified access"_L1, 8, 20).build()
+            << defaultOptions;
     QTest::newRow("duplicateImportsDirty")
             << QStringLiteral("duplicateImportsDirty.qml")
             << ResultBuilder()

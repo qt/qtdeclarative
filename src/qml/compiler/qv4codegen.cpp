@@ -3368,26 +3368,23 @@ bool Codegen::visit(YieldExpression *ast)
         Instruction::LoadUndefined load;
         bytecodeGenerator->addInstruction(load);
 
-        BytecodeGenerator::Label in = bytecodeGenerator->newLabel();
-        bytecodeGenerator->jump().link(in);
-
-        BytecodeGenerator::Label loop = bytecodeGenerator->label();
-
-        lhsValue.loadInAccumulator();
-        Instruction::YieldStar yield;
-        bytecodeGenerator->addInstruction(yield);
-
-        in.link();
+        // Enter the loop by fall-through, so that the code generator can tell it's reachable.
+        BytecodeGenerator::Label in = bytecodeGenerator->label();
 
         Instruction::IteratorNextForYieldStar next;
         next.object = lhsValue.stackSlot();
         next.iterator = iterator.stackSlot();
         BytecodeGenerator::Jump done = bytecodeGenerator->addJumpInstruction(next);
-        bytecodeGenerator->jumpNotUndefined().link(loop);
+        BytecodeGenerator::Jump yieldValue = bytecodeGenerator->jumpNotUndefined();
 
         lhsValue.loadInAccumulator();
         emitReturn(acc);
 
+        yieldValue.link();
+        lhsValue.loadInAccumulator();
+        Instruction::YieldStar yield;
+        bytecodeGenerator->addInstruction(yield);
+        bytecodeGenerator->jump().link(in);
 
         done.link();
         bytecodeGenerator->checkException();
@@ -3405,34 +3402,6 @@ bool Codegen::visit(YieldExpression *ast)
     emitReturn(acc);
     jump.link();
     setExprResult(acc);
-    return false;
-}
-
-static bool endsWithReturn(Module *module, Node *node)
-{
-    if (!node)
-        return false;
-    if (AST::cast<ReturnStatement *>(node))
-        return true;
-    if (AST::cast<ThrowStatement *>(node))
-        return true;
-    if (Program *p = AST::cast<Program *>(node))
-        return endsWithReturn(module, p->statements);
-    if (StatementList *sl = AST::cast<StatementList *>(node)) {
-        while (sl->next)
-            sl = sl->next;
-        return endsWithReturn(module, sl->statement);
-    }
-    if (Block *b = AST::cast<Block *>(node)) {
-        Context *blockContext = module->contextMap.value(node);
-        if (blockContext->requiresExecutionContext)
-            // we need to emit a return statement here, because of the
-            // unwind handler
-            return false;
-        return endsWithReturn(module, b->statements);
-    }
-    if (IfStatement *is = AST::cast<IfStatement *>(node))
-        return is->ko && endsWithReturn(module, is->ok) && endsWithReturn(module, is->ko);
     return false;
 }
 
@@ -3481,9 +3450,6 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast, AST::FormalPara
     OptionalChainStates optionalChainStates;
     OptionalChainStates *savedOptionalChainStates = m_optionalChainsStates;
     m_optionalChainsStates = &optionalChainStates;
-
-    bool savedFunctionEndsWithReturn = functionEndsWithReturn;
-    functionEndsWithReturn = endsWithReturn(_module, body);
 
     // reserve the js stack frame (Context & js Function & accumulator)
     bytecodeGenerator->newRegisterArray(
@@ -3560,20 +3526,18 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast, AST::FormalPara
         bytecodeGenerator->setLocation(ast->lastSourceLocation());
         _context->emitBlockFooter(this);
 
-        if (_returnLabel || !functionEndsWithReturn) {
-            if (_returnLabel)
-                _returnLabel->link();
+        if (_returnLabel)
+            _returnLabel->link();
 
-            if (_returnLabel || requiresReturnValue) {
-                Instruction::LoadReg load;
-                load.reg = Moth::StackSlot::createRegister(_returnAddress);
-                bytecodeGenerator->addInstruction(load);
-            } else {
-                Reference::fromConst(this, Encode::undefined()).loadInAccumulator();
-            }
-
-            bytecodeGenerator->addInstruction(Instruction::Ret());
+        if (_returnLabel || requiresReturnValue) {
+            Instruction::LoadReg load;
+            load.reg = Moth::StackSlot::createRegister(_returnAddress);
+            bytecodeGenerator->addInstruction(load);
+        } else {
+            Reference::fromConst(this, Encode::undefined()).loadInAccumulator();
         }
+
+        bytecodeGenerator->addInstruction(Instruction::Ret());
 
         Q_ASSERT(_context == _functionContext);
         bytecodeGenerator->finalize(_context);
@@ -3597,7 +3561,6 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast, AST::FormalPara
     delete _returnLabel;
     _returnLabel = savedReturnLabel;
     controlFlow = savedControlFlow;
-    functionEndsWithReturn = savedFunctionEndsWithReturn;
     _functionContext = savedFunctionContext;
 
     return leaveContext();
@@ -3896,15 +3859,10 @@ bool Codegen::visit(IfStatement *ast)
     trueLabel.link();
     statement(ast->ok);
     if (ast->ko) {
-        if (endsWithReturn(_module, ast)) {
-            falseLabel.link();
-            statement(ast->ko);
-        } else {
-            BytecodeGenerator::Jump jump_endif = bytecodeGenerator->jump();
-            falseLabel.link();
-            statement(ast->ko);
-            jump_endif.link();
-        }
+        BytecodeGenerator::Jump jump_endif = bytecodeGenerator->jump();
+        falseLabel.link();
+        statement(ast->ko);
+        jump_endif.link();
     } else {
         falseLabel.link();
     }

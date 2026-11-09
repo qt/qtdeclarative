@@ -423,6 +423,7 @@ private:
     const QV4::Compiler::Context *m_context = nullptr;
 
     bool m_skipUntilNextLabel = false;
+    int m_openContextBlocks = 0;
 
     QStringList m_includes;
 
