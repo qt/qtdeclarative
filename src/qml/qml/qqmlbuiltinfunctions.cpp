@@ -270,8 +270,12 @@ QtObject::QtObject(ExecutionEngine *engine)
     : m_engine(engine)
 {
 #if QT_CONFIG(translation)
-    connect(m_engine->jsEngine(), &QJSEngine::uiLanguageChanged,
-            this, &QtObject::uiLanguageChanged);
+    // Worker script engines have no QJSEngine.
+    // We can't report the uiLanguage from their Qt object.
+    if (QJSEngine *jsEngine = m_engine->jsEngine()) {
+        connect(jsEngine, &QJSEngine::uiLanguageChanged,
+                this, &QtObject::uiLanguageChanged);
+    }
 #endif
 }
 
