@@ -342,6 +342,8 @@ private slots:
     void unknownAttached();
     void unknownParameter();
     void unknownUnderlyingType();
+    void unqualifiedInlineComponent_data();
+    void unqualifiedInlineComponent();
     void unqualifiedLostEnclosingContextObject_data();
     void unqualifiedLostEnclosingContextObject();
     void unqualifiedLostScopeObject_data();
@@ -7347,6 +7349,64 @@ static KnownIssue unqualifiedNameIssue(const UnqualifiedName &name, NameKinds ki
 
     return interpreted ? interpreterIssue(name, kinds, usage, loss, cached)
                        : compilerIssue(name, kinds, usage, loss, cached, swapped);
+}
+
+void tst_QmlCppCodegen::unqualifiedInlineComponent_data()
+{
+    QTest::addColumn<QByteArray>("probe");
+    QTest::addColumn<QByteArray>("holder");
+    QTest::addColumn<QString>("expected");
+
+    // Rule 5 before rule 9: The scope object shadows the id of the instantiation site.
+    QTest::addRow("scope object, then id of instantiation site")
+            << "probeId"_ba << "child"_ba << u"scope object"_s;
+
+    // Rule 8 before rule 9: The global object shadows the context object of the instantiation site.
+    QTest::addRow("global, then context object of instantiation site")
+            << "probeGlobal"_ba << QByteArray() << u"2"_s;
+}
+
+void tst_QmlCppCodegen::unqualifiedInlineComponent()
+{
+    QFETCH(QByteArray, probe);
+    QFETCH(QByteArray, holder);
+    QFETCH(QString, expected);
+
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/unqualifiedInlineComponent.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    std::unique_ptr<QObject> root(c.create());
+    QVERIFY(root);
+
+    QObject *inner = root->property("inner").value<QObject *>();
+    QVERIFY(inner);
+    QObject *scope = holder.isEmpty() ? inner : inner->property(holder).value<QObject *>();
+    QVERIFY(scope);
+
+    QString actual;
+    QVERIFY(QMetaObject::invokeMethod(scope, probe, Q_RETURN_ARG(QString, actual)));
+
+    // QQmlJSScopesById::isComponentVisible() and the walk over the contexts of the same
+    // compilation unit in QQmlContextWrapper::getPropertyAndBase() don't stop at the root of an
+    // inline component.
+    if (probe == "probeId") {
+        QEXPECT_FAIL("",
+                     "The ids of the instantiation site of an inline component are found as "
+                     "if they were lexically enclosing",
+                     Abort);
+    }
+
+#ifdef QT_TEST_FORCE_INTERPRETER
+    // QQmlContextWrapper::getPropertyAndBase() searches all contexts before the global object.
+    if (probe == "probeGlobal") {
+        QEXPECT_FAIL("",
+                     "The interpreter searches the instantiation site of an inline component "
+                     "before the global object",
+                     Abort);
+    }
+#endif
+
+    QCOMPARE(actual, expected);
 }
 
 void tst_QmlCppCodegen::unqualifiedLostEnclosingContextObject_data()

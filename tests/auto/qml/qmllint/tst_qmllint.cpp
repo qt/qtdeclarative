@@ -219,6 +219,8 @@ private Q_SLOTS:
 
     void compilerWarnings_data();
     void compilerWarnings();
+    void inlineComponentOuterNames_data();
+    void inlineComponentOuterNames();
 
     void cycles_data();
     void cycles();
@@ -3727,6 +3729,57 @@ void TestQmllint::compilerWarnings()
         category->setSeverity(QQmlJS::WarningSeverity::Warning);
 
     runTest(filename, result, {}, {}, {}, UseDefaultImports, &categories);
+}
+
+void TestQmllint::inlineComponentOuterNames_data()
+{
+    QTest::addColumn<QString>("filename");
+    QTest::addColumn<Result>("result");
+
+    // Inline components end the chain of lexically enclosing contexts, so these names can
+    // only be found at run time, among the remaining contexts.
+    QTest::newRow("id")
+            << QStringLiteral("inlineComponentOuterId.qml")
+            << ResultBuilder()
+               .addExpected("Could not compile function getOuter: "
+                            "Cannot access value for name outerId"_L1)
+               .addExpected("Unqualified access"_L1)
+               .build();
+    QTest::newRow("contextObject")
+            << QStringLiteral("inlineComponentOuterContextObject.qml")
+            << ResultBuilder()
+               .addExpected("Could not compile function getOuterProperty: "
+                            "Cannot access value for name outerProperty"_L1)
+               .addExpected("Unqualified access"_L1)
+               .build();
+}
+
+void TestQmllint::inlineComponentOuterNames()
+{
+    QFETCH(QString, filename);
+    QFETCH(Result, result);
+
+    auto categories = QQmlJSLogger::builtinCategories();
+    auto category = std::find_if(categories.begin(), categories.end(),
+                                 [](const QQmlJS::LoggerCategory &category) {
+                                     return category.id() == qmlCompiler;
+                                 });
+    Q_ASSERT(category != categories.end());
+    category->setSeverity(QQmlJS::WarningSeverity::Warning);
+
+    CallQmllintOptions options;
+    options.defaultImports = UseDefaultImports;
+    options.categories = &categories;
+    options.readSettings = result.flags.testFlag(Result::Flag::UseSettings);
+
+    QEXPECT_FAIL("id", "Inline components don't end the chain of ids yet", Abort);
+    const QJsonArray warnings = callQmllint(filename, options, fromResultFlags(result.flags));
+    checkResult(
+            warnings, result,
+            [] {
+                QEXPECT_FAIL("id", "Inline components don't end the chain of ids yet", Abort);
+            },
+            [] {}, [] {});
 }
 
 void TestQmllint::batches_data()
