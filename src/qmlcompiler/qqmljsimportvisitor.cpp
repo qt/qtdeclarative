@@ -1997,10 +1997,18 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
                 isAlias ? QQmlJSScope::ConstPtr() : m_rootScopeImports.type(typeName).scope;
         if (type) {
             const auto factory = type.factory();
-            // note: the type of prop is set via QQmlJSImportVisitor::processPropertyTypes() for lists of lazy types
             prop.setType(prop.isList() ? (factory ? QQmlJSScope::Ptr{ } : type->listType()) : type);
-            const QString internalName = factory ? factory->internalName() : type->internalName();
-            prop.setTypeName(internalName.isEmpty() ? typeName : internalName);
+            const bool isListOfLazyType = prop.isList() && factory;
+            if (isListOfLazyType) {
+                m_pendingPropertyTypes << PendingPropertyType {
+                    m_currentScope, prop.propertyName(), publicMember->firstSourceLocation()
+                };
+                prop.setTypeName(typeName);
+            } else {
+                const QString internalName =
+                        factory ? factory->internalName() : type->internalName();
+                prop.setTypeName(internalName.isEmpty() ? typeName : internalName);
+            }
 
             // Note: qml supports cyclic dependencies on properties, so don't lazy-load `type` here!
             // If `type` is lazy-loaded here and uses the currently-linted type, then `type` will only

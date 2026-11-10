@@ -3556,6 +3556,14 @@ void TestQmllint::cleanQmlCode_data()
         QTest::newRow("qualifiedImportOfOwnModule")
                 << u"qualifiedimportmodule/org/kde/qualified/Main.qml"_s << options;
     }
+    {
+        CallQmllintOptions options = defaultOptions;
+        options.importPaths << testFile("listOfCompositeTypes");
+        QTest::newRow("listOfQualifiedCompositeType")
+                << u"listOfCompositeTypes/qualified.qml"_s << options;
+        QTest::newRow("listOfCompositeTypeWithDifferentFileName")
+                << u"listOfCompositeTypes/renamed.qml"_s << options;
+    }
 }
 
 void TestQmllint::cleanQmlCode()
