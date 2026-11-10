@@ -299,7 +299,8 @@ struct Q_QML_COMPILER_EXPORT CompiledFunctionOrExpression
 
     QQmlJS::AST::Node *parentNode = nullptr; // FunctionDeclaration, Statement or Expression
     QQmlJS::AST::Node *node = nullptr; // FunctionDeclaration, Statement or Expression
-    quint32 nameIndex = 0;
+    quint32 nameIndex : 31;
+    quint32 isQmlFunction : 1;
     CompiledFunctionOrExpression *next = nullptr;
 };
 

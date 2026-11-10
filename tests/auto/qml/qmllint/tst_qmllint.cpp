@@ -2181,6 +2181,13 @@ void TestQmllint::dirtyQmlSnippet_data()
             << u"Item { foo { bar: Array.from((i) => (1)) } }"_s
             << ResultBuilder::ignoredResult()
             << defaultOptions;
+    QTest::newRow("innerFunctionWithLetOrConstDoesNotDropWarnings")
+            << u"function outer() { function inner() { const x = nope; 1; } }"_s
+            << ResultBuilder()
+               .addExpected("Unqualified access", 1, 49)
+               .addExpected("Expression statement has no obvious effect", 1, 55)
+               .build()
+            << defaultOptions;
     QTest::newRow("invalidLint")
             << u"Item {} // qmllint disable ThisCategoryDoesNotExist\n"_s
             << ResultBuilder::singleExpected(
