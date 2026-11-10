@@ -809,6 +809,7 @@ target_sources(Qml
         doc/src/cppintegration/data.qdoc
         doc/src/cppintegration/macros.qdoc
         doc/src/debugging.qdoc
+        doc/src/internal/qml-name-resolution.qdoc
         doc/src/profiling.qdoc
         doc/src/prototyping-debugging-profiling.qdoc
         doc/src/qmllint/import.qdoc

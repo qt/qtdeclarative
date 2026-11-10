@@ -11,6 +11,7 @@
 #include <data/enumproblems.h>
 #include <data/getOptionalLookup.h>
 #include <data/listprovider.h>
+#include <data/nameholder.h>
 #include <data/objectwithmethod.h>
 #include <data/propertymap.h>
 #include <data/qmlusing.h>
@@ -28,6 +29,9 @@
 #include <private/qv4functionobject_p.h>
 #include <private/qv4mm_p.h>
 #include <private/qv4qobjectwrapper_p.h>
+
+#include <QtQml/qqmlexpression.h>
+#include <QtQml/qqmlscriptstring.h>
 
 #include <QtTest/qsignalspy.h>
 #include <QtTest/qtest.h>
@@ -330,6 +334,23 @@ private slots:
     void unknownAttached();
     void unknownParameter();
     void unknownUnderlyingType();
+    void unqualifiedLostEnclosingContextObject_data();
+    void unqualifiedLostEnclosingContextObject();
+    void unqualifiedLostScopeObject_data();
+    void unqualifiedLostScopeObject();
+    void unqualifiedLostScopeObjectStore_data();
+    void unqualifiedLostScopeObjectStore();
+    void unqualifiedName_data();
+    void unqualifiedName();
+    void unqualifiedPropertyChangesTarget();
+    void unqualifiedScriptStringChangingScope_data();
+    void unqualifiedScriptStringChangingScope();
+    void unqualifiedScriptStringContextHierarchy_data();
+    void unqualifiedScriptStringContextHierarchy();
+    void unqualifiedScriptStringGlobalName_data();
+    void unqualifiedScriptStringGlobalName();
+    void unqualifiedScriptStringId_data();
+    void unqualifiedScriptStringId();
     void unstoredUndefined();
     void unusedAttached();
     void urlString();
@@ -6576,6 +6597,1379 @@ void tst_QmlCppCodegen::unknownUnderlyingType()
     std::unique_ptr<QObject> object(component.create());
     QVERIFY(object);
     QCOMPARE(object->property("foo").toInt(), 11);
+}
+
+// The rules for finding unqualified names are specified in
+// src/qml/doc/src/internal/qml-name-resolution.qdoc. The rule numbers below refer to it.
+
+// The places a name can be found in, in the order of the rules above.
+enum NameKind : quint16 {
+    Keyword = 1 << 0,
+    UpperCaseType = 1 << 1,
+    LowerCaseType = 1 << 2,
+    Id = 1 << 3,
+    BoundId = 1 << 4,
+    ScopeObject = 1 << 5,
+    DynamicScopeObject = 1 << 6, // A scope object with a dynamic metaobject
+    ContextObject = 1 << 7,
+    BoundContextObject = 1 << 8, // The root object of the document of a bound component
+    Global = 1 << 9,
+    ModelContextObject = 1 << 10, // The context a delegate model inserts for an unbound delegate
+    UnboundId = 1 << 11,
+    UnboundContextObject = 1 << 12, // The root object of the document of an unbound component
+    ParentContextProperty = 1 << 13,
+    ParentContextObject = 1 << 14,
+};
+Q_DECLARE_FLAGS(NameKinds, NameKind)
+Q_DECLARE_OPERATORS_FOR_FLAGS(NameKinds)
+
+struct NameKindInfo
+{
+    const char *label;
+    const char *tag; // What the probe produces if the name is found there, unless it's built in
+};
+
+// Indexed by the bit position of the NameKind.
+static const NameKindInfo nameKindInfos[] = {
+    { "keyword", nullptr },
+    { "upper-case type", "type" },
+    { "lower-case type", "QML/rect" }, // The probe stringifies the name, because the compiler
+                                       // cannot read objectName from a type
+    { "id", "id" },
+    { "bound id", "enclosing id" },
+    { "scope object", "scope object" },
+    { "dynamic scope object", "dynamic scope object" },
+    { "context object", "context object" },
+    { "bound context object", "enclosing context object" },
+    { "global", nullptr },
+    { "model context object", "model context object" },
+    { "unbound id", "enclosing id" },
+    { "unbound context object", "enclosing context object" },
+    { "parent context property", "parent context property" },
+    { "parent context object", "parent context object" },
+};
+
+struct UnqualifiedName
+{
+    const char *name;
+    const char *key; // Prefix of the names of the QML members that use the name
+    const char *expression; // How the QML members use the name
+    NameKinds builtIn; // Keyword or Global: Always there
+    NameKinds placeable; // Where else the tests can put the name
+};
+
+static constexpr NameKinds anyObject = NameKind::ScopeObject | NameKind::DynamicScopeObject
+        | NameKind::ContextObject | NameKind::BoundContextObject | NameKind::ModelContextObject
+        | NameKind::UnboundContextObject | NameKind::ParentContextProperty
+        | NameKind::ParentContextObject;
+static constexpr NameKinds anyId = NameKind::Id | NameKind::BoundId | NameKind::UnboundId;
+
+static const UnqualifiedName unqualifiedNames[] = {
+    { "qsTr", "qsTr", R"(qsTr("text"))", Keyword, anyObject },
+    { "qsTranslate", "qsTranslate", R"(qsTranslate("context", "text"))", Keyword, anyObject },
+    { "qsTrId", "qsTrId", R"(qsTrId("text"))", Keyword, anyObject },
+    { "QT_TR_NOOP", "trNoop", R"(QT_TR_NOOP("text"))", Keyword, anyObject },
+    { "QT_TRANSLATE_NOOP", "translateNoop", R"(QT_TRANSLATE_NOOP("context", "text"))", Keyword,
+      anyObject },
+    { "QT_TRID_NOOP", "tridNoop", R"(QT_TRID_NOOP("text"))", Keyword, anyObject },
+    { "Infinity", "infinity", R"("" + Infinity)", Keyword, UpperCaseType | anyObject },
+    { "NaN", "nan", R"("" + NaN)", Keyword, anyObject },
+    { "undefined", "undefined", R"("" + undefined)", Keyword, anyObject },
+    { "console", "console", R"("" + console.debug("text"))", Global, anyObject },
+    { "Math", "math", R"("" + Math.max(1, 2))", Global, UpperCaseType | anyObject },
+    { "foo", "foo", R"("" + foo.objectName)", {}, anyId | anyObject },
+    { "Plugh", "plugh", R"("" + Plugh.objectName)", {}, UpperCaseType | anyObject },
+    { "rect", "rect", R"("" + rect.objectName)", {}, LowerCaseType | anyId | anyObject },
+};
+
+// Callable, and with all the members the expressions use. Produces the tag in any of them.
+static QVariant taggedValue(QJSEngine *engine, const QString &tag)
+{
+    QJSValue function = engine->evaluate(
+            u"(function(tag) {"
+            "    const tagged = function() { return tag };"
+            "    return Object.assign(tagged, {"
+            "        debug: tagged, max: tagged, toString: tagged, objectName: tag"
+            "    });"
+            "})"_s);
+    return function.call({ tag }).toVariant(QJSValue::RetainJSObjects);
+}
+
+static void tagInContext(QQmlContext *context, const QString &tag)
+{
+    const QVariant tagged = taggedValue(context->engine(), tag);
+    for (const UnqualifiedName &name : unqualifiedNames) {
+        if (name.builtIn)
+            context->setContextProperty(QString::fromLatin1(name.name), tagged);
+    }
+}
+
+static QString builtInValue(QJSEngine *engine, const UnqualifiedName &name)
+{
+    return engine->evaluate(QString::fromLatin1(name.expression)).toString();
+}
+
+enum class Loss { None, ScopeObject, ContextObject };
+
+static NameKind winnerOf(NameKinds kinds)
+{
+    return kinds ? NameKind(1 << qCountTrailingZeroBits(kinds.toInt())) : NameKind(0);
+}
+
+// The places that are C++ objects of the NameHolder type. They can hold each name as the other kind
+// of member, too. Then they are SwappedNameHolders.
+static constexpr NameKinds swappableHolders = NameKind::ScopeObject | NameKind::ContextObject
+        | NameKind::BoundContextObject | NameKind::UnboundContextObject
+        | NameKind::ParentContextObject;
+
+// The keywords always win. They are tested with the other kind of member whenever a NameHolder
+// holds them. The other names have to be called if they are methods. They are tested with the other
+// kind of member if a NameHolder is supposed to win.
+static bool isSwappable(const UnqualifiedName &name, NameKinds kinds)
+{
+    if (kinds & DynamicScopeObject)
+        return false;
+    if (name.builtIn & Keyword)
+        return bool(kinds & swappableHolders);
+    return bool(winnerOf(kinds) & swappableHolders);
+}
+
+// Returns an empty string if the name isn't found at all.
+static QString expectedValue(QJSEngine *engine, const UnqualifiedName &name, NameKinds kinds,
+                             Loss loss)
+{
+    if (!kinds)
+        return QString();
+
+    const NameKind winner = winnerOf(kinds);
+
+    // The search does not resume past the lost object.
+    if (loss == Loss::ScopeObject && (winner == ScopeObject || winner == DynamicScopeObject))
+        return QString();
+    if (loss == Loss::ContextObject && winner == ContextObject)
+        return QString();
+
+    // The id stays in the context, but its object is a child of the lost context object. Reading
+    // objectName from null throws.
+    if (loss == Loss::ContextObject && winner == Id)
+        return u"<TypeError>"_s;
+
+    const char *tag = nameKindInfos[qCountTrailingZeroBits(kinds.toInt())].tag;
+    return tag ? QString::fromLatin1(tag) : builtInValue(engine, name);
+}
+
+static QString unqualifiedNameFile(NameKinds kinds, bool swapped)
+{
+    QString file;
+    if (swapped)
+        file += u"Swapped"_s;
+    if (kinds & UpperCaseType)
+        file += u"Type"_s;
+    if (kinds & LowerCaseType)
+        file += u"Addressable"_s;
+    if (kinds & (BoundId | BoundContextObject))
+        file += u"Bound"_s;
+    if (kinds & (BoundId | UnboundId))
+        file += u"Ids"_s;
+    if (kinds & (BoundContextObject | UnboundContextObject))
+        file += u"Root"_s;
+    if (file.isEmpty())
+        file = u"Main"_s;
+    return u"unqualifiedName/"_s + file + u".qml"_s;
+}
+
+// The compiler finds names that aren't built in only on types, ids, and the scope object. It
+// finds a method only on the scope object. Otherwise it would call something that isn't a
+// method. It searches the scope object before the translation functions and before NaN, which
+// it doesn't fold ("Nan" typo in the code generator). If it finds the other kind of member
+// there, it cannot use it. Code the compiler cannot handle runs in the interpreter.
+static bool unqualifiedNameCompilable(const UnqualifiedName &name, NameKinds kinds, bool swapped)
+{
+    const bool isTranslation = (name.builtIn & Keyword) && name.expression[0] != '"';
+    const bool isNaN = qstrcmp(name.name, "NaN") == 0;
+    if (swapped && !(name.builtIn & Keyword))
+        return winnerOf(kinds) == ScopeObject;
+    if (swapped && (isTranslation || isNaN) && (kinds & ScopeObject))
+        return false;
+    return name.builtIn
+            || (kinds & (UpperCaseType | LowerCaseType | Id | BoundId | ScopeObject));
+}
+
+static QByteArray unqualifiedNameComponent(const UnqualifiedName &name, NameKinds kinds)
+{
+    QByteArray component = name.key;
+    if (kinds & Id)
+        component += "Id";
+    if (kinds & ScopeObject)
+        component += "Scope";
+    else if (kinds & DynamicScopeObject)
+        component += "DynamicScope";
+    if (kinds & ContextObject)
+        component += "Context";
+    return component + "Component";
+}
+
+struct KnownIssue
+{
+    enum Kind { None, Crash, Failure };
+    Kind kind = None;
+    const char *reason = nullptr;
+};
+
+// Where the interpreter deviates from the rules.
+static KnownIssue interpreterIssue(const UnqualifiedName &name, NameKinds kinds,
+                                   const QByteArray &usage, Loss loss, bool cached)
+{
+    const NameKind winner = winnerOf(kinds);
+
+    // The translation functions are the only names the tests call directly.
+    const bool isTranslation = (name.builtIn & Keyword) && name.expression[0] != '"';
+    const bool isNaN = qstrcmp(name.name, "NaN") == 0;
+
+    const bool lostBeforeFirstUse = loss != Loss::None && !cached;
+
+    // Same as above: The interpreter walks up the parents of the invalidated context to find
+    // the ids of the enclosing contexts.
+    if (winner == BoundId && loss == Loss::ContextObject) {
+        return { KnownIssue::Failure,
+                 "The enclosing contexts of a bound component cannot be reached anymore once the "
+                 "context object is lost" };
+    }
+
+    // QQmlContextWrapper::getPropertyAndBase() disables lookups and searches the global object
+    // before anything else if the scope object has a dynamic metaobject.
+    if ((name.builtIn & Global) && (kinds & DynamicScopeObject)) {
+        return { KnownIssue::Failure,
+                 "The interpreter searches the global object first if the scope object has a "
+                 "dynamic metaobject" };
+    }
+
+    // QQmlContextWrapper::getPropertyAndBase() searches the global object, and therefore the
+    // translation functions, only after all scopes and contexts. NaN is not folded because the
+    // code generator compares with "Nan". Translation bindings don't look up the translation
+    // functions at all. A lost scope object is skipped, and the contexts underneath a lost context
+    // cannot be reached anymore.
+    if (((isTranslation && usage != "Binding") || isNaN) && !(kinds & DynamicScopeObject)) {
+        NameKinds reachable = kinds
+                & (ScopeObject | ContextObject | BoundContextObject | ModelContextObject
+                   | UnboundContextObject | ParentContextProperty | ParentContextObject);
+        if (lostBeforeFirstUse) {
+            // The parent contexts are unreachable once the context object is lost, so nothing
+            // is found before the global object.
+            constexpr NameKinds contexts = ContextObject | BoundContextObject | ModelContextObject
+                    | UnboundContextObject | ParentContextProperty | ParentContextObject;
+            reachable &= loss == Loss::ScopeObject ? ~NameKinds(ScopeObject) : ~contexts;
+        }
+        if (reachable) {
+            return { KnownIssue::Failure,
+                     isNaN ? "NaN is not folded (\"Nan\" typo in the code generator) and the "
+                             "interpreter searches all scopes and contexts before the global object"
+                           : "The interpreter searches all scopes and contexts before the "
+                             "translation functions" };
+        }
+    }
+
+    // Same cause: The global object comes after all contexts. A type name, the scope object, the
+    // context object, or the enclosing context object of a bound component come before the
+    // remaining contexts anyway.
+    if ((name.builtIn & Global)
+        && (kinds
+            & (ModelContextObject | UnboundContextObject | ParentContextProperty
+               | ParentContextObject))
+        && !(kinds & (UpperCaseType | ScopeObject | ContextObject | BoundContextObject))
+        && !(lostBeforeFirstUse && loss == Loss::ContextObject)) {
+        return { KnownIssue::Failure,
+                 "The interpreter searches the parent contexts before the global object" };
+    }
+
+    // An unpopulated lookup skips a scope object that is gone and searches the rest. A populated
+    // lookup remembers that it found the name on the scope object and throws.
+    if (winner == ScopeObject && loss == Loss::ScopeObject && !cached
+        && (kinds & ~NameKinds(ScopeObject))) {
+        return { KnownIssue::Failure,
+                 "The interpreter resumes the search past a lost scope object if the lookup has "
+                 "not been populated before" };
+    }
+
+    // Likewise for the context object. The parent contexts are unreachable after it is lost, so
+    // the search can only end up on the global object, ids of the component, or types.
+    if (winner == ContextObject && loss == Loss::ContextObject && !cached
+        && (name.builtIn || (kinds & (Id | BoundId | UpperCaseType | LowerCaseType)))) {
+        return { KnownIssue::Failure,
+                 "The interpreter resumes the search past a lost context object if the lookup has "
+                 "not been populated before" };
+    }
+
+    return {};
+}
+
+// Where compiled code deviates from the rules.
+static KnownIssue compilerIssue(const UnqualifiedName &name, NameKinds kinds,
+                                const QByteArray &usage, Loss loss, bool cached, bool swapped)
+{
+    const NameKind winner = winnerOf(kinds);
+
+    // The translation functions are the only names the tests call directly.
+    const bool isTranslation = (name.builtIn & Keyword) && name.expression[0] != '"';
+    const bool isNaN = qstrcmp(name.name, "NaN") == 0;
+
+    // Compiled code calls the scope object's method. Once the scope object is gone, that call
+    // asserts in QObjectMethod (cached lookup). An uncached lookup resumes the search past the lost
+    // scope object. If it finds the name in a context, AOTCompiledContext asserts because it
+    // expects a scope object method. If it finds an id or the global object, the compiled code
+    // calls that and throws a TypeError instead.
+    if (swapped && winner == ScopeObject && loss == Loss::ScopeObject) {
+        if (cached
+            || (kinds
+                & (ContextObject | BoundContextObject | ModelContextObject | UnboundContextObject
+                   | ParentContextProperty | ParentContextObject))) {
+            return { KnownIssue::Crash,
+                     "Compiled code calls the method of the lost scope object and asserts" };
+        }
+        if (kinds & (Global | UnboundId)) {
+            return { KnownIssue::Failure,
+                     "Compiled code resumes the search past the lost scope object and calls what "
+                     "it finds there" };
+        }
+    }
+
+    // QQmlJSTypeResolver::scopedType() searches the scope object before the global object, so the
+    // compiled code calls the scope object's method. Once the scope object is gone, that call
+    // asserts in QObjectMethod (cached lookup) or in AOTCompiledContext, which expects a scope
+    // object lookup (uncached lookup). Only if nothing else has the name, the uncached call
+    // throws a TypeError instead.
+    if (isTranslation && usage != "Binding" && (kinds & ScopeObject)) {
+        if (loss == Loss::ScopeObject && (cached || kinds != (Keyword | ScopeObject))) {
+            return { KnownIssue::Crash,
+                     "Compiled code calls the translation method of the lost scope object and "
+                     "asserts" };
+        }
+        return { KnownIssue::Failure,
+                 "Compiled code searches the scope object before the translation functions" };
+    }
+
+    // NaN is not folded because the code generator compares with "Nan", and
+    // QQmlJSTypeResolver::scopedType() searches the scope object before the global object.
+    if (isNaN && (kinds & ScopeObject)) {
+        return { KnownIssue::Failure,
+                 "NaN is not folded (\"Nan\" typo in the code generator) and compiled code "
+                 "searches the scope object before the global object" };
+    }
+
+    // QQmlJSTypeResolver::scopedType() never searches the context object.
+    if ((name.builtIn & Global) && winner == ContextObject) {
+        return { KnownIssue::Failure,
+                 "Compiled code does not search the context object before the global object" };
+    }
+
+    // QQmlJSTypeResolver::scopedType() never searches the enclosing context objects either.
+    if ((name.builtIn & Global) && winner == BoundContextObject) {
+        return { KnownIssue::Failure,
+                 "Compiled code does not search the enclosing context objects of a bound "
+                 "component before the global object" };
+    }
+
+    // QQmlJSTypeResolver::scopedType() searches ids, then the scope object, and only then types.
+    // A dynamic scope object doesn't have the name statically, but the lookup still fails on it.
+    if (winner == UpperCaseType && (kinds & (ScopeObject | DynamicScopeObject))) {
+        return { KnownIssue::Failure,
+                 "Compiled code searches the scope object before the type names" };
+    }
+
+    // The compiler only knows the static properties of a type with a dynamic metaobject. It
+    // resolves the name to the global object.
+    if ((name.builtIn & Global) && (kinds & DynamicScopeObject)) {
+        return { KnownIssue::Failure,
+                 "Compiled code does not know the names a dynamic metaobject provides" };
+    }
+
+    // The compiled lookup for an enclosing id walks up the parents of the immediate context. Once
+    // the context is invalidated, it has no parents and the id is not found. Since the compiler
+    // resolves the id before the lower-case type, this also happens if there is one.
+    if ((winner == BoundId || (winner == LowerCaseType && (kinds & BoundId)))
+        && loss == Loss::ContextObject) {
+        return { KnownIssue::Crash,
+                 "Compiled code doesn't find an enclosing id of a bound component anymore once "
+                 "the context object is lost and asserts in "
+                 "AOTCompiledContext::(init)loadContextIdLookup()" };
+    }
+
+    // QQmlJSTypeResolver::scopedType() searches ids and the scope object before types.
+    if (winner == LowerCaseType && (kinds & (Id | BoundId | ScopeObject))) {
+        return { KnownIssue::Failure,
+                 "Compiled code searches the ids and the scope object before the type names" };
+    }
+
+    // Compiled code converts a type to a string through a QVariant holding its QMetaObject. The
+    // interpreter produces "QML/rect".
+    if (winner == LowerCaseType) {
+        return { KnownIssue::Failure,
+                 "Compiled code converts a type to \"QVariant(const QMetaObject*, ...)\" instead "
+                 "of \"QML/rect\" when stringifying it" };
+    }
+
+    return {};
+}
+
+// Where the current implementation deviates from the rules.
+static KnownIssue unqualifiedNameIssue(const UnqualifiedName &name, NameKinds kinds,
+                                       const QByteArray &usage, Loss loss, bool cached,
+                                       bool interpreted, bool swapped)
+{
+    const NameKind winner = winnerOf(kinds);
+
+    // QQmlContextData::invalidate() clears the parent of the lost context. Nothing underneath
+    // the immediate context can be reached anymore.
+    if (loss == Loss::ContextObject
+        && (winner == BoundContextObject || winner == ModelContextObject || winner == UnboundId
+            || winner == UnboundContextObject || winner == ParentContextProperty
+            || winner == ParentContextObject)) {
+        return { KnownIssue::Failure,
+                 "The parent contexts cannot be reached anymore once the context object is lost" };
+    }
+
+    return interpreted ? interpreterIssue(name, kinds, usage, loss, cached)
+                       : compilerIssue(name, kinds, usage, loss, cached, swapped);
+}
+
+void tst_QmlCppCodegen::unqualifiedLostEnclosingContextObject_data()
+{
+    QTest::addColumn<bool>("method");
+    QTest::addColumn<QByteArray>("probe");
+    QTest::addColumn<bool>("lost");
+    QTest::addColumn<bool>("cached");
+
+    for (const bool method : { false, true }) {
+        for (const QByteArray &probe : { "probeName"_ba, "probeGlobal"_ba, "probeStoreName"_ba,
+                                         "probeStoreGlobal"_ba }) {
+            // Assigning to a method makes no sense.
+            if (method && probe.startsWith("probeStore"))
+                continue;
+            const QByteArray name = probe == "probeName" ? "plain name"_ba
+                    : probe == "probeGlobal"             ? "name of a global"_ba
+                    : probe == "probeStoreName"          ? "store to plain name"_ba
+                                                         : "store to name of a global"_ba;
+            const QByteArray row = (method ? "method, "_ba : "property, "_ba) + name;
+            QTest::addRow("%s, intact", row.constData()) << method << probe << false << false;
+            for (const bool cached : { true, false }) {
+                QTest::addRow("%s, lost, %s", row.constData(), cached ? "cached" : "uncached")
+                        << method << probe << true << cached;
+            }
+        }
+    }
+}
+
+void tst_QmlCppCodegen::unqualifiedLostEnclosingContextObject()
+{
+    QFETCH(bool, method);
+    QFETCH(QByteArray, probe);
+    QFETCH(bool, lost);
+    QFETCH(bool, cached);
+
+    QString file = u"unqualifiedLostEnclosingContextObject"_s;
+    if (method)
+        file += u"Swapped"_s;
+
+    // When an enclosing context's context object is destroyed, QQmlContextData::
+    // invalidateContextObjectLost() keeps that context linked to its own parent, but it
+    // invalidates its child contexts, which clears their parent link. The contexts of the inner
+    // component then cannot reach the lost context anymore. They cannot tell that it would have
+    // resolved the name, and the interpreter continues the search beyond it, to the global object.
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/"_s + file + u".qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    std::unique_ptr<QObject> root(c.create());
+    QVERIFY(root);
+
+    // The inner object has no parent below the root object, so it survives the root object.
+    QObject keeper;
+    QObject *context = nullptr;
+    QVERIFY(QMetaObject::invokeMethod(root.get(), "makeInner", Q_RETURN_ARG(QObject *, context),
+                                      Q_ARG(QObject *, &keeper)));
+    QVERIFY(context);
+    QObject *scope = context->property("child").value<QObject *>();
+    QVERIFY(scope);
+
+    // The function has to be retrieved while its context is valid. Later it can only run as it
+    // was.
+    const QJSValue function = engine.newQObject(scope).property(QString::fromLatin1(probe));
+    QVERIFY(function.isCallable());
+
+    const auto call = [&]() {
+        const QJSValue result = function.call({ QJSValue(0) });
+        return result.isError() ? u'<' + result.property(u"name"_s).toString() + u'>'
+                                : result.toString();
+    };
+
+    // A store has to land on the enclosing context object, or nowhere.
+    const bool store = probe.startsWith("probeStore");
+    const char *property = probe == "probeStoreName" ? "stored" : "escape";
+    const QString intact = store ? u"stored"_s : u"enclosing context object"_s;
+
+    if (cached) {
+        QCOMPARE(call(), intact);
+        if (store)
+            QCOMPARE(root->property(property).toInt(), 5);
+    }
+
+    if (lost)
+        root.reset();
+
+    const QString actual = call();
+    const QString expected = lost ? u"<ReferenceError>"_s : intact;
+
+    // The inner contexts have lost their link to the lost enclosing context. The interpreter
+    // therefore doesn't know the lost context object. A name that the global object doesn't have
+    // is not found anywhere and throws the expected ReferenceError for that reason, unless a
+    // cached lookup returns undefined from the parent context hierarchy:
+    // QQmlContextWrapper::lookupInParentContextHierarchy() finds no parent.
+    // A global name finds the global object's member. A method call on that fails differently.
+    if (store) {
+        if (lost) {
+            QEXPECT_FAIL("", "QQmlContextWrapper::virtualPut doesn't know about lost context "
+                             "objects and throws a generic Error", Continue);
+        }
+    } else if (lost && (probe == "probeGlobal" || cached)) {
+        QEXPECT_FAIL("", "The inner context isn't linked to the lost enclosing context anymore",
+                     Abort);
+    }
+    QCOMPARE(actual, expected);
+
+    if (!store)
+        return;
+
+    if (!lost) {
+        QCOMPARE(root->property(property).toInt(), 5);
+    } else if (probe == "probeStoreName") {
+        QVERIFY(!engine.globalObject().hasProperty(QString::fromLatin1(property)));
+    } else {
+        QVERIFY(engine.globalObject().property(QString::fromLatin1(property)).isCallable());
+    }
+}
+
+void tst_QmlCppCodegen::unqualifiedLostScopeObject_data()
+{
+    QTest::addColumn<bool>("cached");
+
+    QTest::addRow("cached") << true;
+    QTest::addRow("uncached") << false;
+}
+
+void tst_QmlCppCodegen::unqualifiedLostScopeObject()
+{
+    QFETCH(bool, cached);
+
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/unqualifiedLostScopeObject.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    std::unique_ptr<QObject> root(c.create());
+    QVERIFY(root);
+
+    const auto callStored = [&]() {
+        QString result;
+        if (!QMetaObject::invokeMethod(root.get(), "callStored", Q_RETURN_ARG(QString, result)))
+            return u"<not invoked>"_s;
+        return result;
+    };
+
+    QVERIFY(QMetaObject::invokeMethod(root.get(), "store"));
+    if (cached)
+        QCOMPARE(callStored(), u"2"_s);
+
+    // The scope object would have resolved the name. The context object has it, too, but the
+    // search does not resume there.
+    delete root->property("child").value<QObject *>();
+    const QString result = callStored();
+
+#ifdef QT_TEST_FORCE_INTERPRETER
+    // An unpopulated lookup skips a scope object that is gone and searches the rest.
+    if (!cached) {
+        QEXPECT_FAIL("",
+                     "The interpreter resumes the search past a lost scope object if the "
+                     "lookup has not been populated before",
+                     Abort);
+    }
+#endif
+
+    QCOMPARE(result, u"<ReferenceError>"_s);
+}
+
+void tst_QmlCppCodegen::unqualifiedLostScopeObjectStore_data()
+{
+    QTest::addColumn<QByteArray>("probe");
+    QTest::addColumn<bool>("lost");
+    QTest::addColumn<bool>("cached");
+
+    for (const QByteArray &probe : { "probeStoreTarget"_ba, "probeStoreShared"_ba }) {
+        const QByteArray row = probe == "probeStoreTarget" ? "name only on scope object"_ba
+                                                           : "name also on context object"_ba;
+        QTest::addRow("%s, intact", row.constData()) << probe << false << false;
+        for (const bool cached : { true, false }) {
+            QTest::addRow("%s, lost, %s", row.constData(), cached ? "cached" : "uncached")
+                    << probe << true << cached;
+        }
+    }
+}
+
+void tst_QmlCppCodegen::unqualifiedLostScopeObjectStore()
+{
+    QFETCH(QByteArray, probe);
+    QFETCH(bool, lost);
+    QFETCH(bool, cached);
+
+    QQmlEngine engine;
+    QQmlComponent c(&engine,
+                    QUrl(u"qrc:/qt/qml/TestTypes/unqualifiedLostScopeObjectStore.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    std::unique_ptr<QObject> root(c.create());
+    QVERIFY(root);
+
+    QObject *context = nullptr;
+    QVERIFY(QMetaObject::invokeMethod(root.get(), "makeInner", Q_RETURN_ARG(QObject *, context),
+                                      Q_ARG(QObject *, root.get())));
+    QVERIFY(context);
+    QObject *scope = context->property("child").value<QObject *>();
+    QVERIFY(scope);
+
+    // The method is called from QML, as a plain function. That is what makes it run without its
+    // scope object. A call from C++ doesn't run it at all.
+    const QString stored = QString::fromLatin1("stored" + probe.mid(strlen("probeStore")));
+    const auto call = [&]() {
+        QString result;
+        const bool invoked = QMetaObject::invokeMethod(
+                root.get(), "callStored", Q_RETURN_ARG(QString, result), Q_ARG(QObject *, context),
+                Q_ARG(QString, stored));
+        return invoked ? result : u"<not invoked>"_s;
+    };
+
+    const QString name = QString::fromLatin1(probe == "probeStoreTarget" ? "target" : "shared");
+
+    if (cached) {
+        QCOMPARE(call(), u"stored"_s);
+        QCOMPARE(scope->property(name.toLatin1()).toInt(), 5);
+        QVERIFY(scope->setProperty(name.toLatin1(), 0));
+    }
+
+    if (lost)
+        delete scope;
+
+    const QString actual = call();
+
+    // QQmlContextWrapper::virtualPut() ignores a lost scope object. A name that only it has is
+    // written to the global object, which fails with a generic Error. A name that the context
+    // object has, too, is written to the context object.
+    if (lost) {
+        QEXPECT_FAIL("", "virtualPut() doesn't throw a ReferenceError for a lost scope object",
+                     Abort);
+    }
+    QCOMPARE(actual, lost ? u"<ReferenceError>"_s : u"stored"_s);
+
+    // The store lands on the scope object or nowhere. The context object is searched after the
+    // scope object, so it never gets it.
+    QCOMPARE(context->property("shared").toInt(), 0);
+    QVERIFY(!engine.globalObject().hasProperty(name));
+    if (!lost)
+        QCOMPARE(scope->property(name.toLatin1()).toInt(), 5);
+}
+
+void tst_QmlCppCodegen::unqualifiedName_data()
+{
+    QTest::addColumn<int>("index");
+    QTest::addColumn<int>("kinds");
+    QTest::addColumn<QByteArray>("usage");
+    QTest::addColumn<Loss>("loss");
+    QTest::addColumn<bool>("cached");
+    QTest::addColumn<bool>("swapped");
+
+    for (int i = 0; i < int(std::size(unqualifiedNames)); ++i) {
+        const UnqualifiedName &name = unqualifiedNames[i];
+
+        QList<NameKind> placeable;
+        for (int bit = 0; bit < int(std::size(nameKindInfos)); ++bit) {
+            if (name.placeable.testFlag(NameKind(1 << bit)))
+                placeable.append(NameKind(1 << bit));
+        }
+
+        // Every pair of places, every single place, and none at all.
+        QList<NameKinds> placements = { {} };
+        for (qsizetype a = 0; a < placeable.size(); ++a) {
+            placements.append(placeable[a]);
+            for (qsizetype b = a + 1; b < placeable.size(); ++b) {
+                // A document is either bound or unbound, the scope object is either plain or
+                // dynamic, and a bound delegate doesn't get a model context.
+                const NameKinds pair = placeable[a] | placeable[b];
+                const bool bound = pair & (BoundId | BoundContextObject);
+                const bool unbound = pair & (UnboundId | UnboundContextObject | ModelContextObject);
+                if (!(bound && unbound) && pair != (ScopeObject | DynamicScopeObject))
+                    placements.append(pair);
+            }
+        }
+
+        for (const NameKinds placement : std::as_const(placements)) {
+            QByteArrayList labels;
+            for (int bit = 0; bit < int(std::size(nameKindInfos)); ++bit) {
+                if (placement.testFlag(NameKind(1 << bit)))
+                    labels.append(nameKindInfos[bit].label);
+            }
+            const QByteArray where = !labels.isEmpty() ? labels.join('+')
+                    : name.builtIn                ? "only built in"_ba
+                                                  : "nowhere"_ba;
+            const NameKinds present = name.builtIn | placement;
+            const int kinds = int(present.toInt());
+
+            // The name appears on the dynamic scope object between the first and the second
+            // evaluation of a binding.
+            if (placement & DynamicScopeObject) {
+                QTest::addRow("%s, %s, inserted after first evaluation", name.name,
+                              where.constData())
+                        << i << kinds << "Dynamic"_ba << Loss::None << false << false;
+                continue;
+            }
+
+            for (const bool swapped : { false, true }) {
+                if (swapped && !isSwappable(name, present))
+                    continue;
+
+                // The NameHolders hold the translation functions as methods and all other names as
+                // properties. SwappedNameHolders do it the other way around.
+                const bool isTranslation = (name.builtIn & Keyword) && name.expression[0] != '"';
+                const QByteArray member = !swapped ? ""_ba
+                        : isTranslation            ? " as property"_ba
+                                                   : " as method"_ba;
+                const QByteArray place = where + member;
+
+                for (const QByteArray &usage : { "Function"_ba, "Binding"_ba, "Script"_ba }) {
+                    QTest::addRow("%s, %s, %s", name.name, place.constData(), usage.constData())
+                            << i << kinds << usage << Loss::None << false << swapped;
+                }
+
+                for (const Loss loss : { Loss::ScopeObject, Loss::ContextObject }) {
+                    for (const bool cached : { true, false }) {
+                        QTest::addRow("%s, %s, %s lost, %s", name.name, place.constData(),
+                                      loss == Loss::ScopeObject ? "scope object" : "context object",
+                                      cached ? "cached" : "uncached")
+                                << i << kinds << "Function"_ba << loss << cached << swapped;
+                    }
+                }
+            }
+        }
+    }
+}
+
+void tst_QmlCppCodegen::unqualifiedName()
+{
+    QFETCH(int, index);
+    QFETCH(int, kinds);
+    QFETCH(QByteArray, usage);
+    QFETCH(Loss, loss);
+    QFETCH(bool, cached);
+    QFETCH(bool, swapped);
+
+    // The console name logs "text" if the real console wins, and a name that isn't found throws
+    // a ReferenceError that the uncaught bindings report. Both are expected.
+    static QtMessageHandler previousHandler;
+    previousHandler = qInstallMessageHandler(
+            [](QtMsgType type, const QMessageLogContext &context, const QString &message) {
+                const bool consoleOutput = type == QtDebugMsg && message == "text"_L1;
+                const bool notFound = type == QtWarningMsg
+                        && message.contains("ReferenceError: "_L1)
+                        && message.endsWith(" is not defined"_L1);
+                if (!consoleOutput && !notFound)
+                    previousHandler(type, context, message);
+            });
+    const auto restoreHandler = qScopeGuard([]() { qInstallMessageHandler(previousHandler); });
+
+    const UnqualifiedName &name = unqualifiedNames[index];
+    const NameKinds present = NameKinds::fromInt(kinds);
+    const QString file = unqualifiedNameFile(present, swapped);
+
+    bool interpreted = !unqualifiedNameCompilable(name, present, swapped);
+#ifdef QT_TEST_FORCE_INTERPRETER
+    interpreted = true;
+#endif
+
+    const KnownIssue issue =
+            unqualifiedNameIssue(name, present, usage, loss, cached, interpreted, swapped);
+    if (issue.kind == KnownIssue::Crash)
+        QSKIP(issue.reason);
+
+    QQmlEngine engine;
+    engine.addImportPath(u":/qt/qml/TestTypes/imports/"_s);
+
+    // Rule 9 (rule-remaining-contexts): The context the document is created in comes last.
+    QQmlContext parentContext(engine.rootContext());
+    std::unique_ptr<QObject> parentObject(swapped ? static_cast<QObject *>(new SwappedNameHolder)
+                                                  : new NameHolder);
+    parentObject->setObjectName(u"parent context object"_s);
+    if (present & ParentContextObject)
+        parentContext.setContextObject(parentObject.get());
+    if (present & ParentContextProperty) {
+        parentContext.setContextProperty(
+                QString::fromLatin1(name.name),
+                taggedValue(&engine, u"parent context property"_s));
+    }
+
+    QQmlComponent document(&engine, QUrl(u"qrc:/qt/qml/TestTypes/"_s + file));
+    QVERIFY2(document.isReady(), qPrintable(document.errorString()));
+    std::unique_ptr<QObject> root(document.create(&parentContext));
+    QVERIFY(root);
+
+    QQmlComponent *component = root->property(unqualifiedNameComponent(name, present))
+                                       .value<QQmlComponent *>();
+    QVERIFY(component);
+
+    // A delegate model inserts a context between an unbound delegate and its creation context.
+    // That context's context object is the model item. The model has a role for each name.
+    QByteArrayList roles;
+    for (const UnqualifiedName &modelName : unqualifiedNames)
+        roles.append(modelName.name);
+    NameModel model(roles, taggedValue(&engine, u"model context object"_s));
+    QQmlComponent instantiatorComponent(&engine);
+    instantiatorComponent.setData("import QtQml\nInstantiator {}", QUrl());
+    std::unique_ptr<QObject> instantiator;
+
+    std::unique_ptr<QObject> ownedContextObject;
+    QObject *contextObject = nullptr;
+    if (present & ModelContextObject) {
+        instantiator.reset(instantiatorComponent.createWithInitialProperties(
+                { { u"delegate"_s, QVariant::fromValue(component) },
+                  { u"model"_s, QVariant::fromValue<QObject *>(&model) } }));
+        QVERIFY2(instantiator, qPrintable(instantiatorComponent.errorString()));
+        contextObject = instantiator->property("object").value<QObject *>();
+    } else {
+        ownedContextObject.reset(component->create(qmlContext(root.get())));
+        contextObject = ownedContextObject.get();
+    }
+    QVERIFY2(contextObject, qPrintable(component->errorString()));
+    QObject *scope = contextObject->property("child").value<QObject *>();
+    QVERIFY(scope);
+
+    QStringList actual;
+    QStringList expected;
+    if (usage == "Dynamic") {
+        auto *dynamicScope = qobject_cast<DynamicNameHolder *>(scope);
+        QVERIFY(dynamicScope);
+        actual.append(dynamicScope->property("probe").toString());
+        expected.append(expectedValue(
+                &engine, name, present & ~NameKinds(DynamicScopeObject), Loss::None));
+        dynamicScope->insert(QString::fromLatin1(name.name),
+                             taggedValue(&engine, u"dynamic scope object"_s));
+        dynamicScope->setProperty("trigger", 1);
+        actual.append(dynamicScope->property("probe").toString());
+        expected.append(expectedValue(&engine, name, present, Loss::None));
+    } else if (usage != "Function") {
+        actual.append(scope->property("probe" + usage).toString());
+        expected.append(expectedValue(&engine, name, present, Loss::None));
+    } else {
+        const QJSValue function = engine.newQObject(scope).property(u"probeFunction"_s);
+        QVERIFY(function.isCallable());
+
+        // A call from C++ accepts this objects and doesn't run a method of a deleted object. Call
+        // via a script, which rejects them, so that the method runs without its lost scope object.
+        const QJSValue caller = engine.evaluate(u"(function(f) { return f() })"_s);
+        QVERIFY(caller.isCallable());
+
+        // An error is shown as its name, a name that isn't found as ReferenceError.
+        const auto call = [&]() {
+            const QJSValue result = caller.call({ function });
+            return result.isError() ? u'<' + result.property(u"name"_s).toString() + u'>'
+                                    : result.toString();
+        };
+        const auto expect = [&](Loss loss) {
+            const QString value = expectedValue(&engine, name, present, loss);
+            return value.isNull() ? u"<ReferenceError>"_s : value;
+        };
+
+        // The first call populates the lookups. The others use them.
+        if (loss == Loss::None || cached) {
+            actual.append(call());
+            expected.append(expect(Loss::None));
+        }
+
+        std::unique_ptr<QObject> survivor;
+        switch (loss) {
+        case Loss::None:
+            actual.append(call());
+            expected.append(expect(Loss::None));
+            break;
+        case Loss::ScopeObject:
+            delete scope;
+            break;
+        case Loss::ContextObject:
+            // The scope object outlives its context object, like a control's background.
+            scope->setParent(nullptr);
+            survivor.reset(scope);
+            if (ownedContextObject)
+                ownedContextObject.reset();
+            else
+                delete contextObject;
+            break;
+        }
+
+        if (loss != Loss::None) {
+            actual.append(call());
+            expected.append(expect(loss));
+        }
+    }
+
+    if (issue.kind == KnownIssue::Failure)
+        QEXPECT_FAIL("", issue.reason, Abort);
+    QCOMPARE(actual, expected);
+}
+
+void tst_QmlCppCodegen::unqualifiedPropertyChangesTarget()
+{
+    // The bindings inside the PropertyChanges are not compiled to C++. Both variants of this test
+    // run them in the interpreter.
+
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/unqualifiedPropertyChangesTarget.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    std::unique_ptr<QObject> root(c.create());
+    QVERIFY(root);
+
+    QObject *withoutFoo = root->property("withoutFoo").value<QObject *>();
+    QVERIFY(withoutFoo);
+    root->setProperty("state", u"changed"_s);
+    QCOMPARE(withoutFoo->property("result").toInt(), 1);
+    QCOMPARE(withoutFoo->property("callResult").toInt(), 1);
+
+    // The PropertyChanges' bindings run with their target as scope object. A target that has the
+    // name shadows the root object's property.
+    root->setProperty("state", QString());
+    QObject *withFoo = root->property("withFoo").value<QObject *>();
+    QVERIFY(withFoo);
+    root->setProperty("target", QVariant::fromValue(withFoo));
+    root->setProperty("state", u"changed"_s);
+
+    // The bindings found the name on the root object, the context object, when they ran for the
+    // first target. The lookup is cached and leaves out the scope object.
+    QEXPECT_FAIL("",
+                 "The cached lookup of a context object property doesn't check the scope object. "
+                 "See QQmlContextWrapper::lookupContextObjectProperty()",
+                 Abort);
+    QCOMPARE(withFoo->property("result").toInt(), 2);
+    QCOMPARE(withFoo->property("callResult").toInt(), 2);
+}
+
+void tst_QmlCppCodegen::unqualifiedScriptStringChangingScope_data()
+{
+    QTest::addColumn<QByteArray>("access");
+    QTest::addColumn<QByteArray>("firstScope");
+    QTest::addColumn<QByteArray>("firstContextObject");
+    QTest::addColumn<QByteArray>("secondScope");
+    QTest::addColumn<QByteArray>("secondContextObject");
+
+    for (const QByteArray &access : { "load"_ba, "call"_ba }) {
+        const char *a = access.constData();
+        QTest::addRow("%s, scope object loses the name", a)
+                << access << "withFoo"_ba << "root"_ba << "withoutFoo"_ba << "root"_ba;
+        QTest::addRow("%s, scope object gains the name", a)
+                << access << "withoutFoo"_ba << "root"_ba << "withFoo"_ba << "root"_ba;
+        QTest::addRow("%s, context object loses the name", a)
+                << access << "withoutFoo"_ba << "root"_ba << "withoutFoo"_ba << "withoutFoo"_ba;
+        QTest::addRow("%s, context object gains the name", a)
+                << access << "withoutFoo"_ba << "withoutFoo"_ba << "withoutFoo"_ba << "root"_ba;
+        QTest::addRow("%s, scope object gains the name in front of the outer context", a)
+                << access << "withoutFoo"_ba << "withoutFoo"_ba << "withFoo"_ba << "withoutFoo"_ba;
+    }
+}
+
+void tst_QmlCppCodegen::unqualifiedScriptStringChangingScope()
+{
+    QFETCH(QByteArray, access);
+    QFETCH(QByteArray, firstScope);
+    QFETCH(QByteArray, firstContextObject);
+    QFETCH(QByteArray, secondScope);
+    QFETCH(QByteArray, secondContextObject);
+
+    // Script strings are not compiled to C++. Both variants of this test run them in the
+    // interpreter.
+
+    QQmlEngine engine;
+    QQmlContext outerContext(engine.rootContext());
+    QQmlComponent c(
+            &engine, QUrl(u"qrc:/qt/qml/TestTypes/unqualifiedScriptStringChangingScope.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    std::unique_ptr<QObject> root(c.create(&outerContext));
+    QVERIFY(root);
+
+    const auto objectNamed = [&](const QByteArray &name) {
+        return name == "root" ? root.get() : root->property(name).value<QObject *>();
+    };
+
+    // The context object of the outer context provides the name once the context object of the
+    // evaluation context doesn't. Unlike the component's own context, the evaluation context
+    // allows its context object to be replaced.
+    outerContext.setContextObject(objectNamed("outer"_ba));
+    QQmlContext evaluationContext(&outerContext);
+
+    const QQmlScriptString script = objectNamed(access)->property("ss").value<QQmlScriptString>();
+
+    // The same script string runs the same function, with the same lookups, in any scope object
+    // and context. Where the name is found must not depend on what an earlier run found in a
+    // different scope object or context object.
+    const QByteArray scopes[] = { firstScope, secondScope };
+    const QByteArray contextObjects[] = { firstContextObject, secondContextObject };
+    const QByteArray tag = QTest::currentDataTag();
+    for (qsizetype run = 0; run < 2; ++run) {
+        evaluationContext.setContextObject(objectNamed(contextObjects[run]));
+        QObject *scope = objectNamed(scopes[run]);
+        QVERIFY(scope);
+        const QList<QObject *> candidates
+                = { scope, evaluationContext.contextObject(), outerContext.contextObject() };
+        const auto holder = std::find_if(candidates.begin(), candidates.end(), [](QObject *o) {
+            return o->property("foo").isValid();
+        });
+        QVERIFY(holder != candidates.end());
+
+        QQmlExpression expression(script, &evaluationContext, scope);
+        const QVariant result = expression.evaluate();
+        QVERIFY2(!expression.hasError(), qPrintable(expression.error().toString()));
+
+        if (run == 1) {
+            if (tag.endsWith("scope object gains the name")) {
+                QEXPECT_FAIL("",
+                             "The cached lookup of a context object property doesn't check the "
+                             "scope object. See QQmlContextWrapper::lookupContextObjectProperty()",
+                             Abort);
+            } else if (tag.endsWith("context object gains the name")
+                       || tag.endsWith("scope object gains the name in front of the outer context")) {
+                QEXPECT_FAIL("",
+                             "The cached lookup in the parent context hierarchy doesn't check the "
+                             "immediate scope object and context object. "
+                             "See QQmlContextWrapper::lookupInParentContextHierarchy()",
+                             Abort);
+            }
+        }
+        QCOMPARE(result, (*holder)->property("foo"));
+    }
+}
+
+// The places where an unqualified name can be found, in the order they are searched. Each of them
+// provides the value of its position plus one.
+static const QByteArray nameHolders[] = {
+    "inner.property"_ba, "scope"_ba, "inner.object"_ba,
+    "middle.property"_ba, "middle.object"_ba,
+    "outer.property"_ba, "outer.object"_ba,
+};
+
+static int nameHolderValue(const QByteArray &holder)
+{
+    const auto it = std::find(std::begin(nameHolders), std::end(nameHolders), holder);
+    Q_ASSERT(it != std::end(nameHolders));
+    return int(std::distance(std::begin(nameHolders), it)) + 1;
+}
+
+static QByteArray nameHolderOf(const QVariant &value)
+{
+    bool ok = false;
+    const int index = value.toInt(&ok) - 1;
+    if (!ok || index < 0 || index >= int(std::size(nameHolders)))
+        return "<none: " + value.toString().toUtf8() + ">";
+    return nameHolders[index];
+}
+
+void tst_QmlCppCodegen::unqualifiedScriptStringContextHierarchy_data()
+{
+    QTest::addColumn<QByteArray>("access");
+    QTest::addColumn<QByteArrayList>("firstHolders");
+    QTest::addColumn<QByteArrayList>("secondHolders");
+
+    for (const QByteArray &access : { "load"_ba, "call"_ba }) {
+        const char *a = access.constData();
+        QTest::addRow("%s, innermost context property shadows the scope object", a)
+                << access << QByteArrayList{ "scope" }
+                << QByteArrayList{ "inner.property", "scope" };
+        QTest::addRow("%s, innermost context property shadows the context object", a)
+                << access << QByteArrayList{ "inner.object" }
+                << QByteArrayList{ "inner.property", "inner.object" };
+        QTest::addRow("%s, innermost context property shadows a parent context", a)
+                << access << QByteArrayList{ "middle.object" }
+                << QByteArrayList{ "inner.property", "middle.object" };
+        QTest::addRow("%s, intermediate context property shadows an outer context", a)
+                << access << QByteArrayList{ "outer.object" }
+                << QByteArrayList{ "middle.property", "outer.object" };
+        QTest::addRow("%s, intermediate context object shadows an outer context", a)
+                << access << QByteArrayList{ "outer.object" }
+                << QByteArrayList{ "middle.object", "outer.object" };
+        QTest::addRow("%s, intermediate context property stops shadowing", a)
+                << access << QByteArrayList{ "middle.property", "outer.object" }
+                << QByteArrayList{ "outer.object" };
+        QTest::addRow("%s, intermediate context object stops shadowing", a)
+                << access << QByteArrayList{ "middle.object", "outer.object" }
+                << QByteArrayList{ "outer.object" };
+        QTest::addRow("%s, outer context property shadows its context object", a)
+                << access << QByteArrayList{ "outer.object" }
+                << QByteArrayList{ "outer.property", "outer.object" };
+    }
+}
+
+void tst_QmlCppCodegen::unqualifiedScriptStringContextHierarchy()
+{
+    QFETCH(QByteArray, access);
+    QFETCH(QByteArrayList, firstHolders);
+    QFETCH(QByteArrayList, secondHolders);
+
+    // Script strings are not compiled to C++. Both variants of this test run them in the
+    // interpreter.
+
+    QQmlEngine engine;
+    QQmlComponent c(
+            &engine, QUrl(u"qrc:/qt/qml/TestTypes/unqualifiedScriptStringContextHierarchy.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    std::unique_ptr<QObject> root(c.create());
+    QVERIFY(root);
+
+    QQmlComponent *withName = root->property("withName").value<QQmlComponent *>();
+    QVERIFY(withName);
+    QQmlComponent *withoutName = root->property("withoutName").value<QQmlComponent *>();
+    QVERIFY(withoutName);
+
+    const QQmlScriptString script
+            = root->property(access).value<QObject *>()->property("ss").value<QQmlScriptString>();
+    const QString name = access == "load" ? u"foo"_s : u"getFoo"_s;
+
+    // The same script string runs the same function, with the same lookups, in any scope object
+    // and context. Where the name is found must not depend on what an earlier run found in a
+    // different context hierarchy. All objects with the name are of the same type, and so are
+    // all objects without it.
+    const QByteArray tag = QTest::currentDataTag();
+    const QByteArrayList allHolders[] = { firstHolders, secondHolders };
+    for (qsizetype run = 0; run < 2; ++run) {
+        const QByteArrayList &holders = allHolders[run];
+        std::vector<std::unique_ptr<QObject>> objects;
+        const auto createObject = [&](const QByteArray &holder) {
+            QObject *object = holders.contains(holder)
+                    ? withName->createWithInitialProperties(
+                              { { u"foo"_s, nameHolderValue(holder) } })
+                    : withoutName->create();
+            objects.emplace_back(object);
+            return object;
+        };
+
+        const auto setupContext = [&](QQmlContext *context, const QByteArray &level) {
+            context->setContextObject(createObject(level + ".object"));
+            const QByteArray property = level + ".property";
+            if (!holders.contains(property))
+                return;
+            const int value = nameHolderValue(property);
+            if (access == "load") {
+                context->setContextProperty(name, value);
+            } else {
+                context->setContextProperty(
+                        name, engine.evaluate(u"(function() { return %1 })"_s.arg(value))
+                                      .toVariant(QJSValue::RetainJSObjects));
+            }
+        };
+
+        QQmlContext outer(engine.rootContext());
+        setupContext(&outer, "outer");
+        QQmlContext middle(&outer);
+        setupContext(&middle, "middle");
+        QQmlContext inner(&middle);
+        setupContext(&inner, "inner");
+        QObject *scope = createObject("scope");
+
+        const auto holder = std::find_if(
+                std::begin(nameHolders), std::end(nameHolders),
+                [&](const QByteArray &h) { return holders.contains(h); });
+        QVERIFY(holder != std::end(nameHolders));
+
+        QQmlExpression expression(script, &inner, scope);
+        const QVariant result = expression.evaluate();
+        QVERIFY2(!expression.hasError(), qPrintable(expression.error().toString()));
+
+        if (run == 1) {
+            if (tag.endsWith("innermost context property shadows the scope object")
+                    || tag.endsWith("innermost context property shadows the context object")) {
+                QEXPECT_FAIL("",
+                             "The cached lookup of a scope object or context object property "
+                             "doesn't check the properties of the immediate context. See "
+                             "QQmlContextWrapper::lookupScopeObjectProperty() and "
+                             "lookupContextObjectProperty()",
+                             Abort);
+            } else if (tag.endsWith("innermost context property shadows a parent context")) {
+                QEXPECT_FAIL("",
+                             "The cached lookup in the parent context hierarchy doesn't check "
+                             "the properties of the immediate context. See "
+                             "QQmlContextWrapper::lookupInParentContextHierarchy()",
+                             Abort);
+            }
+        }
+        QCOMPARE(nameHolderOf(result), *holder);
+    }
+}
+
+void tst_QmlCppCodegen::unqualifiedScriptStringGlobalName_data()
+{
+    QTest::addColumn<int>("index");
+    QTest::addColumn<QByteArrayList>("firstShadows");
+    QTest::addColumn<QByteArrayList>("secondShadows");
+
+    // The places where a shadowing member can be. Only the immediate context, the scope object,
+    // and the context object shadow anything but a keyword (rule-keywords,
+    // rule-immediate-ids, rule-scope-object, rule-context-object, rule-global-object, and
+    // rule-remaining-contexts). If the scope object or context object is replaced with an object
+    // of a different type, or a context property appears or disappears, the search is repeated.
+    const QByteArrayList shadows[][2] = {
+        { {}, { "scope" } },
+        { { "scope" }, {} },
+        { {}, { "contextObject" } },
+        { { "contextObject" }, {} },
+        { {}, { "contextProperty" } },
+        { { "contextProperty" }, {} },
+        { { "scope" }, { "contextProperty", "scope" } },
+        { {}, { "parentContextObject" } },
+        { {}, { "parentContextProperty" } },
+    };
+
+    for (int i = 0; i < int(std::size(unqualifiedNames)); ++i) {
+        if (!unqualifiedNames[i].builtIn)
+            continue;
+        for (const auto &[first, second] : shadows) {
+            QTest::addRow("%s, %s, then %s", unqualifiedNames[i].name,
+                          first.isEmpty() ? "none" : first.join('+').constData(),
+                          second.isEmpty() ? "none" : second.join('+').constData())
+                    << i << first << second;
+        }
+    }
+}
+
+void tst_QmlCppCodegen::unqualifiedScriptStringGlobalName()
+{
+    QFETCH(int, index);
+    QFETCH(QByteArrayList, firstShadows);
+    QFETCH(QByteArrayList, secondShadows);
+
+    // Script strings are not compiled to C++. Both variants of this test run them in the
+    // interpreter.
+
+    const UnqualifiedName &global = unqualifiedNames[index];
+
+    QQmlEngine engine;
+    QQmlComponent c(
+            &engine, QUrl(u"qrc:/qt/qml/TestTypes/unqualifiedScriptStringGlobalName.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    std::unique_ptr<QObject> root(c.create());
+    QVERIFY(root);
+
+    const QByteArray holder = global.key + "Holder"_ba;
+    const QQmlScriptString script
+            = root->property(holder).value<QObject *>()->property("ss").value<QQmlScriptString>();
+
+    const QString shadowed = u"shadowed"_s;
+    NameHolder shadow;
+    shadow.setObjectName(shadowed);
+    QObject plain;
+
+    // The translation functions are the only names the tests call directly.
+    const bool isTranslation = (global.builtIn & Keyword) && global.expression[0] != '"';
+    const bool isNaN = qstrcmp(global.name, "NaN") == 0;
+
+    // The same script string runs the same function, with the same lookups, in each context.
+    const QByteArrayList allShadows[] = { firstShadows, secondShadows };
+    for (qsizetype run = 0; run < 2; ++run) {
+        const QByteArrayList &shadows = allShadows[run];
+        QQmlContext parentContext(engine.rootContext());
+        if (shadows.contains("parentContextObject"))
+            parentContext.setContextObject(&shadow);
+        if (shadows.contains("parentContextProperty"))
+            tagInContext(&parentContext, shadowed);
+
+        QQmlContext context(&parentContext);
+        context.setContextObject(shadows.contains("contextObject") ? &shadow : &plain);
+        if (shadows.contains("contextProperty"))
+            tagInContext(&context, shadowed);
+
+        QObject *scope = shadows.contains("scope") ? &shadow : &plain;
+        const bool expectShadow = !(global.builtIn & Keyword)
+                && (shadows.contains("contextProperty") || shadows.contains("scope")
+                    || shadows.contains("contextObject"));
+
+        QQmlExpression expression(script, &context, scope);
+        const QVariant result = expression.evaluate();
+        QVERIFY2(!expression.hasError(), qPrintable(expression.error().toString()));
+
+        const bool shadowedByObjectOrContextProperty = shadows.contains("scope")
+                || shadows.contains("contextObject") || shadows.contains("contextProperty");
+        if (run == 0 && (isTranslation || isNaN) && shadowedByObjectOrContextProperty) {
+            QEXPECT_FAIL("",
+                         isNaN ? "NaN is not folded (\"Nan\" typo in the code generator) and "
+                                 "QQmlContextWrapper::getPropertyAndBase() searches all scopes and "
+                                 "contexts before the global object"
+                               : "QQmlContextWrapper::getPropertyAndBase() searches all scopes and "
+                                 "contexts before the translation functions",
+                         Abort);
+        } else if (run == 1 && (global.builtIn & Global) && firstShadows.isEmpty()
+                   && shadowedByObjectOrContextProperty) {
+            QEXPECT_FAIL("",
+                         "The cached lookup in the global object doesn't check the scope object, "
+                         "context object, and context properties. See "
+                         "QQmlContextWrapper::lookupInGlobalObject()",
+                         Abort);
+        }
+        QCOMPARE(result.toString(),
+                 expectShadow ? shadowed : builtInValue(&engine, global));
+    }
+}
+
+void tst_QmlCppCodegen::unqualifiedScriptStringId_data()
+{
+    QTest::addColumn<bool>("firstInComponentContext");
+
+    QTest::addRow("id in parent context, then in innermost context") << false;
+    QTest::addRow("id in innermost context, then in parent context") << true;
+}
+
+void tst_QmlCppCodegen::unqualifiedScriptStringId()
+{
+    QFETCH(bool, firstInComponentContext);
+
+    // Script strings are not compiled to C++. Both variants of this test run them in the
+    // interpreter.
+
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/unqualifiedScriptStringId.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    std::unique_ptr<QObject> root(c.create());
+    QVERIFY(root);
+
+    QObject *named = root->property("named").value<QObject *>();
+    QVERIFY(named);
+    const QQmlScriptString script
+            = root->property("load").value<QObject *>()->property("ss").value<QQmlScriptString>();
+
+    // A context created by the user has no ids. Its parent context does. Both have the same
+    // context object, and the scope object is the same, too.
+    QQmlContext *componentContext = qmlContext(root.get());
+    QQmlContext userContext(componentContext);
+    userContext.setContextObject(root.get());
+
+    QQmlContext *contexts[] = { &userContext, componentContext };
+    if (firstInComponentContext)
+        std::swap(contexts[0], contexts[1]);
+
+    // QQmlContextWrapper::lookupIdObject() reads the id by index from the immediate context
+    // without checking that the context has it.
+    if (firstInComponentContext) {
+        QSKIP("The cached lookup of an id of the immediate context reads past the ids of a "
+              "different context and crashes");
+    }
+
+    for (QQmlContext *context : contexts) {
+        QQmlExpression expression(script, context, root.get());
+        const QVariant result = expression.evaluate();
+        QVERIFY2(!expression.hasError(), qPrintable(expression.error().toString()));
+        if (context == componentContext) {
+            QEXPECT_FAIL("",
+                         "The cached lookup in the parent context hierarchy doesn't check the "
+                         "ids of the immediate context. "
+                         "See QQmlContextWrapper::lookupInParentContextHierarchy()",
+                         Abort);
+        }
+        QCOMPARE(result.value<QObject *>(), named);
+    }
 }
 
 void tst_QmlCppCodegen::unstoredUndefined()

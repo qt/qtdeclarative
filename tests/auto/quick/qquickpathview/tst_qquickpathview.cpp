@@ -139,6 +139,8 @@ private slots:
     void qtbug90479();
     void overCached();
     void qtbug46487();
+    void highlightInBoundComponent_data();
+    void highlightInBoundComponent();
 
 private:
     std::unique_ptr<QPointingDevice> touchscreen{QTest::createTouchDevice()};
@@ -3105,6 +3107,34 @@ void tst_QQuickPathView::qtbug46487()
     QTRY_COMPARE(pathview->count(), 3);
     QCOMPARE(pathview->property("delegatesCreated").toInt(), 5 + 3);
     QCOMPARE(pathview->property("delegatesDestroyed").toInt(), 5);
+}
+
+void tst_QQuickPathView::highlightInBoundComponent_data()
+{
+    QTest::addColumn<QString>("file");
+    QTest::addColumn<bool>("bound");
+
+    QTest::addRow("unbound") << QStringLiteral("highlightUnbound.qml") << false;
+    QTest::addRow("bound") << QStringLiteral("highlightBound.qml") << true;
+}
+
+void tst_QQuickPathView::highlightInBoundComponent()
+{
+    QFETCH(QString, file);
+    QFETCH(bool, bound);
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl(file));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    std::unique_ptr<QObject> object(component.create());
+    QQuickPathView *pathview = qobject_cast<QQuickPathView *>(object.get());
+    QVERIFY(pathview);
+
+    // QQuickPathView creates the highlight in a new context, even if the component is bound. A
+    // bound component cannot be created outside its creation context, so there is no highlight.
+    if (bound)
+        QEXPECT_FAIL("", "PathView inserts a context for a bound highlight", Abort);
+    QVERIFY(pathview->highlightItem());
 }
 
 QTEST_MAIN(tst_QQuickPathView)

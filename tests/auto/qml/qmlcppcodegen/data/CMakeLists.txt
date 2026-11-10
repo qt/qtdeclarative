@@ -26,6 +26,7 @@ set(cpp_sources
     invisible.h
     largeValueType.h
     listprovider.h
+    nameholder.h
     listsingleton.h
     multiforeign.h
     objectwithmethod.h
@@ -226,6 +227,9 @@ set(qml_files
     ignoredFunctionReturn.qml
     immediateQuit.qml
     imports/QmlBench/Globals.qml
+    imports/ShadowTypes/Infinity.qml
+    imports/ShadowTypes/Math.qml
+    imports/ShadowTypes/Plugh.qml
     importsFromImportPath.qml
     indirectlyShadowable.qml
     infinities.qml
@@ -375,6 +379,37 @@ set(qml_files
     unknownAttached.qml
     unknownParameter.qml
     unknownUnderlyingType.qml
+    unqualifiedLostEnclosingContextObject.qml
+    unqualifiedLostEnclosingContextObjectSwapped.qml
+    unqualifiedLostScopeObject.qml
+    unqualifiedLostScopeObjectStore.qml
+    unqualifiedName/Main.qml
+    unqualifiedName/Addressable.qml
+    unqualifiedName/AddressableBoundIds.qml
+    unqualifiedName/AddressableBoundRoot.qml
+    unqualifiedName/AddressableIds.qml
+    unqualifiedName/AddressableRoot.qml
+    unqualifiedName/BoundIds.qml
+    unqualifiedName/BoundIdsRoot.qml
+    unqualifiedName/BoundRoot.qml
+    unqualifiedName/Ids.qml
+    unqualifiedName/IdsRoot.qml
+    unqualifiedName/Root.qml
+    unqualifiedName/Swapped.qml
+    unqualifiedName/SwappedBoundRoot.qml
+    unqualifiedName/SwappedIds.qml
+    unqualifiedName/SwappedRoot.qml
+    unqualifiedName/SwappedType.qml
+    unqualifiedName/SwappedTypeBoundRoot.qml
+    unqualifiedName/SwappedTypeRoot.qml
+    unqualifiedName/Type.qml
+    unqualifiedName/TypeBoundRoot.qml
+    unqualifiedName/TypeRoot.qml
+    unqualifiedPropertyChangesTarget.qml
+    unqualifiedScriptStringChangingScope.qml
+    unqualifiedScriptStringContextHierarchy.qml
+    unqualifiedScriptStringGlobalName.qml
+    unqualifiedScriptStringId.qml
     unstoredUndefined.qml
     unusedAttached.qml
     urlString.qml
@@ -424,6 +459,15 @@ set(resource_files
     imports/CppAutoTarget/Thing27.qml
     imports/CppAutoTarget/qmldir
     imports/QmlBench/qmldir
+    imports/ShadowTypes/qmldir
+)
+
+# The singletons named like globals must only be visible where ShadowTypes is imported.
+set_source_files_properties(
+    "imports/ShadowTypes/Infinity.qml"
+    "imports/ShadowTypes/Math.qml"
+    "imports/ShadowTypes/Plugh.qml"
+    PROPERTIES QT_QML_SKIP_QMLDIR_ENTRY TRUE
 )
 
 if(NOT OHOS)

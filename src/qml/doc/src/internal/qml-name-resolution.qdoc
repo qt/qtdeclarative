@@ -1,0 +1,168 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \internal
+    \page qml-name-resolution.html
+    \title Resolving Unqualified Names in QML
+
+    This page specifies how the QML engine and the QML compiler resolve unqualified names.
+
+    \section1 Terminology
+
+    \list
+    \li The \e location is the place in a document where the name to be resolved occurs.
+    \li An \e {unqualified name} is an identifier that is not the member of an object expression,
+        that is, not preceded by a \c{.}, and that no JavaScript declaration resolves. The
+        declarations are local variables, function parameters, and function names. They resolve
+        names lexically, before any of the rules below. In
+        \c{function f() { let Infinity = 42; return Infinity }}, \c Infinity is not an
+        unqualified name, and the function returns 42. In \c{property int i: width}, \c width is
+        an unqualified name.
+    \li An \e id is the name given to an object with an \c id property, such as \c root in
+        \c{id: root}. The engine stores the ids of a component as context properties of the
+        component's \c QQmlContext.
+    \li The \e {immediate scope object} is the object whose binding, signal handler, or function
+        contains the location. In the example below, it is the \c Rectangle for the binding on
+        \c color and the \c Text for the binding on \c text.
+    \li The \e {immediate context} is the \c QQmlContext of the component that contains the
+        location. Its \e {context object} is typically the root object of that component.
+        Often, the scope object and the context object are the same.
+    \li The \e {lexically enclosing contexts} are the contexts of the components in whose
+        definitions the location is nested, from the inside out. In the example below, the
+        delegate of \c Repeater is a component defined inside \c Outer.qml. A location inside the
+        delegate has the delegate context as immediate context. The \c Outer.qml context is
+        lexically enclosing. A context in which \c Outer or the delegate is merely instantiated
+        is not.
+    \endlist
+
+    \qml
+    // Outer.qml
+    Item {                              // context object of the Outer.qml context
+        id: outerRoot
+        Repeater {
+            delegate: Item {            // context object of the delegate context
+                id: delegateRoot
+                Rectangle {
+                    id: inner
+                    color: delegateRoot.color   // scope object: the Rectangle
+                    Text { text: outerRoot.objectName }  // scope object: the Text
+                }
+            }
+        }
+    }
+    \endqml
+
+    "Lookup" has a specific meaning in the engine, which is not invoked by these general rules.
+
+    \section1 Name Resolution Rules
+
+    The rules below are checked in order. A rule applies if the place it describes has a member of
+    the given name, no matter whether that member is a property, method, signal, id, type, import
+    namespace, or imported script. The first rule that applies decides. We don't need to know the
+    kind of a name beforehand. In particular, a method found in an earlier place shadows a property
+    of the same name in a later place, and the other way around.
+
+    \list 1
+    \li \target rule-keywords Keywords: The translation functions and the constants \c undefined, \c
+        Infinity, and \c NaN override everything else, in translation bindings as well as in calls
+        at run time.
+    \li \target rule-imports Imports: Types, import namespaces, and imported scripts of the document
+        containing the location. Upper-case type names are always found. Lower-case type names
+        (value types) are only found with \c{ValueTypeBehavior: Addressable}. The precedence between
+        different kinds of imports (explicit module, directory, or script; scoped or unscoped;
+        implicit; qmldir) and the impact of their ordering in a document shall be specified
+        separately.
+    \li \target rule-immediate-ids Ids of the immediate context. Only a QQmlExpression evaluated in
+        a context created by the user, for example for a script string, can find context properties
+        other than ids here.
+    \li \target rule-bound-ids With \c{ComponentBehavior: Bound}: Ids of the lexically enclosing
+        contexts, from the inside out. The chain ends at the root object of the document. Inline
+        components are exempt from \c{ComponentBehavior: Bound} because they can be instantiated
+        anywhere, for example as \c Doc.Inner in a different document. Therefore, the root object of
+        an inline component ends the chain, too. The context an inline component is instantiated in
+        is never lexically enclosing, even if it belongs to the same document. All of these contexts
+        are internal and can therefore not contain custom context properties. \c{ComponentBehavior:
+        Bound} causes Qt's own types not to insert any further contexts between a component and its
+        creation context.
+    \li \target rule-scope-object The immediate scope object.
+    \li \target rule-context-object The context object of the immediate context.
+    \li \target rule-bound-context-objects With \c{ComponentBehavior: Bound}: The context objects of
+        the lexically enclosing contexts, in the same order as in \l {rule-bound-ids}{rule 4}.
+    \li \target rule-global-object The remaining members of the JavaScript global object, see \l
+        {rule-keywords}{rule 1} for the others.
+    \li \target rule-remaining-contexts The remaining contexts, outside the ones covered in \l
+        {rule-immediate-ids}{rule 3}, \l {rule-bound-ids}{4}, \l {rule-context-object}{6}, and \l
+        {rule-bound-context-objects}{7}. For each of those, the context properties are searched
+        first, then the context object.
+    \endlist
+
+    All of this holds no matter if the code is compiled to C++ or interpreted, and no matter if
+    the \c{Lookups} are populated already.
+
+    \section1 Disappearing Scope and Context Objects
+
+    If a scope object or a context object disappears at run time, its type is still retained and
+    we can still determine whether it would have resolved the name in question. If so, a
+    ReferenceError is thrown. The properties of the object's context, typically ids, stay in
+    place. An id whose object is gone is null. A scope object can disappear while code using it as
+    scope is still alive, for example a function stored in a \c var property after the object it
+    is defined in has been destroyed.
+
+    \section1 Internal, Frozen, and User-Created Contexts
+
+    The contexts created by the QML engine for the components it instantiates are internal. They
+    cannot gain or lose properties and their context objects cannot be replaced.
+
+    Qt's own types that insert contexts between an unbound component and its creation context
+    (Loader, the delegate models, ListView's section delegates, PageIndicator's delegates, and some
+    dialog implementations) shall freeze those contexts after filling them, using a new public
+    method on QQmlContext. A frozen context behaves like an internal one.
+
+    User code can still insert contexts that are not frozen between an unbound component and its
+    creation context, using a QQmlContext and QQmlComponent::create() or similar. Such contexts are
+    only searched in \l {rule-remaining-contexts}{rule 9}, and replacements of their context objects
+    can be of a different type. We cannot see such contexts ahead of time. Therefore, qmlcachegen
+    compiles code as if they were not present.
+
+    \section1 Dynamic Metaobjects
+
+    A scope object or context object with a dynamic metaobject can gain and lose names at any
+    time. The only public way to create such an object is QQmlPropertyMap. Qt's own model items
+    also have dynamic metaobjects.
+
+    \section1 Caching and Compiling Ahead of Time
+
+    Based on the rules above, the following guidelines apply to caching and compiling ahead of
+    time:
+
+    \list
+    \li Keywords, types, and the global object cannot change. They can be compiled ahead of time
+        and cached in lookups. Ids, properties, and methods declared in QML cannot be named like
+        members of the global object.
+    \li The ids of a document are fixed. A context with ids is internal and cannot gain or lose
+        properties. Therefore, the ids, including the enclosing ids of a bound component, can be
+        compiled ahead of time and cached.
+    \li The types of the scope object and the context object are known when compiling ahead of
+        time. Only script strings and PropertyChanges can run the same code with a different scope
+        object or context object, and those are not compiled to C++. On the lookup side, deep
+        lookups into the context hierarchy are only cached as
+        \c ContextGetterInParentContextHierarchy anyway and those are repeated each time.
+        Therefore, checking the top context or scope object for changes is enough. If we detect an
+        object with a dynamic metaobject or a non-internal immediate context, we can't cache
+        anything beyond those since they might gain or lose properties at any time, invalidating
+        previous results.
+    \li The lexically enclosing contexts of a bound component are internal, and their context
+        objects are known when compiling ahead of time. In principle we could cache and compile
+        them. Where necessary this can be added. The compiler has to check them before resolving a
+        name to the global object, though.
+    \li Only QQmlExpression, and therefore script strings, can run in a non-internal immediate
+        context (that is, a user-created context).
+    \li Anything found on or beyond an object with a dynamic metaobject cannot be compiled ahead
+        of time. The compiler only knows its static properties. It can recognize QQmlPropertyMap.
+    \li The remaining contexts of \l {rule-remaining-contexts}{rule 9} come after the global object.
+        Frozen and internal ones could be cached, but their context objects may have dynamic
+        metaobjects, for example the model items of a delegate model. Anything beyond a context that
+        is neither frozen nor internal cannot be cached.
+    \endlist
+*/
