@@ -380,6 +380,7 @@ set(qml_files
     unknownAttached.qml
     unknownParameter.qml
     unknownUnderlyingType.qml
+    unqualifiedInlineComponent.qml
     unqualifiedLostEnclosingContextObject.qml
     unqualifiedLostEnclosingContextObjectSwapped.qml
     unqualifiedLostScopeObject.qml
