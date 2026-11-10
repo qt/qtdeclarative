@@ -1,0 +1,4 @@
+module ShadowTypes
+singleton Infinity 1.0 Infinity.qml
+singleton Math 1.0 Math.qml
+singleton Plugh 1.0 Plugh.qml

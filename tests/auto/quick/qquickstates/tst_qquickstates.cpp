@@ -193,6 +193,7 @@ private slots:
     void rewindAnchorChangeSize();
     void bindingProperlyRemovedWithTransition();
     void doNotCrashOnBroken();
+    void propertyChangesTargetShadowsContextObject();
 };
 
 void tst_qquickstates::initTestCase()
@@ -2078,6 +2079,36 @@ void tst_qquickstates::doNotCrashOnBroken()
     QQmlListReference states(item, "states");
     QCOMPARE(states.size(), 1);
     QCOMPARE(states.at(0), nullptr);
+}
+
+void tst_qquickstates::propertyChangesTargetShadowsContextObject()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("propertyChangesTargetShadowsContextObject.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    std::unique_ptr<QObject> root(c.create());
+    QVERIFY(root);
+    QQuickItemPrivate *rootPrivate = QQuickItemPrivate::get(qobject_cast<QQuickItem *>(root.get()));
+
+    QObject *withoutFoo = root->property("withoutFoo").value<QObject *>();
+    QVERIFY(withoutFoo);
+    rootPrivate->setState(QStringLiteral("changed"));
+    QCOMPARE(withoutFoo->property("result").toInt(), 1);
+    QCOMPARE(withoutFoo->property("callResult").toInt(), 1);
+
+    // The PropertyChanges' bindings run with their target as scope object. A target that has the
+    // name shadows the root object's property.
+    rootPrivate->setState(QString());
+    QObject *withFoo = root->property("withFoo").value<QObject *>();
+    QVERIFY(withFoo);
+    root->setProperty("target", QVariant::fromValue(withFoo));
+    rootPrivate->setState(QStringLiteral("changed"));
+    QEXPECT_FAIL("",
+                 "The cached lookup of a context object property doesn't check the scope object. "
+                 "See QQmlContextWrapper::lookupContextObjectProperty()",
+                 Abort);
+    QCOMPARE(withFoo->property("result").toInt(), 2);
+    QCOMPARE(withFoo->property("callResult").toInt(), 2);
 }
 
 QTEST_MAIN(tst_qquickstates)
