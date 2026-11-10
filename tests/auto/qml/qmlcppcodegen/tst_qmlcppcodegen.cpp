@@ -322,6 +322,14 @@ private slots:
     void trivialSignalHandler();
     void typePropagationLoop();
     void typePropertyClash();
+    void typeReferences_data();
+    void typeReferences();
+    void typeReferenceAsVar_data();
+    void typeReferenceAsVar();
+    void typeReferenceSemantics_data();
+    void typeReferenceSemantics();
+    void typeReferenceMixed_data();
+    void typeReferenceMixed();
     void typedArray();
     void unclearComponentBoundaries();
     void undefinedResets();
@@ -6401,6 +6409,315 @@ void tst_QmlCppCodegen::typePropertyClash()
     std::unique_ptr<QObject> o(c.create());
     QVERIFY(o);
     QCOMPARE(o->objectName(), u"Size: 5"_s);
+}
+
+void tst_QmlCppCodegen::typeReferences_data()
+{
+    QTest::addColumn<QByteArray>("function");
+    QTest::addColumn<QString>("expected");
+
+    QTest::addRow("lower-case type") << "direct"_ba << u"QML/rect"_s;
+    QTest::addRow("lower-case type via var") << "viaVar"_ba << u"QML/rect"_s;
+    QTest::addRow("lower-case type read twice")
+            << "readTwice"_ba << u"QML/rectQML/rect"_s;
+    QTest::addRow("lower-case type in branch") << "branch"_ba << u"QML/rect"_s;
+    QTest::addRow("lower-case type in loop") << "loop"_ba << u"QML/rectQML/rectQML/rect"_s;
+    QTest::addRow("upper-case QML type") << "qmlType"_ba << u"QML/QtObject"_s;
+    QTest::addRow("upper-case QML type via var") << "qmlTypeViaVar"_ba << u"QML/QtObject"_s;
+    QTest::addRow("upper-case C++ type") << "cppType"_ba << u"TestTypes/Person"_s;
+    QTest::addRow("upper-case C++ type via var") << "cppTypeViaVar"_ba << u"TestTypes/Person"_s;
+    QTest::addRow("type in import namespace") << "namespaced"_ba << u"QML/QtObject"_s;
+    QTest::addRow("type in import namespace via var")
+            << "namespacedViaVar"_ba << u"QML/QtObject"_s;
+    QTest::addRow("composite type") << "composite"_ba << u"Action"_s;
+    QTest::addRow("composite type via var") << "compositeViaVar"_ba << u"Action"_s;
+    QTest::addRow("inline component") << "inlineComponent"_ba << u"IC"_s;
+    QTest::addRow("inline component via var") << "inlineComponentViaVar"_ba << u"IC"_s;
+}
+
+void tst_QmlCppCodegen::typeReferences()
+{
+    QFETCH(QByteArray, function);
+    QFETCH(QString, expected);
+
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/typeReferences.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    std::unique_ptr<QObject> root(c.create());
+    QVERIFY(root);
+
+    QString actual;
+    QVERIFY(QMetaObject::invokeMethod(root.get(), function, Q_RETURN_ARG(QString, actual)));
+
+#ifndef QT_TEST_FORCE_INTERPRETER
+    // QQmlJSCodeGenerator::conversion() has no special case for a type reference, which the
+    // compiled code only holds as a const QMetaObject *. The conversion to a string goes through
+    // the generic QVariant conversion and produces "QVariant(const QMetaObject*, ...)". The name
+    // of the type is only known to the type wrapper of the lookup.
+    QEXPECT_FAIL("", "Compiled code stringifies a type reference as a QVariant of its QMetaObject",
+                 Abort);
+#endif
+    QCOMPARE(actual, expected);
+}
+
+void tst_QmlCppCodegen::typeReferenceAsVar_data()
+{
+    QTest::addColumn<QByteArray>("function");
+    QTest::addColumn<QString>("expected");
+
+    QTest::addRow("lower-case type") << "returnRect"_ba << u"QML/rect"_s;
+    QTest::addRow("upper-case QML type") << "returnQtObject"_ba << u"QML/QtObject"_s;
+    QTest::addRow("upper-case C++ type") << "returnPerson"_ba << u"TestTypes/Person"_s;
+}
+
+void tst_QmlCppCodegen::typeReferenceAsVar()
+{
+    QFETCH(QByteArray, function);
+    QFETCH(QString, expected);
+
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/typeReferences.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    std::unique_ptr<QObject> root(c.create());
+    QVERIFY(root);
+
+    QQmlEngine::setObjectOwnership(root.get(), QQmlEngine::CppOwnership);
+    const QJSValue method = engine.newQObject(root.get()).property(QString::fromLatin1(function));
+    QVERIFY(method.isCallable());
+    const QJSValue actual = method.call();
+    QVERIFY(!actual.isError());
+
+#ifndef QT_TEST_FORCE_INTERPRETER
+    // QQmlJSCodeGenerator::convertStored() converts any register to a var using
+    // QVariant::fromValue(). For a type reference, which the compiled code holds as a
+    // const QMetaObject *, that makes a QVariant holding the QMetaObject, not the type wrapper.
+    QEXPECT_FAIL("", "Compiled code returns a type reference as a QVariant of its QMetaObject",
+                 Abort);
+#endif
+    QCOMPARE(actual.toString(), expected);
+}
+
+void tst_QmlCppCodegen::typeReferenceSemantics_data()
+{
+    QTest::addColumn<QByteArray>("function");
+    QTest::addColumn<QString>("expected");
+
+    QTest::addRow("stored in var property") << "storeAndRead"_ba << u"QML/rect"_s;
+    QTest::addRow("overwrite stored type") << "storeTwice"_ba << u"TestTypes/Person"_s;
+    QTest::addRow("overwrite stored QML type")
+            << "storeQtObjectThenPerson"_ba << u"TestTypes/Person"_s;
+    QTest::addRow("same type is equal") << "equalSame"_ba << u"true"_s;
+    QTest::addRow("same type via var is equal") << "equalViaVar"_ba << u"true"_s;
+    QTest::addRow("different QML types are unequal") << "equalDifferentQml"_ba << u"false"_s;
+    QTest::addRow("different QML and C++ types are unequal")
+            << "equalDifferentCpp"_ba << u"false"_s;
+    QTest::addRow("different types are not strictly equal")
+            << "strictEqualDifferent"_ba << u"false"_s;
+}
+
+void tst_QmlCppCodegen::typeReferenceSemantics()
+{
+    QFETCH(QByteArray, function);
+    QFETCH(QString, expected);
+
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/typeReferences.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    std::unique_ptr<QObject> root(c.create());
+    QVERIFY(root);
+
+    QString actual;
+    QVERIFY(QMetaObject::invokeMethod(root.get(), function, Q_RETURN_ARG(QString, actual)));
+    const QByteArray tag = QTest::currentDataTag();
+#ifdef QT_TEST_FORCE_INTERPRETER
+    // QQmlTypeWrapper::virtualIsEqualTo() (qqmltypewrapper.cpp) compares the toVariant() results
+    // of the two wrappers. Those are null QObject pointers for all non-singleton types, so any two
+    // such types are equal. QQmlVMEMetaObject::writeVarProperty() uses strictEqual() to skip
+    // redundant writes and thus drops the write of a different type.
+    if (tag == "overwrite stored type" || tag == "overwrite stored QML type"
+            || tag == "different QML types are unequal"
+            || tag == "different QML and C++ types are unequal"
+            || tag == "different types are not strictly equal") {
+        QEXPECT_FAIL("", "Different type references compare equal", Continue);
+    }
+#else
+    // Reading a var property into a QVariant goes through
+    // QQmlVMEMetaObject::readPropertyAsVariant() and ExecutionEngine::toVariant(). For a type
+    // wrapper that is QQmlTypeWrapper::toVariant(), which yields a null QObject* for a
+    // non-singleton type instead of keeping the wrapper.
+    if (tag == "stored in var property" || tag == "overwrite stored type"
+            || tag == "overwrite stored QML type") {
+        QEXPECT_FAIL("", "Type reference read from a var property is null", Continue);
+    }
+#endif
+
+    QCOMPARE(actual, expected);
+}
+
+struct TypeReferenceObjects
+{
+    QQmlEngine *engine;
+    QObject *compiled;
+    QObject *interpreted;
+    QObject *otherInterpreted;
+
+    QString call(QObject *object, const char *function, const QJSValueList &args = {}) const
+    {
+        const QJSValue method = engine->newQObject(object).property(QString::fromLatin1(function));
+        Q_ASSERT(method.isCallable());
+        const QJSValue result = method.call(args);
+        Q_ASSERT(!result.isError());
+        return result.toString();
+    }
+
+    QJSValue callForValue(QObject *object, const char *function) const
+    {
+        return engine->newQObject(object).property(QString::fromLatin1(function)).call();
+    }
+
+    QJSValue wrap(QObject *object) const { return engine->newQObject(object); }
+};
+
+void tst_QmlCppCodegen::typeReferenceMixed_data()
+{
+    using Scenario = std::function<QString(const TypeReferenceObjects &)>;
+    QTest::addColumn<Scenario>("scenario");
+    QTest::addColumn<QString>("expected");
+
+    // A type reference is stored in the var property of one object and read from another one.
+    // c is the compiled object, i and o are interpreted ones.
+    QTest::addRow("compiled to interpreted: type") << Scenario([](const TypeReferenceObjects &x) {
+        x.call(x.compiled, "writeRect");
+        return x.call(x.interpreted, "readOther", { x.wrap(x.compiled) });
+    }) << u"QML/rect"_s;
+    QTest::addRow("compiled to interpreted: type is a type wrapper")
+            << Scenario([](const TypeReferenceObjects &x) {
+                   x.call(x.compiled, "writeRect");
+                   return x.call(x.interpreted, "isTypeWrapper",
+                                 { x.callForValue(x.compiled, "readOwnVar") });
+               })
+            << u"true"_s;
+    QTest::addRow("compiled to interpreted: type is strictly equal")
+            << Scenario([](const TypeReferenceObjects &x) {
+                   x.call(x.compiled, "writeRect");
+                   return x.call(x.interpreted, "otherIsRect", { x.wrap(x.compiled) });
+               })
+            << u"true"_s;
+    QTest::addRow("compiled to interpreted: type with attached properties is a type wrapper")
+            << Scenario([](const TypeReferenceObjects &x) {
+                   x.call(x.compiled, "writeParty");
+                   return x.call(x.interpreted, "isTypeWrapper",
+                                 { x.callForValue(x.compiled, "readOwnVar") });
+               })
+            << u"true"_s;
+    QTest::addRow("compiled to variant: type") << Scenario([](const TypeReferenceObjects &x) {
+        x.call(x.compiled, "writeRect");
+        return QString::fromLatin1(x.compiled->property("stored").metaType().name());
+    }) << u"QJSValue"_s;
+    QTest::addRow("compiled to variant: type with attached properties")
+            << Scenario([](const TypeReferenceObjects &x) {
+                   x.call(x.compiled, "writeParty");
+                   return QString::fromLatin1(x.compiled->property("stored").metaType().name());
+               })
+            << u"QJSValue"_s;
+
+    QTest::addRow("interpreted to compiled: type") << Scenario([](const TypeReferenceObjects &x) {
+        x.call(x.interpreted, "writeRectInto", { x.wrap(x.compiled) });
+        return x.call(x.compiled, "readOwn");
+    }) << u"QML/rect"_s;
+    QTest::addRow("interpreted to compiled: type is strictly equal")
+            << Scenario([](const TypeReferenceObjects &x) {
+                   x.call(x.interpreted, "writeRectInto", { x.wrap(x.compiled) });
+                   return x.call(x.interpreted, "isRect",
+                                 { x.callForValue(x.compiled, "readOwnVar") });
+               })
+            << u"true"_s;
+    QTest::addRow("interpreted to compiled: type with attached properties is a type wrapper")
+            << Scenario([](const TypeReferenceObjects &x) {
+                   x.call(x.interpreted, "writePartyInto", { x.wrap(x.compiled) });
+                   return x.call(x.interpreted, "isTypeWrapper",
+                                 { x.callForValue(x.compiled, "readOwnVar") });
+               })
+            << u"true"_s;
+    QTest::addRow("interpreted to variant: type") << Scenario([](const TypeReferenceObjects &x) {
+        x.call(x.interpreted, "writeRectInto", { x.wrap(x.compiled) });
+        return QString::fromLatin1(x.compiled->property("stored").metaType().name());
+    }) << u"QJSValue"_s;
+    QTest::addRow("interpreted to variant: type with attached properties")
+            << Scenario([](const TypeReferenceObjects &x) {
+                   x.call(x.interpreted, "writePartyInto", { x.wrap(x.compiled) });
+                   return QString::fromLatin1(x.compiled->property("stored").metaType().name());
+               })
+            << u"QJSValue"_s;
+
+    QTest::addRow("interpreted to interpreted: type is strictly equal")
+            << Scenario([](const TypeReferenceObjects &x) {
+                   x.call(x.otherInterpreted, "writeRectInto", {x.wrap(x.otherInterpreted)});
+                   return x.call(x.interpreted, "otherIsRect", { x.wrap(x.otherInterpreted) });
+               })
+            << u"true"_s;
+}
+
+void tst_QmlCppCodegen::typeReferenceMixed()
+{
+    using Scenario = std::function<QString(const TypeReferenceObjects &)>;
+    QFETCH(Scenario, scenario);
+    QFETCH(QString, expected);
+
+    QQmlEngine engine;
+    QQmlComponent compiled(&engine, QUrl(u"qrc:/qt/qml/TestTypes/typeReferences.qml"_s));
+    QVERIFY2(compiled.isReady(), qPrintable(compiled.errorString()));
+    QQmlComponent interpreted(&engine,
+                              QUrl(u"qrc:/qt/qml/TestTypes/typeReferencesInterpreted.qml"_s));
+    QVERIFY2(interpreted.isReady(), qPrintable(interpreted.errorString()));
+
+    std::unique_ptr<QObject> compiledObject(compiled.create());
+    QVERIFY(compiledObject);
+    std::unique_ptr<QObject> interpretedObject(interpreted.create());
+    QVERIFY(interpretedObject);
+    std::unique_ptr<QObject> otherObject(interpreted.create());
+    QVERIFY(otherObject);
+    for (QObject *object : { compiledObject.get(), interpretedObject.get(), otherObject.get() })
+        QQmlEngine::setObjectOwnership(object, QQmlEngine::CppOwnership);
+
+    const char *toVariant =
+            "QQmlTypeWrapper::toVariant() returns the attached object of a type that has attached "
+            "properties, so the type wrapper is lost in any conversion to QVariant";
+    QEXPECT_FAIL("interpreted to variant: type with attached properties", toVariant, Abort);
+    const char *nullToVariant =
+            "QQmlTypeWrapper::toVariant() returns the null attached object of a type without "
+            "attached properties";
+    QEXPECT_FAIL("interpreted to variant: type", nullToVariant, Abort);
+#ifdef QT_TEST_FORCE_INTERPRETER
+    QEXPECT_FAIL("compiled to variant: type", nullToVariant, Abort);
+    QEXPECT_FAIL("compiled to variant: type with attached properties", toVariant, Abort);
+#else
+    const char *rawMetaObject =
+            "The generated code stores a QMetaObject pointer for a type reference, not a type "
+            "wrapper";
+    QEXPECT_FAIL("compiled to interpreted: type", rawMetaObject, Abort);
+    QEXPECT_FAIL("compiled to interpreted: type is a type wrapper", rawMetaObject, Abort);
+    QEXPECT_FAIL("compiled to interpreted: type is strictly equal", rawMetaObject, Abort);
+    QEXPECT_FAIL("compiled to variant: type", rawMetaObject, Abort);
+    QEXPECT_FAIL("interpreted to compiled: type", nullToVariant, Abort);
+    QEXPECT_FAIL("interpreted to compiled: type is strictly equal", nullToVariant, Abort);
+    QEXPECT_FAIL("compiled to variant: type with attached properties",
+                 "The generated code stores the attached object, from "
+                 "AOTCompiledContext::loadAttachedLookup(), not the type wrapper",
+                 Abort);
+    QEXPECT_FAIL("compiled to interpreted: type with attached properties is a type wrapper",
+                 "The generated code stores the attached object, from "
+                 "AOTCompiledContext::loadAttachedLookup(), not the type wrapper",
+                 Abort);
+    QEXPECT_FAIL("interpreted to compiled: type with attached properties is a type wrapper",
+                 "Compiled code reads the var property through QVariant, which converts the "
+                 "stored type wrapper into the attached object in QQmlTypeWrapper::toVariant()",
+                 Abort);
+#endif
+
+    QCOMPARE(
+            scenario({ &engine, compiledObject.get(), interpretedObject.get(), otherObject.get() }),
+            expected);
 }
 
 void tst_QmlCppCodegen::typedArray()

@@ -371,6 +371,8 @@ set(qml_files
     trivialSignalHandler.qml
     typePropagationLoop.qml
     typePropertyClash.qml
+    typeReferences.qml
+    typeReferencesInterpreted.qml
     typedArray.qml
     unclearComponentBoundaries.qml
     undefinedResets.qml
