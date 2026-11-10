@@ -1933,6 +1933,11 @@ void TestQmllint::dirtyQmlSnippet_data()
     QTest::newRow("functionDefinitionInGroupedProperty")
             // should not crash for now, see QTBUG-142091 to get the actual warning
             << u"Item { foo { bar: Array.from((i) => (1)) } }"_s << Result{} << defaultOptions;
+    QTest::newRow("innerFunctionWithLetOrConstDoesNotDropWarnings")
+            << u"function outer() { function inner() { const x = nope; 1; } }"_s
+            << Result{ { { "Unqualified access"_L1, 1, 49 },
+                         { "Expression statement has no obvious effect"_L1, 1, 55 } } }
+            << defaultOptions;
     QTest::newRow("invalidLint")
             << u"Item {} // qmllint disable ThisCategoryDoesNotExist\n"_s
             << Result{ { { "qmllint directive on unknown category \"ThisCategoryDoesNotExist\""_L1,

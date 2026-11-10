@@ -1209,6 +1209,7 @@ void IRBuilder::registerFunctionExpr(QQmlJS::AST::FunctionExpression *fexp, IsQm
     foe->node = fexp;
     foe->parentNode = fexp;
     foe->nameIndex = registerString(fexp->name.toString());
+    foe->isQmlFunction = isQmlFunction == IsQmlFunction::Yes;
     const int index = _object->functionsAndExpressions->append(foe);
 
     Function *f = New<Function>();
@@ -1362,6 +1363,7 @@ void IRBuilder::setBindingValue(QV4::CompiledData::Binding *binding, QQmlJS::AST
         expr->parentNode = parentNode;
         expr->nameIndex = registerString(QLatin1String("expression for ")
                                          + stringAt(binding->propertyNameIndex));
+        expr->isQmlFunction = false;
         const int index = bindingsTarget()->functionsAndExpressions->append(expr);
         binding->value.compiledScriptIndex = index;
         // We don't need to store the binding script as string, except for script strings
@@ -2109,6 +2111,8 @@ QList<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(
         auto function = f.node->asFunctionDefinition();
 
         if (function) {
+            if (!f.isQmlFunction)
+                continue;
             scan.enterQmlFunction(function);
         } else {
             Q_ASSERT(f.node != f.parentNode);
