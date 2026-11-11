@@ -30,6 +30,7 @@
 #include <QtQuickTemplates2/private/qquickaction_p.h>
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 #include <QtQuickTemplates2/private/qquickoverlay_p.h>
+#include <QtQuickTemplates2/private/qquickoverlay_p_p.h>
 #include <QtQuickTemplates2/private/qquickbutton_p.h>
 #include <QtQuickTemplates2/private/qquickicon_p.h>
 #include <QtQuickTemplates2/private/qquickmenu_p.h>
@@ -138,6 +139,7 @@ private slots:
     void contentWidth();
     void contentWidthExplicitOverride();
     void destroyWindowWithOpenPopupWindow();
+    void popupWindowCascadeRestoresFocus();
 
 private:
     bool nativeMenuSupported = false;
@@ -3999,6 +4001,88 @@ void tst_QQuickMenu::destroyWindowWithOpenPopupWindow()
 
     QCOMPARE(popupWindowVisibleSpy.size(), 1);
     QCOMPARE(popupWindowVisibleSpy.constLast().constFirst().toBool(), false);
+}
+
+void tst_QQuickMenu::popupWindowCascadeRestoresFocus()
+{
+    if (!arePopupWindowsSupported())
+        QSKIP("The platform doesn't support popup windows. Skipping test.");
+
+    SKIP_IF_NO_WINDOW_ACTIVATION;
+
+    QQuickControlsApplicationHelper helper(this, QLatin1String("cascadeCloseFocus.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    auto *textField = window->property("textField").value<QQuickItem *>();
+    QVERIFY(textField);
+    QTRY_VERIFY(textField->hasActiveFocus());
+
+    auto *itemPopup = window->property("itemPopup").value<QQuickPopup *>();
+    QVERIFY(itemPopup);
+
+    const QList<QQuickMenu *> menus = {
+        window->property("menu").value<QQuickMenu *>(),
+        window->property("subMenu").value<QQuickMenu *>(),
+        window->property("subSubMenu").value<QQuickMenu *>(),
+    };
+    for (QQuickMenu *menu : menus)
+        QVERIFY(menu);
+
+    // Open each sub-menu from its menu item, the way a user would, so that each
+    // menu's currentItem leads to its open sub-menu.
+    menus[0]->popup(QPointF(10, 10));
+    TRY_VERIFY_POPUP_OPENED(menus[0]);
+    for (int i = 1; i < menus.size(); ++i) {
+        QQuickMenu *parentMenu = menus[i - 1];
+        auto *subMenuItem = qobject_cast<QQuickMenuItem *>(parentMenu->itemAt(1));
+        QVERIFY(subMenuItem);
+        QCOMPARE(subMenuItem->subMenu(), menus[i]);
+        parentMenu->setCurrentIndex(1);
+        emit subMenuItem->triggered();
+        TRY_VERIFY_POPUP_OPENED(menus[i]);
+    }
+    for (QQuickMenu *menu : menus) {
+        QVERIFY(QQuickMenuPrivate::get(menu)->usePopupWindow());
+        QVERIFY(menu->popupItem()->hasFocus());
+    }
+
+    // Open an item popup inside the innermost menu's popup window. Unlike the menus,
+    // it restores focus when it closes, into the window it lives in. It closes
+    // immediately, while the menu that owns that window is still in its exit transition.
+    QQuickMenu *innermostMenu = menus.last();
+    itemPopup->setParentItem(innermostMenu->popupItem());
+    itemPopup->open();
+    TRY_VERIFY_POPUP_OPENED(itemPopup);
+    QCOMPARE(QQuickPopupPrivate::get(itemPopup)->resolvedPopupType(), QQuickPopup::PopupType::Item);
+    QCOMPARE(itemPopup->popupItem()->window(), innermostMenu->popupItem()->window());
+
+    // Each popup window has its own separate focus chain, so there's no need to store the last focus item in an overlay,
+    // which we do for in-scene popups.
+    QCOMPARE(window->activeFocusItem(), textField);
+    auto *overlayPrivate = QQuickOverlayPrivate::get(QQuickOverlay::overlay(window));
+    QVERIFY(!overlayPrivate->lastActiveFocusItem);
+    QVERIFY(!overlayPrivate->lastActiveFocusItemPopup);
+
+    // Closing the root menu closes the sub-menus as well, and each of them starts their
+    // exit transition. The in-scene popup has none, so it finishes closing first, while the
+    // innermost menu is still closing. It must not restore focus into that menu's popup
+    // window, since that would leave `focus` set on the popupItem of a closed menu.
+    menus[0]->close();
+    itemPopup->close();
+    for (QQuickMenu *menu : menus)
+        QTRY_VERIFY(!menu->isVisible());
+    QTRY_VERIFY(!itemPopup->isVisible());
+    for (QQuickMenu *menu : menus)
+        QVERIFY2(!menu->popupItem()->hasFocus(), qPrintable(QDebug::toString(menu)));
+    QVERIFY(!itemPopup->popupItem()->hasFocus());
+
+    // Focus is back where it was before any popup opened.
+    QTRY_COMPARE(window->activeFocusItem(), textField);
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickMenu)
