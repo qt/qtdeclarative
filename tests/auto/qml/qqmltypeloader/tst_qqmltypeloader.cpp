@@ -1,33 +1,38 @@
 // Copyright (C) 2016 Canonical Limited and/or its subsidiary(-ies).
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
-#include <QtTest/QTest>
-#include <QtCore/QTimer>
-#include <QtCore/QRandomGenerator>
+#include <private/qmlutils_p.h>
+#include <private/qqmlcomponent_p.h>
+#include <private/qqmldata_p.h>
+#include <private/qqmlengine_p.h>
+#include <private/qqmlfileselector_p.h>
+#include <private/qqmlirbuilder_p.h>
+#include <private/qqmlmetatype_p.h>
+#include <private/qqmltypedata_p.h>
+#include <private/qqmltypeloader_p.h>
+#include <private/testhttpserver_p.h>
+
+#include <QtTest/qtest.h>
+
+#include <QtQml/qqmlapplicationengine.h>
+#include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlfile.h>
-#include <QtQml/qqmlapplicationengine.h>
 #include <QtQml/qqmlnetworkaccessmanagerfactory.h>
-#include <QtQuick/qquickview.h>
+
 #include <QtQuick/qquickitem.h>
+#include <QtQuick/qquickview.h>
+
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qmutex.h>
+#include <QtCore/qrandom.h>
+#include <QtCore/qtimer.h>
+
 #if QT_CONFIG(process)
 #include <QtCore/qprocess.h>
 #include <QtCore/qresource.h>
 #include <QtCore/qscopeguard.h>
 #endif
-#include <QtQml/private/qqmlcomponent_p.h>
-#include <QtQml/private/qqmlengine_p.h>
-#include <QtQml/private/qqmlfileselector_p.h>
-#include <QtQml/private/qqmlirbuilder_p.h>
-#include <QtQml/private/qqmltypedata_p.h>
-#include <QtQml/private/qqmltypeloader_p.h>
-#include <QtQml/private/qqmldata_p.h>
-#include <QtQml/private/qqmlmetatype_p.h>
-#include <QtQuickTestUtils/private/testhttpserver_p.h>
-#include <QtQuickTestUtils/private/qmlutils_p.h>
-#include <QQmlComponent>
 
 #include <algorithm>
 
