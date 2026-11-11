@@ -356,6 +356,8 @@ private:
     void setData(const QQmlDataBlob::Ptr &, const QQmlDataBlob::SourceCodeData &);
     void setCachedUnit(const QQmlDataBlob::Ptr &blob, const QQmlPrivate::CachedQmlUnit *unit);
 
+    QUrl interceptUncachedUrl(const QUrl &url, QQmlAbstractUrlInterceptor::DataType type) const;
+
     QStringList importPathList(PathType type) const;
     void clearQmldirInfo();
 

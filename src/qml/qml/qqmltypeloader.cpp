@@ -108,6 +108,43 @@ QList<QQmlAbstractUrlInterceptor *> QQmlTypeLoader::urlInterceptors() const
     return data->urlInterceptors;
 }
 
+QUrl QQmlTypeLoader::interceptUrl(const QUrl &url, QQmlAbstractUrlInterceptor::DataType type) const
+{
+    // Can be called from either thread, but only after interceptor setup is done.
+    // Mustn't be called with the lock already held.
+
+    switch (type) {
+    case QQmlAbstractUrlInterceptor::QmlFile:
+    case QQmlAbstractUrlInterceptor::JavaScriptFile: {
+        // Check the typeCache first. The typeCache is supposed to be indexed by original,
+        // unintercepted URLs, and the types it holds know their intercepted URLs. Therefore
+        // we can omit the URL interceptors by using the cache.
+
+        // TODO: This is not entirely true. There are some intercepted URLs in the typeCache, but
+        //       that only matters if some URL interceptor is not idempotent. That is, if it maps
+        //       URLs in a cycle. Doing so will produce interesting results all by itself.
+        //       Nevertheless we should fix the typeCache. We will be able to fix it when we move
+        //       all type lookup by name into the the type loader and all type lookup by "physical",
+        //       intercepted URL into the global type registry. See QTBUG-142737
+
+        // We assume that calling the interceptor is more expensive than taking the shared data
+        // lock. Usually that's true because the interceptor will have to perform file system
+        // operations, either in the resource or the physical file system.
+        const QQmlTypeLoaderSharedDataConstPtr data(&m_data);
+        const auto it = data->typeCache.constFind(QQmlMetaType::normalizedUrl(url));
+        if (it != data->typeCache.constEnd())
+            return (*it)->url();
+        break;
+    }
+    case QQmlAbstractUrlInterceptor::QmldirFile:
+        // TODO: We could use qmldirCache here if it was keyed by original URLs
+    default:
+        break;
+    }
+
+    return interceptUncachedUrl(url, type);
+}
+
 static QUrl doInterceptUrl(
         const QUrl &url, QQmlAbstractUrlInterceptor::DataType type,
         const QList<QQmlAbstractUrlInterceptor *> &urlInterceptors)
@@ -118,7 +155,8 @@ static QUrl doInterceptUrl(
     return result;
 }
 
-QUrl QQmlTypeLoader::interceptUrl(const QUrl &url, QQmlAbstractUrlInterceptor::DataType type) const
+QUrl QQmlTypeLoader::interceptUncachedUrl(const QUrl &url,
+                                          QQmlAbstractUrlInterceptor::DataType type) const
 {
     // Can be called from either thread, but only after interceptor setup is done.
 

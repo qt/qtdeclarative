@@ -11,6 +11,7 @@
 #include <QtQuick/qquickview.h>
 #include <QtQuick/qquickitem.h>
 #include <QtCore/qfileinfo.h>
+#include <QtCore/qmutex.h>
 #if QT_CONFIG(process)
 #include <QtCore/qprocess.h>
 #include <QtCore/qresource.h>
@@ -18,6 +19,7 @@
 #endif
 #include <QtQml/private/qqmlcomponent_p.h>
 #include <QtQml/private/qqmlengine_p.h>
+#include <QtQml/private/qqmlfileselector_p.h>
 #include <QtQml/private/qqmlirbuilder_p.h>
 #include <QtQml/private/qqmltypedata_p.h>
 #include <QtQml/private/qqmltypeloader_p.h>
@@ -47,6 +49,7 @@ private slots:
     void importAndDestroy();
     void intercept();
     void redirect();
+    void interceptSingletonsOnce();
     void qmlSingletonWithinModule();
     void multiSingletonModule();
     void multiSingletonModuleNoWarning();
@@ -542,6 +545,54 @@ void tst_QQMLTypeLoader::intercept()
                         [](const QString &file) {
                             return file.endsWith(QLatin1String("/Slow/qmldir"));
                         }));
+}
+
+class CountingInterceptor : public QQmlAbstractUrlInterceptor
+{
+public:
+    QUrl intercept(const QUrl &url, DataType type) override
+    {
+        if (type == QmlFile) {
+            const QMutexLocker locker(&mutex);
+            ++counts[url.fileName()];
+        }
+        return url;
+    }
+
+    int count(const QString &fileName) const
+    {
+        const QMutexLocker locker(&mutex);
+        return counts.value(fileName);
+    }
+
+private:
+    mutable QMutex mutex;
+    QHash<QString, int> counts;
+};
+
+void tst_QQMLTypeLoader::interceptSingletonsOnce()
+{
+    CountingInterceptor counter;
+    QQmlEngine engine;
+
+    // Add the counter first, so that it sees the URLs before the file selector changes them.
+    engine.addUrlInterceptor(&counter);
+    QQmlFileSelector selector(&engine);
+    selector.setExtraSelectors({ QStringLiteral("sel") });
+
+    QQmlComponent component(&engine, testFileUrl("singletonInterception/Main.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    std::unique_ptr<QObject> o(component.create());
+    QVERIFY(o);
+    QCOMPARE(o->property("names").toString(), QLatin1String("Plain selected"));
+
+    // Each document resolves all the singletons of the directory. Only the first resolution
+    // and the creation of the singleton should run the interceptors. The singleton is created
+    // from its already intercepted URL, which is not in the type cache. That costs one more
+    // interception for singletons that are actually changed by an interceptor.
+    // TODO: Adjust this when we clean up the typeCache to be keyed by non-intercepted URLs only.
+    QCOMPARE_LE(counter.count(QStringLiteral("Plain.qml")), 2);
+    QCOMPARE_LE(counter.count(QStringLiteral("Selected.qml")), 3);
 }
 
 void tst_QQMLTypeLoader::redirect()
