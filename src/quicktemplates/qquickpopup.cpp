@@ -812,7 +812,9 @@ bool QQuickPopupPrivate::prepareEnterTransition()
         getPositioner()->setParentItem(parentItem);
         emit q->visibleChanged();
 
-        if (lastActiveFocusItem) {
+        // Popup windows live in their own window with their own focus chain, so the
+        // parent window keeps its activeFocusItem and nothing needs to be saved.
+        if (lastActiveFocusItem && !usePopupWindow()) {
             this->lastActiveFocusItem = lastActiveFocusItem;
             if (auto *overlay = QQuickOverlay::overlay(window, parentItem)) {
                 auto *overlayPrivate = QQuickOverlayPrivate::get(overlay);
@@ -907,8 +909,20 @@ void QQuickPopupPrivate::finalizeExitTransition()
             }
         }
 
-        // restore focus to the next popup in chain, or to the window content if there are no other popups open
-        if (hadActiveFocusBeforeExitTransition) {
+        // An in-scene popup opened from inside a popup window lives in that popup window's
+        // overlay. If that popup is closing too, don't restore focus into its window. Doing so
+        // would set `focus` on its popupItem again, after being cleared in prepareExitTransition().
+        bool hostPopupClosing = false;
+        if (auto *hostWindow = qobject_cast<QQuickPopupWindow *>(window)) {
+            if (QQuickPopup *hostPopup = hostWindow->popup()) {
+                hostPopupClosing = !hostPopup->isVisible()
+                        || QQuickPopupPrivate::get(hostPopup)->transitionState == ExitTransition;
+            }
+        }
+
+        // Restore focus to the next popup in chain, or to the window content if there are no other popups open.
+        // Only necessary when popupType: Popup.Item.
+        if (hadActiveFocusBeforeExitTransition && !usePopupWindow() && !hostPopupClosing) {
             QQuickPopup *nextFocusPopup = nullptr;
             for (auto popup : stackingOrderPopups) {
                 // only pick a popup that is focused but has not already been activated
