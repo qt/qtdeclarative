@@ -20,6 +20,7 @@
 #include <QtQuickTemplates2/private/qquickbutton_p.h>
 #include <QtQuickTemplates2/private/qquickcombobox_p.h>
 #include <QtQuickTemplates2/private/qquickdialog_p.h>
+#include <QtQuickTemplates2/private/qquickdialogbuttonbox_p.h>
 #include <QtQuickTemplates2/private/qquickdrawer_p.h>
 #include <QtQuickTemplates2/private/qquickoverlay_p.h>
 #include <QtQuickTemplates2/private/qquickoverlay_p_p.h>
@@ -177,6 +178,8 @@ private slots:
     void closeMultiple();
     void popupWithExplicitSizeChangesImplicitSize_data();
     void popupWithExplicitSizeChangesImplicitSize();
+    void dialogButtonBoxFocus_data();
+    void dialogButtonBoxFocus();
 
 private:
     // If we load the QML from scratch every row, closeMultiple takes considerably
@@ -4444,6 +4447,101 @@ void tst_QQuickPopup::popupWithExplicitSizeChangesImplicitSize()
 
     QCOMPARE(popup->width(), oldWidth);
     QCOMPARE(popup->height(), oldHeight);
+}
+
+
+void tst_QQuickPopup::dialogButtonBoxFocus_data()
+{
+    QTest::addColumn<QString>("dialogObjectName");
+    QTest::addColumn<QString>("buttonObjectName");
+    QTest::addColumn<int>("standardButton");
+    QTest::addColumn<bool>("expectedHighlighted");
+    QTest::addColumn<bool>("expectedClosed");
+
+    QTest::newRow("defaultStandardButton") << "defaultStandardButtonDialog" << QString() << int(QPlatformDialogHelper::Cancel) << true << true;
+    QTest::newRow("defaultButton") << "defaultButtonDialog" << "defaultButton" << int(QPlatformDialogHelper::NoButton) << true << false;
+    QTest::newRow("acceptRoleButton") << "acceptRoleDialog" << "acceptRoleButton" << int(QPlatformDialogHelper::NoButton) << false << true;
+    QTest::newRow("standardAcceptRoleButton") << "standardAcceptButtonDialog" << QString() << int(QPlatformDialogHelper::Ok) << false << true;
+    QTest::newRow("noDefaultButton") << "noDefaultButtonDialog" << QString() << int(QPlatformDialogHelper::NoButton) << false << false;
+}
+
+void tst_QQuickPopup::dialogButtonBoxFocus()
+{
+    SKIP_IF_NO_WINDOW_ACTIVATION;
+
+    QFETCH(QString, dialogObjectName);
+    QFETCH(QString, buttonObjectName);
+    QFETCH(int, standardButton);
+    QFETCH(bool, expectedHighlighted);
+    QFETCH(bool, expectedClosed);
+
+    QQuickControlsApplicationHelper helper(this, "dialogButtonBoxFocus.qml");
+    QVERIFY2(helper.ready, helper.failureMessage());
+
+    QQuickWindow *window = helper.window;
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    auto *dialog = window->findChild<QQuickDialog *>(dialogObjectName);
+    QVERIFY(dialog);
+    auto *buttonBox = qobject_cast<QQuickDialogButtonBox *>(dialog->footer());
+    QVERIFY(buttonBox);
+
+    QQuickAbstractButton *expectedButton = nullptr;
+    const auto stdButton = static_cast<QPlatformDialogHelper::StandardButton>(standardButton);
+    if (stdButton != QPlatformDialogHelper::NoButton) {
+        expectedButton = buttonBox->standardButton(stdButton);
+        QVERIFY(expectedButton);
+    } else if (!buttonObjectName.isEmpty()) {
+        expectedButton = buttonBox->findChild<QQuickAbstractButton *>(buttonObjectName);
+        QVERIFY(expectedButton);
+    }
+
+    dialog->open();
+    TRY_VERIFY_POPUP_OPENED(dialog);
+
+    const auto isAnyButtonFocused = [buttonBox]() {
+        for (int i = 0; i < buttonBox->count(); ++i) {
+            if (buttonBox->itemAt(i)->hasFocus())
+                return true;
+        }
+        return false;
+    };
+
+    if (expectedButton)
+        QTRY_VERIFY(expectedButton->hasActiveFocus());
+    else
+        QTRY_VERIFY(!isAnyButtonFocused());
+
+    for (int i = 0; i < buttonBox->count(); ++i) {
+        auto *button = qobject_cast<QQuickAbstractButton *>(buttonBox->itemAt(i));
+        QVERIFY(button);
+        const bool isExpectedButton = button == expectedButton;
+        QCOMPARE(button->hasFocus(), isExpectedButton);
+        QCOMPARE(button->property("highlighted").toBool(), isExpectedButton && expectedHighlighted);
+    }
+
+    // Return on the dialog should activate the same button that received focus
+    // when the dialog was opened. Move focus away from the button, as on some
+    // platforms buttons react to Return on their own.
+    if (expectedButton) {
+        QQuickItem *contentItem = dialog->contentItem();
+        QVERIFY(contentItem);
+        contentItem->forceActiveFocus();
+        QTRY_VERIFY(contentItem->hasActiveFocus());
+        QTRY_VERIFY(!expectedButton->hasActiveFocus());
+
+        QSignalSpy clickedSpy(expectedButton, &QQuickAbstractButton::clicked);
+        QVERIFY(clickedSpy.isValid());
+        QTest::keyClick(window, Qt::Key_Return);
+        QTRY_COMPARE(clickedSpy.count(), 1);
+    }
+
+    if (expectedClosed)
+        QTRY_VERIFY(!dialog->isOpened());
+    else
+        QVERIFY(dialog->isOpened());
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickPopup)

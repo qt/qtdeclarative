@@ -293,6 +293,32 @@ void QQuickDialogButtonBoxPrivate::updateLayout()
         q->insertItem(i, buttons.at(i));
 }
 
+int QQuickDialogButtonBoxPrivate::indexOfDefaultStandardButton() const
+{
+    for (int i = 0; i < contentModel->count(); ++i) {
+        if (auto *button = qobject_cast<QQuickButton *>(itemAt(i))) {
+            const auto stdButton = standardButton(button);
+            const bool isDefaultStdbutton = defaultStandardButton != QPlatformDialogHelper::NoButton
+                                            && stdButton == defaultStandardButton;
+            const bool isDefaultButton = defaultButton == button;
+
+            if (isDefaultButton || isDefaultStdbutton)
+                return i;
+        }
+    }
+    return -1;
+}
+
+int QQuickDialogButtonBoxPrivate::indexOfAcceptButton() const
+{
+    for (int i = 0; i < contentModel->count(); ++i) {
+        QQuickAbstractButton *button = qobject_cast<QQuickAbstractButton *>(itemAt(i));
+        if (button && QQuickDialogPrivate::buttonRole(button) == QPlatformDialogHelper::ButtonRole::AcceptRole)
+            return i;
+    }
+    return -1;
+}
+
 void QQuickDialogButtonBoxPrivate::updateFocus()
 {
     Q_Q(QQuickDialogButtonBox);
@@ -301,31 +327,12 @@ void QQuickDialogButtonBoxPrivate::updateFocus()
         return;
 
     // Give focus to the first default button
-    int indexOfFocusButton = -1;
-    QQuickButton *buttonToHighlight = nullptr;
-    for (int i = 0; i < count; ++i) {
-        QQuickItem *item = q->itemAt(i);
-        if (auto *button = qobject_cast<QQuickButton *>(item)) {
-            const auto stdButton = standardButton(button);
-            const bool isDefaultStdbutton = defaultStandardButton != QPlatformDialogHelper::NoButton && stdButton == defaultStandardButton;
-            const bool isDefaultButton = defaultButton == button;
-            if (isDefaultButton || isDefaultStdbutton) {
-                buttonToHighlight = button;
-                indexOfFocusButton = i;
-                break;
-            }
-        }
-    }
+    int indexOfFocusButton = indexOfDefaultStandardButton();
+    QQuickButton *buttonToHighlight = qobject_cast<QQuickButton *>(q->itemAt(indexOfFocusButton));
+
     // Give focus to the first button with the accept role, if there are no default buttons
-    if (indexOfFocusButton < 0) {
-        for (int i = 0; i < count; ++i) {
-            QQuickAbstractButton *button = qobject_cast<QQuickAbstractButton *>(q->itemAt(i));
-            if (button && QQuickDialogPrivate::buttonRole(button) == QPlatformDialogHelper::ButtonRole::AcceptRole) {
-                indexOfFocusButton = i;
-                break;
-            }
-        }
-    }
+    if (indexOfFocusButton < 0)
+        indexOfFocusButton = indexOfAcceptButton();
 
     if (QQuickItemView *itemView = qobject_cast<QQuickItemView *>(contentItem)) {
         // QQuickItemView has the ItemIsFocusScope flag, and also calls setFocus(true) for the first delegate item it creates

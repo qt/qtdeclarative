@@ -557,6 +557,41 @@ void QQuickDialog::done(int result)
     close();
 }
 
+void QQuickDialog::keyPressEvent(QKeyEvent *event)
+{
+    Q_D(QQuickDialog);
+    if ((!event->modifiers() && event->key() == Qt::Key_Return)
+        || (event->modifiers() & Qt::KeypadModifier && event->key() == Qt::Key_Enter)) {
+        if (d->buttonBox) {
+            QQuickAbstractButton *effectiveDefaultButton = nullptr;
+
+            auto *buttonBoxPrivate = QQuickDialogButtonBoxPrivate::get(d->buttonBox);
+
+            // Try the first default button.
+            int standardButtonIndex = buttonBoxPrivate->indexOfDefaultStandardButton();
+            if (auto *standardButton = qobject_cast<QQuickAbstractButton *>(d->buttonBox->itemAt(standardButtonIndex));
+                standardButton && standardButton->isVisible() && standardButton->isEnabled())
+                effectiveDefaultButton = standardButton;
+
+            // If there is none, try first button with accept role.
+            if (!effectiveDefaultButton) {
+                int acceptButtonIndex = buttonBoxPrivate->indexOfAcceptButton();
+                if (auto *defaultButton = qobject_cast<QQuickAbstractButton *>(d->buttonBox->itemAt(acceptButtonIndex));
+                    defaultButton && defaultButton->isVisible() && defaultButton->isEnabled())
+                    effectiveDefaultButton = defaultButton;
+            }
+
+            if (effectiveDefaultButton) {
+                effectiveDefaultButton->animateClick();
+                event->accept();
+                return;
+            }
+        }
+    }
+
+    QQuickPopup::keyPressEvent(event);
+}
+
 void QQuickDialog::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &data)
 {
     QQuickPopup::itemChange(change, data);
