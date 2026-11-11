@@ -217,12 +217,10 @@ QList<QQmlError> QQmlPropertyValidator::validateObject(
             collectedBindingPropertyData[i] = pd;
 
         if (name.constData()->isUpper() && !binding->isAttachedProperty()) {
-            QQmlType type;
-            QQmlImportNamespace *typeNamespace = nullptr;
+            QQmlImportResolutionResult resolution;
             imports->resolveType(
-                    m_typeLoader, stringAt(binding->propertyNameIndex),
-                    &type, nullptr, &typeNamespace);
-            if (typeNamespace)
+                    m_typeLoader, stringAt(binding->propertyNameIndex), &resolution);
+            if (resolution.ns)
                 return recordError(binding->location, tr("Invalid use of namespace"));
             return recordError(binding->location, tr("Invalid attached object assignment"));
         }

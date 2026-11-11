@@ -165,8 +165,11 @@ private:
                 const QV4::ResolvedTypeReference *typeRef
                         = unit->resolvedType(binding->propertyNameIndex);
                 QQmlType type = typeRef ? typeRef->type() : QQmlType();
-                if (!type.isValid())
-                    imports->resolveType(typeLoader, bindingPropertyName, &type, nullptr, nullptr);
+                if (!type.isValid()) {
+                    QQmlImportResolutionResult resolution;
+                    imports->resolveType(typeLoader, bindingPropertyName, &resolution);
+                    type = resolution.type;
+                }
                 const QMetaObject *attachedType = type.attachedPropertiesType(typeLoader);
                 if (!attachedType) {
                     return recordError(binding->location,
@@ -358,8 +361,9 @@ private:
         if (isIntProp)
             return evaluateEnum(typeName.toString(), scopedEnumName, enumValue);
 
-        QQmlType type;
-        imports->resolveType(typeLoader, typeName, &type, nullptr, nullptr);
+        QQmlImportResolutionResult resolution;
+        imports->resolveType(typeLoader, typeName, &resolution);
+        const QQmlType type = resolution.type;
         if (!type.isValid())
             return std::nullopt;
 
@@ -399,8 +403,9 @@ private:
                                     QStringView enumValue)
     {
         bool ok = false;
-        QQmlType type;
-        imports->resolveType(typeLoader, scope, &type, nullptr, nullptr);
+        QQmlImportResolutionResult resolution;
+        imports->resolveType(typeLoader, scope, &resolution);
+        const QQmlType type = resolution.type;
         if (!type.isValid())
             return std::nullopt;
 

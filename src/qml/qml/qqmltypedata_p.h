@@ -92,11 +92,12 @@ private:
     QQmlError createTypeAndPropertyCaches(
             const QQmlRefPointer<QQmlTypeNameCache> &typeNameCache,
             const QV4::CompiledData::ResolvedTypeReferenceMap &resolvedTypeCache);
-    bool resolveType(const QString &typeName, QTypeRevision &version,
+    bool resolveType(const QString &typeName, QQmlImportResolutionResult *result,
                      TypeReference &ref, int lineNumber = -1, int columnNumber = -1,
                      bool reportErrors = true,
                      QQmlType::RegistrationType registrationType = QQmlType::AnyRegistrationType,
-                     bool *typeRecursionDetected = nullptr);
+                     QQmlImport::RecursionRestriction recursionRestriction
+                     = QQmlImport::PreventRecursion);
 
     void scriptImported(
             const QQmlRefPointer<QQmlScriptBlob> &blob, const QV4::CompiledData::Location &location,

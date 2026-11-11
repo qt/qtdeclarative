@@ -144,18 +144,12 @@ private:
             // Look up anonymous types from the imports of this document
             // ### it would be nice if QQmlImports allowed us to resolve a namespace
             // first, and then types on it.
-            QQmlImportNamespace *typeNamespace = nullptr;
-            QList<QQmlError> errors;
-            QQmlType t;
-            bool typeRecursionDetected = false;
-            const bool typeFound = m_imports->resolveType(
-                    typeLoader, toHashedStringRef(name), &t, nullptr, &typeNamespace, &errors,
-                    QQmlType::AnyRegistrationType,
-                    recursionRestriction == QQmlImport::AllowRecursion
-                            ? &typeRecursionDetected
-                            : nullptr);
-            if (typeFound)
-                return Result(t);
+            QQmlImportResolutionResult resolution;
+            if (m_imports->resolveType(
+                        typeLoader, toHashedStringRef(name), &resolution,
+                        QQmlType::AnyRegistrationType, recursionRestriction)) {
+                return Result(resolution.type);
+            }
 
         }
 
@@ -186,13 +180,9 @@ private:
             // ### it would be nice if QQmlImports allowed us to resolve a namespace
             // first, and then types on it.
             const QString qualifiedTypeName = importNamespace->m_qualifier + u'.' + toQString(name);
-            QQmlImportNamespace *typeNamespace = nullptr;
-            QList<QQmlError> errors;
-            QQmlType t;
-            bool typeFound = m_imports->resolveType(
-                        typeLoader, qualifiedTypeName, &t, nullptr, &typeNamespace, &errors);
-            if (typeFound)
-                return Result(t);
+            QQmlImportResolutionResult resolution;
+            if (m_imports->resolveType(typeLoader, qualifiedTypeName, &resolution))
+                return Result(resolution.type);
         }
 
         return result;

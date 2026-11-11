@@ -768,9 +768,10 @@ inline QQmlPropertyCache::ConstPtr QQmlPropertyCacheCreator<ObjectContainer>::pr
             Q_ASSERT(typeRef);
             QQmlType qmltype = typeRef->type();
             if (!qmltype.isValid()) {
+                QQmlImportResolutionResult resolution;
                 imports->resolveType(
-                        typeLoader, stringAt(binding->propertyNameIndex),
-                        &qmltype, nullptr, nullptr);
+                        typeLoader, stringAt(binding->propertyNameIndex), &resolution);
+                qmltype = resolution.type;
             }
 
             const QMetaObject *attachedMo = qmltype.attachedPropertiesType(typeLoader);
@@ -840,12 +841,14 @@ inline std::optional<QMetaType> QQmlPropertyCacheCreator<ObjectContainer>::metaT
     const QString typeName = stringAt(param.typeNameIndexOrCommonType());
     if (customTypeName)
         *customTypeName = typeName;
-    QQmlType qmltype;
-    bool selfReference = false;
+    QQmlImportResolutionResult resolution;
     if (!imports->resolveType(
-                typeLoader, typeName, &qmltype, nullptr, nullptr, nullptr,
-                QQmlType::AnyRegistrationType, &selfReference))
+                typeLoader, typeName, &resolution, QQmlType::AnyRegistrationType,
+                QQmlImport::AllowRecursion)) {
         return {};
+    }
+    const QQmlType &qmltype = resolution.type;
+    const bool selfReference = resolution.typeRecursionDetected;
 
     if (qmltype.isInlineComponent()) {
         const QMetaType listTypeId = param.isList() ? qmltype.qListTypeId() : qmltype.typeId();
@@ -890,12 +893,11 @@ inline auto QQmlPropertyCacheCreator<ObjectContainer>::tryResolvePropertyType(
     // can be extracted and passed to tryResolvePropertyType as a function object to simplify
     // dependency injection (imports / typeLoader)
     Q_ASSERT(!propertyIR.isCommonType());
-    QQmlType qmltype;
-    bool selfReference = false;
-    QList<QQmlError> errors;
+    QQmlImportResolutionResult resolution;
     const QString typeName = stringAt(propertyIR.commonTypeOrTypeNameIndex());
-    if (!imports->resolveType(typeLoader, typeName, &qmltype, nullptr, nullptr, &errors,
-                              QQmlType::AnyRegistrationType, &selfReference)) {
+    if (!imports->resolveType(typeLoader, typeName, &resolution, QQmlType::AnyRegistrationType,
+                              QQmlImport::AllowRecursion)) {
+        QList<QQmlError> &errors = resolution.errors;
         Q_ASSERT(!errors.isEmpty());
 
         if (typeName == "list"_L1 && errors[0].description() == "is not a type"_L1) {
@@ -907,6 +909,7 @@ inline auto QQmlPropertyCacheCreator<ObjectContainer>::tryResolvePropertyType(
                 qQmlCompileError(propertyIR.location, typeName + u' ' + errors[0].description()));
     }
 
+    const QQmlType &qmltype = resolution.type;
     Q_ASSERT(qmltype.isValid());
 
     propertyType.metaType = propertyIR.isList() ? qmltype.qListTypeId() : qmltype.typeId();
