@@ -61,7 +61,12 @@ Create a new QQmlDataBlob for \a url and of the provided \a type.
 QQmlDataBlob::QQmlDataBlob(const QUrl &url, Type type, QQmlTypeLoader *manager)
     : m_typeLoader(manager)
     , m_type(type)
-    , m_url(manager->interceptUrl(url, (QQmlAbstractUrlInterceptor::DataType)type))
+
+    // The URL can't be cached at this point
+    // since we're creating the blob to be inserted into the cache.
+    // We also may be holding the lock already.
+    , m_url(manager->interceptUncachedUrl(url, (QQmlAbstractUrlInterceptor::DataType)type))
+
     , m_finalUrl(url)
     , m_redirectCount(0)
     , m_inCallback(false)

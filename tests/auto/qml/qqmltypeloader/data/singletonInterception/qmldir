@@ -1,0 +1,6 @@
+singleton Plain 1.0 Plain.qml
+singleton Selected 1.0 Selected.qml
+User1 1.0 User1.qml
+User2 1.0 User2.qml
+User3 1.0 User3.qml
+User4 1.0 User4.qml
