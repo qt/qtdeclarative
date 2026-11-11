@@ -36,23 +36,6 @@ qt_internal_add_test(tst_qqmllanguage
 
 add_subdirectory(testhelper)
 
-if(ANDROID)
-    # Resources:
-    set_source_files_properties("data/I18nType30.qml"
-        PROPERTIES QT_RESOURCE_ALIAS "data/I18nTypeÁâãäå.qml"
-    )
-    set(qqmllanguage_resource_files
-        "data/I18nType30.qml"
-    )
-
-    qt_internal_add_resource(tst_qqmllanguage "qqmllanguage"
-        PREFIX
-            "/"
-        FILES
-            ${qqmllanguage_resource_files}
-    )
-endif()
-
 # These modules rely on resource paths in qmldir "prefer" directives, so they
 # must always be compiled into the binary regardless of platform.
 qt_internal_add_resource(tst_qqmllanguage "modulewithinternaltypessubdir"
