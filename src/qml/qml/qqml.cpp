@@ -3415,14 +3415,14 @@ QQmlType Validator::compositeType(const Type &type) const
 
     // If the module also has a C++ type of the same name, that one takes precedence. We cannot
     // reach the composite type through the module then.
-    QQmlType qmlType;
-    if (!import->resolveType(m_loader, type.name, nullptr, &qmlType) || !qmlType.isComposite())
+    QQmlImportResolutionResult resolution;
+    if (!import->resolveType(m_loader, type.name, &resolution) || !resolution.type.isComposite())
         return QQmlType();
 
     // Types only used in script code are resolved, but not loaded yet. Load them like
     // QQmlTypeWrapper does. If the type is loaded already, this is just a cache lookup.
     const auto cu =
-            m_loader->getType(qmlType.sourceUrl(), QQmlTypeLoader::Synchronous)->compilationUnit();
+            m_loader->getType(resolution.url, QQmlTypeLoader::Synchronous)->compilationUnit();
     return cu ? cu->qmlTypeForComponent(icName) : QQmlType();
 }
 

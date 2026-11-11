@@ -1706,11 +1706,9 @@ void LoadHelper::done()
 
     // The module exists (see check above), but there is no QQmlTypeModule
     // ==> pure QML module, attempt resolveType
-    QTypeRevision versionReturn;
-    QList<QQmlError> errors;
-    QQmlImportNamespace *ns_return = nullptr;
-    m_importCache->resolveType(
-            typeLoader(), m_typeName, &m_type, &versionReturn, &ns_return, &errors);
+    QQmlImportResolutionResult resolution;
+    m_importCache->resolveType(typeLoader(), m_typeName, &resolution);
+    m_type = resolution.type;
     m_resolveTypeResult = ResolveTypeResult::ModuleFound;
 }
 

@@ -113,25 +113,25 @@ int QQmlCustomParser::evaluateEnum(const QString &script, bool *ok) const
 
         QQmlType type;
         if (imports.isT1()) {
-            QQmlImportNamespace *ns = nullptr;
-
-            // Pass &recursionDetected to resolveType because that implicitly allows recursion.
-            // This way we can find the QQmlType of the document we're currently validating.
-            bool recursionDetected = false;
-
+            // Allow recursion so that we can find the QQmlType of the document we're
+            // currently validating.
+            QQmlImportResolutionResult resolution;
             if (!imports.asT1()->resolveType(
-                        loader, scope, &type, nullptr, &ns, nullptr,
-                        QQmlType::AnyRegistrationType, &recursionDetected)) {
+                        loader, scope, &resolution, QQmlType::AnyRegistrationType,
+                        QQmlImport::AllowRecursion)) {
                 return -1;
             }
+            type = resolution.type;
 
-            if (!type.isValid() && ns != nullptr) {
+            if (!type.isValid() && resolution.ns != nullptr) {
                 dot = nextDot(dot);
+                QQmlImportResolutionResult nested;
                 if (dot == -1 || !imports.asT1()->resolveType(
-                            loader, script.left(dot), &type, nullptr, nullptr, nullptr,
-                            QQmlType::AnyRegistrationType, &recursionDetected)) {
+                            loader, script.left(dot), &nested, QQmlType::AnyRegistrationType,
+                            QQmlImport::AllowRecursion)) {
                     return -1;
                 }
+                type = nested.type;
             }
         } else {
             // Allow recursion so that we can find enums from the same document.
@@ -210,11 +210,11 @@ const QMetaObject *QQmlCustomParser::resolveType(const QString& name) const
     if (!loader)
         return nullptr;
 
-    QQmlType qmltype;
-    if (!imports.asT1()->resolveType(loader, name, &qmltype, nullptr, nullptr))
+    QQmlImportResolutionResult resolution;
+    if (!imports.asT1()->resolveType(loader, name, &resolution))
         return nullptr;
 
-    return qmltype.metaObject();
+    return resolution.type.metaObject();
 }
 
 QQmlTypeLoader *QQmlCustomParser::typeLoader() const

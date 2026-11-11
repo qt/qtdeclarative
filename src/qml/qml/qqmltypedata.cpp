@@ -682,7 +682,7 @@ void QQmlTypeData::done()
     }
 
     {
-        QQmlType type = QQmlMetaType::qmlType(finalUrl());
+        QQmlType type = QQmlMetaType::qmlType(url());
         if (m_compiledData && m_compiledData->unitData()->flags & QV4::CompiledData::Unit::IsSingleton) {
             if (!type.isValid()) {
                 QQmlError error;
@@ -1068,12 +1068,14 @@ bool QQmlTypeData::resolveTypes()
             typeName = csRef.typeName;
         }
 
-        QTypeRevision version = csRef.version;
-        if (!resolveType(typeName, version, ref, -1, -1, true, QQmlType::CompositeSingletonType))
+        QQmlImportResolutionResult resolution;
+        if (!resolveType(typeName, &resolution, ref, -1, -1, true,
+                         QQmlType::CompositeSingletonType)) {
             return false;
+        }
 
         if (ref.type.isCompositeSingleton()) {
-            ref.typeData = typeLoader()->getType(ref.type.sourceUrl());
+            ref.typeData = typeLoader()->getType(resolution.url);
             if (ref.typeData->isWaiting() || m_waitingOnMe.contains(ref.typeData.data())) {
                 qCDebug(lcCycle) << "Possible cyclic dependency detected between"
                                  << ref.typeData->urlString() << "and" << urlString();
@@ -1093,24 +1095,30 @@ bool QQmlTypeData::resolveTypes()
 
         const bool reportErrors = unresolvedRef->errorWhenNotFound;
 
-        QTypeRevision version;
+        QQmlImportResolutionResult resolution;
 
         const QString name = stringAt(unresolvedRef.key());
 
-        bool *selfReferenceDetection = unresolvedRef->needsCreation ? nullptr : &ref.selfReference;
+        const QQmlImport::RecursionRestriction recursionRestriction = unresolvedRef->needsCreation
+                ? QQmlImport::PreventRecursion
+                : QQmlImport::AllowRecursion;
 
-        if (!resolveType(name, version, ref, unresolvedRef->location.line(),
+        if (!resolveType(name, &resolution, ref, unresolvedRef->location.line(),
                          unresolvedRef->location.column(), reportErrors,
-                         QQmlType::AnyRegistrationType, selfReferenceDetection) && reportErrors)
+                         QQmlType::AnyRegistrationType, recursionRestriction) && reportErrors) {
             return false;
+        }
+
+        if (!unresolvedRef->needsCreation)
+            ref.selfReference = resolution.typeRecursionDetected;
 
         if (ref.selfReference) {
             // nothing to do
         } else if (ref.type.isComposite()) {
-            ref.typeData = typeLoader()->getType(ref.type.sourceUrl());
+            ref.typeData = typeLoader()->getType(resolution.url);
             addDependency(ref.typeData.data());
         } else if (ref.type.isInlineComponentType()) {
-            QUrl containingTypeUrl = ref.type.sourceUrl();
+            QUrl containingTypeUrl = resolution.url;
             Q_ASSERT(!containingTypeUrl.isEmpty());
             if (QQmlMetaType::equalBaseUrls(finalUrl(), containingTypeUrl)) {
                 ref.selfReference = true;
@@ -1123,7 +1131,7 @@ bool QQmlTypeData::resolveTypes()
             }
         }
 
-        ref.version = version;
+        ref.version = resolution.version;
         ref.location = unresolvedRef->location;
         ref.needsCreation = unresolvedRef->needsCreation;
         m_resolvedTypes.insert(unresolvedRef.key(), ref);
@@ -1205,38 +1213,36 @@ QQmlError QQmlTypeData::buildTypeResolutionCaches(
     return noError;
 }
 
-bool QQmlTypeData::resolveType(const QString &typeName, QTypeRevision &version,
+bool QQmlTypeData::resolveType(const QString &typeName, QQmlImportResolutionResult *result,
                                TypeReference &ref, int lineNumber, int columnNumber,
                                bool reportErrors, QQmlType::RegistrationType registrationType,
-                               bool *typeRecursionDetected)
+                               QQmlImport::RecursionRestriction recursionRestriction)
 {
     assertTypeLoaderThread();
 
-    QQmlImportNamespace *typeNamespace = nullptr;
-    QList<QQmlError> errors;
-
     bool typeFound = m_importCache->resolveType(
-            typeLoader(), typeName, &ref.type, &version, &typeNamespace, &errors, registrationType,
-            typeRecursionDetected);
-    if (!typeNamespace && !typeFound && !m_implicitImportLoaded) {
+            typeLoader(), typeName, result, registrationType, recursionRestriction);
+    if (!result->ns && !typeFound && !m_implicitImportLoaded) {
         // Lazy loading of implicit import
         if (loadImplicitImport()) {
             // Try again to find the type
-            errors.clear();
+            *result = QQmlImportResolutionResult();
             typeFound = m_importCache->resolveType(
-                    typeLoader(), typeName, &ref.type, &version, &typeNamespace, &errors,
-                    registrationType, typeRecursionDetected);
+                    typeLoader(), typeName, result, registrationType, recursionRestriction);
         } else {
             return false; //loadImplicitImport() hit an error, and called setError already
         }
     }
 
-    if ((!typeFound || typeNamespace) && reportErrors) {
+    ref.type = result->type;
+    QList<QQmlError> &errors = result->errors;
+
+    if ((!typeFound || result->ns) && reportErrors) {
         // Known to not be a type:
         //  - known to be a namespace (Namespace {})
         //  - type with unknown namespace (UnknownNamespace.SomeType {})
         QQmlError error;
-        if (typeNamespace) {
+        if (result->ns) {
             error.setDescription(QQmlTypeLoader::tr("Namespace %1 cannot be used as a type").arg(typeName));
         } else {
             if (errors.size()) {

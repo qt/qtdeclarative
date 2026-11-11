@@ -48,6 +48,20 @@ namespace QQmlImport {
     enum RecursionRestriction { PreventRecursion, AllowRecursion };
 }
 
+struct QQmlImportResolutionResult
+{
+    // The URL the type was found at, before URL interception. This is what the type loader's
+    // type cache should be keyed by. The URL of the QQmlType itself has to be the intercepted one.
+    QUrl url;
+
+    QQmlType type;
+    QQmlImportNamespace *ns = nullptr;
+    QString base;
+    QTypeRevision version;
+    QList<QQmlError> errors;
+    bool typeRecursionDetected = false;
+};
+
 struct QQmlImportInstance
 {
     enum Precedence {
@@ -78,11 +92,10 @@ struct QQmlImportInstance
                                               QTypeRevision version);
 
     bool resolveType(QQmlTypeLoader *typeLoader, const QHashedStringRef &type,
-                     QTypeRevision *version_return, QQmlType* type_return,
-                     const QString *base = nullptr, bool *typeRecursionDetected = nullptr,
+                     QQmlImportResolutionResult *result,
                      QQmlType::RegistrationType = QQmlType::AnyRegistrationType,
-                     QQmlImport::RecursionRestriction recursionRestriction = QQmlImport::PreventRecursion,
-                     QList<QQmlError> *errors = nullptr) const;
+                     QQmlImport::RecursionRestriction recursionRestriction =
+                             QQmlImport::PreventRecursion) const;
 };
 
 class QQmlImportNamespace
@@ -98,11 +111,10 @@ public:
     QQmlImportInstance *findImportByLocation(
             const QString &location, QTypeRevision version) const;
 
-    bool resolveType(QQmlTypeLoader *typeLoader, const QHashedStringRef& type,
-                     QTypeRevision *version_return, QQmlType* type_return,
-                     const QString *base = nullptr, QList<QQmlError> *errors = nullptr,
-                     QQmlType::RegistrationType registrationType = QQmlType::AnyRegistrationType,
-                     bool *typeRecursionDeteced = nullptr);
+    bool resolveType(QQmlTypeLoader *typeLoader, const QHashedStringRef &type,
+                     QQmlImportResolutionResult *result,
+                     QQmlType::RegistrationType registrationType,
+                     QQmlImport::RecursionRestriction recursionRestriction);
 
     // Prefix when used as a qualified import.  Otherwise empty.
     QHashedString prefix;
@@ -143,12 +155,12 @@ public:
     void setBaseUrl(const QUrl &url, const QString &urlString = QString());
     QUrl baseUrl() const { return m_baseUrl; }
 
-    bool resolveType(
-            QQmlTypeLoader *typeLoader, const QHashedStringRef &type, QQmlType *type_return,
-            QTypeRevision *version_return, QQmlImportNamespace **ns_return,
-            QList<QQmlError> *errors = nullptr,
-            QQmlType::RegistrationType registrationType = QQmlType::AnyRegistrationType,
-            bool *typeRecursionDetected = nullptr) const;
+    bool
+    resolveType(QQmlTypeLoader *typeLoader, const QHashedStringRef &type,
+                QQmlImportResolutionResult *result,
+                QQmlType::RegistrationType registrationType = QQmlType::AnyRegistrationType,
+                QQmlImport::RecursionRestriction recursionRestriction
+                = QQmlImport::PreventRecursion) const;
 
     const QQmlImportInstance *findImportByModuleUri(const QString &uri,
                                                     QTypeRevision version) const;
@@ -270,11 +282,10 @@ private:
 
     QQmlImportNamespace *importNamespace(const QString &prefix);
 
-    bool resolveType(
-            QQmlTypeLoader *typeLoader, const QHashedStringRef &type, QTypeRevision *version_return,
-            QQmlType *type_return, QList<QQmlError> *errors,
-            QQmlType::RegistrationType registrationType,
-            bool *typeRecursionDetected = nullptr) const;
+    bool resolveQualifiedType(QQmlTypeLoader *typeLoader, const QHashedStringRef &type,
+                     QQmlImportResolutionResult *result,
+                     QQmlType::RegistrationType registrationType,
+                     QQmlImport::RecursionRestriction recursionRestriction) const;
 
     QQmlImportNamespace *findQualifiedNamespace(const QHashedStringRef &) const;
 

@@ -326,8 +326,11 @@ bool SignalHandlerResolver::resolveSignalHandlerExpressions(
             const QmlIR::Object *attachedObj = qmlObjects.at(binding->value.objectIndex);
             auto *typeRef = resolvedType(binding->propertyNameIndex);
             QQmlType type = typeRef ? typeRef->type() : QQmlType();
-            if (!type.isValid())
-                imports->resolveType(typeLoader, bindingPropertyName, &type, nullptr, nullptr);
+            if (!type.isValid()) {
+                QQmlImportResolutionResult resolution;
+                imports->resolveType(typeLoader, bindingPropertyName, &resolution);
+                type = resolution.type;
+            }
 
             const QMetaObject *attachedType = type.attachedPropertiesType(typeLoader);
             if (!attachedType)
@@ -563,8 +566,9 @@ bool QQmlEnumTypeResolver::tryQualifiedEnumAssignment(
         }
         return true;
     }
-    QQmlType type;
-    imports->resolveType(compiler->typeLoader(), typeName, &type, nullptr, nullptr);
+    QQmlImportResolutionResult resolution;
+    imports->resolveType(compiler->typeLoader(), typeName, &resolution);
+    const QQmlType type = resolution.type;
 
     if (!type.isValid() && !isQtObject)
         return true;
@@ -627,8 +631,9 @@ int QQmlEnumTypeResolver::evaluateEnum(const QString &scope, QStringView enumNam
     *ok = false;
 
     if (scope != QLatin1String("Qt")) {
-        QQmlType type;
-        imports->resolveType(compiler->typeLoader(), scope, &type, nullptr, nullptr);
+        QQmlImportResolutionResult resolution;
+        imports->resolveType(compiler->typeLoader(), scope, &resolution);
+        const QQmlType type = resolution.type;
         if (!type.isValid())
             return -1;
         if (!enumName.isEmpty())
