@@ -2974,14 +2974,20 @@ bool Codegen::visit(ObjectPattern *ast)
             break;
         members.append(name);
 
+        Reference value;
         {
             RegisterScope innerScope(this);
-            Reference value = expression(p->initializer, name);
+            value = expression(p->initializer, name);
             if (hasError())
                 return false;
-            value.loadInAccumulator();
+
+            // Locals and arguments can be moved directly. They outlive the innerScope.
+            if (!value.isStackSlot() || !value.stackSlotIsLocalOrArgument) {
+                value.loadInAccumulator();
+                value = Reference::fromAccumulator(this);
+            }
         }
-        push(Reference::fromAccumulator(this));
+        push(value);
     }
 
     int classId = jsUnitGenerator->registerJSClass(members);
