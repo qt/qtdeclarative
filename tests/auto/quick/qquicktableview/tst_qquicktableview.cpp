@@ -278,6 +278,14 @@ private slots:
     void setRowHeightWhenUsingSyncView();
     void resetRowHeight();
     void clearRowHeights();
+    void emitsColumnResized();
+    void doesNotEmitColumnResized();
+    void emitsColumnResizedWithSyncView();
+    void emitsColumnResizedOnInteractiveResize();
+    void emitsRowResized();
+    void doesNotEmitRowResized();
+    void emitsRowResizedWithSyncView();
+    void emitsRowResizedOnInteractiveResize();
     void deletedDelegate();
     void columnResizing_data();
     void columnResizing();
@@ -6825,6 +6833,277 @@ void tst_QQuickTableView::clearRowHeights()
     QCOMPARE(tableView->rowHeight(0), defaultSize);
     QCOMPARE(tableView->explicitRowHeight(1), -1);
     QCOMPARE(tableView->rowHeight(1), defaultSize);
+}
+
+void tst_QQuickTableView::emitsColumnResized()
+{
+    // Check that setColumnWidth() emits columnResized with
+    // the column, the previous explicit width, and the new explicit width
+    LOAD_TABLEVIEW("plaintableview.qml");
+
+    auto model = TestModelAsVariant(3, 3);
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    const int column = 1;
+    QSignalSpy spy(tableView, &QQuickTableView::columnResized);
+
+    tableView->setColumnWidth(column, 150);
+    QCOMPARE(spy.size(), 1);
+    QVariantList args = spy.takeFirst();
+    QCOMPARE(args.at(0).toInt(), column);
+    QCOMPARE(args.at(1).toReal(), -1.);
+    QCOMPARE(args.at(2).toReal(), 150.);
+
+    tableView->setColumnWidth(column, 200);
+    QCOMPARE(spy.size(), 1);
+    args = spy.takeFirst();
+    QCOMPARE(args.at(0).toInt(), column);
+    QCOMPARE(args.at(1).toReal(), 150.);
+    QCOMPARE(args.at(2).toReal(), 200.);
+
+    tableView->setColumnWidth(column, -1);
+    QCOMPARE(spy.size(), 1);
+    args = spy.takeFirst();
+    QCOMPARE(args.at(0).toInt(), column);
+    QCOMPARE(args.at(1).toReal(), 200.);
+    QCOMPARE(args.at(2).toReal(), -1.);
+}
+
+void tst_QQuickTableView::doesNotEmitColumnResized()
+{
+    // Check that columnResized is not emitted when the
+    // width doesn't change, or when the column is invalid
+    LOAD_TABLEVIEW("plaintableview.qml");
+
+    auto model = TestModelAsVariant(3, 3);
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    tableView->setColumnWidth(1, 150);
+
+    QSignalSpy spy(tableView, &QQuickTableView::columnResized);
+
+    tableView->setColumnWidth(1, 150);
+    QCOMPARE(spy.size(), 0);
+
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*column must be greather than, or equal to, zero"));
+    tableView->setColumnWidth(-1, 10);
+    QCOMPARE(spy.size(), 0);
+}
+
+void tst_QQuickTableView::emitsColumnResizedWithSyncView()
+{
+    // Check that when a view that syncs horizontally (like a HorizontalHeaderView)
+    // sets a column width, both that view and the sync view emit columnResized
+    LOAD_TABLEVIEW("syncviewsimple.qml");
+    GET_QML_TABLEVIEW(tableViewH);
+
+    const auto model = TestModelAsVariant(3, 3);
+    tableView->setModel(model);
+    tableViewH->setModel(model);
+    tableView->setColumnWidthProvider(QJSValue());
+
+    WAIT_UNTIL_POLISHED;
+
+    QSignalSpy syncViewSpy(tableView, &QQuickTableView::columnResized);
+    QSignalSpy headerSpy(tableViewH, &QQuickTableView::columnResized);
+
+    const int column = 1;
+    const qreal size = 200;
+    tableViewH->setColumnWidth(column, size);
+
+    QCOMPARE(syncViewSpy.size(), 1);
+    QCOMPARE(headerSpy.size(), 1);
+
+    for (QSignalSpy *spy : {&syncViewSpy, &headerSpy}) {
+        const QVariantList args = spy->takeFirst();
+        QCOMPARE(args.at(0).toInt(), column);
+        QCOMPARE(args.at(1).toReal(), -1.);
+        QCOMPARE(args.at(2).toReal(), size);
+    }
+}
+
+void tst_QQuickTableView::emitsColumnResizedOnInteractiveResize()
+{
+    // Check that columnResized is emitted while the user drags to
+    // resize a column (same as QHeaderView::sectionResized), and that
+    // each emission continues from the previous one
+    LOAD_TABLEVIEW("tableviewwithselected2.qml");
+
+    auto model = TestModelAsVariant(3, 3);
+    tableView->setModel(model);
+    tableView->setResizableColumns(true);
+
+    WAIT_UNTIL_POLISHED;
+
+    const int column = 1;
+    QCOMPARE(tableView->explicitColumnWidth(column), -1);
+
+    QSignalSpy spy(tableView, &QQuickTableView::columnResized);
+
+    const auto item = tableView->itemAtIndex(tableView->index(0, column));
+    QVERIFY(item);
+    QQuickWindow *window = item->window();
+
+    const QPoint localPos = QPoint(item->width(), item->height() / 2);
+    const QPoint startPos = window->contentItem()->mapFromItem(item, localPos).toPoint();
+    const QPoint startDragDist = QPoint(qApp->styleHints()->startDragDistance() + 1, 0);
+    const QPoint dragLength(100, 0);
+
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, startPos);
+    QTest::mouseMove(window, startPos + startDragDist);
+    QTest::mouseMove(window, startPos + dragLength);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, startPos + dragLength);
+
+    QTRY_VERIFY(!QQuickTest::qIsPolishScheduled(tableView));
+
+    QVERIFY(spy.size() >= 1);
+    QCOMPARE(spy.first().at(1).toReal(), -1.);
+    QCOMPARE(spy.last().at(2).toReal(), tableView->explicitColumnWidth(column));
+
+    for (int i = 0; i < spy.size(); ++i) {
+        QCOMPARE(spy.at(i).at(0).toInt(), column);
+        if (i > 0)
+            QCOMPARE(spy.at(i).at(1).toReal(), spy.at(i - 1).at(2).toReal());
+    }
+}
+
+void tst_QQuickTableView::emitsRowResized()
+{
+    // Check that setRowHeight() emits rowResized with
+    // the row, the previous explicit height, and the new explicit height
+    LOAD_TABLEVIEW("plaintableview.qml");
+
+    auto model = TestModelAsVariant(3, 3);
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    const int row = 1;
+    QSignalSpy spy(tableView, &QQuickTableView::rowResized);
+
+    tableView->setRowHeight(row, 80);
+    QCOMPARE(spy.size(), 1);
+    QVariantList args = spy.takeFirst();
+    QCOMPARE(args.at(0).toInt(), row);
+    QCOMPARE(args.at(1).toReal(), -1.);
+    QCOMPARE(args.at(2).toReal(), 80.);
+
+    tableView->setRowHeight(row, 120);
+    QCOMPARE(spy.size(), 1);
+    args = spy.takeFirst();
+    QCOMPARE(args.at(0).toInt(), row);
+    QCOMPARE(args.at(1).toReal(), 80.);
+    QCOMPARE(args.at(2).toReal(), 120.);
+
+    tableView->setRowHeight(row, -1);
+    QCOMPARE(spy.size(), 1);
+    args = spy.takeFirst();
+    QCOMPARE(args.at(0).toInt(), row);
+    QCOMPARE(args.at(1).toReal(), 120.);
+    QCOMPARE(args.at(2).toReal(), -1.);
+}
+
+void tst_QQuickTableView::doesNotEmitRowResized()
+{
+    // Check that rowResized is not emitted when the
+    // height doesn't change, or when the row is invalid
+    LOAD_TABLEVIEW("plaintableview.qml");
+
+    auto model = TestModelAsVariant(3, 3);
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    tableView->setRowHeight(1, 80);
+
+    QSignalSpy spy(tableView, &QQuickTableView::rowResized);
+
+    tableView->setRowHeight(1, 80);
+    QCOMPARE(spy.size(), 0);
+
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*row must be greather than, or equal to, zero"));
+    tableView->setRowHeight(-1, 10);
+    QCOMPARE(spy.size(), 0);
+}
+
+void tst_QQuickTableView::emitsRowResizedWithSyncView()
+{
+    // Check that when a view that syncs vertically (like a VerticalHeaderView)
+    // sets a row height, both that view and the sync view emit rowResized
+    LOAD_TABLEVIEW("syncviewsimple.qml");
+    GET_QML_TABLEVIEW(tableViewV);
+
+    const auto model = TestModelAsVariant(3, 3);
+    tableView->setModel(model);
+    tableViewV->setModel(model);
+    tableView->setRowHeightProvider(QJSValue());
+
+    WAIT_UNTIL_POLISHED;
+
+    QSignalSpy syncViewSpy(tableView, &QQuickTableView::rowResized);
+    QSignalSpy headerSpy(tableViewV, &QQuickTableView::rowResized);
+
+    const int row = 1;
+    const qreal size = 200;
+    tableViewV->setRowHeight(row, size);
+
+    QCOMPARE(syncViewSpy.size(), 1);
+    QCOMPARE(headerSpy.size(), 1);
+
+    for (QSignalSpy *spy : {&syncViewSpy, &headerSpy}) {
+        const QVariantList args = spy->takeFirst();
+        QCOMPARE(args.at(0).toInt(), row);
+        QCOMPARE(args.at(1).toReal(), -1.);
+        QCOMPARE(args.at(2).toReal(), size);
+    }
+}
+
+void tst_QQuickTableView::emitsRowResizedOnInteractiveResize()
+{
+    // Check that rowResized is emitted while the user drags to
+    // resize a row, and that each emission continues from the previous one
+    LOAD_TABLEVIEW("tableviewwithselected2.qml");
+
+    auto model = TestModelAsVariant(3, 3);
+    tableView->setModel(model);
+    tableView->setResizableRows(true);
+
+    WAIT_UNTIL_POLISHED;
+
+    const int row = 1;
+    QCOMPARE(tableView->explicitRowHeight(row), -1);
+
+    QSignalSpy spy(tableView, &QQuickTableView::rowResized);
+
+    const auto item = tableView->itemAtIndex(tableView->index(row, 0));
+    QVERIFY(item);
+    QQuickWindow *window = item->window();
+
+    const QPoint localPos = QPoint(item->width() / 2, item->height());
+    const QPoint startPos = window->contentItem()->mapFromItem(item, localPos).toPoint();
+    const QPoint startDragDist = QPoint(0, qApp->styleHints()->startDragDistance() + 1);
+    const QPoint dragLength(0, 100);
+
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, startPos);
+    QTest::mouseMove(window, startPos + startDragDist);
+    QTest::mouseMove(window, startPos + dragLength);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, startPos + dragLength);
+
+    QTRY_VERIFY(!QQuickTest::qIsPolishScheduled(tableView));
+
+    QVERIFY(spy.size() >= 1);
+    QCOMPARE(spy.first().at(1).toReal(), -1.);
+    QCOMPARE(spy.last().at(2).toReal(), tableView->explicitRowHeight(row));
+
+    for (int i = 0; i < spy.size(); ++i) {
+        QCOMPARE(spy.at(i).at(0).toInt(), row);
+        if (i > 0)
+            QCOMPARE(spy.at(i).at(1).toReal(), spy.at(i - 1).at(2).toReal());
+    }
 }
 
 void tst_QQuickTableView::deletedDelegate()

@@ -7002,18 +7002,24 @@ void QQuickTableView::setColumnWidth(int column, qreal size)
         return;
     }
 
+    const qreal oldWidth = explicitColumnWidth(column);
+
     if (d->syncHorizontally) {
         d->syncView->setColumnWidth(column, size);
+        if (!qFuzzyCompare(oldWidth, size))
+            emit columnResized(column, oldWidth, size);
         return;
     }
 
-    if (qFuzzyCompare(explicitColumnWidth(column), size))
+    if (qFuzzyCompare(oldWidth, size))
         return;
 
     if (size < 0)
         d->explicitColumnWidths.remove(d->logicalColumnIndex(column));
     else
         d->explicitColumnWidths.insert(d->logicalColumnIndex(column), size);
+
+    emit columnResized(column, oldWidth, size);
 
     if (d->loadedItems.isEmpty())
         return;
@@ -7060,18 +7066,24 @@ void QQuickTableView::setRowHeight(int row, qreal size)
         return;
     }
 
+    const qreal oldHeight = explicitRowHeight(row);
+
     if (d->syncVertically) {
         d->syncView->setRowHeight(row, size);
+        if (!qFuzzyCompare(oldHeight, size))
+            emit rowResized(row, oldHeight, size);
         return;
     }
 
-    if (qFuzzyCompare(explicitRowHeight(row), size))
+    if (qFuzzyCompare(oldHeight, size))
         return;
 
     if (size < 0)
         d->explicitRowHeights.remove(d->logicalRowIndex(row));
     else
         d->explicitRowHeights.insert(d->logicalRowIndex(row), size);
+
+    emit rowResized(row, oldHeight, size);
 
     if (d->loadedItems.isEmpty())
         return;

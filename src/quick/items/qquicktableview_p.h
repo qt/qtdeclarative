@@ -286,6 +286,8 @@ Q_SIGNALS:
     Q_REVISION(6, 13) void sortingEnabledChanged();
     Q_REVISION(6, 13) void sortColumnChanged();
     Q_REVISION(6, 13) void sortOrderChanged();
+    Q_REVISION(6, 13) void columnResized(int column, qreal oldWidth, qreal newWidth);
+    Q_REVISION(6, 13) void rowResized(int row, qreal oldHeight, qreal newHeight);
 
 protected:
     void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
