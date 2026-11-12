@@ -144,6 +144,9 @@ void BytecodeGenerator::compressInstructions()
 
 void BytecodeGenerator::finalize(Compiler::Context *context)
 {
+    if (debugInstructionPass)
+        debugInstructionPass(this);
+
     compressInstructions();
 
     // collect content and line numbers
@@ -205,45 +208,8 @@ int BytecodeGenerator::addInstructionHelper(Instr::Type type, const Instr &i, in
     lastInstrType = int(type);
     lastInstr = i;
 
-    if (compilationMode == Compiler::CompilationMode::Debug && type != Instr::Type::Debug) {
-QT_WARNING_PUSH
-QT_WARNING_DISABLE_GCC("-Wmaybe-uninitialized") // broken gcc warns about Instruction::Debug()
-        if (instructions.isEmpty() || currentLine != instructions.constLast().line) {
-            addInstruction(Instruction::Debug());
-        } else if (type == Instr::Type::Ret) {
-            currentLine = -currentLine;
-            addInstruction(Instruction::Debug());
-            currentLine = -currentLine;
-            currentSourceLocation = QQmlJS::SourceLocation();
-        }
-QT_WARNING_POP
-    }
-
     const int pos = instructions.size();
-
-    const int argCount = Moth::InstrInfo::argumentCount[static_cast<int>(type)];
-    int s = argCount*sizeof(int);
-    if (offsetOfOffset != -1)
-        offsetOfOffset += Instr::encodedLength(type);
-    I instr {
-        type,
-        static_cast<short>(s + Instr::encodedLength(type)),
-        0,
-        currentLine,
-        currentStatement,
-        offsetOfOffset,
-        -1,
-        "\0\0"
-    };
-    uchar *code = instr.packed;
-    code = Instr::pack(code, Instr::wideInstructionType(type));
-
-    for (int j = 0; j < argCount; ++j) {
-        qToLittleEndian<qint32>(i.argumentsAsInts[j], code);
-        code += sizeof(int);
-    }
-
-    instructions.append(instr);
+    instructions.append(makeInstruction(type, i, offsetOfOffset, currentLine, currentStatement));
     if (m_sourceLocationTable)
         m_sourceLocationTable->entries.append({ 0, currentSourceLocation });
 

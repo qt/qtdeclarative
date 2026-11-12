@@ -11,16 +11,6 @@
 using namespace QV4;
 using namespace QV4::Moth;
 
-int InstrInfo::size(Instr::Type type)
-{
-#define MOTH_RETURN_INSTR_SIZE(I) case Instr::Type::I: case Instr::Type::I##_Wide: return InstrMeta<int(Instr::Type::I)>::Size;
-    switch (type) {
-    FOR_EACH_MOTH_INSTR_ALL(MOTH_RETURN_INSTR_SIZE)
-    }
-#undef MOTH_RETURN_INSTR_SIZE
-    Q_UNREACHABLE();
-}
-
 static QByteArray alignedNumber(int n) {
     QByteArray number = QByteArray::number(n);
     return number.prepend(8 - number.size(), ' ');
@@ -67,10 +57,6 @@ static QByteArray rawBytes(const char *data, int n)
 QT_BEGIN_NAMESPACE
 namespace QV4 {
 namespace Moth {
-
-const int InstrInfo::argumentCount[] = {
-    FOR_EACH_MOTH_INSTR_ALL(MOTH_COLLECT_NARGS)
-};
 
 QString dumpRegister(int reg, int nFormals)
 {

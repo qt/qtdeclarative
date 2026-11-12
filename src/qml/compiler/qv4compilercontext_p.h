@@ -103,10 +103,11 @@ struct ImportEntry
 };
 
 struct Module {
-    Module(const QString &fileName, const QString &finalUrl, CompilationMode compilationMode)
+    Module(const QString &fileName, const QString &finalUrl,
+           Moth::DebugInstructionPass debugInstructionPass)
         : fileName(fileName)
         , finalUrl(finalUrl)
-        , compilationMode(compilationMode)
+        , debugInstructionPass(debugInstructionPass)
     {}
     ~Module() {
         qDeleteAll(contextMap);
@@ -124,7 +125,8 @@ struct Module {
     QString finalUrl;
     QDateTime sourceTimeStamp;
     uint unitFlags = 0; // flags merged into CompiledData::Unit::flags
-    CompilationMode compilationMode = CompilationMode::Release;
+    Moth::DebugInstructionPass debugInstructionPass = nullptr;
+    bool isDebugging() const { return debugInstructionPass != nullptr; }
     QList<ExportEntry> localExportEntries;
     QList<ExportEntry> indirectExportEntries;
     QList<ExportEntry> starExportEntries;

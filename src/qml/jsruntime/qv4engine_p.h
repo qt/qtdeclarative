@@ -545,7 +545,7 @@ public:
 #if !QT_CONFIG(qml_debug)
     QV4::Debugging::Debugger *debugger() const { return nullptr; }
     QV4::Profiling::Profiler *profiler() const { return nullptr; }
-    Compiler::CompilationMode compilationMode() const { return Compiler::CompilationMode::Release; }
+    Moth::DebugInstructionPass debugInstructionPass() const { return nullptr; }
 
     void setDebugger(Debugging::Debugger *) {}
     void setProfiler(Profiling::Profiler *) {}
@@ -554,7 +554,7 @@ public:
 #else
     QV4::Debugging::Debugger *debugger() const { return m_debugger.data(); }
     QV4::Profiling::Profiler *profiler() const { return m_profiler.data(); }
-    Compiler::CompilationMode compilationMode() const;
+    Moth::DebugInstructionPass debugInstructionPass() const;
 
     void setDebugger(Debugging::Debugger *debugger);
     void setProfiler(Profiling::Profiler *profiler);

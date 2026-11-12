@@ -38,9 +38,9 @@ namespace Moth {
 
 class BytecodeGenerator {
 public:
-    BytecodeGenerator(int line, Compiler::CompilationMode compilationMode,
+    BytecodeGenerator(int line, DebugInstructionPass debugInstructionPass,
                       bool storeSourceLocation = false)
-        : startLine(line), compilationMode(compilationMode)
+        : debugInstructionPass(debugInstructionPass), startLine(line)
     {
         if (storeSourceLocation)
             m_sourceLocationTable.reset(new QV4::Compiler::Context::SourceLocationTable {});
@@ -78,7 +78,7 @@ public:
             // A label that nothing can reach doesn't need a position. Code following it is only
             // emitted if another label makes it reachable, and that label gets its own position.
             generator->labels[index] = generator->labelReachable[index]
-                    ? generator->instructions.size()
+                    ? int(generator->instructions.size())
                     : Dead;
         }
         bool isValid() const { return generator != nullptr; }
@@ -308,6 +308,7 @@ private:
     friend struct Jump;
     friend struct Label;
     friend struct ExceptionHandler;
+    friend class DebugInstructions;
 
     int addInstructionHelper(Moth::Instr::Type type, const Instr &i, int offsetOfOffset = -1);
 
@@ -322,6 +323,35 @@ private:
         unsigned char packed[sizeof(Instr) + 2]; // 2 for instruction type
     };
 
+    static I makeInstruction(Moth::Instr::Type type, const Instr &i, int offsetOfOffset, int line,
+                             int statement)
+    {
+        const int argCount = Moth::InstrInfo::argumentCount[static_cast<int>(type)];
+        int s = argCount * sizeof(int);
+        if (offsetOfOffset != -1)
+            offsetOfOffset += Instr::encodedLength(type);
+        I instr{ type,      static_cast<short>(s + Instr::encodedLength(type)),
+                 0,         line,
+                 statement, offsetOfOffset,
+                 -1,        "\0\0" };
+        uchar *code = instr.packed;
+        code = Instr::pack(code, Instr::wideInstructionType(type));
+
+        for (int j = 0; j < argCount; ++j) {
+            qToLittleEndian<qint32>(i.argumentsAsInts[j], code);
+            code += sizeof(int);
+        }
+        return instr;
+    }
+
+    template<int InstrT>
+    static I makeInstruction(const InstrData<InstrT> &data, int line, int statement)
+    {
+        Instr genericInstr;
+        InstrMeta<InstrT>::setData(genericInstr, data);
+        return makeInstruction(Moth::Instr::Type(InstrT), genericInstr, -1, line, statement);
+    }
+
     void compressInstructions();
     void packInstruction(I &i);
     void adjustJumpOffsets();
@@ -333,16 +363,16 @@ private:
     // Whether a label can be reached. Before it is linked, whether a reachable jump targets it.
     QList<bool> labelReachable;
     ExceptionHandler *currentExceptionHandler = nullptr;
+    DebugInstructionPass debugInstructionPass = nullptr;
     int regCount = 0;
 public:
     int currentReg = 0;
 private:
     int startLine = 0;
     int currentLine = 0;
-    int currentStatement = 0;
     QQmlJS::SourceLocation currentSourceLocation;
     std::unique_ptr<QV4::Compiler::Context::SourceLocationTable> m_sourceLocationTable;
-    Compiler::CompilationMode compilationMode = Compiler::CompilationMode::Release;
+    int currentStatement = 0;
     bool hasError = false;
 
     // Whether control flow can reach the next instruction. Unreachable instructions are dropped.

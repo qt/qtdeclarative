@@ -235,7 +235,7 @@ QQmlRefPointer<ExecutableCompilationUnit> FunctionCtor::parse(ExecutionEngine *e
         return nullptr;
     }
 
-    Compiler::Module module(QString(), QString(), engine->compilationMode());
+    Compiler::Module module(QString(), QString(), engine->debugInstructionPass());
 
     Compiler::JSUnitGenerator jsGenerator(&module);
     RuntimeCodegen cg(engine, &jsGenerator, false);

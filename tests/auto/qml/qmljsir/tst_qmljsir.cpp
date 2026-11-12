@@ -25,13 +25,13 @@ void tst_qmljsir::failureMode()
     QFETCH(QString, source);
     QFETCH(int, expectedWarnings);
 
-    Document stopDocument(QString(), QString(), QV4::Compiler::CompilationMode::Debug);
+    Document stopDocument{ QString(), QString() };
     IRBuilder stopBuilder;
     QVERIFY(stopDocument.parse(source, QString(), &stopBuilder.errors));
     QVERIFY(!stopBuilder.generateFromQml(&stopDocument));
     QCOMPARE(stopBuilder.errors.size(), 1);
 
-    Document continueDocument(QString(), QString(), QV4::Compiler::CompilationMode::Debug);
+    Document continueDocument{ QString(), QString() };
     IRBuilder continueBuilder{ IRBuilder::ContinueAfterFailure };
     QVERIFY(continueDocument.parse(source, QString(), &continueBuilder.errors));
     QVERIFY(!continueBuilder.generateFromQml(&continueDocument));
@@ -70,7 +70,7 @@ void tst_qmljsir::propertyVirtSpecifiers_data()
 // but Copy&Move are disabled on the Document because of the MemoryPool in JsEngine
 static auto tryBuildIRDocumentFrom(const QString &source) -> std::unique_ptr<Document>
 {
-    auto documentPtr = std::make_unique<Document>(QString(), QString(), QV4::Compiler::CompilationMode::Debug);
+    auto documentPtr = std::make_unique<Document>(QString(), QString());
     QList<QQmlJS::DiagnosticMessage> parseErrors;
     if (!documentPtr->parse(source, QString(), &parseErrors))
         return nullptr;

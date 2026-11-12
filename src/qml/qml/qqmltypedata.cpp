@@ -693,7 +693,8 @@ bool QQmlTypeData::loadFromSource()
     assertTypeLoaderThread();
 
     m_document.reset(
-            new QmlIR::Document(urlString(), finalUrlString(), m_typeLoader->compilationMode()));
+            new QmlIR::Document(urlString(), finalUrlString(),
+                                m_typeLoader->debugInstructionPass()));
     m_document->jsModule.sourceTimeStamp = m_backupSourceCode.sourceTimeStamp();
     QmlIR::IRBuilder compiler;
 

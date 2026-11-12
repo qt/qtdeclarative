@@ -9,6 +9,7 @@
 #include <private/qqmlcontext_p.h>
 #include <private/qqmlengine_p.h>
 #include <private/qv4compileddata_p.h>
+#include <private/qv4debuginstructions_p.h>
 #include <private/qv4function_p.h>
 #include <private/qv4scopedvalue_p.h>
 #include <private/qv4script_p.h>
@@ -234,9 +235,9 @@ void QV4Debugger::aboutToThrow()
     pauseAndWait(Throwing);
 }
 
-QV4::Compiler::CompilationMode QV4Debugger::compilationMode() const
+QV4::Moth::DebugInstructionPass QV4Debugger::debugInstructionPass() const
 {
-    return QV4::Compiler::CompilationMode::Debug;
+    return &QV4::Moth::DebugInstructions::insert;
 }
 
 QV4::Function *QV4Debugger::getFunction() const

@@ -183,9 +183,7 @@ private:
         Result result;
 
         QmlIR::Document irDocument =
-                QmlIR::Document(QString(), QString(),
-                                QV4::Compiler::CompilationMode::
-                                        Release); // needs to outlive the lintFileInBatch() call.
+                QmlIR::Document{ QString(), QString() }; // needs to outlive the lintFileInBatch() call.
 
         qsizetype maxWarnings;
         bool isESModule;

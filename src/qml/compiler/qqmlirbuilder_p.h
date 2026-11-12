@@ -462,7 +462,7 @@ struct Q_QML_COMPILER_EXPORT Document
     Q_DISABLE_COPY_MOVE(Document)
 
     Document(const QString &fileName, const QString &finalUrl,
-             QV4::Compiler::CompilationMode compilationMode);
+             QV4::Moth::DebugInstructionPass debugInstructionPass = nullptr);
 
     bool parse(const QString &sourceCode, const QString &url,
                QList<QQmlJS::DiagnosticMessage> *errors,

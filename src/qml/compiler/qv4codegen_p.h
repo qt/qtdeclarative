@@ -751,11 +751,12 @@ public:
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> generateCompilationUnit(
             bool generateUnitData = true);
     static QQmlRefPointer<QV4::CompiledData::CompilationUnit> compileModule(
-            CompilationMode compilationMode, const QString &url, const QString &sourceCode,
-            const QDateTime &sourceTimeStamp, QList<QQmlJS::DiagnosticMessage> *diagnostics);
+            Moth::DebugInstructionPass debugInstructionPass, const QString &url,
+            const QString &sourceCode, const QDateTime &sourceTimeStamp, QList<QQmlJS::DiagnosticMessage> *diagnostics);
 
     static const QV4::CompiledData::Unit *generateNativeModuleUnitData(
-            CompilationMode compilationMode, const QString &url, const QV4::Value &value);
+            Moth::DebugInstructionPass debugInstructionPass, const QString &url,
+            const QV4::Value &value);
 
     Context *currentContext() const { return _context; }
     BytecodeGenerator *generator() const { return bytecodeGenerator; }

@@ -44,7 +44,7 @@ class tst_qqmljsscope : public QQmlDataTest
     QQmlJSScope::ConstPtr run(const QString &unresolved, bool expectErrorsOrWarnings = false)
     {
         const QString resolved = testFile(unresolved);
-        QmlIR::Document document(resolved, resolved, QV4::Compiler::CompilationMode::Release);
+        QmlIR::Document document(resolved, resolved);
         return run(resolved, &document, expectErrorsOrWarnings);
     }
 
@@ -603,7 +603,7 @@ void tst_qqmljsscope::scriptIndices()
     }
 
     const QString file = testFile(u"functionAndBindingIndices.qml"_s);
-    QmlIR::Document document(file, file, QV4::Compiler::CompilationMode::Release); // we need QmlIR information here
+    QmlIR::Document document(file, file); // we need QmlIR information here
     QQmlJSScope::ConstPtr root = run(file, &document);
     QVERIFY(root);
     QVERIFY(document.javaScriptCompilationUnit->unitData());
@@ -968,7 +968,7 @@ void tst_qqmljsscope::compilationUnitsAreCompatible()
         return;
 
     const QString file = testFile(u"compilationUnitsCompatibility.qml"_s);
-    QmlIR::Document document(file, file, QV4::Compiler::CompilationMode::Release); // we need QmlIR information here
+    QmlIR::Document document(file, file); // we need QmlIR information here
     QVERIFY(run(file, &document));
     QVERIFY(document.javaScriptCompilationUnit->unitData());
     getRuntimeInfoFromCompilationUnit(document.javaScriptCompilationUnit->unitData(),
@@ -1148,7 +1148,7 @@ void tst_qqmljsscope::modulePrefixes()
     logger.setFilePath(url);
     logger.setCode(sourceCode);
 
-    QmlIR::Document document(url, url, QV4::Compiler::CompilationMode::Release);
+    QmlIR::Document document(url, url);
     QQmlJSSaveFunction noop([](auto &&...) { return true; });
     QQmlJSCompileError error;
     [&]() {
@@ -1176,7 +1176,7 @@ void tst_qqmljsscope::javaScriptBuiltinFlag()
     logger.setFilePath(url);
     logger.setCode(loadFile(url));
 
-    QmlIR::Document document(url, url, QV4::Compiler::CompilationMode::Release);
+    QmlIR::Document document(url, url);
     QQmlJSSaveFunction noop([](auto &&...) { return true; });
     QQmlJSCompileError error;
     [&]() {

@@ -52,12 +52,13 @@ namespace Compiler {
     struct Context;
     struct JSUnitGenerator;
     class Codegen;
-
-    enum class CompilationMode : quint8 { Release, Debug };
 }
 
 namespace Moth {
     class BytecodeGenerator;
+
+    // Inserts the instructions a debugger needs into the generated code. A debugger provides it.
+    using DebugInstructionPass = void (*)(BytecodeGenerator *generator);
 }
 
 namespace Heap {

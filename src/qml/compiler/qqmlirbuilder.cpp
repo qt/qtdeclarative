@@ -468,8 +468,8 @@ QStringList Signal::parameterStringList(const QV4::Compiler::StringTableGenerato
 }
 
 Document::Document(const QString &fileName, const QString &finalUrl,
-                   QV4::Compiler::CompilationMode compilationMode)
-    : jsModule(fileName, finalUrl, compilationMode)
+                   QV4::Moth::DebugInstructionPass debugInstructionPass)
+    : jsModule(fileName, finalUrl, debugInstructionPass)
     , program(nullptr)
     , jsGenerator(&jsModule)
 {

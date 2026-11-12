@@ -616,14 +616,9 @@ union Instr
     int argumentsAsInts[4];
 };
 
-struct InstrInfo
+template <int N>
+struct InstrMeta
 {
-    static const int argumentCount[];
-    static int size(Instr::Type type);
-};
-
-template<int N>
-struct InstrMeta {
 };
 
 QT_WARNING_PUSH
@@ -642,6 +637,25 @@ QT_WARNING_DISABLE_GCC("-Wmaybe-uninitialized")
 FOR_EACH_MOTH_INSTR_ALL(MOTH_INSTR_META_TEMPLATE);
 #undef MOTH_INSTR_META_TEMPLATE
 QT_WARNING_POP
+
+struct InstrInfo
+{
+    static constexpr int argumentCount[] = {
+        FOR_EACH_MOTH_INSTR_ALL(MOTH_COLLECT_NARGS)
+    };
+    static constexpr int size(Instr::Type type)
+    {
+#define MOTH_RETURN_INSTR_SIZE(I) \
+case Instr::Type::I:              \
+case Instr::Type::I##_Wide:       \
+    return InstrMeta<int(Instr::Type::I)>::Size;
+        switch (type) {
+            FOR_EACH_MOTH_INSTR_ALL(MOTH_RETURN_INSTR_SIZE)
+        }
+#undef MOTH_RETURN_INSTR_SIZE
+        Q_UNREACHABLE_RETURN(-1);
+    }
+};
 
 template<int InstrType>
 class InstrData : public InstrMeta<InstrType>::DataType

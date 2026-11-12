@@ -55,7 +55,7 @@ void Script::parse()
     ExecutionEngine *v4 = m_context->engine();
     Scope valueScope(v4);
 
-    QV4::Compiler::Module module(m_sourceFile, m_sourceFile, v4->compilationMode());
+    QV4::Compiler::Module module(m_sourceFile, m_sourceFile, v4->debugInstructionPass());
 
     if (m_sourceCode.startsWith(QLatin1String("function("))) {
         static const int snippetLength = 70;

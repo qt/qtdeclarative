@@ -7325,10 +7325,7 @@ struct DummyDebugger : public QV4::Debugging::Debugger
     void enteringFunction() final { }
     void leavingFunction(const QV4::ReturnedValue &) final { }
     void aboutToThrow() final { }
-    QV4::Compiler::CompilationMode compilationMode() const final
-    {
-        return QV4::Compiler::CompilationMode::Debug;
-    }
+    QV4::Moth::DebugInstructionPass debugInstructionPass() const final { return nullptr; }
 };
 #else
 using DummyDebugger = QV4::Debugging::Debugger; // it's already dummy

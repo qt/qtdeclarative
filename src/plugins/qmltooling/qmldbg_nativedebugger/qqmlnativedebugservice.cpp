@@ -8,6 +8,7 @@
 #include <private/qqmldebugserviceinterfaces_p.h>
 #include <private/qv4debugging_p.h>
 #include <private/qv4debugging_p.h>
+#include <private/qv4debuginstructions_p.h>
 #include <private/qv4engine_p.h>
 #include <private/qv4identifierhash_p.h>
 #include <private/qv4identifiertable_p.h>
@@ -165,7 +166,7 @@ public:
     void enteringFunction() override;
     void leavingFunction(const QV4::ReturnedValue &retVal) override;
     void aboutToThrow() override;
-    QV4::Compiler::CompilationMode compilationMode() const override;
+    QV4::Moth::DebugInstructionPass debugInstructionPass() const override;
 
     void handleCommand(QJsonObject *response, const QString &cmd, const QJsonObject &arguments);
 
@@ -628,9 +629,9 @@ void NativeDebugger::aboutToThrow()
     m_service->emitAsynchronousMessageToClient(event);
 }
 
-QV4::Compiler::CompilationMode NativeDebugger::compilationMode() const
+QV4::Moth::DebugInstructionPass NativeDebugger::debugInstructionPass() const
 {
-    return QV4::Compiler::CompilationMode::Debug;
+    return &QV4::Moth::DebugInstructions::insert;
 }
 
 QV4::Function *NativeDebugger::getFunction() const

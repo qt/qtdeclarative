@@ -4,6 +4,7 @@
 # Generated from qmltooling.pro.
 
 add_subdirectory(packetprotocol)
+add_subdirectory(debuginstructions)
 add_subdirectory(qmldbg_native)
 add_subdirectory(qmldbg_messages)
 add_subdirectory(qmldbg_profiler)

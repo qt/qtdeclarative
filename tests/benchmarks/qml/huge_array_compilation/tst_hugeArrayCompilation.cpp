@@ -29,7 +29,7 @@ void HugeArrayCompilation::compile()
     QQmlJSCompileError error;
 
     QBENCHMARK {
-        QmlIR::Document irDocument(QString(), QString(), QV4::Compiler::CompilationMode::Release);
+        QmlIR::Document irDocument{ QString(), QString() };
         QVERIFY(qParseQmlFile(irDocument, path, &error));
         QVERIFY(qCompileQmlFile(irDocument, path, saveFunction, &compiler, &error));
     }

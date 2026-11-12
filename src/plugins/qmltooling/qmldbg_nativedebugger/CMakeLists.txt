@@ -16,6 +16,7 @@ qt_internal_add_plugin(QQmlNativeDebugServiceFactoryPlugin
         qqmlnativedebugservicefactory.cpp qqmlnativedebugservicefactory.h
     LIBRARIES
         Qt::Core
+        Qt::DebugInstructionsPrivate
         Qt::PacketProtocolPrivate
         Qt::QmlPrivate
 )

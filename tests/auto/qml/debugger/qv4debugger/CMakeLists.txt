@@ -43,6 +43,7 @@ qt_internal_add_test(tst_qv4debugger
         ../../../../../src/plugins/qmltooling/qmldbg_debugger
     LIBRARIES
         Qt::CorePrivate
+        Qt::DebugInstructionsPrivate
         Qt::Gui
         Qt::GuiPrivate
         Qt::Network

@@ -3433,7 +3433,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast, AST::FormalPara
         _module->blocks.append(_context);
         _context->blockIndex = _module->blocks.size() - 1;
     }
-    if (_module->compilationMode == CompilationMode::Debug) // allow the debugger to see overwritten arguments
+    if (_module->isDebugging()) // allow the debugger to see overwritten arguments
         _context->argumentsCanEscape = true;
 
     // When a user writes the following QML signal binding:
@@ -3445,7 +3445,8 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast, AST::FormalPara
     _context->returnsClosure = body && cast<ExpressionStatement *>(body->statement)
             && cast<FunctionExpression *>(cast<ExpressionStatement *>(body->statement)->expression);
 
-    BytecodeGenerator bytecode(_context->line, _module->compilationMode, storeSourceLocations);
+    BytecodeGenerator bytecode(_context->line, _module->debugInstructionPass,
+                               storeSourceLocations);
     BytecodeGenerator *savedBytecodeGenerator;
     savedBytecodeGenerator = bytecodeGenerator;
     bytecodeGenerator = &bytecode;
@@ -4250,7 +4251,8 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> Codegen::generateCompilationU
 }
 
 QQmlRefPointer<QV4::CompiledData::CompilationUnit> Codegen::compileModule(
-        CompilationMode compilationMode, const QString &url, const QString &sourceCode,
+        Moth::DebugInstructionPass debugInstructionPass, const QString &url,
+        const QString &sourceCode,
         const QDateTime &sourceTimeStamp, QList<QQmlJS::DiagnosticMessage> *diagnostics)
 {
     QQmlJS::Engine ee;
@@ -4273,7 +4275,7 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> Codegen::compileModule(
     }
 
     using namespace QV4::Compiler;
-    Compiler::Module compilerModule(url, url, compilationMode);
+    Compiler::Module compilerModule(url, url, debugInstructionPass);
     compilerModule.unitFlags |= CompiledData::Unit::IsESModule;
     compilerModule.sourceTimeStamp = sourceTimeStamp;
     JSUnitGenerator jsGenerator(&compilerModule);
@@ -4289,10 +4291,11 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> Codegen::compileModule(
 }
 
 const QV4::CompiledData::Unit *Codegen::generateNativeModuleUnitData(
-        CompilationMode compilationMode, const QString &url, const Value &value)
+        Moth::DebugInstructionPass debugInstructionPass, const QString &url,
+        const Value &value)
 {
     using namespace QV4::Compiler;
-    Compiler::Module compilerModule(url, url, compilationMode);
+    Compiler::Module compilerModule(url, url, debugInstructionPass);
     compilerModule.unitFlags |= CompiledData::Unit::IsESModule;
     JSUnitGenerator jsGenerator(&compilerModule);
     Codegen cg(&jsGenerator, /*strictMode*/true);
