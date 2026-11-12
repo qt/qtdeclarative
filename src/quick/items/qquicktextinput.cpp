@@ -1665,7 +1665,7 @@ bool QQuickTextInput::contextMenuEvent(QContextMenuEvent *event)
 {
     Q_Q(QQuickTextInput);
     QContextMenuEvent mapped(event->reason(),
-        q->mapToScene(q->cursorRectangle().center()).toPoint(), event->globalPos(),
+        q->cursorRectangle().center().toPoint(), event->globalPos(),
         event->modifiers());
     const bool eventProcessed = QQuickItemPrivate::handleContextMenuEvent(&mapped);
     event->setAccepted(mapped.isAccepted());
