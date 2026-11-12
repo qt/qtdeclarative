@@ -76,16 +76,13 @@ JsFile::JsFile(
     LegacyDirectivesCollector directivesCollector(*this);
     m_engine->setDirectives(&directivesCollector);
 
-    QQmlJS::Lexer lexer(m_engine.get());
-    lexer.setCode(code, /*lineno = */ 1, /*qmlMode=*/false);
-    QQmlJS::Parser parser(m_engine.get());
-
     bool isESM = filePath.endsWith(u".mjs", Qt::CaseInsensitive);
-    bool isValid = isESM ? parser.parseModule() : parser.parseProgram();
-    setIsValid(isValid);
+    const QQmlJS::Parser::Result parsed = QQmlJS::Parser::parseCode(
+            m_engine.get(), code,
+            isESM ? QQmlJS::Parser::Goal::Module : QQmlJS::Parser::Goal::Script);
+    setIsValid(parsed.success);
 
-    const auto diagnostics = parser.diagnosticMessages();
-    for (const DiagnosticMessage &msg : diagnostics) {
+    for (const DiagnosticMessage &msg : parsed.diagnosticMessages) {
         addErrorLocal(
                 std::move(myParsingErrors().errorMessage(msg).withFile(filePath).withPath(m_path)));
     }
@@ -93,8 +90,8 @@ JsFile::JsFile(
     auto astComments = std::make_shared<AstComments>(m_engine);
 
     CommentCollector collector;
-    collector.collectComments(m_engine, parser.rootNode(), astComments);
-    m_script = std::make_shared<ScriptExpression>(code, m_engine, parser.rootNode(), astComments,
+    collector.collectComments(m_engine, parsed.rootNode, astComments);
+    m_script = std::make_shared<ScriptExpression>(code, m_engine, parsed.rootNode, astComments,
                                                   isESM ? ScriptExpression::ExpressionType::ESMCode
                                                         : ScriptExpression::ExpressionType::JSCode);
 }
@@ -221,20 +218,16 @@ QmlFile::QmlFile(
                          code),
       m_engine(new QQmlJS::Engine)
 {
-    QQmlJS::Lexer lexer(m_engine.get());
-    lexer.setCode(code, /*lineno = */ 1, /*qmlMode=*/true);
-    QQmlJS::Parser parser(m_engine.get());
-    if (option == EnableParserRecovery) {
-        parser.setIdentifierInsertionEnabled(true);
-        parser.setIncompleteBindingsEnabled(true);
-    }
-    m_isValid = parser.parse();
-    const auto diagnostics = parser.diagnosticMessages();
-    for (const DiagnosticMessage &msg : diagnostics) {
+    const bool recovery = option == EnableParserRecovery;
+    const QQmlJS::Parser::Result parsed = QQmlJS::Parser::parseCode(
+            m_engine.get(), code, QQmlJS::Parser::Goal::QmlDocument,
+            QQmlJS::Parser::OptionsBuilder().setRecovery(recovery).build());
+    m_isValid = parsed.success;
+    for (const DiagnosticMessage &msg : parsed.diagnosticMessages) {
         addErrorLocal(
                 std::move(myParsingErrors().errorMessage(msg).withFile(filePath).withPath(m_path)));
     }
-    m_ast = parser.ast();
+    m_ast = QQmlJS::AST::cast<QQmlJS::AST::UiProgram *>(parsed.rootNode);
 }
 
 ErrorGroups QmlFile::myParsingErrors()

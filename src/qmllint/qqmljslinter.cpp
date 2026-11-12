@@ -747,19 +747,14 @@ void QQmlJSLinter::typeReader(const QString &filename)
 
     result.logger->setCode(code);
 
-    QQmlJS::Lexer lexer(&lintInfo.engine);
-
-    lexer.setCode(code, /*lineno = */ 1, /*qmlMode=*/!lintInfo.isJavaScript);
-    QQmlJS::Parser parser(&lintInfo.engine);
-
-    const bool parseSuccess = lintInfo.isJavaScript
-            ? (lintInfo.isESModule ? parser.parseModule() : parser.parseProgram())
-            : parser.parse();
-    const auto diagnosticMessages = parser.diagnosticMessages();
-    for (const QQmlJS::DiagnosticMessage &m : diagnosticMessages)
+    const QQmlJS::Parser::Goal goal = !lintInfo.isJavaScript ? QQmlJS::Parser::Goal::QmlDocument
+            : lintInfo.isESModule                            ? QQmlJS::Parser::Goal::Module
+                                                             : QQmlJS::Parser::Goal::Script;
+    const QQmlJS::Parser::Result parsed = QQmlJS::Parser::parseCode(&lintInfo.engine, code, goal);
+    for (const QQmlJS::DiagnosticMessage &m : parsed.diagnosticMessages)
         result.logger->log(m.message, qmlSyntax, m.loc);
 
-    if (!parseSuccess) {
+    if (!parsed.success) {
         result.status = FailedToParse;
         return;
     }
@@ -775,7 +770,7 @@ void QQmlJSLinter::typeReader(const QString &filename)
     const QString implicitImportDirectory =
             QQmlJSImportVisitor::implicitImportDirectory(result.logger->filePath(), mapperPtr);
     if (lintInfo.isJavaScript) {
-        m_importer.runImportVisitor(parser.rootNode(),
+        m_importer.runImportVisitor(parsed.rootNode,
                                     {
                                             lintInfo.handle,
                                             lintInfo.result.logger.get(),
@@ -789,7 +784,7 @@ void QQmlJSLinter::typeReader(const QString &filename)
                              lintInfo.qmldirFiles, &lintInfo.engine);
 
     parseComments(result.logger.get(), lintInfo.engine.comments());
-    parser.rootNode()->accept(&*lintInfo.visitor);
+    parsed.rootNode->accept(&*lintInfo.visitor);
 }
 
 static void checkMaxWarnings(QQmlJSLogger *logger, qsizetype maxWarnings)
@@ -1152,15 +1147,12 @@ QQmlJSLinter::FixResult QQmlJSLinter::applyFixes(const QQmlJSLogger *logger, QSt
     }
 
     QQmlJS::Engine engine;
-    QQmlJS::Lexer lexer(&engine);
+    const QQmlJS::Parser::Result parsed = QQmlJS::Parser::parseCode(
+            &engine, code, QQmlJS::Parser::Goal::QmlDocument,
+            QQmlJS::Parser::OptionsBuilder().setQmlMode(!isJavaScript).build());
 
-    lexer.setCode(code, /*lineno = */ 1, /*qmlMode=*/!isJavaScript);
-    QQmlJS::Parser parser(&engine);
-
-    bool success = parser.parse();
-
-    if (!success) {
-        const auto diagnosticMessages = parser.diagnosticMessages();
+    if (!parsed.success) {
+        const auto diagnosticMessages = parsed.diagnosticMessages;
 
         if (!silent) {
             qDebug() << "File became unparseable after suggestions were applied. Please file a bug "

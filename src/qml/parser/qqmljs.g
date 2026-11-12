@@ -191,6 +191,8 @@
 #include <QtCore/qlist.h>
 #include <QtCore/qstring.h>
 
+#include <optional>
+
 QT_BEGIN_NAMESPACE
 
 namespace QQmlJS {
@@ -278,6 +280,56 @@ public:
     bool parseProgram() { return parse(T_FEED_JS_SCRIPT); }
     bool parseScript() { return parse(T_FEED_JS_SCRIPT); }
     bool parseModule() { return parse(T_FEED_JS_MODULE); }
+
+    enum class Goal { QmlDocument, Script, Module, Expression };
+
+    struct Result
+    {
+        bool success = false;
+        AST::Node *rootNode = nullptr;
+        QList<DiagnosticMessage> diagnosticMessages;
+    };
+
+    struct Options
+    {
+        std::optional<bool> qmlMode;
+        int lineNumber = 1;
+        bool identifierInsertion = false;
+        bool incompleteBindings = false;
+    };
+
+    class OptionsBuilder
+    {
+    public:
+        OptionsBuilder &setQmlMode(bool qmlMode)
+        {
+            m_options.qmlMode = qmlMode;
+            return *this;
+        }
+
+        OptionsBuilder &setLineNumber(int lineNumber)
+        {
+            m_options.lineNumber = lineNumber;
+            return *this;
+        }
+
+        OptionsBuilder &setRecovery(bool enabled)
+        {
+            m_options.identifierInsertion = enabled;
+            m_options.incompleteBindings = enabled;
+            return *this;
+        }
+
+        Options build() const { return m_options; }
+
+    private:
+        Options m_options;
+    };
+
+    static Result parseCode(Engine *engine, const QString &code, Goal goal)
+    { return parseCode(engine, code, goal, Options()); }
+
+    static Result parseCode(Engine *engine, const QString &code, Goal goal, Options options);
 
     AST::UiProgram *ast() const
     { return AST::cast<AST::UiProgram *>(program); }
@@ -505,6 +557,35 @@ Parser::~Parser()
         free(state_stack);
         free(location_stack);
     }
+}
+
+Parser::Result Parser::parseCode(Engine *engine, const QString &code, Goal goal, Options options)
+{
+    Lexer lexer(engine);
+    lexer.setCode(code, options.lineNumber, options.qmlMode.value_or(goal == Goal::QmlDocument));
+    Parser parser(engine);
+    parser.setIdentifierInsertionEnabled(options.identifierInsertion);
+    parser.setIncompleteBindingsEnabled(options.incompleteBindings);
+
+    Result result;
+    switch (goal) {
+    case Goal::QmlDocument:
+        result.success = parser.parse();
+        break;
+    case Goal::Script:
+        result.success = parser.parseScript();
+        break;
+    case Goal::Module:
+        result.success = parser.parseModule();
+        break;
+    case Goal::Expression:
+        result.success = parser.parseExpression();
+        break;
+    }
+    result.rootNode = parser.rootNode();
+    result.diagnosticMessages = parser.diagnosticMessages();
+    engine->setLexer(nullptr);
+    return result;
 }
 
 static inline SourceLocation location(Lexer *lexer)

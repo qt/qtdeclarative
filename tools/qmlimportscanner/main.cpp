@@ -534,20 +534,18 @@ QVariantList findQmlImportsInQmlCode(const QString &filePath, const QString &cod
                                   << "TS:" << QDateTime::currentMSecsSinceEpoch();
 
     QQmlJS::Engine engine;
-    QQmlJS::Lexer lexer(&engine);
-    lexer.setCode(code, /*line = */ 1);
-    QQmlJS::Parser parser(&engine);
+    const QQmlJS::Parser::Result parsed =
+            QQmlJS::Parser::parseCode(&engine, code, QQmlJS::Parser::Goal::QmlDocument);
 
-    if (!parser.parse() || !parser.diagnosticMessages().isEmpty()) {
-        // Extract errors from the parser
-        const auto diagnosticMessages = parser.diagnosticMessages();
-        for (const QQmlJS::DiagnosticMessage &m : diagnosticMessages) {
+    if (!parsed.success || !parsed.diagnosticMessages.isEmpty()) {
+        for (const QQmlJS::DiagnosticMessage &m : parsed.diagnosticMessages) {
             std::cerr << QDir::toNativeSeparators(filePath).toStdString() << ':'
                       << m.loc.startLine << ':' << m.message.toStdString() << std::endl;
         }
         return QVariantList();
     }
-    return findImportsInAst(parser.ast()->headers, filePath);
+    return findImportsInAst(QQmlJS::AST::cast<QQmlJS::AST::UiProgram *>(parsed.rootNode)->headers,
+                            filePath);
 }
 
 // Scan a single qml file for import statements
@@ -615,13 +613,10 @@ QVariantList findQmlImportsInJavascriptFile(const QString &filePath)
     QQmlJS::Engine ee;
     ImportCollector collector;
     ee.setDirectives(&collector);
-    QQmlJS::Lexer lexer(&ee);
-    lexer.setCode(sourceCode, /*line*/1, /*qml mode*/false);
-    QQmlJS::Parser parser(&ee);
-    parser.parseProgram();
+    const QQmlJS::Parser::Result parsed =
+            QQmlJS::Parser::parseCode(&ee, sourceCode, QQmlJS::Parser::Goal::Script);
 
-    const auto diagnosticMessages = parser.diagnosticMessages();
-    for (const QQmlJS::DiagnosticMessage &m : diagnosticMessages)
+    for (const QQmlJS::DiagnosticMessage &m : parsed.diagnosticMessages)
         if (m.isError())
             return QVariantList();
 

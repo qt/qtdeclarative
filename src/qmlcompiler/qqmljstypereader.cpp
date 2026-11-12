@@ -24,7 +24,6 @@ void defaultTypeReader(QQmlJSImporter *importer, const QString &filePath,
     const QFileInfo info{ filePath };
 
     QQmlJS::Engine engine;
-    QQmlJS::Lexer lexer(&engine);
 
     const QString lowerSuffix = info.suffix().toLower();
     const bool isESModule = lowerSuffix == QLatin1String("mjs");
@@ -37,12 +36,10 @@ void defaultTypeReader(QQmlJSImporter *importer, const QString &filePath,
     QString code = QString::fromUtf8(file.readAll());
     file.close();
 
-    lexer.setCode(code, /*line = */ 1, /*qmlMode=*/ !isJavaScript);
-    QQmlJS::Parser parser(&engine);
-
-    isJavaScript ? (isESModule ? parser.parseModule() : parser.parseProgram()) : parser.parse();
-
-    QQmlJS::AST::Node *rootNode = parser.rootNode();
+    const QQmlJS::Parser::Goal goal = !isJavaScript ? QQmlJS::Parser::Goal::QmlDocument
+            : isESModule                            ? QQmlJS::Parser::Goal::Module
+                                                    : QQmlJS::Parser::Goal::Script;
+    QQmlJS::AST::Node *rootNode = QQmlJS::Parser::parseCode(&engine, code, goal).rootNode;
 
     QQmlJSLogger logger;
     logger.setFilePath(filePath);

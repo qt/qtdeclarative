@@ -395,23 +395,20 @@ bool qCompileJSFile(
         QQmlJS::AST::Program *program = nullptr;
 
         {
-            QQmlJS::Lexer lexer(engine);
-            lexer.setCode(sourceCode, /*line*/1, /*parseAsBinding*/false);
-            QQmlJS::Parser parser(engine);
+            QQmlJS::Parser::Result parsed =
+                    QQmlJS::Parser::parseCode(engine, sourceCode, QQmlJS::Parser::Goal::Script);
 
-            bool parsed = parser.parseProgram();
+            error->appendDiagnostics(inputFileName, parsed.diagnosticMessages);
 
-            error->appendDiagnostics(inputFileName, parser.diagnosticMessages());
-
-            if (!parsed)
+            if (!parsed.success)
                 return false;
 
-            program = QQmlJS::AST::cast<QQmlJS::AST::Program*>(parser.rootNode());
+            program = QQmlJS::AST::cast<QQmlJS::AST::Program *>(parsed.rootNode);
             if (!program) {
-                lexer.setCode(QStringLiteral("undefined;"), 1, false);
-                parsed = parser.parseProgram();
-                Q_ASSERT(parsed);
-                program = QQmlJS::AST::cast<QQmlJS::AST::Program*>(parser.rootNode());
+                parsed = QQmlJS::Parser::parseCode(engine, QStringLiteral("undefined;"),
+                                                   QQmlJS::Parser::Goal::Script);
+                Q_ASSERT(parsed.success);
+                program = QQmlJS::AST::cast<QQmlJS::AST::Program *>(parsed.rootNode);
                 Q_ASSERT(program);
             }
         }

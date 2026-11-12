@@ -37,22 +37,26 @@ bool QQmlJSTypeDescriptionReader::operator()(
 {
     Engine engine;
 
-    Lexer lexer(&engine);
-    Parser parser(&engine);
+    const Parser::Result parsed = Parser::parseCode(&engine, m_source, Parser::Goal::QmlDocument);
 
-    lexer.setCode(m_source, /*lineno = */ 1, /*qmlMode = */true);
-
-    if (!parser.parse()) {
-        m_errorMessage = QString::fromLatin1("%1:%2: %3").arg(
-                    QString::number(parser.errorLineNumber()),
-                    QString::number(parser.errorColumnNumber()),
-                    parser.errorMessage());
+    if (!parsed.success) {
+        DiagnosticMessage firstError;
+        for (const DiagnosticMessage &d : parsed.diagnosticMessages) {
+            if (!d.isWarning()) {
+                firstError = d;
+                break;
+            }
+        }
+        m_errorMessage =
+                QString::fromLatin1("%1:%2: %3")
+                        .arg(QString::number(firstError.loc.startLine),
+                             QString::number(firstError.loc.startColumn), firstError.message);
         return false;
     }
 
     m_objects = objects;
     m_dependencies = dependencies;
-    readDocument(parser.ast());
+    readDocument(cast<UiProgram *>(parsed.rootNode));
 
     return m_errorMessage.isEmpty();
 }

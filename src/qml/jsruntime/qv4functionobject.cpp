@@ -220,18 +220,16 @@ QQmlRefPointer<ExecutableCompilationUnit> FunctionCtor::parse(ExecutionEngine *e
     QString function = (t == Type_Function ? QLatin1String("function anonymous(") : QLatin1String("function* anonymous(")) + arguments + QLatin1String("\n){") + body + QLatin1String("\n}");
 
     QQmlJS::Engine ee;
-    QQmlJS::Lexer lexer(&ee);
-    lexer.setCode(function, 1, false);
-    QQmlJS::Parser parser(&ee);
+    const QQmlJS::Parser::Result parsed =
+            QQmlJS::Parser::parseCode(&ee, function, QQmlJS::Parser::Goal::Expression);
 
-    const bool parsed = parser.parseExpression();
-
-    if (!parsed) {
+    if (!parsed.success) {
         engine->throwSyntaxError(QLatin1String("Parse error"));
         return nullptr;
     }
 
-    QQmlJS::AST::FunctionExpression *fe = QQmlJS::AST::cast<QQmlJS::AST::FunctionExpression *>(parser.rootNode());
+    QQmlJS::AST::FunctionExpression *fe =
+            QQmlJS::AST::cast<QQmlJS::AST::FunctionExpression *>(parsed.rootNode);
     if (!fe) {
         engine->throwSyntaxError(QLatin1String("Parse error"));
         return nullptr;

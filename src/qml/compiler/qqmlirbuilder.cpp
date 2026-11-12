@@ -522,13 +522,10 @@ bool IRBuilder::generateFromQml(const QString &code, const QString &url, Documen
 {
     QQmlJS::AST::UiProgram *program = nullptr;
     {
-        QQmlJS::Lexer lexer(&output->jsParserEngine);
-        lexer.setCode(code, /*line = */ 1);
-
-        QQmlJS::Parser parser(&output->jsParserEngine);
-
-        const bool parseResult = parser.parse();
-        const auto diagnosticMessages = parser.diagnosticMessages();
+        const QQmlJS::Parser::Result parsed = QQmlJS::Parser::parseCode(
+                &output->jsParserEngine, code, QQmlJS::Parser::Goal::QmlDocument);
+        const bool parseResult = parsed.success;
+        const auto diagnosticMessages = parsed.diagnosticMessages;
         if (!parseResult || !diagnosticMessages.isEmpty()) {
             // Extract errors from the parser
             for (const QQmlJS::DiagnosticMessage &m : diagnosticMessages) {
@@ -543,7 +540,7 @@ bool IRBuilder::generateFromQml(const QString &code, const QString &url, Documen
             if (!errors.isEmpty() || !parseResult)
                 return false;
         }
-        program = parser.ast();
+        program = QQmlJS::AST::cast<QQmlJS::AST::UiProgram *>(parsed.rootNode);
         Q_ASSERT(program);
     }
 

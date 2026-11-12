@@ -4254,19 +4254,16 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> Codegen::compileModule(
         const QDateTime &sourceTimeStamp, QList<QQmlJS::DiagnosticMessage> *diagnostics)
 {
     QQmlJS::Engine ee;
-    QQmlJS::Lexer lexer(&ee);
-    lexer.setCode(sourceCode, /*line*/1, /*qml mode*/false);
-    QQmlJS::Parser parser(&ee);
-
-    const bool parsed = parser.parseModule();
+    const QQmlJS::Parser::Result parsed =
+            QQmlJS::Parser::parseCode(&ee, sourceCode, QQmlJS::Parser::Goal::Module);
 
     if (diagnostics)
-        *diagnostics = parser.diagnosticMessages();
+        *diagnostics = parsed.diagnosticMessages;
 
-    if (!parsed)
+    if (!parsed.success)
         return QQmlRefPointer<CompiledData::CompilationUnit>();
 
-    QQmlJS::AST::ESModule *moduleNode = QQmlJS::AST::cast<QQmlJS::AST::ESModule*>(parser.rootNode());
+    QQmlJS::AST::ESModule *moduleNode = QQmlJS::AST::cast<QQmlJS::AST::ESModule *>(parsed.rootNode);
     if (!moduleNode) {
         // if parsing was successful, and we have no module, then
         // the file was empty.

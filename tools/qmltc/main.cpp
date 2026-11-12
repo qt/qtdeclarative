@@ -195,12 +195,10 @@ int main(int argc, char **argv)
 
     // main logic:
     QQmlJS::Engine engine;
-    QQmlJS::Lexer lexer(&engine);
-    lexer.setCode(sourceCode, /*lineno = */ 1);
-    QQmlJS::Parser qmlParser(&engine);
-    if (!qmlParser.parse()) {
-        const auto diagnosticMessages = qmlParser.diagnosticMessages();
-        for (const QQmlJS::DiagnosticMessage &m : diagnosticMessages) {
+    const QQmlJS::Parser::Result parsed =
+            QQmlJS::Parser::parseCode(&engine, sourceCode, QQmlJS::Parser::Goal::QmlDocument);
+    if (!parsed.success) {
+        for (const QQmlJS::DiagnosticMessage &m : parsed.diagnosticMessages) {
             fprintf(stderr, "%s\n",
                     qPrintable(QStringLiteral("%1:%2:%3: %4")
                                        .arg(inputFile)
@@ -281,7 +279,7 @@ int main(int argc, char **argv)
                             qmldirFiles);
     visitor.setMode(QQmltc::Visitor::Compile);
     QQmltc::TypeResolver typeResolver{ &importer };
-    typeResolver.init(&visitor, qmlParser.rootNode());
+    typeResolver.init(&visitor, parsed.rootNode);
 
     using PassManagerPtr =
             std::unique_ptr<QQmlSA::PassManager,

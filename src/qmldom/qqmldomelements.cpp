@@ -1704,19 +1704,19 @@ void ScriptExpression::setCode(const QString &code)
 
 AST::Node *ScriptExpression::parse()
 {
-    QQmlJS::Lexer lexer(m_engine.get());
     // qmlMode enables QML specific things that plain JS doesn't have, for example type annotations.
     const bool qmlMode = m_expressionType != ExpressionType::ESMCode
             && m_expressionType != ExpressionType::JSCode;
-    lexer.setCode(m_codeStr, /*lineno = */ 1, qmlMode);
-    QQmlJS::Parser parser(m_engine.get());
-    const bool parserSucceeded = m_expressionType == ExpressionType::ESMCode ? parser.parseModule()
-                                                                             : parser.parseScript();
-    if (!parserSucceeded) {
+    const QQmlJS::Parser::Goal goal = m_expressionType == ExpressionType::ESMCode
+            ? QQmlJS::Parser::Goal::Module
+            : QQmlJS::Parser::Goal::Script;
+    const QQmlJS::Parser::Result parsed =
+            QQmlJS::Parser::parseCode(m_engine.get(), m_codeStr, goal,
+                                      QQmlJS::Parser::OptionsBuilder().setQmlMode(qmlMode).build());
+    if (!parsed.success) {
         addErrorLocal(domParsingErrors().error(tr("Parsing of code failed")));
     }
-    const auto messages = parser.diagnosticMessages();
-    for (const DiagnosticMessage &msg : messages) {
+    for (const DiagnosticMessage &msg : parsed.diagnosticMessages) {
         ErrorMessage err = domParsingErrors().errorMessage(msg);
         err.location.offset -= m_localOffset.offset;
         err.location.startLine -= m_localOffset.startLine;
@@ -1724,7 +1724,7 @@ AST::Node *ScriptExpression::parse()
             err.location.startColumn -= m_localOffset.startColumn;
         addErrorLocal(std::move(err));
     }
-    return parser.rootNode();
+    return parsed.rootNode;
 }
 
 void ScriptExpression::astDumper(const Sink &s, AstDumperOptions options) const

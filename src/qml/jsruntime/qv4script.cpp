@@ -70,14 +70,11 @@ void Script::parse()
     }
 
     Engine ee, *engine = &ee;
-    Lexer lexer(engine);
-    lexer.setCode(m_sourceCode, m_line, m_parseAsBinding);
-    Parser parser(engine);
+    const Parser::Result parsed = Parser::parseCode(
+            engine, m_sourceCode, Parser::Goal::Script,
+            Parser::OptionsBuilder().setQmlMode(m_parseAsBinding).setLineNumber(m_line).build());
 
-    const bool parsed = parser.parseProgram();
-
-    const auto diagnosticMessages = parser.diagnosticMessages();
-    for (const DiagnosticMessage &m : diagnosticMessages) {
+    for (const DiagnosticMessage &m : parsed.diagnosticMessages) {
         if (m.isError()) {
             valueScope.engine->throwSyntaxError(
                     m.message, m_sourceFile, m.loc.startLine, m.loc.startColumn);
@@ -88,9 +85,9 @@ void Script::parse()
         }
     }
 
-    if (parsed) {
+    if (parsed.success) {
         using namespace AST;
-        Program *program = AST::cast<Program *>(parser.rootNode());
+        Program *program = AST::cast<Program *>(parsed.rootNode);
         if (!program) {
             // if parsing was successful, and we have no program, then
             // we're done...:
@@ -153,21 +150,17 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> Script::precompile(
     using namespace QV4::Compiler;
     using namespace QQmlJS::AST;
 
-    Lexer lexer(jsEngine);
-    lexer.setCode(source, /*line*/1, /*qml mode*/false);
-    Parser parser(jsEngine);
+    const Parser::Result parsed = Parser::parseCode(jsEngine, source, Parser::Goal::Script);
 
-    parser.parseProgram();
-
-    QList<QQmlError> errors
-            = QQmlEnginePrivate::qmlErrorFromDiagnostics(fileName, parser.diagnosticMessages());
+    QList<QQmlError> errors =
+            QQmlEnginePrivate::qmlErrorFromDiagnostics(fileName, parsed.diagnosticMessages);
     if (!errors.isEmpty()) {
         if (reportedErrors)
             *reportedErrors << errors;
         return nullptr;
     }
 
-    Program *program = AST::cast<Program *>(parser.rootNode());
+    Program *program = AST::cast<Program *>(parsed.rootNode);
     if (!program) {
         // if parsing was successful, and we have no program, then
         // we're done...:
