@@ -225,7 +225,7 @@ bool QQuickContextMenu::event(QEvent *event)
         auto *attacheeItem = qobject_cast<QQuickItem *>(parent());
         Q_ASSERT(attacheeItem);
         const auto *contextMenuEvent = static_cast<QContextMenuEvent *>(event);
-        const QPoint posRelativeToParent(attacheeItem->mapFromScene(contextMenuEvent->pos()).toPoint());
+        const QPoint posRelativeToParent = contextMenuEvent->pos();
 
         const bool isRequestedSignalConnected = d->isRequestedSignalConnected();
         if (isRequestedSignalConnected)

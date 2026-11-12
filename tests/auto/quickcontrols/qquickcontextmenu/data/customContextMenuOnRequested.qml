@@ -13,6 +13,8 @@ Item {
         id: button
         objectName: "tomato"
         text: "tomato"
+        x: 100
+        y: 100
 
         ContextMenu.onRequested: position => {
             root.pressPos = position

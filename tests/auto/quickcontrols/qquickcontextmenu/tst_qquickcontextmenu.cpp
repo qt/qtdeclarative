@@ -323,7 +323,9 @@ void tst_QQuickContextMenu::createOnRequested()
     QQuickMenu *menu = window.findChild<QQuickMenu *>();
     QVERIFY(menu);
     QTRY_VERIFY(menu->isOpened());
-    QCOMPARE(window.rootObject()->property("pressPos").toPoint(), tomatoCenter);
+    // The position passed to onRequested is relative to the item
+    QCOMPARE(window.rootObject()->property("pressPos").toPoint(),
+             tomatoItem->mapFromScene(tomatoCenter).toPoint());
 }
 
 // Drawer shouldn't prevent right clicks from opening ContextMenu: QTBUG-132765.

@@ -3285,6 +3285,9 @@ QList<QQuickItem *> QQuickDeliveryAgentPrivate::contextMenuTargets(QQuickItem *i
     \internal
 
     Based on \l deliverPointerEvent().
+
+    Each item receives its own event, with the position mapped to the
+    item's coordinate system.
 */
 void QQuickDeliveryAgentPrivate::deliverContextMenuEvent(QContextMenuEvent *event)
 {
@@ -3292,6 +3295,8 @@ void QQuickDeliveryAgentPrivate::deliverContextMenuEvent(QContextMenuEvent *even
     QList<QQuickItem *> targetItems = contextMenuTargets(rootItem, event);
     qCDebug(lcContextMenu) << "delivering context menu event" << event << "to" << targetItems.size() << "target item(s)";
     QList<QPointer<QQuickItem>> safeTargetItems(targetItems.begin(), targetItems.end());
+    const QPointF scenePos = event->pos();
+    bool accepted = event->isAccepted();
     for (auto &item : safeTargetItems) {
         qCDebug(lcContextMenu) << "- attempting to deliver to" << item;
         if (item.isNull())
@@ -3300,10 +3305,14 @@ void QQuickDeliveryAgentPrivate::deliverContextMenuEvent(QContextMenuEvent *even
         if (isSubsceneAgent)
             QQuickItemPrivate::get(item)->maybeHasSubsceneDeliveryAgent = true;
 
-        QCoreApplication::sendEvent(item, event);
-        if (event->isAccepted())
-            return;
+        QContextMenuEvent itemEvent(event->reason(), item->mapFromScene(scenePos).toPoint(),
+                                    event->globalPos(), event->modifiers());
+        QCoreApplication::sendEvent(item, &itemEvent);
+        accepted = itemEvent.isAccepted();
+        if (accepted)
+            break;
     }
+    event->setAccepted(accepted);
 }
 
 #ifndef QT_NO_DEBUG_STREAM

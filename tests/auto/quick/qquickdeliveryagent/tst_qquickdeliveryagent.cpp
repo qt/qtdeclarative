@@ -72,6 +72,29 @@ struct HoverItem : public QQuickItem
     QPointF globalMousePosition;
 };
 
+struct ContextMenuItem : public QQuickItem
+{
+    ContextMenuItem(QQuickItem *parent) : QQuickItem(parent) {}
+
+    bool event(QEvent *e) override
+    {
+        if (e->type() != QEvent::ContextMenu)
+            return QQuickItem::event(e);
+
+        auto *cme = static_cast<QContextMenuEvent *>(e);
+        ++contextMenuEventCount;
+        contextMenuPos = cme->pos();
+        contextMenuGlobalPos = cme->globalPos();
+        e->setAccepted(accept);
+        return true;
+    }
+
+    bool accept = true;
+    int contextMenuEventCount = 0;
+    QPoint contextMenuPos;
+    QPoint contextMenuGlobalPos;
+};
+
 // A QQuick3DViewport simulator
 class SubsceneRootItem : public QQuickShaderEffectSource
 {
@@ -160,6 +183,8 @@ private slots:
     void layerEnabledHoverCrash();
     void mouseGrabberQueryDuringTouchDoesNotStrandHover();
     void mouseMoveHoverEfficiency();
+    void contextMenuEventItemLocalPosition_data();
+    void contextMenuEventItemLocalPosition();
 
 private:
     std::unique_ptr<QPointingDevice> touchscreen{QTest::createTouchDevice()};
@@ -877,6 +902,57 @@ void tst_qquickdeliveryagent::mouseMoveHoverEfficiency() // QTBUG-140340
     // effectivelyClipsEventHandlingChildren() was true and the mouse position was outside.
     QCOMPARE_GE(QQuickItemPrivate::effectiveClippingSkips_counter, 9000ull);
 #endif
+}
+
+void tst_qquickdeliveryagent::contextMenuEventItemLocalPosition_data()
+{
+    QTest::addColumn<bool>("childAccepts");
+
+    QTest::addRow("child accepts") << true;
+    QTest::addRow("child ignores") << false;
+}
+
+void tst_qquickdeliveryagent::contextMenuEventItemLocalPosition()
+{
+    QFETCH(bool, childAccepts);
+
+    QQuickWindow window;
+    window.resize(200, 200);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+    ContextMenuItem parent(window.contentItem());
+    parent.setPosition(QPointF(20, 30));
+    parent.setSize(QSizeF(150, 150));
+    parent.accept = true;
+
+    ContextMenuItem child(&parent);
+    child.setPosition(QPointF(40, 50));
+    child.setSize(QSizeF(50, 50));
+    child.accept = childAccepts;
+
+    const QPoint scenePos(70, 95);
+    const QPoint globalPos = window.mapToGlobal(scenePos);
+    QContextMenuEvent event(QContextMenuEvent::Mouse, scenePos, globalPos);
+    event.setAccepted(false);
+    QGuiApplication::sendEvent(&window, &event);
+
+    // Each item gets the position in its own coordinate system,
+    // while the global position is left as is.
+    QCOMPARE(child.contextMenuEventCount, 1);
+    QCOMPARE(child.contextMenuPos, QPoint(10, 15));
+    QCOMPARE(child.contextMenuGlobalPos, globalPos);
+
+    if (childAccepts)
+        QCOMPARE(parent.contextMenuEventCount, 0);
+    else {
+        QCOMPARE(parent.contextMenuEventCount, 1);
+        QCOMPARE(parent.contextMenuPos, QPoint(50, 65));
+        QCOMPARE(parent.contextMenuGlobalPos, globalPos);
+    }
+
+    // The acceptance of the item event is reflected back to the original event
+    QVERIFY(event.isAccepted());
 }
 
 QTEST_MAIN(tst_qquickdeliveryagent)
