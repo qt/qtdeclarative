@@ -144,6 +144,8 @@ private slots:
     void parentChange();
     void parentChangeErrors();
     void anchorChanges();
+    void scriptStringsWithoutUrl_data();
+    void scriptStringsWithoutUrl();
     void anchorChanges2();
     void anchorChanges3();
     void anchorChanges4();
@@ -759,6 +761,43 @@ void tst_qquickstates::anchorChanges()
 
     rectPrivate->setState("");
     QCOMPARE(innerRect->x(), qreal(5));
+}
+
+void tst_qquickstates::scriptStringsWithoutUrl_data()
+{
+    QTest::addColumn<QString>("file");
+    QTest::addColumn<QString>("state");
+    QTest::addColumn<QRectF>("expected");
+
+    // QQmlBinding is used for the anchor script strings
+    QTest::addRow("AnchorChanges") << "anchorChanges1.qml" << "right" << QRectF(150, 0, 50, 50);
+    // QQmlPropertyBinding is used for the bindable width and height
+    QTest::addRow("ParentChange") << "scriptStringsWithoutUrl.qml" << "reparented"
+                                  << QRectF(0, 0, 30, 40);
+}
+
+void tst_qquickstates::scriptStringsWithoutUrl()
+{
+    QFETCH(QString, file);
+    QFETCH(QString, state);
+    QFETCH(QRectF, expected);
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+
+    // Script strings have no source text. Without a URL they still have to run from their
+    // compiled functions.
+    QFile f(testFile(file));
+    QVERIFY(f.open(QIODevice::ReadOnly));
+    component.setData(f.readAll(), QUrl());
+
+    QScopedPointer<QQuickItem> root(qobject_cast<QQuickItem *>(component.create()));
+    QVERIFY2(root, qPrintable(component.errorString()));
+    QQuickItem *inner = root->findChild<QQuickItem *>("MyRect");
+    QVERIFY(inner);
+
+    QQuickItemPrivate::get(root.get())->setState(state);
+    QCOMPARE(QRectF(inner->position(), inner->size()), expected);
 }
 
 void tst_qquickstates::anchorChanges2()

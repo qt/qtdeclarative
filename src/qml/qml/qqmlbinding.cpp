@@ -51,7 +51,7 @@ QQmlBinding *QQmlBinding::create(const QQmlPropertyData *property, const QQmlScr
 
     QQmlRefPointer<QQmlContextData> ctxtdata = QQmlContextData::get(scriptPrivate->context);
     QQmlEnginePrivate *engine = QQmlEnginePrivate::get(scriptPrivate->context->engine());
-    if (engine && ctxtdata && !ctxtdata->urlString().isEmpty() && ctxtdata->typeCompilationUnit()) {
+    if (engine && ctxtdata && ctxtdata->typeCompilationUnit()) {
         url = ctxtdata->urlString();
         if (scriptPrivate->bindingId != QQmlBinding::Invalid)
             runtimeFunction = ctxtdata->typeCompilationUnit()->runtimeFunctions.at(scriptPrivate->bindingId);

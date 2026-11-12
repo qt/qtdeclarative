@@ -22,6 +22,7 @@ private slots:
     void exception();
     void expressionFromDataComponent();
     void emptyScriptString();
+    void scriptStringFromDataWithoutUrl();
 };
 
 class TestObject : public QObject
@@ -152,6 +153,28 @@ void tst_qqmlexpression::emptyScriptString()
 
     // verify that comparing against an empty script string does not crash
     QVERIFY(script != empty);
+}
+
+void tst_qqmlexpression::scriptStringFromDataWithoutUrl()
+{
+    qmlRegisterType<TestObject>("Test", 1, 0, "TestObject");
+
+    QQmlEngine engine;
+    QQmlComponent c(&engine);
+
+    QFile f(testFile("scriptString.qml"));
+    QVERIFY(f.open(QIODevice::ReadOnly));
+    c.setData(f.readAll(), QUrl());
+
+    std::unique_ptr<QObject> root(c.create());
+    QVERIFY2(root, qPrintable(c.errorString()));
+    TestObject *testObj = qobject_cast<TestObject *>(root.get());
+    QVERIFY(testObj);
+
+    // The script string has to run from the compiled function. There is no source text.
+    QQmlExpression expression(testObj->scriptString());
+    QCOMPARE(expression.evaluate().toInt(), 15);
+    QVERIFY(!expression.hasError());
 }
 
 QTEST_MAIN(tst_qqmlexpression)

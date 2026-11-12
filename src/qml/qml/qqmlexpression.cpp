@@ -130,10 +130,7 @@ QQmlExpression::QQmlExpression(const QQmlScriptString &script, QQmlContext *ctxt
     if (scriptPrivate->context) {
         QQmlRefPointer<QQmlContextData> ctxtdata = QQmlContextData::get(scriptPrivate->context);
         QQmlEnginePrivate *engine = QQmlEnginePrivate::get(scriptPrivate->context->engine());
-        if (engine
-                && ctxtdata
-                && !ctxtdata->urlString().isEmpty()
-                && ctxtdata->typeCompilationUnit()) {
+        if (engine && ctxtdata && ctxtdata->typeCompilationUnit()) {
             d->url = ctxtdata->urlString();
             d->line = scriptPrivate->lineNumber;
             d->column = scriptPrivate->columnNumber;
