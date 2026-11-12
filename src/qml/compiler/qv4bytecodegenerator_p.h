@@ -69,6 +69,7 @@ public:
         void link() const {
             Q_ASSERT(index >= 0);
             Q_ASSERT(generator->labels[index] == Unlinked);
+            generator->locationSetAfterLabel = false;
             generator->clearLastInstruction();
             if (generator->labelReachable[index])
                 generator->reachable = true;
@@ -320,8 +321,23 @@ private:
         int statement;
         int offsetForJump;
         int linkedLabel;
+        // Whether code generation set a location between the last label and this instruction.
+        bool locationSetAfterLabel;
         unsigned char packed[sizeof(Instr) + 2]; // 2 for instruction type
     };
+
+    static bool endsFlow(Moth::Instr::Type type)
+    {
+        switch (type) {
+        case Instr::Type::Ret:
+        case Instr::Type::Jump:
+        case Instr::Type::UnwindToLabel:
+        case Instr::Type::ThrowException:
+            return true;
+        default:
+            return false;
+        }
+    }
 
     static I makeInstruction(Moth::Instr::Type type, const Instr &i, int offsetOfOffset, int line,
                              int statement)
@@ -333,7 +349,8 @@ private:
         I instr{ type,      static_cast<short>(s + Instr::encodedLength(type)),
                  0,         line,
                  statement, offsetOfOffset,
-                 -1,        "\0\0" };
+                 -1,        false,
+                 "\0\0" };
         uchar *code = instr.packed;
         code = Instr::pack(code, Instr::wideInstructionType(type));
 
@@ -350,6 +367,15 @@ private:
         Instr genericInstr;
         InstrMeta<InstrT>::setData(genericInstr, data);
         return makeInstruction(Moth::Instr::Type(InstrT), genericInstr, -1, line, statement);
+    }
+
+    template<int InstrT>
+    static I makeJumpInstruction(const InstrData<InstrT> &data, int line, int statement)
+    {
+        Instr genericInstr;
+        InstrMeta<InstrT>::setData(genericInstr, data);
+        return makeInstruction(Moth::Instr::Type(InstrT), genericInstr,
+                               offsetof(InstrData<InstrT>, offset), line, statement);
     }
 
     void compressInstructions();
@@ -371,6 +397,7 @@ private:
     int startLine = 0;
     int currentLine = 0;
     QQmlJS::SourceLocation currentSourceLocation;
+    bool locationSetAfterLabel = true;
     std::unique_ptr<QV4::Compiler::Context::SourceLocationTable> m_sourceLocationTable;
     int currentStatement = 0;
     bool hasError = false;

@@ -10,23 +10,11 @@ QT_USE_NAMESPACE
 using namespace QV4;
 using namespace Moth;
 
-static bool endsFlow(Instr::Type type)
-{
-    switch (type) {
-    case Instr::Type::Ret:
-    case Instr::Type::Jump:
-    case Instr::Type::UnwindToLabel:
-    case Instr::Type::ThrowException:
-        return true;
-    default:
-        return false;
-    }
-}
-
 void BytecodeGenerator::setLocation(const QQmlJS::SourceLocation &loc)
 {
     currentLine = static_cast<int>(loc.startLine);
     currentSourceLocation = loc;
+    locationSetAfterLabel = true;
 }
 
 void BytecodeGenerator::incrementStatement()
@@ -209,7 +197,9 @@ int BytecodeGenerator::addInstructionHelper(Instr::Type type, const Instr &i, in
     lastInstr = i;
 
     const int pos = instructions.size();
-    instructions.append(makeInstruction(type, i, offsetOfOffset, currentLine, currentStatement));
+    I instr = makeInstruction(type, i, offsetOfOffset, currentLine, currentStatement);
+    instr.locationSetAfterLabel = locationSetAfterLabel;
+    instructions.append(instr);
     if (m_sourceLocationTable)
         m_sourceLocationTable->entries.append({ 0, currentSourceLocation });
 

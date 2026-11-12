@@ -3533,8 +3533,10 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast, AST::FormalPara
         bytecodeGenerator->setLocation(ast->lastSourceLocation());
         _context->emitBlockFooter(this);
 
-        if (_returnLabel)
+        if (_returnLabel) {
             _returnLabel->link();
+            bytecodeGenerator->setLocation(ast->lastSourceLocation());
+        }
 
         if (_returnLabel || requiresReturnValue) {
             Instruction::LoadReg load;
@@ -3751,7 +3753,8 @@ bool Codegen::visit(ForEachStatement *ast)
         } else {
             done = end;
         }
-        ControlFlowLoop flow(this, &end, &in, std::move(cleanup));
+        BytecodeGenerator::Label continueLabel = bytecodeGenerator->newLabel();
+        ControlFlowLoop flow(this, &end, &continueLabel, std::move(cleanup));
         bytecodeGenerator->addLoopStart(in);
         in.link();
         iterator.loadInAccumulator();
@@ -3793,6 +3796,8 @@ bool Codegen::visit(ForEachStatement *ast)
             setJumpOutLocation(bytecodeGenerator, ast->statement, ast->forToken);
         }
 
+        continueLabel.link();
+        bytecodeGenerator->setLocation(ast->forToken);
         bytecodeGenerator->checkException();
         bytecodeGenerator->jump().link(in);
 
@@ -3842,6 +3847,7 @@ bool Codegen::visit(ForStatement *ast)
         bytecodeGenerator->addInstruction(clone);
     }
     statement(ast->expression);
+    bytecodeGenerator->setLocation(ast->forToken);
     bytecodeGenerator->checkException();
     bytecodeGenerator->jump().link(cond);
 

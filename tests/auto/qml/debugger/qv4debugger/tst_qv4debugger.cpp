@@ -305,6 +305,8 @@ private slots:
     void breakPointOnCommentAboveCallback();
     void breakPointOnClosingBrace_data();
     void breakPointOnClosingBrace();
+    void breakPointHitsPerExecution_data();
+    void breakPointHitsPerExecution();
     void executableLinesReleasedWithLastBreakPoint();
     void addBreakPointWhilePaused();
     void removeBreakPointForNextInstruction();
@@ -598,6 +600,14 @@ void tst_qv4debugger::breakPointOnClosingBrace_data()
     QTest::newRow("dead code")      << "    return x; x = 2;\n"                  << 4;
     QTest::newRow("unreachable loop")
             << "    while (true) return x; while (x) x = 1;\n" << 4;
+    // The return unwinds the block contexts to the epilogue, which is on the
+    // line of the block footer before it.
+    QTest::newRow("braced if-else return")
+            << "    if (x) { return 1 } else { return 2 }\n" << 3;
+    QTest::newRow("switch return")
+            << "    switch (x) { case true: return 1; default: return 2; }\n" << 3;
+    QTest::newRow("loop return in block")
+            << "    for (var i = 0; i < 3; ++i) { if (x) { return 1 } }\n" << 3;
 }
 
 void tst_qv4debugger::breakPointOnClosingBrace()
@@ -615,6 +625,114 @@ void tst_qv4debugger::breakPointOnClosingBrace()
     QVERIFY(m_debuggerAgent->m_wasPaused);
     QCOMPARE(m_debuggerAgent->m_statesWhenPaused.size(), 1);
     QCOMPARE(m_debuggerAgent->m_statesWhenPaused.first().lineNumber, pausedAt);
+}
+
+void tst_qv4debugger::breakPointHitsPerExecution_data()
+{
+    QTest::addColumn<QString>("script");
+    QTest::addColumn<int>("breakLine");
+    QTest::addColumn<int>("hits");
+
+    // The condition is tested 4 times
+    QTest::newRow("for header")
+            << "var s = 0;\n"
+               "for (let i = 0; i < 3; ++i)\n"
+               "    s += i;\n"
+            << 2 << 4;
+    QTest::newRow("for header with block")
+            << "var s = 0;\n"
+               "for (var i = 0; i < 3; ++i) {\n"
+               "    s += i;\n"
+               "}\n"
+            << 2 << 4;
+    QTest::newRow("for header multiline")
+            << "var s = 0;\n"
+               "for (var i = 0;\n"
+               "     i < 3;\n"
+               "     ++i) {\n"
+               "    s += i;\n"
+               "}\n"
+            << 3 << 4;
+    QTest::newRow("for-in header")
+            << "var s = 0;\n"
+               "for (var k in [1, 2, 3]) {\n"
+               "    s += k;\n"
+               "}\n"
+            << 2 << 4;
+    QTest::newRow("for-of header")
+            << "var s = 0;\n"
+               "for (var k of [1, 2, 3]) {\n"
+               "    s += k;\n"
+               "}\n"
+            << 2 << 4;
+    QTest::newRow("while header")
+            << "var i = 0;\n"
+               "while (i < 3) {\n"
+               "    ++i;\n"
+               "}\n"
+            << 2 << 4;
+    // A function with a return from a block falls off its end, or returns
+    QTest::newRow("closing brace, falling off")
+            << "function f(x) {\n"
+               "    if (x) { return 1 }\n"
+               "    var y = 2;\n"
+               "}\n"
+               "f(false);\n"
+            << 4 << 1;
+    QTest::newRow("closing brace, returning")
+            << "function f(x) {\n"
+               "    if (x) { return 1 }\n"
+               "    var y = 2;\n"
+               "}\n"
+               "f(true);\n"
+            << 4 << 1;
+    QTest::newRow("for-of continue")
+            << "var s = 0;\n"
+               "for (var k of [1, 2, 3]) {\n"
+               "    if (k) continue;\n"
+               "    s += k;\n"
+               "}\n"
+            << 2 << 4;
+    // The exit of the loop is reached by break and by falling out of the condition
+    QTest::newRow("break to line of condition")
+            << "var n = 10;\n"
+               "do {\n"
+               "    if (n > 5) break;\n"
+               "} while (n < 3); n = 7;\n"
+            << 4 << 1;
+    QTest::newRow("falling out to line of condition")
+            << "var n = 0;\n"
+               "do {\n"
+               "    if (n > 5) break;\n"
+               "    ++n;\n"
+               "} while (n < 3); n = 7;\n"
+            << 5 << 3;
+    // Jumps within a line must not pause twice
+    QTest::newRow("ternary")
+            << "var x = true;\n"
+               "var y = x ? 1 : 2;\n"
+            << 2 << 1;
+    QTest::newRow("one-line if-else")
+            << "var x = true, a = 0, b = 0;\n"
+               "if (x) a = 1; else b = 1;\n"
+            << 2 << 1;
+    QTest::newRow("one-line logical")
+            << "var x = true, y;\n"
+               "y = x && (x || y);\n"
+            << 2 << 1;
+}
+
+void tst_qv4debugger::breakPointHitsPerExecution()
+{
+    QFETCH(QString, script);
+    QFETCH(int, breakLine);
+    QFETCH(int, hits);
+
+    debugger()->addBreakPoint("breakPointHitsPerExecution", breakLine);
+    evaluateJavaScript(script, "breakPointHitsPerExecution");
+    QCOMPARE(m_debuggerAgent->m_statesWhenPaused.size(), hits);
+    for (const auto &state : m_debuggerAgent->m_statesWhenPaused)
+        QCOMPARE(state.lineNumber, breakLine);
 }
 
 void tst_qv4debugger::executableLinesReleasedWithLastBreakPoint()

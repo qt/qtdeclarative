@@ -36,6 +36,7 @@ private:
     DebugInstructions(BytecodeGenerator *generator) : m_generator(generator) {}
     void run();
     void appendDebug(int line, const I &before);
+    void appendJumpOverDebug(const I &before);
 
     BytecodeGenerator *m_generator;
 };
