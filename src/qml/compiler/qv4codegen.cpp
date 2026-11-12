@@ -4396,12 +4396,18 @@ public:
     bool visit(BinaryExpression *e) override
     {
         switch (e->op) {
+        case QSOperator::Assign:
+            // The left side may be a destructuring pattern. All of its targets are written.
+            collectIdentifiers(locs.specificLocations, e->left);
+            return true;
+
         case QSOperator::InplaceAnd:
         case QSOperator::InplaceSub:
         case QSOperator::InplaceDiv:
         case QSOperator::InplaceAdd:
         case QSOperator::InplaceLeftShift:
         case QSOperator::InplaceMod:
+        case QSOperator::InplaceExp:
         case QSOperator::InplaceMul:
         case QSOperator::InplaceOr:
         case QSOperator::InplaceRightShift:
@@ -4435,6 +4441,18 @@ private:
             bool visit(IdentifierExpression *ie) final {
                 ids.append(ie->name);
                 return false;
+            }
+
+            bool visit(PatternElement *pe) final {
+                if (!pe->bindingIdentifier.isEmpty())
+                    ids.append(pe->bindingIdentifier);
+                return true;
+            }
+
+            bool visit(PatternProperty *pp) final {
+                if (!pp->bindingIdentifier.isEmpty())
+                    ids.append(pp->bindingIdentifier);
+                return true;
             }
 
             void throwRecursionDepthError() final

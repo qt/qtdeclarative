@@ -369,6 +369,8 @@ private slots:
     void singleBlockLoops();
     void qtbug_60547();
     void delayLoadingArgs();
+    void delayLoadingAssignedLocals_data();
+    void delayLoadingAssignedLocals();
     void manyArguments();
     void forInIterator();
     void localForInIterator();
@@ -9349,6 +9351,38 @@ void tst_qqmlecmascript::delayLoadingArgs()
     QJSEngine engine;
     QJSValue ret = engine.evaluate("(function(x){return x + (x+=2)})(20)");
     QCOMPARE(ret.toInt(), 42); // esp. not 44.
+}
+
+void tst_qqmlecmascript::delayLoadingAssignedLocals_data()
+{
+    QTest::addColumn<QString>("body");
+    QTest::addColumn<int>("expected");
+
+    QTest::newRow("assign") << u"let a = 10; return a - (a = 5);"_s << 5;
+    QTest::newRow("assignArgument") << u"return (function(a) { return a - (a = 5); })(10);"_s << 5;
+    QTest::newRow("assignInComma") << u"let a = 10; return a - (a = 5, 1);"_s << 9;
+    QTest::newRow("assignInConditional") << u"let a = 10; return a - (true ? (a = 5) : 0);"_s << 5;
+    QTest::newRow("chainedAssign") << u"let a = 10, b; return a - (b = a = 5);"_s << 5;
+    QTest::newRow("assignInInitializer") << u"var a = 10; var x = a - (a = 5); return x;"_s << 5;
+    QTest::newRow("inplaceExp") << u"let a = 3; return a * (a **= 2);"_s << 27;
+    QTest::newRow("callee") << u"let a = function(v) { return v; }; return a(a = 5);"_s << 5;
+    QTest::newRow("arrayPattern") << u"let a = 10; return a - ([a] = [5], 1);"_s << 9;
+    QTest::newRow("nestedArrayPattern") << u"let a = 10; return a - ([[a]] = [[5]], 1);"_s << 9;
+    QTest::newRow("restElement") << u"let a = 10; return a - ([...a] = [5], 1);"_s << 9;
+    QTest::newRow("objectPattern") << u"let a = 10; return a - ({a} = {a: 5}, 1);"_s << 9;
+    QTest::newRow("objectPatternRenamed") << u"let a = 10; return a - ({x: a} = {x: 5}, 1);"_s << 9;
+    QTest::newRow("patternDefault") << u"let a = 10, b; return a - ([b = (a = 5)] = [], 1);"_s << 9;
+}
+
+void tst_qqmlecmascript::delayLoadingAssignedLocals()
+{
+    QFETCH(QString, body);
+    QFETCH(int, expected);
+
+    QJSEngine engine;
+    const QJSValue ret = engine.evaluate(u"(function() { "_s + body + u" })()"_s);
+    QVERIFY2(!ret.isError(), qPrintable(ret.toString()));
+    QCOMPARE(ret.toInt(), expected);
 }
 
 void tst_qqmlecmascript::manyArguments()
