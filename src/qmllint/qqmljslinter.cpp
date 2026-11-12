@@ -885,8 +885,11 @@ void QQmlJSLinter::lintFileImpl(const QString &filename)
     QLoggingCategory::setFilterRules(u"qt.qml.compiler=false"_s);
 
     CodegenWarningInterface warningInterface(lintInfo.result.logger.get());
-    qCompileQmlFile(filename, saveFunction, &codegen, &error, true, &warningInterface,
-                    lintInfo.fileContents);
+    QmlIR::Document irDocument(QString(), QString(), false);
+    if (qParseQmlFile(irDocument, filename, &error, &warningInterface, lintInfo.fileContents)) {
+        qCompileQmlFile(irDocument, filename, saveFunction, &codegen, &error, true,
+                        &warningInterface);
+    }
 
     checkMaxWarnings(lintInfo.result.logger.get(), lintInfo.maxWarnings);
     lintInfo.result.setStatusFromLogger();

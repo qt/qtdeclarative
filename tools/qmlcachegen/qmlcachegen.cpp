@@ -259,8 +259,11 @@ int main(int argc, char **argv)
     if (inputFile.endsWith(".qml"_L1)) {
         QQmlJSCompileError error;
         if (target != GenerateCpp || inputResourcePath.isEmpty() || parser.isSet(onlyBytecode)) {
-            if (!qCompileQmlFile(inputFile, saveFunction, nullptr, &error,
-                                 /* storeSourceLocation */ false)) {
+            QmlIR::Document irDocument(QString(), QString(),
+                                       QV4::Compiler::CompilationMode::Release);
+            if (!qParseQmlFile(irDocument, inputFile, &error)
+                || !qCompileQmlFile(irDocument, inputFile, saveFunction, nullptr, &error,
+                                    /* storeSourceLocation */ false)) {
                 error.augment("Error compiling qml file: "_L1).print();
                 return EXIT_FAILURE;
             }
@@ -309,8 +312,11 @@ int main(int argc, char **argv)
             if (parser.isSet(noAotValidationOption))
                 cppCodeGen.m_flags.setFlag(QQmlJSAotCompiler::NoAOTValidation);
 
-            if (!qCompileQmlFile(inputFile, saveFunction, &cppCodeGen, &error,
-                                 /* storeSourceLocation */ true)) {
+            QmlIR::Document irDocument(QString(), QString(),
+                                       QV4::Compiler::CompilationMode::Release);
+            if (!qParseQmlFile(irDocument, inputFile, &error)
+                || !qCompileQmlFile(irDocument, inputFile, saveFunction, &cppCodeGen, &error,
+                                    /* storeSourceLocation */ true)) {
                 error.augment("Error compiling qml file: "_L1).print();
                 return EXIT_FAILURE;
             }

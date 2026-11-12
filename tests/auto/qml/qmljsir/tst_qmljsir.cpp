@@ -27,12 +27,14 @@ void tst_qmljsir::failureMode()
 
     Document stopDocument(QString(), QString(), QV4::Compiler::CompilationMode::Debug);
     IRBuilder stopBuilder;
-    QVERIFY(!stopBuilder.generateFromQml(source, QString(), &stopDocument));
+    QVERIFY(stopDocument.parse(source, QString(), &stopBuilder.errors));
+    QVERIFY(!stopBuilder.generateFromQml(&stopDocument));
     QCOMPARE(stopBuilder.errors.size(), 1);
 
     Document continueDocument(QString(), QString(), QV4::Compiler::CompilationMode::Debug);
     IRBuilder continueBuilder{ IRBuilder::ContinueAfterFailure };
-    QVERIFY(!continueBuilder.generateFromQml(source, QString(), &continueDocument));
+    QVERIFY(continueDocument.parse(source, QString(), &continueBuilder.errors));
+    QVERIFY(!continueBuilder.generateFromQml(&continueDocument));
     QCOMPARE(continueBuilder.errors.size(), expectedWarnings);
 }
 
@@ -69,9 +71,10 @@ void tst_qmljsir::propertyVirtSpecifiers_data()
 static auto tryBuildIRDocumentFrom(const QString &source) -> std::unique_ptr<Document>
 {
     auto documentPtr = std::make_unique<Document>(QString(), QString(), QV4::Compiler::CompilationMode::Debug);
-    return IRBuilder().generateFromQml(source, QString(), documentPtr.get())
-            ? std::move(documentPtr)
-            : nullptr;
+    QList<QQmlJS::DiagnosticMessage> parseErrors;
+    if (!documentPtr->parse(source, QString(), &parseErrors))
+        return nullptr;
+    return IRBuilder().generateFromQml(documentPtr.get()) ? std::move(documentPtr) : nullptr;
 }
 
 /*

@@ -59,7 +59,8 @@ class tst_qqmljsscope : public QQmlDataTest
         QQmlJSSaveFunction noop([](auto &&...) { return true; });
         QQmlJSCompileError error;
         [&]() {
-            QVERIFY2(qCompileQmlFile(*document, resolvedFile, noop, nullptr, &error),
+            QVERIFY2(qParseQmlFile(*document, resolvedFile, &error)
+                             && qCompileQmlFile(*document, resolvedFile, noop, nullptr, &error),
                      qPrintable(error.message));
         }();
         if (!error.message.isEmpty())
@@ -1151,7 +1152,9 @@ void tst_qqmljsscope::modulePrefixes()
     QQmlJSSaveFunction noop([](auto &&...) { return true; });
     QQmlJSCompileError error;
     [&]() {
-        QVERIFY2(qCompileQmlFile(document, url, noop, nullptr, &error), qPrintable(error.message));
+        QVERIFY2(qParseQmlFile(document, url, &error)
+                         && qCompileQmlFile(document, url, noop, nullptr, &error),
+                 qPrintable(error.message));
     }();
     if (!error.message.isEmpty())
         return;
@@ -1177,7 +1180,9 @@ void tst_qqmljsscope::javaScriptBuiltinFlag()
     QQmlJSSaveFunction noop([](auto &&...) { return true; });
     QQmlJSCompileError error;
     [&]() {
-        QVERIFY2(qCompileQmlFile(document, url, noop, nullptr, &error), qPrintable(error.message));
+        QVERIFY2(qParseQmlFile(document, url, &error)
+                         && qCompileQmlFile(document, url, noop, nullptr, &error),
+                 qPrintable(error.message));
     }();
     if (!error.message.isEmpty())
         return;

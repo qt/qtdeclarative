@@ -463,6 +463,12 @@ struct Q_QML_COMPILER_EXPORT Document
 
     Document(const QString &fileName, const QString &finalUrl,
              QV4::Compiler::CompilationMode compilationMode);
+
+    bool parse(const QString &sourceCode, const QString &url,
+               QList<QQmlJS::DiagnosticMessage> *errors,
+               QV4::Compiler::CodegenWarningInterface *wInterface =
+                       QV4::Compiler::defaultCodegenWarningInterface());
+
     QString code;
     QQmlJS::Engine jsParserEngine;
     QV4::Compiler::Module jsModule;
@@ -511,7 +517,7 @@ public:
     };
 
     explicit IRBuilder(FailureMode failureMode = StopAfterFirstFailure);
-    bool generateFromQml(const QString &code, const QString &url, Document *output,
+    bool generateFromQml(Document *output,
                          QV4::Compiler::CodegenWarningInterface *wInterface =
                                  QV4::Compiler::defaultCodegenWarningInterface());
 

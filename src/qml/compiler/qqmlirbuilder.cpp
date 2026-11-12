@@ -475,6 +475,32 @@ Document::Document(const QString &fileName, const QString &finalUrl,
 {
 }
 
+bool Document::parse(const QString &sourceCode, const QString &url,
+                     QList<QQmlJS::DiagnosticMessage> *errors,
+                     QV4::Compiler::CodegenWarningInterface *wInterface)
+{
+    const QQmlJS::Parser::Result parsed = QQmlJS::Parser::parseCode(
+            &jsParserEngine, sourceCode, QQmlJS::Parser::Goal::QmlDocument);
+
+    bool hasErrors = false;
+    for (const QQmlJS::DiagnosticMessage &message : parsed.diagnosticMessages) {
+        if (message.isWarning()) {
+            wInterface->reportParserWarnings(url, message.loc, message.message);
+        } else {
+            *errors << message;
+            hasErrors = true;
+        }
+    }
+
+    if (!parsed.success || hasErrors)
+        return false;
+
+    code = sourceCode;
+    program = QQmlJS::AST::cast<QQmlJS::AST::UiProgram *>(parsed.rootNode);
+    Q_ASSERT(program);
+    return true;
+}
+
 ScriptDirectivesCollector::ScriptDirectivesCollector(Document *doc)
     : document(doc)
     , engine(&doc->jsParserEngine)
@@ -517,35 +543,12 @@ IRBuilder::IRBuilder(FailureMode failureMode)
 {
 }
 
-bool IRBuilder::generateFromQml(const QString &code, const QString &url, Document *output,
+bool IRBuilder::generateFromQml(Document *output,
                                 QV4::Compiler::CodegenWarningInterface *wInterface)
 {
-    QQmlJS::AST::UiProgram *program = nullptr;
-    {
-        const QQmlJS::Parser::Result parsed = QQmlJS::Parser::parseCode(
-                &output->jsParserEngine, code, QQmlJS::Parser::Goal::QmlDocument);
-        const bool parseResult = parsed.success;
-        const auto diagnosticMessages = parsed.diagnosticMessages;
-        if (!parseResult || !diagnosticMessages.isEmpty()) {
-            // Extract errors from the parser
-            for (const QQmlJS::DiagnosticMessage &m : diagnosticMessages) {
-                if (m.isWarning()) {
-                    wInterface->reportParserWarnings(url, m.loc, m.message);
-                    continue;
-                }
-
-                errors << m;
-            }
-
-            if (!errors.isEmpty() || !parseResult)
-                return false;
-        }
-        program = QQmlJS::AST::cast<QQmlJS::AST::UiProgram *>(parsed.rootNode);
-        Q_ASSERT(program);
-    }
-
-    output->code = code;
-    output->program = program;
+    Q_ASSERT(output->program);
+    QQmlJS::AST::UiProgram *program = output->program;
+    const QString &code = output->code;
 
     qSwap(_imports, output->imports);
     qSwap(_pragmas, output->pragmas);

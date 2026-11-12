@@ -128,20 +128,17 @@ using QQmlJSSaveFunction
     = std::function<bool(const QV4::CompiledData::SaveableUnitPointer &,
                          const QQmlJSAotFunctionMap &, const LookupSignatures &, QString *)>;
 
-bool Q_QMLCOMPILER_EXPORT qCompileQmlFile(const QString &inputFileName,
-                                          const QQmlJSSaveFunction &saveFunction,
-                                          QQmlJSAotCompiler *aotCompiler, QQmlJSCompileError *error,
-                                          bool storeSourceLocation = false,
-                                          QV4::Compiler::CodegenWarningInterface *wInterface =
-                                                  QV4::Compiler::defaultCodegenWarningInterface(),
-                                          const QString *fileContents = nullptr);
+bool Q_QMLCOMPILER_EXPORT qParseQmlFile(QmlIR::Document &irDocument, const QString &inputFileName,
+                                        QQmlJSCompileError *error,
+                                        QV4::Compiler::CodegenWarningInterface *wInterface =
+                                                QV4::Compiler::defaultCodegenWarningInterface(),
+                                        const QString *fileContents = nullptr);
 bool Q_QMLCOMPILER_EXPORT qCompileQmlFile(QmlIR::Document &irDocument, const QString &inputFileName,
                                           const QQmlJSSaveFunction &saveFunction,
                                           QQmlJSAotCompiler *aotCompiler, QQmlJSCompileError *error,
                                           bool storeSourceLocation = false,
                                           QV4::Compiler::CodegenWarningInterface *wInterface =
-                                          QV4::Compiler::defaultCodegenWarningInterface(),
-                                          const QString *fileContents = nullptr);
+                                                  QV4::Compiler::defaultCodegenWarningInterface());
 bool Q_QMLCOMPILER_EXPORT qCompileJSFile(const QString &inputFileName, const QString &inputFileUrl,
                                          const QQmlJSSaveFunction &saveFunction,
                                          QQmlJSCompileError *error);

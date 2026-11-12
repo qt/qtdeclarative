@@ -139,20 +139,9 @@ private:
     const QmlIR::Function *m_function = nullptr;
 };
 
-bool qCompileQmlFile(const QString &inputFileName, const QQmlJSSaveFunction &saveFunction,
-                     QQmlJSAotCompiler *aotCompiler, QQmlJSCompileError *error,
-                     bool storeSourceLocation, QV4::Compiler::CodegenWarningInterface *wInterface,
-                     const QString *fileContents)
-{
-    QmlIR::Document irDocument(QString(), QString(), QV4::Compiler::CompilationMode::Release);
-    return qCompileQmlFile(irDocument, inputFileName, saveFunction, aotCompiler, error,
-                           storeSourceLocation, wInterface, fileContents);
-}
-
-bool qCompileQmlFile(QmlIR::Document &irDocument, const QString &inputFileName,
-                     const QQmlJSSaveFunction &saveFunction, QQmlJSAotCompiler *aotCompiler,
-                     QQmlJSCompileError *error, bool storeSourceLocation,
-                     QV4::Compiler::CodegenWarningInterface *wInterface, const QString *fileContents)
+bool qParseQmlFile(QmlIR::Document &irDocument, const QString &inputFileName,
+                   QQmlJSCompileError *error, QV4::Compiler::CodegenWarningInterface *wInterface,
+                   const QString *fileContents)
 {
     QString sourceCode;
 
@@ -171,12 +160,27 @@ bool qCompileQmlFile(QmlIR::Document &irDocument, const QString &inputFileName,
         }
     }
 
+    QList<QQmlJS::DiagnosticMessage> parseErrors;
+    if (!irDocument.parse(sourceCode, inputFileName, &parseErrors, wInterface)) {
+        error->appendDiagnostics(inputFileName, parseErrors);
+        return false;
+    }
+    return true;
+}
+
+bool qCompileQmlFile(QmlIR::Document &irDocument, const QString &inputFileName,
+                     const QQmlJSSaveFunction &saveFunction, QQmlJSAotCompiler *aotCompiler,
+                     QQmlJSCompileError *error, bool storeSourceLocation,
+                     QV4::Compiler::CodegenWarningInterface *wInterface)
+{
+    Q_ASSERT(irDocument.program);
+
     {
         // For now, only use the AOT IRBuilder when linting
         std::unique_ptr<QmlIR::IRBuilder> irBuilder = aotCompiler && aotCompiler->isLintCompiler()
                 ? std::make_unique<QQmlJSAOTIRBuilder>(QmlIR::IRBuilder::ContinueAfterFailure)
                 : std::make_unique<QmlIR::IRBuilder>();
-        if (!irBuilder->generateFromQml(sourceCode, inputFileName, &irDocument, wInterface)) {
+        if (!irBuilder->generateFromQml(&irDocument, wInterface)) {
             error->appendDiagnostics(inputFileName, irBuilder->errors);
             return false;
         }

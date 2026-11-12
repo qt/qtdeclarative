@@ -29,7 +29,9 @@ void HugeArrayCompilation::compile()
     QQmlJSCompileError error;
 
     QBENCHMARK {
-        (void) qCompileQmlFile(path, saveFunction, &compiler, &error);
+        QmlIR::Document irDocument(QString(), QString(), QV4::Compiler::CompilationMode::Release);
+        QVERIFY(qParseQmlFile(irDocument, path, &error));
+        QVERIFY(qCompileQmlFile(irDocument, path, saveFunction, &compiler, &error));
     }
 }
 

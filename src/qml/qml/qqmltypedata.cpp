@@ -704,7 +704,9 @@ bool QQmlTypeData::loadFromSource()
         return false;
     }
 
-    if (!compiler.generateFromQml(source, finalUrlString(), m_document.data())) {
+    const bool success = m_document->parse(source, finalUrlString(), &compiler.errors)
+            && compiler.generateFromQml(m_document.data());
+    if (!success) {
         QList<QQmlError> errors;
         errors.reserve(compiler.errors.size());
         for (const QQmlJS::DiagnosticMessage &msg : std::as_const(compiler.errors)) {
