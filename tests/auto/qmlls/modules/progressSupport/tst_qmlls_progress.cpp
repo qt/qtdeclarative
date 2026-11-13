@@ -82,7 +82,8 @@ struct ClientAndServer
                 [this](const QByteArray &data) { client->receiveData(data); });
     }
 
-    static ClientAndServer createAndInitialize()
+    static ClientAndServer
+    createAndInitialize(const std::function<void(ClientAndServer &)> &beforeInitialized = {})
     {
         ClientAndServer result;
 
@@ -93,6 +94,8 @@ struct ClientAndServer
                 initializeParams,
                 [&initializedOk](const InitializeResult &) { initializedOk = true; });
         [&initializedOk] { QTRY_VERIFY_WITH_TIMEOUT(initializedOk, 6000); }();
+        if (beforeInitialized)
+            beforeInitialized(result);
         result.client->notifyInitialized({});
 
         return result;
@@ -223,6 +226,159 @@ void tst_qmlls_progress::orderOfProgressNotifications()
     emit server->codeModelManager()->backgroundBuildFinished("");
 
     QTRY_COMPARE_WITH_TIMEOUT(step, 3, 6000);
+}
+
+void tst_qmlls_progress::moduleExploration_data()
+{
+    QTest::addColumn<std::function<void(QLanguageServerProtocol *, bool *)>>("registerCheck");
+
+    QTest::addRow("createNotification") << std::function{ [](QLanguageServerProtocol *client,
+                                                             bool *ok) {
+        client->registerWorkDoneProgressCreateRequestHandler(
+                [ok](const QByteArray &,
+                     const Requests::WorkDoneProgressCreateParamsType &paramsToCheck,
+                     LSPResponse<Responses::WorkDoneProgressCreateResultType> &&response) {
+                    QCOMPARE(std::get<int>(paramsToCheck.token), 0);
+                    *ok = true;
+                    response.sendResponse();
+                });
+    } };
+
+    QTest::addRow("startNotification") << std::function{ [](QLanguageServerProtocol *client,
+                                                            bool *ok) {
+        client->registerWorkDoneProgressCreateRequestHandler(
+                [](const QByteArray &, const Requests::WorkDoneProgressCreateParamsType &,
+                   LSPResponse<Responses::WorkDoneProgressCreateResultType> &&response) {
+                    response.sendResponse();
+                });
+        client->registerProgressNotificationHandler([ok](const QByteArray &,
+                                                         const ProgressParams &paramsToCheck) {
+            QCOMPARE(std::get<int>(paramsToCheck.token), 0);
+            if (const auto *begin = std::get_if<WorkDoneProgressBegin>(&paramsToCheck.value)) {
+                QVERIFY(!*ok);
+                QCOMPARE(begin->title, "Qmlls collecting QML modules");
+                QCOMPARE(begin->cancellable, true);
+                *ok = true;
+            }
+        });
+    } };
+
+    QTest::addRow("endNotification") << std::function{ [](QLanguageServerProtocol *client,
+                                                          bool *ok) {
+        client->registerWorkDoneProgressCreateRequestHandler(
+                [](const QByteArray &, const Requests::WorkDoneProgressCreateParamsType &,
+                   LSPResponse<Responses::WorkDoneProgressCreateResultType> &&response) {
+                    response.sendResponse();
+                });
+        client->registerProgressNotificationHandler(
+                [ok](const QByteArray &, const ProgressParams &paramsToCheck) {
+                    QCOMPARE(std::get<int>(paramsToCheck.token), 0);
+                    if (const auto *end = std::get_if<WorkDoneProgressEnd>(&paramsToCheck.value)) {
+                        QVERIFY(!*ok);
+                        QCOMPARE(end->message, "Finished collecting QML modules");
+                        *ok = true;
+                    }
+                });
+    } };
+}
+
+void tst_qmlls_progress::moduleExploration()
+{
+    QFETCH(std::function<void(QLanguageServerProtocol *, bool *)>, registerCheck);
+
+    auto [client, server] = ClientAndServer::createAndInitialize();
+
+    bool ok = false;
+    registerCheck(client.get(), &ok);
+
+    server->codeModelManager()->setExploringModules(true);
+    server->codeModelManager()->setExploringModules(false);
+
+    QTRY_VERIFY_WITH_TIMEOUT(ok, 6000);
+}
+
+void tst_qmlls_progress::cancelModuleExploration()
+{
+    auto [client, server] = ClientAndServer::createAndInitialize();
+
+    client->registerWorkDoneProgressCreateRequestHandler(
+            [](const QByteArray &, const Requests::WorkDoneProgressCreateParamsType &,
+               LSPResponse<Responses::WorkDoneProgressCreateResultType> &&response) {
+                response.sendResponse();
+            });
+
+    QSignalSpy spy(server->codeModelManager(),
+                   &QQmlCodeModelManager::moduleExplorationCancelRequested);
+
+    server->codeModelManager()->setExploringModules(true);
+    QCOMPARE(spy.count(), 0);
+
+    WorkDoneProgressCancelParams p;
+    p.token = 0;
+    client->notifyWorkDoneProgressCancel(p);
+
+    QTRY_COMPARE_WITH_TIMEOUT(spy.count(), 1, 6000);
+}
+
+void tst_qmlls_progress::moduleExplorationStartedBeforeClientInitialized()
+{
+    bool created = false;
+    bool began = false;
+    bool ended = false;
+
+    auto [client, server] = ClientAndServer::createAndInitialize([&](ClientAndServer &cs) {
+        cs.server->codeModelManager()->setExploringModules(true);
+
+        cs.client->registerWorkDoneProgressCreateRequestHandler(
+                [&created](const QByteArray &, const Requests::WorkDoneProgressCreateParamsType &,
+                           LSPResponse<Responses::WorkDoneProgressCreateResultType> &&response) {
+                    created = true;
+                    response.sendResponse();
+                });
+        cs.client->registerProgressNotificationHandler(
+                [&](const QByteArray &, const ProgressParams &paramsToCheck) {
+                    if (std::holds_alternative<WorkDoneProgressBegin>(paramsToCheck.value))
+                        began = true;
+                    else if (std::holds_alternative<WorkDoneProgressEnd>(paramsToCheck.value))
+                        ended = true;
+                });
+    });
+
+    QTRY_VERIFY_WITH_TIMEOUT(created, 6000);
+    QTRY_VERIFY_WITH_TIMEOUT(began, 6000);
+    QVERIFY(!ended);
+
+    server->codeModelManager()->setExploringModules(false);
+    QTRY_VERIFY_WITH_TIMEOUT(ended, 6000);
+}
+
+void tst_qmlls_progress::moduleExplorationAndBackgroundBuildHaveDistinctTokens()
+{
+    auto [client, server] = ClientAndServer::createAndInitialize();
+
+    QList<int> createdTokens;
+    client->registerWorkDoneProgressCreateRequestHandler(
+            [&createdTokens](const QByteArray &,
+                             const Requests::WorkDoneProgressCreateParamsType &params,
+                             LSPResponse<Responses::WorkDoneProgressCreateResultType> &&response) {
+                createdTokens.append(std::get<int>(params.token));
+                response.sendResponse();
+            });
+    int ends = 0;
+    client->registerProgressNotificationHandler(
+            [&ends](const QByteArray &, const ProgressParams &paramsToCheck) {
+                if (std::holds_alternative<WorkDoneProgressEnd>(paramsToCheck.value))
+                    ++ends;
+            });
+
+    emit server->codeModelManager()->backgroundBuildStarted("");
+    server->codeModelManager()->setExploringModules(true);
+    server->codeModelManager()->setExploringModules(false);
+    emit server->codeModelManager()->backgroundBuildFinished("");
+
+    QTRY_COMPARE_WITH_TIMEOUT(ends, 2, 6000);
+    QCOMPARE(createdTokens.size(), 2);
+    QVERIFY(createdTokens.first() != createdTokens.last());
 }
 
 QTEST_MAIN(tst_qmlls_progress)

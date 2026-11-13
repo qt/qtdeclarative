@@ -21,7 +21,8 @@ using namespace Qt::StringLiterals;
 Import paths passed to explore() are scanned for qmldir files one after the other. Modules are
 published as soon as they are found, so modulesIn() always returns the latest partial or complete
 result without waiting for the search to finish. Import paths that were already explored or are
-queued are not scanned again.
+queued are not scanned again. cancel() stops the running search and drops the queued import paths,
+keeping the modules found so far.
 
 All functions can be called from any thread.
 */
@@ -94,6 +95,18 @@ void QQmlLSModuleExplorer::explore(const QStringList &importPaths)
     m_hasWork.wakeAll();
 }
 
+void QQmlLSModuleExplorer::cancel()
+{
+    {
+        QMutexLocker guard(&m_mutex);
+        if (!m_exploring)
+            return;
+        m_pendingImportPaths.clear();
+        m_cancelRequested = true;
+    }
+    m_hasWork.wakeAll();
+}
+
 QStringList QQmlLSModuleExplorer::modulesIn(const QStringList &importPaths) const
 {
     QStringList modules;
@@ -114,14 +127,22 @@ bool QQmlLSModuleExplorer::isExploring() const
 
 std::optional<QString> QQmlLSModuleExplorer::takeNextImportPath()
 {
-    QMutexLocker guard(&m_mutex);
-    while (m_pendingImportPaths.empty() && !m_stopRequested)
-        m_hasWork.wait(&m_mutex);
-    if (m_stopRequested)
-        return std::nullopt;
-    QString importPath = std::move(m_pendingImportPaths.front());
-    m_pendingImportPaths.pop_front();
-    return importPath;
+    while (true) {
+        QMutexLocker guard(&m_mutex);
+        while (m_pendingImportPaths.empty() && !m_stopRequested && !m_cancelRequested)
+            m_hasWork.wait(&m_mutex);
+        if (m_stopRequested)
+            return std::nullopt;
+        if (!m_pendingImportPaths.empty()) {
+            QString importPath = std::move(m_pendingImportPaths.front());
+            m_pendingImportPaths.pop_front();
+            return importPath;
+        }
+        m_exploring = false;
+        m_cancelRequested = false;
+        guard.unlock();
+        emit explorationFinished();
+    }
 }
 
 void QQmlLSModuleExplorer::addModule(const QString &importPath, const QString &module)
@@ -136,6 +157,7 @@ bool QQmlLSModuleExplorer::finishExploring()
     if (!m_pendingImportPaths.empty())
         return false;
     m_exploring = false;
+    m_cancelRequested = false;
     return true;
 }
 
@@ -149,6 +171,8 @@ void QQmlLSModuleExplorer::run()
                 QMutexLocker guard(&m_mutex);
                 if (m_stopRequested)
                     return;
+                if (m_cancelRequested)
+                    break;
             }
             if (const auto module = moduleNameFromQmldir(it.next()))
                 addModule(*importPath, *module);

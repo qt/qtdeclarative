@@ -53,13 +53,27 @@ private:
         int m_idForBackgroundBuilds = 0;
     };
 
+    struct ProgressDescription
+    {
+        QByteArray title;
+        QByteArray message;
+        bool cancellable = false;
+    };
+    void beginProgress(const QByteArray &uri, const ProgressDescription &description);
+    void endProgress(const QByteArray &uri, const QByteArray &message);
+
+    static const QByteArray s_moduleExplorationKey;
+
     Tokens m_tokens;
+    QHash<QByteArray, QByteArray> m_pendingEndMessages;
     QmlLsp::QQmlCodeModelManager *m_codeModelManager = nullptr;
     QLanguageServerProtocol *m_protocol = nullptr;
 
 private slots:
     void onBackgroundBuildStarted(const QByteArray &uri);
     void onBackgroundBuildDone(const QByteArray &uri);
+    void onModuleExplorationStarted();
+    void onModuleExplorationFinished();
     void onBackgroundBuildCancelRequested(
             const QLspSpecification::Notifications::WorkDoneProgressCancelParamsType &p);
     void clientInitialized(QLanguageServer *server);

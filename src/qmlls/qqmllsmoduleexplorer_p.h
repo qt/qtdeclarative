@@ -38,6 +38,7 @@ public:
 
     void setEnabled(bool enabled);
     void explore(const QStringList &importPaths);
+    void cancel();
     QStringList modulesIn(const QStringList &importPaths) const;
     bool isExploring() const;
 
@@ -59,6 +60,7 @@ private:
     bool m_enabled = true;
     bool m_exploring = false;
     bool m_stopRequested = false;
+    bool m_cancelRequested = false;
 };
 
 QT_END_NAMESPACE

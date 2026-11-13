@@ -408,6 +408,11 @@ void QQmlCodeModelManager::disableModuleExploration()
     emit moduleExplorationDisabled();
 }
 
+void QQmlCodeModelManager::cancelModuleExploration()
+{
+    emit moduleExplorationCancelRequested();
+}
+
 void QQmlCodeModelManager::setExploringModules(bool exploring)
 {
     if (std::exchange(m_exploringModules, exploring) == exploring)

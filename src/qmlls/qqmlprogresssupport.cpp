@@ -35,6 +35,13 @@ void QQmlProgressSupport::clientInitialized(QLanguageServer *server)
     QObject::connect(m_codeModelManager, &QmlLsp::QQmlCodeModelManager::backgroundBuildFinished,
                      this, &QQmlProgressSupport::onBackgroundBuildDone);
 
+    QObject::connect(m_codeModelManager, &QmlLsp::QQmlCodeModelManager::moduleExplorationStarted,
+                     this, &QQmlProgressSupport::onModuleExplorationStarted);
+    QObject::connect(m_codeModelManager, &QmlLsp::QQmlCodeModelManager::moduleExplorationFinished,
+                     this, &QQmlProgressSupport::onModuleExplorationFinished);
+    if (m_codeModelManager->isExploringModules())
+        onModuleExplorationStarted();
+
     QObject::connect(server->notifySignals(),
                      &QLspNotifySignals::receivedWorkDoneProgressCancelNotification, this,
                      &QQmlProgressSupport::onBackgroundBuildCancelRequested);
@@ -80,19 +87,20 @@ void QQmlProgressSupport::Tokens::removeToken(const QByteArray &uri)
     m_tokens.erase(it);
 }
 
-void QQmlProgressSupport::onBackgroundBuildStarted(const QByteArray &uri)
+const QByteArray QQmlProgressSupport::s_moduleExplorationKey = "qmlls:module-exploration"_ba;
+
+void QQmlProgressSupport::beginProgress(const QByteArray &uri,
+                                        const ProgressDescription &description)
 {
     QLspSpecification::Requests::WorkDoneProgressCreateParamsType p;
     const int token = m_tokens.createUniqueToken(uri);
     p.token = token;
-    m_protocol->requestWorkDoneProgressCreate(p, [this, uri, token]() {
+    m_protocol->requestWorkDoneProgressCreate(p, [this, uri, token, description]() {
         QLspSpecification::ProgressParams beginParams{ token };
         QLspSpecification::WorkDoneProgressBegin workDoneProgressBegin{};
-        workDoneProgressBegin.title = "Qmlls running background build";
-        workDoneProgressBegin.cancellable = true;
-        workDoneProgressBegin.message =
-                "Building \"" + QUrl::fromEncoded(uri).toLocalFile().toUtf8() + "\"";
-        workDoneProgressBegin.cancellable = true;
+        workDoneProgressBegin.title = description.title;
+        workDoneProgressBegin.cancellable = description.cancellable;
+        workDoneProgressBegin.message = description.message;
         beginParams.value = workDoneProgressBegin;
         m_protocol->notifyProgress(beginParams);
 
@@ -107,13 +115,13 @@ void QQmlProgressSupport::onBackgroundBuildStarted(const QByteArray &uri)
         case Created:
             Q_ASSERT(false);
         case Finished:
-            onBackgroundBuildDone(token->uri);
+            endProgress(token->uri, m_pendingEndMessages.take(token->uri));
             break;
         }
     });
 }
 
-void QQmlProgressSupport::onBackgroundBuildDone(const QByteArray &uri)
+void QQmlProgressSupport::endProgress(const QByteArray &uri, const QByteArray &message)
 {
     const auto token = m_tokens.find(uri);
     if (!token)
@@ -124,15 +132,40 @@ void QQmlProgressSupport::onBackgroundBuildDone(const QByteArray &uri)
         // We can't report progress if the WorkDoneProgressCreate request didn't finish yet. Let the
         // WorkDoneProgressCreate callback call this method again after the request was created.
         token->status = Finished;
+        m_pendingEndMessages.insert(uri, message);
         return;
     case Finished:
     case Created:
         QLspSpecification::WorkDoneProgressEnd workDoneProgressEnd;
-        workDoneProgressEnd.message = "Build terminated";
+        workDoneProgressEnd.message = message;
         const QLspSpecification::ProgressParams endParams{ token->token, workDoneProgressEnd };
         m_protocol->notifyProgress(endParams);
         m_tokens.removeToken(token->uri);
     }
+}
+
+void QQmlProgressSupport::onBackgroundBuildStarted(const QByteArray &uri)
+{
+    beginProgress(uri,
+                  { "Qmlls running background build",
+                    "Building \"" + QUrl::fromEncoded(uri).toLocalFile().toUtf8() + "\"", true });
+}
+
+void QQmlProgressSupport::onBackgroundBuildDone(const QByteArray &uri)
+{
+    endProgress(uri, "Build terminated");
+}
+
+void QQmlProgressSupport::onModuleExplorationStarted()
+{
+    beginProgress(s_moduleExplorationKey,
+                  { "Qmlls collecting QML modules",
+                    "Searching the import paths for importable QML modules", true });
+}
+
+void QQmlProgressSupport::onModuleExplorationFinished()
+{
+    endProgress(s_moduleExplorationKey, "Finished collecting QML modules");
 }
 
 void QQmlProgressSupport::onBackgroundBuildCancelRequested(
@@ -152,7 +185,10 @@ void QQmlProgressSupport::onBackgroundBuildCancelRequested(
         return;
     }
 
-    m_codeModelManager->cancelBackgroundBuild(token->uri);
+    if (token->uri == s_moduleExplorationKey)
+        m_codeModelManager->cancelModuleExploration();
+    else
+        m_codeModelManager->cancelBackgroundBuild(token->uri);
 }
 
 void QQmlProgressSupport::setupCapabilities(QLspSpecification::ServerCapabilities &) { }

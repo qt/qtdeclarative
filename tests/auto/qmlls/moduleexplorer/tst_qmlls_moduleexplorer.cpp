@@ -19,6 +19,7 @@ private slots:
     void findsModulesInImportPath();
     void survivesSymbolicLinkCycles();
     void doesNothingWhenDisabled();
+    void cancelStopsExploration();
 
 private:
     static void writeQmldir(const QString &directory, const QString &moduleName);
@@ -83,6 +84,29 @@ void tst_qmlls_moduleexplorer::doesNothingWhenDisabled()
     QVERIFY(!explorer.isExploring());
     QVERIFY(started.isEmpty());
     QVERIFY(explorer.modulesIn({ importPath.path() }).isEmpty());
+}
+
+void tst_qmlls_moduleexplorer::cancelStopsExploration()
+{
+    QTemporaryDir importPath;
+    QVERIFY(importPath.isValid());
+    for (int i = 0; i < 200; ++i) {
+        const QString name = u"Module%1"_s.arg(i);
+        writeQmldir(importPath.filePath(name), name);
+    }
+    QTemporaryDir otherImportPath;
+    QVERIFY(otherImportPath.isValid());
+    writeQmldir(otherImportPath.filePath(u"Other"_s), u"Other"_s);
+
+    QQmlLSModuleExplorer explorer;
+    QSignalSpy finished(&explorer, &QQmlLSModuleExplorer::explorationFinished);
+    explorer.explore({ importPath.path(), otherImportPath.path() });
+    explorer.cancel();
+    QTRY_COMPARE_WITH_TIMEOUT(finished.count(), 1, 10000);
+
+    QVERIFY(!explorer.isExploring());
+    QVERIFY(explorer.modulesIn({ otherImportPath.path() }).isEmpty());
+    QVERIFY(explorer.modulesIn({ importPath.path() }).size() < 200);
 }
 
 QTEST_MAIN(tst_qmlls_moduleexplorer)

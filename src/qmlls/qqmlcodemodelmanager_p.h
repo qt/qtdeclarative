@@ -67,6 +67,7 @@ public:
     QQmlToolingSharedSettings *settings() const { return m_settings; }
     void disableCMakeCalls();
     void disableModuleExploration();
+    void cancelModuleExploration();
     const QFactoryLoader &pluginLoader() const { return m_pluginLoader; }
     QByteArray shortestRootUrlForFile(const QByteArray &fileUrl) const;
 
@@ -140,6 +141,7 @@ Q_SIGNALS:
     void backgroundBuildCancelled(const QByteArray &rootUri);
     void configurationChanged();
     void moduleExplorationDisabled();
+    void moduleExplorationCancelRequested();
     void importPathsKnown(const QStringList &importPaths);
     void moduleExplorationStarted();
     void moduleExplorationFinished();

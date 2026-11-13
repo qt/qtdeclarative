@@ -49,6 +49,8 @@ QmlCompletionSupport::QmlCompletionSupport(QmlLsp::QQmlCodeModelManager *codeMod
     QObject::connect(m_completionEngine.moduleExplorer(),
                      &QQmlLSModuleExplorer::explorationFinished, this,
                      [codeModelManager] { codeModelManager->setExploringModules(false); });
+    connect(codeModelManager, &QmlLsp::QQmlCodeModelManager::moduleExplorationCancelRequested, this,
+            [this] { m_completionEngine.moduleExplorer()->cancel(); });
     connect(codeModelManager, &QmlLsp::QQmlCodeModelManager::moduleExplorationDisabled, this,
             [this] { m_completionEngine.moduleExplorer()->setEnabled(false); });
     connect(codeModelManager, &QmlLsp::QQmlCodeModelManager::importPathsKnown, this,
