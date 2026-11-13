@@ -69,9 +69,9 @@ void Script::parse()
         return;
     }
 
-    Engine ee, *engine = &ee;
+    Engine engine;
     const Parser::Result parsed = Parser::parseCode(
-            engine, m_sourceCode, Parser::Goal::Script,
+            &engine, m_sourceCode, Parser::Goal::Script,
             Parser::OptionsBuilder().setQmlMode(m_parseAsBinding).setLineNumber(m_line).build());
 
     for (const DiagnosticMessage &m : parsed.diagnosticMessages) {
