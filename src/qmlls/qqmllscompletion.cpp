@@ -4,6 +4,9 @@
 
 #include "qqmllscompletion_p.h"
 
+#include <QtCore/qdiriterator.h>
+#include <QtCore/qfile.h>
+
 QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(QQmlLSCompletionLog, "qt.languageserver.completions")
@@ -897,6 +900,48 @@ void QQmlLSCompletion::insideImportCompletion(const DomItem &currentItem,
         }
         return;
     }
+
+    const auto environment = currentItem.environment().ownerAs<DomEnvironment>();
+    if (!environment)
+        return;
+
+    const auto qmlFile = containingFile.ownerAs<QmlFile>();
+    if (!qmlFile)
+        return;
+
+    QStringView typedModulePrefix =
+            QStringView(qmlFile->code()).mid(uri.begin(), positionInfo.offset() - uri.begin());
+    const qsizetype lastDotIndex = typedModulePrefix.lastIndexOf(u'.');
+    if (lastDotIndex == -1) {
+        for (const QString &moduleName : importableModules(environment->loadPaths())) {
+            CompletionItem item;
+            item.label = moduleName.toUtf8();
+            item.kind = CompletionItemKind::Module;
+            result = item;
+        }
+    } else {
+        // only complete after the last typed '.'
+        typedModulePrefix.truncate(lastDotIndex + 1);
+        for (const QString &moduleName : importableModules(environment->loadPaths())) {
+            if (!moduleName.startsWith(typedModulePrefix))
+                continue;
+            CompletionItem item;
+            item.label = moduleName.mid(lastDotIndex + 1).toUtf8();
+            item.kind = CompletionItemKind::Module;
+            result = item;
+        }
+    }
+}
+
+void QQmlLSCompletion::exploreImportPaths(const QStringList &importPaths)
+{
+    m_moduleExplorer.explore(importPaths);
+}
+
+QStringList QQmlLSCompletion::importableModules(const QStringList &importPaths) const
+{
+    m_moduleExplorer.explore(importPaths);
+    return m_moduleExplorer.modulesIn(importPaths);
 }
 
 void QQmlLSCompletion::insideQmlFileCompletion(const DomItem &currentItem,

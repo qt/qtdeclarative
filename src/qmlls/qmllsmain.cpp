@@ -260,6 +260,21 @@ static int cmakeJobs(const QCommandLineParser &parser, const QCommandLineOption 
             "\"max\", using default value of 1 instead."_L1);
 }
 
+static bool prepareModuleExplorationFeature(const QCommandLineParser &parser,
+                                            const QCommandLineOption &noModuleExplorationOption)
+{
+    if (qmlGetConfigOption<bool, qmlConvertBoolConfigOption>("QMLLS_NO_MODULE_EXPLORATION")) {
+        qWarning() << "Disabling module exploration via QMLLS_NO_MODULE_EXPLORATION environment "
+                      "variable.";
+        return false;
+    }
+    if (parser.isSet(noModuleExplorationOption)) {
+        qWarning() << "Disabling module exploration via command line switch.";
+        return false;
+    }
+    return true;
+}
+
 static bool prepareCMakeFeature(const QCommandLineParser &parser,
                                 const QCommandLineOption &noCMakeCallsOption)
 {
@@ -372,6 +387,12 @@ int qmllsMain(int argv, char *argc[])
     parser.addOption(noCMakeCallsOption);
     settings.addOption("no-cmake-calls"_L1, "false"_L1);
 
+    QCommandLineOption noModuleExplorationOption(
+            QStringList() << "no-module-exploration"_L1,
+            "Disables the background search for importable QML modules in the import paths."_L1);
+    parser.addOption(noModuleExplorationOption);
+    settings.addOption("no-module-exploration"_L1, "false"_L1);
+
     QCommandLineOption cmakeJobsOption(QStringList() << "cmake-jobs"_L1 << "j"_L1,
                                        "Number of CMake jobs for automatic CMake rebuilds. "_L1,
                                        "jobs"_L1, "1"_L1);
@@ -477,6 +498,9 @@ int qmllsMain(int argv, char *argc[])
                    "might not be found if no .qmlls.ini files are present in the root source "
                    "folder.";
     }
+
+    if (!prepareModuleExplorationFeature(parser, noModuleExplorationOption))
+        qmlServer.codeModelManager()->disableModuleExploration();
 
     qmlServer.codeModelManager()->setImportPaths(
             collectImportPaths(parser, qmlImportPathOption, environmentOption, qmlImportNoDefault));

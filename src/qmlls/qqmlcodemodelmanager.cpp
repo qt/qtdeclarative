@@ -160,9 +160,11 @@ void QQmlCodeModelManager::setBuildPathsOn(const QQmlWorkspace *ws, const QStrin
             + (option == DontAppendPathsFromFallback ? QStringList{} : defaultBuildPaths()));
 
     const QString file = QUrl::fromEncoded(ws->url).toLocalFile();
-    ws->codeModel->setImportPaths(
+    const QStringList importPaths =
             m_buildInformation.importPathsFor(file)
-            + (option == DontAppendPathsFromFallback ? QStringList{} : defaultImportPaths()));
+            + (option == DontAppendPathsFromFallback ? QStringList{} : defaultImportPaths());
+    ws->codeModel->setImportPaths(importPaths);
+    emit importPathsKnown(importPaths);
 
     if (const QStringList resourceFiles = m_buildInformation.resourceFilesFor(file);
             !resourceFiles.isEmpty()) {
@@ -401,6 +403,21 @@ void QQmlCodeModelManager::addOpenToUpdate(const QByteArray &url)
     findCodeModelForFile(url)->addOpenToUpdate(url, NormalUpdate);
 }
 
+void QQmlCodeModelManager::disableModuleExploration()
+{
+    emit moduleExplorationDisabled();
+}
+
+void QQmlCodeModelManager::setExploringModules(bool exploring)
+{
+    if (std::exchange(m_exploringModules, exploring) == exploring)
+        return;
+    if (exploring)
+        emit moduleExplorationStarted();
+    else
+        emit moduleExplorationFinished();
+}
+
 void QQmlCodeModelManager::setImportPaths(const QStringList &paths)
 {
     // Note: this function can only be called after the fallback workspace was created but before
@@ -409,6 +426,7 @@ void QQmlCodeModelManager::setImportPaths(const QStringList &paths)
     Q_ASSERT(m_workspaces.size() == 1);
     for (const auto &ws : m_workspaces)
         ws.codeModel->setImportPaths(paths);
+    emit importPathsKnown(paths);
 }
 
 HelpManager *QQmlCodeModelManager::helpManagerForUrl(const QByteArray &url)

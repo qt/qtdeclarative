@@ -531,6 +531,49 @@ void tst_qmlls_modules::inMemoryEnumCompletion()
                                    QStringList({ u"QtQuick"_s, u"vector4d"_s })));
 }
 
+void tst_qmlls_modules::importModuleCompletion()
+{
+    ignoreDiagnostics();
+    ignoreWorkspaceSemanticTokensRefreshRequestHandler();
+    const QString filePath = u"completions/importModule.qml"_s;
+
+    auto tempDir = setImportPathsViaTemporaryBuildDir(QDir::cleanPath(testFile(filePath) + "/.."),
+                                                      { testFile("completions/extraImportPath") },
+                                                      m_protocol.get());
+
+    const auto uri = openFile(filePath);
+    QVERIFY(uri);
+
+    CompletionParams cParams;
+    cParams.position.line = 1;
+    cParams.position.character = 10;
+    cParams.textDocument.uri = *uri;
+
+    auto importableModuleIsSuggested = [&]() {
+        std::shared_ptr<bool> didFinish = std::make_shared<bool>(false);
+        std::shared_ptr<bool> found = std::make_shared<bool>(false);
+        m_protocol->requestCompletion(
+                cParams,
+                [didFinish, found](auto res) {
+                    if (const auto *items = std::get_if<QList<CompletionItem>>(&res)) {
+                        for (const CompletionItem &item : *items) {
+                            if (item.label == "MyModule" && item.kind == CompletionItemKind::Module)
+                                *found = true;
+                        }
+                    }
+                    *didFinish = true;
+                },
+                [didFinish](const ResponseError &err) {
+                    ProtocolBase::defaultResponseErrorHandler(err);
+                    *didFinish = true;
+                });
+        return QTest::qWaitFor([&] { return *didFinish; }, 6000) && *found;
+    };
+
+    // the modules are searched in the background, the result might not be there immediately
+    QTRY_VERIFY_WITH_TIMEOUT(importableModuleIsSuggested(), 20000);
+}
+
 void tst_qmlls_modules::automaticSemicolonInsertionForCompletions_data()
 {
     QTest::addColumn<QString>("filePath");

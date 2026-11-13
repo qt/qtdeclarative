@@ -43,6 +43,18 @@ bool CompletionRequest::fillFrom(QmlLsp::OpenDocument doc, const Parameters &par
 QmlCompletionSupport::QmlCompletionSupport(QmlLsp::QQmlCodeModelManager *codeModelManager)
     : BaseT(codeModelManager), m_completionEngine(codeModelManager->pluginLoader())
 {
+    QObject::connect(m_completionEngine.moduleExplorer(),
+                     &QQmlLSModuleExplorer::explorationStarted, this,
+                     [codeModelManager] { codeModelManager->setExploringModules(true); });
+    QObject::connect(m_completionEngine.moduleExplorer(),
+                     &QQmlLSModuleExplorer::explorationFinished, this,
+                     [codeModelManager] { codeModelManager->setExploringModules(false); });
+    connect(codeModelManager, &QmlLsp::QQmlCodeModelManager::moduleExplorationDisabled, this,
+            [this] { m_completionEngine.moduleExplorer()->setEnabled(false); });
+    connect(codeModelManager, &QmlLsp::QQmlCodeModelManager::importPathsKnown, this,
+            [this](const QStringList &importPaths) {
+                m_completionEngine.exploreImportPaths(importPaths);
+            });
 }
 
 void QmlCompletionSupport::registerHandlers(QLanguageServer *, QLanguageServerProtocol *protocol)

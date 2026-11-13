@@ -2847,6 +2847,30 @@ void tst_qmlls_utils::completions_data()
             << testFile(u"completions/importAs.qml"_s) << 1 << 24 << ExpectedCompletions({ })
             << QStringList{ u"as"_s, u"QtQuick"_s, u"import"_s };
 
+    QTest::newRow("importModulesFromEveryImportPath")
+            << testFile("imports.qml") << 1 << 8
+            << ExpectedCompletions({
+                       { u"QtQuick"_s, CompletionItemKind::Module },
+                       { u"QtQuick.Controls"_s, CompletionItemKind::Module },
+                       { u"QtQuick.Controls.Basic"_s, CompletionItemKind::Module },
+                       { u"QtQml"_s, CompletionItemKind::Module },
+                       { u"ModuleWithSingleton"_s, CompletionItemKind::Module },
+                       { u"MyModule"_s, CompletionItemKind::Module },
+               })
+            << QStringList{ u"Rectangle"_s, u"qmldir"_s, u"module"_s };
+
+    QTest::newRow("importModulesFromEveryImportPath2")
+            << testFile("imports.qml") << 1 << 12
+            << ExpectedCompletions({
+                       { u"QtQuick"_s, CompletionItemKind::Module },
+                       { u"QtQuick.Controls"_s, CompletionItemKind::Module },
+                       { u"QtQuick.Controls.Basic"_s, CompletionItemKind::Module },
+                       { u"QtQml"_s, CompletionItemKind::Module },
+                       { u"ModuleWithSingleton"_s, CompletionItemKind::Module },
+                       { u"MyModule"_s, CompletionItemKind::Module },
+               })
+            << QStringList{ u"Rectangle"_s, u"qmldir"_s, u"module"_s };
+
     QTest::newRow("expandBase1") << file << 10 << 24
                                  << ExpectedCompletions({
                                             { u"width"_s, CompletionItemKind::Property },
@@ -4534,6 +4558,8 @@ void tst_qmlls_utils::completions()
     QFETCH(QStringList, notExpected);
 
     auto [env, file] = createEnvironmentAndLoadFile(filePath);
+    m_completionEngine.exploreImportPaths(env.as<QQmlJS::Dom::DomEnvironment>()->loadPaths());
+    QTRY_VERIFY_WITH_TIMEOUT(!m_completionEngine.moduleExplorer()->isExploring(), 3000);
 
     auto locations = QQmlLSUtils::itemsFromTextLocation(
             file.field(QQmlJS::Dom::Fields::currentItem), line - 1, character - 1);
@@ -4553,9 +4579,8 @@ void tst_qmlls_utils::completions()
 
     qsizetype pos = QQmlLSUtils::textOffsetFrom(code, line - 1, character - 1);
     CompletionContextStrings ctxt{ code, pos };
-    QQmlLSCompletion completionEngine(m_pluginLoader);
     QList<CompletionItem> completions =
-            completionEngine.completions(locations.front().domItem, ctxt);
+            m_completionEngine.completions(locations.front().domItem, ctxt);
 
     if (expected.isEmpty()) {
         if constexpr (enable_debug_output) {
@@ -4615,12 +4640,6 @@ void tst_qmlls_utils::completions()
 
     for (const ExpectedCompletion &exp : expected) {
         QEXPECT_FAIL("letStatementAfterEqual", "Completion not implemented yet!", Abort);
-
-        QEXPECT_FAIL("importAfterDot", "Imports need to be reworked via QTBUG-126766", Abort);
-        QEXPECT_FAIL("importAfterDot2", "Imports need to be reworked via QTBUG-126766", Abort);
-        QEXPECT_FAIL("importAfterDotMissing", "Imports need to be reworked via QTBUG-126766",
-                     Abort);
-        QEXPECT_FAIL("importModuleStart", "Imports need to be reworked via QTBUG-126766", Abort);
 
         QVERIFY2(labels.contains(exp.label),
                  u"no %1 in %2"_s.arg(exp.label, labelsForPrinting).toUtf8());

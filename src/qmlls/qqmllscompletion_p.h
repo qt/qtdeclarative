@@ -19,6 +19,7 @@
 #include <private/qqmlcompletioncontextstrings_p.h>
 #include <private/qqmllsutils_p.h>
 #include <private/qqmllsplugin_p.h>
+#include <private/qqmllsmoduleexplorer_p.h>
 
 #include <QtLanguageServer/private/qlanguageserverspectypes_p.h>
 #include <QtQmlDom/private/qqmldomexternalitems_p.h>
@@ -27,6 +28,7 @@
 #include <QtCore/private/qfactoryloader_p.h>
 #include <QtCore/qpluginloader.h>
 #include <QtCore/qxpfunctional.h>
+#include <QtCore/qhash.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -41,6 +43,9 @@ public:
     enum AppendOption { AppendSemicolon, AppendNothing };
 
     QQmlLSCompletion(const QFactoryLoader &pluginLoader);
+
+    void exploreImportPaths(const QStringList &importPaths);
+    QQmlLSModuleExplorer *moduleExplorer() const { return &m_moduleExplorer; }
 
     using CompletionItem = QLspSpecification::CompletionItem;
     using BackInsertIterator = std::back_insert_iterator<QList<CompletionItem>>;
@@ -229,7 +234,10 @@ private:
     void collectFromPlugins(const qxp::function_ref<CompletionFromPluginFunction> f,
                             BackInsertIterator result) const;
 
+    QStringList importableModules(const QStringList &importPaths) const;
+
     QStringList m_loadPaths;
+    mutable QQmlLSModuleExplorer m_moduleExplorer;
 
     std::vector<std::unique_ptr<QQmlLSCompletionPlugin>> m_plugins;
 };

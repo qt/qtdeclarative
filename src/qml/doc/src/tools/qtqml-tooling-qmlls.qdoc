@@ -160,6 +160,18 @@ See also \l{Configuration File}.
 The values from the settings file have lower precedence than
 \c{--build-dir}, \c{QMLLS_BUILD_DIRS}, and \c{addBuildDirsMethod}.
 
+\section2 Configuring Module Import Completion
+
+\QMLLS searches the import paths in the background for QML modules to suggest
+them when completing an \c{import} statement.
+
+To disable this feature, use the following ways:
+\list
+    \li The \c{--no-module-exploration} command line option.
+    \li The \c{QMLLS_NO_MODULE_EXPLORATION} environment variable.
+    \li The \c{.qmlls.ini} settings file, see \l {Configuration File}.
+\endlist
+
 \section2 Configuring Automatic CMake Builds
 
 \QMLLS will try to trigger a CMake rebuild when it detects that the

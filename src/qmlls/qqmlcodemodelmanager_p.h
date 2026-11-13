@@ -66,6 +66,7 @@ public:
     void removeRootUrls(const QList<QByteArray> &urls);
     QQmlToolingSharedSettings *settings() const { return m_settings; }
     void disableCMakeCalls();
+    void disableModuleExploration();
     const QFactoryLoader &pluginLoader() const { return m_pluginLoader; }
     QByteArray shortestRootUrlForFile(const QByteArray &fileUrl) const;
 
@@ -87,6 +88,8 @@ public:
         return fallbackCodeModel()->documentationRootPath();
     }
     void cancelBackgroundBuild(const QByteArray &uri);
+    bool isExploringModules() const { return m_exploringModules; }
+    void setExploringModules(bool exploring);
 public slots:
     void onCMakeProberFinished(int exitCode, QProcess::ExitStatus exitStatus);
     void onBuildFinished(const QByteArray &rootUrl);
@@ -127,6 +130,7 @@ protected:
     QProcess m_cmakeProber;
     CMakeStatus m_cmakeStatus = IsProbingCMake;
     bool m_verbose = false;
+    bool m_exploringModules = false;
 
 Q_SIGNALS:
     void updatedSnapshot(const QByteArray &url, UpdatePolicy policy);
@@ -135,6 +139,10 @@ Q_SIGNALS:
     void backgroundBuildFinished(const QByteArray &rootUri);
     void backgroundBuildCancelled(const QByteArray &rootUri);
     void configurationChanged();
+    void moduleExplorationDisabled();
+    void importPathsKnown(const QStringList &importPaths);
+    void moduleExplorationStarted();
+    void moduleExplorationFinished();
 };
 
 } // namespace QmlLsp

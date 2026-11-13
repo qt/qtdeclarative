@@ -40,7 +40,8 @@ class tst_qmlls_utils : public QQmlDataTest
 public:
     tst_qmlls_utils()
         : QQmlDataTest(QT_QMLLS_UTILS_DATADIR),
-          m_pluginLoader(QmlLSPluginInterface_iid, u"/qmlls"_s)
+          m_pluginLoader(QmlLSPluginInterface_iid, u"/qmlls"_s),
+          m_completionEngine(m_pluginLoader)
     {
     }
 
@@ -101,6 +102,7 @@ private:
     // avoid loading the same file over and over when running all the tests
     QHash<CacheKey, std::shared_ptr<QQmlJS::Dom::DomEnvironment>> cache;
     QFactoryLoader m_pluginLoader;
+    QQmlLSCompletion m_completionEngine;
 
 };
 

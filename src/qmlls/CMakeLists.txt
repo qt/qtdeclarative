@@ -30,6 +30,7 @@ qt_internal_add_module(QmlLSPrivate
         qqmlhover_p.h qqmlhover.cpp
         qqmllsplugin_p.h
         qqmllscompletion.cpp qqmllscompletion_p.h
+        qqmllsmoduleexplorer.cpp qqmllsmoduleexplorer_p.h
         qqmllscompletionplugin.cpp qqmllscompletionplugin_p.h
         qdochtmlparser_p.h qdochtmlparser.cpp
         qqmlhighlightsupport_p.h qqmlhighlightsupport.cpp
