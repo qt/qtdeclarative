@@ -4,8 +4,6 @@
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtTest/QTest>
 #include <QtTest/QSignalSpy>
-#include <QtCore/QTimer>
-#include <QtCore/QEventLoop>
 
 #include "qv4datacollector.h"
 #include "qv4debugger.h"
@@ -29,21 +27,6 @@ Q_IMPORT_QML_PLUGIN(QV4DebuggerTestTypesPlugin);
 
 typedef QV4::ReturnedValue (*InjectedFunction)(const FunctionObject *b, const QV4::Value *, const QV4::Value *, int);
 Q_DECLARE_METATYPE(InjectedFunction)
-
-static bool waitForSignal(QObject* obj, const char* signal, int timeout = 10000)
-{
-    QEventLoop loop;
-    QObject::connect(obj, signal, &loop, SLOT(quit()));
-    QTimer timer;
-    QSignalSpy timeoutSpy(&timer, SIGNAL(timeout()));
-    if (timeout > 0) {
-        QObject::connect(&timer, SIGNAL(timeout()), &loop, SLOT(quit()));
-        timer.setSingleShot(true);
-        timer.start(timeout);
-    }
-    loop.exec();
-    return timeoutSpy.isEmpty();
-}
 
 class TestEngine : public QJSEngine
 {
@@ -361,10 +344,11 @@ private:
     }
     void evaluateJavaScript(const QString &script, const QString &fileName, int lineNumber = 1)
     {
+        QSignalSpy finished(m_engine.get(), &TestEngine::evaluateFinished);
         QMetaObject::invokeMethod(m_engine.get(), "evaluate", Qt::QueuedConnection,
                                   Q_ARG(QString, script), Q_ARG(QString, fileName),
                                   Q_ARG(int, lineNumber));
-        waitForSignal(m_engine.get(), SIGNAL(evaluateFinished()), /*timeout*/0);
+        QTRY_VERIFY_WITH_TIMEOUT(finished.count(), 60000);
     }
 
     std::unique_ptr<TestEngine> m_engine;
