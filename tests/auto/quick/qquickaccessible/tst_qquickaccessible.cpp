@@ -4,6 +4,7 @@
 
 #include <QtTest/QTest>
 #include <QtTest/qtestaccessible.h>
+#include <QtTest/qsignalspy.h>
 
 #include <QtCore/qregularexpression.h>
 
@@ -79,6 +80,8 @@ private slots:
     void windowContainer();
     void passwordTest();
     void announceTest();
+    void attachedActions_data();
+    void attachedActions();
     void eventTest();
     void scrollEventTest();
     void relations_data();
@@ -983,6 +986,72 @@ void tst_QQuickAccessible::announceTest()
     QAccessibleAnnouncementEvent event(object.get(), QStringLiteral("I am complete!"));
     QVERIFY_EVENT(&event);
 
+    QTestAccessibility::clearEvents();
+}
+
+void tst_QQuickAccessible::attachedActions_data()
+{
+    QTest::addColumn<QByteArray>("signal");
+    QTest::addColumn<QString>("actionName");
+
+    QTest::newRow("press") << "pressAction()"_ba
+                           << QAccessibleActionInterface::pressAction();
+    QTest::newRow("toggle") << "toggleAction()"_ba
+                            << QAccessibleActionInterface::toggleAction();
+    QTest::newRow("increase") << "increaseAction()"_ba
+                              << QAccessibleActionInterface::increaseAction();
+    QTest::newRow("decrease") << "decreaseAction()"_ba
+                              << QAccessibleActionInterface::decreaseAction();
+    QTest::newRow("showOnScreen") << "showOnScreenAction()"_ba
+                                  << QAccessibleActionInterface::showOnScreenAction();
+    QTest::newRow("scrollUp") << "scrollUpAction()"_ba
+                              << QAccessibleActionInterface::scrollUpAction();
+    QTest::newRow("scrollDown") << "scrollDownAction()"_ba
+                                << QAccessibleActionInterface::scrollDownAction();
+    QTest::newRow("scrollLeft") << "scrollLeftAction()"_ba
+                                << QAccessibleActionInterface::scrollLeftAction();
+    QTest::newRow("scrollRight") << "scrollRightAction()"_ba
+                                 << QAccessibleActionInterface::scrollRightAction();
+    QTest::newRow("previousPage") << "previousPageAction()"_ba
+                                  << QAccessibleActionInterface::previousPageAction();
+    QTest::newRow("nextPage") << "nextPageAction()"_ba
+                              << QAccessibleActionInterface::nextPageAction();
+    QTest::newRow("showMenu") << "showMenuAction()"_ba
+                              << QAccessibleActionInterface::showMenuAction();
+}
+
+void tst_QQuickAccessible::attachedActions()
+{
+    QFETCH(QByteArray, signal);
+    QFETCH(QString, actionName);
+
+    auto window = std::make_unique<QQuickView>();
+    window->setSource(testFileUrl("attachedActions.qml"));
+    QQuickItem *item = window->rootObject();
+    QVERIFY(item);
+
+    QQuickAccessibleAttached *attached = QQuickAccessibleAttached::attachedProperties(item);
+    QVERIFY(attached);
+
+    QAccessibleInterface *iface = QAccessible::queryAccessibleInterface(item);
+    QVERIFY(iface);
+    QAccessibleActionInterface *actionIface = iface->actionInterface();
+    QVERIFY(actionIface);
+
+    // The action is only advertised once something is connected to the signal
+    QVERIFY(!actionIface->actionNames().contains(actionName));
+
+    const int signalIndex = attached->metaObject()->indexOfSignal(signal);
+    QVERIFY(signalIndex != -1);
+    QSignalSpy spy(attached, attached->metaObject()->method(signalIndex));
+    QVERIFY(spy.isValid());
+
+    QVERIFY(actionIface->actionNames().contains(actionName));
+
+    actionIface->doAction(actionName);
+    QCOMPARE(spy.size(), 1);
+
+    window.reset();
     QTestAccessibility::clearEvents();
 }
 

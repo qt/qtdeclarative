@@ -289,6 +289,7 @@ Q_SIGNALS:
     void scrollRightAction();
     void previousPageAction();
     void nextPageAction();
+    void showMenuAction();
 
 private:
     QQuickItem *findRelation(QAccessible::Relation relation) const;
@@ -316,6 +317,7 @@ private:
     static QMetaMethod sigScrollRight;
     static QMetaMethod sigPreviousPage;
     static QMetaMethod sigNextPage;
+    static QMetaMethod sigShowMenu;
 
 public:
     using QObject::property;

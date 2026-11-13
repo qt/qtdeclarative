@@ -342,6 +342,13 @@ QT_BEGIN_NAMESPACE
 
     This signal is emitted when a next page action is received from an assistive tool such as a screen-reader.
 */
+/*!
+    \qmlattachedsignal QtQuick::Accessible::showMenuAction()
+    \since 6.13
+
+    This signal is emitted when an assistive tool such as a screen-reader requests
+    that the item's context menu is shown.
+*/
 
 QMetaMethod QQuickAccessibleAttached::sigPress;
 QMetaMethod QQuickAccessibleAttached::sigToggle;
@@ -354,6 +361,7 @@ QMetaMethod QQuickAccessibleAttached::sigScrollLeft;
 QMetaMethod QQuickAccessibleAttached::sigScrollRight;
 QMetaMethod QQuickAccessibleAttached::sigPreviousPage;
 QMetaMethod QQuickAccessibleAttached::sigNextPage;
+QMetaMethod QQuickAccessibleAttached::sigShowMenu;
 
 // Connects the change signals of the value and cursorPosition properties of the
 // parent, for the interfaces that its role provides. The role of an item often
@@ -435,6 +443,7 @@ QQuickAccessibleAttached::QQuickAccessibleAttached(QObject *parent)
         sigScrollRight = QMetaMethod::fromSignal(&QQuickAccessibleAttached::scrollRightAction);
         sigPreviousPage = QMetaMethod::fromSignal(&QQuickAccessibleAttached::previousPageAction);
         sigNextPage= QMetaMethod::fromSignal(&QQuickAccessibleAttached::nextPageAction);
+        sigShowMenu = QMetaMethod::fromSignal(&QQuickAccessibleAttached::showMenuAction);
     }
 }
 
@@ -558,6 +567,8 @@ bool QQuickAccessibleAttached::doAction(const QString &actionName)
         sig = &sigPreviousPage;
     else if (actionName == QAccessibleActionInterface::nextPageAction())
         sig = &sigNextPage;
+    else if (actionName == QAccessibleActionInterface::showMenuAction())
+        sig = &sigShowMenu;
     if (sig && isSignalConnected(*sig)) {
         bool ret = false;
         if (m_proxying)
@@ -593,6 +604,8 @@ void QQuickAccessibleAttached::availableActions(QStringList *actions) const
         actions->append(QAccessibleActionInterface::previousPageAction());
     if (isSignalConnected(sigNextPage))
         actions->append(QAccessibleActionInterface::nextPageAction());
+    if (isSignalConnected(sigShowMenu))
+        actions->append(QAccessibleActionInterface::showMenuAction());
 }
 
 QString QQuickAccessibleAttached::stripHtml(const QString &html)
