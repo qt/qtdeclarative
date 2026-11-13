@@ -19,7 +19,19 @@ macos arm ci # QTBUG-102817
 # QTBUG-139415
 [RangeSlider::test_overlappingHandles]
 android
-[SplitView::test_handleContainmentMaskHovered]
+[SplitView::test_handleContainmentMaskHovered:handleHorizontalHoverOnTheCenter]
+android
+[SplitView::test_handleContainmentMaskHovered:handleHorizontalHoverOnTheLeft]
+android
+[SplitView::test_handleContainmentMaskHovered:handleHorizontalHoverOnTheRight]
+android
+[SplitView::test_handleContainmentMaskHovered:handleVerticalHoverOnTheBottom]
+android
+[SplitView::test_handleContainmentMaskHovered:handleVerticalHoverOnTheCenter]
+android
+[SplitView::test_handleContainmentMaskHovered:handleVerticalHoverOnTheTop]
+android
+[SplitView::test_handleContainmentMaskHovered:secondItemHorizontalHover]
 android
 [SplitView::test_hoverableChilden]
 android
