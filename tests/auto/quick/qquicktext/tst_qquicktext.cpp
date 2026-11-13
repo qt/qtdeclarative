@@ -109,7 +109,10 @@ private slots:
     void implicitSize();
     void implicitSizeChangeRewrap();
     void implicitSizeMaxLineCount();
+    void implicitWidthAfterWidthChange_data();
     void implicitWidthAfterWidthChange();
+    void implicitWidthAfterTextChange_data();
+    void implicitWidthAfterTextChange();
     void dependentImplicitSizes();
     void contentSize();
     void implicitSizeBinding_data();
@@ -2625,18 +2628,55 @@ void tst_qquicktext::implicitSizeMaxLineCount()
     QCOMPARE_EQ(textObject->implicitWidth(), referenceWidth);
 }
 
-// implicitWidth should not grow after width is constrained and then released
+// implicitWidth should not change after width is constrained and then released
+void tst_qquicktext::implicitWidthAfterWidthChange_data()
+{
+    QTest::addColumn<QQuickText::TextFormat>("format");
+    QTest::addColumn<QString>("text");
+    QTest::addColumn<QQuickText::WrapMode>("wrapMode");
+    QTest::addColumn<int>("maximumLineCount");
+    QTest::addColumn<bool>("constrainHeight");
+
+    const QString longParagraph =
+            QStringLiteral("11111111111111111111111111111111111111111111111111111111111"
+                           "11111111111111111111111111111111111111111");
+
+    QTest::newRow("styled text, <br>")
+            << QQuickText::StyledText << "First line<br>Second line<br>" + longParagraph
+            << QQuickText::Wrap << 2 << false;
+    QTest::newRow("single paragraph, word wrap")
+            << QQuickText::PlainText << QStringLiteral("Some long text here")
+            << QQuickText::WordWrap << 1 << false;
+    QTest::newRow("single paragraph, wrap anywhere")
+            << QQuickText::PlainText << QStringLiteral("Some long text here")
+            << QQuickText::WrapAnywhere << 1 << false;
+    QTest::newRow("first of two paragraphs")
+            << QQuickText::PlainText << QStringLiteral("A long wrapping text\nB")
+            << QQuickText::WordWrap << 1 << false;
+    QTest::newRow("second of three paragraphs")
+            << QQuickText::PlainText
+            << QStringLiteral("aaaa bbbb cccc dddd\n") + longParagraph + "\nf"
+            << QQuickText::WordWrap << 2 << false;
+    QTest::newRow("elided by height")
+            << QQuickText::PlainText << QStringLiteral("Short\nThis is a much longer second line")
+            << QQuickText::WordWrap << 2 << true;
+    QTest::newRow("elided by height, paragraph beyond maximumLineCount")
+            << QQuickText::PlainText << "a\nb\n" + longParagraph << QQuickText::Wrap << 2 << true;
+}
+
 void tst_qquicktext::implicitWidthAfterWidthChange()
 {
-    // Test that implicitWidth remains stable when the item width is constrained
-    // and then released, for StyledText with <br> tags, maximumLineCount, wrap, and elide.
+    QFETCH(QQuickText::TextFormat, format);
+    QFETCH(QString, text);
+    QFETCH(QQuickText::WrapMode, wrapMode);
+    QFETCH(int, maximumLineCount);
+    QFETCH(bool, constrainHeight);
+
     QScopedPointer<QQuickText> textObject(new QQuickText);
-    textObject->setTextFormat(QQuickText::StyledText);
-    textObject->setText(QStringLiteral("First line<br>Second line<br>"
-                                       "11111111111111111111111111111111111111111111111111111111111"
-                                       "11111111111111111111111111111111111111111"));
-    textObject->setMaximumLineCount(2);
-    textObject->setWrapMode(QQuickText::Wrap);
+    textObject->setTextFormat(format);
+    textObject->setText(text);
+    textObject->setMaximumLineCount(maximumLineCount);
+    textObject->setWrapMode(wrapMode);
     textObject->setElideMode(QQuickText::ElideRight);
     textObject->componentComplete();
 
@@ -2645,22 +2685,62 @@ void tst_qquicktext::implicitWidthAfterWidthChange()
     QVERIFY(originalImplicitWidth > 0);
 
     // Constrain the width to something narrow enough to trigger wrapping
-    const qreal narrowWidth = originalImplicitWidth * 0.3;
-    textObject->setWidth(narrowWidth);
+    textObject->setWidth(originalImplicitWidth * 0.3);
+    if (constrainHeight)
+        textObject->setHeight(QFontMetricsF(textObject->font()).height() * 1.3);
 
-    // The implicitWidth should not change just because we constrained the width
-    const qreal constrainedImplicitWidth = textObject->implicitWidth();
-    QCOMPARE_EQ(constrainedImplicitWidth, originalImplicitWidth);
+    // The implicitWidth should not change just because we constrained the size
+    QCOMPARE_EQ(textObject->implicitWidth(), originalImplicitWidth);
 
     // Now widen the width back
     textObject->setWidth(originalImplicitWidth * 2);
-    const qreal widenedImplicitWidth = textObject->implicitWidth();
-    QCOMPARE_EQ(widenedImplicitWidth, originalImplicitWidth);
+    QCOMPARE_EQ(textObject->implicitWidth(), originalImplicitWidth);
 
     // Release the width constraint entirely
     textObject->resetWidth();
-    const qreal afterImplicitWidth = textObject->implicitWidth();
-    QCOMPARE_EQ(afterImplicitWidth, originalImplicitWidth);
+    QCOMPARE_EQ(textObject->implicitWidth(), originalImplicitWidth);
+}
+
+void tst_qquicktext::implicitWidthAfterTextChange_data()
+{
+    QTest::addColumn<QQuickText::WrapMode>("wrapMode");
+
+    QTest::newRow("WordWrap") << QQuickText::WordWrap;
+    QTest::newRow("WrapAnywhere") << QQuickText::WrapAnywhere;
+    QTest::newRow("Wrap") << QQuickText::Wrap;
+}
+
+void tst_qquicktext::implicitWidthAfterTextChange()
+{
+    // QTBUG-151737: an elided text whose width follows implicitWidth must grow to fit a
+    // longer text instead of eliding it at the previous width.
+    QFETCH(QQuickText::WrapMode, wrapMode);
+
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick\n"
+                      "Text {\n"
+                      "    width: implicitWidth\n"
+                      "    height: implicitHeight\n"
+                      "    elide: Text.ElideRight\n"
+                      "    maximumLineCount: 1\n"
+                      "    text: \"short\"\n"
+                      "}",
+                      QUrl());
+    QScopedPointer<QObject> object(component.create());
+    QQuickText *textObject = qobject_cast<QQuickText *>(object.data());
+    QVERIFY(textObject);
+    textObject->setWrapMode(wrapMode);
+
+    const QString longText = QStringLiteral("Some long text that does not fit");
+    textObject->setText(longText);
+
+    QQuickText reference;
+    reference.setText(longText);
+    reference.componentComplete();
+
+    QCOMPARE_EQ(textObject->implicitWidth(), reference.implicitWidth());
+    QCOMPARE_EQ(textObject->width(), reference.implicitWidth());
+    QVERIFY(!textObject->truncated());
 }
 
 void tst_qquicktext::dependentImplicitSizes()
