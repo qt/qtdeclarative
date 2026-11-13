@@ -71,7 +71,7 @@ public:
     void appendText(const QString &textIn, int start, int length, QString &textOut);
     bool parseTag(const QChar *&ch, const QString &textIn, QString &textOut, QTextCharFormat &format);
     bool parseCloseTag(const QChar *&ch, const QString &textIn, QString &textOut);
-    void parseEntity(const QChar *&ch, const QString &textIn, QString &textOut);
+    void parseEntity(const QChar *&ch, QString &textOut);
     bool parseFontAttributes(const QChar *&ch, const QString &textIn, QTextCharFormat &format);
     bool parseOrderedListAttributes(const QChar *&ch, const QString &textIn);
     bool parseUnorderedListAttributes(const QChar *&ch, const QString &textIn);
@@ -235,7 +235,7 @@ void QQuickStyledTextPrivate::parse()
         } else if (*ch == ampersand) {
             ++ch;
             appendText(text, textStart, textLength, drawText);
-            parseEntity(ch, text, drawText);
+            parseEntity(ch, drawText);
             textStart = ch - text.constData() + 1;
             textLength = 0;
         } else if (ch->isSpace()) {
@@ -542,29 +542,25 @@ bool QQuickStyledTextPrivate::parseCloseTag(const QChar *&ch, const QString &tex
     return false;
 }
 
-void QQuickStyledTextPrivate::parseEntity(const QChar *&ch, const QString &textIn, QString &textOut)
+void QQuickStyledTextPrivate::parseEntity(const QChar *&ch, QString &textOut)
 {
-    int entityStart = ch - textIn.constData();
-    int entityLength = 0;
-    while (!ch->isNull()) {
-        if (*ch == QLatin1Char(';')) {
-            auto entity = QStringView(textIn).mid(entityStart, entityLength);
+    const QChar *end = ch;
+    while (end->isLetterOrNumber() || *end == QLatin1Char('#'))
+        ++end;
 #if QT_CONFIG(texthtmlparser)
-            const QString parsedEntity = QTextHtmlParser::parseEntity(entity);
-            if (!parsedEntity.isNull())
-                textOut += parsedEntity;
-            else
-#endif
-                qCWarning(lcStyledText) << "StyledText doesn't support entity" << entity;
-            return;
-        } else if (*ch == QLatin1Char(' ')) {
-            auto entity = QStringView(textIn).mid(entityStart - 1, entityLength + 1);
-            textOut += entity + *ch;
+    if (*end == QLatin1Char(';')) {
+        const QString entity = QTextHtmlParser::parseEntity(QStringView(ch, end));
+        if (!entity.isNull()) {
+            textOut += entity;
+            ch = end;
             return;
         }
-        ++entityLength;
-        ++ch;
     }
+#endif
+    // Not a supported entity reference: keep the ampersand and the name as plain text.
+    textOut += ampersand;
+    textOut += QStringView(ch, end);
+    ch = end - 1;
 }
 
 bool QQuickStyledTextPrivate::parseFontAttributes(const QChar *&ch, const QString &textIn, QTextCharFormat &format)
