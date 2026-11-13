@@ -908,6 +908,7 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
         truncated = false;
         elide = false;
         int unwrappedLineCount = 1;
+        bool uncountedLineBreak = false;
         const int maxLineCount = maximumLineCount();
         height = 0;
         qreal naturalHeight = 0;
@@ -936,6 +937,8 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
             if (multilineElide && naturalHeight > maxHeight && visibleCount > 1) {
                 elide = true;
                 heightExceeded = true;
+                uncountedLineBreak = layoutText.at(line.textStart() + line.textLength() - 1)
+                        == QChar::LineSeparator;
                 if (eos != -1)  // There's an abbreviated string available, skip the rest as it's
                     break;      // all going to be discarded.
 
@@ -1013,9 +1016,10 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
         if (once) {
             once = false;
 
-            // If implicit sizes are required layout any additional lines up to the maximum line
-            // count.
-            if ((requireImplicitSize) && line.isValid() && unwrappedLineCount < maxLineCount) {
+            // If implicit sizes are required, lay out any additional lines up to the maximum
+            // line count, including the remainder of a paragraph wrapped on the last allowed line.
+            const int paragraphCount = unwrappedLineCount + (uncountedLineBreak ? 1 : 0);
+            if ((requireImplicitSize) && line.isValid() && paragraphCount <= maxLineCount) {
                 // Layout the remainder of the wrapped lines up to maxLineCount to get the implicit
                 // height.
                 for (int lineCount = layout.lineCount(); lineCount < maxLineCount; ++lineCount) {
