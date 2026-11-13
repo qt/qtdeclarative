@@ -3283,13 +3283,26 @@ bool QQuickDeliveryAgentPrivate::dragOverThreshold(QVector2D delta)
 
     (Similar to \l pointerTargets(), necessary because QContextMenuEvent is not
     a QPointerEvent.)
+
+    Keyboard-originating events go to the active focus item and its ancestors,
+    independently of event position. If there is no active focus item, they
+    go to \a item.
 */
 QList<QQuickItem *> QQuickDeliveryAgentPrivate::contextMenuTargets(QQuickItem *item, const QContextMenuEvent *event) const
 {
-    const auto pos = event->pos().isNull() ? activeFocusItem->mapToScene({}).toPoint() : event->pos();
-    if (event->pos().isNull())
-        qCDebug(lcContextMenu) << "for QContextMenuEvent, active focus item is" << activeFocusItem << "@" << pos;
-    return eventTargets(item, event, -1, item->mapFromScene(pos), pos);
+    if (event->reason() == QContextMenuEvent::Keyboard) {
+        QList<QQuickItem *> targets;
+        QQuickItem *focusItem = activeFocusItem ? activeFocusItem : item;
+        for (QQuickItem *target = focusItem; target; target = target->parentItem()) {
+            targets.append(target);
+            if (target == item)
+                break;
+        }
+        return targets;
+    }
+
+    const auto scenePos = event->pos();
+    return eventTargets(item, event, -1, item->mapFromScene(scenePos), scenePos);
 }
 
 /*!
@@ -3306,7 +3319,24 @@ void QQuickDeliveryAgentPrivate::deliverContextMenuEvent(QContextMenuEvent *even
     QList<QQuickItem *> targetItems = contextMenuTargets(rootItem, event);
     qCDebug(lcContextMenu) << "delivering context menu event" << event << "to" << targetItems.size() << "target item(s)";
     QList<QPointer<QQuickItem>> safeTargetItems(targetItems.begin(), targetItems.end());
-    const QPointF scenePos = event->pos();
+
+    QPointF scenePos = event->pos();
+    QPoint globalPos = event->globalPos();
+
+    if (event->reason() == QContextMenuEvent::Keyboard && !targetItems.isEmpty()) {
+        // Keyboard-originating events are positioned at the cursor rectangle of
+        // the initial target item, or at its center if it has no cursor rectangle.
+        QQuickItem *targetItem = targetItems.first();
+        QRectF cursorRect = targetItem->inputMethodQuery(Qt::ImCursorRectangle).toRectF();
+        if (cursorRect.isNull())
+            cursorRect = targetItem->boundingRect();
+        const QPointF localPos = cursorRect.center();
+        scenePos = targetItem->mapToScene(localPos);
+        globalPos = targetItem->mapToGlobal(localPos).toPoint();
+        qCDebug(lcContextMenu) << "keyboard context menu event positioned at" << scenePos
+                               << "of" << targetItem;
+    }
+
     bool accepted = event->isAccepted();
     for (auto &item : safeTargetItems) {
         qCDebug(lcContextMenu) << "- attempting to deliver to" << item;
@@ -3317,7 +3347,7 @@ void QQuickDeliveryAgentPrivate::deliverContextMenuEvent(QContextMenuEvent *even
             QQuickItemPrivate::get(item)->maybeHasSubsceneDeliveryAgent = true;
 
         QContextMenuEvent itemEvent(event->reason(), item->mapFromScene(scenePos).toPoint(),
-                                    event->globalPos(), event->modifiers());
+                                    globalPos, event->modifiers());
         QCoreApplication::sendEvent(item, &itemEvent);
         accepted = itemEvent.isAccepted();
         if (accepted)

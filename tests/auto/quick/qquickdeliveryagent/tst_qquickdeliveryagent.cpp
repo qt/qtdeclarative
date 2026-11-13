@@ -89,7 +89,15 @@ struct ContextMenuItem : public QQuickItem
         return true;
     }
 
+    QVariant inputMethodQuery(Qt::InputMethodQuery query) const override
+    {
+        if (query == Qt::ImCursorRectangle && !cursorRect.isNull())
+            return cursorRect;
+        return QQuickItem::inputMethodQuery(query);
+    }
+
     bool accept = true;
+    QRectF cursorRect;
     int contextMenuEventCount = 0;
     QPoint contextMenuPos;
     QPoint contextMenuGlobalPos;
@@ -185,6 +193,8 @@ private slots:
     void mouseMoveHoverEfficiency();
     void contextMenuEventItemLocalPosition_data();
     void contextMenuEventItemLocalPosition();
+    void contextMenuEventFromKeyboard_data();
+    void contextMenuEventFromKeyboard();
 
 private:
     std::unique_ptr<QPointingDevice> touchscreen{QTest::createTouchDevice()};
@@ -952,6 +962,77 @@ void tst_qquickdeliveryagent::contextMenuEventItemLocalPosition()
     }
 
     // The acceptance of the item event is reflected back to the original event
+    QVERIFY(event.isAccepted());
+}
+
+void tst_qquickdeliveryagent::contextMenuEventFromKeyboard_data()
+{
+    QTest::addColumn<QRectF>("cursorRect");
+    QTest::addColumn<bool>("childAccepts");
+    QTest::addColumn<QPoint>("expectedChildPos");
+
+    // Without a cursor rectangle the event is positioned at the center of the item
+    QTest::addRow("no cursor rect, child accepts") << QRectF() << true << QPoint(25, 25);
+    QTest::addRow("no cursor rect, child ignores") << QRectF() << false << QPoint(25, 25);
+    QTest::addRow("cursor rect, child accepts") << QRectF(10, 20, 2, 10) << true << QPoint(11, 25);
+    QTest::addRow("cursor rect, child ignores") << QRectF(10, 20, 2, 10) << false << QPoint(11, 25);
+}
+
+void tst_qquickdeliveryagent::contextMenuEventFromKeyboard()
+{
+    QFETCH(QRectF, cursorRect);
+    QFETCH(bool, childAccepts);
+    QFETCH(QPoint, expectedChildPos);
+
+    QQuickWindow window;
+    window.resize(200, 200);
+    window.show();
+    window.requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(&window));
+
+    // An item at the event position, which should not receive keyboard
+    // originating events, as those are delivered based on focus.
+    ContextMenuItem other(window.contentItem());
+    other.setSize(QSizeF(15, 15));
+
+    ContextMenuItem parent(window.contentItem());
+    parent.setPosition(QPointF(20, 30));
+    parent.setSize(QSizeF(150, 150));
+    parent.accept = true;
+
+    ContextMenuItem child(&parent);
+    child.setPosition(QPointF(40, 50));
+    child.setSize(QSizeF(50, 50));
+    child.accept = childAccepts;
+    child.cursorRect = cursorRect;
+
+    child.forceActiveFocus();
+    QCOMPARE(window.activeFocusItem(), &child);
+
+    const QPoint eventPos(5, 5);
+    QContextMenuEvent event(QContextMenuEvent::Keyboard, eventPos, window.mapToGlobal(eventPos));
+    event.setAccepted(false);
+    QGuiApplication::sendEvent(&window, &event);
+
+    QCOMPARE(other.contextMenuEventCount, 0);
+
+    // The child's position in the scene is (60, 80)
+    const QPoint expectedScenePos = QPoint(60, 80) + expectedChildPos;
+    const QPoint expectedGlobalPos = window.mapToGlobal(expectedScenePos);
+
+    QCOMPARE(child.contextMenuEventCount, 1);
+    QCOMPARE(child.contextMenuPos, expectedChildPos);
+    QCOMPARE(child.contextMenuGlobalPos, expectedGlobalPos);
+
+    if (childAccepts)
+        QCOMPARE(parent.contextMenuEventCount, 0);
+    else {
+        // The parent receives the same position, mapped to its own coordinates
+        QCOMPARE(parent.contextMenuEventCount, 1);
+        QCOMPARE(parent.contextMenuPos, expectedChildPos + QPoint(40, 50));
+        QCOMPARE(parent.contextMenuGlobalPos, expectedGlobalPos);
+    }
+
     QVERIFY(event.isAccepted());
 }
 
