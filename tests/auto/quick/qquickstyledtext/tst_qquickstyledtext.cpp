@@ -132,7 +132,15 @@ void tst_qquickstyledtext::textOutput_data()
     QTest::newRow("img without src") << "a<img />b" << "ab" << FormatList() << false;
     QTest::newRow("tag mix") << "<f6>ds<b></img><pro>gfh</b><w><w>ghj</stron><ql><sl><pl>dfg</j6><img><bol><r><prp>dfg<bkj></b><up><string>ewrq</al><bl>jklhj<zl>" << "dsgfhghjdfgdfgewrqjklhj" << (FormatList() << Format(Format::Bold, 2, 3)) << false;
     QTest::newRow("named html entities") << "&gt; &lt; &amp; &quot; &nbsp;" << QLatin1String("> < & \" ") + QChar(QChar::Nbsp) << FormatList() << false;
-    QTest::newRow("invalid html entities") << "a &hello & a &goodbye;" << "a &hello & a " << FormatList() << false;
+    QTest::newRow("invalid html entities") << "a &hello & a &goodbye;" << "a &hello & a &goodbye;" << FormatList() << false;
+    QTest::newRow("ampersand at end") << "Amper &sand" << "Amper &sand" << FormatList() << false;
+    QTest::newRow("lone ampersand at end") << "a &" << "a &" << FormatList() << false;
+    QTest::newRow("ampersand before newline") << "a &b\nc" << "a &b c" << FormatList() << false;
+    QTest::newRow("ampersand before tag and semicolon")
+            << "&a<b>;</b>" << "&a;" << (FormatList() << Format(Format::Bold, 2, 1)) << false;
+    QTest::newRow("double ampersand") << "&&amp;" << "&&" << FormatList() << false;
+    QTest::newRow("entity without semicolon") << "&amp x" << "&amp x" << FormatList() << false;
+    QTest::newRow("numeric entities") << "&#38; &#x26; &#65;" << "& & A" << FormatList() << false;
     QTest::newRow("upper case tags 1") << "<B><I><S><U>text</U></S></I></B>" << "text" << (FormatList() << Format(Format::Bold|Format::Italic|Format::StrikeOut|Format::Underline, 0, 4)) << false;
     QTest::newRow("upper case tags 2") << "<STRONG><DEL>text</DEL></STRONG>" << "text" << (FormatList() << Format(Format::Bold|Format::StrikeOut, 0, 4)) << false;
     QTest::newRow("upper case font") << "<FONT COLOR=\"red\" SIZE=\"1\">text</FONT>" << "text" << (FormatList() << Format(0, 0, 4)) << true;
