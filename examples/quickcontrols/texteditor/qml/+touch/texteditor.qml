@@ -160,8 +160,8 @@ ApplicationWindow {
     footer: ToolBar {
         visible: !textArea.readOnly && textArea.activeFocus
 
-        Flickable {
-            anchors.fill: parent
+        contentItem: Flickable {
+            implicitHeight: toolRow.implicitHeight
             contentWidth: toolRow.implicitWidth
             flickableDirection: Qt.Horizontal
             boundsBehavior: Flickable.StopAtBounds
