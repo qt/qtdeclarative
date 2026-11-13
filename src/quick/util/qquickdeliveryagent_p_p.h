@@ -192,6 +192,7 @@ public:
 
     QList<QQuickItem *> eventTargets(QQuickItem *, const QEvent *event, int pointId, QPointF localPos, QPointF scenePos,
                                        qxp::function_ref<std::optional<bool> (QQuickItem *, const QEvent *)> predicate) const;
+    QList<QQuickItem *> eventTargets(QQuickItem *, const QEvent *event, int pointId, QPointF localPos, QPointF scenePos) const;
     void eventTargetsAppend(QQuickItem *, const QEvent *event, int pointId, QPointF localPos, QPointF scenePos,
                             qxp::function_ref<std::optional<bool> (QQuickItem *, const QEvent *)> predicate,
                             QList<QQuickItem *> &targets) const;

@@ -2360,6 +2360,21 @@ QList<QQuickItem *> QQuickDeliveryAgentPrivate::eventTargets(QQuickItem *item, c
 
 /*!
     \internal
+    \overload
+
+    Returns targets based on item containment of \a localPos alone.
+*/
+QList<QQuickItem *> QQuickDeliveryAgentPrivate::eventTargets(QQuickItem *item, const QEvent *event, int pointId,
+        QPointF localPos, QPointF scenePos) const
+{
+    return eventTargets(item, event, pointId, localPos, scenePos,
+        [](QQuickItem *, const QEvent *) -> std::optional<bool> {
+            return std::nullopt; // Noop-predicate
+        });
+}
+
+/*!
+    \internal
     Recursively collects event-target items into \a targets in reverse
     paint order (highest stacking order first), interleaving \a item
     among its children according to z-order.
@@ -3271,14 +3286,10 @@ bool QQuickDeliveryAgentPrivate::dragOverThreshold(QVector2D delta)
 */
 QList<QQuickItem *> QQuickDeliveryAgentPrivate::contextMenuTargets(QQuickItem *item, const QContextMenuEvent *event) const
 {
-    auto predicate = [](QQuickItem *, const QEvent *) -> std::optional<bool> {
-        return std::nullopt;
-    };
-
     const auto pos = event->pos().isNull() ? activeFocusItem->mapToScene({}).toPoint() : event->pos();
     if (event->pos().isNull())
         qCDebug(lcContextMenu) << "for QContextMenuEvent, active focus item is" << activeFocusItem << "@" << pos;
-    return eventTargets(item, event, -1, item->mapFromScene(pos), pos, predicate);
+    return eventTargets(item, event, -1, item->mapFromScene(pos), pos);
 }
 
 /*!
