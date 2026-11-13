@@ -11,20 +11,10 @@ qnx
 
 # QTBUG-101704
 [ToolTip::test_attachedSizeBug]
-*
+!android
 
 # QTBUG-139415
-[ComboBox::test_keyClose]
-android
-[Popup::test_anchors]
-android
-[ComboBox::test_modelReset]
-android
 [RangeSlider::test_overlappingHandles]
-android
-[SpinBox::test_editable_doubleSpinBox]
-android
-[SpinBox::test_groupSeparatorHandling:en_EN]
 android
 [SplitView::test_handleContainmentMaskHovered]
 android
@@ -38,12 +28,6 @@ android
 android
 wayland
 [ToolTip::test_activateShortcutWhileToolTipVisible]
-android
-[TextArea::test_implicitSize]
-android
-[TextArea::test_ignorePressRelease]
-android
-[SplitView::test_sizes]
 android
 [tst_radiobutton::compile]
 android
@@ -65,17 +49,7 @@ android
 android
 [tst_radiobutton::compile]
 android
-[Page::test_headerFooter]
-android
 [Page::test_layout]
-android
-[Page::test_oneChild]
-android
-[Page::test_spacing]
-android
-[Tumbler::test_customContentItemAfterConstruction]
-android
-[Tumbler::test_datePicker]
 android
 [SelectionRectangle::test_selectionModeAuto]
 wayland
