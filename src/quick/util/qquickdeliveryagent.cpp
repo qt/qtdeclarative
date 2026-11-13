@@ -3278,7 +3278,7 @@ QList<QQuickItem *> QQuickDeliveryAgentPrivate::contextMenuTargets(QQuickItem *i
     const auto pos = event->pos().isNull() ? activeFocusItem->mapToScene({}).toPoint() : event->pos();
     if (event->pos().isNull())
         qCDebug(lcContextMenu) << "for QContextMenuEvent, active focus item is" << activeFocusItem << "@" << pos;
-    return eventTargets(item, event, -1, pos, pos, predicate);
+    return eventTargets(item, event, -1, item->mapFromScene(pos), pos, predicate);
 }
 
 /*!
