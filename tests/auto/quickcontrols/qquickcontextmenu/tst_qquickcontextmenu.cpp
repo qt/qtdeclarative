@@ -2,8 +2,11 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <QtCore/qscopeguard.h>
+#include <QtGui/qaccessible.h>
 #include <QtGui/qclipboard.h>
 #include <QtGui/private/qguiapplication_p.h>
+#include <QtGui/qpa/qplatformaccessibility.h>
+#include <QtGui/qpa/qplatformintegration.h>
 #include <QtGui/qpa/qplatformtheme.h>
 #include <QtTest/qsignalspy.h>
 #include <QtTest/qtest.h>
@@ -52,6 +55,7 @@ private slots:
     void textControlsMenuKey();
     void mouseAreaUnderTextArea();
     void textFieldNativeMenuOnRequested();
+    void accessibleShowMenu();
     void textEditingContextMenuUndoRedo_data();
     void textEditingContextMenuUndoRedo();
     void textEditingContextMenuCut_data();
@@ -561,6 +565,54 @@ void tst_QQuickContextMenu::textFieldNativeMenuOnRequested()
     auto *contextMenu = textField->findChild<QQuickContextMenu *>();
     QVERIFY(contextMenu);
     QTRY_VERIFY(!contextMenu->menu()->isVisible());
+}
+
+void tst_QQuickContextMenu::accessibleShowMenu()
+{
+#if !QT_CONFIG(accessibility)
+    QSKIP("Accessibility is disabled in this build");
+#else
+    QPlatformIntegration *pfIntegration = QGuiApplicationPrivate::platformIntegration();
+    if (!pfIntegration->accessibility())
+        QSKIP("This platform does not support accessibility");
+    pfIntegration->accessibility()->setActive(true);
+    const auto restoreAccessibility = qScopeGuard([pfIntegration]{
+        pfIntegration->accessibility()->setActive(false);
+    });
+
+    QQuickApplicationHelper helper(this, "accessibleShowMenu.qml");
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    // Items without a context menu don't advertise the action
+    auto *withoutMenu = window->findChild<QQuickItem *>("withoutMenu");
+    QVERIFY(withoutMenu);
+    QAccessibleInterface *withoutMenuIface = QAccessible::queryAccessibleInterface(withoutMenu);
+    QVERIFY(withoutMenuIface);
+    QVERIFY(withoutMenuIface->actionInterface());
+    QVERIFY(!withoutMenuIface->actionInterface()->actionNames().contains(
+        QAccessibleActionInterface::showMenuAction()));
+
+    // Items with a context menu advertise the action, and show the menu on request
+    auto *withMenu = window->findChild<QQuickItem *>("withMenu");
+    QVERIFY(withMenu);
+    QAccessibleInterface *withMenuIface = QAccessible::queryAccessibleInterface(withMenu);
+    QVERIFY(withMenuIface);
+    QAccessibleActionInterface *actionIface = withMenuIface->actionInterface();
+    QVERIFY(actionIface);
+    QCOMPARE(actionIface->actionNames().count(QAccessibleActionInterface::showMenuAction()), 1);
+
+    // The menu property is deferred, so the menu isn't created until requested
+    QVERIFY(!window->findChild<QQuickMenu *>());
+
+    actionIface->doAction(QAccessibleActionInterface::showMenuAction());
+    auto *menu = window->findChild<QQuickMenu *>();
+    QVERIFY(menu);
+    QTRY_VERIFY(menu->isOpened());
+    QCOMPARE(menu->parentItem(), withMenu);
+#endif
 }
 
 void tst_QQuickContextMenu::textEditingContextMenuData()

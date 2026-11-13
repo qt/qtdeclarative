@@ -279,6 +279,7 @@ public:
     virtual void removePointerHandler(QQuickPointerHandler *h);
 
     QObject *setContextMenu(QObject *menu);
+    QObject *contextMenu() const { return extra.isAllocated() ? extra->contextMenu : nullptr; }
 
     virtual QtPrivate::QQuickAttachedPropertyPropagator *attachedPropertyPropagator_parent(
         const QMetaObject *attachedType);

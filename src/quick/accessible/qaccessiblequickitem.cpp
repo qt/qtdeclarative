@@ -5,6 +5,7 @@
 #include "qaccessiblequickitem_p.h"
 
 #include <QtGui/private/qaccessiblehelper_p.h>
+#include <QtGui/qguiapplication.h>
 #include <QtGui/qtextdocument.h>
 
 #include "QtQuick/private/qquickitem_p.h"
@@ -547,6 +548,12 @@ QStringList QAccessibleQuickItem::actionNames() const
     // ### The following can lead to duplicate action names.
     if (QQuickAccessibleAttached *attached = QQuickAccessibleAttached::attachedProperties(item()))
         attached->availableActions(&actions);
+
+    if (QQuickItemPrivate::get(item())->contextMenu()
+        && !actions.contains(QAccessibleActionInterface::showMenuAction())) {
+        actions.append(QAccessibleActionInterface::showMenuAction());
+    }
+
     return actions;
 }
 
@@ -567,6 +574,16 @@ void QAccessibleQuickItem::doAction(const QString &actionName)
     const QByteArray functionName = "accessible" + actionName.toLatin1() + "Action";
     if (object()->metaObject()->indexOfMethod(QByteArray(functionName + "()")) != -1) {
         QMetaObject::invokeMethod(object(), functionName);
+        return;
+    }
+
+    // Context menu default behavior
+    if (actionName == QAccessibleActionInterface::showMenuAction()
+        && QQuickItemPrivate::get(item())->contextMenu()) {
+        QContextMenuEvent event(QContextMenuEvent::Other, QPoint(),
+                                item()->mapToGlobal(QPointF()).toPoint(),
+                                QGuiApplication::keyboardModifiers());
+        QCoreApplication::sendEvent(item(), &event);
         return;
     }
 
