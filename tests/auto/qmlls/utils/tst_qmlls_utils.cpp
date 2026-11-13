@@ -2836,20 +2836,16 @@ void tst_qmlls_utils::completions_data()
                })
             << QStringList({ u"vector4d"_s, u"width"_s, u"Rectangle"_s, u"import"_s });
 
-    QTest::newRow("importVersionStart")
+    QTest::newRow("importAsAfterVersion")
             << file << 1 << 16
             << ExpectedCompletions({
-                       { u"2"_s, CompletionItemKind::Constant },
                        { u"as"_s, CompletionItemKind::Keyword },
                })
-            << QStringList({ u"Rectangle"_s, u"import"_s, u"vector4d"_s, u"width"_s });
+            << QStringList{ u"QtQuick"_s, u"Rectangle"_s, u"import"_s, u"vector4d"_s, u"width"_s };
 
-    // QTest::newRow("importVersionMinor")
-    //         << uri << 1 << 18
-    //         << ExpectedCompletions({
-    //                    { u"15"_s, CompletionItemKind::Constant },
-    //            })
-    //         << QStringList({ u"as"_s, u"Rectangle"_s, u"import"_s, u"vector4d"_s, u"width"_s });
+    QTest::newRow("importAfterAsIdentifier")
+            << testFile(u"completions/importAs.qml"_s) << 1 << 24 << ExpectedCompletions({ })
+            << QStringList{ u"as"_s, u"QtQuick"_s, u"import"_s };
 
     QTest::newRow("expandBase1") << file << 10 << 24
                                  << ExpectedCompletions({
@@ -4625,7 +4621,6 @@ void tst_qmlls_utils::completions()
         QEXPECT_FAIL("importAfterDotMissing", "Imports need to be reworked via QTBUG-126766",
                      Abort);
         QEXPECT_FAIL("importModuleStart", "Imports need to be reworked via QTBUG-126766", Abort);
-        QEXPECT_FAIL("importVersionStart", "Imports need to be reworked via QTBUG-126766", Abort);
 
         QVERIFY2(labels.contains(exp.label),
                  u"no %1 in %2"_s.arg(exp.label, labelsForPrinting).toUtf8());

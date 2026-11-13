@@ -98,10 +98,6 @@ private:
 
     void suggestBindingCompletion(const DomItem &itemAtPosition, BackInsertIterator it) const;
 
-    void insideImportCompletionHelper(const DomItem &file,
-                                      const QQmlLSCompletionPosition &positionInfo,
-                                      BackInsertIterator it) const;
-
     void jsIdentifierCompletion(const QQmlJSScope::ConstPtr &scope,
                                 QDuplicateTracker<QString> *usedNames, BackInsertIterator it) const;
 

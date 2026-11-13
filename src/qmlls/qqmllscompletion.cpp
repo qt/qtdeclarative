@@ -166,52 +166,6 @@ QQmlLSCompletion::suggestBindingCompletion(const DomItem &itemAtPosition, BackIn
     signalHandlerCompletion(scope, nullptr, it);
 }
 
-void QQmlLSCompletion::insideImportCompletionHelper(const DomItem &file,
-                                                    const QQmlLSCompletionPosition &positionInfo,
-                                                    BackInsertIterator it) const
-{
-    // returns completions for import statements, ctx is supposed to be in an import statement
-    const CompletionContextStrings &ctx = positionInfo.cursorPosition;
-    ImportCompletionType importCompletionType = ImportCompletionType::None;
-    QRegularExpression spaceRe(uR"(\s+)"_s);
-    QList<QStringView> linePieces = ctx.preLine().split(spaceRe, Qt::SkipEmptyParts);
-    qsizetype effectiveLength = linePieces.size()
-            + ((!ctx.preLine().isEmpty() && ctx.preLine().last().isSpace()) ? 1 : 0);
-    if (effectiveLength < 2) {
-        CompletionItem comp;
-        comp.label = "import";
-        comp.kind = CompletionItemKind::Keyword;
-        it = comp;
-    }
-    if (linePieces.isEmpty() || linePieces.first() != u"import")
-        return;
-    if (effectiveLength == 2) {
-        // the cursor is after the import, possibly in a partial module name
-        importCompletionType = ImportCompletionType::Module;
-    } else if (effectiveLength == 3) {
-        if (linePieces.last() != u"as") {
-            // the cursor is after the module, possibly in a partial version token (or partial as)
-            CompletionItem comp;
-            comp.label = "as";
-            comp.kind = CompletionItemKind::Keyword;
-            it = comp;
-            importCompletionType = ImportCompletionType::Version;
-        }
-    }
-    DomItem env = file.environment();
-    if (std::shared_ptr<DomEnvironment> envPtr = env.ownerAs<DomEnvironment>()) {
-        switch (importCompletionType) {
-        case ImportCompletionType::None:
-            break;
-        case ImportCompletionType::Module: {
-            break;
-        }
-        case ImportCompletionType::Version:
-            break;
-        }
-    }
-}
-
 void QQmlLSCompletion::idsCompletions(const DomItem &component, BackInsertIterator it) const
 {
     qCDebug(QQmlLSCompletionLog) << "adding ids completions";
@@ -910,12 +864,38 @@ void QQmlLSCompletion::insideImportCompletion(const DomItem &currentItem,
                                               BackInsertIterator result) const
 {
     const DomItem containingFile = currentItem.containingFile();
-    insideImportCompletionHelper(containingFile, positionInfo, result);
 
     // when in front of the import statement: propose types for root Qml Object completion
     if (cursorInFrontOfItem(currentItem, positionInfo)) {
         suggestReachableTypes(containingFile, LocalSymbolsType::ObjectType,
                               CompletionItemKind::Constructor, result);
+        return;
+    }
+
+    const auto regions = FileLocations::treeOf(currentItem)->info().regions;
+    const QQmlJS::SourceLocation importToken = regions.value(ImportTokenRegion);
+    const QQmlJS::SourceLocation uri = regions.value(ImportUriRegion);
+
+    if (importToken.isValid() && positionInfo.offset() <= importToken.end()) {
+        CompletionItem item;
+        item.label = "import";
+        item.kind = CompletionItemKind::Keyword;
+        result = item;
+        return;
+    }
+
+    if (!uri.isValid() || positionInfo.offset() < uri.begin())
+        return;
+
+    if (positionInfo.offset() > uri.end()) {
+        const QQmlJS::SourceLocation asToken = regions.value(AsTokenRegion);
+        if (!asToken.isValid() || positionInfo.offset() <= asToken.end()) {
+            CompletionItem item;
+            item.label = "as";
+            item.kind = CompletionItemKind::Keyword;
+            result = item;
+        }
+        return;
     }
 }
 
