@@ -2,7 +2,7 @@
 
 # QTBUG-70597
 [Tumbler::test_itemsCorrectlyPositioned]
-*
+!android
 
 # QTBUG-95750
 [RangeSlider::test_overlappingHandles]
@@ -15,24 +15,14 @@ macos arm ci # QTBUG-102817
 # QTBUG-126236
 [Action::test_repeater]
 macos
-linux
+linux !android
 
 # QTBUG-101704
 [ToolTip::test_attachedSizeBug]
-*
+!android
 
 # QTBUG-139415
-[ComboBox::test_keyClose]
-android
-[Popup::test_anchors]
-android
-[ComboBox::test_modelReset]
-android
 [RangeSlider::test_overlappingHandles]
-android
-[SpinBox::test_editable_doubleSpinBox]
-android
-[SpinBox::test_groupSeparatorHandling:en_EN]
 android
 [SplitView::test_handleContainmentMaskHovered]
 android
@@ -46,10 +36,6 @@ android
 android
 wayland
 [ToolTip::test_activateShortcutWhileToolTipVisible]
-android
-[TextArea::test_implicitSize]
-android
-[TextArea::test_ignorePressRelease]
 android
 [SelectionRectangle::test_selectionModeAuto]
 wayland
