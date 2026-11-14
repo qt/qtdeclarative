@@ -2001,16 +2001,12 @@ void tst_QmlCppCodegen::deadContext()
     std::unique_ptr<QObject> o(c.create());
     QVERIFY(o);
 
-    const char *vmeError = "QQmlVMEMetaObject: Internal error "
-                           "- attempted to evaluate a function in an invalid context";
     static const QRegularExpression timerError(
                 u"qrc:/qt/qml/TestTypes/deadContext[0-9]*\\.qml:[0-9]+: TypeError: Property 'doit' "
                 "of object QQmlTimer_QML_[0-9]+\\(0x[0-9a-f]+\\) is not a function"_s);
 
-    for (int i = 0; i < 4; ++i) {
-        QTest::ignoreMessage(QtWarningMsg,  vmeError);
-        QTest::ignoreMessage(QtWarningMsg,  timerError);
-    }
+    for (int i = 0; i < 4; ++i)
+        QTest::ignoreMessage(QtWarningMsg, timerError);
 
     QTRY_COMPARE(o->property("choice").toInt(), end);
 }
