@@ -1304,10 +1304,8 @@ bool QQmlVMEMetaObject::getListProperty(int id, QQmlListProperty<QObject> *targe
 
 QV4::ReturnedValue QQmlVMEMetaObject::method(int localMethodIndex) const
 {
-    if (m_ctxt.isNull() || !m_ctxt->isValid()) {
-        qWarning("QQmlVMEMetaObject: Internal error - attempted to evaluate a function in an invalid context");
+    if (m_ctxt.isNull() || !m_ctxt->isValid())
         return QV4::Encode::undefined();
-    }
 
     QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
     if (!md)
