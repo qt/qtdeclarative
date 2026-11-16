@@ -190,6 +190,21 @@ ApplicationWindow {
         }
         //! [comboBox]
 
+        //! [dayOfWeekRow]
+        dayOfWeekRow {
+            text {
+                bold: true
+                alignment: Qt.AlignHCenter | Qt.AlignVCenter
+            }
+            background {
+                color: "transparent"
+                width: 180
+                height: 30
+                border.width: 0
+            }
+        }
+        //! [dayOfWeekRow]
+
         //! [delayButton]
         delayButton {
             indicator {

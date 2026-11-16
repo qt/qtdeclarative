@@ -143,6 +143,16 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \qmlproperty ControlStyle StylableControls::dayOfWeekRow
+
+    Grouped property for styling \l [QtQuickControls]{DayOfWeekRow}.
+
+    Unset properties fall back to \l control.
+
+    \snippet ControlsSnippets.qml dayOfWeekRow
+*/
+
+/*!
     \qmlproperty ControlStyle StylableControls::delayButton
 
     Grouped property for styling \l [QtQuickControls]{DelayButton}.
@@ -766,6 +776,7 @@ IMPLEMENT_ACCESSORS(flatButton, QQStyleKitReader::ControlType::FlatButton)
 IMPLEMENT_ACCESSORS(checkBox, QQStyleKitReader::ControlType::CheckBox)
 IMPLEMENT_ACCESSORS(checkDelegate, QQStyleKitReader::ControlType::CheckDelegate)
 IMPLEMENT_ACCESSORS(comboBox, QQStyleKitReader::ControlType::ComboBox)
+IMPLEMENT_ACCESSORS(dayOfWeekRow, QQStyleKitReader::ControlType::DayOfWeekRow)
 IMPLEMENT_ACCESSORS(delayButton, QQStyleKitReader::ControlType::DelayButton)
 IMPLEMENT_ACCESSORS(dial, QQStyleKitReader::ControlType::Dial)
 IMPLEMENT_ACCESSORS(dialog, QQStyleKitReader::ControlType::Dialog)

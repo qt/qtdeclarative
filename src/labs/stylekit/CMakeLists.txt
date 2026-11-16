@@ -43,6 +43,7 @@ qt_internal_add_qml_module(LabsStyleKit
         CheckBox.qml
         CheckDelegate.qml
         ComboBox.qml
+        DayOfWeekRow.qml
         DelayButton.qml
         Dial.qml
         Dialog.qml

@@ -60,6 +60,7 @@ public:
         CheckBox,
         CheckDelegate,
         ComboBox,
+        DayOfWeekRow,
         DelayButton,
         Dial,
         Dialog,

@@ -39,6 +39,7 @@ class Q_LABSSTYLEKIT_EXPORT QQStyleKitControls : public QObject, public QQmlPars
     Q_PROPERTY(QQStyleKitControl *checkBox READ checkBox WRITE set_checkBox NOTIFY checkBoxChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *checkDelegate READ checkDelegate WRITE set_checkDelegate NOTIFY checkDelegateChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *comboBox READ comboBox WRITE set_comboBox NOTIFY comboBoxChanged FINAL)
+    Q_PROPERTY(QQStyleKitControl *dayOfWeekRow READ dayOfWeekRow WRITE set_dayOfWeekRow NOTIFY dayOfWeekRowChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *delayButton READ delayButton WRITE set_delayButton NOTIFY delayButtonChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *dial READ dial WRITE set_dial NOTIFY dialChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *dialog READ dialog WRITE set_dialog NOTIFY dialogChanged FINAL)
@@ -106,6 +107,7 @@ public:
     IMPLEMENT_ACCESSORS(checkBox)
     IMPLEMENT_ACCESSORS(checkDelegate)
     IMPLEMENT_ACCESSORS(comboBox)
+    IMPLEMENT_ACCESSORS(dayOfWeekRow)
     IMPLEMENT_ACCESSORS(delayButton)
     IMPLEMENT_ACCESSORS(dial)
     IMPLEMENT_ACCESSORS(dialog)
@@ -170,6 +172,7 @@ signals:
     void checkBoxChanged();
     void checkDelegateChanged();
     void comboBoxChanged();
+    void dayOfWeekRowChanged();
     void delayButtonChanged();
     void dialChanged();
     void dialogChanged();

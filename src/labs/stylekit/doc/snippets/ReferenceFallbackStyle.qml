@@ -179,6 +179,19 @@ BaseStyle {
         }
     }
 
+    dayOfWeekRow {
+        text {
+            bold: true
+            alignment: Qt.AlignHCenter | Qt.AlignVCenter
+        }
+        background {
+            color: __transparent
+            width: 180
+            height: 30
+            border.width: 0
+        }
+    }
+
     delayButton {
         indicator {
             height: 6
