@@ -346,6 +346,16 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \qmlproperty ControlStyle StylableControls::monthGrid
+
+    Grouped property for styling \l [QtQuickControls]{MonthGrid}.
+
+    Unset properties fall back to \l control.
+
+    \snippet ControlsSnippets.qml monthGrid
+*/
+
+/*!
     \qmlproperty ControlStyle StylableControls::page
 
     Grouped property for styling \l [QtQuickControls]{Page}.
@@ -800,6 +810,7 @@ IMPLEMENT_ACCESSORS(menuBar, QQStyleKitReader::ControlType::MenuBar)
 IMPLEMENT_ACCESSORS(menuBarItem, QQStyleKitReader::ControlType::MenuBarItem)
 IMPLEMENT_ACCESSORS(menuItem, QQStyleKitReader::ControlType::MenuItem)
 IMPLEMENT_ACCESSORS(menuSeparator, QQStyleKitReader::ControlType::MenuSeparator)
+IMPLEMENT_ACCESSORS(monthGrid, QQStyleKitReader::ControlType::MonthGrid)
 
 #undef IMPLEMENT_ACCESSORS
 

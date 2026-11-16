@@ -419,6 +419,18 @@ ApplicationWindow {
         }
         //! [menuSeparator]
 
+        //! [monthGrid]
+        monthGrid {
+            text.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+            background {
+                width: 180
+                height: 180
+                color: "transparent"
+                border.width: 0
+            }
+        }
+        //! [monthGrid]
+
         //! [page]
         page {
             background {

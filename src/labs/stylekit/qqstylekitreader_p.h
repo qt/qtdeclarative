@@ -99,6 +99,7 @@ public:
         MenuBarItem,
         MenuItem,
         MenuSeparator,
+        MonthGrid,
         Pane,
         Page,
         PageIndicator,

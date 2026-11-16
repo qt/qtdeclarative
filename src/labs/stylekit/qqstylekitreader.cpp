@@ -82,6 +82,7 @@ QT_BEGIN_NAMESPACE
     \value StyleReader.MenuBarItem                      \l {MenuBarItem}
     \value StyleReader.MenuItem                         \l {MenuItem}
     \value StyleReader.MenuSeparator                    \l {MenuSeparator}
+    \value StyleReader.MonthGrid                        \l {MonthGrid}
     \value StyleReader.Page                             \l {Page}
     \value StyleReader.PageIndicator                    \l {PageIndicator}
     \value StyleReader.Pane                             \l {Pane}
