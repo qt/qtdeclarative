@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <QtCore/qlist.h>
+#include <QtGui/qsurfaceformat.h>
 
 #include <qtest.h>
 
@@ -20,6 +21,8 @@
 #include <QtQuickControls2Impl/private/qquickiconlabel_p.h>
 #include <QtQuickControls2Impl/private/qquickiconlabel_p_p.h>
 #include <QtQuickControls2Impl/private/qquickmnemoniclabel_p.h>
+
+#include <algorithm>
 
 using namespace QQuickViewTestUtils;
 using namespace QQuickVisualTestUtils;
@@ -390,6 +393,34 @@ void tst_qquickiconlabel::defaultIconColor_data()
         << "transparentActionIconColorAndDefaultIconColorSet.qml" << transparent << red;
 }
 
+/*!
+    On a surface with fewer than 8 bits per color channel (e.g. RGB565), the
+    rendered colors have less precision. This function checks if
+    \a actualPixelColor is to be considered equal to \a expectedPixelColor
+    if the surface format have less than 8 bits per channel.
+    If the surface format have 8 bits per channel, it will do an exact match
+
+    \param actualPixelColor Actual pixel color subject to precision loss
+    \param expectedPixelColor The expected pixel color without precision loss
+*/
+static bool compareColor(const QColor &actual,
+                         const QColor &expected,
+                         const QSurfaceFormat &format)
+{
+    const int minColorBits =
+        std::min({ format.redBufferSize(), format.greenBufferSize(), format.blueBufferSize() });
+    const int tolerance = minColorBits > 0 && minColorBits < 8 ? 256 >> minColorBits : 0;
+
+    bool tolerated = (qAbs(actual.red() - expected.red()) <= tolerance
+            && qAbs(actual.green() - expected.green()) <= tolerance
+            && qAbs(actual.blue() - expected.blue()) <= tolerance
+            && actual.alpha() == expected.alpha());
+    if (!tolerated)
+        qDebug() << "compareColor tolerance:" << tolerance;
+
+    return tolerated;
+}
+
 void tst_qquickiconlabel::defaultIconColor()
 {
     QFETCH(QString, qmlFileName);
@@ -408,8 +439,12 @@ void tst_qquickiconlabel::defaultIconColor()
     QSKIP("Image grabbing is buggy on Android");
 #endif
     const QImage windowContents = window.grabWindow();
-    QCOMPARE(windowContents.pixelColor(windowContents.width() / 2, windowContents.height() / 2),
-        expectedPixelColor);
+    QColor actualPixelColor =
+            windowContents.pixelColor(windowContents.width() / 2, windowContents.height() / 2);
+    QVERIFY2(compareColor(actualPixelColor, expectedPixelColor, window.format()),
+             qPrintable(QStringLiteral("\n   Actual color  : %1\n   Expected color: %2")
+                                .arg(actualPixelColor.name(QColor::HexArgb),
+                                     expectedPixelColor.name(QColor::HexArgb))));
 }
 
 QTEST_MAIN(tst_qquickiconlabel)
