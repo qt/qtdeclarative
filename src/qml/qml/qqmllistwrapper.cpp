@@ -812,9 +812,11 @@ ReturnedValue PropertyListPrototype::method_sort(const FunctionObject *b, const 
         THROW_TYPE_ERROR();
 
     const ArrayElementLessThan lessThan(scope.engine, comparefn);
+    Scoped<QObjectWrapper> o1(scope);
+    Scoped<QObjectWrapper> o2(scope);
     sortHelper(begin(*property), end(*property), [&](QObject *a, QObject *b) {
-        Scoped<QObjectWrapper> o1(scope, QObjectWrapper::wrap(scope.engine, a));
-        Scoped<QObjectWrapper> o2(scope, QObjectWrapper::wrap(scope.engine, b));
+        o1 = QObjectWrapper::wrap(scope.engine, a);
+        o2 = QObjectWrapper::wrap(scope.engine, b);
         return lessThan(o1, o2);
     });
 
