@@ -8,7 +8,7 @@ Item {
     id: root
     width: 320; height: 240
     property bool suspendGrabbing: stepper.running
-    Stepper { id: stepper; scene: root; frames: 60 }
+    Stepper { id: stepper; scene: root; frames: 30 }
 
     Rectangle { anchors.fill: parent; color: "black" }
     ListView {
@@ -30,6 +30,6 @@ Item {
     }
 
     function step(f) {
-        list.contentY = f * 2.37
+        list.contentY = f * 4.74
     }
 }
