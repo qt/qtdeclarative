@@ -8,7 +8,7 @@ Item {
     id: root
     width: 320; height: 240
     property bool suspendGrabbing: stepper.running
-    Stepper { id: stepper; scene: root; frames: 40 }
+    Stepper { id: stepper; scene: root; frames: 20 }
 
     Rectangle { anchors.fill: parent; color: "white" }
     Rectangle { x: 80; y: 60; width: 160; height: 120; color: "#40a040" }

@@ -8,7 +8,7 @@ Item {
     id: root
     width: 320; height: 240
     property bool suspendGrabbing: stepper.running
-    Stepper { id: stepper; scene: root; frames: 31 }
+    Stepper { id: stepper; scene: root; frames: 16 }
 
     Rectangle { id: bg; anchors.fill: parent }
     Repeater {
@@ -29,7 +29,7 @@ Item {
     Rectangle { id: sweep; y: 80; width: 35; height: 28; color: "#40c040" }
 
     function step(f) {
-        bg.color = Math.floor(f / 2) % 2 ? "#f0f0d0" : "#d0e0f0"
-        sweep.x = f * 9.7
+        bg.color = f % 2 ? "#f0f0d0" : "#d0e0f0"
+        sweep.x = f * 19.4
     }
 }

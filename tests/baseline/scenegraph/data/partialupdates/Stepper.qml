@@ -3,7 +3,7 @@
 
 import QtQuick
 
-// Steps the scene once per presented frame, then lets the grabber take the image
+// Steps the scene once per frame, then lets the grabber take the image
 QtObject {
     id: stepper
     required property Item scene
@@ -13,8 +13,11 @@ QtObject {
 
     property Connections conn: Connections {
         target: stepper.scene.Window.window
-        function onFrameSwapped() {
+        function onAfterAnimating() {
             if (stepper.frame < stepper.frames) {
+                // Only the software backend paints partially, others need just the end state
+                if (stepper.scene.GraphicsInfo.api !== GraphicsInfo.Software)
+                    stepper.frame = stepper.frames - 1
                 stepper.scene.step(stepper.frame)
                 ++stepper.frame
                 stepper.scene.Window.window.update()
