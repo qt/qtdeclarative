@@ -200,9 +200,13 @@ QQmlJSShadowCheck::Shadowability QQmlJSShadowCheck::checkShadowing(
             return NotShadowable; // Only properties and methods can be shadowed
         }
 
+        const QQmlJS::LoggerWarningId category = m_logger->wasCategoryChanged(qmlShadowableMember)
+                ? qmlShadowableMember
+                : qmlCompiler;
+
         m_logger->log(
                 u"Member %1 of %2 can be shadowed"_s.arg(memberName, baseType.descriptiveName()),
-                qmlCompiler, currentSourceLocation());
+                category, currentSourceLocation());
 
         // Make it "var". We don't know what it is.
         const QQmlJSScope::ConstPtr varType = m_typeResolver->varType();

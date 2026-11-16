@@ -1,0 +1,70 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\ingroup qmllint-warnings-and-errors
+
+\title Shadowable member
+\brief [shadowable-member] A member accessed by the compiler might be shadowed in a derived type.
+
+\qmllintwarningcategory shadowable-member
+
+\section1 Member can be shadowed
+
+\section2 What happened?
+The \l{Qt Quick Compiler}{compiler} accesses a non-final property or method through an
+object whose exact type isn't known at compile time. A derived type might redeclare
+("shadow") the member with a different type, and the QML engine would pick up that variant.
+
+In the example below, the lookup for \c value on \c other can't be fully optimized because
+\c other might hold an object of a type deriving from \c Base that shadows \c value with a
+property of another type.
+
+\section2 Why is that bad?
+The compiler can't rely on the declared type of the member and has to treat it as \c var.
+The generated code is slower.
+
+This category is enabled automatically if the \l{compiler} category is enabled, unless it is
+explicitly enabled or disabled.
+
+\section2 Example
+\qml
+// Base.qml
+import QtQml
+
+QtObject {
+    property int value
+}
+\endqml
+
+\qml
+// Main.qml
+import QtQml
+
+QtObject {
+    property Base other
+    property int v: other.value
+}
+\endqml
+
+Marking \c value as final guarantees that it can't be shadowed and allows the compiler to rely
+on the type it sees. In QML, use the \c final keyword:
+
+\qml
+// Base.qml
+import QtQml
+
+QtObject {
+    final property int value
+}
+\endqml
+
+In C++, declare the property \c FINAL:
+
+\code
+Q_PROPERTY(int value READ value WRITE setValue NOTIFY valueChanged FINAL)
+\endcode
+
+Alternatively, access the member through an object referenced by \c id, an attached property
+or a singleton, where the exact type is known.
+*/

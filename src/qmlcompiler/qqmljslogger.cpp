@@ -148,6 +148,10 @@ warning levels.
       NonEssential)                                                                                \
     X(qmlRequired, "required", "RequiredProperty", "Warn about required properties", Warning,      \
       NonEssential)                                                                                \
+    X(qmlShadowableMember, "shadowable-member", "ShadowableMember",                                \
+      "Warn about members that the compiler has to treat as var because a derived type might "     \
+      "shadow them. Reported under the compiler category unless set explicitly.",                  \
+      Disable, NonEssential)                                                                       \
     X(qmlShadow, "shadow", "Shadow", "Warn about shadowing attributes from a base class", Disable, \
       NonEssential)                                                                                \
     X(qmlSignalHandlerNameClash, "signal-handler-name-clash", "SignalHandlerNameClash",            \

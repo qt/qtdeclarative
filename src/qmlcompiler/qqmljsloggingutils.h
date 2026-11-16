@@ -100,6 +100,7 @@ extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlRedundantOptionalCh
 extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlRenamedType;
 extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlRequired;
 extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlShadow;
+extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlShadowableMember;
 extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlSignalHandlerNameClash;
 extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlSignalParameters;
 extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlStalePropertyRead;
