@@ -803,5 +803,18 @@ BaseStyle {
             border.width: 0
         }
     }
+
+    weekNumberColumn {
+        text {
+            bold: true
+            alignment: Qt.AlignHCenter | Qt.AlignVCenter
+        }
+        background {
+            color: __transparent
+            width: 30
+            height: 180
+            border.width: 0
+        }
+    }
 }
 //! [1]

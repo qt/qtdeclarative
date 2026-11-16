@@ -106,7 +106,8 @@ public:
         PageIndicator,
         Frame,
         Label,
-        GroupBox
+        GroupBox,
+        WeekNumberColumn
     };
     Q_ENUM(ControlType)
 

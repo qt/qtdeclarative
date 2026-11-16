@@ -111,6 +111,7 @@ QT_BEGIN_NAMESPACE
     \value StyleReader.ToolTip                          \l {ToolTip}
     \value StyleReader.TreeViewDelegate                 \l {TreeViewDelegate}
     \value StyleReader.Tumbler                          \l {Tumbler}
+    \value StyleReader.WeekNumberColumn                 \l {WeekNumberColumn}
 
     \sa {StyleVariation::controlType}{StyleVariation.controlType}
 */

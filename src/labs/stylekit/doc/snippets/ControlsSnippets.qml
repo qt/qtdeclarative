@@ -1041,6 +1041,22 @@ ApplicationWindow {
         }
         //! [tumbler]
 
+        //! [weekNumberColumn]
+        weekNumberColumn {
+            text {
+                bold: true
+                alignment: Qt.AlignHCenter | Qt.AlignVCenter
+            }
+
+            background {
+                width: 30
+                height: 180
+                color: "transparent"
+                border.width: 0
+            }
+        }
+        //! [weekNumberColumn]
+
         //! [theme]
         light: Theme {
             applicationWindow.background.color: "#f0f0f0"

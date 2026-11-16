@@ -86,6 +86,7 @@ class Q_LABSSTYLEKIT_EXPORT QQStyleKitControls : public QObject, public QQmlPars
     Q_PROPERTY(QQStyleKitControl *menuItem READ menuItem WRITE set_menuItem NOTIFY menuItemChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *menuSeparator READ menuSeparator WRITE set_menuSeparator NOTIFY menuSeparatorChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *monthGrid READ monthGrid WRITE set_monthGrid NOTIFY monthGridChanged FINAL)
+    Q_PROPERTY(QQStyleKitControl *weekNumberColumn READ weekNumberColumn WRITE set_weekNumberColumn NOTIFY weekNumberColumnChanged FINAL)
     QML_UNCREATABLE("This component is abstract, and cannot be instantiated")
     QML_NAMED_ELEMENT(StylableControls)
 
@@ -154,6 +155,7 @@ public:
     IMPLEMENT_ACCESSORS(menuItem)
     IMPLEMENT_ACCESSORS(menuSeparator)
     IMPLEMENT_ACCESSORS(monthGrid)
+    IMPLEMENT_ACCESSORS(weekNumberColumn)
 
 #undef IMPLEMENT_ACCESSORS
 
@@ -219,6 +221,7 @@ signals:
     void menuItemChanged();
     void menuSeparatorChanged();
     void monthGridChanged();
+    void weekNumberColumnChanged();
 
 protected:
     void classBegin() override {}

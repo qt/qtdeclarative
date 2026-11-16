@@ -94,6 +94,7 @@ qt_internal_add_qml_module(LabsStyleKit
         TextArea.qml
         VerticalHeaderView.qml
         VerticalHeaderViewDelegate.qml
+        WeekNumberColumn.qml
     LIBRARIES
         Qt6::GuiPrivate
         Qt6::Qml

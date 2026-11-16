@@ -694,6 +694,16 @@ QT_BEGIN_NAMESPACE
     \snippet ControlsSnippets.qml tumbler
 */
 
+/*!
+    \qmlproperty ControlStyle StylableControls::weekNumberColumn
+
+    Grouped property for styling \l [QtQuickControls]{WeekNumberColumn}.
+
+    Unset properties fall back to \l control.
+
+    \snippet ControlsSnippets.qml weekNumberColumn
+*/
+
 using namespace Qt::StringLiterals;
 
 QQStyleKitControls::QQStyleKitControls(QObject *parent)
@@ -822,6 +832,7 @@ IMPLEMENT_ACCESSORS(menuBarItem, QQStyleKitReader::ControlType::MenuBarItem)
 IMPLEMENT_ACCESSORS(menuItem, QQStyleKitReader::ControlType::MenuItem)
 IMPLEMENT_ACCESSORS(menuSeparator, QQStyleKitReader::ControlType::MenuSeparator)
 IMPLEMENT_ACCESSORS(monthGrid, QQStyleKitReader::ControlType::MonthGrid)
+IMPLEMENT_ACCESSORS(weekNumberColumn, QQStyleKitReader::ControlType::WeekNumberColumn)
 
 #undef IMPLEMENT_ACCESSORS
 
