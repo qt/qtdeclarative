@@ -195,6 +195,7 @@ private Q_SLOTS:
 
     void dirtyQmlCode_data();
     void dirtyQmlCode();
+    void importPathChangeKeepsUnresolvableBaseTypes();
 
     void dirtyQmlSnippet_data();
     void dirtyQmlSnippet();
@@ -3587,6 +3588,26 @@ void TestQmllint::cleanQmlCode()
 
     const QJsonArray warnings = callQmllint(filename, options);
     checkResult(warnings, ResultBuilder::cleanResult());
+}
+
+void TestQmllint::importPathChangeKeepsUnresolvableBaseTypes()
+{
+    const auto guard = qScopeGuard([this]() { m_linter.clearCache(); });
+    m_linter.clearCache();
+
+    // This loads Foozle.qml, whose base type cannot be resolved.
+    callQmllint(testFile("nonNullStored.qml"), {}, CallQmllintCheck::ShouldFail);
+
+    // Changing the import paths makes the importer rebuild the directory imports from the
+    // already loaded files.
+    CallQmllintOptions options;
+    options.importPaths << testFile("qualifiedimportmodule");
+    callQmllint(testFile("qualifiedimportmodule/org/kde/qualified/UseRenamed.qml"), options,
+                CallQmllintCheck::ShouldFail);
+
+    // Foozle.qml is part of the implicit import of this file. It has been resolved
+    // already, so the importer must not mistake it for an incomplete type from a qmltypes file.
+    checkResult(callQmllint(testFile("listIndices.qml"), {}), ResultBuilder::cleanResult());
 }
 
 void TestQmllint::compilerWarnings_data()

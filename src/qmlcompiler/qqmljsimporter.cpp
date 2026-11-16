@@ -805,6 +805,13 @@ void QQmlJSImporter::processImport(const QQmlJS::Import &importDescription,
             if (val.scope->baseTypeName() == s_inProcessMarker)
                 continue;
 
+            // If the base type is still null despite m_importFiles containing the type,
+            // it cannot be resolved and there's nothing we can do about it here.
+            if (m_importedFiles.contains(
+                        QQmlJSUtils::qmlBuildPathFromSourcePath(m_mapper, val.scope->filePath()))) {
+                continue;
+            }
+
             // Composite types use QML names, and we should have resolved those already.
             // ... except that old qmltypes files might specify composite types with C++ names.
             // Warn about those.
