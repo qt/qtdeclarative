@@ -71,6 +71,7 @@ private slots:
     void listIgnoresNull_data() { modeData(); }
     void listIgnoresNull();
     void consoleLogSyntheticList();
+    void sortLargeList();
 
     void listWrapperCreateOwnedIsIndependent();
     void listWrapperIncreaseLengthWhenWritingOutOfBoundsArrayIndex();
@@ -1129,6 +1130,18 @@ void tst_qqmllistreference::consoleLogSyntheticList()
             QtDebugMsg, QRegularExpression("\\[QObject_QML_[0-9]+\\(0x[0-9a-f]+\\)\\]"));
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
+}
+
+void tst_qqmllistreference::sortLargeList()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("sortLargeList.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    std::unique_ptr<QObject> root(component.create());
+    QVERIFY(root);
+
+    // Don't run out of JS stack space
+    QMetaObject::invokeMethod(root.get(), "sort");
 }
 
 void tst_qqmllistreference::listWrapperCreateOwnedIsIndependent()
