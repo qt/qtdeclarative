@@ -3821,9 +3821,8 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
             switch (sc) {
             case SC_ToolButton: {
                 QRect contentsRect = frameRect.marginsRemoved(metrics.padding);
-                const bool hasMenuButton = (tool->features
-                    & (QStyleOptionToolButton::MenuButtonPopup | QStyleOptionToolButton::HasMenu))
-                    != 0;
+                const bool hasMenuButton =
+                    (tool->features & QStyleOptionToolButton::MenuButtonPopup) != 0;
                 const auto *indicator = resolved.indicator();
                 if (hasMenuButton && indicator && indicator->visible()) {
                     QRect menuRect = subControlRect(CC_ToolButton, opt, SC_ToolButtonMenu, w);
