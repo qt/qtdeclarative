@@ -11131,6 +11131,7 @@ void tst_qqmlecmascript::largeLoopsDoNotExhaustJSStack_data()
     add("URLSearchParams.forEach",
         "var q = new URLSearchParams(new Array(n).fill(['k', 'v']));"
         "var count = 0; q.forEach(function() { ++count; }); count === n");
+    add("rest element", "var [first, ...rest] = new Array(n/2).fill(0); rest.length === n/2 - 1");
 }
 
 void tst_qqmlecmascript::largeLoopsDoNotExhaustJSStack()
