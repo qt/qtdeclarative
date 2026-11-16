@@ -1027,9 +1027,10 @@ ReturnedValue Runtime::DestructureRestElement::call(ExecutionEngine *engine, con
     ScopedArrayObject array(scope, engine->newArrayObject());
     array->arrayCreate();
     uint index = 0;
+    ScopedValue n(scope);
+    ScopedValue done(scope);
     while (1) {
-        ScopedValue n(scope);
-        ScopedValue done(scope, IteratorNext::call(engine, iterator, n));
+        done = IteratorNext::call(engine, iterator, n);
         if (engine->hasException)
             return Encode::undefined();
         Q_ASSERT(done->isBoolean());
