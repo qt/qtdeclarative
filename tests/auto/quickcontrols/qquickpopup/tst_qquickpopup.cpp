@@ -61,6 +61,23 @@ static bool isPlatformUbuntu()
     return qEnvironmentVariable("XDG_SESSION_DESKTOP") == QStringLiteral("ubuntu");
 }
 
+// Returns true if the window system lets \a window take the global keyboard and mouse
+// grabs that popup windows use. Some platforms don't implement grabs (QCocoaWindow,
+// QTBUG-106597), and a window system may refuse them. An X server refuses while another
+// client, such as a screen locker, holds a grab. Tests that observe the grab need it to
+// succeed, so take it the same way QQuickPopupWindowPrivate::setVisible() does, and
+// release it at once.
+static bool windowSystemGrantsGrabs(QWindow *window)
+{
+    if (!window->setKeyboardGrabEnabled(true))
+        return false;
+    const bool mouseGrabbed = window->setMouseGrabEnabled(true);
+    if (mouseGrabbed)
+        window->setMouseGrabEnabled(false);
+    window->setKeyboardGrabEnabled(false);
+    return mouseGrabbed;
+}
+
 class tst_QQuickPopup : public QQmlDataTest
 {
     Q_OBJECT
@@ -161,6 +178,7 @@ private slots:
     void popupWindowChangingParent();
     void popupWindowChangingParentWindow();
     void popupWindowFocus();
+    void popupWindowGrabSurvivesDialogClose();
     void popupTypeChangeFromWindowToItem();
     void popupTypeChangeFromItemToWindow();
     void resetHoveredStateForItemsWithinPopup();
@@ -3535,6 +3553,54 @@ void tst_QQuickPopup::popupWindowFocus()
     popup->close();
     QTRY_VERIFY(!popup->isOpened());
     QTRY_VERIFY(!popup->isVisible());
+}
+
+// The grab belongs to the chain of Qt::Popup windows, and only the last of them to close
+// may release it. QGuiApplicationPrivate::popupCount() counts only Qt::Popup windows, so
+// closing a Dialog while a popup is open must not release the grab.
+void tst_QQuickPopup::popupWindowGrabSurvivesDialogClose()
+{
+#ifndef QT_BUILD_INTERNAL
+    QSKIP("This test requires a developer build.");
+#else
+    if (!arePopupWindowsSupported())
+        QSKIP("The platform doesn't support popup windows. Skipping test.");
+
+    QQuickApplicationHelper helper(this, "popupWindowTypeClosePolicy.qml");
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+    if (!windowSystemGrantsGrabs(window))
+        QSKIP("The window system doesn't grant window grabs. Skipping test.");
+
+    auto *popup = window->property("popup").value<QQuickPopup *>();
+    QVERIFY(popup);
+    auto *dialog = window->property("dialog").value<QQuickPopup *>();
+    QVERIFY(dialog);
+
+    popup->open();
+    TRY_VERIFY_POPUP_OPENED(popup);
+    QCOMPARE(QQuickPopupPrivate::get(popup)->popupWindow->type(), Qt::Popup);
+    QCOMPARE(QGuiApplicationPrivate::popupCount(), 1);
+    QCOMPARE(qt_quickpopupwindow_grabbedWindow(), window);
+
+    dialog->open();
+    TRY_VERIFY_POPUP_OPENED(dialog);
+    QCOMPARE(QQuickPopupPrivate::get(dialog)->popupWindow->type(), Qt::Dialog);
+    // A Qt::Dialog window doesn't take part in the popup count.
+    QCOMPARE(QGuiApplicationPrivate::popupCount(), 1);
+
+    // Closing it must leave the popup's grab alone...
+    dialog->close();
+    QTRY_VERIFY(!dialog->isVisible());
+    QCOMPARE(qt_quickpopupwindow_grabbedWindow(), window);
+
+    // ... and closing this popup releases it.
+    popup->close();
+    QTRY_VERIFY(!popup->isVisible());
+    QCOMPARE(qt_quickpopupwindow_grabbedWindow(), nullptr);
+#endif
 }
 
 void tst_QQuickPopup::popupTypeChangeFromWindowToItem()

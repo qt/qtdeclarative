@@ -41,6 +41,19 @@ Q_AUTOTEST_EXPORT QWindow *qt_quickpopupwindow_grabbedWindow()
 }
 #endif
 
+/*!
+    \internal
+
+    Returns \c true if \a flags describe a Qt::Popup window.
+    Various other window types have the Qt::Popup bit set, but only pure Qt::Popup windows
+    are appended to the QGuiApplicationPrivate::popup_list. Pure Qt::Popup windows are expected
+    to do a global pointer grab in Qt, while other window types are not.
+*/
+static bool isPopupWindowType(Qt::WindowFlags flags)
+{
+    return (flags & Qt::WindowType_Mask) == Qt::Popup;
+}
+
 class QQuickPopupWindowPrivate : public QQuickWindowQmlImplPrivate
 {
     Q_DECLARE_PUBLIC(QQuickPopupWindow)
@@ -197,8 +210,9 @@ void QQuickPopupWindowPrivate::setVisible(bool visible)
 
     const bool visibleChanged = QWindowPrivate::visible != visible;
 
-    // Check if we're about to close the last popup, in which case, ungrab.
-    if (!visible && visibleChanged && QGuiApplicationPrivate::popupCount() == 1) {
+    // Release the grab when the last popup closes.
+    if (!visible && visibleChanged && isPopupWindowType(windowFlags)
+        && QGuiApplicationPrivate::popupCount() == 1) {
         if (s_grabbedWindow) {
             s_grabbedWindow->setMouseGrabEnabled(false);
             s_grabbedWindow->setKeyboardGrabEnabled(false);
