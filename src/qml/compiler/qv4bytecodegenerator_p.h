@@ -47,6 +47,11 @@ public:
     }
 
     struct Label {
+        enum Special: int {
+            Unlinked = -1,
+            Dead = -2,
+        };
+
         enum LinkMode {
             LinkNow,
             LinkLater
@@ -55,7 +60,7 @@ public:
         Label(BytecodeGenerator *generator, LinkMode mode = LinkNow)
             : generator(generator),
               index(generator->labels.size()) {
-            generator->labels.append(-1);
+            generator->labels.append(Unlinked);
             generator->labelReachable.append(false);
             if (mode == LinkNow)
                 link();
@@ -63,13 +68,18 @@ public:
 
         void link() const {
             Q_ASSERT(index >= 0);
-            Q_ASSERT(generator->labels[index] == -1);
-            generator->labels[index] = generator->instructions.size();
+            Q_ASSERT(generator->labels[index] == Unlinked);
             generator->clearLastInstruction();
             if (generator->labelReachable[index])
                 generator->reachable = true;
             else
                 generator->labelReachable[index] = generator->reachable;
+
+            // A label that nothing can reach doesn't need a position. Code following it is only
+            // emitted if another label makes it reachable, and that label gets its own position.
+            generator->labels[index] = generator->labelReachable[index]
+                    ? generator->instructions.size()
+                    : Dead;
         }
         bool isValid() const { return generator != nullptr; }
 
@@ -112,7 +122,8 @@ public:
             // We only drop code that cannot be reached when we see it. Therefore, the target of a
             // backward jump has to be reachable already. Code generation has to make sure of
             // this by entering loops by fall-through.
-            Q_ASSERT(generator->labels[l.index] == -1 || generator->labelReachable[l.index]);
+            Q_ASSERT(generator->labels[l.index] == Label::Unlinked
+                     || generator->labelReachable[l.index]);
             generator->labelReachable[l.index] = true;
         }
 
@@ -314,6 +325,7 @@ private:
     void compressInstructions();
     void packInstruction(I &i);
     void adjustJumpOffsets();
+    bool isLabelValid(int position) const { return labels.at(position) >= 0; }
 
     QList<I> instructions;
     QList<int> labels;

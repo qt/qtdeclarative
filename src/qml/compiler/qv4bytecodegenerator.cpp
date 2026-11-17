@@ -97,7 +97,7 @@ void BytecodeGenerator::adjustJumpOffsets()
         auto &i = instructions[index];
         if (i.offsetForJump == -1) // no jump
             continue;
-        Q_ASSERT(i.linkedLabel != -1 && labels.at(i.linkedLabel) != -1);
+        Q_ASSERT(i.linkedLabel != -1 && isLabelValid(i.linkedLabel));
         const auto &linkedInstruction = instructions.at(labels.at(i.linkedLabel));
         qint8 *c = reinterpret_cast<qint8*>(i.packed + i.offsetForJump);
         int jumpOffset = linkedInstruction.position - (i.position + i.size);
