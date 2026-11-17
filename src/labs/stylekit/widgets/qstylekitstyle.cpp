@@ -3327,7 +3327,8 @@ void QStyleKitStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCom
                         const qreal trackW = foreground->fillWidth()
                             ? minW + ratio * (fgW - minW)
                             : ratio * fgW;
-                        trackRect = QRectF(fgX, fgY, trackW, fgH);
+                        const qreal trackX = slider->upsideDown ? fgX + (fgW - trackW) : fgX;
+                        trackRect = QRectF(trackX, fgY, trackW, fgH);
                     } else {
                         const qreal trackH = foreground->fillHeight()
                             ? minW + ratio * (fgH - minW)
@@ -3645,7 +3646,8 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
                     const int range = qSaturateRound(contentsRect.width()
                         - handle->leftMargin() - handle->rightMargin() - handleW);
                     const int sliderPos = QStyle::sliderPositionFromValue(
-                        slider->minimum, slider->maximum, slider->sliderPosition, range, false);
+                        slider->minimum, slider->maximum, slider->sliderPosition, range,
+                        slider->upsideDown);
                     handleRect.moveLeft(contentsRect.x() + handle->leftMargin() + sliderPos);
                     handleRect.moveTop(contentsRect.y()
                         + handle->topMargin() - handle->bottomMargin()
@@ -3654,7 +3656,8 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
                     const int range = qSaturateRound(contentsRect.height()
                         - handle->topMargin() - handle->bottomMargin() - handleH);
                     const int sliderPos = QStyle::sliderPositionFromValue(
-                        slider->minimum, slider->maximum, slider->sliderPosition, range, true);
+                        slider->minimum, slider->maximum, slider->sliderPosition, range,
+                        slider->upsideDown);
                     handleRect.moveLeft(contentsRect.x()
                         + handle->leftMargin() - handle->rightMargin()
                         + (contentsRect.width() - handleW) / 2.0);
