@@ -492,6 +492,7 @@ private slots:
     // property-data pointer, so the surviving binding wrote through the wrong
     // offset (heap-use-after-free / clobbered sibling property).
     void compositeBaseLayoutChangeDropsRemovedBaseProperty();
+    void compositeBaseGainsShadowedProperty();
 
     // Changing the non-composite (C++) base type of a component root: instead of failing the
     // hot reload, the enclosing component root is rebuilt so the object is recreated with the
@@ -4911,6 +4912,50 @@ void tst_QQmlPreviewObjectPatch::compositeBaseLayoutChangeDropsRemovedBaseProper
         // clobbered by the dropped binding writing through a stale offset.
         QCOMPARE(w->property("stay").toInt(), 7);
     }
+}
+
+void tst_QQmlPreviewObjectPatch::compositeBaseGainsShadowedProperty()
+{
+    const QString moduleDir = dataDirectory() + QStringLiteral("/HotReloadShadowedBaseProp");
+    const QString patchedDir = dataDirectory() + QStringLiteral("/HotReloadShadowedBasePropPatched");
+
+    QQmlComponent pad(&engine, QUrl::fromLocalFile(moduleDir + "/Pad.qml"));
+    QVERIFY2(pad.isReady(), qPrintable(pad.errorString()));
+    std::unique_ptr<QObject> root(pad.create());
+    QVERIFY(root);
+
+    QPointer<QObject> w = root->findChild<QObject *>(QStringLiteral("w"));
+    QVERIFY(w);
+    QCOMPARE(w->property("shadowed").toInt(), 42);
+
+    QQmlComponent baseOld(&engine, QUrl::fromLocalFile(moduleDir + "/Widget.qml"));
+    QVERIFY2(baseOld.isReady(), qPrintable(baseOld.errorString()));
+    QQmlComponent baseNew(&engine, QUrl::fromLocalFile(patchedDir + "/Widget.qml"));
+    QVERIFY2(baseNew.isReady(), qPrintable(baseNew.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&baseOld)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&baseNew)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QVERIFY(!objects.empty());
+    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+    QVERIFY(w);
+
+    std::unique_ptr<QObject> base(baseNew.create());
+    QVERIFY(base);
+
+    QVariant result;
+    QVERIFY(QMetaObject::invokeMethod(root.get(), "readShadowed", Q_RETURN_ARG(QVariant, result),
+                                      Q_ARG(QVariant, QVariant::fromValue(base.get()))));
+    QCOMPARE(result.toInt(), 1);
+
+    QVERIFY(QMetaObject::invokeMethod(root.get(), "readShadowed", Q_RETURN_ARG(QVariant, result),
+                                      Q_ARG(QVariant, QVariant::fromValue(w.data()))));
+    QCOMPARE(result.toInt(), 42);
 }
 
 // An inline component's root changes its non-composite base type (Rectangle -> Item). The
