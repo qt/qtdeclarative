@@ -389,8 +389,8 @@ QQmlPropertyCache::Ptr QQmlPropertyCache::rebased(const ConstPtr &parent) const
             copyData = cache->propertyIndexCache.data() + (index - cache->propertyOffset());
         }
 
-        if (const QQmlPropertyData *overridden = parent->findNamedProperty(it.key()))
-            copyData->setOverrideIndex(overridden->coreIndex());
+        if (QQmlPropertyData *overridden = parent->findNamedProperty(it.key()))
+            copyData->markAsOverrideOf(overridden);
         else
             copyData->setOverrideIndex(-1);
 
