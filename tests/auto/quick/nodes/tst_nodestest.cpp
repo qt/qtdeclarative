@@ -13,6 +13,7 @@
 #include <QtQuick/qsgsimplerectnode.h>
 #include <QtQuick/qsgsimpletexturenode.h>
 #include <QtQuick/private/qsgplaintexture_p.h>
+#include <QtQuick/private/qquickclipnode_p.h>
 
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qpa/qplatformintegration.h>
@@ -76,6 +77,9 @@ private Q_SLOTS:
     void textureNodeTextureOwnership();
     void textureNodeRect_data();
     void textureNodeRect();
+
+    void defaultClipNodeGeometry_data();
+    void defaultClipNodeGeometry();
 
 private:
     void rhiTestData();
@@ -507,6 +511,41 @@ void NodesTest::textureNodeRect()
     QCOMPARE(vertices[3], bottomRight);
 
     renderContext->invalidate();
+}
+
+void NodesTest::defaultClipNodeGeometry_data()
+{
+    QTest::addColumn<QRectF>("rect");
+    QTest::addColumn<qreal>("radius");
+    QTest::addColumn<int>("expectedVertexCount");
+
+    QTest::newRow("no radius") << QRectF(0, 0, 100, 60) << qreal(0) << 4;
+    QTest::newRow("rounded") << QRectF(0, 0, 100, 60) << qreal(8) << (8 + 1) * 4;
+    QTest::newRow("radius clamped") << QRectF(0, 0, 100, 20) << qreal(40) << (10 + 1) * 4;
+    QTest::newRow("negative width") << QRectF(0, 0, -30, 60) << qreal(8) << 4;
+    QTest::newRow("negative height") << QRectF(0, 0, 100, -30) << qreal(8) << 4;
+    QTest::newRow("zero width") << QRectF(0, 0, 0, 60) << qreal(8) << 4;
+}
+
+// QTBUG-151279
+void NodesTest::defaultClipNodeGeometry()
+{
+    QFETCH(QRectF, rect);
+    QFETCH(qreal, radius);
+    QFETCH(int, expectedVertexCount);
+
+    QQuickDefaultClipNode node(rect);
+    node.setRadius(radius);
+    node.update();
+
+    const QSGGeometry *g = node.geometry();
+    QCOMPARE(g->vertexCount(), expectedVertexCount);
+    const QVector2D *vertices = static_cast<const QVector2D *>(g->vertexData());
+    for (int i = 0; i < g->vertexCount(); ++i) {
+        QVERIFY(qIsFinite(vertices[i].x()));
+        QVERIFY(qIsFinite(vertices[i].y()));
+    }
+    QCOMPARE(node.clipRect(), rect);
 }
 
 QTEST_MAIN(NodesTest);
