@@ -46,15 +46,16 @@ void QQuickDefaultClipNode::updateGeometry()
 {
     QSGGeometry *g = geometry();
 
-    if (qFuzzyIsNull(m_radius)) {
+    // Radius should never exceed half of the width or half of the height
+    const qreal radius = qMin(qMin(m_rect.width() / 2, m_rect.height() / 2), m_radius);
+
+    if (radius < 0 || qFuzzyIsNull(radius)) {
         g->allocate(4);
         QSGGeometry::updateRectGeometry(g, m_rect);
 
     } else {
         int vertexCount = 0;
 
-        // Radius should never exceeds half of the width or half of the height
-        qreal radius = qMin(qMin(m_rect.width() / 2, m_rect.height() / 2), m_radius);
         QRectF rect = m_rect;
         rect.adjust(radius, radius, -radius, -radius);
 
