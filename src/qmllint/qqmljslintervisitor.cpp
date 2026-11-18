@@ -378,7 +378,8 @@ static bool allCodePathsReturnInsideCase(Node *statement)
         auto *tryStatement = cast<TryStatement *>(statement);
         if (allCodePathsReturnInsideCase(tryStatement->statement))
             return true;
-        return allCodePathsReturnInsideCase(tryStatement->finallyExpression->statement);
+        return tryStatement->finallyExpression
+                && allCodePathsReturnInsideCase(tryStatement->finallyExpression->statement);
     }
     case Node::Kind_WithStatement:
         return allCodePathsReturnInsideCase(cast<WithStatement *>(statement)->statement);

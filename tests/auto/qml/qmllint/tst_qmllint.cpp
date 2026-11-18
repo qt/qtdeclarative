@@ -2558,6 +2558,13 @@ void TestQmllint::dirtyJsSnippet_data()
                            "Add \"// fallthrough\" at the end of the block to silence this warning."_L1,
                            13, 17 } } }
             << defaultOptions;
+    constexpr QLatin1String unterminatedCaseMsg =
+        "Non-empty case block potentially falls through to the next case or "
+        "default statement. "
+        "Add \"// fallthrough\" at the end of the block to silence this warning."_L1;
+    QTest::newRow("unterminatedCaseTryCatchWithoutFinally")
+        << u"switch (x) { case 1: try {} catch (e) {} case 2: }"_s
+        << Result{{{unterminatedCaseMsg}}} << defaultOptions;
     QTest::newRow("unterminatedCaseBlockNested")
             << uR"(switch (0) {
                 case 0: // all cases should be KO, including this one
