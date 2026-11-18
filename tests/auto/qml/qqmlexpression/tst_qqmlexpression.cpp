@@ -1,14 +1,17 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
-#include <qtest.h>
+#include <QtTest/qtest.h>
+
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlcontext.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlexpression.h>
 #include <QtQml/qqmlfile.h>
 #include <QtQml/qqmlscriptstring.h>
-#include <QtQuickTestUtils/private/qmlutils_p.h>
+
+#include <private/qmlutils_p.h>
+#include <private/qqmlcontext_p.h>
 
 using namespace Qt::StringLiterals;
 
@@ -429,7 +432,7 @@ void tst_qqmlexpression::contextPropertyNamedLikeGlobal()
     QQmlContext immediate(&parent);
     QQmlContext *contexts[] = { &immediate, &parent, engine.rootContext() };
 
-    contexts[depth]->setContextProperty(
+    QQmlContextPrivate::get(contexts[depth])->setContextProperty(
             u"Math"_s, engine.evaluate(u"({ tag: 'context property' })"_s)
                                .toVariant(QJSValue::RetainJSObjects));
 

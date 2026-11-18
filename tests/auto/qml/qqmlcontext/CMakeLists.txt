@@ -31,3 +31,11 @@ qt_internal_add_test(tst_qqmlcontext
         Qt::QuickTestUtilsPrivate
     TESTDATA ${test_data}
 )
+
+qt_add_qml_module(tst_qqmlcontext
+    URI GlobalOverride
+    QML_FILES
+        data/aotGlobals.qml
+    RESOURCE_PREFIX "/"
+    NO_GENERATE_EXTRA_QMLDIRS
+)
