@@ -255,6 +255,14 @@ private:
             insert(type, *value);
         }
 
+        // Returns an existing instance; used in singletonInstance to avoid a temporary
+        // QJSValue construction
+        QObject *getExistingQObject(const QQmlType::SingletonInstanceInfo::ConstPtr &type) const
+        {
+            const auto it = constFind(type);
+            return it == constEnd() ? nullptr : it->toQObject();
+        }
+
         void clear()
         {
             const auto canDelete = [](QObject *instance, const auto &siinfo) -> bool {
@@ -379,6 +387,9 @@ Q_QML_EXPORT QJSValue QQmlEnginePrivate::singletonInstance<QJSValue>(const QQmlT
 
 template<typename T>
 T QQmlEnginePrivate::singletonInstance(const QQmlType &type) {
+    // Hot path of every singleton property lookup: avoid QJSValue construction once created.
+    if (QObject *instance = singletonInstances.getExistingQObject(type.singletonInstanceInfo()))
+        return qobject_cast<T>(instance);
     return qobject_cast<T>(singletonInstance<QJSValue>(type).toQObject());
 }
 
