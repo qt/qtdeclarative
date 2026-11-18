@@ -7017,9 +7017,11 @@ static QVariant taggedValue(QJSEngine *engine, const QString &tag)
 static void tagInContext(QQmlContext *context, const QString &tag)
 {
     const QVariant tagged = taggedValue(context->engine(), tag);
+    QQmlContextPrivate *d = QQmlContextPrivate::get(context);
     for (const UnqualifiedName &name : unqualifiedNames) {
-        if (name.builtIn)
-            context->setContextProperty(QString::fromLatin1(name.name), tagged);
+        // Circumvent all the checks in QQmlContext::setContextProperty() and make sure the
+        // intended semantics are upheld, rather than the backwards compatibility workarounds.
+        d->setContextProperty(QString::fromLatin1(name.name), tagged);
     }
 }
 
@@ -7716,7 +7718,9 @@ void tst_QmlCppCodegen::unqualifiedName()
     if (present & ParentContextObject)
         parentContext.setContextObject(parentObject.get());
     if (present & ParentContextProperty) {
-        parentContext.setContextProperty(
+        // Circumvent all the checks in QQmlContext::setContextProperty() and make sure the
+        // intended semantics are upheld, rather than the backwards compatibility workarounds.
+        QQmlContextPrivate::get(&parentContext)->setContextProperty(
                 QString::fromLatin1(name.name),
                 taggedValue(&engine, u"parent context property"_s));
     }

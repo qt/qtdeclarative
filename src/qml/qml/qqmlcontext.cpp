@@ -3,18 +3,17 @@
 // Qt-Security score:significant
 
 #include "qqmlcontext_p.h"
-#include "qqmlcomponentattached_p.h"
 
-#include "qqmlcomponent_p.h"
-#include "qqmlexpression_p.h"
-#include "qqmlengine_p.h"
-#include "qqmlengine.h"
-#include "qqmlinfo.h"
-#include "qqmlabstracturlinterceptor.h"
-
-#include <qjsengine.h>
-#include <QtCore/qvarlengtharray.h>
 #include <private/qmetaobject_p.h>
+#include <private/qqmlcomponent_p.h>
+#include <private/qqmlexpression_p.h>
+#include <private/qv4codegen_p.h>
+
+#include <QtQml/qjsengine.h>
+#include <QtQml/qqmlabstracturlinterceptor.h>
+#include <QtQml/qqmlengine.h>
+
+#include <QtCore/qvarlengtharray.h>
 #include <QtCore/qdebug.h>
 #include <QtCore/qqueue.h>
 
@@ -227,14 +226,19 @@ void QQmlContext::setContextObject(QObject *object)
 
     \note You should not use context properties to inject values into your QML
           components. Use singletons or regular object properties instead.
+
+    \note You should not try to override members of the JavaScript global object
+          using context properties. This works by accident, but only for
+          interpreted or JIT'ed code (not for AOT-compiled code) and only if you
+          set the context property before resolving the name for the first time.
+          The precedence between context properties and members of the JavaScript
+          global object has changed in the past and will change again.
 */
 void QQmlContext::setContextProperty(const QString &name, const QVariant &value)
 {
     Q_D(QQmlContext);
-    if (d->notifyIndex() == -1)
-        d->setNotifyIndex(QMetaObjectPrivate::absoluteSignalCount(&QQmlContext::staticMetaObject));
 
-    QQmlRefPointer<QQmlContextData> data = d->m_data;
+    const QQmlContextData *data = d->m_data;
 
     if (data->isInternal()) {
         qWarning("QQmlContext: Cannot set property on internal context.");
@@ -246,26 +250,25 @@ void QQmlContext::setContextProperty(const QString &name, const QVariant &value)
         return;
     }
 
-    if (bool isNumber = false; name.toUInt(&isNumber), isNumber) {
-        qWarning("QQmlContext: Using numbers as context properties will be disallowed in a future Qt version.");
+    if (QV4::Compiler::Codegen::isNameGlobal(name)) {
+        qWarning("Setting a context property '%s' tries to override a member of the JavaScript "
+                 "global object. This only works if you run the code through the interpreter or "
+                 "the JIT. You can't do this in AOT-compiled code. Furthermore, it only works if "
+                 "you set the context property before resolving the name for the first "
+                 "time in this context. This behavior has changed in the past and will change "
+                 "again. You must not rely on it.", qPrintable(name));
+        if (name == QLatin1String("console")) {
+            qWarning("In order to intercept messages sent via the 'console' object, use logging "
+                     "categories and/or qInstallMessageHandler(). The QML engine sends all "
+                     "messages with no explicit logging category to the 'qml' logging category.");
+        }
+    } else if (bool isNumber = false; name.toUInt(&isNumber), isNumber) {
+        qWarning("QQmlContext: Using numbers as context properties will be disallowed in a future "
+                 "Qt version.");
         QT7_ONLY(return;)
     }
 
-    int idx = data->propertyIndex(name);
-    if (idx == -1) {
-        data->addPropertyNameAndIndex(name, data->numIdValues() + d->numPropertyValues());
-        d->appendPropertyValue(value);
-        data->refreshExpressions();
-    } else {
-        d->setPropertyValue(idx, value);
-        QMetaObject::activate(this, d->notifyIndex(), idx, nullptr);
-    }
-
-    if (auto *obj = qvariant_cast<QObject *>(value)) {
-        connect(obj, &QObject::destroyed, this, [d, name](QObject *destroyed) {
-            d->dropDestroyedQObject(name, destroyed);
-        });
-    }
+    d->setContextProperty(name, value);
 }
 
 /*!
@@ -275,6 +278,13 @@ void QQmlContext::setContextProperty(const QString &name, const QVariant &value)
 
     \note You should not use context properties to inject values into your QML
           components. Use singletons or regular object properties instead.
+
+    \note You should not try to override members of the JavaScript global object
+          using context properties. This works by accident, but only for
+          interpreted or JIT'ed code (not for AOT-compiled code) and only if you
+          set the context property before resolving the name for the first time.
+          The precedence between context properties and members of the JavaScript
+          global object has changed in the past and will change again.
 */
 void QQmlContext::setContextProperty(const QString &name, QObject *value)
 {
@@ -292,6 +302,13 @@ void QQmlContext::setContextProperty(const QString &name, QObject *value)
 
     \note You should not use context properties to inject values into your QML
           components. Use singletons or regular object properties instead.
+
+    \note You should not try to override members of the JavaScript global object
+          using context properties. This works by accident, but only for
+          interpreted or JIT'ed code (not for AOT-compiled code) and only if you
+          set the context property before resolving the name for the first time.
+          The precedence between context properties and members of the JavaScript
+          global object has changed in the past and will change again.
 
     \sa QQmlContext::setContextProperty()
 */
@@ -593,6 +610,30 @@ void QQmlContextPrivate::dropDestroyedQObject(const QString &name, QObject *dest
 void QQmlContextPrivate::emitDestruction()
 {
     m_data->emitDestruction();
+}
+
+void QQmlContextPrivate::setContextProperty(const QString &name, const QVariant &value)
+{
+    Q_Q(QQmlContext);
+
+    if (notifyIndex() == -1)
+        setNotifyIndex(QMetaObjectPrivate::absoluteSignalCount(&QQmlContext::staticMetaObject));
+
+    int idx = m_data->propertyIndex(name);
+    if (idx == -1) {
+        m_data->addPropertyNameAndIndex(name, m_data->numIdValues() + numPropertyValues());
+        appendPropertyValue(value);
+        m_data->refreshExpressions();
+    } else {
+        setPropertyValue(idx, value);
+        QMetaObject::activate(q, notifyIndex(), idx, nullptr);
+    }
+
+    if (auto *obj = qvariant_cast<QObject *>(value)) {
+        QObject::connect(obj, &QObject::destroyed, q, [this, name](QObject *destroyed) {
+            dropDestroyedQObject(name, destroyed);
+        });
+    }
 }
 
 // m_data is owned by the public context. When the public context is reset to nullptr, it will be

@@ -16,16 +16,18 @@
 // We mean it.
 //
 
-#include <QtCore/qlist.h>
-#include <QtCore/qstring.h>
-#include <QtCore/qvariant.h>
-#include <QtCore/qpointer.h>
 #include <QtQml/qqmlcontext.h>
 #include <QtQml/qqmllist.h>
 
-#include <QtCore/private/qobject_p.h>
+#include <QtCore/qlist.h>
+#include <QtCore/qpointer.h>
+#include <QtCore/qstring.h>
 #include <QtCore/qtaggedpointer.h>
-#include <QtQml/private/qqmlrefcount_p.h>
+#include <QtCore/qvariant.h>
+
+#include <private/qmetaobject_p.h>
+#include <private/qobject_p.h>
+#include <private/qqmlrefcount_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -69,6 +71,8 @@ public:
     }
 
     void emitDestruction();
+
+    Q_QML_AUTOTEST_EXPORT void setContextProperty(const QString &name, const QVariant &value);
 
 private:
     friend class QQmlContextData;

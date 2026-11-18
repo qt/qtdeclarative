@@ -8,6 +8,7 @@
 #include <QQmlContext>
 #include <QQmlComponent>
 #include <QQmlExpression>
+#include <QRegularExpression>
 #include <private/qqmlcontext_p.h>
 #include <private/qqmlguardedcontextdata_p.h>
 #include <private/qqmldata_p.h>
@@ -57,6 +58,9 @@ private slots:
 
     void childContexts();
     void contextDataCompilationUnitSetter();
+
+    void overrideJavaScriptGlobals_data();
+    void overrideJavaScriptGlobals();
 
 private:
     QQmlEngine engine;
@@ -1089,6 +1093,114 @@ void tst_qqmlcontext::contextDataCompilationUnitSetter()
     QCOMPARE(context1->contextProperty("self2").value<QObject *>(), nullptr);
     QCOMPARE(context2->contextProperty("self").value<QObject *>(), nullptr);
     QCOMPARE(context2->contextProperty("self2").value<QObject *>(), nullptr);
+}
+
+static const char generalGlobalOverrideWarning[]
+        = "Setting a context property '%1' tries to override a member of the JavaScript global "
+          "object\\. .*You must not rely on it\\.";
+
+void tst_qqmlcontext::overrideJavaScriptGlobals_data()
+{
+    QTest::addColumn<QString>("name");
+    QTest::addColumn<bool>("resolveFirst");
+    QTest::addColumn<bool>("viaProperties");
+    QTest::addColumn<bool>("viaObject");
+    QTest::addColumn<bool>("aot");
+
+    for (const char *name : { "parseInt", "console" }) {
+        for (bool aot : { false, true }) {
+            for (bool resolveFirst : { false, true }) {
+                for (const char *how : { "variant", "list", "object" }) {
+                    QTest::addRow("%s-%s-%s-%s", name, aot ? "aot" : "interpreted",
+                                  resolveFirst ? "late" : "early", how)
+                            << QString::fromLatin1(name) << resolveFirst
+                            << (qstrcmp(how, "list") == 0) << (qstrcmp(how, "object") == 0) << aot;
+                }
+            }
+        }
+    }
+}
+
+void tst_qqmlcontext::overrideJavaScriptGlobals()
+{
+    QFETCH(QString, name);
+    QFETCH(bool, resolveFirst);
+    QFETCH(bool, viaProperties);
+    QFETCH(bool, viaObject);
+    QFETCH(bool, aot);
+
+    QQmlContext ctxt(&engine);
+    QObject replacement;
+    replacement.setObjectName("replacement");
+    const QVariant value = viaObject ? QVariant::fromValue(&replacement) : QVariant(42);
+
+    // A function in a compiled document caches the result of resolving the name.
+    // The AOT-compiled variant reads the member from the global object directly. It never sees
+    // context properties.
+    QQmlComponent component(&engine);
+    if (aot) {
+        component.loadUrl(QUrl("qrc:/GlobalOverride/data/aotGlobals.qml"));
+    } else {
+        // qmlcachegen can't compile the capturing of console to C++. That's not interesting
+        // in the AOT case since nothing can be overridden anyway. In the interpreter case it
+        // is interesting. Therefore, use slightly different code here.
+        component.setData(QByteArray("import QtQml\nQtObject {\n"
+                                     "    property var captured\n"
+                                     "    function capture(): void { captured = %1 }\n"
+                                     "}").replace("%1", name.toUtf8()),
+                          QUrl());
+    }
+    QScopedPointer<QObject> object(component.create(&ctxt));
+    QVERIFY2(object, qPrintable(component.errorString()));
+
+    // The AOT-compiled code for 'console' calls the real console object directly. Its effect is
+    // observable as a message, not as a value.
+    const bool logsInstead = aot && name == QLatin1String("console");
+    const auto log = [&]() {
+        QTest::ignoreMessage(QtDebugMsg, "hello");
+        QVERIFY(QMetaObject::invokeMethod(object.data(), "consoleLog"));
+    };
+    const auto isOverridden = [&]() {
+        object->setProperty("captured", QVariant());
+        if (!QMetaObject::invokeMethod(object.data(), "capture"))
+            return false;
+        const QVariant captured = object->property("captured");
+        return captured == value;
+    };
+
+    if (resolveFirst) {
+        if (logsInstead)
+            log();
+        else
+            QVERIFY(!isOverridden());
+    }
+
+    // The general warning is emitted exactly once; for 'console' there is exactly one hint on top.
+    QTest::ignoreMessage(
+            QtWarningMsg, QRegularExpression(QString::fromLatin1(generalGlobalOverrideWarning)
+                                                     .arg(name)));
+    if (name == QLatin1String("console")) {
+        QTest::ignoreMessage(
+                QtWarningMsg,
+                QRegularExpression("In order to intercept messages sent via the 'console' object, "
+                                   "use logging categories .*"));
+    }
+
+    if (viaProperties)
+        ctxt.setContextProperties({ { name, value } });
+    else if (viaObject)
+        ctxt.setContextProperty(name, &replacement);
+    else
+        ctxt.setContextProperty(name, value);
+
+    // Any further warning, in particular a duplicate, makes the test fail.
+    QTest::failOnWarning();
+
+    QCOMPARE(ctxt.contextProperty(name), value);
+    if (logsInstead)
+        log();
+    else
+        QCOMPARE(isOverridden(), !aot && !resolveFirst);
 }
 
 QTEST_MAIN(tst_qqmlcontext)
