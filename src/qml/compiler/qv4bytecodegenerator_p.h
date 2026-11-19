@@ -41,6 +41,7 @@ public:
     BytecodeGenerator(int line, DebugInstructionPass debugInstructionPass,
                       bool storeSourceLocation = false)
         : debugInstructionPass(debugInstructionPass), startLine(line)
+        , lastInstr(Instruction::Nop(), 0)
     {
         if (storeSourceLocation)
             m_sourceLocationTable.reset(new QV4::Compiler::Context::SourceLocationTable {});
@@ -164,21 +165,15 @@ public:
         return ExceptionHandler(this);
     }
 
-    template<int InstrT>
-    void addInstruction(const InstrData<InstrT> &data)
+    template<typename Data>
+    void addInstruction(const Data &data)
     {
-        Instr genericInstr;
-        InstrMeta<InstrT>::setData(genericInstr, data);
-        addInstructionHelper(Moth::Instr::Type(InstrT), genericInstr);
+        addInstructionHelper(Data::type, Moth::Instr::Factory<Data>::create(data));
     }
 
     Q_REQUIRED_RESULT Jump jump()
     {
-QT_WARNING_PUSH
-QT_WARNING_DISABLE_GCC("-Wmaybe-uninitialized") // broken gcc warns about Instruction::Debug()
-        Instruction::Jump data;
-        return addJumpInstruction(data);
-QT_WARNING_POP
+        return addJumpInstruction(Instruction::Jump());
     }
 
     Q_REQUIRED_RESULT Jump jumpTrue()
@@ -277,12 +272,11 @@ QT_WARNING_POP
 
     void finalize(Compiler::Context *context);
 
-    template<int InstrT>
-    Jump addJumpInstruction(const InstrData<InstrT> &data)
+    template<typename Data>
+    Jump addJumpInstruction(const Data &data)
     {
-        Instr genericInstr;
-        InstrMeta<InstrT>::setData(genericInstr, data);
-        return Jump(this, addInstructionHelper(Moth::Instr::Type(InstrT), genericInstr, offsetof(InstrData<InstrT>, offset)));
+        return Jump(this, addInstructionHelper(Data::type, Moth::Instr::Factory<Data>::create(data),
+                                               offsetof(Data, offset)));
     }
 
     void addCJumpInstruction(bool jumpOnFalse, const Label *trueLabel, const Label *falseLabel)
@@ -355,27 +349,10 @@ private:
         code = Instr::pack(code, Instr::wideInstructionType(type));
 
         for (int j = 0; j < argCount; ++j) {
-            qToLittleEndian<qint32>(i.argumentsAsInts[j], code);
+            qToLittleEndian<qint32>(i[j], code);
             code += sizeof(int);
         }
         return instr;
-    }
-
-    template<int InstrT>
-    static I makeInstruction(const InstrData<InstrT> &data, int line, int statement)
-    {
-        Instr genericInstr;
-        InstrMeta<InstrT>::setData(genericInstr, data);
-        return makeInstruction(Moth::Instr::Type(InstrT), genericInstr, -1, line, statement);
-    }
-
-    template<int InstrT>
-    static I makeJumpInstruction(const InstrData<InstrT> &data, int line, int statement)
-    {
-        Instr genericInstr;
-        InstrMeta<InstrT>::setData(genericInstr, data);
-        return makeInstruction(Moth::Instr::Type(InstrT), genericInstr,
-                               offsetof(InstrData<InstrT>, offset), line, statement);
     }
 
     void compressInstructions();

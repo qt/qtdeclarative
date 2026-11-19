@@ -32,19 +32,14 @@ void DebugInstructions::insert(BytecodeGenerator *generator)
 
 void DebugInstructions::appendDebug(int line, const I &before)
 {
-QT_WARNING_PUSH
-QT_WARNING_DISABLE_GCC("-Wmaybe-uninitialized") // broken gcc warns about Instruction::Debug()
-    m_generator->instructions.append(
-            BytecodeGenerator::makeInstruction(Instruction::Debug(), line, before.statement));
-QT_WARNING_POP
+    m_generator->instructions.append(makeInstruction(Instruction::Debug(), line, before.statement));
 }
 
 // The jump skips the Debug and the instruction after it, and lands on the instruction it belongs to.
 void DebugInstructions::appendJumpOverDebug(const I &before)
 {
     QList<int> &labels = m_generator->labels;
-    I jump = BytecodeGenerator::makeJumpInstruction(Instruction::Jump(), before.line,
-                                                    before.statement);
+    I jump = makeJumpInstruction(Instruction::Jump(), before.line, before.statement);
     jump.linkedLabel = labels.size();
     labels.append(m_generator->instructions.size() + 2);
     m_generator->labelReachable.append(true);

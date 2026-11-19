@@ -300,8 +300,6 @@ QT_BEGIN_NAMESPACE
     F(TailCall) \
     F(Debug) \
 
-#define MOTH_NUM_INSTRUCTIONS() (static_cast<int>(Moth::Instr::Type::Debug_Wide) + 1)
-
 #if defined(Q_CC_GNU)
 #if defined(Q_OS_WASM) && !defined(__asmjs)
 // Upstream llvm does not support computed goto for the wasm target, unlike the 'fastcomp' llvm fork
@@ -311,10 +309,7 @@ QT_BEGIN_NAMESPACE
 #endif
 #endif
 
-#define MOTH_INSTR_ALIGN_MASK (alignof(QV4::Moth::Instr) - 1)
-
 #define MOTH_INSTR_ENUM(I)  I, I##_Wide,
-#define MOTH_INSTR_SIZE(I) (sizeof(QV4::Moth::Instr::instr_##I))
 
 #define MOTH_EXPAND_FOR_MSVC(x) x
 #define MOTH_DEFINE_ARGS(nargs, ...) \
@@ -335,29 +330,15 @@ QT_BEGIN_NAMESPACE
     int arg2; \
     int arg3; \
     int arg4;
-#define MOTH_DEFINE_ARGS5(arg1, arg2, arg3, arg4, arg5) \
-    int arg1; \
-    int arg2; \
-    int arg3; \
-    int arg4; \
-    int arg5;
-
-#define MOTH_COLLECT_ENUMS(instr) \
-    INSTR_##instr(MOTH_GET_ENUM)
-#define MOTH_GET_ENUM_INSTRUCTION(name, ...) \
-    name,
 
 #define MOTH_EMIT_STRUCTS(instr) \
     INSTR_##instr(MOTH_EMIT_STRUCT)
 #define MOTH_EMIT_STRUCT_INSTRUCTION(name, nargs, ...) \
-    struct instr_##name { \
+    struct name { \
+        static constexpr Instr::Type type = Instr::Type::name; \
+        static constexpr int argumentCount = nargs; \
         MOTH_DEFINE_ARGS(nargs, __VA_ARGS__) \
     };
-
-#define MOTH_EMIT_INSTR_MEMBERS(instr) \
-    INSTR_##instr(MOTH_EMIT_INSTR_MEMBER)
-#define MOTH_EMIT_INSTR_MEMBER_INSTRUCTION(name, nargs, ...) \
-    instr_##name name;
 
 #define MOTH_COLLECT_NARGS(instr) \
     INSTR_##instr(MOTH_COLLECT_ARG_COUNT)
@@ -411,9 +392,6 @@ QT_BEGIN_NAMESPACE
 #define MOTH_DECODE_ARGS4(name, type, nargs, arg1, arg2, arg3, arg4) \
         MOTH_DECODE_ARGS3(name, type, nargs, arg1, arg2, arg3); \
         MOTH_DECODE_ARG(arg4, type, nargs, 3);
-#define MOTH_DECODE_ARGS5(name, type, nargs, arg1, arg2, arg3, arg4, arg5) \
-        MOTH_DECODE_ARGS4(name, type, nargs, arg1, arg2, arg3, arg4); \
-        MOTH_DECODE_ARG(arg5, type, nargs, 4);
 
 #ifdef MOTH_COMPUTED_GOTO
 /* collect jump labels */
@@ -514,10 +492,13 @@ inline QString dumpBytecode(
                         lineAndStatementNumberMapping);
 }
 
-union Instr
+struct Instr
 {
-    enum class Type {
+    static constexpr int MaxArgCount = 4; // keep in sync with MOTH_DEFINE_ARGS
+
+    enum class Type : int {
         FOR_EACH_MOTH_INSTR_ALL(MOTH_INSTR_ENUM)
+        Count
     };
 
     static Type wideInstructionType(Type t) { return Type(int(t) | 1); }
@@ -609,63 +590,70 @@ union Instr
         return c + 1;
     }
 
-    FOR_EACH_MOTH_INSTR_ALL(MOTH_EMIT_STRUCTS)
+    template<typename Data>
+    Instr(const Data &data, int populated)
+    {
+        static_assert(std::is_trivially_copyable_v<Data> && std::is_standard_layout_v<Data>);
+        static_assert(Data::argumentCount <= MaxArgCount);
+        static_assert(Data::argumentCount == 0
+                      || sizeof(Data) == Data::argumentCount * sizeof(int));
 
-    FOR_EACH_MOTH_INSTR_ALL(MOTH_EMIT_INSTR_MEMBERS)
+        // Copy the values we're going to use.
+        memcpy(m_values, &data, populated * sizeof(int));
 
-    int argumentsAsInts[4];
-};
+        // Zero the rest, so that they're initialized.
+        // TODO: This is not actually necessary but most tooling can't see
+        //       that we're never reading these.
+        memset(m_values + populated, 0, (MaxArgCount - populated) * sizeof(int));
+    }
 
-template <int N>
-struct InstrMeta
-{
-};
-
-QT_WARNING_PUSH
-QT_WARNING_DISABLE_GCC("-Wuninitialized")
-QT_WARNING_DISABLE_GCC("-Wmaybe-uninitialized")
-#define MOTH_INSTR_META_TEMPLATE(I) \
-    template<> struct InstrMeta<int(Instr::Type::I)> { \
-        enum { Size = MOTH_INSTR_SIZE(I) }; \
-        typedef Instr::instr_##I DataType; \
-        static const DataType &data(const Instr &instr) { return instr.I; } \
-        static void setData(Instr &instr, const DataType &v) \
-        { memcpy(reinterpret_cast<char *>(&instr.I), \
-                 reinterpret_cast<const char *>(&v), \
-                 Size); } \
+    template<typename Data, typename = std::void_t<>>
+    struct Factory {
+        static Instr create(const Data &data)
+        {
+            return Instr(data, Data::argumentCount);
+        }
     };
-FOR_EACH_MOTH_INSTR_ALL(MOTH_INSTR_META_TEMPLATE);
-#undef MOTH_INSTR_META_TEMPLATE
-QT_WARNING_POP
+
+    template<typename Data>
+    struct Factory<Data, std::void_t<decltype(Data::offset)>>
+    {
+        static Instr create(const Data &data)
+        {
+            constexpr int populated = Data::argumentCount - 1;
+
+            // offset is the last member and it's an int.
+            static_assert(std::is_same_v<decltype(Data::offset), int>);
+            static_assert(offsetof(Data, offset) == populated * sizeof(int));
+
+            return Instr(data, populated);
+        }
+    };
+
+    template<typename Data>
+    Data as() const
+    {
+        static_assert(std::is_trivially_copyable_v<Data> && std::is_standard_layout_v<Data>);
+        Data data;
+        memcpy(&data, m_values, Data::argumentCount * sizeof(int));
+        return data;
+    }
+
+    int operator[](int i) const { return m_values[i]; }
+
+private:
+    int m_values[MaxArgCount];
+};
 
 struct InstrInfo
 {
     static constexpr int argumentCount[] = {
         FOR_EACH_MOTH_INSTR_ALL(MOTH_COLLECT_NARGS)
     };
-    static constexpr int size(Instr::Type type)
-    {
-#define MOTH_RETURN_INSTR_SIZE(I) \
-case Instr::Type::I:              \
-case Instr::Type::I##_Wide:       \
-    return InstrMeta<int(Instr::Type::I)>::Size;
-        switch (type) {
-            FOR_EACH_MOTH_INSTR_ALL(MOTH_RETURN_INSTR_SIZE)
-        }
-#undef MOTH_RETURN_INSTR_SIZE
-        Q_UNREACHABLE_RETURN(-1);
-    }
-};
-
-template<int InstrType>
-class InstrData : public InstrMeta<InstrType>::DataType
-{
 };
 
 struct Instruction {
-#define MOTH_INSTR_DATA_TYPEDEF(I) typedef InstrData<int(Instr::Type::I)> I;
-FOR_EACH_MOTH_INSTR_ALL(MOTH_INSTR_DATA_TYPEDEF)
-#undef MOTH_INSTR_DATA_TYPEDEF
+    FOR_EACH_MOTH_INSTR_ALL(MOTH_EMIT_STRUCTS)
 private:
     Instruction();
 };

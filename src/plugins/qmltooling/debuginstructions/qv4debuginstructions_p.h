@@ -38,6 +38,20 @@ private:
     void appendDebug(int line, const I &before);
     void appendJumpOverDebug(const I &before);
 
+    template <typename Data>
+    static I makeInstruction(const Data &data, int line, int statement)
+    {
+        return BytecodeGenerator::makeInstruction(Data::type, Instr::Factory<Data>::create(data),
+                                                  -1, line, statement);
+    }
+
+    template <typename Data>
+    static I makeJumpInstruction(const Data &data, int line, int statement)
+    {
+        return BytecodeGenerator::makeInstruction(Data::type, Instr::Factory<Data>::create(data),
+                                                  offsetof(Data, offset), line, statement);
+    }
+
     BytecodeGenerator *m_generator;
 };
 

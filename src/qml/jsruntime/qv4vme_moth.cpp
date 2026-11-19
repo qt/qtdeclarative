@@ -277,7 +277,7 @@ using namespace QV4::Moth;
 static struct InstrCount {
     InstrCount() {
         fprintf(stderr, "Counting instructions...\n");
-        for (int i = 0; i < MOTH_NUM_INSTRUCTIONS(); ++i)
+        for (int i = 0; i < int(Instr::Type::Count); ++i)
             hits[i] = 0;
     }
     ~InstrCount() {
@@ -287,7 +287,7 @@ static struct InstrCount {
         FOR_EACH_MOTH_INSTR(BLAH)
         #undef BLAH
     }
-    quint64 hits[MOTH_NUM_INSTRUCTIONS()];
+    quint64 hits[size_t(Instr::Type::Count)];
     void hit(Instr::Type i) { hits[int(i)]++; }
 } instrCount;
 #endif // COUNT_INSTRUCTIONS

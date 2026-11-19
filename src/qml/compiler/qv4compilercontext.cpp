@@ -326,13 +326,10 @@ void Context::emitBlockFooter(Codegen *codegen)
     if (!requiresExecutionContext)
         return;
 
-QT_WARNING_PUSH
-QT_WARNING_DISABLE_GCC("-Wmaybe-uninitialized") // the loads below are empty structs.
     if (contextType == ContextType::Global)
         bytecodeGenerator->addInstruction(Instruction::PopScriptContext());
     else if (contextType != ContextType::ESModule && contextType != ContextType::ScriptImportedByQML)
         bytecodeGenerator->addInstruction(Instruction::PopContext());
-QT_WARNING_POP
 }
 
 void Context::setupFunctionIndices(Moth::BytecodeGenerator *bytecodeGenerator)

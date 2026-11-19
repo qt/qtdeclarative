@@ -42,9 +42,9 @@ int BytecodeGenerator::newRegisterArray(int n)
 void BytecodeGenerator::packInstruction(I &i)
 {
     Instr::Type type = Instr::unpack(i.packed);
-    Q_ASSERT(int(type) < MOTH_NUM_INSTRUCTIONS());
+    Q_ASSERT(int(type) < int(Instr::Type::Count));
     type = Instr::narrowInstructionType(type);
-    int instructionsAsInts[sizeof(Instr)/sizeof(int)] = {};
+    int instructionsAsInts[Instr::MaxArgCount] = {};
     int nMembers = Moth::InstrInfo::argumentCount[static_cast<int>(i.type)];
     uchar *code = i.packed + Instr::encodedLength(type);
     for (int j = 0; j < nMembers; ++j) {
@@ -179,15 +179,16 @@ int BytecodeGenerator::addInstructionHelper(Instr::Type type, const Instr &i, in
 
     if (lastInstrType == int(Instr::Type::StoreReg)) {
         if (type == Instr::Type::LoadReg) {
-            if (i.LoadReg.reg == lastInstr.StoreReg.reg) {
+            if (i.as<Instruction::LoadReg>().reg == lastInstr.as<Instruction::StoreReg>().reg) {
                 // value is already in the accumulator
                 return -1;
             }
         }
         if (type == Instr::Type::MoveReg) {
-            if (i.MoveReg.srcReg == lastInstr.StoreReg.reg) {
+            const auto move = i.as<Instruction::MoveReg>();
+            if (move.srcReg == lastInstr.as<Instruction::StoreReg>().reg) {
                 Instruction::StoreReg store;
-                store.reg = i.MoveReg.destReg;
+                store.reg = move.destReg;
                 addInstruction(store);
                 return -1;
             }

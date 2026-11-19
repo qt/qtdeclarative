@@ -4821,8 +4821,6 @@ void Codegen::Reference::loadInAccumulator() const
         codegen->bytecodeGenerator->addInstruction(load);
         return;
     case Const: {
-QT_WARNING_PUSH
-QT_WARNING_DISABLE_GCC("-Wmaybe-uninitialized") // the loads below are empty structs.
         if (constant == Encode::null()) {
             Instruction::LoadNull load;
             codegen->bytecodeGenerator->addInstruction(load);
@@ -4856,7 +4854,6 @@ QT_WARNING_DISABLE_GCC("-Wmaybe-uninitialized") // the loads below are empty str
             load.index = codegen->registerConstant(constant);
             codegen->bytecodeGenerator->addInstruction(load);
         }
-QT_WARNING_POP
     } return;
     case StackSlot: {
         Instruction::LoadReg load;
