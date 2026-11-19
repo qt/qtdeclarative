@@ -42,6 +42,7 @@ set(cpp_sources
     sequencetypeexample.cpp sequencetypeexample.h
     shadowingSingleton.h
     state.h
+    takeenums.h
     takenumber.cpp takenumber.h
     theme.cpp theme.h
     timelinetheme.cpp timelinetheme.h
@@ -358,6 +359,7 @@ set(qml_files
     stringToByteArray.qml
     structuredValueType.qml
     multiEnginePropertyCache.qml
+    takeEnums.qml
     takenumber.qml
     testlogger.js
     text.qml
