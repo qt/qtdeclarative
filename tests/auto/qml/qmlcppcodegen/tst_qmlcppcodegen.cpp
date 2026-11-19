@@ -18,6 +18,7 @@
 #include <data/refuseWrite.h>
 #include <data/resettable.h>
 #include <data/sequenceToIterable.h>
+#include <data/takeenums.h>
 #include <data/takenumber.h>
 #include <data/weathermoduleurl.h>
 #include <data/withlength.h>
@@ -311,6 +312,8 @@ private slots:
     void stringToByteArray();
     void structuredValueType();
     void multiEnginePropertyCache();
+    void takeEnums();
+    void takeEnums_data();
     void takeNumbers();
     void takeNumbers_data();
     void testIsnan();
@@ -6215,6 +6218,40 @@ void tst_QmlCppCodegen::multiEnginePropertyCache()
 
     QTest::ignoreMessage(QtDebugMsg, "close2");
     o->setProperty("bar", 2);
+}
+
+void tst_QmlCppCodegen::takeEnums()
+{
+    QFETCH(bool, fromNumbers);
+
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/takeEnums.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    std::unique_ptr<QObject> o(c.create());
+    QVERIFY(o);
+
+    TakeEnums *takeEnums = o->property("target").value<TakeEnums *>();
+    QVERIFY(takeEnums != nullptr);
+
+    if (fromNumbers) {
+        QVERIFY(QMetaObject::invokeMethod(o.get(), "passNumbers", Q_ARG(int, -2), Q_ARG(int, 200),
+                                          Q_ARG(int, -300), Q_ARG(int, 4660), Q_ARG(int, -2)));
+    } else {
+        QVERIFY(QMetaObject::invokeMethod(o.get(), "passEnums"));
+    }
+
+    QCOMPARE(qToUnderlying(takeEnums->takenInt8), qint8(-2));
+    QCOMPARE(qToUnderlying(takeEnums->takenUInt8), quint8(200));
+    QCOMPARE(qToUnderlying(takeEnums->takenInt16), qint16(-300));
+    QCOMPARE(qToUnderlying(takeEnums->takenUInt16), quint16(4660));
+    QCOMPARE(qToUnderlying(takeEnums->takenInt64), qint64(-2));
+}
+
+void tst_QmlCppCodegen::takeEnums_data()
+{
+    QTest::addColumn<bool>("fromNumbers");
+    QTest::addRow("enums") << false;
+    QTest::addRow("numbers") << true;
 }
 
 void tst_QmlCppCodegen::takeNumbers()

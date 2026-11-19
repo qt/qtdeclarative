@@ -2792,8 +2792,11 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, QMetaType metaType, voi
     }
 
     if (metaType.flags() & QMetaType::IsEnumeration) {
-        *reinterpret_cast<int *>(data) = value.toInt32();
-        return true;
+        // underlyingType() is invalid only for enumerations of unsupported size.
+        // Those won't be useful anyway.
+        if (const QMetaType underlyingType = metaType.underlyingType(); underlyingType.isValid())
+            return metaTypeFromJS(value, underlyingType, data);
+        return false;
     }
 
     if (const QV4::QmlListWrapper *wrapper = value.as<QV4::QmlListWrapper>()) {

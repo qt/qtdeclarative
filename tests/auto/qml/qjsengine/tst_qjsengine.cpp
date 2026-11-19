@@ -418,6 +418,7 @@ private slots:
     void evalInGlobalContext();
     void truncateArrayData();
     void rebuildInternalClassIndexOnResurrectedMember();
+    void metaTypeFromJSEnumWidth();
 
 public:
     Q_INVOKABLE QJSValue throwingCppMethod1();
@@ -7700,6 +7701,57 @@ void tst_QJSEngine::rebuildInternalClassIndexOnResurrectedMember()
     )")); // should not crash
     QVERIFY2(!result.isError(), qPrintable(result.toString()));
     QCOMPARE(result.toString(), QStringLiteral("42,254,255"));
+}
+
+namespace {
+enum class EnumInt8 : qint8 { Value = -2 };
+enum class EnumUInt8 : quint8 { Value = 200 };
+enum class EnumInt16 : qint16 { Value = -300 };
+enum class EnumUInt16 : quint16 { Value = 0x1234 };
+enum class EnumInt32 : qint32 { Value = -70000 };
+enum class EnumUInt32 : quint32 { Value = 0xfffffff0u };
+enum class EnumInt64 : qint64 { Value = -(qint64(1) << 40) };
+enum class EnumUInt64 : quint64 { Value = quint64(1) << 40 };
+
+template <typename Enum>
+void verifyEnumFromJS(QV4::ExecutionEngine *engine)
+{
+    const Enum expected = Enum::Value;
+    QV4::Scope scope(engine);
+    QV4::ScopedValue value(scope, QV4::Value::fromDouble(double(qToUnderlying(expected))));
+
+    // The guard bytes directly follow the enum and must stay untouched.
+    struct
+    {
+        Enum value;
+        uchar guard[8];
+    } buffer;
+    memset(&buffer, 0xaa, sizeof(buffer));
+
+    QVERIFY(QV4::ExecutionEngine::metaTypeFromJS(value, QMetaType::fromType<Enum>(),
+                                                 &buffer.value));
+    QCOMPARE(qToUnderlying(buffer.value), qToUnderlying(expected));
+    for (uchar guard : buffer.guard)
+        QCOMPARE(guard, uchar(0xaa));
+}
+} // namespace
+
+void tst_QJSEngine::metaTypeFromJSEnumWidth()
+{
+    QJSEngine engine;
+    QV4::ExecutionEngine *v4 = engine.handle();
+
+    using Check = void (*)(QV4::ExecutionEngine *);
+    const Check checks[] = {
+        &verifyEnumFromJS<EnumInt8>,   &verifyEnumFromJS<EnumUInt8>,  &verifyEnumFromJS<EnumInt16>,
+        &verifyEnumFromJS<EnumUInt16>, &verifyEnumFromJS<EnumInt32>,  &verifyEnumFromJS<EnumUInt32>,
+        &verifyEnumFromJS<EnumInt64>,  &verifyEnumFromJS<EnumUInt64>,
+    };
+    for (Check check : checks) {
+        check(v4);
+        if (QTest::currentTestFailed())
+            return;
+    }
 }
 
 QTEST_MAIN(tst_QJSEngine)
