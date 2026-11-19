@@ -435,7 +435,6 @@ private:
 
 public:
     void collectFromJSStack(MarkStack *markStack) const;
-    void sweep(bool lastSweep = false);
     void cleanupDeletedQObjectWrappersInSweep();
     bool isAboveUnmanagedHeapLimit()
     {
@@ -446,6 +445,7 @@ public:
         return aboveUnmanagedHeapLimit;
     }
 private:
+    void lastSweep();
     bool shouldRunGC() const;
 
     HeapItem *allocate(BlockAllocator *allocator, std::size_t size)

@@ -1188,7 +1188,7 @@ void MemoryManager::setGCTimeLimit(int timeMs)
     gcStateMachine->timeLimit = std::chrono::milliseconds(timeMs);
 }
 
-void MemoryManager::sweep(bool lastSweep)
+void MemoryManager::lastSweep()
 {
 
     for (PersistentValueStorage::Iterator it = m_weakValues->begin(); it != m_weakValues->end(); ++it) {
@@ -1198,7 +1198,7 @@ void MemoryManager::sweep(bool lastSweep)
         // we need to call destroyObject on qobjectwrappers now, so that they can emit the destroyed
         // signal before we start sweeping the heap
         if (QObjectWrapper *qobjectWrapper = (*it).as<QObjectWrapper>()) {
-            qobjectWrapper->destroyObject(lastSweep);
+            qobjectWrapper->destroyObject(/*lastSweep = */ true);
         }
     }
 
@@ -1206,13 +1206,6 @@ void MemoryManager::sweep(bool lastSweep)
     freeWeakSets(this);
 
     cleanupDeletedQObjectWrappersInSweep();
-
-    if (!lastSweep) {
-        engine->identifierTable->sweep();
-        blockAllocator.sweep(/*classCountPtr*/);
-        hugeItemAllocator.sweep();
-        icAllocator.sweep(/*classCountPtr*/);
-    }
 
     // reset all black bits
     blockAllocator.resetBlackBits();
@@ -1449,7 +1442,7 @@ MemoryManager::~MemoryManager()
         icAllocator.resetBlackBits();
     }
     // then sweep
-    sweep(/*lastSweep*/true);
+    lastSweep();
 
     blockAllocator.freeAll();
     hugeItemAllocator.freeAll();
