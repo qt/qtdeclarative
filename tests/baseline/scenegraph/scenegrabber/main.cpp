@@ -279,12 +279,18 @@ int main(int argc, char *argv[])
                 QGuiApplication::exit(2);
             }
 
-            appWindow->resize(itemObject->size().toSize());
-
             // Use application window as visual parent to the loaded component
             v.setApplicationWindow(appWindow);
             itemObject->setParentItem(v.appWindow()->contentItem());
             itemObject->setParent(v.appWindow());
+
+            // The item can still resize once polished in the window
+            const auto resizeWindow = [appWindow, itemObject] {
+                appWindow->resize(itemObject->size().toSize());
+            };
+            resizeWindow();
+            QObject::connect(itemObject, &QQuickItem::widthChanged, appWindow, resizeWindow);
+            QObject::connect(itemObject, &QQuickItem::heightChanged, appWindow, resizeWindow);
         }
         auto *wrappedScreen = new QQuickScreenInfo(engine, preferredScreen);
         v.appWindow()->setScreen(wrappedScreen);
