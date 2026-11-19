@@ -120,7 +120,7 @@ struct Module {
     QList<Context *> blocks;
     QList<Class> classes;
     QList<TemplateObject> templateObjects;
-    Context *rootContext;
+    Context *rootContext = nullptr;
     QString fileName;
     QString finalUrl;
     QDateTime sourceTimeStamp;
