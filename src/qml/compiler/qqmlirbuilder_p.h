@@ -294,8 +294,7 @@ struct Function
 
 struct Q_QML_COMPILER_EXPORT CompiledFunctionOrExpression
 {
-    CompiledFunctionOrExpression()
-    {}
+    CompiledFunctionOrExpression() : nameIndex(0), isQmlFunction(0) { }
 
     QQmlJS::AST::Node *parentNode = nullptr; // FunctionDeclaration, Statement or Expression
     QQmlJS::AST::Node *node = nullptr; // FunctionDeclaration, Statement or Expression
