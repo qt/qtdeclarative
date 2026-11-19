@@ -317,6 +317,9 @@ bool LinterVisitor::visit(QQmlJS::AST::UiEnumDeclaration *uied)
     return true;
 }
 
+// Handling potential fallthrough in inherently undecidable in the general case,
+// since we cannot reliably determine whether subprograms return. Avoid adding
+// new features with additional heuristics.
 static bool allCodePathsReturnInsideCase(Node *statement)
 {
     using namespace AST;
