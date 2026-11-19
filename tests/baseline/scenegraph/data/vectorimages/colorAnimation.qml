@@ -19,7 +19,7 @@ Rectangle {
             VectorImage {
                 layer.enabled: true
                 layer.samples: 4
-                source: "../shared/svg/simple_animatecolor.svg"
+                source: "../shared/svg/simple_animateColor.svg"
                 preferredRendererType: renderer
             }
         }
