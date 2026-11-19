@@ -302,12 +302,14 @@ void QQuickPopupPositioner::repositionPopupWindow()
         return;
     }
 
+    QQuickPopupItem *popupItem = static_cast<QQuickPopupItem *>(m_popup->popupItem());
+    p->popupItem->setPosition(p->windowInsetsTopLeft());
+
     // Wayland does server side repositioning.
     // All other platforms handle the repositioning on the client side.
     if (QGuiApplication::platformName().startsWith(QLatin1String("wayland")))
         return;
 
-    QQuickPopupItem *popupItem = static_cast<QQuickPopupItem *>(m_popup->popupItem());
     const QQuickItem *centerInParent = p->anchors ? p->getAnchors()->centerIn() : nullptr;
     const QQuickOverlay *centerInOverlay = qobject_cast<const QQuickOverlay *>(centerInParent);
     bool skipFittingStep = false;
@@ -366,7 +368,6 @@ void QQuickPopupPositioner::repositionPopupWindow()
     }
 
     p->popupWindow->setPosition(rect.x(), rect.y());
-    p->popupItem->setPosition(p->windowInsetsTopLeft());
 }
 
 void QQuickPopupPositioner::itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &)

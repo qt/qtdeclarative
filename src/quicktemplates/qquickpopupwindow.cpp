@@ -147,8 +147,22 @@ void QQuickPopupWindow::resizeEvent(QResizeEvent *e)
     }
 
     const QMarginsF windowInsets = popupPrivate->windowInsets();
-    d->m_popupItem->setWidth(e->size().width() - windowInsets.left() - windowInsets.right());
-    d->m_popupItem->setHeight(e->size().height() - windowInsets.top() - windowInsets.bottom());
+
+    const QRectF popupItemGeometry(windowInsets.left(),
+                                   windowInsets.top(),
+                                   e->size().width() - windowInsets.left() - windowInsets.right(),
+                                   e->size().height() - windowInsets.top() - windowInsets.bottom());
+
+    d->m_popupItem->setWidth(popupItemGeometry.width());
+    d->m_popupItem->setHeight(popupItemGeometry.height());
+
+#if QT_CONFIG(wayland)
+    if (popupPrivate->extendedWindowType != QNativeInterface::Private::QWaylandWindow::Default
+        && QGuiApplication::platformName().startsWith(QLatin1String("wayland"))) {
+        QRegion inputRegion(popupItemGeometry.toRect());
+        setMask(inputRegion);
+    }
+#endif
 
     // and restore the actual x and y afterwards
     popupPrivate->x = oldX;
@@ -198,8 +212,11 @@ void QQuickPopupWindowPrivate::setVisible(bool visible)
 #if QT_CONFIG(wayland)
     Q_Q(QQuickPopupWindow);
     // The parent control geoemtry is used by the wayland compositor when flipping menus and comboboxes.
-    if (auto waylandWindow = dynamic_cast<QNativeInterface::Private::QWaylandWindow *>(platformWindow); waylandWindow && visible)
+    if (auto waylandWindow = dynamic_cast<QNativeInterface::Private::QWaylandWindow *>(platformWindow); waylandWindow && visible) {
         waylandWindow->setParentControlGeometry(q->parentControlGeometry());
+        QQuickPopupPrivate *popupPrivate = QQuickPopupPrivate::get(m_popup);
+        waylandWindow->setCustomMargins(popupPrivate->windowInsets().toMargins());
+    }
 #endif
 
     QQuickWindowQmlImplPrivate::setVisible(visible);
@@ -414,8 +431,10 @@ bool QQuickPopupWindow::event(QEvent *e)
     if (e->type() == QEvent::PlatformSurface && static_cast<QPlatformSurfaceEvent *>(e)->surfaceEventType() == QPlatformSurfaceEvent::SurfaceCreated) {
 #if QT_CONFIG(wayland)
         if (auto *waylandWindow = dynamic_cast<QNativeInterface::Private::QWaylandWindow *>(handle())) {
-            waylandWindow->setExtendedWindowType(QQuickPopupPrivate::get(d->m_popup)->extendedWindowType);
+            auto *popupPrivate = QQuickPopupPrivate::get(d->m_popup);
+            waylandWindow->setExtendedWindowType(popupPrivate->extendedWindowType);
             waylandWindow->setParentControlGeometry(parentControlGeometry());
+            waylandWindow->setCustomMargins(popupPrivate->windowInsets().toMargins());
         }
 #endif
 #if QT_CONFIG(xcb)

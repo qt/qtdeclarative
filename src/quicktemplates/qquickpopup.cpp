@@ -688,13 +688,6 @@ bool QQuickPopupPrivate::handleHoverEvent(QQuickItem *item, QHoverEvent *event)
 
 QMarginsF QQuickPopupPrivate::windowInsets() const
 {
-    // Don't honor negative insets on wayland. If we do,
-    // it would impact the popup window's geometry.
-    // We assume that the compositor will draw window decorations.
-#if QT_CONFIG(wayland)
-    if (QGuiApplication::platformName().startsWith(QLatin1String("wayland")))
-        return {0, 0, 0, 0};
-#endif
     Q_Q(const QQuickPopup);
     // If the popup has negative insets, it means that its background is pushed
     // outside the bounds of the popup. This is fine when the popup is an item in the
@@ -1249,8 +1242,14 @@ void QQuickPopupPrivate::adjustPopupItemParentAndWindow()
                 popupWindow = new QQuickPopupWindow(q, ancestor);
                 // Changing the visual parent can cause the popup item's implicit width/height to change.
                 // We store the initial size here first, to ensure that we're resizing the window to the correct size.
-                const qreal initialWidth = popupItem->width() + windowInsets().left() + windowInsets().right();
-                const qreal initialHeight = popupItem->height() + windowInsets().top() + windowInsets().bottom();
+                QMarginsF effectiveInsets = windowInsets();
+#if QT_CONFIG(wayland)
+                // On wayland the inset is added by the window through custom margins.
+                if (QGuiApplication::platformName().startsWith(QLatin1String("wayland")))
+                    effectiveInsets = QMarginsF();
+#endif
+                const qreal initialWidth = popupItem->width() + effectiveInsets.left() + effectiveInsets.right();
+                const qreal initialHeight = popupItem->height() + effectiveInsets.top() + effectiveInsets.bottom();
                 popupItem->setParentItem(popupWindow->contentItem());
                 popupWindow->resize(qCeil(initialWidth), qCeil(initialHeight));
                 if (popupWndModality != Qt::NonModal)
