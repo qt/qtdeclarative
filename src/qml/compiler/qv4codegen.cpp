@@ -3920,15 +3920,18 @@ bool Codegen::visit(LabelledStatement *ast)
 
 void Codegen::emitReturn(const Reference &expr)
 {
-    ControlFlow::UnwindTarget target = controlFlow ? controlFlow->unwindTarget(ControlFlow::Return) : ControlFlow::UnwindTarget();
-    if (target.linkLabel.isValid() && (target.unwindLevel || target.completionRegister >= 0)) {
-        Q_ASSERT(_returnAddress >= 0);
-        (void) expr.storeOnStack(_returnAddress);
-        controlFlow->unwind(target);
-    } else {
-        expr.loadInAccumulator();
-        bytecodeGenerator->addInstruction(Instruction::Ret());
+    if (controlFlow) {
+        const ControlFlow::UnwindTarget target = controlFlow->unwindTarget(ControlFlow::Return);
+        if (target.linkLabel.isValid() && (target.unwindLevel || target.completionRegister >= 0)) {
+            Q_ASSERT(_returnAddress >= 0);
+            (void) expr.storeOnStack(_returnAddress);
+            controlFlow->unwind(target);
+            return;
+        }
     }
+
+    expr.loadInAccumulator();
+    bytecodeGenerator->addInstruction(Instruction::Ret());
 }
 
 bool Codegen::visit(ReturnStatement *ast)
