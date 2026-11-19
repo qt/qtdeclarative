@@ -69,7 +69,7 @@ public:
 
         appwindow = qobject_cast<QQuickApplicationWindow *>(window);
         if (preferAppWindow && !justShow)
-            QObject::connect(appwindow, &QQuickWindow::afterRendering, this, &GrabbingView::startGrabbing);
+            QObject::connect(appwindow, &QQuickWindow::afterRendering, this, &GrabbingView::startGrabbing, Qt::SingleShotConnection);
     }
     QQuickApplicationWindow* appWindow() { return appwindow; }
 
