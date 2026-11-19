@@ -12,6 +12,7 @@
 
 #include <private/qcore_mac_p.h>
 #include <private/qcoregraphics_p.h>
+#include <private/qfontengine_p.h>
 #include <private/qguiapplication_p.h>
 #include <private/qmacstyle_p.h>
 #include <private/qqc2qstylehelper_p.h>
