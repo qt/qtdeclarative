@@ -22,6 +22,8 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
+struct Page;
+
 struct Q_QML_EXPORT PersistentValueStorage
 {
     PersistentValueStorage(ExecutionEngine *engine);
@@ -37,11 +39,11 @@ struct Q_QML_EXPORT PersistentValueStorage
     void mark(MarkStack *markStack);
 
     struct Iterator {
-        Iterator(void *p, int idx);
+        Iterator(Page *p, int idx);
         Iterator(const Iterator &o);
         Iterator & operator=(const Iterator &o);
         ~Iterator();
-        void *p;
+        Page *p;
         int index;
         Iterator &operator++();
         bool operator !=(const Iterator &other) {
@@ -57,8 +59,8 @@ struct Q_QML_EXPORT PersistentValueStorage
     static ExecutionEngine *getEngine(const Value *v);
 
     ExecutionEngine *engine;
-    void *firstPage;
-    void *firstPartialPage = nullptr;
+    Page *firstPage = nullptr;
+    Page *firstPartialPage = nullptr;
 private:
     static void freeUnchecked(Value *v);
 };

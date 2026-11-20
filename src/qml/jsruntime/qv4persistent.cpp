@@ -8,9 +8,9 @@
 #include "qv4qobjectwrapper_p.h"
 #include "PageAllocation.h"
 
-using namespace QV4;
+QT_BEGIN_NAMESPACE
 
-namespace {
+namespace QV4 {
 
 struct Page;
 struct Header {
@@ -37,8 +37,8 @@ Page *getPage(const Value *val) {
 
 QML_NEARLY_ALWAYS_INLINE void insertInFront(PersistentValueStorage *storage, Page *p)
 {
-    p->header.next = reinterpret_cast<Page *>(storage->firstPage);
-    p->header.prev = reinterpret_cast<Page **>(&storage->firstPage);
+    p->header.next = storage->firstPage;
+    p->header.prev = &storage->firstPage;
     if (p->header.next)
         p->header.next->header.prev = &p->header.next;
     storage->firstPage = p;
@@ -65,7 +65,7 @@ Page *allocatePage(PersistentValueStorage *storage)
     p->header.refCount = 0;
     p->header.freeList = 0;
     insertInFront(storage, p);
-    p->header.nextPartial = static_cast<Page *>(storage->firstPartialPage);
+    p->header.nextPartial = storage->firstPartialPage;
     storage->firstPartialPage = p;
     for (int i = 0; i < kEntriesPerPage - 1; ++i) {
         p->values[i] = Encode(i + 1);
@@ -88,56 +88,48 @@ static void releasePage(Page *p)
     }
 }
 
-
-}
-
-
-PersistentValueStorage::Iterator::Iterator(void *p, int idx)
+PersistentValueStorage::Iterator::Iterator(Page *p, int idx)
     : p(p), index(idx)
 {
-    Page *page = static_cast<Page *>(p);
-    if (page)
-        ++page->header.refCount;
+    if (p)
+        ++p->header.refCount;
 }
 
 PersistentValueStorage::Iterator::Iterator(const PersistentValueStorage::Iterator &o)
     : p(o.p), index(o.index)
 {
-    Page *page = static_cast<Page *>(p);
-    if (page)
-        ++page->header.refCount;
+    if (p)
+        ++p->header.refCount;
 }
 
 PersistentValueStorage::Iterator &PersistentValueStorage::Iterator::operator=(const PersistentValueStorage::Iterator &o)
 {
-    Page *page = static_cast<Page *>(p);
-    if (page)
-        releasePage(page);
+    if (p)
+        releasePage(p);
     p = o.p;
     index = o.index;
-    page = static_cast<Page *>(p);
-    if (page)
-        ++page->header.refCount;
+    if (p)
+        ++p->header.refCount;
 
     return *this;
 }
 
 PersistentValueStorage::Iterator::~Iterator()
 {
-    if (Page *page = static_cast<Page *>(p))
-        releasePage(page);
+    if (p)
+        releasePage(p);
 }
 
 PersistentValueStorage::Iterator &PersistentValueStorage::Iterator::operator++() {
     while (p) {
         while (index < kEntriesPerPage - 1) {
             ++index;
-            if (!static_cast<Page *>(p)->values[index].isEmpty())
+            if (!p->values[index].isEmpty())
                 return *this;
         }
         index = -1;
-        Page *next = static_cast<Page *>(p)->header.next;
-        releasePage(static_cast<Page *>(p));
+        Page *next = p->header.next;
+        releasePage(p);
         p = next;
         if (next)
             ++next->header.refCount;
@@ -148,7 +140,7 @@ PersistentValueStorage::Iterator &PersistentValueStorage::Iterator::operator++()
 
 Value &PersistentValueStorage::Iterator::operator *()
 {
-    return static_cast<Page *>(p)->values[index];
+    return p->values[index];
 }
 
 PersistentValueStorage::PersistentValueStorage(ExecutionEngine *engine)
@@ -160,8 +152,7 @@ PersistentValueStorage::PersistentValueStorage(ExecutionEngine *engine)
 PersistentValueStorage::~PersistentValueStorage()
 {
     deallocateEmptyPages();
-    Page *p = static_cast<Page *>(firstPage);
-    while (p) {
+    for (Page *p = firstPage; p;) {
         for (int i = 0; i < kEntriesPerPage; ++i) {
             if (!p->values[i].isEmpty())
                 p->values[i] = Encode::undefined();
@@ -179,7 +170,7 @@ PersistentValueStorage::~PersistentValueStorage()
 
 Value *PersistentValueStorage::allocate()
 {
-    Page *p = static_cast<Page *>(firstPartialPage);
+    Page *p = firstPartialPage;
     if (!p)
         p = allocatePage(this);
 
@@ -207,7 +198,7 @@ void PersistentValueStorage::freeUnchecked(Value *v)
     // around, and PersistenValueStorage::free() is static. Such a page cannot
     // be linked into the list of partial pages anymore.
     if (PersistentValueStorage *storage = (p->header.freeList == -1) ? p->header.storage : nullptr)
-        p->header.nextPartial = static_cast<Page *>(std::exchange(storage->firstPartialPage, p));
+        p->header.nextPartial = std::exchange(storage->firstPartialPage, p);
 
     *v = Encode(p->header.freeList);
     p->header.freeList = v - p->values;
@@ -216,14 +207,11 @@ void PersistentValueStorage::freeUnchecked(Value *v)
 
 void PersistentValueStorage::mark(MarkStack *markStack)
 {
-    Page *p = static_cast<Page *>(firstPage);
-    while (p) {
+    for (Page *p = firstPage; p; p = p->header.next) {
         for (int i = 0; i < kEntriesPerPage; ++i) {
             if (Managed *m = p->values[i].as<Managed>())
                 m->mark(markStack);
         }
-
-        p = p->header.next;
     }
 }
 
@@ -236,7 +224,7 @@ void PersistentValueStorage::mark(MarkStack *markStack)
 */
 void PersistentValueStorage::deallocateEmptyPages()
 {
-    Page **link = reinterpret_cast<Page **>(&firstPartialPage);
+    Page **link = &firstPartialPage;
 
     while (Page *p = *link) {
         // refCount == 0 coincides with being empty here, as nothing should hold an iterator
@@ -480,3 +468,6 @@ void WeakValue::free()
     val = nullptr;
 }
 
+} // namespace QV4
+
+QT_END_NAMESPACE
