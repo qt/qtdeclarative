@@ -16,8 +16,10 @@ struct Page;
 struct Header {
     WTF::PageAllocation alloc;
     ExecutionEngine *engine;
+    PersistentValueStorage *storage;
     Page **prev;
     Page *next;
+    Page *nextPartial;
     int refCount;
     int freeList;
 };
@@ -58,16 +60,32 @@ Page *allocatePage(PersistentValueStorage *storage)
     Q_ASSERT(!((quintptr)p & (WTF::pageSize() - 1)));
 
     p->header.engine = storage->engine;
+    p->header.storage = storage;
     p->header.alloc = page;
     p->header.refCount = 0;
     p->header.freeList = 0;
     insertInFront(storage, p);
+    p->header.nextPartial = static_cast<Page *>(storage->firstPartialPage);
+    storage->firstPartialPage = p;
     for (int i = 0; i < kEntriesPerPage - 1; ++i) {
         p->values[i] = Encode(i + 1);
     }
     p->values[kEntriesPerPage - 1] = Encode(-1);
 
     return p;
+}
+
+static void releasePage(Page *p)
+{
+    if (--p->header.refCount)
+        return;
+
+    // Dangling pages aren't handled by deallocateEmptyPages(). These are pages that outlive
+    // their PersistentValueStorage. We have to deallocate them right away.
+    if (!p->header.storage) {
+        unlink(p);
+        p->header.alloc.deallocate();
+    }
 }
 
 
@@ -93,8 +111,8 @@ PersistentValueStorage::Iterator::Iterator(const PersistentValueStorage::Iterato
 PersistentValueStorage::Iterator &PersistentValueStorage::Iterator::operator=(const PersistentValueStorage::Iterator &o)
 {
     Page *page = static_cast<Page *>(p);
-    if (page && !--page->header.refCount)
-        freePage(p);
+    if (page)
+        releasePage(page);
     p = o.p;
     index = o.index;
     page = static_cast<Page *>(p);
@@ -106,9 +124,8 @@ PersistentValueStorage::Iterator &PersistentValueStorage::Iterator::operator=(co
 
 PersistentValueStorage::Iterator::~Iterator()
 {
-    Page *page = static_cast<Page *>(p);
-    if (page && !--page->header.refCount)
-        freePage(page);
+    if (Page *page = static_cast<Page *>(p))
+        releasePage(page);
 }
 
 PersistentValueStorage::Iterator &PersistentValueStorage::Iterator::operator++() {
@@ -120,8 +137,7 @@ PersistentValueStorage::Iterator &PersistentValueStorage::Iterator::operator++()
         }
         index = -1;
         Page *next = static_cast<Page *>(p)->header.next;
-        if (!--static_cast<Page *>(p)->header.refCount)
-            freePage(p);
+        releasePage(static_cast<Page *>(p));
         p = next;
         if (next)
             ++next->header.refCount;
@@ -143,7 +159,7 @@ PersistentValueStorage::PersistentValueStorage(ExecutionEngine *engine)
 
 PersistentValueStorage::~PersistentValueStorage()
 {
-    clearFreePageHint();
+    deallocateEmptyPages();
     Page *p = static_cast<Page *>(firstPage);
     while (p) {
         for (int i = 0; i < kEntriesPerPage; ++i) {
@@ -152,8 +168,10 @@ PersistentValueStorage::~PersistentValueStorage()
         }
         Page *n = p->header.next;
         p->header.engine = nullptr;
+        p->header.storage = nullptr;
         p->header.prev = nullptr;
         p->header.next = nullptr;
+        p->header.nextPartial = nullptr;
         Q_ASSERT(p->header.refCount);
         p = n;
     }
@@ -161,30 +179,14 @@ PersistentValueStorage::~PersistentValueStorage()
 
 Value *PersistentValueStorage::allocate()
 {
-    Page *p = static_cast<Page *>(freePageHint);
-    if (p && p->header.freeList == -1)
-        p = static_cast<Page *>(firstPage);
-    while (p) {
-        if (p->header.freeList != -1)
-            break;
-        p = p->header.next;
-    }
+    Page *p = static_cast<Page *>(firstPartialPage);
     if (!p)
         p = allocatePage(this);
 
     Value *v = p->values + p->header.freeList;
     p->header.freeList = v->int_32();
-
-    if (p->header.freeList != -1 && p != freePageHint) {
-        if (auto oldHint = static_cast<Page *>(freePageHint)) {
-            oldHint->header.refCount--;
-            // no need to free - if the old page were unused,
-            // we would have used it to serve the allocation
-            Q_ASSERT(oldHint->header.refCount);
-        }
-        freePageHint = p;
-        p->header.refCount++;
-    }
+    if (p->header.freeList == -1)
+        firstPartialPage = p->header.nextPartial;
 
     ++p->header.refCount;
 
@@ -198,10 +200,18 @@ void PersistentValueStorage::freeUnchecked(Value *v)
     Q_ASSERT(v);
     Page *p = getPage(v);
 
+    // If the page was full, a first entry is freed up here. Link the page into
+    // the list of partial pages.
+    // It's generally possible to encounter a "floating" page, though. The
+    // PersistentValueStorage dtor has provisions for keeping non-empty pages
+    // around, and PersistenValueStorage::free() is static. Such a page cannot
+    // be linked into the list of partial pages anymore.
+    if (PersistentValueStorage *storage = (p->header.freeList == -1) ? p->header.storage : nullptr)
+        p->header.nextPartial = static_cast<Page *>(std::exchange(storage->firstPartialPage, p));
+
     *v = Encode(p->header.freeList);
     p->header.freeList = v - p->values;
-    if (!--p->header.refCount)
-        freePage(p);
+    releasePage(p);
 }
 
 void PersistentValueStorage::mark(MarkStack *markStack)
@@ -217,29 +227,35 @@ void PersistentValueStorage::mark(MarkStack *markStack)
     }
 }
 
-void PersistentValueStorage::clearFreePageHint()
+/*!
+    \internal
+    Unmaps pages that hold neither values nor iterators. Pages that become empty
+    are not unmapped right away, so that allocating and freeing a value in a
+    loop doesn't map and unmap a page each time. Instead, the garbage collector
+    calls this at the end of each cycle.
+*/
+void PersistentValueStorage::deallocateEmptyPages()
 {
-    if (!freePageHint)
-        return;
-    auto page = static_cast<Page *>(freePageHint);
-    if (!--page->header.refCount)
-        freePage(page);
-    freePageHint = nullptr;
+    Page **link = reinterpret_cast<Page **>(&firstPartialPage);
 
+    while (Page *p = *link) {
+        // refCount == 0 coincides with being empty here, as nothing should hold an iterator
+        // to a page at this point
+        if (p->header.refCount) {
+            link = &p->header.nextPartial;
+            continue;
+        }
+
+        *link = p->header.nextPartial;
+        unlink(p);
+        p->header.alloc.deallocate();
+    }
 }
 
 ExecutionEngine *PersistentValueStorage::getEngine(const Value *v)
 {
     return getPage(v)->header.engine;
 }
-
-void PersistentValueStorage::freePage(void *page)
-{
-    Page *p = static_cast<Page *>(page);
-    unlink(p);
-    p->header.alloc.deallocate();
-}
-
 
 PersistentValue::PersistentValue(const PersistentValue &other)
     : val(nullptr)
