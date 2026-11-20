@@ -198,13 +198,13 @@ void QSGRhiDistanceFieldGlyphCache::createTexture(TextureInfo *texInfo,
                                                       int height)
 {
     QByteArray zeroBuf(width * height, 0);
-    createTexture(texInfo, width, height, zeroBuf.constData());
+    createTexture(texInfo, width, height, zeroBuf);
 }
 
 void QSGRhiDistanceFieldGlyphCache::createTexture(TextureInfo *texInfo,
                                                   int width,
                                                   int height,
-                                                  const void *pixels)
+                                                  const QByteArray &pixels)
 {
     QRhiTexture *newTexture = m_rhi->newTexture(QRhiTexture::RED_OR_ALPHA8, QSize(width, height), 1, QRhiTexture::UsedAsTransferSource);
     if (!newTexture->create()) {
@@ -226,7 +226,7 @@ void QSGRhiDistanceFieldGlyphCache::createTexture(TextureInfo *texInfo,
             texInfo->image = QA8Image();
             return;
         } else {
-            memcpy(texInfo->image.bits(), pixels, width * height);
+            memcpy(texInfo->image.bits(), pixels.constData(), width * height);
         }
     }
 
@@ -234,7 +234,7 @@ void QSGRhiDistanceFieldGlyphCache::createTexture(TextureInfo *texInfo,
     texInfo->size = QSize(width, height);
 
     QRhiResourceUpdateBatch *resourceUpdates = m_rc->glyphCacheResourceUpdates();
-    QRhiTextureSubresourceUploadDescription subresDesc(pixels, width * height);
+    QRhiTextureSubresourceUploadDescription subresDesc(pixels);
     subresDesc.setSourceSize(QSize(width, height));
     resourceUpdates->uploadTexture(texInfo->texture, QRhiTextureUploadEntry(0, 0, subresDesc));
 }
@@ -552,7 +552,8 @@ bool QSGRhiDistanceFieldGlyphCache::loadPregeneratedCache(const QRawFont &font)
                 return false;
             }
 
-            createTexture(texInfo, width, height, textureData);
+            createTexture(texInfo, width, height,
+                          QByteArray(reinterpret_cast<const char *>(textureData), qsizetype(size)));
             textureData += size;
 
             if (!texInfo->texture)

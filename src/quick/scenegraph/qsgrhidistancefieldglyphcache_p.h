@@ -66,7 +66,7 @@ private:
         TextureInfo(const QRect &preallocRect = QRect()) : texture(nullptr), allocatedArea(preallocRect) { }
     };
 
-    void createTexture(TextureInfo *texInfo, int width, int height, const void *pixels);
+    void createTexture(TextureInfo *texInfo, int width, int height, const QByteArray &pixels);
     void createTexture(TextureInfo *texInfo, int width, int height);
     void resizeTexture(TextureInfo *texInfo, int width, int height);
 
