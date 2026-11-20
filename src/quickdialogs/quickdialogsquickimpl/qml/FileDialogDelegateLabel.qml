@@ -39,6 +39,7 @@ Item {
             }
             Text {
                 text: root.delegate.fileName
+                textFormat: Text.PlainText
                 color: root.delegate.icon.color
                 y: (parent.height - height) / 2
             }

@@ -45,6 +45,7 @@ FileDialogImpl {
 
         contentItem: Label {
             text: qsTr("“%1” already exists.\nDo you want to replace it?").arg(control.fileName)
+            textFormat: Text.PlainText
             wrapMode: Text.WordWrap
         }
 

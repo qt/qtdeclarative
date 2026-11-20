@@ -48,6 +48,7 @@ FileDialogImpl {
             width: overwriteConfirmationDialogLastTextLine.width
             Label {
                 text: control.fileName + " already exists."
+                textFormat: Text.PlainText
             }
             Label {
                 id: overwriteConfirmationDialogLastTextLine
