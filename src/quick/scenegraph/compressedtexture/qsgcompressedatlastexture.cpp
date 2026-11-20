@@ -74,8 +74,7 @@ void Atlas::enqueueTextureUpload(QSGRhiAtlasTexture::TextureBase *t, QRhiResourc
 
     const QRect &r = texture->atlasSubRect();
 
-    QRhiTextureSubresourceUploadDescription subresDesc(texture->data().constData(),
-                                                       texture->sizeInBytes());
+    QRhiTextureSubresourceUploadDescription subresDesc(texture->data());
     subresDesc.setSourceSize(texture->textureSize());
     subresDesc.setDestinationTopLeft(r.topLeft());
 
