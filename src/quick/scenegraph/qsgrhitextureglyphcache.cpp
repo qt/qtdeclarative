@@ -44,7 +44,7 @@ QRhiTexture *QSGRhiTextureGlyphCache::createEmptyTexture(QRhiTexture::Format for
         data.fill(0, m_size.width() * m_size.height());
     else
         data.fill(0, m_size.width() * m_size.height() * 4);
-    QRhiTextureSubresourceUploadDescription subresDesc(data.constData(), data.size());
+    QRhiTextureSubresourceUploadDescription subresDesc(data);
     subresDesc.setSourceSize(m_size);
     resourceUpdates->uploadTexture(t, QRhiTextureUploadEntry(0, 0, subresDesc));
 
