@@ -957,6 +957,9 @@ GCState doSweep(GCStateMachine *that, ExtraData &)
 
     mm->updateUnmanagedHeapSizeGCLimit();
 
+    mm->m_persistentValues->deallocateEmptyPages();
+    mm->m_weakValues->deallocateEmptyPages();
+
     return GCState::Invalid;
 }
 

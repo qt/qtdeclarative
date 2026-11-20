@@ -2860,8 +2860,11 @@ void tst_QJSValue::deleteFromDifferentThread()
     thread->start();
     condition.wait(&mutex);
     QTRY_VERIFY(thread->isFinished());
-    storage.clearFreePageHint();
-    QTRY_COMPARE(storage.firstPage, nullptr);
+
+    // QJSValuePrivate::free() uses QMetaObject::invokeMethod() across thread boundaries
+    // to do its work. The resulting message may not have arrived at this point, and the
+    // page may not be empty yet. deallocateEmptyPages() in QTRY_* loop to account for it.
+    QTRY_VERIFY((storage.deallocateEmptyPages(), storage.firstPage == nullptr));
 #endif
 }
 

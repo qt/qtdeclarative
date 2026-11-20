@@ -80,7 +80,7 @@ To facilitate incremental garbage collection, the gc algorithm is divided into t
 12. freeWeakMaps: An atomic phase in which we remove references to dead objects from live weak maps.
 13. freeWeakSets: Same as the last phase, but for weak sets
 14: handleQObjectWrappers: An atomic phase in which pending references to QObjectWrappers are cleared
-15. multiple sweep phases: Atomic phases, in which do the actual sweeping to free up memory. Note that this will also call destroy on objects marked with `V4_NEEDS_DESTROY`. There is one phase for the various allocators (identifier table, block allocator, huge item allocator, IC allocator)
+15. multiple sweep phases: Atomic phases, in which do the actual sweeping to free up memory. Note that this will also call destroy on objects marked with `V4_NEEDS_DESTROY`. There is one phase for the various allocators (identifier table, block allocator, huge item allocator, IC allocator). Empty pages in the persistent and weak value storages are also freed here.
 16. updateMetaData: Updates the black bitmaps, the usage statistics, and marks the gc cycle as done.
 17. invalid, the "not-running" stage of the state machine.
 
