@@ -303,9 +303,8 @@ void Atlas::enqueueTextureUpload(TextureBase *t, QRhiResourceUpdateBatch *resour
             src += bpl;
         }
     } else {
-        QRhiTextureSubresourceUploadDescription subresDesc(src, image.sizeInBytes());
+        QRhiTextureSubresourceUploadDescription subresDesc(image);
         subresDesc.setDestinationTopLeft(QPoint(r.x() + 1, r.y() + 1));
-        subresDesc.setSourceSize(QSize(r.width() - 2, r.height() - 2));
         entries.append(QRhiTextureUploadEntry(0, 0, subresDesc));
     }
 
