@@ -179,5 +179,5 @@ qt_internal_extend_target(tst_qmlcachegen CONDITION CMAKE_CROSSCOMPILING
 
 qt_internal_extend_target(tst_qmlcachegen
     DEFINES
-        AOTSTATS_MODULE_RCC_QMLCACHE_FOLDER="${CMAKE_CURRENT_BINARY_DIR}/.rcc/qmlcache"
+        RCC_QMLCACHE_FOLDER="${CMAKE_CURRENT_BINARY_DIR}/.rcc/qmlcache"
 )
