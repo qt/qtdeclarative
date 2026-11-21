@@ -930,6 +930,7 @@ QQmlJSAotFunction QQmlJSAotCompiler::doCompileAndRecordAotStats(
     QElapsedTimer timer {};
     timer.start();
     QQmlJSAotFunction result;
+    m_logger->setCurrentFunctionWasSkipped(false);
     if (!m_logger->currentFunctionHasCompileError())
         result = doCompile(context, function);
     auto elapsed = std::chrono::milliseconds { timer.elapsed() };

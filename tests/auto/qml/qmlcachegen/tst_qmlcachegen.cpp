@@ -101,6 +101,8 @@ private slots:
 
     void crash_data();
     void crash();
+
+    void skipReset();
 };
 
 // A wrapper around QQmlComponent to ensure the temporary reference counts
@@ -147,7 +149,8 @@ static bool generateCache(const QString &qmlFileName, QByteArray *capturedStderr
     return proc.exitCode() == 0;
 }
 
-static bool generateCpp(const QString &qmlFileName, QByteArray *capturedStderr = nullptr)
+static bool generateCpp(const QString &qmlFileName, QTemporaryDir *outputDir,
+                        QByteArray *capturedStderr = nullptr)
 {
     RETURN_FALSE_WHEN_CROSS_COMPILED
 
@@ -156,9 +159,10 @@ static bool generateCpp(const QString &qmlFileName, QByteArray *capturedStderr =
         proc.setProcessChannelMode(QProcess::ForwardedChannels);
     proc.setProgram(QLibraryInfo::path(QLibraryInfo::LibraryExecutablesPath)
                     + QLatin1String("/qmlcachegen"));
-    QTemporaryDir outputDir;
-    const QString outputFile = outputDir.filePath("output.cpp"_L1);
+
+    const QString outputFile = outputDir->filePath("output.cpp"_L1);
     proc.setArguments(QStringList{ "--resource-path"_L1, "qrc:/qt/qml/Crashes/testFile.qml"_L1,
+                                   "--dump-aot-stats"_L1, "--module-id=DummyModule"_L1,
                                    "-o"_L1, outputFile, qmlFileName });
     proc.start();
     if (!proc.waitForFinished())
@@ -1142,7 +1146,7 @@ void tst_qmlcachegen::aotstatsGeneration()
     QFETCH(QString, aotstatsFile);
     QFETCH(QList<FunctionEntry>, entries);
 
-    const QDir rccQmlcacheDir(AOTSTATS_MODULE_RCC_QMLCACHE_FOLDER);
+    const QDir rccQmlcacheDir(RCC_QMLCACHE_FOLDER);
     QFile file(rccQmlcacheDir.filePath(aotstatsFile));
     QVERIFY(file.exists());
     QVERIFY(file.open(QIODevice::Text | QIODevice::ReadOnly));
@@ -1190,7 +1194,24 @@ void tst_qmlcachegen::crash()
 
     QFile file(filePath);
     QVERIFY(file.exists());
-    QVERIFY(generateCpp(filePath));
+    QTemporaryDir dir;
+    QVERIFY(generateCpp(filePath, &dir));
+}
+
+void tst_qmlcachegen::skipReset()
+{
+    SKIP_WHEN_CROSS_COMPILED
+
+    QTemporaryDir dir;
+    QVERIFY(generateCpp(testFile("skipReset.qml"_L1), &dir));
+
+    const QString aotstatsPath = dir.filePath("output.cpp.aotstats"_L1);
+    QFile f(aotstatsPath);
+    QVERIFY(f.open(QIODevice::ReadOnly | QIODevice::Text));
+    const QString aotstats = QString::fromUtf8(f.readAll());
+
+    // Exactly one skip
+    QCOMPARE(aotstats.count(R"("codegenResult": 1)"_L1), 1);
 }
 
 const QQmlScriptString &ScriptStringProps::undef() const

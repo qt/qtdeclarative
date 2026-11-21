@@ -303,6 +303,7 @@ public:
         return m_hasCompileError || m_hasPendingCompileError;
     }
 
+    void setCurrentFunctionWasSkipped(bool v) { m_hasCompileSkip = v; }
     bool currentFunctionWasSkipped() const
     {
         return m_hasCompileSkip;
