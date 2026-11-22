@@ -80,7 +80,7 @@ private:
     void updateGradient();
 
 private:
-    qreal m_position;
+    qreal m_position = 0.0;
     QColor m_color;
 };
 

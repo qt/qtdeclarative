@@ -10,6 +10,9 @@
 #include <qopenglframebufferobject.h>
 #include <qopenglfunctions.h>
 
+#include <qpa/qplatformintegration.h>
+#include <private/qguiapplication_p.h>
+
 #include <QtQuick/QQuickFramebufferObject>
 
 #include <QtQuickTestUtils/private/qmlutils_p.h>
@@ -136,6 +139,9 @@ tst_QQuickFramebufferObject::tst_QQuickFramebufferObject()
 
 void tst_QQuickFramebufferObject::initTestCase()
 {
+    if (!QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::OpenGL))
+        QSKIP("OpenGL is not enabled in this configuration");
+
     QQmlDataTest::initTestCase();
     QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGLRhi);
 }

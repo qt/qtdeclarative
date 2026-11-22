@@ -94,15 +94,17 @@ public:
 
     QPalette defaultPalette() const override;
 
+    void resetContentItem();
+
     bool cascade = false;
     int hoverTimer = 0;
     int currentIndex = -1;
     qreal overlap = 0;
     QPointer<QQuickMenu> parentMenu;
     QPointer<QQuickMenuItem> currentItem;
-    QQuickItem *contentItem = nullptr; // TODO: cleanup
+    QPointer<QQuickItem> contentItem;
     QList<QObject *> contentData;
-    QQmlObjectModel *contentModel;
+    QPointer<QQmlObjectModel> contentModel;
     QQmlComponent *delegate = nullptr;
     QString title;
     QQuickIcon icon;

@@ -1332,7 +1332,6 @@ void tst_qquicktextinput::mouseSelectionMode()
     QQuickView window(QUrl::fromLocalFile(qmlfile));
 
     window.show();
-    window.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&window));
 
     QVERIFY(window.rootObject() != nullptr);

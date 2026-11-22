@@ -624,8 +624,11 @@ QQmlDelegateModel::ReleaseFlags QQmlDelegateModelPrivate::release(QObject *objec
 
 void QQmlDelegateModelPrivate::destroyCacheItem(QQmlDelegateModelItem *cacheItem)
 {
-    emitDestroyingItem(cacheItem->object);
-    cacheItem->destroyObject();
+    if (QObject *object = cacheItem->object) {
+        emitDestroyingItem(object);
+        cacheItem->destroyObject();
+    }
+
     if (cacheItem->incubationTask) {
         releaseIncubator(cacheItem->incubationTask);
         cacheItem->incubationTask = nullptr;
