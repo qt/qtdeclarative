@@ -42,7 +42,7 @@ public:
     static const QJSEngine *get(const QJSEnginePrivate *e) { return e->q_func(); }
     static QJSEnginePrivate *get(QV4::ExecutionEngine *e);
 
-    QJSEnginePrivate() = default;
+    QJSEnginePrivate();
     ~QJSEnginePrivate() override;
 
     static void addToDebugServer(QJSEngine *q);

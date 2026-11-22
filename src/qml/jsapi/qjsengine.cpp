@@ -1292,6 +1292,7 @@ QJSEnginePrivate *QJSEnginePrivate::get(QV4::ExecutionEngine *e)
     return e->jsEngine()->d_func();
 }
 
+QJSEnginePrivate::QJSEnginePrivate() = default;
 QJSEnginePrivate::~QJSEnginePrivate() = default;
 
 void QJSEnginePrivate::addToDebugServer(QJSEngine *q)
