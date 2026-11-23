@@ -548,7 +548,13 @@ QRect QQuickPopupWindow::parentControlGeometry() const
     const QQuickItem *parent = popup()->parentItem();
     // Menus have an overlap property that we want to honor,
     // as long as it's not wider than half the width of the parent item.
-    const qreal overlap = popup()->property("overlap").toReal();
+    qreal overlap = 0;
+    if (QQuickMenu *menu = qobject_cast<QQuickMenu *>(popup())) {
+        if (menu->cascade() && menu->overlap()) {
+            if (QQuickMenuPrivate::get(menu)->parentMenu)
+                overlap = menu->overlap();
+        }
+    }
     QRectF parentItemBoundingRect = parent->boundingRect();
     const QPointF parentItemMappedPosition = parent->mapToScene(parentItemBoundingRect.topLeft());
     return { qFloor(parentItemMappedPosition.x() + overlap), qFloor(parentItemMappedPosition.y()),
