@@ -4171,6 +4171,27 @@ QString QQmlJSCodeGenerator::conversion(
 {
     const QQmlJSScope::ConstPtr contained = to.containedType();
 
+    if (from.containedType() == m_typeResolver->metaObjectType()
+            && contained == m_typeResolver->stringType()) {
+
+        // TODO: We could actually convert a merger of multiple type expressions by
+        //       comparing their metaobjects with the one we get as value here.
+        if (from.variant() != QQmlJSRegisterContent::MetaType)
+            REJECT<QString>(u"Cannot convert complex type expression to string"_s);
+
+        const QQmlJSScope::ConstPtr actualType = from.scopeType();
+
+        // Strip the module namespace qualifier.
+        // This is safe because actual type names can't contain dots.
+        const QString rawNameForType = m_typeResolver->nameForType(actualType);
+        const qsizetype dot = rawNameForType.lastIndexOf('.'_L1);
+        const QString nameForType = dot == -1 ? rawNameForType : rawNameForType.mid(dot + 1);
+
+        return actualType->isComposite()
+                ? u"QStringLiteral(\"%1\")"_s.arg(nameForType)
+                : u"QStringLiteral(\"%1/%2\")"_s.arg(actualType->moduleName(), nameForType);
+    }
+
     // If from is QJSPrimitiveValue and to contains a primitive we coerce using QJSPrimitiveValue
     if (from.isStoredIn(m_typeResolver->jsPrimitiveType()) && m_typeResolver->isPrimitive(to)) {
 
