@@ -2803,6 +2803,25 @@ void AOTCompiledContext::initLoadTypeLookup(uint index, uint importNamespace) co
 {
     QV4::Lookup *lookup = compilationUnit->runtimeLookups + index;
     initTypeWrapperLookup<QV4::Lookup::Call::ContextGetterType>(this, lookup, importNamespace);
+    if (engine->hasError() || lookup->call != QV4::Lookup::Call::ContextGetterType)
+        return;
+
+    const QQmlType type = static_cast<const QV4::Heap::QQmlTypeWrapper *>(
+                                  lookup->qmlTypeLookup.qmlTypeWrapper.get())->type();
+    if (!type.isComposite())
+        return;
+
+    // A composite type has a QMetaType as soon as it is registered, but a QMetaObject only once
+    // its compilation unit has been loaded. loadTypeLookup() has to produce a QMetaObject because
+    // the generated code dereferences it (e.g. for casts). Make sure the unit is loaded here.
+    // The type was visible to the AOT compiler, so it must be loadable. If it isn't, the generated
+    // code is wrong, and we cannot recover from here.
+
+    const QUrl url = type.sourceUrl().adjusted(QUrl::RemoveFragment);
+    const QQmlRefPointer<QQmlTypeData> typeData =
+            engine->handle()->typeLoader()->getType(url, QQmlTypeLoader::Synchronous);
+    Q_ASSERT(!typeData->isError());
+    Q_UNUSED(typeData);
 }
 
 bool AOTCompiledContext::getObjectLookup(uint index, QObject *object, void *target) const
