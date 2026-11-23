@@ -544,7 +544,11 @@ QRect QQuickPopupWindow::parentControlGeometry() const
         }
     }
     QRectF parentItemBoundingRect = parent->boundingRect();
-    const QPointF parentItemMappedPosition = parent->mapToScene(parentItemBoundingRect.topLeft());
+    QPointF parentItemMappedPosition = parent->mapToScene(parentItemBoundingRect.topLeft());
+    QPoint offset;
+    if (QQuickRenderControl::renderWindowFor(parent->window(), &offset))
+        parentItemMappedPosition += offset.toPointF();
+
     return { qFloor(parentItemMappedPosition.x() + overlap), qFloor(parentItemMappedPosition.y()),
              qCeil(qMax<qreal>(qAbs(parentItemBoundingRect.width() - overlap * 2), parentItemBoundingRect.width() / 4)), qCeil(parentItemBoundingRect.height()) };
 }
