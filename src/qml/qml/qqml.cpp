@@ -3728,11 +3728,12 @@ bool validateLookupSignature(QQmlEngine *engine, QV4::CompiledData::CompilationU
 */
 
 /*!
-    \fn int qmlRegisterInterface(const char *typeName)
+    \fn template <typename T> int qmlRegisterInterface(const char *uri, int versionMajor)
     \relates <qqml.h>
 
-    This template function registers the C++ type in the QML system
-    under the name \a typeName.
+    This template function registers the C++ type \c T in the QML system
+    as an interface in the module \a uri, with the major version
+    \a versionMajor.
 
     Types registered as an interface with the engine should also
     declare themselves as an interface with the
