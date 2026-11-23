@@ -38,6 +38,9 @@ public:
     void constructPolygonPath();
     void constructRoundedPolygonPath();
 
+    static constexpr int pointCountMin = 3;
+    static constexpr int pointCountMax = 60;
+
     qreal cornerRadius = 10;
     int pointCount = 6;
     qreal ratio = 0.5;

@@ -280,7 +280,7 @@ void QQuickRegularPolygonShape::setCornerRadius(qreal radius)
     Q_D(QQuickRegularPolygonShape);
     if (qFuzzyCompare(d->cornerRadius, radius))
         return;
-    d->cornerRadius = radius;
+    d->cornerRadius = radius < 0 ? 0 : radius;
     d->updatePath();
     emit cornerRadiusChanged();
 }
@@ -305,7 +305,8 @@ void QQuickRegularPolygonShape::setSideCount(int sideCount)
     Q_D(QQuickRegularPolygonShape);
     if (d->sideCount == sideCount)
         return;
-    d->sideCount = sideCount;
+    d->sideCount = std::clamp(sideCount, QQuickRegularPolygonShapePrivate::sideCountMin,
+                              QQuickRegularPolygonShapePrivate::sideCountMax);
     d->updatePath();
     emit sideCountChanged();
 }

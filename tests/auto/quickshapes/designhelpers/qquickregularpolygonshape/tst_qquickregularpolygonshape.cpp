@@ -7,6 +7,7 @@
 #include <QtQuickTestUtils/private/viewtestutils_p.h>
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
 #include <QtQuickShapesDesignHelpers/private/qquickregularpolygonshape_p.h>
+#include <QtQuickShapesDesignHelpers/private/qquickregularpolygonshape_p_p.h>
 
 using namespace QQuickVisualTestUtils;
 
@@ -19,6 +20,8 @@ public:
 private slots:
     void initTestCase() override;
     void basicShape();
+    void setSideCount();
+    void setCornerRadius();
     void changeSignals();
     void changeSignals_data();
     void fillItem();
@@ -55,6 +58,35 @@ void tst_QQuickRegularPolygonShape::basicShape()
     QCOMPARE(shape->fillColor(), QColor(Qt::white));
     QCOMPARE(shape->strokeColor(), QColor(Qt::black));
     QCOMPARE(shape->fillItem(), nullptr);
+}
+
+void tst_QQuickRegularPolygonShape::setSideCount()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("regularpolygonshape.qml"));
+    QQuickRegularPolygonShape *shape = qobject_cast<QQuickRegularPolygonShape *>(c.create());
+    QVERIFY2(shape, qPrintable(c.errorString()));
+
+    QCOMPARE(shape->sideCount(), 6);
+
+    shape->setSideCount(QQuickRegularPolygonShapePrivate::sideCountMin - 1);
+    QCOMPARE(shape->sideCount(), QQuickRegularPolygonShapePrivate::sideCountMin);
+
+    shape->setSideCount(QQuickRegularPolygonShapePrivate::sideCountMax + 1);
+    QCOMPARE(shape->sideCount(), QQuickRegularPolygonShapePrivate::sideCountMax);
+}
+
+void tst_QQuickRegularPolygonShape::setCornerRadius()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("regularpolygonshape.qml"));
+    QQuickRegularPolygonShape *shape = qobject_cast<QQuickRegularPolygonShape *>(c.create());
+    QVERIFY2(shape, qPrintable(c.errorString()));
+
+    QCOMPARE(shape->cornerRadius(), 10);
+
+    shape->setCornerRadius(-1);
+    QCOMPARE(shape->cornerRadius(), 0);
 }
 
 void tst_QQuickRegularPolygonShape::changeSignals_data()

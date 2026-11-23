@@ -253,7 +253,7 @@ void QQuickStarShape::setCornerRadius(qreal radius)
     Q_D(QQuickStarShape);
     if (qFuzzyCompare(d->cornerRadius, radius))
         return;
-    d->cornerRadius = radius;
+    d->cornerRadius = radius < 0 ? 0 : radius;
     d->updatePath();
     emit cornerRadiusChanged();
 }
@@ -302,7 +302,8 @@ void QQuickStarShape::setPointCount(int count)
     Q_D(QQuickStarShape);
     if (d->pointCount == count)
         return;
-    d->pointCount = count;
+    d->pointCount = std::clamp(count, QQuickStarShapePrivate::pointCountMin,
+                               QQuickStarShapePrivate::pointCountMax);
     d->updatePath();
     emit pointCountChanged();
 }

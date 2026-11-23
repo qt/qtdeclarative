@@ -7,6 +7,7 @@
 #include <QtQuickTestUtils/private/viewtestutils_p.h>
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
 #include <QtQuickShapesDesignHelpers/private/qquickstarshape_p.h>
+#include <QtQuickShapesDesignHelpers/private/qquickstarshape_p_p.h>
 
 using namespace QQuickVisualTestUtils;
 
@@ -19,6 +20,8 @@ public:
 private slots:
     void initTestCase() override;
     void basicShape();
+    void setPointCount();
+    void setCornerRadius();
     void changeSignals();
     void changeSignals_data();
     void fillItem();
@@ -55,6 +58,35 @@ void tst_QQuickStarShape::basicShape()
     QCOMPARE(shape->fillColor(), QColor(Qt::white));
     QCOMPARE(shape->strokeColor(), QColor(Qt::black));
     QCOMPARE(shape->fillItem(), nullptr);
+}
+
+void tst_QQuickStarShape::setPointCount()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("starshape.qml"));
+    QQuickStarShape *shape = qobject_cast<QQuickStarShape *>(c.create());
+    QVERIFY2(shape, qPrintable(c.errorString()));
+
+    QCOMPARE(shape->pointCount(), 6);
+
+    shape->setPointCount(QQuickStarShapePrivate::pointCountMin - 1);
+    QCOMPARE(shape->pointCount(), QQuickStarShapePrivate::pointCountMin);
+
+    shape->setPointCount(QQuickStarShapePrivate::pointCountMax + 1);
+    QCOMPARE(shape->pointCount(), QQuickStarShapePrivate::pointCountMax);
+}
+
+void tst_QQuickStarShape::setCornerRadius()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("starshape.qml"));
+    QQuickStarShape *shape = qobject_cast<QQuickStarShape *>(c.create());
+    QVERIFY2(shape, qPrintable(c.errorString()));
+
+    QCOMPARE(shape->cornerRadius(), 10);
+
+    shape->setCornerRadius(-1);
+    QCOMPARE(shape->cornerRadius(), 0);
 }
 
 void tst_QQuickStarShape::changeSignals_data()
