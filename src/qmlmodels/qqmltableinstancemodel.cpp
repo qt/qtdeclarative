@@ -295,7 +295,7 @@ void QQmlTableInstanceModel::cancel(int index)
 
     // Since the view expects the item to be incubating, there should be
     // an incubation task. And since the incubation is not done, no-one
-    // should yet have received, and therfore hold a reference to, the object.
+    // should yet have received, and therefore hold a reference to, the object.
     Q_ASSERT(modelItem->incubationTask());
     Q_ASSERT(!modelItem->isObjectReferenced());
 
