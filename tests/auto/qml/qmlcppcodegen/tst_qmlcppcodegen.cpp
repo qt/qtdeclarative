@@ -6501,14 +6501,6 @@ void tst_QmlCppCodegen::typeReferences()
     QString actual;
     QVERIFY(QMetaObject::invokeMethod(root.get(), function, Q_RETURN_ARG(QString, actual)));
 
-#ifndef QT_TEST_FORCE_INTERPRETER
-    // QQmlJSCodeGenerator::conversion() has no special case for a type reference, which the
-    // compiled code only holds as a const QMetaObject *. The conversion to a string goes through
-    // the generic QVariant conversion and produces "QVariant(const QMetaObject*, ...)". The name
-    // of the type is only known to the type wrapper of the lookup.
-    QEXPECT_FAIL("", "Compiled code stringifies a type reference as a QVariant of its QMetaObject",
-                 Abort);
-#endif
     QCOMPARE(actual, expected);
 }
 
@@ -7172,7 +7164,6 @@ static KnownIssue interpreterIssue(const UnqualifiedName &name, NameKinds kinds,
 static KnownIssue compilerIssue(const UnqualifiedName &name, NameKinds kinds,
                                 const QByteArray &usage)
 {
-    const NameKind winner = winnerOf(kinds);
 
     // The translation functions are the only names the tests call directly.
     const bool isTranslation = (name.builtIn & Keyword) && name.expression[0] != '"';
@@ -7198,14 +7189,6 @@ static KnownIssue compilerIssue(const UnqualifiedName &name, NameKinds kinds,
     if ((name.builtIn & Global) && (kinds & DynamicScopeObject)) {
         return { KnownIssue::Failure,
                  "Compiled code does not know the names a dynamic metaobject provides" };
-    }
-
-    // Compiled code converts a type to a string through a QVariant holding its QMetaObject. The
-    // interpreter produces "QML/rect".
-    if (winner == LowerCaseType) {
-        return { KnownIssue::Failure,
-                 "Compiled code converts a type to \"QVariant(const QMetaObject*, ...)\" instead "
-                 "of \"QML/rect\" when stringifying it" };
     }
 
     return {};
