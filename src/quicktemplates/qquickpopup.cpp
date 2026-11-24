@@ -1262,6 +1262,11 @@ void QQuickPopupPrivate::adjustPopupItemParentAndWindow()
             }
             popupItem->setParentItem(popupWindow->contentItem());
             popupItem->forceActiveFocus(Qt::PopupFocusReason);
+#if QT_CONFIG(wayland)
+            // On wayland a Qt::Popup is grabbing by default.
+            if (QGuiApplication::platformName().startsWith(QLatin1String("wayland")))
+                popupWindow->setFlag(Qt::WindowDoesNotAcceptFocus, !q->hasFocus());
+#endif
         }
         if (popupWindow && popupWindow->transientParent()) {
             if (qobject_cast<QQuickWindow *>(popupWindow->transientParent())) {
