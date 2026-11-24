@@ -9,6 +9,8 @@
 #define slots Baz
 #define emit Yoyodyne
 
+#include <QtQml/private/qqmlcomponent_p.h>
+
 #include <QtQuick/QtQuick>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickflickable_p.h>

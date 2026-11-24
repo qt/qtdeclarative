@@ -187,7 +187,7 @@ public:
     {
         if (progress != m_progress) {
             m_progress = progress;
-            emit q_func()->progressChanged(progress);
+            Q_EMIT q_func()->progressChanged(progress);
         }
     }
     void setCreationContext(QQmlRefPointer<QQmlContextData> creationContext)
