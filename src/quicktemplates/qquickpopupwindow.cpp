@@ -19,6 +19,7 @@
 
 #include <QtCore/qloggingcategory.h>
 #include <QtGui/private/qeventpoint_p.h>
+#include <QtQuick/qquickrendercontrol.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickwindowmodule_p.h>
 #include <QtQuick/private/qquickwindowmodule_p_p.h>
