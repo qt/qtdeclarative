@@ -394,6 +394,28 @@ private slots:
         QCOMPARE(obj1_1.environment(), env);
         QCOMPARE(obj1_1.owner(), tOwner);
     }
+    void lastRevision()
+    {
+        using namespace Qt::StringLiterals;
+        auto univPtr = std::make_shared<DomUniverse>(u"univ"_s);
+        auto envPtr = std::make_shared<DomEnvironment>(
+                qmltypeDirs,
+                DomEnvironment::Option::SingleThreaded | DomEnvironment::Option::NoDependencies,
+                DomCreationOption::Default, univPtr);
+        DomItem fileInfo;
+        envPtr->loadFile(FileToLoad::fromFileSystem(envPtr, baseDir + u"/test1.qml"_s),
+                         [&fileInfo](Path, const DomItem &, const DomItem &newIt) {
+                             fileInfo = newIt;
+                         });
+        envPtr->loadPendingDependencies();
+        QVERIFY(fileInfo);
+
+        const auto currentRevision = fileInfo.field(Fields::currentRevision).value().toInteger();
+        QVERIFY(currentRevision > 0);
+        QCOMPARE(fileInfo.field(Fields::lastRevision).value().toInteger(), currentRevision);
+        QCOMPARE(fileInfo.field(Fields::lastValidRevision).value().toInteger(), currentRevision);
+    }
+
     void testLoadNoDep()
     {
 #ifdef Q_OS_ANDROID

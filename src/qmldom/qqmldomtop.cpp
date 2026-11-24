@@ -1583,15 +1583,15 @@ int ExternalItemInfoBase::currentRevision(const DomItem &) const
 int ExternalItemInfoBase::lastRevision(const DomItem &self) const
 {
     Path p = currentItem()->canonicalPath();
-    DomItem lastValue = self.universe()[p.mid(1, p.length() - 1)][u"revision"];
-    return static_cast<int>(lastValue.value().toInteger(0));
+    DomItem lastValue = self.universe()[p.mid(1, p.length() - 1)];
+    return lastValue.revision();
 }
 
 int ExternalItemInfoBase::lastValidRevision(const DomItem &self) const
 {
     Path p = currentItem()->canonicalPath();
-    DomItem lastValidValue = self.universe()[p.mid(1, p.length() - 2)].field(Fields::validItem)[u"revision"];
-    return static_cast<int>(lastValidValue.value().toInteger(0));
+    DomItem lastValidValue = self.universe()[p.mid(1, p.length() - 2)].field(Fields::validItem);
+    return lastValidValue.revision();
 }
 
 QString ExternalItemPairBase::canonicalFilePath(const DomItem &) const
