@@ -588,8 +588,8 @@ public:
     PathIterator begin() const;
     PathIterator end() const;
 
-    PathRoot headRoot() const;
-    PathCurrent headCurrent() const;
+    std::optional<PathRoot> headRoot() const;
+    std::optional<PathCurrent> headCurrent() const;
     Kind headKind() const;
     QString headName() const;
     bool checkHeadName(QStringView name) const;
@@ -599,7 +599,7 @@ public:
         return f && *f == name;
     }
     std::optional<FieldName> headField() const;
-    index_type headIndex(index_type defaultValue=-1) const;
+    std::optional<index_type> headIndex() const;
     Path head() const;
     Path last() const;
     Source split() const;
@@ -715,7 +715,9 @@ inline size_t qHash(const Path &path, size_t seed)
             Path p = path[--iPath];
             Path::Kind k = p.headKind();
             *it++ = size_t(k);
-            *it++ = qHash(p.component(0).stringView(), seed)^size_t(p.headRoot())^size_t(p.headCurrent());
+            const size_t rootBits = p.headRoot() ? size_t(*p.headRoot()) : 0;
+            const size_t currentBits = p.headCurrent() ? size_t(*p.headCurrent()) : 0;
+            *it++ = qHash(p.component(0).stringView(), seed) ^ rootBits ^ currentBits;
         }
     }
 

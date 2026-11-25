@@ -281,20 +281,20 @@ PathIterator Path::end() const
     return PathIterator();
 }
 
-PathRoot Path::headRoot() const
+std::optional<PathRoot> Path::headRoot() const
 {
     auto &comp = component(0);
     if (PathEls::Root const * r = comp.asRoot())
         return r->contextKind;
-    return PathRoot::Modules;
+    return std::nullopt;
 }
 
-PathCurrent Path::headCurrent() const
+std::optional<PathCurrent> Path::headCurrent() const
 {
     auto comp = component(0);
     if (PathEls::Current const * c = comp.asCurrent())
         return c->contextKind;
-    return PathCurrent::Obj;
+    return std::nullopt;
 }
 
 std::optional<FieldName> Path::headField() const
@@ -322,9 +322,12 @@ bool Path::checkHeadName(QStringView name) const
     return component(0).checkName(name);
 }
 
-index_type Path::headIndex(index_type defaultValue) const
+std::optional<index_type> Path::headIndex() const
 {
-    return component(0).index(defaultValue);
+    auto &comp = component(0);
+    if (PathEls::Index const *i = comp.asIndex())
+        return i->indexValue;
+    return std::nullopt;
 }
 
 Path Path::head() const

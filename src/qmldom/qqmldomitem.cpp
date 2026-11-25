@@ -828,7 +828,8 @@ bool DomItem::resolve(const Path &path, DomItem::Visitor visitor, const ErrorHan
     Path myPath = path;
     QList<ResolveToDo> toDos(1); // invariant: always increase pathIndex to guarantee end even with only partial visited match
     if (path.headKind() == Path::Kind::Root) {
-        DomItem root = rootFromContext(*this, path.headRoot());
+        // headKind() guarantees the head is a Root, so headRoot() has a value.
+        DomItem root = rootFromContext(*this, *path.headRoot());
         if (!root) {
             myResolveErrors()
                     .error(tr("Root context %1 is not known").arg(path.headName()))
@@ -878,7 +879,8 @@ bool DomItem::resolve(const Path &path, DomItem::Visitor visitor, const ErrorHan
                 }
                 break;
             case Path::Kind::Index:
-                it = it.index(cNow.headIndex());
+                // headKind() guarantees the head is an Index, so headIndex() has a value.
+                it = it.index(*cNow.headIndex());
                 break;
             case Path::Kind::Empty:
                 myResolveErrors()
@@ -891,7 +893,8 @@ bool DomItem::resolve(const Path &path, DomItem::Visitor visitor, const ErrorHan
                 return false;
             case Path::Kind::Current:
             {
-                PathCurrent current = cNow.headCurrent();
+                // headKind() guarantees the head is a Current, so headCurrent() has a value.
+                PathCurrent current = *cNow.headCurrent();
                 switch (current) {
                 case PathCurrent::Obj:
                     if (domKind() != DomKind::Object)
@@ -2604,7 +2607,8 @@ bool Reference::shouldCache() const
     for (const Path &p : referredObjectPath) {
         switch (p.headKind()) {
         case Path::Kind::Current:
-            switch (p.headCurrent()) {
+            // headKind() guarantees the head is a Current, so headCurrent() has a value.
+            switch (*p.headCurrent()) {
             case PathCurrent::Lookup:
             case PathCurrent::LookupDynamic:
             case PathCurrent::LookupStrict:

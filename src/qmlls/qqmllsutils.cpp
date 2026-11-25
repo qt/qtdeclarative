@@ -817,7 +817,7 @@ static void findUsagesOfNonJSIdentifiers(const DomItem &item, const QString &nam
             // Only look for the first enum defined. The inner enums
             // have no way to be accessed.
             const auto parentPath = current.containingObject().pathFromOwner();
-            const auto index = parentPath.last().headIndex();
+            const auto index = parentPath.last().headIndex().value_or(-1);
             if (index != 0)
                 return continueForChildren;
             const QString enumValue = current.field(Fields::name).value().toString();
@@ -829,7 +829,7 @@ static void findUsagesOfNonJSIdentifiers(const DomItem &item, const QString &nam
             // Only look for the first enum defined. The inner enums
             // have no way to be accessed.
             const auto parentPath = current.pathFromOwner();
-            const auto index = parentPath.last().headIndex();
+            const auto index = parentPath.last().headIndex().value_or(-1);
             if (index != 0)
                 return continueForChildren;
             const QString enumValue = current.field(Fields::name).value().toString();

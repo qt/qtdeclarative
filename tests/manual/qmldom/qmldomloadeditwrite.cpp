@@ -130,7 +130,7 @@ int main()
                         if (!canonicalChild) {
                             dbg << QStringLiteral(u" ").repeated(p.length()) << "+" << p.last()
                                 << " (adopted, will not recurse)\n";
-                        } else if (p && p.headIndex(0) % 2 == 1) {
+                        } else if (p && p.headIndex().value_or(0) % 2 == 1) {
                             dbg << QStringLiteral(u" ").repeated(p.length()) << "-" << p.last()
                                 << " *recursive visit skipped*\n";
                             return false; // we skip odd entries in lists;

@@ -193,7 +193,7 @@ private:
         return std::get<T>(currentEl<T>(idx).item.value);
     }
 
-    index_type currentIndex() { return currentNodeEl().path.last().headIndex(); }
+    index_type currentIndex() { return currentNodeEl().path.last().headIndex().value_or(-1); }
 
     QmlStackElement &currentQmlObjectOrComponentEl(int idx = 0);
 

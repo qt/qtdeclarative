@@ -618,13 +618,13 @@ void QQmlDomAstCreatorBase::endVisit(AST::UiPublicMember *el)
     case DomType::PropertyDefinition: {
         PropertyDefinition pDef = std::get<PropertyDefinition>(sEl.item.value);
         PropertyDefinition *pDefPtr =
-                valueFromMultimap(obj.m_propertyDefs, pDef.name, sEl.path.last().headIndex());
+                valueFromMultimap(obj.m_propertyDefs, pDef.name, *sEl.path.last().headIndex());
         Q_ASSERT(pDefPtr);
         *pDefPtr = std::move(pDef);
     } break;
     case DomType::MethodInfo: {
         MethodInfo m = std::get<MethodInfo>(sEl.item.value);
-        MethodInfo *mPtr = valueFromMultimap(obj.m_methods, m.name, sEl.path.last().headIndex());
+        MethodInfo *mPtr = valueFromMultimap(obj.m_methods, m.name, *sEl.path.last().headIndex());
         Q_ASSERT(mPtr);
         *mPtr = std::move(m);
     } break;
@@ -900,7 +900,7 @@ void QQmlDomAstCreatorBase::endVisit(AST::UiSourceElement *el)
     loadAnnotations(el);
     QmlObject &obj = current<QmlObject>();
     MethodInfo *mPtr =
-            valueFromMultimap(obj.m_methods, m.name, nodeStack.last().path.last().headIndex());
+            valueFromMultimap(obj.m_methods, m.name, *nodeStack.last().path.last().headIndex());
     Q_ASSERT(mPtr);
     *mPtr = m;
     removeCurrentNode(DomType::MethodInfo);
@@ -1073,7 +1073,7 @@ void QQmlDomAstCreatorBase::endVisit(AST::UiObjectBinding *)
     QmlObject *objPtr = b.objectValue();
     Q_ASSERT(objPtr);
     *objPtr = objValue;
-    index_type idx = currentNodeEl(1).path.last().headIndex();
+    index_type idx = *currentNodeEl(1).path.last().headIndex();
     Binding *bPtr = valueFromMultimap(containingObj.m_bindings, b.name(), idx);
     Q_ASSERT(bPtr);
     *bPtr = b;

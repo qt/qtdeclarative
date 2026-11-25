@@ -710,7 +710,7 @@ MutableDomItem QmlObject::addPropertyDef(
         MutableDomItem &self, const PropertyDefinition &propertyDef, AddOption option)
 {
     Path p = addPropertyDef(propertyDef, option);
-    if (p.last().headIndex(0) > 1)
+    if (p.last().headIndex().value_or(0) > 1)
         self.owningItemPtr()->addErrorLocal(domParsingErrors().error(
                 tr("Repeated PropertyDefinition with name %1").arg(propertyDef.name)));
     return self.owner().path(p);
@@ -719,7 +719,7 @@ MutableDomItem QmlObject::addPropertyDef(
 MutableDomItem QmlObject::addBinding(MutableDomItem &self, const Binding &binding, AddOption option)
 {
     Path p = addBinding(binding, option);
-    if (p && p.last().headIndex(0) > 1)
+    if (p && p.last().headIndex().value_or(0) > 1)
         self.owningItemPtr()->addErrorLocal(
                 domParsingErrors().error(tr("Repeated binding with name %1").arg(binding.name())));
     return self.owner().path(p);
@@ -729,7 +729,7 @@ MutableDomItem QmlObject::addMethod(
         MutableDomItem &self, const MethodInfo &functionDef, AddOption option)
 {
     Path p = addMethod(functionDef, option);
-    if (p.last().headIndex(0) > 1)
+    if (p.last().headIndex().value_or(0) > 1)
         self.owningItemPtr()->addErrorLocal(
                 domParsingErrors().error(tr("Repeated Method with name %1").arg(functionDef.name)));
     return self.owner().path(p);
@@ -1998,7 +1998,7 @@ bool EnumItem::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor)
 void EnumItem::writeOut(const DomItem &self, OutWriter &ow) const
 {
     const auto fLoc = FileLocations::treeOf(self);
-    index_type myIndex = self.pathFromOwner().last().headIndex();
+    index_type myIndex = self.pathFromOwner().last().headIndex().value_or(-1);
     if (myIndex != 0)
         ow.writeRegion(fLoc, CommaTokenRegion);
     ow.ensureNewline();
