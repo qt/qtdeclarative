@@ -17,7 +17,7 @@ namespace PathEls {
 
 /*!
 \internal
-\class QQmljs::Dom::QmlPath::Path
+\class QQmlJS::Dom::Path
 
 \brief Represents an immutable JsonPath like path in the Qml code model (from a DomItem to another
  DomItem)
@@ -156,7 +156,6 @@ The root contexts are:
        the DOM model
 \li \l{$universe} The dom unverse used by ths environment, and potentially shared with others that
        contains all the known parse entries, and also the latest, potentially invalid entries
-\li \l{$} ? undecided, one the previous ones?
 \endlist
 
 The current contexts are:
@@ -172,7 +171,6 @@ The current contexts are:
 \li \l{@lookupDynamic} The default lookup inside the current object: localJS, ids, properties, proto
        properties, component, its properties, global context, ..
 \li \l{@lookup} Either lookupStrict or lookupDynamic depending on the current component and context.
-\li \l{@} ? undecided, one the previous ones
 \endlist
  */
 
@@ -284,15 +282,15 @@ PathIterator Path::end() const
 std::optional<PathRoot> Path::headRoot() const
 {
     auto &comp = component(0);
-    if (PathEls::Root const * r = comp.asRoot())
+    if (PathEls::Root const *r = comp.asRoot())
         return r->contextKind;
     return std::nullopt;
 }
 
 std::optional<PathCurrent> Path::headCurrent() const
 {
-    auto comp = component(0);
-    if (PathEls::Current const * c = comp.asCurrent())
+    auto &comp = component(0);
+    if (PathEls::Current const *c = comp.asCurrent())
         return c->contextKind;
     return std::nullopt;
 }
@@ -315,11 +313,6 @@ Path::Kind Path::headKind() const
 QString Path::headName() const
 {
     return component(0).name();
-}
-
-bool Path::checkHeadName(QStringView name) const
-{
-    return component(0).checkName(name);
 }
 
 std::optional<index_type> Path::headIndex() const
@@ -366,6 +359,11 @@ Source Path::split() const
     return Source{Path(), *this};
 }
 
+
+Path Path::fromComponent(Component c)
+{
+    return Path(0, 1, std::make_shared<PathEls::PathData>(QList<Component>(1, std::move(c))));
+}
 
 Path Path::fromRoot(PathRoot s)
 {
@@ -492,7 +490,7 @@ collectBackwards(PathEls::PathData *pathStart, qsizetype size)
 
 Compresses \c toAdd into one vector of components before adding it to \c this.
 */
-Path Path::withPath(const Path &toAdd, bool avoidToAddAsBase) const
+Path Path::withPath(const Path &toAdd) const
 {
     if (toAdd.length() == 0)
         return *this;
@@ -509,7 +507,7 @@ Path Path::withPath(const Path &toAdd, bool avoidToAddAsBase) const
                 return thisExtended.withPath(toAdd.mid(added.length(), resLength - thisExtended.length()));
         }
     }
-    if (!avoidToAddAsBase) {
+    {
         Path toAddExtended = toAdd.expandFront();
         if (toAddExtended.length() >= resLength) {
             toAddExtended = toAddExtended.mid(toAddExtended.length() - resLength, resLength);
@@ -578,21 +576,6 @@ Path Path::expandBack() const
     return *this;
 }
 
-Path &Path::operator++()
-{
-    if (m_length > 0)
-        m_length -= 1;
-    return *this;
-}
-
-Path Path::operator++(int)
-{
-    Path res = *this;
-    if (m_length > 0)
-        m_length -= 1;
-    return res;
-}
-
 int Path::cmp(const Path &p1, const Path &p2)
 {
     // lexicographic ordering
@@ -645,7 +628,7 @@ Path Path::withComponent(const PathEls::PathComponent &c)
     }
     if (m_data && m_data.use_count() != 1) {
         // create a new path (otherwise paths linking to this will change)
-        Path newP(c);
+        Path newP = fromComponent(c);
         newP.m_data->parent = m_data;
         newP.m_length = static_cast<quint16>(m_length + 1);
         return newP;
@@ -724,4 +707,3 @@ Path Path::mid(int offset) const
 } // end namespace QQmlJS
 QT_END_NAMESPACE
 
-#include "moc_qqmldompath_p.cpp"

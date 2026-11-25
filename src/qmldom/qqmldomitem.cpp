@@ -868,7 +868,7 @@ bool DomItem::resolve(const Path &path, DomItem::Visitor visitor, const ErrorHan
                 it = it.key(cNow.headName());
                 break;
             case Path::Kind::Field:
-                if (cNow.checkHeadName(Fields::get) && it.internalKind() == DomType::Reference) {
+                if (cNow.headField() == Fields::get && it.internalKind() == DomType::Reference) {
                     it = resolveReference(it, it.canonicalPath(),
                                           visitedRefs == nullptr ? &vRefs : visitedRefs,
                                           errorHandler, myResolveErrors());
@@ -2263,7 +2263,7 @@ DomItem DomItem::subReferencesItem(const PathEls::PathComponent &c, const QList<
 DomItem DomItem::subReferenceItem(const PathEls::PathComponent &c, const Path &referencedObject) const
 {
     if (domTypeIsOwningItem(internalKind())) {
-        return DomItem(m_top, m_owner, m_ownerPath, Reference(referencedObject, Path(c)));
+        return DomItem(m_top, m_owner, m_ownerPath, Reference(referencedObject, Path::fromComponent(c)));
     } else {
         return DomItem(m_top, m_owner, m_ownerPath,
                        Reference(referencedObject, pathFromOwner().withComponent(c)));

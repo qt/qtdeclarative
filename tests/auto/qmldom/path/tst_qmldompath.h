@@ -27,12 +27,12 @@ private slots:
     void pathComponentTestInternalAlloc() {
         PathComponent c;
         QCOMPARE(c.kind(), Kind::Empty);
-        PathComponent c1{Current()};
+        PathComponent c1{PathCurrent::Obj};
         QCOMPARE(c1.kind(), Kind::Current);
         QVERIFY(c!=c1);
         QVERIFY(c<c1);
         QVERIFY(c1>c);
-        PathComponent c1_1{Current(PathCurrent::Ids)};
+        PathComponent c1_1{PathCurrent::Ids};
         QCOMPARE(c1_1.kind(), Kind::Current);
         QVERIFY(c1 != c1_1);
         QVERIFY(c < c1_1);
@@ -58,7 +58,7 @@ private slots:
         auto c7 = PathComponent(Key(QStringLiteral(u" ugly\n \t \\string\"'bla")));
         QCOMPARE(c7.kind(), Kind::Key);
         QCOMPARE(c7.name(), QLatin1String(" ugly\n \t \\string\"'bla"));
-        auto c8_1=PathComponent(Root(PathRoot::Env));
+        auto c8_1=PathComponent(PathRoot::Env);
         QCOMPARE(c8_1.kind(), Kind::Root);
         QCOMPARE(c8_1.name(), QLatin1String("$env"));
     }

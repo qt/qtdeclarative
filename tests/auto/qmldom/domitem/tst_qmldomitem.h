@@ -3634,7 +3634,7 @@ private slots:
                 Path(), emptyChildrenVisitor, VisitOption::Recurse | VisitOption::VisitSelf,
                 [&success](const Path &p, const DomItem &, bool) {
                     const QString pathString = p.toString();
-                    if (p && p.checkHeadName(Fields::propertyDefs)) {
+                    if (p && p.headField() == Fields::propertyDefs) {
                         success = true;
                     }
                     return true;
@@ -3647,7 +3647,7 @@ private slots:
         qmlObject.visitTree(
                 Path(), emptyChildrenVisitor, VisitOption::Recurse | VisitOption::VisitSelf,
                 [&success](const Path &p, const DomItem &, bool) {
-                    if (p && p.checkHeadName(Fields::propertyDefs)) {
+                    if (p && p.headField() == Fields::propertyDefs) {
                         qWarning() << "Filter did not filter propertyDefs at path" << p;
                         success = false;
                     }

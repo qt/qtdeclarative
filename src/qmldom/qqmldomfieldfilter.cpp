@@ -68,7 +68,7 @@ bool FieldFilter::operator()(const DomItem &obj, const Path &p, const DomItem &i
     if (p)
         return this->operator()(obj, p.component(0), i);
     else
-        return this->operator()(obj, PathEls::Empty(), i);
+        return this->operator()(obj, PathEls::PathComponent(), i);
 }
 
 bool FieldFilter::operator()(const DomItem &base, const PathEls::PathComponent &c, const DomItem &obj) const

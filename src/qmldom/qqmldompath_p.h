@@ -498,21 +498,15 @@ public:
         return std::visit([](auto &&d) { return d.hasSquareBrackets(); }, m_data);
     }
 
-    const Empty   *asEmpty()   const { return std::get_if<Empty>(&m_data); }
     const Field   *asField()   const { return std::get_if<Field>(&m_data); }
     const Index   *asIndex()   const { return std::get_if<Index>(&m_data); }
-    const Key     *asKey()     const { return std::get_if<Key>(&m_data); }
     const Root    *asRoot()    const { return std::get_if<Root>(&m_data); }
     const Current *asCurrent() const { return std::get_if<Current>(&m_data); }
 
     static int cmp(const PathComponent &p1, const PathComponent &p2);
 
-    PathComponent(Empty &&o): m_data(std::move(o)) {}
-    PathComponent(Field &&o): m_data(std::move(o)) {}
     PathComponent(Index &&o): m_data(std::move(o)) {}
     PathComponent(Key &&o): m_data(std::move(o)) {}
-    PathComponent(Root &&o): m_data(std::move(o)) {}
-    PathComponent(Current &&o): m_data(std::move(o)) {}
 
     // Convenience constructors
     Q_IMPLICIT PathComponent(FieldName f): m_data(Field(f)) {}
@@ -570,16 +564,11 @@ class PathIterator;
 // Define a iterator for it?
 // begin() can basically be itself, end() the empty path (zero length), iteration though dropFront()
 class QMLDOM_EXPORT Path{
-    Q_GADGET
 public:
     using Kind = PathEls::Kind;
     using Component = PathEls::PathComponent;
 
     Path() = default;
-    explicit Path(const PathEls::PathComponent &c) : m_endOffset(0), m_length(0)
-    {
-        *this = withComponent(c);
-    }
 
     int length() const { return m_length; }
     Path operator[](int i) const;
@@ -592,12 +581,6 @@ public:
     std::optional<PathCurrent> headCurrent() const;
     Kind headKind() const;
     QString headName() const;
-    bool checkHeadName(QStringView name) const;
-    bool checkHeadName(FieldName name) const
-    {
-        const auto f = headField();
-        return f && *f == name;
-    }
     std::optional<FieldName> headField() const;
     std::optional<index_type> headIndex() const;
     Path head() const;
@@ -618,9 +601,10 @@ public:
     static Path fromRoot(PathRoot r);
     static Path fromIndex(index_type i);
     static Path fromField(FieldName name);
-    static Path fromKey(QStringView s=u"");
+    static Path fromKey(QStringView s);
     static Path fromKey(const QString &s);
     static Path fromCurrent(PathCurrent c);
+    static Path fromComponent(Component c);
     // add
     Path withEmpty() const;
     Path withField(FieldName name) const;
@@ -628,13 +612,10 @@ public:
     Path withKey(QStringView name) const;
     Path withIndex(index_type i) const;
     Path withCurrent(PathCurrent s) const;
-    Path withPath(const Path &toAdd, bool avoidToAddAsBase = false) const;
+    Path withPath(const Path &toAdd) const;
 
     Path expandFront() const;
     Path expandBack() const;
-
-    Path &operator++();
-    Path operator ++(int);
 
     // iterator traits
     using difference_type = long;
