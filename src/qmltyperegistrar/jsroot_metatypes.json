@@ -8103,6 +8103,18 @@
                         "type": "number"
                     },
                     {
+                        "name": "Key_Assistant",
+                        "type": "number"
+                    },
+                    {
+                        "name": "Key_SelectiveScreenshot",
+                        "type": "number"
+                    },
+                    {
+                        "name": "Key_PerformanceMode",
+                        "type": "number"
+                    },
+                    {
                         "name": "Key_MediaLast",
                         "type": "number"
                     },
@@ -8184,6 +8196,10 @@
                     },
                     {
                         "name": "Key_LastNumberRedial",
+                        "type": "number"
+                    },
+                    {
+                        "name": "Key_LinkPhone",
                         "type": "number"
                     },
                     {
