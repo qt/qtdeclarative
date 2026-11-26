@@ -1341,12 +1341,13 @@ void tst_qquickwindow::synthMouseDoubleClickFromTouch_data()
     QTest::addColumn<QPoint>("movement");
     QTest::addColumn<QPoint>("distanceBetweenPresses");
     QTest::addColumn<bool>("expectedSynthesizedDoubleClickEvent");
+    const QPoint tooFarPoint(QGuiApplication::styleHints()->touchDoubleTapDistance() + 1, 0);
 
     QTest::newRow("normal") << QPoint(0, 0) << QPoint(0, 0) << true;
     QTest::newRow("with 1 pixel wiggle") << QPoint(1, 1) << QPoint(1, 1) << true;
-    QTest::newRow("too much distance to second tap") << QPoint(0, 0) << QPoint(50, 0) << false;
-    QTest::newRow("too much drag") << QPoint(50, 0) << QPoint(0, 0) << false;
-    QTest::newRow("too much drag and too much distance to second tap") << QPoint(50, 0) << QPoint(50, 0) << false;
+    QTest::newRow("too much distance to second tap") << QPoint(0, 0) << tooFarPoint << false;
+    QTest::newRow("too much drag") << tooFarPoint << QPoint(0, 0) << false;
+    QTest::newRow("too much drag and too much distance to second tap") << tooFarPoint << tooFarPoint << false;
 }
 
 void tst_qquickwindow::synthMouseDoubleClickFromTouch()
