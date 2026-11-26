@@ -485,7 +485,7 @@ static QString signatureToString(const QQmlPrivate::AOTLookupValidation::Signatu
                 .arg(typeToString(p->type), QString::number(p->relativeIndex));
     } else if (const auto *e = std::get_if<QQmlPrivate::AOTLookupValidation::EnumKeySignature>(&signature)) {
         bool isFlag = e->isFlag == QQmlPrivate::AOTLookupValidation::IsFlag::Yes;
-        return u"EnumKeySignature{ %1, %2 }"_s
+        return u"EnumKeySignature{ %1u, %2 }"_s
                 .arg(QString::number(e->value), isFlag ? "IsFlag::Yes"_L1 : "IsFlag::No"_L1);
     } else if (const auto *m = std::get_if<QQmlPrivate::AOTLookupValidation::MethodSignature>(&signature)) {
         QString paramNames = "{ "_L1;

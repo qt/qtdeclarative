@@ -146,6 +146,7 @@ private slots:
     void enforceSignature();
     void enumsInOtherObject();
     void enumsInOtherObjectFromSource();
+    void enumsUser();
     void equalityQObjects();
     void equalityQUrl();
     void equalityTestsWithNullOrUndefined();
@@ -2520,6 +2521,18 @@ void tst_QmlCppCodegen::enumsInOtherObjectFromSource()
     std::unique_ptr<QObject> object(component.create());
     QVERIFY(object);
     QCOMPARE(object->property("color").toString(), u"blue"_s);
+}
+
+void tst_QmlCppCodegen::enumsUser()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/enumsUser.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    std::unique_ptr<QObject> o(c.create());
+    QVERIFY(o);
+    int result = 0;
+    QMetaObject::invokeMethod(o.get(), "getEnum", Q_RETURN_ARG(int, result));
+    QCOMPARE(result, 2);
 }
 
 void tst_QmlCppCodegen::equalityQObjects()
