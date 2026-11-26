@@ -825,7 +825,7 @@ bool DomItem::resolve(const Path &path, DomItem::Visitor visitor, const ErrorHan
     if (path.length()==0)
         return visitor(fPath, *this);
     QList<QSet<quintptr>> visited(path.length() + 1);
-    Path myPath = path;
+    const PathIterator components = path.begin();
     QList<ResolveToDo> toDos(1); // invariant: always increase pathIndex to guarantee end even with only partial visited match
     if (path.headKind() == Path::Kind::Root) {
         // headKind() guarantees the head is a Root, so headRoot() has a value.
@@ -862,7 +862,7 @@ bool DomItem::resolve(const Path &path, DomItem::Visitor visitor, const ErrorHan
                     break;
                 visited[vPair.second].insert(vPair.first);
             }
-            auto cNow = path[iPath++];
+            auto cNow = components[iPath++];
             switch (cNow.headKind()) {
             case Path::Kind::Key:
                 it = it.key(cNow.headName());
@@ -939,7 +939,7 @@ bool DomItem::resolve(const Path &path, DomItem::Visitor visitor, const ErrorHan
                                 .handle(errorHandler);
                         return false;
                     }
-                    Path cNow = path[iPath++];
+                    Path cNow = components[iPath++];
                     if (cNow.headKind() != Path::Kind::Field) {
                         myResolveErrors()
                                 .error(tr("Expected a key path specifying the type to search after "
@@ -961,7 +961,7 @@ bool DomItem::resolve(const Path &path, DomItem::Visitor visitor, const ErrorHan
                                 .handle(errorHandler);
                         return false;
                     }
-                    cNow = path[iPath++];
+                    cNow = components[iPath++];
                     if (cNow.headKind() != Path::Kind::Key) {
                         myResolveErrors()
                                 .error(tr("Expected a key specifying the path to search after the "
