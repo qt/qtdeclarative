@@ -72,8 +72,8 @@ private:
 class Q_QUICKDIALOGS2QUICKIMPL_EXPORT QQuickFolderDialogImplAttached : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QQuickListView *folderDialogListView READ folderDialogListView WRITE setFolderDialogListView NOTIFY folderDialogListViewChanged)
-    Q_PROPERTY(QQuickFolderBreadcrumbBar *breadcrumbBar READ breadcrumbBar WRITE setBreadcrumbBar NOTIFY breadcrumbBarChanged)
+    Q_PROPERTY(QQuickListView *folderDialogListView READ folderDialogListView WRITE setFolderDialogListView NOTIFY folderDialogListViewChanged FINAL)
+    Q_PROPERTY(QQuickFolderBreadcrumbBar *breadcrumbBar READ breadcrumbBar WRITE setBreadcrumbBar NOTIFY breadcrumbBarChanged FINAL)
     Q_MOC_INCLUDE(<QtQuickTemplates2/private/qquickdialogbuttonbox_p.h>)
 
 public:

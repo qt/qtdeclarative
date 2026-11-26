@@ -71,26 +71,26 @@ class Q_QUICKDIALOGS2QUICKIMPL_EXPORT QQuickFontDialogImplAttached : public QObj
 {
     Q_OBJECT
     Q_PROPERTY(QQuickListView *familyListView READ familyListView WRITE setFamilyListView
-               NOTIFY familyListViewChanged)
+               NOTIFY familyListViewChanged FINAL)
     Q_PROPERTY(QQuickListView *styleListView READ styleListView WRITE setStyleListView
-               NOTIFY styleListViewChanged)
+               NOTIFY styleListViewChanged FINAL)
     Q_PROPERTY(QQuickListView *sizeListView READ sizeListView WRITE setSizeListView
-               NOTIFY sizeListViewChanged)
+               NOTIFY sizeListViewChanged FINAL)
     Q_PROPERTY(QQuickTextEdit *sampleEdit READ sampleEdit WRITE setSampleEdit
-               NOTIFY sampleEditChanged)
+               NOTIFY sampleEditChanged FINAL)
     Q_PROPERTY(QQuickDialogButtonBox *buttonBox READ buttonBox WRITE setButtonBox
-               NOTIFY buttonBoxChanged)
+               NOTIFY buttonBoxChanged FINAL)
     Q_PROPERTY(QQuickComboBox *writingSystemComboBox READ writingSystemComboBox
-               WRITE setWritingSystemComboBox NOTIFY writingSystemComboBoxChanged)
+               WRITE setWritingSystemComboBox NOTIFY writingSystemComboBoxChanged FINAL)
     Q_PROPERTY(QQuickCheckBox *underlineCheckBox READ underlineCheckBox WRITE setUnderlineCheckBox
-                       NOTIFY underlineCheckBoxChanged)
+                       NOTIFY underlineCheckBoxChanged FINAL)
     Q_PROPERTY(QQuickCheckBox *strikeoutCheckBox READ strikeoutCheckBox WRITE setStrikeoutCheckBox
-                       NOTIFY strikeoutCheckBoxChanged)
+                       NOTIFY strikeoutCheckBoxChanged FINAL)
 
     Q_PROPERTY(QQuickTextField *familyEdit READ familyEdit WRITE setFamilyEdit
-               NOTIFY familyEditChanged)
-    Q_PROPERTY(QQuickTextField *styleEdit READ styleEdit WRITE setStyleEdit NOTIFY styleEditChanged)
-    Q_PROPERTY(QQuickTextField *sizeEdit READ sizeEdit WRITE setSizeEdit NOTIFY sizeEditChanged)
+               NOTIFY familyEditChanged FINAL)
+    Q_PROPERTY(QQuickTextField *styleEdit READ styleEdit WRITE setStyleEdit NOTIFY styleEditChanged FINAL)
+    Q_PROPERTY(QQuickTextField *sizeEdit READ sizeEdit WRITE setSizeEdit NOTIFY sizeEditChanged FINAL)
 
     Q_MOC_INCLUDE(<QtQuickTemplates2 / private / qquickdialogbuttonbox_p.h>)
 
