@@ -138,6 +138,7 @@ public:
     QByteArray rootUrl() const;
     QStringList buildPaths();
     QStringList buildPathsForFileUrl(const QByteArray &url);
+    QStringList legacyBuildPathsWithDepsForFileUrl(const QByteArray &url);
     void setBuildPaths(const QStringList &paths);
     QStringList buildPathsForOpenedFiles();
     QStringList importPathsForUrl(const QByteArray &);

@@ -28,6 +28,7 @@ public:
 private slots:
     void buildPathsForFileUrl_data();
     void buildPathsForFileUrl();
+    void depsAreNotBuilt();
     void fileNamesToWatch();
     void resourceFiles();
     void resourceFilesFallback();

@@ -628,7 +628,7 @@ QStringList QQmlCodeModel::importPathsForUrl(const QByteArray &url)
 
     // fallback for projects targeting Qt < 6.10, that don't have .qmlls.build.ini files
     if (result.isEmpty() || result == QLibraryInfo::paths(QLibraryInfo::QmlImportsPath))
-        result << buildPathsForFileUrl(url);
+        result << legacyBuildPathsWithDepsForFileUrl(url);
 
     const QString importPathsKey = u"importPaths"_s;
     const QString fileName = url2Path(url);
@@ -693,10 +693,18 @@ static QStringList withDependentBuildDirectories(QStringList &&buildPaths)
     return res;
 }
 
+QStringList QQmlCodeModel::legacyBuildPathsWithDepsForFileUrl(const QByteArray &url)
+{
+    // TODO: Remove this, and withDependentBuildDirectories(), once we no longer support projects
+    // targeting Qt < 6.10. Only the import path fallback in importPathsForUrl() needs the _deps
+    // expansion, newer projects get their import paths from .qmlls.build.ini.
+    return withDependentBuildDirectories(buildPathsForFileUrl(url));
+}
+
 QStringList QQmlCodeModel::buildPathsForFileUrl(const QByteArray &url)
 {
     if (QStringList result = buildPaths(); !result.isEmpty())
-        return withDependentBuildDirectories(std::move(result));
+        return result;
 
     // fallback: look in the user settings (.qmlls.ini files in the source directory)
     if (!m_settings || !m_settings->search(url2Path(url), { QString(), verbose() }).isValid())
@@ -707,7 +715,7 @@ QStringList QQmlCodeModel::buildPathsForFileUrl(const QByteArray &url)
         return {};
 
     const QString fileName = url2Path(url);
-    return withDependentBuildDirectories(m_settings->valueAsAbsolutePathList(buildDir, fileName));
+    return m_settings->valueAsAbsolutePathList(buildDir, fileName);
 }
 
 void QQmlCodeModel::setDocumentationRootPath(const QString &path)
