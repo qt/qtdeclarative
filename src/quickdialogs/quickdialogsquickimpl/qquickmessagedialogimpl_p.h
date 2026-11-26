@@ -73,9 +73,9 @@ class Q_QUICKDIALOGS2QUICKIMPL_EXPORT QQuickMessageDialogImplAttached : public Q
 {
     Q_OBJECT
     Q_PROPERTY(QQuickDialogButtonBox *buttonBox READ buttonBox WRITE setButtonBox NOTIFY
-                       buttonBoxChanged)
+                       buttonBoxChanged FINAL)
     Q_PROPERTY(QQuickButton *detailedTextButton READ detailedTextButton WRITE setDetailedTextButton
-                       NOTIFY detailedTextButtonChanged)
+                       NOTIFY detailedTextButtonChanged FINAL)
 public:
     explicit QQuickMessageDialogImplAttached(QObject *parent = nullptr);
 
