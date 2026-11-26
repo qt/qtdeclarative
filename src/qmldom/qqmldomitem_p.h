@@ -931,8 +931,7 @@ public:
     }
 
     bool resolve(const Path &path, Visitor visitor, const ErrorHandler &errorHandler,
-                 ResolveOptions options = ResolveOption::None, const Path &fullPath = Path(),
-                 QList<Path> *visitedRefs = nullptr) const;
+                 const Path &fullPath = Path(), QList<Path> *visitedRefs = nullptr) const;
 
     DomItem operator[](const Path &path) const;
     DomItem operator[](QStringView component) const;

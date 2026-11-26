@@ -54,14 +54,6 @@ Q_ENUM_NS(PathCurrent)
 enum class Language { QmlQuick1, QmlQuick2, QmlQuick3, QmlCompiled, QmlAnnotation, Qbs };
 Q_ENUM_NS(Language)
 
-enum class ResolveOption{
-    None=0,
-    TraceVisit=0x1 // call the function along all elements of the path, not just for the target (the function might be called even if the target is never reached)
-};
-Q_ENUM_NS(ResolveOption)
-Q_DECLARE_FLAGS(ResolveOptions, ResolveOption)
-Q_DECLARE_OPERATORS_FOR_FLAGS(ResolveOptions)
-
 enum class VisitOption {
     None = 0,
     VisitSelf = 0x1, // Visit the start item

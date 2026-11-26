@@ -781,7 +781,7 @@ static DomItem resolveReference(const DomItem &it, const Path &refRef, QList<Pat
                 resolveRes = r;
                 return false;
             },
-            errorHandler, ResolveOption::None, ref->referredObjectPath, visitedRefs);
+            errorHandler, ref->referredObjectPath, visitedRefs);
     return resolveRes;
 }
 
@@ -816,7 +816,7 @@ static std::optional<LookupType> lookupTypeFromString(const QString &expectedTyp
 }
 
 bool DomItem::resolve(const Path &path, DomItem::Visitor visitor, const ErrorHandler &errorHandler,
-                      ResolveOptions options, const Path &fullPath, QList<Path> *visitedRefs) const
+                      const Path &fullPath, QList<Path> *visitedRefs) const
 {
     QList<Path> vRefs;
     Path fPath = fullPath;
@@ -861,8 +861,6 @@ bool DomItem::resolve(const Path &path, DomItem::Visitor visitor, const ErrorHan
                     break;
                 visited[vPair.second].insert(vPair.first);
             }
-            if (options & ResolveOption::TraceVisit && !visitor(path.mid(0,iPath), it))
-                return false;
             auto cNow = path[iPath++];
             switch (cNow.headKind()) {
             case Path::Kind::Key:
@@ -929,8 +927,6 @@ bool DomItem::resolve(const Path &path, DomItem::Visitor visitor, const ErrorHan
                             break;
                         visited[vPair.second].insert(vPair.first);
                     }
-                    if (options & ResolveOption::TraceVisit && !visitor(path.mid(0, iPath), it))
-                        return false;
                     if (iPath + 1 >= path.length()) {
                         myResolveErrors()
                                 .error(tr("Premature end of path, expected a field specifying the "
@@ -2712,8 +2708,7 @@ DomItem Reference::get(const DomItem &self, const ErrorHandler &h, QList<Path> *
                     res = el;
                     return false;
                 },
-                h, ResolveOption::None, referredObjectPath,
-                (visitedRefs ? visitedRefs : &visitedRefsLocal));
+                h, referredObjectPath, (visitedRefs ? visitedRefs : &visitedRefsLocal));
         if (env)
             RefCacheEntry::addForPath(
                     env, selfPath, RefCacheEntry { RefCacheEntry::Cached::First, { cachedPath } });
@@ -2768,7 +2763,7 @@ QList<DomItem> Reference::getAll(
                     res.append(el);
                     return true;
                 },
-                h, ResolveOption::None, referredObjectPath, visitedRefs);
+                h, referredObjectPath, visitedRefs);
         if (env) {
             QList<Path> canonicalPaths;
             for (const DomItem &i : res) {
