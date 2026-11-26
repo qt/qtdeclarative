@@ -66,6 +66,7 @@ private slots:
     void aliasToAliasResolutionSkipCorruption();
     void aliasToLocalAlias();
     void ambiguousAs();
+    void overriddenAttachedSlot();
     void ambiguousSignals();
     void anchorsFill();
     void anonymousComposite();
@@ -705,6 +706,16 @@ void tst_QmlCppCodegen::ambiguousAs()
     QCOMPARE(o->property("other").value<QObject *>(), o.get());
     o->setProperty("useSelf", QVariant::fromValue(false));
     QCOMPARE(o->property("other").value<QObject *>(), nullptr);
+}
+
+void tst_QmlCppCodegen::overriddenAttachedSlot()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/overriddenAttachedSlot.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    std::unique_ptr<QObject> o(c.create());
+    QVERIFY(o);
+    QCOMPARE(o->property("result").toInt(), 3);
 }
 
 void tst_QmlCppCodegen::ambiguousSignals()

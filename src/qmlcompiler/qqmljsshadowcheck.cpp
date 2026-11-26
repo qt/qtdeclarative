@@ -177,6 +177,9 @@ QQmlJSShadowCheck::Shadowability QQmlJSShadowCheck::checkShadowing(
         }
 
         Q_FALLTHROUGH();
+    case QQmlJSRegisterContent::Attachment:
+        // The attached object factory can return an instance of a type derived from the declared
+        // attached type, just like a singleton factory. Members can therefore be shadowed.
     case QQmlJSRegisterContent::MethodCall:
     case QQmlJSRegisterContent::Property:
     case QQmlJSRegisterContent::TypeByName:
@@ -186,8 +189,7 @@ QQmlJSShadowCheck::Shadowability QQmlJSShadowCheck::checkShadowing(
 
         // You can have something like parent.QtQuick.Screen.pixelDensity
         // In that case "QtQuick" cannot be resolved as member type and we would later have to look
-        // for "QtQuick.Screen" instead. However, you can only do that with attached properties and
-        // those are not shadowable.
+        // for "QtQuick.Screen" instead.
         if (!member.isValid()) {
             Q_ASSERT(m_typeResolver->isPrefix(memberName));
             return NotShadowable;

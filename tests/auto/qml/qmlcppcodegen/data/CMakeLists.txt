@@ -27,6 +27,7 @@ set(cpp_sources
     largeValueType.h
     listprovider.h
     nameholder.h
+    overriddenattachedslot.h
     listsingleton.h
     multiforeign.h
     objectwithmethod.h
@@ -196,6 +197,7 @@ set(qml_files
     enumLookup.qml
     enumMarkedAsFlag.qml
     enumProblems.qml
+    overriddenAttachedSlot.qml
     enumScope.qml
     enumsInOtherObject.qml
     enumsUser.qml
