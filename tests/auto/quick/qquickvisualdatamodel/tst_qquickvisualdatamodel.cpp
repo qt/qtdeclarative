@@ -4469,8 +4469,8 @@ static void warningsHandler(QtMsgType type, const QMessageLogContext &ctxt, cons
 
 void tst_qquickvisualdatamodel::noWarningOnObjectDeletion()
 {
-    qmlRegisterType<InventoryModel>("TestTypes", 1, 0, "InventoryModel");
-    qmlRegisterUncreatableType<ComponentEntity>("TestTypes", 1, 0, "ComponentEntity", "no");
+    qmlRegisterType<InventoryModel>("InventoryTypes", 1, 0, "InventoryModel");
+    qmlRegisterUncreatableType<ComponentEntity>("InventoryTypes", 1, 0, "ComponentEntity", "no");
 
     oldHandler = qInstallMessageHandler(warningsHandler);
     const auto guard = qScopeGuard([&]() { qInstallMessageHandler(oldHandler); });
