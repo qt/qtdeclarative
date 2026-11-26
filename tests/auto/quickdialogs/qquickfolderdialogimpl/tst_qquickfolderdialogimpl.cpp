@@ -837,6 +837,9 @@ void tst_QQuickFolderDialogImpl::itemsDisabledWhenNecessary()
     const auto editPathKeySequence = QKeySequence(Qt::CTRL | Qt::Key_L);
     QTest::keySequence(dialogHelper.popupWindow(), editPathKeySequence);
     QVERIFY(breadcrumbBar->textField()->isVisible());
+    // The key event below is delivered to the active focus item. Showing the text field does
+    // not make it the active focus item until the popup window has focus, so wait for that.
+    QTRY_VERIFY_ACTIVE_FOCUS(breadcrumbBar->textField());
     QCOMPARE(openButton->isEnabled(), false);
 #endif
     // Hide it with the escape key. The Open button should now be enabled.
