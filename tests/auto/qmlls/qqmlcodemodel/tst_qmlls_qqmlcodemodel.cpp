@@ -92,6 +92,31 @@ void tst_qmlls_qqmlcodemodel::buildPathsForFileUrl()
     QCOMPARE_EQ(result, QStringList{ expectedPath });
 }
 
+void tst_qmlls_qqmlcodemodel::depsAreNotBuilt()
+{
+    QTemporaryDir buildDir;
+    QVERIFY(buildDir.isValid());
+    const QString depBuildDir = buildDir.filePath(u"_deps/dep-build"_s);
+    QVERIFY(QDir().mkpath(depBuildDir));
+
+    QQmlToolingSharedSettings settings(u"qmlls"_s);
+    TestCodeModelManager model(&settings);
+    const QByteArray rootUrl = QUrl::fromLocalFile(buildDir.path()).toEncoded();
+    model.addRootUrls({ rootUrl });
+    model.setBuildPathsForRootUrl(QByteArray(), QStringList{ buildDir.path() });
+
+    const QByteArray url = QUrl::fromLocalFile(buildDir.filePath(u"file.qml"_s)).toEncoded();
+
+    auto *codeModel = model.findCodeModelForFile(url);
+
+    // The dependencies' build directories are only searched for backwards compatibility...
+    QCOMPARE_EQ(codeModel->legacyBuildPathsWithDepsForFileUrl(url),
+                (QStringList{ buildDir.path(), depBuildDir }));
+    // ... and are not what the automatic CMake builds run on.
+    QCOMPARE_EQ(model.buildPathsForFileUrl(url), QStringList{ buildDir.path() });
+    QCOMPARE_EQ(codeModel->buildPathsForOpenedFiles(), QStringList{ buildDir.path() });
+}
+
 void tst_qmlls_qqmlcodemodel::findFilePathsFromFileNames_data()
 {
     QTest::addColumn<QStringList>("fileNames");
