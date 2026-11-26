@@ -1,5 +1,5 @@
 import QtQuick
-import TestTypes
+import InventoryTypes
 
 ListView {
     id: listView
