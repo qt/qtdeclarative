@@ -5,7 +5,7 @@ CppBaseClass {
     id: self
 
     enum EE {
-        AA, BB, CC
+        AA, BB, CC, DD = -1
     }
 
     property int foo: 1 + 2
