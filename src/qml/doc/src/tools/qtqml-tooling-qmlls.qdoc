@@ -162,8 +162,27 @@ The values from the settings file have lower precedence than
 
 \section2 Configuring Automatic CMake Builds
 
-\QMLLS will try to trigger a CMake rebuild when it detects that the
-source code of a C++ defined QML type has been modified.
+\QMLLS runs CMake on its own, without being asked by the user or the client.
+On startup, and whenever it detects that the source code of a C++ defined QML
+type has been modified, it runs
+\code [cmake]
+cmake --build <build-directory> -t all_qmltyperegistrations
+\endcode
+for each build directory in use. Building this target
+can compile C++ code, run code generators, and re-run the CMake configuration
+step, which executes the \c{CMakeLists.txt} files of the project.
+
+The build directories are taken from the sources described in
+\l{Setting up the Build Directory}. If none of the other sources provides a
+build directory for an opened QML file, \QMLLS uses the \c{buildDir} entry of
+the nearest \c{.qmlls.ini} file found by walking up the directory tree from the
+opened file. Because that file is part of the project, opening a QML file from a
+project with a \c{.qmlls.ini} file can start a build of a build directory chosen
+by the project.
+
+\warning Do not open QML files from untrusted locations with an editor that uses
+\QMLLS. Building an untrusted project can execute arbitrary code with your
+privileges. See also \l{Using Qt's Developer Tools Securely}.
 
 To disable this feature, use the following ways:
 \list
@@ -177,6 +196,17 @@ your editor should invoke \c{qmlls} as follows:
     \li The \l{QT_QML_GENERATE_QMLLS_INI_NO_CMAKE_CALLS} CMake variable
 if \l{QT_QML_GENERATE_QMLLS_INI} is enabled.
 \endlist
+
+The \c{--no-cmake-calls} command line option and the \c{QMLLS_NO_CMAKE_CALLS}
+environment variable take precedence over every other setting. When either of
+them disables CMake calls, a \c{.qmlls.ini} file cannot re-enable them. In
+contrast, the \c{no-cmake-calls} entry of a \c{.qmlls.ini} file is only
+consulted if neither of them is set. The nearest \c{.qmlls.ini} file to the
+opened file wins, so a \c{.qmlls.ini} file shipped with a project takes
+precedence over one in a parent directory, such as your own. To reliably
+prevent \QMLLS from running CMake, regardless of the projects you open,
+pass \c{--no-cmake-calls} on the command line or set
+\c{QMLLS_NO_CMAKE_CALLS} in the environment of \QMLLS.
 
 To control the number of jobs used by CMake, use
 \list
